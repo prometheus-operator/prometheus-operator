@@ -1,0 +1,10 @@
+apiVersion: v2
+kind: Pod
+metadata:
+  name: prometheus-ctrl
+  labels:
+    name: prometheus-ctrl
+spec:
+  containers:
+  - name: prometheus-ctrl
+    image: quay.io/fabxc/prometheus-ctrl:latest
