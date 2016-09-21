@@ -1,0 +1,10 @@
+apiVersion: "prometheus.coreos.com/v1"
+kind: "Prometheus"
+metadata:
+  name: "prometheus-main"
+  labels:
+    prometheus: "main"
+spec:
+  servicesMonitors:
+  - name: example-app
+
