@@ -1,8 +1,6 @@
 package prometheus
 
 import (
-	"fmt"
-
 	"k8s.io/client-go/1.4/kubernetes"
 	core "k8s.io/client-go/1.4/kubernetes/typed/core/v1"
 	extensions "k8s.io/client-go/1.4/kubernetes/typed/extensions/v1beta1"
@@ -36,41 +34,38 @@ type Prometheus struct {
 	*Object
 
 	kclient *kubernetes.Clientset
-	errc    chan<- error
 }
 
 // New returns a new Prometheus server manager for a newly created Prometheus.
-func New(kc *kubernetes.Clientset, o *Object) (*Prometheus, <-chan error) {
-	errc := make(chan error)
+func New(kc *kubernetes.Clientset, o *Object) (*Prometheus, error) {
 	p := &Prometheus{
 		Object:  o,
 		kclient: kc,
-		errc:    errc,
 	}
-
+	if err := createService(p.kclient.Core().Services(p.Namespace), p.Name); err != nil {
+		return nil, err
+	}
+	if err := createReplicaSet(p.kclient.ExtensionsClient.ReplicaSets(p.Namespace), p.Name); err != nil {
+		return nil, err
+	}
 	go p.run()
-	return p, errc
+	return p, nil
 }
 
 // Delete romves the Prometheus server deployment.
 func (p *Prometheus) Delete() error {
-	return fmt.Errorf("not implemented")
-}
-
-func (p *Prometheus) run() {
-	if err := p.create(); err != nil {
-		p.errc <- err
-	}
-}
-
-func (p *Prometheus) create() error {
-	if err := createService(p.kclient.Core().Services(p.Namespace), p.Name); err != nil {
+	rs := p.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
+	if err := rs.Delete(p.Name, nil); err != nil {
 		return err
 	}
-	if err := createReplicaSet(p.kclient.ExtensionsClient.ReplicaSets(p.Namespace), p.Name); err != nil {
+	svc := p.kclient.Core().Services(p.Namespace)
+	if err := svc.Delete(p.Name, nil); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (p *Prometheus) run() {
 }
 
 func createReplicaSet(client extensions.ReplicaSetInterface, name string) error {

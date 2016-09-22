@@ -29,9 +29,10 @@ const (
 // Controller manages lify cycle of Prometheus deployments and
 // monitoring configurations.
 type Controller struct {
-	kclient *kubernetes.Clientset
-	logger  log.Logger
-	host    string
+	kclient    *kubernetes.Clientset
+	logger     log.Logger
+	host       string
+	prometheis map[string]*prometheus.Prometheus
 }
 
 // Config defines configuration parameters for the Controller.
@@ -55,9 +56,10 @@ func New(c Config) (*Controller, error) {
 		With("ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 
 	return &Controller{
-		kclient: client,
-		logger:  logger,
-		host:    cfg.Host,
+		kclient:    client,
+		logger:     logger,
+		host:       cfg.Host,
+		prometheis: map[string]*prometheus.Prometheus{},
 	}, nil
 }
 
@@ -79,11 +81,19 @@ func (c *Controller) Run() error {
 		case evt := <-events:
 			switch evt.Type {
 			case watch.Added:
-				prometheus.New(c.kclient, evt.Object)
+				p, err := prometheus.New(c.kclient, evt.Object)
+				if err != nil {
+					c.logger.Log("msg", "Prometheus creation failed", "err", err)
+				} else {
+					c.prometheis[evt.Object.Namespace+"\xff"+evt.Object.Name] = p
+				}
 			case watch.Modified:
-				c.logger.Log("msg", "updated event received", "prometheus", evt.Object.Name)
+				c.logger.Log("msg", "modified event received", "prometheus", evt.Object.Name)
 			case watch.Deleted:
-				c.logger.Log("msg", "delete event received", "prometheus", evt.Object.Name)
+				p := c.prometheis[evt.Object.Namespace+"\xff"+evt.Object.Name]
+				if err := p.Delete(); err != nil {
+					c.logger.Log("msg", "Prometheus deletion failed", "err", err)
+				}
 			default:
 				c.logger.Log("msg", "unknown event type received", "type", evt.Type)
 			}
@@ -192,7 +202,7 @@ func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion 
 				if evt.Type == "ERROR" {
 					break
 				}
-				c.logger.Log("msg", "Prometheus event", "type", evt.Type, "obj", fmt.Sprintf("%v", evt.Object))
+				c.logger.Log("msg", "Prometheus event", "type", evt.Type, "obj", fmt.Sprintf("%v:%v", evt.Object.Namespace, evt.Object.Name))
 				watchVersion = evt.Object.ObjectMeta.ResourceVersion
 				events <- &evt
 			}
