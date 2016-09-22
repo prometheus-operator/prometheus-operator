@@ -211,11 +211,12 @@ func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion 
 	return events, errc
 }
 
+// PrometheusList is a list of Prometheus TPR objects.
 type PrometheusList struct {
 	unversioned.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	unversioned.ListMeta `json:"metadata,omitempty"`
 	// Items is a list of third party objects
-	Items []prometheus.Prometheus `json:"items"`
+	Items []prometheus.Object `json:"items"`
 }
