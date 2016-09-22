@@ -46,8 +46,7 @@ func makeService(name string) *apiV1.Service {
 	return svc
 }
 
-func makeReplicaSet(name string) *apiExtensions.ReplicaSet {
-	replicas := int32(1)
+func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 	rs := &apiExtensions.ReplicaSet{
 		ObjectMeta: apiV1.ObjectMeta{
 			Name: name,

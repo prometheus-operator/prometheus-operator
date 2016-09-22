@@ -81,19 +81,21 @@ func (c *Controller) Run() error {
 		case evt := <-events:
 			switch evt.Type {
 			case watch.Added:
-				p, err := prometheus.New(c.kclient, evt.Object)
+				l := log.NewContext(c.logger).With("namespace", evt.Object.Namespace, "prometheus", evt.Object.Name)
+				p, err := prometheus.New(l, c.kclient, evt.Object)
 				if err != nil {
 					c.logger.Log("msg", "Prometheus creation failed", "err", err)
 				} else {
 					c.prometheis[evt.Object.Namespace+"\xff"+evt.Object.Name] = p
 				}
+
 			case watch.Modified:
 				c.logger.Log("msg", "modified event received", "prometheus", evt.Object.Name)
+
 			case watch.Deleted:
 				p := c.prometheis[evt.Object.Namespace+"\xff"+evt.Object.Name]
-				if err := p.Delete(); err != nil {
-					c.logger.Log("msg", "Prometheus deletion failed", "err", err)
-				}
+				p.Delete()
+
 			default:
 				c.logger.Log("msg", "unknown event type received", "type", evt.Type)
 			}
@@ -188,7 +190,6 @@ func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion 
 			c.logger.Log("msg", "watching Prometheus resource", "version", watchVersion)
 
 			for {
-
 				dec := json.NewDecoder(resp.Body)
 				var evt Event
 				if err := dec.Decode(&evt); err != nil {
@@ -199,6 +200,7 @@ func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion 
 					errc <- err
 					break
 				}
+
 				if evt.Type == "ERROR" {
 					break
 				}
@@ -206,6 +208,7 @@ func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion 
 				watchVersion = evt.Object.ObjectMeta.ResourceVersion
 				events <- &evt
 			}
+			resp.Body.Close()
 		}
 	}()
 	return events, errc
