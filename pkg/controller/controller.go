@@ -90,11 +90,16 @@ func (c *Controller) Run() error {
 				}
 
 			case watch.Modified:
-				c.logger.Log("msg", "modified event received", "prometheus", evt.Object.Name)
-
+				p := c.prometheis[evt.Object.Namespace+"\xff"+evt.Object.Name]
+				if p != nil {
+					p.Update(evt.Object)
+				}
 			case watch.Deleted:
 				p := c.prometheis[evt.Object.Namespace+"\xff"+evt.Object.Name]
-				p.Delete()
+				if p != nil {
+					p.Delete()
+					delete(c.prometheis, evt.Object.Namespace+"\xff"+evt.Object.Name)
+				}
 
 			default:
 				c.logger.Log("msg", "unknown event type received", "type", evt.Type)

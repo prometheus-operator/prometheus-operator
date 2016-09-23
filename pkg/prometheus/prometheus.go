@@ -1,8 +1,11 @@
 package prometheus
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -22,26 +25,19 @@ type Prometheus struct {
 	kclient *kubernetes.Clientset
 	logger  log.Logger
 	actions chan func() error
+	stopc   chan struct{}
 }
-
-type event struct{}
 
 // New returns a new Prometheus server manager for a newly created Prometheus.
 func New(l log.Logger, kc *kubernetes.Clientset, o *Object) (*Prometheus, error) {
 	p := &Prometheus{
-		Object:  o,
 		kclient: kc,
 		logger:  l,
 		actions: make(chan func() error),
+		stopc:   make(chan struct{}),
 	}
 
-	svcClient := p.kclient.Core().Services(p.Namespace)
-	if _, err := svcClient.Create(makeService(p.Name)); err != nil && !apierrors.IsAlreadyExists(err) {
-		return nil, err
-	}
-
-	rsClient := p.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
-	if _, err := rsClient.Create(makeReplicaSet(p.Name, 1)); err != nil && !apierrors.IsAlreadyExists(err) {
+	if err := p.update(o)(); err != nil {
 		return nil, err
 	}
 
@@ -49,10 +45,67 @@ func New(l log.Logger, kc *kubernetes.Clientset, o *Object) (*Prometheus, error)
 	return p, nil
 }
 
+// Update applies changes to the object.
+func (p *Prometheus) Update(o *Object) {
+	p.actions <- p.update(o)
+}
+
+func (p *Prometheus) update(o *Object) func() error {
+	return func() error {
+		p.Object = o
+
+		var (
+			svcClient = p.kclient.Core().Services(p.Namespace)
+			rsClient  = p.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
+			cmClient  = p.kclient.Core().ConfigMaps(o.Namespace)
+		)
+
+		// XXX: for some reason creating an existing services does not return an
+		// AlreadyExists error but complains about immutable attributes.
+		if _, err := svcClient.Get(p.Name); apierrors.IsNotFound(err) {
+			if _, err := svcClient.Create(makeService(p.Name)); err != nil {
+				return fmt.Errorf("create service: %s", err)
+			}
+		} else if err != nil {
+			return err
+		}
+
+		if _, err := rsClient.Create(makeReplicaSet(p.Name, 1)); err != nil && !apierrors.IsAlreadyExists(err) {
+			return fmt.Errorf("create replica set: %s", err)
+		}
+
+		// Update config map based on the most recent configuration.
+		var buf bytes.Buffer
+		if err := configTmpl.Execute(&buf, nil); err != nil {
+			return err
+		}
+
+		cm := makeConfigMap(p.Name, map[string]string{
+			"prometheus.yaml": buf.String(),
+		})
+		if _, err := cmClient.Get(p.Name); apierrors.IsNotFound(err) {
+			if _, err := cmClient.Create(cm); err != nil {
+				return err
+			}
+		} else if err == nil {
+			if _, err := cmClient.Update(cm); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+
+		return nil
+	}
+}
+
 // Delete removes the Prometheus server deployment asynchronously.
 func (p *Prometheus) Delete() {
+	p.logger.Log("exec", "delete", "prometheus", p.Name)
 	p.actions <- p.deleteReplicaSet
 	p.actions <- p.deleteService
+	p.actions <- p.deleteConfigMap
+	close(p.stopc)
 }
 
 func (p *Prometheus) deleteReplicaSet() error {
@@ -75,7 +128,6 @@ func (p *Prometheus) deleteReplicaSet() error {
 	if _, err := watch.Until(100*time.Second, w, func(e watch.Event) (bool, error) {
 		rs, ok := e.Object.(*apiExtensions.ReplicaSet)
 		if !ok {
-			fmt.Println(e.Object, e.Type)
 			return false, errors.New("not a replica set")
 		}
 		// Check if the replica set is scaled down and all replicas are gone.
@@ -110,10 +162,69 @@ func (p *Prometheus) deleteService() error {
 	return nil
 }
 
+func (p *Prometheus) deleteConfigMap() error {
+	cm := p.kclient.Core().ConfigMaps(p.Namespace)
+	if err := cm.Delete(p.Name, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p *Prometheus) run() {
-	for f := range p.actions {
-		if err := f(); err != nil {
-			p.logger.Log("msg", "action failed", "err", err)
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-p.stopc:
+			return
+		default:
+		}
+		select {
+		case f := <-p.actions:
+			if err := f(); err != nil {
+				p.logger.Log("msg", "action failed", "err", err)
+			}
+
+		case <-ticker.C:
+			if err := p.reloadConfig(); err != nil {
+				p.logger.Log("msg", "reload action failed", "err", err)
+			}
+
+		case <-p.stopc:
+			return
 		}
 	}
+}
+
+func (p *Prometheus) reloadConfig() error {
+	podClient := p.kclient.Core().Pods(p.Namespace)
+
+	selector, err := labels.Parse("prometheus.coreos.com=" + p.Name)
+	if err != nil {
+		return fmt.Errorf("parse selector: %s", err)
+	}
+	pods, err := podClient.List(api.ListOptions{LabelSelector: selector})
+	if err != nil {
+		return fmt.Errorf("receive pod list: %s", err)
+	}
+
+	for _, pod := range pods.Items {
+		// TODO(fabxc): don't hardcode port, parallelize requests.
+		req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/-/reload", pod.Status.PodIP, 9090), nil)
+		if err != nil {
+			return fmt.Errorf("request:  %s", err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+		if err != nil {
+			p.logger.Log("msg", "reloading Prometheus failed", "err", err)
+			continue
+		}
+		resp.Body.Close()
+	}
+
+	return nil
 }

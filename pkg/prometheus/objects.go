@@ -24,6 +24,16 @@ type SpecServiceMonitor struct {
 	Name string `json:"name"`
 }
 
+func makeConfigMap(name string, data map[string]string) *apiV1.ConfigMap {
+	cm := &apiV1.ConfigMap{
+		ObjectMeta: apiV1.ObjectMeta{
+			Name: name,
+		},
+		Data: data,
+	}
+	return cm
+}
+
 func makeService(name string) *apiV1.Service {
 	svc := &apiV1.Service{
 		ObjectMeta: apiV1.ObjectMeta{
@@ -36,11 +46,13 @@ func makeService(name string) *apiV1.Service {
 					Port:       9090,
 					TargetPort: intstr.FromString("web"),
 					Protocol:   apiV1.ProtocolTCP,
+					NodePort:   30900,
 				},
 			},
 			Selector: map[string]string{
 				"prometheus.coreos.com": name,
 			},
+			Type: apiV1.ServiceTypeNodePort,
 		},
 	}
 	return svc
