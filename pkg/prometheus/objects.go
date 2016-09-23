@@ -83,6 +83,44 @@ func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 									Protocol:      apiV1.ProtocolTCP,
 								},
 							},
+							Args: []string{
+								"-storage.local.retention=12h",
+								"-storage.local.memory-chunks=500000",
+								"-config.file=/etc/prometheus/prometheus.yaml",
+							},
+							VolumeMounts: []apiV1.VolumeMount{
+								{
+									Name:      "config-volume",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus",
+								},
+							},
+						}, {
+							Name:  "reloader",
+							Image: "jimmidyson/configmap-reload",
+							Args: []string{
+								"-webhook-url=http://localhost:9090/-/reload",
+								"-volume-dir=/etc/prometheus/",
+							},
+							VolumeMounts: []apiV1.VolumeMount{
+								{
+									Name:      "config-volume",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus",
+								},
+							},
+						},
+					},
+					Volumes: []apiV1.Volume{
+						{
+							Name: "config-volume",
+							VolumeSource: apiV1.VolumeSource{
+								ConfigMap: &apiV1.ConfigMapVolumeSource{
+									LocalObjectReference: apiV1.LocalObjectReference{
+										Name: name,
+									},
+								},
+							},
 						},
 					},
 				},

@@ -2,10 +2,8 @@ package prometheus
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -70,10 +68,6 @@ func (p *Prometheus) update(o *Object) func() error {
 			return err
 		}
 
-		if _, err := rsClient.Create(makeReplicaSet(p.Name, 1)); err != nil && !apierrors.IsAlreadyExists(err) {
-			return fmt.Errorf("create replica set: %s", err)
-		}
-
 		// Update config map based on the most recent configuration.
 		var buf bytes.Buffer
 		if err := configTmpl.Execute(&buf, nil); err != nil {
@@ -93,6 +87,10 @@ func (p *Prometheus) update(o *Object) func() error {
 			}
 		} else {
 			return err
+		}
+
+		if _, err := rsClient.Create(makeReplicaSet(p.Name, 1)); err != nil && !apierrors.IsAlreadyExists(err) {
+			return fmt.Errorf("create replica set: %s", err)
 		}
 
 		return nil
@@ -171,9 +169,6 @@ func (p *Prometheus) deleteConfigMap() error {
 }
 
 func (p *Prometheus) run() {
-	ticker := time.NewTicker(10 * time.Second)
-	defer ticker.Stop()
-
 	for {
 		select {
 		case <-p.stopc:
@@ -185,46 +180,8 @@ func (p *Prometheus) run() {
 			if err := f(); err != nil {
 				p.logger.Log("msg", "action failed", "err", err)
 			}
-
-		case <-ticker.C:
-			if err := p.reloadConfig(); err != nil {
-				p.logger.Log("msg", "reload action failed", "err", err)
-			}
-
 		case <-p.stopc:
 			return
 		}
 	}
-}
-
-func (p *Prometheus) reloadConfig() error {
-	podClient := p.kclient.Core().Pods(p.Namespace)
-
-	selector, err := labels.Parse("prometheus.coreos.com=" + p.Name)
-	if err != nil {
-		return fmt.Errorf("parse selector: %s", err)
-	}
-	pods, err := podClient.List(api.ListOptions{LabelSelector: selector})
-	if err != nil {
-		return fmt.Errorf("receive pod list: %s", err)
-	}
-
-	for _, pod := range pods.Items {
-		// TODO(fabxc): don't hardcode port, parallelize requests.
-		req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/-/reload", pod.Status.PodIP, 9090), nil)
-		if err != nil {
-			return fmt.Errorf("request:  %s", err)
-		}
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		resp, err := http.DefaultClient.Do(req.WithContext(ctx))
-		if err != nil {
-			p.logger.Log("msg", "reloading Prometheus failed", "err", err)
-			continue
-		}
-		resp.Body.Close()
-	}
-
-	return nil
 }
