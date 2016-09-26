@@ -2,8 +2,10 @@ package prometheus
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -18,8 +20,9 @@ import (
 // Prometheus manages the life-cycle of a single Prometheus server
 // in the cluster.
 type Prometheus struct {
-	*Object
+	*PrometheusObj
 
+	host    string
 	kclient *kubernetes.Clientset
 	logger  log.Logger
 	actions chan func() error
@@ -27,9 +30,10 @@ type Prometheus struct {
 }
 
 // New returns a new Prometheus server manager for a newly created Prometheus.
-func New(l log.Logger, kc *kubernetes.Clientset, o *Object) (*Prometheus, error) {
+func New(l log.Logger, host string, kc *kubernetes.Clientset, o *PrometheusObj) (*Prometheus, error) {
 	p := &Prometheus{
 		kclient: kc,
+		host:    host,
 		logger:  l,
 		actions: make(chan func() error),
 		stopc:   make(chan struct{}),
@@ -44,13 +48,13 @@ func New(l log.Logger, kc *kubernetes.Clientset, o *Object) (*Prometheus, error)
 }
 
 // Update applies changes to the object.
-func (p *Prometheus) Update(o *Object) {
+func (p *Prometheus) Update(o *PrometheusObj) {
 	p.actions <- p.update(o)
 }
 
-func (p *Prometheus) update(o *Object) func() error {
+func (p *Prometheus) update(o *PrometheusObj) func() error {
 	return func() error {
-		p.Object = o
+		p.PrometheusObj = o
 
 		var (
 			svcClient = p.kclient.Core().Services(p.Namespace)
@@ -68,9 +72,24 @@ func (p *Prometheus) update(o *Object) func() error {
 			return err
 		}
 
+		tplcfg := &TemplateConfig{}
+
+		sms, err := getServiceMonitors(p.host, p.kclient.CoreClient.RESTClient.Client, p.Namespace)
+		if err != nil {
+			return err
+		}
+
+		for _, sm := range sms.Items {
+			for _, sref := range p.Spec.ServiceMonitors {
+				if sref.Name == sm.Spec.Service {
+					tplcfg.ServiceMonitors = append(tplcfg.ServiceMonitors, sm.Spec)
+				}
+			}
+		}
+
 		// Update config map based on the most recent configuration.
 		var buf bytes.Buffer
-		if err := configTmpl.Execute(&buf, nil); err != nil {
+		if err := configTmpl.Execute(&buf, tplcfg); err != nil {
 			return err
 		}
 
@@ -95,6 +114,20 @@ func (p *Prometheus) update(o *Object) func() error {
 
 		return nil
 	}
+}
+
+func getServiceMonitors(host string, c *http.Client, ns string) (*ServiceMonitorList, error) {
+	resp, err := c.Get(host + "/apis/prometheus.coreos.com/v1/namespaces/" + ns + "/servicemonitors")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var res ServiceMonitorList
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
 // Delete removes the Prometheus server deployment asynchronously.

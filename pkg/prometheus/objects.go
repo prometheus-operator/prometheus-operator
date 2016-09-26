@@ -8,20 +8,46 @@ import (
 )
 
 // Object represents an Prometheus TPR API object.
-type Object struct {
+type PrometheusObj struct {
 	apiUnversioned.TypeMeta `json:",inline"`
 	apiV1.ObjectMeta        `json:"metadata,omitempty"`
-	Spec                    Spec `json:"spec"`
+	Spec                    PrometheusSpec `json:"spec"`
 }
 
 // Spec defines a Prometheus server.
-type Spec struct {
-	ServiceMonitors []SpecServiceMonitor `json:"serviceMonitors"`
+type PrometheusSpec struct {
+	ServiceMonitors []ServiceMonitorRef `json:"serviceMonitors"`
 }
 
 // SpecServiceMonitor references a service monitor belonging to a Prometheus server.
-type SpecServiceMonitor struct {
-	Name string `json:"name"`
+type ServiceMonitorRef struct {
+	Name           string `json:"name"`
+	ScrapeInterval string `json:"scrapeInterval"`
+}
+
+type ServiceMonitorObj struct {
+	apiUnversioned.TypeMeta `json:",inline"`
+	apiV1.ObjectMeta        `json:"metadata,omitempty"`
+	Spec                    ServiceMonitorSpec `json:"spec"`
+}
+
+type ServiceMonitorSpec struct {
+	Endpoints []Endpoint `json:"endpoints"`
+	Service   string     `json:"service"`
+}
+
+type Endpoint struct {
+	Port string `json:"port"`
+	Path string `json:"path"`
+}
+
+type ServiceMonitorList struct {
+	apiUnversioned.TypeMeta `json:",inline"`
+	// Standard list metadata
+	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	apiUnversioned.ListMeta `json:"metadata,omitempty"`
+	// Items is a list of third party objects
+	Items []ServiceMonitorObj `json:"items"`
 }
 
 func makeConfigMap(name string, data map[string]string) *apiV1.ConfigMap {

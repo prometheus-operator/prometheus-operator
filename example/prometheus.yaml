@@ -5,6 +5,8 @@ metadata:
   labels:
     prometheus: "main"
 spec:
-  servicesMonitors:
+  serviceMonitors:
   - name: example-app
-
+    endpoints:
+    - name: web
+      scrapeInterval: 10s

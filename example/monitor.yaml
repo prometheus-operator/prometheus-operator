@@ -4,8 +4,7 @@ metadata:
   name: "example-app"
 spec:
   service: "example-app"
-  scrapePorts:
-  - name: web
-  ruleConfigMaps:
-  - name: example-app-rules
+  endpoints:
+  - port: web
+    path: /metrics
 

@@ -1,0 +1,27 @@
+kind: Service
+apiVersion: "v1"
+metadata: 
+  name: example-app
+spec: 
+  selector: 
+    app: example-app 
+  ports:
+  - name: web
+    protocol: TCP
+    port: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: example-app
+spec:
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        app: example-app
+        version: 2.0.4
+    spec:
+      containers:
+      - name: example-app 
+        image: fabxc/instrumented_app

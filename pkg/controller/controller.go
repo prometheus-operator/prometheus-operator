@@ -14,7 +14,6 @@ import (
 	"github.com/go-kit/kit/log"
 	"k8s.io/client-go/1.4/kubernetes"
 	apierrors "k8s.io/client-go/1.4/pkg/api/errors"
-	"k8s.io/client-go/1.4/pkg/api/unversioned"
 	api "k8s.io/client-go/1.4/pkg/api/v1"
 	extensionsobj "k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/1.4/pkg/watch"
@@ -82,7 +81,7 @@ func (c *Controller) Run() error {
 			switch evt.Type {
 			case watch.Added:
 				l := log.NewContext(c.logger).With("namespace", evt.Object.Namespace, "prometheus", evt.Object.Name)
-				p, err := prometheus.New(l, c.kclient, evt.Object)
+				p, err := prometheus.New(l, c.host, c.kclient, evt.Object)
 				if err != nil {
 					c.logger.Log("msg", "Prometheus creation failed", "err", err)
 				} else {
@@ -172,7 +171,7 @@ func newClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 // Event represents an event in the cluster.
 type Event struct {
 	Type   watch.EventType
-	Object *prometheus.Object
+	Object *prometheus.PrometheusObj
 }
 
 func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion string) (<-chan *Event, <-chan error) {
@@ -217,14 +216,4 @@ func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion 
 		}
 	}()
 	return events, errc
-}
-
-// PrometheusList is a list of Prometheus TPR objects.
-type PrometheusList struct {
-	unversioned.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	unversioned.ListMeta `json:"metadata,omitempty"`
-	// Items is a list of third party objects
-	Items []prometheus.Object `json:"items"`
 }
