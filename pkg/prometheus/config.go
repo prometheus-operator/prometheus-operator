@@ -48,7 +48,7 @@ scrape_configs:
     replacement: "pod_$1"
   - source_labels: [__meta_kubernetes_service_name]
     target_label: "job"
-    replacement: "$1_{{ $ep.Port }}"
+    replacement: "${1}_{{ $ep.Port }}"
 {{- end }}
 {{- end }}
 {{- end }}

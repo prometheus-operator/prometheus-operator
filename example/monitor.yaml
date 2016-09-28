@@ -5,9 +5,9 @@ metadata:
   labels:
     app: example-app
 spec:
-  selector:
-    matchLabels:
-      app: example-app
+  # selector:
+  #   matchLabels:
+  #     app: example-app
   endpoints:
   - path: "/metrics"
   scrapeInterval: "30s"

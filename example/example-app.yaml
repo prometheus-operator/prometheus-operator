@@ -11,6 +11,9 @@ spec:
   - name: web
     protocol: TCP
     port: 8080
+  - name: web2
+    protocol: TCP
+    port: 8081
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
