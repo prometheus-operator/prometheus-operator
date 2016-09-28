@@ -2,9 +2,11 @@ package prometheus
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -12,6 +14,7 @@ import (
 	"k8s.io/client-go/1.4/kubernetes"
 	"k8s.io/client-go/1.4/pkg/api"
 	apierrors "k8s.io/client-go/1.4/pkg/api/errors"
+	"k8s.io/client-go/1.4/pkg/api/unversioned"
 	apiExtensions "k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/1.4/pkg/labels"
 	"k8s.io/client-go/1.4/pkg/watch"
@@ -22,28 +25,39 @@ import (
 type Prometheus struct {
 	*PrometheusObj
 
+	ctx    context.Context
+	cancel func()
+
 	host    string
+	hclient *http.Client
 	kclient *kubernetes.Clientset
 	logger  log.Logger
 	actions chan func() error
-	stopc   chan struct{}
 }
 
 // New returns a new Prometheus server manager for a newly created Prometheus.
-func New(l log.Logger, host string, kc *kubernetes.Clientset, o *PrometheusObj) (*Prometheus, error) {
+func New(ctx context.Context, l log.Logger, host string, kc *kubernetes.Clientset, o *PrometheusObj) (*Prometheus, error) {
+	ctx, cancel := context.WithCancel(ctx)
 	p := &Prometheus{
+		ctx:     ctx,
+		cancel:  cancel,
 		kclient: kc,
+		hclient: kc.CoreClient.Client,
 		host:    host,
 		logger:  l,
 		actions: make(chan func() error),
-		stopc:   make(chan struct{}),
 	}
 
 	if err := p.update(o)(); err != nil {
 		return nil, err
 	}
+	if err := p.generateConfig(); err != nil {
+		return nil, err
+	}
 
 	go p.run()
+	go p.runWatchServiceMonitors()
+
 	return p, nil
 }
 
@@ -59,7 +73,6 @@ func (p *Prometheus) update(o *PrometheusObj) func() error {
 		var (
 			svcClient = p.kclient.Core().Services(p.Namespace)
 			rsClient  = p.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
-			cmClient  = p.kclient.Core().ConfigMaps(o.Namespace)
 		)
 
 		// XXX: for some reason creating an existing services does not return an
@@ -72,42 +85,6 @@ func (p *Prometheus) update(o *PrometheusObj) func() error {
 			return err
 		}
 
-		tplcfg := &TemplateConfig{}
-
-		sms, err := getServiceMonitors(p.host, p.kclient.CoreClient.RESTClient.Client, p.Namespace)
-		if err != nil {
-			return err
-		}
-
-		for _, sm := range sms.Items {
-			for _, sref := range p.Spec.ServiceMonitors {
-				if sref.Name == sm.Spec.Service {
-					tplcfg.ServiceMonitors = append(tplcfg.ServiceMonitors, sm.Spec)
-				}
-			}
-		}
-
-		// Update config map based on the most recent configuration.
-		var buf bytes.Buffer
-		if err := configTmpl.Execute(&buf, tplcfg); err != nil {
-			return err
-		}
-
-		cm := makeConfigMap(p.Name, map[string]string{
-			"prometheus.yaml": buf.String(),
-		})
-		if _, err := cmClient.Get(p.Name); apierrors.IsNotFound(err) {
-			if _, err := cmClient.Create(cm); err != nil {
-				return err
-			}
-		} else if err == nil {
-			if _, err := cmClient.Update(cm); err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-
 		if _, err := rsClient.Create(makeReplicaSet(p.Name, 1)); err != nil && !apierrors.IsAlreadyExists(err) {
 			return fmt.Errorf("create replica set: %s", err)
 		}
@@ -116,8 +93,114 @@ func (p *Prometheus) update(o *PrometheusObj) func() error {
 	}
 }
 
-func getServiceMonitors(host string, c *http.Client, ns string) (*ServiceMonitorList, error) {
-	resp, err := c.Get(host + "/apis/prometheus.coreos.com/v1/namespaces/" + ns + "/servicemonitors")
+// Event represents an event in the cluster.
+type Event struct {
+	Type   watch.EventType
+	Object ServiceMonitorObj
+}
+
+func (p *Prometheus) runWatchServiceMonitors() {
+	watchVersion := "0"
+	for {
+		select {
+		case <-p.ctx.Done():
+			return
+		default:
+		}
+		if err := p.watchServiceMonitors(&watchVersion); err != nil {
+			p.logger.Log("msg", "watching service monitors failed", "err", err)
+			watchVersion = "0"
+		}
+	}
+}
+func (p *Prometheus) watchServiceMonitors(watchVersion *string) error {
+	resp, err := p.hclient.Get(p.host + "/apis/prometheus.coreos.com/v1/namespaces/" + p.Namespace + "/servicemonitors?watch=true&resourceVersion=" + *watchVersion)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("unxpected status code %s", resp.Status)
+	}
+	p.logger.Log("msg", "watching Prometheus resource", "version", watchVersion)
+
+	for {
+		dec := json.NewDecoder(resp.Body)
+		var evt Event
+		if err := dec.Decode(&evt); err != nil {
+			if err == io.EOF {
+				continue
+			}
+			return err
+		}
+
+		if evt.Type == "ERROR" {
+			return fmt.Errorf("received error event")
+		}
+		p.logger.Log("msg", "Prometheus event", "type", evt.Type, "obj", fmt.Sprintf("%v:%v", evt.Object.Namespace, evt.Object.Name))
+		*watchVersion = evt.Object.ObjectMeta.ResourceVersion
+
+		if err := p.generateConfig(); err != nil {
+			return err
+		}
+	}
+}
+
+func (p *Prometheus) generateConfig() error {
+	// TODO(fabxc): deduplicate job names for double matching monitors.
+	monitors := map[string]ServiceMonitorObj{}
+	for _, m := range p.Spec.Monitors {
+		lsel, err := unversioned.LabelSelectorAsSelector(&m.Selector)
+		if err != nil {
+			return err
+		}
+
+		sms, err := p.getServiceMonitors(lsel)
+		if err != nil {
+			return err
+		}
+		for _, m := range sms.Items {
+			monitors[m.Namespace+"\xff"+m.Name] = m
+		}
+	}
+
+	tplcfg := &TemplateConfig{ServiceMonitors: monitors}
+
+	// Update config map based on the most recent configuration.
+	var buf bytes.Buffer
+	if err := configTmpl.Execute(&buf, tplcfg); err != nil {
+		return err
+	}
+
+	cmClient := p.kclient.Core().ConfigMaps(p.Namespace)
+
+	cm := makeConfigMap(p.Name, map[string]string{
+		"prometheus.yaml": buf.String(),
+	})
+	_, err := cmClient.Get(p.Name)
+	if apierrors.IsNotFound(err) {
+		_, err = cmClient.Create(cm)
+	} else if err == nil {
+		_, err = cmClient.Update(cm)
+	}
+	return err
+}
+
+func (p *Prometheus) getServiceMonitors(labelSelector labels.Selector) (*ServiceMonitorList, error) {
+	path := "/apis/prometheus.coreos.com/v1/namespaces/" + p.Namespace + "/servicemonitors"
+	if labelSelector != nil {
+		path += "?labelSelector=" + labelSelector.String()
+	}
+
+	req, err := http.NewRequest("GET", p.host+path, nil)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(p.ctx, 30*time.Second)
+	defer cancel()
+
+	resp, err := p.hclient.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -132,11 +215,10 @@ func getServiceMonitors(host string, c *http.Client, ns string) (*ServiceMonitor
 
 // Delete removes the Prometheus server deployment asynchronously.
 func (p *Prometheus) Delete() {
-	p.logger.Log("exec", "delete", "prometheus", p.Name)
 	p.actions <- p.deleteReplicaSet
 	p.actions <- p.deleteService
 	p.actions <- p.deleteConfigMap
-	close(p.stopc)
+	p.cancel()
 }
 
 func (p *Prometheus) deleteReplicaSet() error {
@@ -204,7 +286,7 @@ func (p *Prometheus) deleteConfigMap() error {
 func (p *Prometheus) run() {
 	for {
 		select {
-		case <-p.stopc:
+		case <-p.ctx.Done():
 			return
 		default:
 		}
@@ -213,7 +295,7 @@ func (p *Prometheus) run() {
 			if err := f(); err != nil {
 				p.logger.Log("msg", "action failed", "err", err)
 			}
-		case <-p.stopc:
+		case <-p.ctx.Done():
 			return
 		}
 	}

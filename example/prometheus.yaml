@@ -5,8 +5,10 @@ metadata:
   labels:
     prometheus: "main"
 spec:
-  serviceMonitors:
-  - name: example-app
-    endpoints:
-    - name: web
-      scrapeInterval: 10s
+  monitors:
+  - selector:
+      matchLabels:
+        app: example-app
+  rules:
+  - name: "example-app-alerts"
+

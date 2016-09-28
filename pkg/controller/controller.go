@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -81,7 +82,7 @@ func (c *Controller) Run() error {
 			switch evt.Type {
 			case watch.Added:
 				l := log.NewContext(c.logger).With("namespace", evt.Object.Namespace, "prometheus", evt.Object.Name)
-				p, err := prometheus.New(l, c.host, c.kclient, evt.Object)
+				p, err := prometheus.New(context.TODO(), l, c.host, c.kclient, &evt.Object)
 				if err != nil {
 					c.logger.Log("msg", "Prometheus creation failed", "err", err)
 				} else {
@@ -91,7 +92,7 @@ func (c *Controller) Run() error {
 			case watch.Modified:
 				p := c.prometheis[evt.Object.Namespace+"\xff"+evt.Object.Name]
 				if p != nil {
-					p.Update(evt.Object)
+					p.Update(&evt.Object)
 				}
 			case watch.Deleted:
 				p := c.prometheis[evt.Object.Namespace+"\xff"+evt.Object.Name]
@@ -171,7 +172,7 @@ func newClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 // Event represents an event in the cluster.
 type Event struct {
 	Type   watch.EventType
-	Object *prometheus.PrometheusObj
+	Object prometheus.PrometheusObj
 }
 
 func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion string) (<-chan *Event, <-chan error) {
@@ -192,9 +193,9 @@ func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion 
 				return
 			}
 			c.logger.Log("msg", "watching Prometheus resource", "version", watchVersion)
+			dec := json.NewDecoder(resp.Body)
 
 			for {
-				dec := json.NewDecoder(resp.Body)
 				var evt Event
 				if err := dec.Decode(&evt); err != nil {
 					if err == io.EOF {
@@ -206,10 +207,13 @@ func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion 
 				}
 
 				if evt.Type == "ERROR" {
+					watchVersion = "0"
+					c.logger.Log("msg", "failed to get event from apiserver", "errevt", fmt.Sprintf("%+v", evt))
 					break
 				}
 				c.logger.Log("msg", "Prometheus event", "type", evt.Type, "obj", fmt.Sprintf("%v:%v", evt.Object.Namespace, evt.Object.Name))
 				watchVersion = evt.Object.ObjectMeta.ResourceVersion
+
 				events <- &evt
 			}
 			resp.Body.Close()

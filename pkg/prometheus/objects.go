@@ -16,14 +16,18 @@ type PrometheusObj struct {
 
 // Spec defines a Prometheus server.
 type PrometheusSpec struct {
-	ServiceMonitors []ServiceMonitorRef `json:"serviceMonitors"`
+	Service  apiV1.ServiceSpec `json:"service"`
+	Monitors []MonitorRefSpec  `json:"monitors"`
+	// Alerting AlertingSpec      `json:"alerting"`
 }
 
-// SpecServiceMonitor references a service monitor belonging to a Prometheus server.
-type ServiceMonitorRef struct {
-	Name           string `json:"name"`
-	ScrapeInterval string `json:"scrapeInterval"`
+type MonitorRefSpec struct {
+	Selector apiUnversioned.LabelSelector `json:"selector"`
 }
+
+// type AlertingSpec struct {
+// 	Selector apiUnversioned.LabelSelector `json:"selector"`
+// }
 
 type ServiceMonitorObj struct {
 	apiUnversioned.TypeMeta `json:",inline"`
@@ -32,13 +36,15 @@ type ServiceMonitorObj struct {
 }
 
 type ServiceMonitorSpec struct {
-	Endpoints []Endpoint `json:"endpoints"`
-	Service   string     `json:"service"`
+	Endpoints      []Endpoint                   `json:"endpoints"`
+	Selector       apiUnversioned.LabelSelector `json:"selector"`
+	ScrapeInterval string                       `json:"scrapeInterval"`
+	// Rules          []apiV1.ConfigMapVolumeSource `json:"rules"`
 }
 
 type Endpoint struct {
-	Port string `json:"port"`
-	Path string `json:"path"`
+	Port intstr.IntOrString `json:"port"`
+	Path string             `json:"path"`
 }
 
 type ServiceMonitorList struct {
