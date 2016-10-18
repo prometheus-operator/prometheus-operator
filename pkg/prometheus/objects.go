@@ -43,8 +43,10 @@ type ServiceMonitorSpec struct {
 }
 
 type Endpoint struct {
-	Port intstr.IntOrString `json:"port"`
-	Path string             `json:"path"`
+	Port       string             `json:"port"`
+	TargetPort intstr.IntOrString `json:"targetPort"`
+	Path       string             `json:"path"`
+	Scheme     string             `json:"scheme"`
 }
 
 type ServiceMonitorList struct {
@@ -107,7 +109,7 @@ func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 					Containers: []apiV1.Container{
 						{
 							Name:  "prometheus",
-							Image: "quay.io/prometheus/prometheus:latest",
+							Image: "quay.io/prometheus/prometheus:v1.3.0-beta.0",
 							Ports: []apiV1.ContainerPort{
 								{
 									Name:          "web",
