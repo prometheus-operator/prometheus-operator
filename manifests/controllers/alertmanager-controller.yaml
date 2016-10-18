@@ -1,19 +1,19 @@
 apiVersion: extensions/v1beta1
 kind: ReplicaSet
 metadata:
-  name: prometheus-controller
+  name: alertmanager-controller
   labels:
-    controller: prometheus 
+    controller: alertmanager
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        controller: prometheus
+        controller: alertmanager
     spec:
       containers:
-       - name: prometheus-controller
-         image: quay.io/coreos/kube-prometheus-controller:latest
+       - name: alertmanager-controller
+         image: quay.io/coreos/kube-alertmanager-controller:latest
          resources:
            requests:
              cpu: 100m
@@ -21,4 +21,4 @@ spec:
            limits:
              cpu: 200m
              memory: 100Mi
-      
+
