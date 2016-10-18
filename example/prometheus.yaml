@@ -5,10 +5,10 @@ metadata:
   labels:
     prometheus: "main"
 spec:
-  # monitors:
-  # - selector:
-  #     matchLabels:
-  #       app: example-app
+  monitors:
+  - selector:
+      matchLabels:
+        app: example-app
   rules:
   - name: "example-app-alerts"
 

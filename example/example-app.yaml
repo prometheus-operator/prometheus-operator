@@ -30,3 +30,6 @@ spec:
       containers:
       - name: example-app 
         image: fabxc/instrumented_app
+        ports:
+        - name: web
+          containerPort: 8080
