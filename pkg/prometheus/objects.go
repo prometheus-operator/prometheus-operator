@@ -17,6 +17,7 @@ type PrometheusObj struct {
 // Spec defines a Prometheus server.
 type PrometheusSpec struct {
 	ServiceMonitors []MonitorRefSpec `json:"serviceMonitors"`
+	// Namespaces   []NamespaceRefSpec `json:"namespaces"`
 	// Retention       string                     `json:"retention"`
 	// Replicas        int                        `json:"replicas"`
 	// Resources       apiV1.ResourceRequirements `json:"resources"`
@@ -27,6 +28,10 @@ type PrometheusSpec struct {
 }
 
 type MonitorRefSpec struct {
+	Selector apiUnversioned.LabelSelector `json:"selector"`
+}
+
+type NamespaceRefSpec struct {
 	Selector apiUnversioned.LabelSelector `json:"selector"`
 }
 
