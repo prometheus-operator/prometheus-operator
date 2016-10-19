@@ -1,0 +1,7 @@
+apiVersion: prometheus.coreos.com/v1alpha1
+kind: Prometheus
+metadata:
+  name: prometheus-k8s
+  labels:
+    prometheus: k8s
+spec: {}
