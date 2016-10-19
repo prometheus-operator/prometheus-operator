@@ -1,4 +1,4 @@
-apiVersion: "prometheus.coreos.com/v1"
+apiVersion: "prometheus.coreos.com/v1alpha1"
 kind: "Prometheus"
 metadata:
   name: "prometheus-main"
@@ -9,6 +9,6 @@ spec:
   - selector:
       matchLabels:
         app: example-app
-  rules:
-  - name: "example-app-alerts"
-
+  - selector:
+      matchLabels:
+        app: node-exporter

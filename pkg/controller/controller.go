@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/coreos/kube-prometheus-controller/pkg/prometheus"
 
@@ -19,6 +20,7 @@ import (
 	extensionsobj "k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/1.4/pkg/watch"
 	"k8s.io/client-go/1.4/rest"
+	"k8s.io/kubernetes/pkg/util/wait"
 )
 
 const (
@@ -117,7 +119,7 @@ func (c *Controller) createTPRs() error {
 				Name: tprServiceMonitor,
 			},
 			Versions: []extensionsobj.APIVersion{
-				{Name: "v1"},
+				{Name: "v1alpha1"},
 			},
 			Description: "Prometheus monitoring for a service",
 		},
@@ -126,7 +128,7 @@ func (c *Controller) createTPRs() error {
 				Name: tprPrometheus,
 			},
 			Versions: []extensionsobj.APIVersion{
-				{Name: "v1"},
+				{Name: "v1alpha1"},
 			},
 			Description: "Managed Prometheus server",
 		},
@@ -139,7 +141,43 @@ func (c *Controller) createTPRs() error {
 		}
 		c.logger.Log("msg", "TPR created", "tpr", tpr.Name)
 	}
-	return nil
+
+	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
+	err := wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
+		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/namespaces/default/prometheuses")
+		if err != nil {
+			return false, err
+		}
+		defer resp.Body.Close()
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			return true, nil
+		case http.StatusNotFound: // not set up yet. wait.
+			return false, nil
+		default:
+			return false, fmt.Errorf("invalid status code: %v", resp.Status)
+		}
+	})
+	if err != nil {
+		return err
+	}
+	return wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
+		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/namespaces/default/servicemonitors")
+		if err != nil {
+			return false, err
+		}
+		defer resp.Body.Close()
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			return true, nil
+		case http.StatusNotFound: // not set up yet. wait.
+			return false, nil
+		default:
+			return false, fmt.Errorf("invalid status code: %v", resp.Status)
+		}
+	})
 }
 
 func newClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*rest.Config, error) {
@@ -182,7 +220,7 @@ func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion 
 	)
 	go func() {
 		for {
-			resp, err := client.Get(c.host + "/apis/prometheus.coreos.com/v1/namespaces/default/prometheuses?watch=true&resourceVersion=" + watchVersion)
+			resp, err := client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/namespaces/default/prometheuses?watch=true&resourceVersion=" + watchVersion)
 			if err != nil {
 				errc <- err
 				return

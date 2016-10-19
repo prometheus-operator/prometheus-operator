@@ -16,9 +16,14 @@ type PrometheusObj struct {
 
 // Spec defines a Prometheus server.
 type PrometheusSpec struct {
-	Service  apiV1.ServiceSpec `json:"service"`
-	Monitors []MonitorRefSpec  `json:"monitors"`
-	// Alerting AlertingSpec      `json:"alerting"`
+	ServiceMonitors []MonitorRefSpec `json:"serviceMonitors"`
+	// Retention       string                     `json:"retention"`
+	// Replicas        int                        `json:"replicas"`
+	// Resources       apiV1.ResourceRequirements `json:"resources"`
+	// Alerting        AlertingSpec               `json:"alerting"`
+	// Remote          RemoteSpec                 `json:"remote"`
+	// Persistence...
+	// Sharding...
 }
 
 type MonitorRefSpec struct {
@@ -109,7 +114,7 @@ func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 					Containers: []apiV1.Container{
 						{
 							Name:  "prometheus",
-							Image: "quay.io/prometheus/prometheus:v1.3.0-beta.0",
+							Image: "quay.io/fabxc/prometheus:v1.3.0-beta.0",
 							Ports: []apiV1.ContainerPort{
 								{
 									Name:          "web",

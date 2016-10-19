@@ -113,8 +113,9 @@ func (p *Prometheus) runWatchServiceMonitors() {
 		}
 	}
 }
+
 func (p *Prometheus) watchServiceMonitors(watchVersion *string) error {
-	resp, err := p.hclient.Get(p.host + "/apis/prometheus.coreos.com/v1/namespaces/" + p.Namespace + "/servicemonitors?watch=true&resourceVersion=" + *watchVersion)
+	resp, err := p.hclient.Get(p.host + "/apis/prometheus.coreos.com/v1alpha1/namespaces/" + p.Namespace + "/servicemonitors?watch=true&resourceVersion=" + *watchVersion)
 	if err != nil {
 		return err
 	}
@@ -148,9 +149,12 @@ func (p *Prometheus) watchServiceMonitors(watchVersion *string) error {
 }
 
 func (p *Prometheus) generateConfig() error {
+	if len(p.Spec.ServiceMonitors) == 0 {
+		return nil
+	}
 	// TODO(fabxc): deduplicate job names for double matching monitors.
 	monitors := map[string]ServiceMonitorObj{}
-	for _, m := range p.Spec.Monitors {
+	for _, m := range p.Spec.ServiceMonitors {
 		lsel, err := unversioned.LabelSelectorAsSelector(&m.Selector)
 		if err != nil {
 			return err
@@ -188,7 +192,7 @@ func (p *Prometheus) generateConfig() error {
 }
 
 func (p *Prometheus) getServiceMonitors(labelSelector labels.Selector) (*ServiceMonitorList, error) {
-	path := "/apis/prometheus.coreos.com/v1/namespaces/" + p.Namespace + "/servicemonitors"
+	path := "/apis/prometheus.coreos.com/v1/alpha1/namespaces/" + p.Namespace + "/servicemonitors"
 	if labelSelector != nil {
 		path += "?labelSelector=" + labelSelector.String()
 	}
