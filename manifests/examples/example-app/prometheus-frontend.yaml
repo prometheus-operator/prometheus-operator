@@ -2,6 +2,7 @@ apiVersion: prometheus.coreos.com/v1alpha1
 kind: Prometheus
 metadata:
   name: prometheus-frontend
+  namespace: default
   labels:
     prometheus: frontend
 spec:

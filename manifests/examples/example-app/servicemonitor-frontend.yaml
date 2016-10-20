@@ -2,6 +2,7 @@ apiVersion: prometheus.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
   name: frontend
+  namespace: default
   labels:
     team: frontend
 spec:
