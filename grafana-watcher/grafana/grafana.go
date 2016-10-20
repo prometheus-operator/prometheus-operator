@@ -6,6 +6,7 @@ import (
 
 type Interface interface {
 	Dashboards() DashboardsInterface
+	Datasources() DatasourcesInterface
 }
 
 type Clientset struct {
@@ -22,4 +23,8 @@ func New(baseUrl string) Interface {
 
 func (c *Clientset) Dashboards() DashboardsInterface {
 	return NewDashboardsClient(c.BaseUrl, c.HTTPClient)
+}
+
+func (c *Clientset) Datasources() DatasourcesInterface {
+	return NewDatasourcesClient(c.BaseUrl, c.HTTPClient)
 }

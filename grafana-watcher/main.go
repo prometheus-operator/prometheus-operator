@@ -86,10 +86,10 @@ func main() {
 
 	g := grafana.New(*grafanaUrl)
 	du := updater.NewGrafanaDashboardUpdater(g.Dashboards(), filepath.Join(*watchDir, "*-dashboard.json"))
-	//su := updater.NewGrafanaSourceUpdater(g.Sources(), filepath.Join(*watchDir, "*-source.json"))
+	su := updater.NewGrafanaDatasourceUpdater(g.Datasources(), filepath.Join(*watchDir, "*-datasource.json"))
 	w := newVolumeWatcher(*watchDir)
 	w.AddEventHandler(du)
-	//w.AddEventHandler(su)
+	w.AddEventHandler(su)
 
 	w.Run()
 }
