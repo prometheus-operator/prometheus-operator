@@ -14,25 +14,26 @@ data:
     scrape_configs:
     - job_name: kubelets
       scrape_interval: 20s
+      scheme: https
       tls_config:
         ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        # Skip verification until we have resolved why the certificate validation
+        # for the kubelet on API server nodes fail.
+        insecure_skip_verify: true
       bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
 
       kubernetes_sd_configs:
       - role: node
 
-      relabel_configs:
-      - source_labels: [__address__]
-        regex: (.*):10250
-        replacement: ${1}:10255
-        target_label: __address__
-    
     # Scrapes the endpoint lists for the Kubernetes API server, kube-state-metrics,
     # and node-exporter, which we all consider part of a default setup.
     - job_name: standard-endpoints
       scrape_interval: 20s
       tls_config:
         ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        # As for kubelets, certificate validation fails for the API server (node)
+        # and we circumvent it for now.
+        insecure_skip_verify: true
       bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
 
       kubernetes_sd_configs:
