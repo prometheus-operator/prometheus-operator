@@ -20,7 +20,15 @@ func NewGrafanaDatasourceUpdater(c grafana.DatasourcesInterface, g string) Updat
 	}
 }
 
+func (u *GrafanaDatasourceUpdater) Init() error {
+	return u.updateDatasources()
+}
+
 func (u *GrafanaDatasourceUpdater) OnModify() error {
+	return u.updateDatasources()
+}
+
+func (u *GrafanaDatasourceUpdater) updateDatasources() error {
 	err := u.deleteAllDatasources()
 	if err != nil {
 		return err

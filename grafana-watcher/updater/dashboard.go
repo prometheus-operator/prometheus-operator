@@ -9,6 +9,7 @@ import (
 )
 
 type Updater interface {
+	Init() error
 	OnModify() error
 }
 
@@ -24,7 +25,15 @@ func NewGrafanaDashboardUpdater(c grafana.DashboardsInterface, g string) Updater
 	}
 }
 
+func (u *GrafanaDashboardUpdater) Init() error {
+	return u.updateDashboards()
+}
+
 func (u *GrafanaDashboardUpdater) OnModify() error {
+	return u.updateDashboards()
+}
+
+func (u *GrafanaDashboardUpdater) updateDashboards() error {
 	err := u.deleteAllDashboards()
 	if err != nil {
 		return err

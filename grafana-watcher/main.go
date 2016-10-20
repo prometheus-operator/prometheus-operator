@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	fsnotify "gopkg.in/fsnotify.v1"
 
@@ -85,9 +86,32 @@ func main() {
 	}
 
 	g := grafana.New(*grafanaUrl)
-	du := updater.NewGrafanaDashboardUpdater(g.Dashboards(), filepath.Join(*watchDir, "*-dashboard.json"))
+
+	for {
+		log.Println("Waiting for Grafana to be available.")
+		_, err := g.Datasources().All()
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
 	su := updater.NewGrafanaDatasourceUpdater(g.Datasources(), filepath.Join(*watchDir, "*-datasource.json"))
+	log.Println("Initializing datasources.")
+	err := su.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	du := updater.NewGrafanaDashboardUpdater(g.Dashboards(), filepath.Join(*watchDir, "*-dashboard.json"))
+	log.Println("Initializing dashboards.")
+	err = du.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	w := newVolumeWatcher(*watchDir)
+
 	w.AddEventHandler(du)
 	w.AddEventHandler(su)
 
