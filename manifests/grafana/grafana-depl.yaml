@@ -12,6 +12,11 @@ spec:
       containers:
       - name: grafana
         image: grafana/grafana:3.1.1
+        env:
+        - name: GF_AUTH_BASIC_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/grafana-storage
