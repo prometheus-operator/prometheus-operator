@@ -144,7 +144,7 @@ func (c *Controller) createTPRs() error {
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
 	err := wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
-		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/namespaces/default/prometheuses")
+		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/prometheuses")
 		if err != nil {
 			return false, err
 		}
@@ -163,7 +163,7 @@ func (c *Controller) createTPRs() error {
 		return err
 	}
 	return wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
-		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/namespaces/default/servicemonitors")
+		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/servicemonitors")
 		if err != nil {
 			return false, err
 		}
@@ -220,7 +220,7 @@ func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion 
 	)
 	go func() {
 		for {
-			resp, err := client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/namespaces/default/prometheuses?watch=true&resourceVersion=" + watchVersion)
+			resp, err := client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/prometheuses?watch=true&resourceVersion=" + watchVersion)
 			if err != nil {
 				errc <- err
 				return

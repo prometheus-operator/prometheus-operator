@@ -70,20 +70,7 @@ func (p *Prometheus) update(o *PrometheusObj) func() error {
 	return func() error {
 		p.PrometheusObj = o
 
-		var (
-			svcClient = p.kclient.Core().Services(p.Namespace)
-			rsClient  = p.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
-		)
-
-		// XXX: for some reason creating an existing services does not return an
-		// AlreadyExists error but complains about immutable attributes.
-		if _, err := svcClient.Get(p.Name); apierrors.IsNotFound(err) {
-			if _, err := svcClient.Create(makeService(p.Name)); err != nil {
-				return fmt.Errorf("create service: %s", err)
-			}
-		} else if err != nil {
-			return err
-		}
+		var rsClient = p.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
 
 		if _, err := rsClient.Create(makeReplicaSet(p.Name, 1)); err != nil && !apierrors.IsAlreadyExists(err) {
 			return fmt.Errorf("create replica set: %s", err)
@@ -220,7 +207,6 @@ func (p *Prometheus) getServiceMonitors(labelSelector labels.Selector) (*Service
 // Delete removes the Prometheus server deployment asynchronously.
 func (p *Prometheus) Delete() {
 	p.actions <- p.deleteReplicaSet
-	p.actions <- p.deleteService
 	p.actions <- p.deleteConfigMap
 	p.cancel()
 }
@@ -266,14 +252,6 @@ func (p *Prometheus) deleteReplicaSet() error {
 
 	// Replica set scaled down, we can delete it.
 	if err := rs.Delete(p.Name, nil); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *Prometheus) deleteService() error {
-	svc := p.kclient.Core().Services(p.Namespace)
-	if err := svc.Delete(p.Name, nil); err != nil {
 		return err
 	}
 	return nil

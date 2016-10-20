@@ -78,30 +78,6 @@ func makeConfigMap(name string, data map[string]string) *apiV1.ConfigMap {
 	return cm
 }
 
-func makeService(name string) *apiV1.Service {
-	svc := &apiV1.Service{
-		ObjectMeta: apiV1.ObjectMeta{
-			Name: name,
-		},
-		Spec: apiV1.ServiceSpec{
-			Ports: []apiV1.ServicePort{
-				{
-					Name:       "web",
-					Port:       9090,
-					TargetPort: intstr.FromString("web"),
-					Protocol:   apiV1.ProtocolTCP,
-					NodePort:   30900,
-				},
-			},
-			Selector: map[string]string{
-				"prometheus.coreos.com": name,
-			},
-			Type: apiV1.ServiceTypeNodePort,
-		},
-	}
-	return svc
-}
-
 func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 	rs := &apiExtensions.ReplicaSet{
 		ObjectMeta: apiV1.ObjectMeta{
