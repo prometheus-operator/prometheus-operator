@@ -1,0 +1,39 @@
+kind: Service
+apiVersion: "v1"
+metadata: 
+  name: example-app
+  namespace: development
+  labels:
+    tier: frontend
+    team: frontend
+  annotations:
+    prometheus.io/scrape: 'true'
+spec: 
+  selector: 
+    app: example-app
+  ports:
+  - name: web
+    protocol: TCP
+    port: 8080
+    targetPort: web
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: example-app
+  namespace: development
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: example-app
+        version: 1.2.0
+    spec:
+      containers:
+      - name: example-app 
+        image: quay.io/fabxc/prometheus_demo_service
+        ports:
+        - name: web
+          containerPort: 8080
+          protocol: TCP

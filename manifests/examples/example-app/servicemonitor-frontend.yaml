@@ -1,0 +1,13 @@
+apiVersion: prometheus.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: frontend
+  labels:
+    team: frontend
+spec:
+  selector:
+    matchLabels:
+      team: frontend
+  scrapeInterval: 10s
+  endpoints:
+  - port: web

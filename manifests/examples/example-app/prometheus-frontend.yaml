@@ -1,0 +1,11 @@
+apiVersion: prometheus.coreos.com/v1alpha1
+kind: Prometheus
+metadata:
+  name: prometheus-frontend
+  labels:
+    prometheus: frontend
+spec:
+  serviceMonitors:
+  - selector:
+      matchLabels:
+        team: frontend
