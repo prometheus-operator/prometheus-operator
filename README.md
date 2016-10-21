@@ -52,7 +52,7 @@ a Prometheus server monitoring them.
 ```bash
 kubectl --kubeconfig="$KUBECONFIG" create namespace production
 kubectl --kubeconfig="$KUBECONFIG" create namespace development
-hack/cluster-monitoring/deploy
+hack/example-service-monitoring/deploy
 ```
 
 After all pods are ready you can reach the Prometheus server monitoring your services
@@ -61,7 +61,7 @@ on node port `30100`.
 Teardown:
 
 ```bash
-hack/cluster-monitoring/teardown
+hack/example-service-monitoring/teardown
 ```
 
 
