@@ -65,3 +65,18 @@ spec:
         team: mobile
   ruleEvaluationInterval: 30s
 ```
+
+## Installation
+
+You can install the controller inside of your cluster by running
+
+```
+kubectl apply -f example/prometheus-controller.yaml
+```
+
+To run the controller outside of your cluster:
+
+```
+make
+hack/controller-external.sh <kubectl cluster name>
+```

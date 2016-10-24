@@ -1,10 +1,23 @@
-apiVersion: v2
-kind: Pod
+apiVersion: extensions/v1beta1
+kind: ReplicaSet
 metadata:
-  name: prometheus-ctrl
+  name: prometheus-controller
   labels:
-    name: prometheus-ctrl
+    controller: prometheus 
 spec:
-  containers:
-  - name: prometheus-ctrl
-    image: quay.io/fabxc/prometheus-ctrl:latest
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        controller: prometheus
+    spec:
+      containers:
+       - name: prometheus-controller
+         image: quay.io/coreos/kube-prometheus-controller:latest
+         resources:
+           requests:
+             cpu: 100m
+             memory: 50Mi
+           limits:
+             cpu: 200m
+             memory: 100Mi
