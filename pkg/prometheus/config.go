@@ -15,8 +15,6 @@ scrape_configs:
 
   {{- if ne $ep.Interval "" }}
   scrape_interval: "{{ $ep.Interval }}"
-  {{- else }}
-  scrape_interval: "30s"
   {{- end }}
   {{- if ne $ep.Path "" }}
   metrics_path: "{{ $ep.Path }}"
@@ -27,9 +25,6 @@ scrape_configs:
 
   kubernetes_sd_configs:
   - role: endpoints
-  tls_config:
-    ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-  bearer_token_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
   relabel_configs:
   # 
@@ -61,6 +56,10 @@ scrape_configs:
   - action: "labelmap"
     regex: "__meta_kubernetes_service_label_(.+)"
     replacement: "svc_$1"
+  - # Drop 'pod_template_hash' label that's set by deployment controller.
+    action: replace
+    target_label: "__meta_kubernetes_pod_label_pod_template_hash"
+    replacement: ""
   - action: "labelmap"
     regex: "__meta_kubernetes_pod_label_(.+)"
     replacement: "pod_$1"
