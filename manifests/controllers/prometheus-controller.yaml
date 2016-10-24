@@ -21,6 +21,3 @@ spec:
            limits:
              cpu: 200m
              memory: 100Mi
-      imagePullSecrets:
-      - name: coreos-quay
-      

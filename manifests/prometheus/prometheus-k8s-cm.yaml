@@ -7,10 +7,6 @@ data:
     global:
       evaluation_interval: 30s
 
-    # Add your etcd scrape config here. We cannot default here as etcd is a
-    # prerequisite for Kubernetes.
-    # TODO(fabxc): potentially make this configurable via KPM in the future.
-
     scrape_configs:
     - job_name: kubelets
       scrape_interval: 20s

@@ -54,6 +54,4 @@ spec:
       - name: grafana-dashboards
         configMap:
           name: grafana-dashboards
-      imagePullSecrets:
-      - name: coreos-quay
 

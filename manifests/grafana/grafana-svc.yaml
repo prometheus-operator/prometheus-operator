@@ -7,6 +7,7 @@ metadata:
   annotations:
     prometheus.io/scrape: 'true'
 spec:
+  type: NodePort
   ports:
   - name: web
     port: 3000
@@ -14,4 +15,3 @@ spec:
     nodePort: 30902
   selector:
     app: grafana
-  type: NodePort

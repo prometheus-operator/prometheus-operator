@@ -4,4 +4,4 @@ if [ -z "${KUBECONFIG}" ]; then
     KUBECONFIG=~/.kube/config
 fi
 
-kubectl --kubeconfig="$KUBECONFIG" -n "$KUBE_NAMESPACE" delete -f manifests/examples/example-app
+kubectl --kubeconfig="$KUBECONFIG" delete -f manifests/examples/example-app

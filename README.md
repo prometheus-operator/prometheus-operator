@@ -24,7 +24,6 @@ controller, the [node_exporter](https://github.com/prometheus/node_exporter),
 
 ```bash
 export KUBECONFIG=<path>          # defaults to "~/.kube/config"
-export KUBE_NAMESPACE=<ns>        # defaults to "default"
 hack/cluster-monitoring/deploy
 ```
 
@@ -39,9 +38,9 @@ To tear it all down again, run:
 hack/cluster-monitoring/teardown
 ```
 
-__All services in the manifest still contain the `prometheus.io/scrape = true` annotations. It is not
+*All services in the manifest still contain the `prometheus.io/scrape = true` annotations. It is not
 used by the Prometheus controller. They remain for convential deployments as in
-[this example configuration](https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml).__
+[this example configuration](https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml).*
 
 ## Monitoring custom services
 
@@ -63,5 +62,13 @@ Teardown:
 ```bash
 hack/example-service-monitoring/teardown
 ```
+
+## Roadmap
+
+* Incorporate [Alertmanager controller](https://github.com/coreos/kube-alertmanager-controller)
+* Grafana controller that dynamically discovers and deploys dashboards from ConfigMaps
+* Collection of base alerting for cluster monitoring
+* KPM/Helm packages to easily provide production-ready cluster-monitoring setup (essentially contents of `hack/cluster-monitoring`)
+* Add meta-monitoring to default cluster monitoring setup
 
 
