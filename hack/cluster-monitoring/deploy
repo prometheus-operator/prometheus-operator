@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -o xtrace
-
 if [ -z "${KUBECONFIG}" ]; then
     KUBECONFIG=~/.kube/config
 fi
