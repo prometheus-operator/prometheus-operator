@@ -9,6 +9,6 @@ spec:
   selector:
     matchLabels:
       team: frontend
-  scrapeInterval: 10s
   endpoints:
   - port: web
+    interval: 10s

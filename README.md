@@ -63,6 +63,21 @@ Teardown:
 hack/example-service-monitoring/teardown
 ```
 
+## Dashboarding
+
+The provided manifests deploy a Grafana instance serving dashboards provided via a ConfigMap.
+To modify, delete, or add dashboards, the `grafana-dashboards` ConfigMap must be modified.
+
+Currently, Grafana does not support serving dashboards from static files. Instead, the `grafana-watcher`
+sidecar container aims to emulate the behavior, by keeping the Grafana database always in sync
+with the provided ConfigMap. Hence, the Grafana pod is effectively stateless.
+This allows managing dashboards via `git` etc. and easily deploying them via CD pipelines.
+
+In the future, a separate Grafana controller should support gathering dashboards from multiple
+ConfigMaps, which are selected by their labels.
+Prometheus servers deployed by the Prometheus controller should be automatically added as
+Grafana data sources.  
+
 ## Roadmap
 
 * Incorporate [Alertmanager controller](https://github.com/coreos/kube-alertmanager-controller)
