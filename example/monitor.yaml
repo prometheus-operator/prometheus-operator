@@ -10,5 +10,5 @@ spec:
       app: example-app
   endpoints:
   - port: "web"
-  scrapeInterval: 30s
+    interval: 30s
 

@@ -46,9 +46,8 @@ type ServiceMonitorObj struct {
 }
 
 type ServiceMonitorSpec struct {
-	Endpoints      []Endpoint                   `json:"endpoints"`
-	Selector       apiUnversioned.LabelSelector `json:"selector"`
-	ScrapeInterval string                       `json:"scrapeInterval"`
+	Endpoints []Endpoint                   `json:"endpoints"`
+	Selector  apiUnversioned.LabelSelector `json:"selector"`
 	// Rules          []apiV1.ConfigMapVolumeSource `json:"rules"`
 }
 
@@ -57,6 +56,7 @@ type Endpoint struct {
 	TargetPort intstr.IntOrString `json:"targetPort"`
 	Path       string             `json:"path"`
 	Scheme     string             `json:"scheme"`
+	Interval   string             `json:"interval"`
 }
 
 type ServiceMonitorList struct {

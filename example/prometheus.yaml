@@ -5,7 +5,7 @@ metadata:
   labels:
     prometheus: "main"
 spec:
-  monitors:
+  serviceMonitors:
   - selector:
       matchLabels:
         app: example-app

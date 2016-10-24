@@ -179,7 +179,7 @@ func (p *Prometheus) generateConfig() error {
 }
 
 func (p *Prometheus) getServiceMonitors(labelSelector labels.Selector) (*ServiceMonitorList, error) {
-	path := "/apis/prometheus.coreos.com/v1/alpha1/namespaces/" + p.Namespace + "/servicemonitors"
+	path := "/apis/prometheus.coreos.com/v1alpha1/namespaces/" + p.Namespace + "/servicemonitors"
 	if labelSelector != nil {
 		path += "?labelSelector=" + labelSelector.String()
 	}

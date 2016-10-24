@@ -9,12 +9,12 @@ type TemplateConfig struct {
 var configTmpl = template.Must(template.New("config").Parse(`
 {{- block "scrapeConfigs" . -}}
 scrape_configs:
-{{- range $i, $mon := .ServiceMonitors }}
-{{- range $ep := $mon.Spec.Endpoints }}
-- job_name: "{{ $mon.Name }}_{{ $i }}"
+{{- range $mon := .ServiceMonitors }}
+{{- range $i, $ep := $mon.Spec.Endpoints }}
+- job_name: "{{ $mon.Name }}-{{ $i }}"
 
-  {{- if ne $mon.Spec.ScrapeInterval "" }}
-  scrape_interval: "{{ $mon.Spec.ScrapeInterval }}"
+  {{- if ne $ep.Interval "" }}
+  scrape_interval: "{{ $ep.Interval }}"
   {{- else }}
   scrape_interval: "30s"
   {{- end }}
@@ -70,7 +70,7 @@ scrape_configs:
   {{- if ne $ep.Port "" }}
   - source_labels: ["__meta_kubernetes_service_name"]
     target_label: "job"
-    replacement: "${1}_{{ $ep.Port }}"
+    replacement: "${1}-{{ $ep.Port }}"
   {{- else if ne $ep.TargetPort.String "" }}
   - source_labels: ["__meta_kubernetes_service_name"]
     target_label: "job"
