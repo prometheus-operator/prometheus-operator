@@ -80,3 +80,16 @@ To run the controller outside of your cluster:
 make
 hack/controller-external.sh <kubectl cluster name>
 ```
+
+### Roadmap / Ideas
+
+Roughly in order of importance:
+
+* Namespace configuration/limitation of discovered monitoring targets
+* Auto-update/rollback of Prometheus server deployments
+* Dynamic mounting of recording/alerting rule ConfigMaps
+* Configuring receiving AlertManagers 
+* Persistent volume mounts for time series data
+* Resource limits for deployed servers and auto-tuned storage flags based on them
+* Retention configuration; potentially auto-adapting to remaining storage on persistent volume
+* Automatic horizontal sharding

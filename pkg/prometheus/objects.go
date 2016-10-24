@@ -16,7 +16,8 @@ type PrometheusObj struct {
 
 // Spec defines a Prometheus server.
 type PrometheusSpec struct {
-	ServiceMonitors []MonitorRefSpec `json:"serviceMonitors"`
+	ServiceMonitors    []MonitorRefSpec `json:"serviceMonitors"`
+	EvaluationInterval string           `json:"evaluationInterval"`
 	// Namespaces   []NamespaceRefSpec `json:"namespaces"`
 	// Retention       string                     `json:"retention"`
 	// Replicas        int                        `json:"replicas"`
@@ -88,14 +89,15 @@ func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 			Template: apiV1.PodTemplateSpec{
 				ObjectMeta: apiV1.ObjectMeta{
 					Labels: map[string]string{
-						"prometheus.coreos.com": name,
+						"prometheus.coreos.com/name": name,
+						"prometheus.coreos.com/type": "prometheus",
 					},
 				},
 				Spec: apiV1.PodSpec{
 					Containers: []apiV1.Container{
 						{
 							Name:  "prometheus",
-							Image: "quay.io/fabxc/prometheus:v1.3.0-beta.0",
+							Image: "quay.io/prometheus/prometheus:v1.3.0-beta.0",
 							Ports: []apiV1.ContainerPort{
 								{
 									Name:          "web",

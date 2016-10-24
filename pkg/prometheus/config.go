@@ -4,14 +4,24 @@ import "html/template"
 
 type TemplateConfig struct {
 	ServiceMonitors map[string]ServiceMonitorObj
+	Prometheus      PrometheusSpec
 }
 
 var configTmpl = template.Must(template.New("config").Parse(`
-{{- block "scrapeConfigs" . -}}
+{{- block "globals" . }}
+global:
+  {{- if ne .Prometheus.EvaluationInterval "" }}
+  evaluation_interval: {{ .Prometheus.EvaluationInterval }}
+  {{- else }}
+  evaluation_interval: 30s
+  {{- end }}
+{{- end}}
+
+{{ block "scrapeConfigs" . }}
 scrape_configs:
 {{- range $mon := .ServiceMonitors }}
 {{- range $i, $ep := $mon.Spec.Endpoints }}
-- job_name: "{{ $mon.Name }}-{{ $i }}"
+- job_name: "{{ $mon.Namespace }}/{{ $mon.Name }}/{{ $i }}"
 
   {{- if ne $ep.Interval "" }}
   scrape_interval: "{{ $ep.Interval }}"

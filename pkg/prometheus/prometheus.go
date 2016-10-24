@@ -156,7 +156,10 @@ func (p *Prometheus) generateConfig() error {
 		}
 	}
 
-	tplcfg := &TemplateConfig{ServiceMonitors: monitors}
+	tplcfg := &TemplateConfig{
+		ServiceMonitors: monitors,
+		Prometheus:      p.Spec,
+	}
 
 	// Update config map based on the most recent configuration.
 	var buf bytes.Buffer
@@ -220,7 +223,7 @@ func (p *Prometheus) deleteReplicaSet() error {
 	}
 
 	// XXX: Selecting by ObjectMeta.Name gives an error. So use the label for now.
-	selector, err := labels.Parse("prometheus.coreos.com=" + p.Name)
+	selector, err := labels.Parse("prometheus.coreos.com/type=prometheus,prometheus.coreos.com/name=" + p.Name)
 	if err != nil {
 		return err
 	}
