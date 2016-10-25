@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/coreos/kube-prometheus-controller/pkg/spec"
 	"github.com/go-kit/kit/log"
 	"k8s.io/client-go/1.4/kubernetes"
 	"k8s.io/client-go/1.4/pkg/api"
@@ -23,7 +24,7 @@ import (
 // Prometheus manages the life-cycle of a single Prometheus server
 // in the cluster.
 type Prometheus struct {
-	*PrometheusObj
+	*spec.Prometheus
 
 	ctx    context.Context
 	cancel func()
@@ -36,7 +37,7 @@ type Prometheus struct {
 }
 
 // New returns a new Prometheus server manager for a newly created Prometheus.
-func New(ctx context.Context, l log.Logger, host string, kc *kubernetes.Clientset, o *PrometheusObj) (*Prometheus, error) {
+func New(ctx context.Context, l log.Logger, host string, kc *kubernetes.Clientset, o *spec.Prometheus) (*Prometheus, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	p := &Prometheus{
 		ctx:     ctx,
@@ -62,13 +63,13 @@ func New(ctx context.Context, l log.Logger, host string, kc *kubernetes.Clientse
 }
 
 // Update applies changes to the object.
-func (p *Prometheus) Update(o *PrometheusObj) {
+func (p *Prometheus) Update(o *spec.Prometheus) {
 	p.actions <- p.update(o)
 }
 
-func (p *Prometheus) update(o *PrometheusObj) func() error {
+func (p *Prometheus) update(o *spec.Prometheus) func() error {
 	return func() error {
-		p.PrometheusObj = o
+		p.Prometheus = o
 
 		var rsClient = p.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
 
@@ -83,7 +84,7 @@ func (p *Prometheus) update(o *PrometheusObj) func() error {
 // Event represents an event in the cluster.
 type Event struct {
 	Type   watch.EventType
-	Object ServiceMonitorObj
+	Object spec.ServiceMonitor
 }
 
 func (p *Prometheus) runWatchServiceMonitors() {
@@ -140,7 +141,7 @@ func (p *Prometheus) generateConfig() error {
 		return nil
 	}
 	// TODO(fabxc): deduplicate job names for double matching monitors.
-	monitors := map[string]ServiceMonitorObj{}
+	monitors := map[string]spec.ServiceMonitor{}
 	for _, m := range p.Spec.ServiceMonitors {
 		lsel, err := unversioned.LabelSelectorAsSelector(&m.Selector)
 		if err != nil {
@@ -156,7 +157,7 @@ func (p *Prometheus) generateConfig() error {
 		}
 	}
 
-	tplcfg := &TemplateConfig{
+	tplcfg := &templateConfig{
 		ServiceMonitors: monitors,
 		Prometheus:      p.Spec,
 	}
@@ -181,7 +182,7 @@ func (p *Prometheus) generateConfig() error {
 	return err
 }
 
-func (p *Prometheus) getServiceMonitors(labelSelector labels.Selector) (*ServiceMonitorList, error) {
+func (p *Prometheus) getServiceMonitors(labelSelector labels.Selector) (*spec.ServiceMonitorList, error) {
 	path := "/apis/prometheus.coreos.com/v1alpha1/namespaces/" + p.Namespace + "/servicemonitors"
 	if labelSelector != nil {
 		path += "?labelSelector=" + labelSelector.String()
@@ -200,7 +201,7 @@ func (p *Prometheus) getServiceMonitors(labelSelector labels.Selector) (*Service
 	}
 	defer resp.Body.Close()
 
-	var res ServiceMonitorList
+	var res spec.ServiceMonitorList
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
 		return nil, err
 	}

@@ -1,73 +1,9 @@
 package prometheus
 
 import (
-	apiUnversioned "k8s.io/client-go/1.4/pkg/api/unversioned"
 	apiV1 "k8s.io/client-go/1.4/pkg/api/v1"
 	apiExtensions "k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/1.4/pkg/util/intstr"
 )
-
-// Object represents an Prometheus TPR API object.
-type PrometheusObj struct {
-	apiUnversioned.TypeMeta `json:",inline"`
-	apiV1.ObjectMeta        `json:"metadata,omitempty"`
-	Spec                    PrometheusSpec `json:"spec"`
-}
-
-// Spec defines a Prometheus server.
-type PrometheusSpec struct {
-	ServiceMonitors    []MonitorRefSpec `json:"serviceMonitors"`
-	EvaluationInterval string           `json:"evaluationInterval"`
-	// Namespaces   []NamespaceRefSpec `json:"namespaces"`
-	// Retention       string                     `json:"retention"`
-	// Replicas        int                        `json:"replicas"`
-	// Resources       apiV1.ResourceRequirements `json:"resources"`
-	// Alerting        AlertingSpec               `json:"alerting"`
-	// Remote          RemoteSpec                 `json:"remote"`
-	// Persistence...
-	// Sharding...
-}
-
-type MonitorRefSpec struct {
-	Selector apiUnversioned.LabelSelector `json:"selector"`
-}
-
-type NamespaceRefSpec struct {
-	Selector apiUnversioned.LabelSelector `json:"selector"`
-}
-
-// type AlertingSpec struct {
-// 	Selector apiUnversioned.LabelSelector `json:"selector"`
-// }
-
-type ServiceMonitorObj struct {
-	apiUnversioned.TypeMeta `json:",inline"`
-	apiV1.ObjectMeta        `json:"metadata,omitempty"`
-	Spec                    ServiceMonitorSpec `json:"spec"`
-}
-
-type ServiceMonitorSpec struct {
-	Endpoints []Endpoint                   `json:"endpoints"`
-	Selector  apiUnversioned.LabelSelector `json:"selector"`
-	// Rules          []apiV1.ConfigMapVolumeSource `json:"rules"`
-}
-
-type Endpoint struct {
-	Port       string             `json:"port"`
-	TargetPort intstr.IntOrString `json:"targetPort"`
-	Path       string             `json:"path"`
-	Scheme     string             `json:"scheme"`
-	Interval   string             `json:"interval"`
-}
-
-type ServiceMonitorList struct {
-	apiUnversioned.TypeMeta `json:",inline"`
-	// Standard list metadata
-	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	apiUnversioned.ListMeta `json:"metadata,omitempty"`
-	// Items is a list of third party objects
-	Items []ServiceMonitorObj `json:"items"`
-}
 
 func makeConfigMap(name string, data map[string]string) *apiV1.ConfigMap {
 	cm := &apiV1.ConfigMap{

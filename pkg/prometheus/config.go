@@ -1,10 +1,14 @@
 package prometheus
 
-import "html/template"
+import (
+	"html/template"
 
-type TemplateConfig struct {
-	ServiceMonitors map[string]ServiceMonitorObj
-	Prometheus      PrometheusSpec
+	"github.com/coreos/kube-prometheus-controller/pkg/spec"
+)
+
+type templateConfig struct {
+	ServiceMonitors map[string]spec.ServiceMonitor
+	Prometheus      spec.PrometheusSpec
 }
 
 var configTmpl = template.Must(template.New("config").Parse(`

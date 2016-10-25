@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/coreos/kube-prometheus-controller/pkg/prometheus"
+	"github.com/coreos/kube-prometheus-controller/pkg/spec"
 
 	"github.com/go-kit/kit/log"
 	"k8s.io/client-go/1.4/kubernetes"
@@ -210,7 +211,7 @@ func newClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 // Event represents an event in the cluster.
 type Event struct {
 	Type   watch.EventType
-	Object prometheus.PrometheusObj
+	Object spec.Prometheus
 }
 
 func (c *Controller) monitorPrometheusServers(client *http.Client, watchVersion string) (<-chan *Event, <-chan error) {
