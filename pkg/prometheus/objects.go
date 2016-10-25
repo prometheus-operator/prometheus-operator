@@ -1,8 +1,8 @@
 package prometheus
 
 import (
-	apiV1 "k8s.io/client-go/1.4/pkg/api/v1"
-	apiExtensions "k8s.io/client-go/1.4/pkg/apis/extensions/v1beta1"
+	apiV1 "k8s.io/client-go/1.5/pkg/api/v1"
+	apiExtensions "k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 )
 
 func makeConfigMap(name string, data map[string]string) *apiV1.ConfigMap {
