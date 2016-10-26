@@ -1,34 +1,34 @@
 package controller
 
 import (
-	apiV1 "k8s.io/client-go/1.5/pkg/api/v1"
-	apiExtensions "k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 )
 
-func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
-	rs := &apiExtensions.ReplicaSet{
-		ObjectMeta: apiV1.ObjectMeta{
+func makeDeployment(name string, replicas int32) *v1beta1.Deployment {
+	depl := &v1beta1.Deployment{
+		ObjectMeta: v1.ObjectMeta{
 			Name: name,
 		},
-		Spec: apiExtensions.ReplicaSetSpec{
+		Spec: v1beta1.DeploymentSpec{
 			Replicas: &replicas,
-			Template: apiV1.PodTemplateSpec{
-				ObjectMeta: apiV1.ObjectMeta{
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: v1.ObjectMeta{
 					Labels: map[string]string{
 						"prometheus.coreos.com/name": name,
 						"prometheus.coreos.com/type": "prometheus",
 					},
 				},
-				Spec: apiV1.PodSpec{
-					Containers: []apiV1.Container{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
 						{
 							Name:  "prometheus",
 							Image: "quay.io/prometheus/prometheus:v1.3.0-beta.0",
-							Ports: []apiV1.ContainerPort{
+							Ports: []v1.ContainerPort{
 								{
 									Name:          "web",
 									ContainerPort: 9090,
-									Protocol:      apiV1.ProtocolTCP,
+									Protocol:      v1.ProtocolTCP,
 								},
 							},
 							Args: []string{
@@ -36,7 +36,7 @@ func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 								"-storage.local.memory-chunks=500000",
 								"-config.file=/etc/prometheus/prometheus.yaml",
 							},
-							VolumeMounts: []apiV1.VolumeMount{
+							VolumeMounts: []v1.VolumeMount{
 								{
 									Name:      "config-volume",
 									ReadOnly:  true,
@@ -50,7 +50,7 @@ func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 								"-webhook-url=http://localhost:9090/-/reload",
 								"-volume-dir=/etc/prometheus/",
 							},
-							VolumeMounts: []apiV1.VolumeMount{
+							VolumeMounts: []v1.VolumeMount{
 								{
 									Name:      "config-volume",
 									ReadOnly:  true,
@@ -59,12 +59,12 @@ func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 							},
 						},
 					},
-					Volumes: []apiV1.Volume{
+					Volumes: []v1.Volume{
 						{
 							Name: "config-volume",
-							VolumeSource: apiV1.VolumeSource{
-								ConfigMap: &apiV1.ConfigMapVolumeSource{
-									LocalObjectReference: apiV1.LocalObjectReference{
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{
 										Name: name,
 									},
 								},
@@ -75,5 +75,5 @@ func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 			},
 		},
 	}
-	return rs
+	return depl
 }

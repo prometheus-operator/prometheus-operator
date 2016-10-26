@@ -41,6 +41,7 @@ type Controller struct {
 	promInf cache.SharedIndexInformer
 	smonInf cache.SharedIndexInformer
 	cmapInf cache.SharedIndexInformer
+	deplInf cache.SharedIndexInformer
 
 	queue *queue
 
@@ -107,19 +108,33 @@ func (c *Controller) Run(stopc <-chan struct{}) error {
 		cache.NewListWatchFromClient(c.kclient.Core().GetRESTClient(), "configmaps", api.NamespaceAll, nil),
 		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{},
 	)
+	c.deplInf = cache.NewSharedIndexInformer(
+		cache.NewListWatchFromClient(c.kclient.Extensions().GetRESTClient(), "deployments", api.NamespaceAll, nil),
+		&extensionsobj.Deployment{}, resyncPeriod, cache.Indexers{},
+	)
 
 	go c.promInf.Run(stopc)
 	go c.smonInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
+	go c.deplInf.Run(stopc)
 
-	for !c.promInf.HasSynced() || !c.smonInf.HasSynced() || !c.cmapInf.HasSynced() {
+	for !c.promInf.HasSynced() || !c.smonInf.HasSynced() || !c.cmapInf.HasSynced() || !c.deplInf.HasSynced() {
 		time.Sleep(100 * time.Millisecond)
 	}
 
 	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.enqueuePrometheus,
-		DeleteFunc: c.enqueuePrometheus,
-		UpdateFunc: func(_, p interface{}) { c.enqueuePrometheus(p) },
+		AddFunc: func(p interface{}) {
+			c.logger.Log("msg", "prominf add")
+			c.enqueuePrometheus(p)
+		},
+		DeleteFunc: func(p interface{}) {
+			c.logger.Log("msg", "prominf del")
+			c.enqueuePrometheus(p)
+		},
+		UpdateFunc: func(_, p interface{}) {
+			c.logger.Log("msg", "prominf up")
+			c.enqueuePrometheus(p)
+		},
 	})
 	c.smonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    func(_ interface{}) { c.enqueueAll() },
@@ -129,6 +144,12 @@ func (c *Controller) Run(stopc <-chan struct{}) error {
 	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		// TODO(fabxc): only enqueue Prometheus the ConfigMap belonged to.
 		DeleteFunc: func(_ interface{}) { c.enqueueAll() },
+	})
+	c.deplInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		// TODO(fabxc): only enqueue Prometheus an affected deployment belonged to.
+		AddFunc:    func(_ interface{}) { c.enqueueAll() },
+		DeleteFunc: func(_ interface{}) { c.enqueueAll() },
+		UpdateFunc: func(_, _ interface{}) { c.enqueueAll() },
 	})
 
 	<-stopc
@@ -211,8 +232,8 @@ func (c *Controller) reconcile(p *spec.Prometheus) error {
 		rs = append(rs, o.(*extensionsobj.ReplicaSet))
 	})
 	if len(rs) == 0 {
-		rsClient := c.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
-		if _, err := rsClient.Create(makeReplicaSet(p.Name, 1)); err != nil && !apierrors.IsAlreadyExists(err) {
+		deplClient := c.kclient.ExtensionsClient.Deployments(p.Namespace)
+		if _, err := deplClient.Create(makeDeployment(p.Name, 1)); err != nil && !apierrors.IsAlreadyExists(err) {
 			return fmt.Errorf("create replica set: %s", err)
 		}
 	}
@@ -226,8 +247,9 @@ func (c *Controller) reconcile(p *spec.Prometheus) error {
 
 func (c *Controller) deletePrometheus(p *spec.Prometheus) error {
 	// Update the replica count to 0 and wait for all pods to be deleted.
-	rs := c.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
-	replicaSet, err := rs.Update(makeReplicaSet(p.Name, 0))
+	deplClient := c.kclient.ExtensionsClient.Deployments(p.Namespace)
+	// depl := c.kclient.Extensions().Deployments(p.Namespace)
+	depl, err := deplClient.Update(makeDeployment(p.Name, 0))
 	if err != nil {
 		return err
 	}
@@ -237,17 +259,17 @@ func (c *Controller) deletePrometheus(p *spec.Prometheus) error {
 	if err != nil {
 		return err
 	}
-	w, err := rs.Watch(api.ListOptions{LabelSelector: selector})
+	w, err := deplClient.Watch(api.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return err
 	}
 	if _, err := watch.Until(100*time.Second, w, func(e watch.Event) (bool, error) {
-		rs, ok := e.Object.(*extensionsobj.ReplicaSet)
+		curDepl, ok := e.Object.(*extensionsobj.Deployment)
 		if !ok {
 			return false, errors.New("not a replica set")
 		}
 		// Check if the replica set is scaled down and all replicas are gone.
-		if rs.Status.ObservedGeneration >= replicaSet.Status.ObservedGeneration && rs.Status.Replicas == *rs.Spec.Replicas {
+		if curDepl.Status.ObservedGeneration >= depl.Status.ObservedGeneration && curDepl.Status.Replicas == *curDepl.Spec.Replicas {
 			return true, nil
 		}
 
@@ -263,8 +285,15 @@ func (c *Controller) deletePrometheus(p *spec.Prometheus) error {
 		return err
 	}
 
-	// Replica set scaled down, we can delete it.
-	if err := rs.Delete(p.Name, nil); err != nil {
+	// Deployment scaled down, we can delete it.
+	if err := deplClient.Delete(p.Name, nil); err != nil {
+		return err
+	}
+	// Remove ReplicaSet of the deployment.
+	rsClient := c.kclient.Extensions().ReplicaSets(p.Namespace)
+	if err := rsClient.DeleteCollection(&api.DeleteOptions{}, api.ListOptions{
+		LabelSelector: selector,
+	}); err != nil {
 		return err
 	}
 
