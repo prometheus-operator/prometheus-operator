@@ -100,12 +100,6 @@
 			"revisionTime": "2016-10-23T20:27:10Z"
 		},
 		{
-			"checksumSHA1": "U56/szyUW/HMS0wN6yUbidU7Bx8=",
-			"path": "github.com/coreos/rkt/tests/testutils/logger",
-			"revision": "175baebaac49fa5a21f38cf99ace810399e4b496",
-			"revisionTime": "2016-10-07T15:13:29Z"
-		},
-		{
 			"checksumSHA1": "5rPfda8jFccr3A6heL+JAmi9K9g=",
 			"origin": "k8s.io/client-go/1.5/vendor/github.com/davecgh/go-spew/spew",
 			"path": "github.com/davecgh/go-spew/spew",
