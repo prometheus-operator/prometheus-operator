@@ -13,6 +13,14 @@ type Prometheus struct {
 	Spec                 PrometheusSpec `json:"spec"`
 }
 
+// PrometheusList is a list of Prometheuses.
+type PrometheusList struct {
+	unversioned.TypeMeta `json:",inline"`
+	unversioned.ListMeta `json:"metadata,omitempty"`
+
+	Items []*Prometheus `json:"items"`
+}
+
 // PrometheusSpec holds specification parameters of a Prometheus deployment.
 type PrometheusSpec struct {
 	ServiceMonitors    []ServiceMonitorSelection `json:"serviceMonitors"`
