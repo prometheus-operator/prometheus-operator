@@ -40,6 +40,7 @@ type Controller struct {
 
 	promInf cache.SharedIndexInformer
 	smonInf cache.SharedIndexInformer
+	cmapInf cache.SharedIndexInformer
 
 	queue *queue
 
@@ -94,13 +95,24 @@ func (c *Controller) Run(stopc <-chan struct{}) error {
 		return err
 	}
 
-	c.promInf = cache.NewSharedIndexInformer(NewPrometheusListWatch(c.pclient), &spec.Prometheus{}, resyncPeriod, cache.Indexers{})
-	c.smonInf = cache.NewSharedIndexInformer(NewServiceMonitorListWatch(c.pclient), &spec.ServiceMonitor{}, resyncPeriod, cache.Indexers{})
+	c.promInf = cache.NewSharedIndexInformer(
+		NewPrometheusListWatch(c.pclient),
+		&spec.Prometheus{}, resyncPeriod, cache.Indexers{},
+	)
+	c.smonInf = cache.NewSharedIndexInformer(
+		NewServiceMonitorListWatch(c.pclient),
+		&spec.ServiceMonitor{}, resyncPeriod, cache.Indexers{},
+	)
+	c.cmapInf = cache.NewSharedIndexInformer(
+		cache.NewListWatchFromClient(c.kclient.Core().GetRESTClient(), "configmaps", api.NamespaceAll, nil),
+		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{},
+	)
 
 	go c.promInf.Run(stopc)
 	go c.smonInf.Run(stopc)
+	go c.cmapInf.Run(stopc)
 
-	for !c.promInf.HasSynced() || !c.smonInf.HasSynced() {
+	for !c.promInf.HasSynced() || !c.smonInf.HasSynced() || !c.cmapInf.HasSynced() {
 		time.Sleep(100 * time.Millisecond)
 	}
 
@@ -113,6 +125,10 @@ func (c *Controller) Run(stopc <-chan struct{}) error {
 		AddFunc:    func(_ interface{}) { c.enqueueAll() },
 		DeleteFunc: func(_ interface{}) { c.enqueueAll() },
 		UpdateFunc: func(_, _ interface{}) { c.enqueueAll() },
+	})
+	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		// TODO(fabxc): only enqueue Prometheus the ConfigMap belonged to.
+		DeleteFunc: func(_ interface{}) { c.enqueueAll() },
 	})
 
 	<-stopc
