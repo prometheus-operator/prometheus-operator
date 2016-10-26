@@ -5,6 +5,8 @@ metadata:
   labels:
     prometheus: "main"
 spec:
+  replicas: 2
+  version: v1.3.0-beta.0
   serviceMonitors:
   - selector:
       matchLabels:

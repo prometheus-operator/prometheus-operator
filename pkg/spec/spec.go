@@ -25,6 +25,9 @@ type PrometheusList struct {
 type PrometheusSpec struct {
 	ServiceMonitors    []ServiceMonitorSelection `json:"serviceMonitors"`
 	EvaluationInterval string                    `json:"evaluationInterval"`
+	Version            string                    `json:"version"`
+	BaseImage          string                    `json:"baseImage"`
+	Replicas           int32                     `json:"replicas"`
 	// Retention       string                     `json:"retention"`
 	// Replicas        int                        `json:"replicas"`
 	// Resources       apiV1.ResourceRequirements `json:"resources"`

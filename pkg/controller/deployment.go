@@ -1,21 +1,42 @@
 package controller
 
 import (
+	"fmt"
+
+	"github.com/coreos/kube-prometheus-controller/pkg/spec"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 )
 
-func makeDeployment(name string, replicas int32) *v1beta1.Deployment {
+func makeDeployment(p *spec.Prometheus) *v1beta1.Deployment {
+	// TODO(fabxc): is this the right point to inject defaults?
+	// Ideally we would do it before storing but that's currently not possible.
+	// Potentially an update handler on first insertion.
+
+	baseImage := p.Spec.BaseImage
+	if baseImage == "" {
+		baseImage = "quay.io/prometheus/prometheus"
+	}
+	version := p.Spec.Version
+	if version == "" {
+		version = "v1.3.0-beta.0"
+	}
+	replicas := p.Spec.Replicas
+	if replicas < 1 {
+		replicas = 1
+	}
+	fmt.Println("creating deployment with replicas %q %q", p.Spec.Replicas, replicas)
+
 	depl := &v1beta1.Deployment{
 		ObjectMeta: v1.ObjectMeta{
-			Name: name,
+			Name: p.Name,
 		},
 		Spec: v1beta1.DeploymentSpec{
 			Replicas: &replicas,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: v1.ObjectMeta{
 					Labels: map[string]string{
-						"prometheus.coreos.com/name": name,
+						"prometheus.coreos.com/name": p.Name,
 						"prometheus.coreos.com/type": "prometheus",
 					},
 				},
@@ -23,7 +44,7 @@ func makeDeployment(name string, replicas int32) *v1beta1.Deployment {
 					Containers: []v1.Container{
 						{
 							Name:  "prometheus",
-							Image: "quay.io/prometheus/prometheus:v1.3.0-beta.0",
+							Image: fmt.Sprintf("%s:%s", baseImage, version),
 							Ports: []v1.ContainerPort{
 								{
 									Name:          "web",
@@ -65,7 +86,7 @@ func makeDeployment(name string, replicas int32) *v1beta1.Deployment {
 							VolumeSource: v1.VolumeSource{
 								ConfigMap: &v1.ConfigMapVolumeSource{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: name,
+										Name: p.Name,
 									},
 								},
 							},

@@ -17,6 +17,7 @@ import (
 	apierrors "k8s.io/client-go/1.5/pkg/api/errors"
 	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 	extensionsobj "k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/1.5/pkg/labels"
 	utilruntime "k8s.io/client-go/1.5/pkg/util/runtime"
@@ -223,19 +224,22 @@ func (c *Controller) reconcile(p *spec.Prometheus) error {
 
 	// Ensure we have a replica set running Prometheus deployed.
 	// XXX: Selecting by ObjectMeta.Name gives an error. So use the label for now.
-	selector, err := labels.Parse("prometheus.coreos.com/type=prometheus,prometheus.coreos.com/name=" + p.Name)
+	deplQ := &v1beta1.Deployment{}
+	deplQ.Namespace = p.Namespace
+	deplQ.Name = p.Name
+	_, exists, err = c.deplInf.GetStore().Get(deplQ)
 	if err != nil {
 		return err
 	}
-	var rs []*extensionsobj.ReplicaSet
-	cache.ListAllByNamespace(c.promInf.GetIndexer(), p.Namespace, selector, func(o interface{}) {
-		rs = append(rs, o.(*extensionsobj.ReplicaSet))
-	})
-	if len(rs) == 0 {
-		deplClient := c.kclient.ExtensionsClient.Deployments(p.Namespace)
-		if _, err := deplClient.Create(makeDeployment(p.Name, 1)); err != nil && !apierrors.IsAlreadyExists(err) {
-			return fmt.Errorf("create replica set: %s", err)
+
+	deplClient := c.kclient.ExtensionsClient.Deployments(p.Namespace)
+
+	if !exists {
+		if _, err := deplClient.Create(makeDeployment(p)); err != nil {
+			return fmt.Errorf("create deployment: %s", err)
 		}
+	} else if _, err := deplClient.Update(makeDeployment(p)); err != nil {
+		return fmt.Errorf("update deployment: %s", err)
 	}
 
 	// We just always regenerate the configuration to be safe.
@@ -249,7 +253,7 @@ func (c *Controller) deletePrometheus(p *spec.Prometheus) error {
 	// Update the replica count to 0 and wait for all pods to be deleted.
 	deplClient := c.kclient.ExtensionsClient.Deployments(p.Namespace)
 	// depl := c.kclient.Extensions().Deployments(p.Namespace)
-	depl, err := deplClient.Update(makeDeployment(p.Name, 0))
+	depl, err := deplClient.Update(makeDeployment(p))
 	if err != nil {
 		return err
 	}
