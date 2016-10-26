@@ -1,21 +1,25 @@
 package controller
 
 import (
-	"context"
+	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
 
-	"github.com/coreos/kube-prometheus-controller/pkg/prometheus"
 	"github.com/coreos/kube-prometheus-controller/pkg/spec"
 
 	"github.com/go-kit/kit/log"
 	"k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/pkg/api"
 	apierrors "k8s.io/client-go/1.5/pkg/api/errors"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	extensionsobj "k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/1.5/pkg/labels"
+	utilruntime "k8s.io/client-go/1.5/pkg/util/runtime"
 	"k8s.io/client-go/1.5/pkg/util/wait"
 	"k8s.io/client-go/1.5/pkg/watch"
 	"k8s.io/client-go/1.5/rest"
@@ -30,13 +34,16 @@ const (
 // Controller manages lify cycle of Prometheus deployments and
 // monitoring configurations.
 type Controller struct {
-	kclient    *kubernetes.Clientset
-	pclient    *rest.RESTClient
-	logger     log.Logger
-	host       string
-	prometheis map[string]*prometheus.Prometheus
+	kclient *kubernetes.Clientset
+	pclient *rest.RESTClient
+	logger  log.Logger
 
-	promInf cache.SharedInformer
+	promInf cache.SharedIndexInformer
+	smonInf cache.SharedIndexInformer
+
+	queue *queue
+
+	host string
 }
 
 // Config defines configuration parameters for the Controller.
@@ -64,16 +71,19 @@ func New(c Config) (*Controller, error) {
 		return nil, err
 	}
 	return &Controller{
-		kclient:    client,
-		pclient:    promclient,
-		logger:     logger,
-		host:       cfg.Host,
-		prometheis: map[string]*prometheus.Prometheus{},
+		kclient: client,
+		pclient: promclient,
+		logger:  logger,
+		queue:   newQueue(200),
+		host:    cfg.Host,
 	}, nil
 }
 
 // Run the controller.
-func (c *Controller) Run() error {
+func (c *Controller) Run(stopc <-chan struct{}) error {
+	defer c.queue.close()
+	go c.worker()
+
 	v, err := c.kclient.Discovery().ServerVersion()
 	if err != nil {
 		return fmt.Errorf("communicating with server failed: %s", err)
@@ -84,48 +94,231 @@ func (c *Controller) Run() error {
 		return err
 	}
 
-	promInf := cache.NewSharedInformer(NewPrometheusListWatch(c.pclient), &spec.Prometheus{}, resyncPeriod)
+	c.promInf = cache.NewSharedIndexInformer(NewPrometheusListWatch(c.pclient), &spec.Prometheus{}, resyncPeriod, cache.Indexers{})
+	c.smonInf = cache.NewSharedIndexInformer(NewServiceMonitorListWatch(c.pclient), &spec.ServiceMonitor{}, resyncPeriod, cache.Indexers{})
 
-	go promInf.Run(make(chan struct{}))
+	go c.promInf.Run(stopc)
+	go c.smonInf.Run(stopc)
 
-	for !promInf.HasSynced() {
+	for !c.promInf.HasSynced() || !c.smonInf.HasSynced() {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(o interface{}) {
-			p := o.(*spec.Prometheus)
-			c.logger.Log("msg", "prometheus added", "prometheus", p.Name, "ns", p.Namespace)
-
-			prom, err := prometheus.New(context.TODO(), c.logger, c.host, c.kclient, p)
-			if err != nil {
-				c.logger.Log("msg", "Prometheus creation failed", "err", err)
-			} else {
-				c.prometheis[p.Namespace+"\xff"+p.Name] = prom
-			}
-		},
-		DeleteFunc: func(o interface{}) {
-			p := o.(*spec.Prometheus)
-			c.logger.Log("msg", "prometheus deleted", "prometheus", p.Name, "ns", p.Namespace)
-
-			prom := c.prometheis[p.Namespace+"\xff"+p.Name]
-			if prom != nil {
-				prom.Delete()
-				delete(c.prometheis, p.Namespace+"\xff"+p.Name)
-			}
-		},
-		UpdateFunc: func(o, n interface{}) {
-			p := n.(*spec.Prometheus)
-			c.logger.Log("msg", "prometheus updated", "prometheus", p.Name, "ns", p.Namespace)
-
-			prom := c.prometheis[p.Namespace+"\xff"+p.Name]
-			if prom != nil {
-				prom.Update(p)
-			}
-		},
+	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.enqueuePrometheus,
+		DeleteFunc: c.enqueuePrometheus,
+		UpdateFunc: func(_, p interface{}) { c.enqueuePrometheus(p) },
+	})
+	c.smonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    func(_ interface{}) { c.enqueueAll() },
+		DeleteFunc: func(_ interface{}) { c.enqueueAll() },
+		UpdateFunc: func(_, _ interface{}) { c.enqueueAll() },
 	})
 
-	select {}
+	<-stopc
+	return nil
+}
+
+type queue struct {
+	ch chan *spec.Prometheus
+}
+
+func newQueue(size int) *queue {
+	return &queue{ch: make(chan *spec.Prometheus, size)}
+}
+
+func (q *queue) add(p *spec.Prometheus) { q.ch <- p }
+func (q *queue) close()                 { close(q.ch) }
+
+func (q *queue) pop() (*spec.Prometheus, bool) {
+	p, ok := <-q.ch
+	return p, ok
+}
+
+var keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
+
+func (c *Controller) enqueuePrometheus(p interface{}) {
+	c.queue.add(p.(*spec.Prometheus))
+}
+
+func (c *Controller) enqueueAll() {
+	cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(o interface{}) {
+		c.enqueuePrometheus(o.(*spec.Prometheus))
+	})
+}
+
+// worker runs a worker thread that just dequeues items, processes them, and marks them done.
+// It enforces that the syncHandler is never invoked concurrently with the same key.
+func (c *Controller) worker() {
+	for {
+		p, ok := c.queue.pop()
+		if !ok {
+			return
+		}
+		if err := c.reconcile(p); err != nil {
+			utilruntime.HandleError(fmt.Errorf("reconciliation failed: %s", err))
+		}
+	}
+}
+
+func (c *Controller) reconcile(p *spec.Prometheus) error {
+	key, err := keyFunc(p)
+	if err != nil {
+		return err
+	}
+	c.logger.Log("msg", "reconcile prometheus", "key", key)
+
+	_, exists, err := c.promInf.GetStore().GetByKey(key)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		// TODO(fabxc): we want to do server side deletion due to the variety of
+		// resources we create.
+		// Doing so just based on the deletion event is not reliable, so
+		// we have to garbage collect the controller-created resources in some other way.
+		//
+		// Let's rely on the index key matching that of the created configmap and replica
+		// set for now. This does not work if we delete Prometheus resources as the
+		// controller is not running – that could be solved via garbage collection later.
+		return c.deletePrometheus(p)
+	}
+
+	// Ensure we have a replica set running Prometheus deployed.
+	// XXX: Selecting by ObjectMeta.Name gives an error. So use the label for now.
+	selector, err := labels.Parse("prometheus.coreos.com/type=prometheus,prometheus.coreos.com/name=" + p.Name)
+	if err != nil {
+		return err
+	}
+	var rs []*extensionsobj.ReplicaSet
+	cache.ListAllByNamespace(c.promInf.GetIndexer(), p.Namespace, selector, func(o interface{}) {
+		rs = append(rs, o.(*extensionsobj.ReplicaSet))
+	})
+	if len(rs) == 0 {
+		rsClient := c.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
+		if _, err := rsClient.Create(makeReplicaSet(p.Name, 1)); err != nil && !apierrors.IsAlreadyExists(err) {
+			return fmt.Errorf("create replica set: %s", err)
+		}
+	}
+
+	// We just always regenerate the configuration to be safe.
+	if err := c.createConfig(p); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Controller) deletePrometheus(p *spec.Prometheus) error {
+	// Update the replica count to 0 and wait for all pods to be deleted.
+	rs := c.kclient.ExtensionsClient.ReplicaSets(p.Namespace)
+	replicaSet, err := rs.Update(makeReplicaSet(p.Name, 0))
+	if err != nil {
+		return err
+	}
+
+	// XXX: Selecting by ObjectMeta.Name gives an error. So use the label for now.
+	selector, err := labels.Parse("prometheus.coreos.com/type=prometheus,prometheus.coreos.com/name=" + p.Name)
+	if err != nil {
+		return err
+	}
+	w, err := rs.Watch(api.ListOptions{LabelSelector: selector})
+	if err != nil {
+		return err
+	}
+	if _, err := watch.Until(100*time.Second, w, func(e watch.Event) (bool, error) {
+		rs, ok := e.Object.(*extensionsobj.ReplicaSet)
+		if !ok {
+			return false, errors.New("not a replica set")
+		}
+		// Check if the replica set is scaled down and all replicas are gone.
+		if rs.Status.ObservedGeneration >= replicaSet.Status.ObservedGeneration && rs.Status.Replicas == *rs.Spec.Replicas {
+			return true, nil
+		}
+
+		switch e.Type {
+		// Deleted before we could validate it was scaled down correctly.
+		case watch.Deleted:
+			return true, errors.New("replica set deleted")
+		case watch.Error:
+			return false, errors.New("watch error")
+		}
+		return false, nil
+	}); err != nil {
+		return err
+	}
+
+	// Replica set scaled down, we can delete it.
+	if err := rs.Delete(p.Name, nil); err != nil {
+		return err
+	}
+
+	// Delete the auto-generate configuration.
+	// TODO(fabxc): add an ownerRef at creation so we don't delete config maps
+	// manually created for Prometheus servers with no ServiceMonitor selectors.
+	cm := c.kclient.Core().ConfigMaps(p.Namespace)
+	if err := cm.Delete(p.Name, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Controller) createConfig(p *spec.Prometheus) error {
+	smons, err := c.selectServiceMonitors(p)
+	if err != nil {
+		return err
+	}
+	// Update config map based on the most recent configuration.
+	var buf bytes.Buffer
+	if err := configTmpl.Execute(&buf, &templateConfig{
+		ServiceMonitors: smons,
+		Prometheus:      p.Spec,
+	}); err != nil {
+		return err
+	}
+
+	cm := &v1.ConfigMap{
+		ObjectMeta: v1.ObjectMeta{
+			Name: p.Name,
+		},
+		Data: map[string]string{
+			"prometheus.yaml": buf.String(),
+		},
+	}
+
+	cmClient := c.kclient.Core().ConfigMaps(p.Namespace)
+
+	_, err = cmClient.Get(p.Name)
+	if apierrors.IsNotFound(err) {
+		_, err = cmClient.Create(cm)
+	} else if err == nil {
+		_, err = cmClient.Update(cm)
+	}
+	return err
+}
+
+func (c *Controller) selectServiceMonitors(p *spec.Prometheus) (map[string]*spec.ServiceMonitor, error) {
+	// Selectors might overlap. Deduplicate them along the keyFunc.
+	res := make(map[string]*spec.ServiceMonitor)
+
+	for _, smon := range p.Spec.ServiceMonitors {
+		selector, err := unversioned.LabelSelectorAsSelector(&smon.Selector)
+		if err != nil {
+			return nil, err
+		}
+
+		// Only service monitors within the same namespace as the Prometheus
+		// object can belong to it.
+		cache.ListAllByNamespace(c.smonInf.GetIndexer(), p.Namespace, selector, func(obj interface{}) {
+			k, err := keyFunc(obj)
+			if err != nil {
+				// Keep going for other items.
+				utilruntime.HandleError(fmt.Errorf("key func failed: %s", err))
+				return
+			}
+			res[k] = obj.(*spec.ServiceMonitor)
+		})
+	}
+	return res, nil
 }
 
 func (c *Controller) createTPRs() error {
@@ -221,10 +414,4 @@ func newClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 	cfg.Burst = 100
 
 	return cfg, nil
-}
-
-// Event represents an event in the cluster.
-type Event struct {
-	Type   watch.EventType
-	Object spec.Prometheus
 }

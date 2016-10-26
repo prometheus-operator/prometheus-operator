@@ -1,4 +1,4 @@
-package prometheus
+package controller
 
 import (
 	"html/template"
@@ -7,8 +7,8 @@ import (
 )
 
 type templateConfig struct {
-	ServiceMonitors map[string]spec.ServiceMonitor
 	Prometheus      spec.PrometheusSpec
+	ServiceMonitors map[string]*spec.ServiceMonitor
 }
 
 var configTmpl = template.Must(template.New("config").Parse(`

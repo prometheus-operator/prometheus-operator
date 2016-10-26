@@ -23,13 +23,12 @@ func init() {
 }
 
 func main() {
-
 	c, err := controller.New(cfg)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
-	if err := c.Run(); err != nil {
+	if err := c.Run(make(chan struct{})); err != nil {
 		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}

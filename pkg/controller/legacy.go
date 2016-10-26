@@ -1,19 +1,9 @@
-package prometheus
+package controller
 
 import (
 	apiV1 "k8s.io/client-go/1.5/pkg/api/v1"
 	apiExtensions "k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 )
-
-func makeConfigMap(name string, data map[string]string) *apiV1.ConfigMap {
-	cm := &apiV1.ConfigMap{
-		ObjectMeta: apiV1.ObjectMeta{
-			Name: name,
-		},
-		Data: data,
-	}
-	return cm
-}
 
 func makeReplicaSet(name string, replicas int32) *apiExtensions.ReplicaSet {
 	rs := &apiExtensions.ReplicaSet{

@@ -67,5 +67,5 @@ type ServiceMonitorList struct {
 	unversioned.TypeMeta `json:",inline"`
 	unversioned.ListMeta `json:"metadata,omitempty"`
 
-	Items []ServiceMonitor `json:"items"`
+	Items []*ServiceMonitor `json:"items"`
 }

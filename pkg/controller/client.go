@@ -2,11 +2,9 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/coreos/kube-prometheus-controller/pkg/spec"
-	"github.com/coreos/rkt/tests/testutils/logger"
 	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/runtime"
@@ -38,13 +36,11 @@ func (d *prometheusDecoder) Close() {
 	d.close()
 }
 
-type prometheusEvent struct {
-	Type   watch.EventType
-	Object spec.Prometheus
-}
-
 func (d *prometheusDecoder) Decode() (action watch.EventType, object runtime.Object, err error) {
-	var e prometheusEvent
+	var e struct {
+		Type   watch.EventType
+		Object spec.Prometheus
+	}
 	if err := d.dec.Decode(&e); err != nil {
 		return watch.Error, nil, err
 	}
@@ -66,14 +62,9 @@ func NewPrometheusListWatch(client *rest.RESTClient) *cache.ListWatch {
 				return nil, err
 			}
 			var p spec.PrometheusList
-			if err := json.Unmarshal(b, &p); err != nil {
-				return nil, err
-			}
-			logger.Log("listres", fmt.Sprintf("%+v", p))
-			return &p, nil
+			return &p, json.Unmarshal(b, &p)
 		},
 		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-			logger.Log("msg", "called watch")
 			r, err := client.Get().
 				Prefix("watch").
 				Namespace(api.NamespaceAll).
@@ -85,6 +76,62 @@ func NewPrometheusListWatch(client *rest.RESTClient) *cache.ListWatch {
 				return nil, err
 			}
 			return watch.NewStreamWatcher(&prometheusDecoder{
+				dec:   json.NewDecoder(r),
+				close: r.Close,
+			}), nil
+		},
+	}
+}
+
+type serviceMonitorDecoder struct {
+	dec   *json.Decoder
+	close func() error
+}
+
+func (d *serviceMonitorDecoder) Close() {
+	d.close()
+}
+
+func (d *serviceMonitorDecoder) Decode() (action watch.EventType, object runtime.Object, err error) {
+	var e struct {
+		Type   watch.EventType
+		Object spec.ServiceMonitor
+	}
+	if err := d.dec.Decode(&e); err != nil {
+		return watch.Error, nil, err
+	}
+	return e.Type, &e.Object, nil
+}
+
+// NewServiceMonitorListWatch returns a new ListWatch on the ServiceMonitor resource.
+func NewServiceMonitorListWatch(client *rest.RESTClient) *cache.ListWatch {
+	return &cache.ListWatch{
+		ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+			req := client.Get().
+				Namespace(api.NamespaceAll).
+				Resource("servicemonitors").
+				// VersionedParams(&options, api.ParameterCodec)
+				FieldsSelectorParam(nil)
+
+			b, err := req.DoRaw()
+			if err != nil {
+				return nil, err
+			}
+			var sm spec.ServiceMonitorList
+			return &sm, json.Unmarshal(b, &sm)
+		},
+		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+			r, err := client.Get().
+				Prefix("watch").
+				Namespace(api.NamespaceAll).
+				Resource("servicemonitors").
+				// VersionedParams(&options, api.ParameterCodec).
+				FieldsSelectorParam(nil).
+				Stream()
+			if err != nil {
+				return nil, err
+			}
+			return watch.NewStreamWatcher(&serviceMonitorDecoder{
 				dec:   json.NewDecoder(r),
 				close: r.Close,
 			}), nil
