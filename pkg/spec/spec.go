@@ -23,11 +23,12 @@ type PrometheusList struct {
 
 // PrometheusSpec holds specification parameters of a Prometheus deployment.
 type PrometheusSpec struct {
-	ServiceMonitors    []ServiceMonitorSelection `json:"serviceMonitors"`
-	EvaluationInterval string                    `json:"evaluationInterval"`
-	Version            string                    `json:"version"`
-	BaseImage          string                    `json:"baseImage"`
-	Replicas           int32                     `json:"replicas"`
+	ServiceMonitors    []ServiceMonitorSelection            `json:"serviceMonitors"`
+	EvaluationInterval string                               `json:"evaluationInterval"`
+	Version            string                               `json:"version"`
+	BaseImage          string                               `json:"baseImage"`
+	Replicas           int32                                `json:"replicas"`
+	StorageVolumes     v1.PersistentVolumeClaimVolumeSource `json:"storageVolumes"`
 	// Retention       string                     `json:"retention"`
 	// Replicas        int                        `json:"replicas"`
 	// Resources       apiV1.ResourceRequirements `json:"resources"`
