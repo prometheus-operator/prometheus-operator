@@ -5,11 +5,11 @@ import (
 
 	"github.com/coreos/kube-prometheus-controller/pkg/spec"
 	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/1.5/pkg/apis/apps/v1alpha1"
 	"k8s.io/client-go/1.5/pkg/util/intstr"
 )
 
-func makeDeployment(p *spec.Prometheus, old *v1beta1.Deployment) *v1beta1.Deployment {
+func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -28,30 +28,57 @@ func makeDeployment(p *spec.Prometheus, old *v1beta1.Deployment) *v1beta1.Deploy
 	}
 	image := fmt.Sprintf("%s:%s", baseImage, version)
 
-	depl := &v1beta1.Deployment{
+	petset := &v1alpha1.PetSet{
 		ObjectMeta: v1.ObjectMeta{
 			Name: p.Name,
 		},
-		Spec: makeDeploymentSpec(p.Name, image, replicas),
+		Spec: makePetSetSpec(p.Name, image, replicas),
 	}
 	if old != nil {
-		depl.Annotations = old.Annotations
+		petset.Annotations = old.Annotations
 	}
-	return depl
+	return petset
 }
 
-func makeDeploymentSpec(name, image string, replicas int32) v1beta1.DeploymentSpec {
+func makePetSetService(p *spec.Prometheus) *v1.Service {
+	svc := &v1.Service{
+		ObjectMeta: v1.ObjectMeta{
+			Name: fmt.Sprintf("%s-petset", p.Name),
+		},
+		Spec: v1.ServiceSpec{
+			Selector: map[string]string{
+				"prometheus.coreos.com/name": p.Name,
+				"prometheus.coreos.com/type": "prometheus",
+			},
+			ClusterIP: "None",
+			Ports: []v1.ServicePort{
+				{
+					Name:       "web",
+					Port:       9090,
+					TargetPort: intstr.FromString("web"),
+				},
+			},
+		},
+	}
+	return svc
+}
+
+func makePetSetSpec(name, image string, replicas int32) v1alpha1.PetSetSpec {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
 
-	return v1beta1.DeploymentSpec{
-		Replicas: &replicas,
+	return v1alpha1.PetSetSpec{
+		ServiceName: fmt.Sprintf("%s-petset", name),
+		Replicas:    &replicas,
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: v1.ObjectMeta{
 				Labels: map[string]string{
 					"prometheus.coreos.com/name": name,
 					"prometheus.coreos.com/type": "prometheus",
+				},
+				Annotations: map[string]string{
+					"pod.alpha.kubernetes.io/initialized": "true",
 				},
 			},
 			Spec: v1.PodSpec{
