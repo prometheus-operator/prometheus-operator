@@ -34,6 +34,30 @@ func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 		},
 		Spec: makePetSetSpec(p.Name, image, replicas),
 	}
+	if vc := p.Spec.Storage; vc == nil {
+		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: fmt.Sprintf("%s-db", p.Name),
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		})
+	} else {
+		pvc := v1.PersistentVolumeClaim{
+			ObjectMeta: v1.ObjectMeta{
+				Name: fmt.Sprintf("%s-db", p.Name),
+				Annotations: map[string]string{
+					"volume.alpha.kubernetes.io/storage-class": vc.Class,
+				},
+			},
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+				Resources:   vc.Resources,
+				Selector:    vc.Selector,
+			},
+		}
+		petset.Spec.VolumeClaimTemplates = append(petset.Spec.VolumeClaimTemplates, pvc)
+	}
+
 	if old != nil {
 		petset.Annotations = old.Annotations
 	}
@@ -96,18 +120,23 @@ func makePetSetSpec(name, image string, replicas int32) v1alpha1.PetSetSpec {
 						Args: []string{
 							"-storage.local.retention=12h",
 							"-storage.local.memory-chunks=500000",
+							"-storage.local.path=/var/prometheus/data",
 							"-config.file=/etc/prometheus/config/prometheus.yaml",
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
-								Name:      "config-volume",
+								Name:      "config",
 								ReadOnly:  true,
 								MountPath: "/etc/prometheus/config",
 							},
 							{
-								Name:      "rules-volume",
+								Name:      "rules",
 								ReadOnly:  true,
 								MountPath: "/etc/prometheus/rules",
+							},
+							{
+								Name:      fmt.Sprintf("%s-db", name),
+								MountPath: "/var/prometheus/data",
 							},
 						},
 						ReadinessProbe: &v1.Probe{
@@ -133,7 +162,7 @@ func makePetSetSpec(name, image string, replicas int32) v1alpha1.PetSetSpec {
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
-								Name:      "config-volume",
+								Name:      "config",
 								ReadOnly:  true,
 								MountPath: "/etc/prometheus/config",
 							},
@@ -147,7 +176,7 @@ func makePetSetSpec(name, image string, replicas int32) v1alpha1.PetSetSpec {
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
-								Name:      "rules-volume",
+								Name:      "rules",
 								ReadOnly:  true,
 								MountPath: "/etc/prometheus/rules",
 							},
@@ -157,7 +186,7 @@ func makePetSetSpec(name, image string, replicas int32) v1alpha1.PetSetSpec {
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
 				Volumes: []v1.Volume{
 					{
-						Name: "config-volume",
+						Name: "config",
 						VolumeSource: v1.VolumeSource{
 							ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -167,7 +196,7 @@ func makePetSetSpec(name, image string, replicas int32) v1alpha1.PetSetSpec {
 						},
 					},
 					{
-						Name: "rules-volume",
+						Name: "rules",
 						VolumeSource: v1.VolumeSource{
 							ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
