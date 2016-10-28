@@ -32,11 +32,11 @@ spec:
   # Endpoints of the service or their underlying pods that can be monitored.
   endpoints:
   - port: web            # Name of the service port.
-    scrapeInterval: 30s  # Interval at which the service endpoints will be scraped.
+    interval: 30s        # Interval at which the service endpoints will be scraped.
   - targetPort: metrics  # Name or number of the target port of a service endpoint.
     path: /varz          # HTTP path that exposes metrics.
     scheme: https        # To use http or https when scraping. 
-    scrapeInterval: 60s
+    interval: 60s
 ```
 
 The controller generates Prometheus `job` names of the pattern `<>`.
@@ -59,11 +59,14 @@ metadata:
   labels:
     prometheus: "mobile"
 spec:
+  baseImage: quay.io/prometheus/prometheus # default
+  version: v1.3.0-beta.0                   # default, must match image tag
+  replicas: 2                              # defaults to 1
   serviceMonitors:
   - selector:
       matchLabels:
         team: mobile
-  ruleEvaluationInterval: 30s
+  evaluationInterval: 30s
 ```
 
 ## Installation

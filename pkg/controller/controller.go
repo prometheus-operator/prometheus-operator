@@ -295,9 +295,13 @@ func (c *Controller) reconcile(p *spec.Prometheus) error {
 		return c.deletePrometheus(p)
 	}
 
-	// We just always regenerate the configuration to be safe.
-	if err := c.createConfig(p); err != nil {
-		return err
+	// If no service monitor selectors are configured, the user wants to manage
+	// configuration himself.
+	if len(p.Spec.ServiceMonitors) > 0 {
+		// We just always regenerate the configuration to be safe.
+		if err := c.createConfig(p); err != nil {
+			return err
+		}
 	}
 
 	deplClient := c.kclient.ExtensionsClient.Deployments(p.Namespace)
