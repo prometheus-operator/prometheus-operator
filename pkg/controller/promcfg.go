@@ -21,6 +21,9 @@ global:
   {{- end }}
 {{- end}}
 
+rule_files:
+- /etc/prometheus/rules/*.rules
+
 {{ block "scrapeConfigs" . }}
 scrape_configs:
 {{- range $mon := .ServiceMonitors }}

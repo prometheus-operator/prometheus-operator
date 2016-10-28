@@ -64,27 +64,46 @@ func makeDeploymentSpec(name, image string, replicas int32) v1beta1.DeploymentSp
 						Args: []string{
 							"-storage.local.retention=12h",
 							"-storage.local.memory-chunks=500000",
-							"-config.file=/etc/prometheus/prometheus.yaml",
+							"-config.file=/etc/prometheus/config/prometheus.yaml",
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config-volume",
 								ReadOnly:  true,
-								MountPath: "/etc/prometheus",
+								MountPath: "/etc/prometheus/config",
+							},
+							{
+								Name:      "rules-volume",
+								ReadOnly:  true,
+								MountPath: "/etc/prometheus/rules",
 							},
 						},
 					}, {
-						Name:  "reloader",
+						Name:  "config-reloader",
 						Image: "jimmidyson/configmap-reload",
 						Args: []string{
 							"-webhook-url=http://localhost:9090/-/reload",
-							"-volume-dir=/etc/prometheus/",
+							"-volume-dir=/etc/prometheus/config",
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config-volume",
 								ReadOnly:  true,
-								MountPath: "/etc/prometheus",
+								MountPath: "/etc/prometheus/config",
+							},
+						},
+					}, {
+						Name:  "rules-reloader",
+						Image: "jimmidyson/configmap-reload",
+						Args: []string{
+							"-webhook-url=http://localhost:9090/-/reload",
+							"-volume-dir=/etc/prometheus/rules/",
+						},
+						VolumeMounts: []v1.VolumeMount{
+							{
+								Name:      "rules-volume",
+								ReadOnly:  true,
+								MountPath: "/etc/prometheus/rules",
 							},
 						},
 					},
@@ -96,6 +115,16 @@ func makeDeploymentSpec(name, image string, replicas int32) v1beta1.DeploymentSp
 							ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: name,
+								},
+							},
+						},
+					},
+					{
+						Name: "rules-volume",
+						VolumeSource: v1.VolumeSource{
+							ConfigMap: &v1.ConfigMapVolumeSource{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: fmt.Sprintf("%s-rules", name),
 								},
 							},
 						},
