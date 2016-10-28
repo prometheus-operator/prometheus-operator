@@ -6,6 +6,7 @@ import (
 	"github.com/coreos/kube-prometheus-controller/pkg/spec"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/1.5/pkg/util/intstr"
 )
 
 func makeDeployment(p *spec.Prometheus, old *v1beta1.Deployment) *v1beta1.Deployment {
@@ -40,6 +41,10 @@ func makeDeployment(p *spec.Prometheus, old *v1beta1.Deployment) *v1beta1.Deploy
 }
 
 func makeDeploymentSpec(name, image string, replicas int32) v1beta1.DeploymentSpec {
+	// Prometheus may take quite long to shut down to checkpoint existing data.
+	// Allow up to 10 minutes for clean termination.
+	terminationGracePeriod := int64(600)
+
 	return v1beta1.DeploymentSpec{
 		Replicas: &replicas,
 		Template: v1.PodTemplateSpec{
@@ -73,6 +78,20 @@ func makeDeploymentSpec(name, image string, replicas int32) v1beta1.DeploymentSp
 								MountPath: "/etc/prometheus",
 							},
 						},
+						ReadinessProbe: &v1.Probe{
+							Handler: v1.Handler{
+								HTTPGet: &v1.HTTPGetAction{
+									Path: "/status",
+									Port: intstr.FromString("web"),
+								},
+							},
+							InitialDelaySeconds: 1,
+							TimeoutSeconds:      3,
+							PeriodSeconds:       5,
+							// For larger servers, restoring a checkpoint on startup may take quite a bit of time.
+							// Wait up to 5 minutes.
+							FailureThreshold: 100,
+						},
 					}, {
 						Name:  "reloader",
 						Image: "jimmidyson/configmap-reload",
@@ -89,6 +108,7 @@ func makeDeploymentSpec(name, image string, replicas int32) v1beta1.DeploymentSp
 						},
 					},
 				},
+				TerminationGracePeriodSeconds: &terminationGracePeriod,
 				Volumes: []v1.Volume{
 					{
 						Name: "config-volume",
