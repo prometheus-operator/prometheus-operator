@@ -308,23 +308,19 @@ func (c *Controller) reconcile(p *spec.Prometheus) error {
 		}
 	}
 
-	svcClient := c.kclient.Core().Services(p.Namespace)
-
-	svcQ := &v1.Service{}
-	svcQ.Namespace = p.Namespace
-	svcQ.Name = fmt.Sprintf("%s-petset", p.Name)
-	obj, exists, err := c.svcInf.GetStore().Get(svcQ)
-	if err != nil {
+	// Create ConfigMaps if they don't exist.
+	cmClient := c.kclient.Core().ConfigMaps(p.Namespace)
+	if _, err := cmClient.Create(makeEmptyConfig(p.Name)); err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}
-	if !exists {
-		if _, err := svcClient.Create(makePetSetService(p)); err != nil {
-			return fmt.Errorf("create petset service: %s", err)
-		}
+	if _, err := cmClient.Create(makeEmptyRules(p.Name)); err != nil && !apierrors.IsAlreadyExists(err) {
+		return err
 	}
-	// if _, err = svcClient.Update(makePetSetService(p)); err != nil {
-	// 	return err
-	// }
+
+	svcClient := c.kclient.Core().Services(p.Namespace)
+	if _, err := svcClient.Create(makePetSetService(p)); err != nil && !apierrors.IsAlreadyExists(err) {
+		return fmt.Errorf("create petset service: %s", err)
+	}
 
 	psetClient := c.kclient.Apps().PetSets(p.Namespace)
 	// Ensure we have a replica set running Prometheus deployed.
@@ -332,7 +328,7 @@ func (c *Controller) reconcile(p *spec.Prometheus) error {
 	psetQ := &v1alpha1.PetSet{}
 	psetQ.Namespace = p.Namespace
 	psetQ.Name = p.Name
-	obj, exists, err = c.psetInf.GetStore().Get(psetQ)
+	obj, exists, err := c.psetInf.GetStore().Get(psetQ)
 	if err != nil {
 		return err
 	}
@@ -394,15 +390,18 @@ func (c *Controller) deletePrometheus(p *spec.Prometheus) error {
 		return err
 	}
 
-	if err := c.kclient.Core().Services(p.Namespace).Delete(fmt.Sprintf("%s-petset", p.Name), nil); err != nil {
-		return err
-	}
+	// if err := c.kclient.Core().Services(p.Namespace).Delete(fmt.Sprintf("%s-petset", p.Name), nil); err != nil {
+	// 	return err
+	// }
 
 	// Delete the auto-generate configuration.
 	// TODO(fabxc): add an ownerRef at creation so we don't delete config maps
 	// manually created for Prometheus servers with no ServiceMonitor selectors.
 	cm := c.kclient.Core().ConfigMaps(p.Namespace)
 	if err := cm.Delete(p.Name, nil); err != nil {
+		return err
+	}
+	if err := cm.Delete(fmt.Sprintf("%s-rules", p.Name), nil); err != nil {
 		return err
 	}
 	return nil

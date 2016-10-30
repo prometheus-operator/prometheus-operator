@@ -64,16 +64,31 @@ func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 	return petset
 }
 
+func makeEmptyConfig(name string) *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: v1.ObjectMeta{
+			Name: fmt.Sprintf("%s", name),
+		},
+		Data: map[string]string{
+			"prometheus.yaml": "",
+		},
+	}
+}
+
+func makeEmptyRules(name string) *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: v1.ObjectMeta{
+			Name: fmt.Sprintf("%s-rules", name),
+		},
+	}
+}
+
 func makePetSetService(p *spec.Prometheus) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
-			Name: fmt.Sprintf("%s-petset", p.Name),
+			Name: "prometheus",
 		},
 		Spec: v1.ServiceSpec{
-			Selector: map[string]string{
-				"prometheus.coreos.com/name": p.Name,
-				"prometheus.coreos.com/type": "prometheus",
-			},
 			ClusterIP: "None",
 			Ports: []v1.ServicePort{
 				{
@@ -81,6 +96,9 @@ func makePetSetService(p *spec.Prometheus) *v1.Service {
 					Port:       9090,
 					TargetPort: intstr.FromString("web"),
 				},
+			},
+			Selector: map[string]string{
+				"prometheus.coreos.com/type": "prometheus",
 			},
 		},
 	}
@@ -93,7 +111,7 @@ func makePetSetSpec(name, image string, replicas int32) v1alpha1.PetSetSpec {
 	terminationGracePeriod := int64(600)
 
 	return v1alpha1.PetSetSpec{
-		ServiceName: fmt.Sprintf("%s-petset", name),
+		ServiceName: "prometheus",
 		Replicas:    &replicas,
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: v1.ObjectMeta{
