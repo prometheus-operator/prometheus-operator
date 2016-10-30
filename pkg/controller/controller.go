@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/coreos/kube-prometheus-controller/pkg/spec"
@@ -342,7 +343,71 @@ func (c *Controller) reconcile(p *spec.Prometheus) error {
 	if _, err := psetClient.Update(makePetSet(p, obj.(*v1alpha1.PetSet))); err != nil {
 		return err
 	}
-	return nil
+
+	return c.syncVersion(p)
+}
+
+func podRunningAndReady(pod v1.Pod) (bool, error) {
+	switch pod.Status.Phase {
+	case v1.PodFailed, v1.PodSucceeded:
+		return false, fmt.Errorf("pod completed")
+	case v1.PodRunning:
+		for _, cond := range pod.Status.Conditions {
+			if cond.Type != v1.PodReady {
+				continue
+			}
+			return cond.Status == v1.ConditionTrue, nil
+		}
+		return false, fmt.Errorf("pod ready conditation not found")
+	}
+	return false, nil
+}
+
+// syncVersion ensures that all running pods for a Prometheus have the required version.
+// It kills pods with the wrong version one-after-one and lets the PetSet controller
+// create new pods.
+//
+// TODO(fabxc): remove this once the PetSet controller learns how to do rolling updates.
+func (c *Controller) syncVersion(p *spec.Prometheus) error {
+	selector, err := labels.Parse("prometheus.coreos.com/type=prometheus,prometheus.coreos.com/name=" + p.Name)
+	if err != nil {
+		return err
+	}
+	podClient := c.kclient.Core().Pods(p.Namespace)
+
+Outer:
+	for {
+		pods, err := podClient.List(api.ListOptions{LabelSelector: selector})
+		if err != nil {
+			return err
+		}
+		if len(pods.Items) == 0 {
+			return nil
+		}
+		for _, cp := range pods.Items {
+			ready, err := podRunningAndReady(cp)
+			if err != nil {
+				return err
+			}
+			if !ready {
+				time.Sleep(200 * time.Millisecond)
+				continue Outer
+			}
+		}
+		var pod *v1.Pod
+		for _, cp := range pods.Items {
+			if !strings.HasSuffix(cp.Spec.Containers[0].Image, p.Spec.Version) {
+				pod = &cp
+				break
+			}
+		}
+		if pod == nil {
+			return nil
+		}
+		if err := podClient.Delete(pod.Name, nil); err != nil {
+			return err
+		}
+	}
 }
 
 func (c *Controller) deletePrometheus(p *spec.Prometheus) error {

@@ -32,7 +32,7 @@ func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 		ObjectMeta: v1.ObjectMeta{
 			Name: p.Name,
 		},
-		Spec: makePetSetSpec(p.Name, image, replicas),
+		Spec: makePetSetSpec(p.Name, image, version, replicas),
 	}
 	if vc := p.Spec.Storage; vc == nil {
 		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -105,7 +105,7 @@ func makePetSetService(p *spec.Prometheus) *v1.Service {
 	return svc
 }
 
-func makePetSetSpec(name, image string, replicas int32) v1alpha1.PetSetSpec {
+func makePetSetSpec(name, image, version string, replicas int32) v1alpha1.PetSetSpec {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)

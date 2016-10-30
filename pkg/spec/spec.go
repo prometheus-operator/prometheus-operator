@@ -61,7 +61,9 @@ type ServiceMonitor struct {
 type ServiceMonitorSpec struct {
 	Endpoints []Endpoint                `json:"endpoints"`
 	Selector  unversioned.LabelSelector `json:"selector"`
-	// Rules          []apiV1.ConfigMapVolumeSource `json:"rules"`
+	// AllNamespaces     bool                      `json:"allNamespaces"`
+	// Namespaces        []string                  `json:"namespaces"`
+	// NamespaceSelector unversioned.LabelSelector `json:"namespaceSelector"`
 }
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.
