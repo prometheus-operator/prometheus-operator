@@ -1,0 +1,588 @@
+{
+    "dashboard": {
+        "__inputs": [
+            {
+                "description": "",
+                "label": "prometheus",
+                "name": "DS_PROMETHEUS",
+                "pluginId": "prometheus",
+                "pluginName": "Prometheus",
+                "type": "datasource"
+            }
+        ],
+        "__requires": [
+            {
+                "id": "singlestat",
+                "name": "Singlestat",
+                "type": "panel",
+                "version": ""
+            },
+            {
+                "id": "graph",
+                "name": "Graph",
+                "type": "panel",
+                "version": ""
+            },
+            {
+                "id": "grafana",
+                "name": "Grafana",
+                "type": "grafana",
+                "version": "3.1.1"
+            },
+            {
+                "id": "prometheus",
+                "name": "Prometheus",
+                "type": "datasource",
+                "version": "1.0.0"
+            }
+        ],
+        "annotations": {
+            "list": []
+        },
+        "description": "",
+        "editable": true,
+        "gnetId": 162,
+        "hideControls": true,
+        "id": null,
+        "links": [
+            {
+                "icon": "external link",
+                "includeVars": true,
+                "tags": [],
+                "targetBlank": false,
+                "type": "dashboards"
+            }
+        ],
+        "refresh": "10s",
+        "rows": [
+            {
+                "collapse": false,
+                "editable": true,
+                "height": "250px",
+                "panels": [
+                    {
+                        "cacheTimeout": null,
+                        "colorBackground": false,
+                        "colorValue": false,
+                        "colors": [
+                            "rgba(50, 172, 45, 0.97)",
+                            "rgba(237, 129, 40, 0.89)",
+                            "rgba(245, 54, 54, 0.9)"
+                        ],
+                        "datasource": "${DS_PROMETHEUS}",
+                        "decimals": 2,
+                        "editable": true,
+                        "error": false,
+                        "format": "percent",
+                        "gauge": {
+                            "maxValue": 100,
+                            "minValue": 0,
+                            "show": true,
+                            "thresholdLabels": false,
+                            "thresholdMarkers": true
+                        },
+                        "id": 6,
+                        "interval": null,
+                        "isNew": true,
+                        "links": [],
+                        "mappingType": 1,
+                        "mappingTypes": [
+                            {
+                                "name": "value to text",
+                                "value": 1
+                            },
+                            {
+                                "name": "range to text",
+                                "value": 2
+                            }
+                        ],
+                        "maxDataPoints": 100,
+                        "nullPointMode": "connected",
+                        "nullText": null,
+                        "postfix": "",
+                        "postfixFontSize": "50%",
+                        "prefix": "",
+                        "prefixFontSize": "50%",
+                        "rangeMaps": [
+                            {
+                                "from": "null",
+                                "text": "N/A",
+                                "to": "null"
+                            }
+                        ],
+                        "span": 3,
+                        "sparkline": {
+                            "fillColor": "rgba(31, 118, 189, 0.18)",
+                            "full": false,
+                            "lineColor": "rgb(31, 120, 193)",
+                            "show": false
+                        },
+                        "targets": [
+                            {
+                                "expr": "sum(sum by (container_name)( rate(container_cpu_usage_seconds_total{image!=\"\",instance=~\"$node\"}[1m] ) )) / count(node_cpu{mode=\"system\",instance=~\"$node:9100\"}) * 100",
+                                "interval": "10s",
+                                "intervalFactor": 1,
+                                "legendFormat": "",
+                                "refId": "A",
+                                "step": 10
+                            }
+                        ],
+                        "thresholds": "65, 90",
+                        "title": "Cluster CPU Usage",
+                        "type": "singlestat",
+                        "valueFontSize": "80%",
+                        "valueMaps": [
+                            {
+                                "op": "=",
+                                "text": "N/A",
+                                "value": "null"
+                            }
+                        ],
+                        "valueName": "current"
+                    },
+                    {
+                        "aliasColors": {},
+                        "bars": false,
+                        "datasource": "${DS_PROMETHEUS}",
+                        "decimals": 3,
+                        "editable": true,
+                        "error": false,
+                        "fill": 0,
+                        "grid": {
+                            "threshold1": null,
+                            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                            "threshold2": null,
+                            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+                        },
+                        "id": 3,
+                        "isNew": true,
+                        "legend": {
+                            "alignAsTable": true,
+                            "avg": true,
+                            "current": true,
+                            "max": false,
+                            "min": false,
+                            "rightSide": true,
+                            "show": false,
+                            "sort": "current",
+                            "sortDesc": true,
+                            "total": false,
+                            "values": true
+                        },
+                        "lines": true,
+                        "linewidth": 2,
+                        "links": [],
+                        "nullPointMode": "connected",
+                        "percentage": false,
+                        "pointradius": 5,
+                        "points": false,
+                        "renderer": "flot",
+                        "seriesOverrides": [],
+                        "span": 9,
+                        "stack": false,
+                        "steppedLine": false,
+                        "targets": [
+                            {
+                                "expr": "sum(sum by (container_name)(rate(container_cpu_usage_seconds_total{image!=\"\",instance=~\"$node\"}[1m])))",
+                                "interval": "10s",
+                                "intervalFactor": 1,
+                                "legendFormat": "CPU Usage",
+                                "metric": "container_cpu_usage_seconds_total",
+                                "refId": "A",
+                                "step": 10
+                            },
+                            {
+                                "expr": "count(node_cpu{mode=\"system\",instance=~\"$node:9100\"})",
+                                "interval": "10s",
+                                "intervalFactor": 1,
+                                "legendFormat": "CPU Total",
+                                "metric": "node_cpu",
+                                "refId": "B",
+                                "step": 10
+                            }
+                        ],
+                        "timeFrom": null,
+                        "timeShift": null,
+                        "title": "Cluster CPU Usage",
+                        "tooltip": {
+                            "msResolution": true,
+                            "shared": true,
+                            "sort": 0,
+                            "value_type": "cumulative"
+                        },
+                        "type": "graph",
+                        "xaxis": {
+                            "show": true
+                        },
+                        "yaxes": [
+                            {
+                                "format": "percentunit",
+                                "label": null,
+                                "logBase": 1,
+                                "max": null,
+                                "min": null,
+                                "show": true
+                            },
+                            {
+                                "format": "short",
+                                "label": null,
+                                "logBase": 1,
+                                "max": null,
+                                "min": null,
+                                "show": true
+                            }
+                        ]
+                    }
+                ],
+                "title": "Row"
+            },
+            {
+                "collapse": false,
+                "editable": true,
+                "height": "250px",
+                "panels": [
+                    {
+                        "cacheTimeout": null,
+                        "colorBackground": false,
+                        "colorValue": false,
+                        "colors": [
+                            "rgba(50, 172, 45, 0.97)",
+                            "rgba(237, 129, 40, 0.89)",
+                            "rgba(245, 54, 54, 0.9)"
+                        ],
+                        "datasource": "${DS_PROMETHEUS}",
+                        "editable": true,
+                        "error": false,
+                        "format": "percent",
+                        "gauge": {
+                            "maxValue": 100,
+                            "minValue": 0,
+                            "show": true,
+                            "thresholdLabels": false,
+                            "thresholdMarkers": true
+                        },
+                        "id": 4,
+                        "interval": null,
+                        "isNew": true,
+                        "links": [],
+                        "mappingType": 1,
+                        "mappingTypes": [
+                            {
+                                "name": "value to text",
+                                "value": 1
+                            },
+                            {
+                                "name": "range to text",
+                                "value": 2
+                            }
+                        ],
+                        "maxDataPoints": 100,
+                        "nullPointMode": "connected",
+                        "nullText": null,
+                        "postfix": "",
+                        "postfixFontSize": "50%",
+                        "prefix": "",
+                        "prefixFontSize": "50%",
+                        "rangeMaps": [
+                            {
+                                "from": "null",
+                                "text": "N/A",
+                                "to": "null"
+                            }
+                        ],
+                        "span": 3,
+                        "sparkline": {
+                            "fillColor": "rgba(31, 118, 189, 0.18)",
+                            "full": false,
+                            "lineColor": "rgb(31, 120, 193)",
+                            "show": false
+                        },
+                        "targets": [
+                            {
+                                "expr": "(sum(node_memory_MemTotal{instance=~\"$node:9100\"}) - sum(node_memory_MemFree{instance=~\"$node:9100\"}+node_memory_Buffers{instance=~\"$node:9100\"}+node_memory_Cached{instance=~\"$node:9100\"}) ) / sum(node_memory_MemTotal{instance=~\"$node:9100\"}) * 100",
+                                "interval": "10s",
+                                "intervalFactor": 1,
+                                "legendFormat": "",
+                                "refId": "A",
+                                "step": 10
+                            }
+                        ],
+                        "thresholds": "65, 90",
+                        "title": "Cluster memory usage",
+                        "type": "singlestat",
+                        "valueFontSize": "80%",
+                        "valueMaps": [
+                            {
+                                "op": "=",
+                                "text": "N/A",
+                                "value": "null"
+                            }
+                        ],
+                        "valueName": "current"
+                    },
+                    {
+                        "aliasColors": {},
+                        "bars": false,
+                        "datasource": "${DS_PROMETHEUS}",
+                        "decimals": 2,
+                        "editable": true,
+                        "error": false,
+                        "fill": 0,
+                        "grid": {
+                            "threshold1": null,
+                            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                            "threshold2": null,
+                            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+                        },
+                        "id": 2,
+                        "isNew": true,
+                        "legend": {
+                            "alignAsTable": true,
+                            "avg": true,
+                            "current": true,
+                            "max": false,
+                            "min": false,
+                            "rightSide": true,
+                            "show": false,
+                            "sideWidth": 200,
+                            "sort": "current",
+                            "sortDesc": true,
+                            "total": false,
+                            "values": true
+                        },
+                        "lines": true,
+                        "linewidth": 2,
+                        "links": [],
+                        "nullPointMode": "connected",
+                        "percentage": false,
+                        "pointradius": 5,
+                        "points": false,
+                        "renderer": "flot",
+                        "seriesOverrides": [],
+                        "span": 9,
+                        "stack": false,
+                        "steppedLine": false,
+                        "targets": [
+                            {
+                                "expr": "(sum(node_memory_MemTotal{instance=~\"$node:9100\"}) - sum(node_memory_MemFree{instance=~\"$node:9100\"}+node_memory_Buffers{instance=~\"$node:9100\"}+node_memory_Cached{instance=~\"$node:9100\"}))",
+                                "interval": "10s",
+                                "intervalFactor": 1,
+                                "legendFormat": "Cluster Memory Usage",
+                                "metric": "node_memory_MemAvailable",
+                                "refId": "A",
+                                "step": 10
+                            },
+                            {
+                                "expr": "sum(node_memory_MemTotal{instance=~\"$node:9100\"})",
+                                "interval": "10s",
+                                "intervalFactor": 2,
+                                "legendFormat": "Cluster Memory Total",
+                                "metric": "node_memory_MemTotal",
+                                "refId": "B",
+                                "step": 20
+                            }
+                        ],
+                        "timeFrom": null,
+                        "timeShift": null,
+                        "title": "Cluster Memory Usage",
+                        "tooltip": {
+                            "msResolution": false,
+                            "shared": true,
+                            "sort": 0,
+                            "value_type": "cumulative"
+                        },
+                        "type": "graph",
+                        "xaxis": {
+                            "show": true
+                        },
+                        "yaxes": [
+                            {
+                                "format": "bytes",
+                                "label": null,
+                                "logBase": 1,
+                                "max": null,
+                                "min": null,
+                                "show": true
+                            },
+                            {
+                                "format": "short",
+                                "label": null,
+                                "logBase": 1,
+                                "max": null,
+                                "min": null,
+                                "show": true
+                            }
+                        ]
+                    }
+                ],
+                "title": "New row"
+            },
+            {
+                "collapse": false,
+                "editable": true,
+                "height": "250px",
+                "panels": [
+                    {
+                        "aliasColors": {},
+                        "bars": false,
+                        "datasource": "${DS_PROMETHEUS}",
+                        "decimals": 2,
+                        "editable": true,
+                        "error": false,
+                        "fill": 0,
+                        "grid": {
+                            "threshold1": null,
+                            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                            "threshold2": null,
+                            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+                        },
+                        "id": 9,
+                        "isNew": true,
+                        "legend": {
+                            "alignAsTable": true,
+                            "avg": true,
+                            "current": true,
+                            "max": false,
+                            "min": false,
+                            "rightSide": true,
+                            "show": true,
+                            "sideWidth": 200,
+                            "sort": "current",
+                            "sortDesc": true,
+                            "total": true,
+                            "values": true
+                        },
+                        "lines": true,
+                        "linewidth": 2,
+                        "links": [],
+                        "nullPointMode": "connected",
+                        "percentage": false,
+                        "pointradius": 5,
+                        "points": false,
+                        "renderer": "flot",
+                        "seriesOverrides": [],
+                        "span": 12,
+                        "stack": false,
+                        "steppedLine": false,
+                        "targets": [
+                            {
+                                "expr": "sum (rate (node_network_receive_bytes{instance=~\"$node:9100\"}[1m]))",
+                                "interval": "10s",
+                                "intervalFactor": 1,
+                                "legendFormat": "Received Bytes",
+                                "metric": "network",
+                                "refId": "A",
+                                "step": 10
+                            },
+                            {
+                                "expr": "sum (rate (node_network_transmit_bytes{instance=~\"$node:9100\"}[1m]))",
+                                "interval": "10s",
+                                "intervalFactor": 1,
+                                "legendFormat": "Transmitted Bytes",
+                                "metric": "network",
+                                "refId": "B",
+                                "step": 10
+                            }
+                        ],
+                        "timeFrom": null,
+                        "timeShift": null,
+                        "title": "Cluster Network I/O",
+                        "tooltip": {
+                            "msResolution": false,
+                            "shared": true,
+                            "sort": 0,
+                            "value_type": "cumulative"
+                        },
+                        "type": "graph",
+                        "xaxis": {
+                            "show": true
+                        },
+                        "yaxes": [
+                            {
+                                "format": "bytes",
+                                "label": null,
+                                "logBase": 1,
+                                "max": null,
+                                "min": null,
+                                "show": true
+                            },
+                            {
+                                "format": "short",
+                                "label": null,
+                                "logBase": 1,
+                                "max": null,
+                                "min": null,
+                                "show": true
+                            }
+                        ]
+                    }
+                ],
+                "title": "New row"
+            }
+        ],
+        "schemaVersion": 12,
+        "sharedCrosshair": true,
+        "style": "dark",
+        "tags": [],
+        "templating": {
+            "list": [
+                {
+                    "allValue": ".*",
+                    "current": {},
+                    "datasource": "${DS_PROMETHEUS}",
+                    "hide": 0,
+                    "includeAll": true,
+                    "label": "Node",
+                    "multi": false,
+                    "name": "node",
+                    "options": [],
+                    "query": "label_values(kube_node_info, node)",
+                    "refresh": 1,
+                    "regex": "",
+                    "type": "query"
+                }
+            ]
+        },
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "timepicker": {
+            "refresh_intervals": [
+                "5s",
+                "10s",
+                "30s",
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "2h",
+                "1d"
+            ],
+            "time_options": [
+                "5m",
+                "15m",
+                "1h",
+                "6h",
+                "12h",
+                "24h",
+                "2d",
+                "7d",
+                "30d"
+            ]
+        },
+        "timezone": "browser",
+        "title": "Kubernetes Cluster Monitoring",
+        "version": 0
+    },
+    "inputs": [
+        {
+            "name": "DS_PROMETHEUS",
+            "pluginId": "prometheus",
+            "type": "datasource",
+            "value": "prometheus"
+        }
+    ],
+    "overwrite": true
+}
