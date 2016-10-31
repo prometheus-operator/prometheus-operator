@@ -4,5 +4,5 @@ metadata:
   name: prometheus-main-rules
 data:
   test.rules: |
-    ALERT Test
-    IF true
+    ALERT SomethingIsUp
+    IF up == 1

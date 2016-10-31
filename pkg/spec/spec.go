@@ -29,6 +29,7 @@ type PrometheusSpec struct {
 	BaseImage          string                    `json:"baseImage"`
 	Replicas           int32                     `json:"replicas"`
 	Storage            *StorageSpec              `json:"storage"`
+	Alertmanagers      []AlertmanagerEndpoints   `json:"alertmanagers"`
 	// Retention       string                     `json:"retention"`
 	// Replicas        int                        `json:"replicas"`
 	// Resources       apiV1.ResourceRequirements `json:"resources"`
@@ -43,6 +44,13 @@ type StorageSpec struct {
 	Class     string                     `json:"class"`
 	Selector  *unversioned.LabelSelector `json:"selector"`
 	Resources v1.ResourceRequirements    `json:"resources"`
+}
+
+// AlertmanagerEndpoints defines a selection of a single Endpoints object
+// containing alertmanager IPs to fire alerts against.
+type AlertmanagerEndpoints struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
 }
 
 // ServiceMonitorSelection selects service monitors by their labels.
