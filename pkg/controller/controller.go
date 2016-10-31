@@ -42,7 +42,6 @@ type Controller struct {
 	smonInf cache.SharedIndexInformer
 	cmapInf cache.SharedIndexInformer
 	psetInf cache.SharedIndexInformer
-	svcInf  cache.SharedIndexInformer
 
 	queue *queue
 
@@ -113,10 +112,6 @@ func (c *Controller) Run(stopc <-chan struct{}) error {
 		cache.NewListWatchFromClient(c.kclient.Apps().GetRESTClient(), "petsets", api.NamespaceAll, nil),
 		&v1alpha1.PetSet{}, resyncPeriod, cache.Indexers{},
 	)
-	c.svcInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Core().GetRESTClient(), "services", api.NamespaceAll, nil),
-		&v1.Service{}, resyncPeriod, cache.Indexers{},
-	)
 
 	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(p interface{}) {
@@ -173,9 +168,8 @@ func (c *Controller) Run(stopc <-chan struct{}) error {
 	go c.smonInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
 	go c.psetInf.Run(stopc)
-	go c.svcInf.Run(stopc)
 
-	for !c.promInf.HasSynced() || !c.smonInf.HasSynced() || !c.cmapInf.HasSynced() || !c.psetInf.HasSynced() || !c.svcInf.HasSynced() {
+	for !c.promInf.HasSynced() || !c.smonInf.HasSynced() || !c.cmapInf.HasSynced() || !c.psetInf.HasSynced() {
 		time.Sleep(100 * time.Millisecond)
 	}
 
@@ -318,6 +312,7 @@ func (c *Controller) reconcile(p *spec.Prometheus) error {
 		return err
 	}
 
+	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(p.Namespace)
 	if _, err := svcClient.Create(makePetSetService(p)); err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("create petset service: %s", err)
