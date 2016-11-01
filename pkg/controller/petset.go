@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/coreos/prometheus-operator/pkg/spec"
 	"k8s.io/client-go/1.5/pkg/api/v1"
@@ -9,7 +10,7 @@ import (
 	"k8s.io/client-go/1.5/pkg/util/intstr"
 )
 
-func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet) *v1alpha1.PetSet {
+func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string) *v1alpha1.PetSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -32,7 +33,7 @@ func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 		ObjectMeta: v1.ObjectMeta{
 			Name: p.Name,
 		},
-		Spec: makePetSetSpec(p.Name, image, version, replicas),
+		Spec: makePetSetSpec(p.Name, image, version, replicas, alertmanagers),
 	}
 	if vc := p.Spec.Storage; vc == nil {
 		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -105,7 +106,12 @@ func makePetSetService(p *spec.Prometheus) *v1.Service {
 	return svc
 }
 
-func makePetSetSpec(name, image, version string, replicas int32) v1alpha1.PetSetSpec {
+func makePetSetSpec(name, image, version string, replicas int32, alertmanagers []string) v1alpha1.PetSetSpec {
+	amFlag := ""
+	if len(alertmanagers) > 0 {
+		amFlag = "-alertmanager.url=" + strings.Join(alertmanagers, ",")
+	}
+
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -140,6 +146,7 @@ func makePetSetSpec(name, image, version string, replicas int32) v1alpha1.PetSet
 							"-storage.local.memory-chunks=500000",
 							"-storage.local.path=/var/prometheus/data",
 							"-config.file=/etc/prometheus/config/prometheus.yaml",
+							amFlag,
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
