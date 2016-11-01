@@ -1,7 +1,7 @@
 # kube-prometheus
 
 This repository collects Kubernetes manifests, dashboards, and alerting rules
-combined with documentationa and scripts to deploy them to get full cluster 
+combined with documentation and scripts to deploy them to get a full cluster 
 monitoring setup working.
 
 ## Prerequisites
