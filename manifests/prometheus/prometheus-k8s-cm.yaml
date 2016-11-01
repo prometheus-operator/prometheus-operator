@@ -50,3 +50,27 @@ data:
         regex: kubernetes
         target_label: __scheme__
         replacement: https
+
+    # Scrapes the endpoint lists for the kube-dns server. Which we consider
+    # part of a default setup.
+    - job_name: kube-components
+      scrape_interval: 20s
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+      kubernetes_sd_configs:
+      - role: endpoints
+
+      relabel_configs:
+      - action: replace
+        source_labels: [__meta_kubernetes_service_name]
+        target_label: job
+        regex: "kube-(.*)-prometheus-discovery"
+        replacement: "kube-${1}"
+      - action: keep
+        source_labels: [__meta_kubernetes_service_name]
+        regex: "kube-(.*)-prometheus-discovery"
+      - action: keep
+        source_labels: [__meta_kubernetes_endpoint_port_name]
+        regex: "prometheus"
