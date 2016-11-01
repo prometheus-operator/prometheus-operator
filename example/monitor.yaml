@@ -1,4 +1,4 @@
-apiVersion: "prometheus.coreos.com/v1alpha1"
+apiVersion: "monitoring.coreos.com/v1alpha1"
 kind: "ServiceMonitor"
 metadata:
   name: "example-app"
