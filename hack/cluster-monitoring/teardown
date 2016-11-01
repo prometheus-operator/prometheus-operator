@@ -15,4 +15,4 @@ kctl delete -f manifests/prometheus
 # Hack: wait a bit to let the controller delete the deployed Prometheus server.
 sleep 5
 
-kctl delete -f manifests/controllers/prometheus-controller.yaml
+kctl delete -f manifests/prometheus-operator.yaml

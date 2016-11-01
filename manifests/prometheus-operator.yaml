@@ -1,18 +1,18 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: prometheus-controller
+  name: prometheus-operator
   labels:
-    controller: prometheus 
+    operator: prometheus
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        controller: prometheus
+        operator: prometheus
     spec:
       containers:
-       - name: prometheus-controller
+       - name: prometheus-operator
          image: quay.io/coreos/prometheus-operator:latest
          resources:
            requests:
@@ -20,4 +20,4 @@ spec:
              memory: 50Mi
            limits:
              cpu: 200m
-             memory: 100Mi
+             memory: 300Mi
