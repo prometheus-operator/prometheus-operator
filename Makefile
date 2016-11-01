@@ -1,5 +1,5 @@
 build:
-	go build github.com/coreos/kube-prometheus-controller/cmd/controller
+	go build github.com/coreos/prometheus-operator/cmd/operator
 
 container:
-	docker build -t quay.io/coreos/kube-prometheus-controller .
+	docker build -t quay.io/coreos/prometheus-operator.

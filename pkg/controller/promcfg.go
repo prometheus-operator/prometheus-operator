@@ -3,7 +3,7 @@ package controller
 import (
 	"html/template"
 
-	"github.com/coreos/kube-prometheus-controller/pkg/spec"
+	"github.com/coreos/prometheus-operator/pkg/spec"
 )
 
 type templateConfig struct {

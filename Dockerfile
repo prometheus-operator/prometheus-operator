@@ -1,5 +1,5 @@
 FROM quay.io/prometheus/busybox:latest
 
-ADD controller /bin/controller
+ADD operator /bin/operator
 
-ENTRYPOINT ["/bin/controller"]
+ENTRYPOINT ["/bin/operator"]

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/coreos/kube-prometheus-controller/pkg/spec"
+	"github.com/coreos/prometheus-operator/pkg/spec"
 	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/runtime"

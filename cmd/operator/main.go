@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/coreos/kube-prometheus-controller/pkg/controller"
+	"github.com/coreos/prometheus-operator/pkg/controller"
 )
 
 var cfg controller.Config

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/kube-prometheus-controller/pkg/spec"
+	"github.com/coreos/prometheus-operator/pkg/spec"
 
 	"github.com/go-kit/kit/log"
 	"k8s.io/client-go/1.5/kubernetes"

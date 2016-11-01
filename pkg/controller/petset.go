@@ -3,7 +3,7 @@ package controller
 import (
 	"fmt"
 
-	"github.com/coreos/kube-prometheus-controller/pkg/spec"
+	"github.com/coreos/prometheus-operator/pkg/spec"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/apps/v1alpha1"
 	"k8s.io/client-go/1.5/pkg/util/intstr"

@@ -10,4 +10,4 @@ cafile=$(kubectl config view -o jsonpath="{.clusters[?(@.name == \"$1\")].cluste
 certfile=$(kubectl config view -o jsonpath="{.users[?(@.name == \"$1\")].user.client-certificate}")
 keyfile=$(kubectl config view -o jsonpath="{.users[?(@.name == \"$1\")].user.client-key}")
 
-./controller --apiserver=$apiserver --ca-file=$cafile --cert-file=$certfile --key-file=$keyfile
+./operator --apiserver=$apiserver --ca-file=$cafile --cert-file=$certfile --key-file=$keyfile
