@@ -190,7 +190,7 @@ func (c *Controller) Run(stopc <-chan struct{}) error {
 		AddFunc: func(o interface{}) {
 			e := o.(*v1.Endpoints)
 			c.enqueuePrometheusIf(func(p *spec.Prometheus) bool {
-				for _, a := range p.Spec.Alertmanagers {
+				for _, a := range p.Spec.Alerting.Alertmanagers {
 					if a.Namespace == e.ObjectMeta.Namespace && a.Name == e.ObjectMeta.Name {
 						c.logger.Log("msg", "enqueuePrometheus", "trigger", "am service add")
 						return true
@@ -202,7 +202,7 @@ func (c *Controller) Run(stopc <-chan struct{}) error {
 		UpdateFunc: func(_, cur interface{}) {
 			e := cur.(*v1.Endpoints)
 			c.enqueuePrometheusIf(func(p *spec.Prometheus) bool {
-				for _, a := range p.Spec.Alertmanagers {
+				for _, a := range p.Spec.Alerting.Alertmanagers {
 					if a.Namespace == e.ObjectMeta.Namespace && a.Name == e.ObjectMeta.Name {
 						c.logger.Log("msg", "enqueuePrometheus", "trigger", "am service update", "namespace", e.ObjectMeta.Namespace, "name", e.ObjectMeta.Name)
 						return true
@@ -214,7 +214,7 @@ func (c *Controller) Run(stopc <-chan struct{}) error {
 		DeleteFunc: func(o interface{}) {
 			e := o.(*v1.Endpoints)
 			c.enqueuePrometheusIf(func(p *spec.Prometheus) bool {
-				for _, a := range p.Spec.Alertmanagers {
+				for _, a := range p.Spec.Alerting.Alertmanagers {
 					if a.Namespace == e.ObjectMeta.Namespace && a.Name == e.ObjectMeta.Name {
 						c.logger.Log("msg", "enqueuePrometheus", "trigger", "am service delete")
 						return true
@@ -400,7 +400,7 @@ func (c *Controller) reconcile(p *spec.Prometheus) error {
 	}
 
 	am := []string{}
-	for _, eselector := range p.Spec.Alertmanagers {
+	for _, eselector := range p.Spec.Alerting.Alertmanagers {
 		epntQ := &v1.Endpoints{}
 		epntQ.Name = eselector.Name
 		epntQ.Namespace = eselector.Namespace

@@ -43,7 +43,7 @@ type PrometheusSpec struct {
 	BaseImage          string                    `json:"baseImage"`
 	Replicas           int32                     `json:"replicas"`
 	Storage            *StorageSpec              `json:"storage"`
-	Alertmanagers      []AlertmanagerEndpoints   `json:"alertmanagers"`
+	Alerting           AlertingSpec              `json:"alerting"`
 	// Retention       string                     `json:"retention"`
 	// Replicas        int                        `json:"replicas"`
 	// Resources       apiV1.ResourceRequirements `json:"resources"`
@@ -51,6 +51,11 @@ type PrometheusSpec struct {
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Persistence...
 	// Sharding...
+}
+
+// AlertingSpec defines paramters for alerting configuration of Prometheus servers.
+type AlertingSpec struct {
+	Alertmanagers []AlertmanagerEndpoints `json:"alertmanagers"`
 }
 
 // StorageSpec defines the configured storage for a group Prometheus servers.
