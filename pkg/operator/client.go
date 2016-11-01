@@ -33,7 +33,7 @@ const resyncPeriod = 5 * time.Minute
 func newPrometheusRESTClient(c rest.Config) (*rest.RESTClient, error) {
 	c.APIPath = "/apis"
 	c.GroupVersion = &unversioned.GroupVersion{
-		Group:   "prometheus.coreos.com",
+		Group:   "monitoring.coreos.com",
 		Version: "v1alpha1",
 	}
 	// TODO(fabxc): is this even used with our custom list/watch functions?
