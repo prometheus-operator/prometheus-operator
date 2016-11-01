@@ -1,4 +1,5 @@
 build:
+	./scripts/check_license.sh
 	go build github.com/coreos/prometheus-operator/cmd/operator
 
 container:
