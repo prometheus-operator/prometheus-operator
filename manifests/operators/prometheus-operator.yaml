@@ -1,5 +1,5 @@
 apiVersion: extensions/v1beta1
-kind: ReplicaSet
+kind: Deployment
 metadata:
   name: prometheus-controller
   labels:
@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
        - name: prometheus-controller
-         image: quay.io/coreos/kube-prometheus-controller:latest
+         image: quay.io/coreos/prometheus-operator:latest
          resources:
            requests:
              cpu: 100m
