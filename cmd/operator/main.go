@@ -20,11 +20,11 @@ import (
 	"os"
 
 	"github.com/coreos/prometheus-operator/pkg/analytics"
-	"github.com/coreos/prometheus-operator/pkg/controller"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 )
 
 var (
-	cfg              controller.Config
+	cfg              operator.Config
 	analyticsEnabled bool
 )
 
@@ -45,7 +45,7 @@ func main() {
 	if analyticsEnabled {
 		analytics.Enable()
 	}
-	c, err := controller.New(cfg)
+	c, err := operator.New(cfg)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
