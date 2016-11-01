@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package operator
 
 import (
 	"bytes"
@@ -42,8 +42,8 @@ import (
 )
 
 const (
-	tprServiceMonitor = "service-monitor.prometheus.coreos.com"
-	tprPrometheus     = "prometheus.prometheus.coreos.com"
+	tprServiceMonitor = "service-monitor.monitoring.coreos.com"
+	tprPrometheus     = "prometheus.monitoring.coreos.com"
 )
 
 // Controller manages lify cycle of Prometheus deployments and
