@@ -1,7 +1,0 @@
-apiVersion: v1
-data:
-  .gitkeep: ""
-kind: ConfigMap
-metadata:
-  creationTimestamp: null
-  name: prometheus-k8s-alerts
