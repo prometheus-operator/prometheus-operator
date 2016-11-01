@@ -121,11 +121,6 @@ func makePetSetService(p *spec.Prometheus) *v1.Service {
 }
 
 func makePetSetSpec(name, image, version string, replicas int32, alertmanagers []string) v1alpha1.PetSetSpec {
-	amFlag := ""
-	if len(alertmanagers) > 0 {
-		amFlag = "-alertmanager.url=" + strings.Join(alertmanagers, ",")
-	}
-
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -160,7 +155,7 @@ func makePetSetSpec(name, image, version string, replicas int32, alertmanagers [
 							"-storage.local.memory-chunks=500000",
 							"-storage.local.path=/var/prometheus/data",
 							"-config.file=/etc/prometheus/config/prometheus.yaml",
-							amFlag,
+							"-alertmanager.url=" + strings.Join(alertmanagers, ","),
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
