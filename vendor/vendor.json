@@ -237,6 +237,12 @@
 			"revisionTime": "2016-10-23T20:27:10Z"
 		},
 		{
+			"checksumSHA1": "neYqKo33GRQbeVPx0mu+1unNdGM=",
+			"path": "github.com/jpillora/go-ogle-analytics",
+			"revision": "49dbddd69887519886adf7763e0306e1f33ba50f",
+			"revisionTime": "2016-07-20T12:08:20Z"
+		},
+		{
 			"checksumSHA1": "gA95N2LM2hEJLoqrTPaFsSWDJ2Y=",
 			"origin": "k8s.io/client-go/1.5/vendor/github.com/juju/ratelimit",
 			"path": "github.com/juju/ratelimit",
@@ -1127,5 +1133,5 @@
 			"revisionTime": "2016-10-23T20:27:10Z"
 		}
 	],
-	"rootPath": "github.com/coreos/kube-prometheus-controller"
+	"rootPath": "github.com/coreos/prometheus-operator"
 }
