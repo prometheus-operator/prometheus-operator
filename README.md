@@ -89,7 +89,7 @@ hack/controller-external.sh <kubectl cluster name>
 Roughly in order of importance:
 
 * Namespace configuration/limitation of discovered monitoring targets
-* Auto-update/rollback of Prometheus server deployments
+* Global desired Prometheus version with optional pinning
 * Dynamic mounting of recording/alerting rule ConfigMaps
 * Configuring receiving AlertManagers 
 * Persistent volume mounts for time series data
