@@ -11,5 +11,4 @@ spec:
     protocol: TCP
     targetPort: web
   selector:
-    prometheus.coreos.com/type: prometheus
-    prometheus.coreos.com/name: prometheus-main
+    prometheus: prometheus-main

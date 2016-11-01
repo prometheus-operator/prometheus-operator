@@ -452,7 +452,7 @@ func podRunningAndReady(pod v1.Pod) (bool, error) {
 //
 // TODO(fabxc): remove this once the PetSet controller learns how to do rolling updates.
 func (c *Controller) syncVersion(p *spec.Prometheus) error {
-	selector, err := labels.Parse("prometheus.coreos.com/type=prometheus,prometheus.coreos.com/name=" + p.Name)
+	selector, err := labels.Parse("app=prometheus,prometheus=" + p.Name)
 	if err != nil {
 		return err
 	}
@@ -514,7 +514,7 @@ func (c *Controller) deletePrometheus(p *spec.Prometheus) error {
 	}
 
 	// XXX: Selecting by ObjectMeta.Name gives an error. So use the label for now.
-	selector, err := labels.Parse("prometheus.coreos.com/type=prometheus,prometheus.coreos.com/name=" + p.Name)
+	selector, err := labels.Parse("app=prometheus,prometheus=" + p.Name)
 	if err != nil {
 		return err
 	}
@@ -646,7 +646,7 @@ func (c *Controller) createTPRs() error {
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
 	err := wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
-		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/prometheuses")
+		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/monitoring.coreos.com/v1alpha1/prometheuses")
 		if err != nil {
 			return false, err
 		}
@@ -665,7 +665,7 @@ func (c *Controller) createTPRs() error {
 		return err
 	}
 	return wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
-		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/prometheus.coreos.com/v1alpha1/servicemonitors")
+		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/monitoring.coreos.com/v1alpha1/servicemonitors")
 		if err != nil {
 			return false, err
 		}

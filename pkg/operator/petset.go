@@ -113,7 +113,7 @@ func makePetSetService(p *spec.Prometheus) *v1.Service {
 				},
 			},
 			Selector: map[string]string{
-				"prometheus.coreos.com/type": "prometheus",
+				"app": "prometheus",
 			},
 		},
 	}
@@ -131,8 +131,8 @@ func makePetSetSpec(name, image, version string, replicas int32, alertmanagers [
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: v1.ObjectMeta{
 				Labels: map[string]string{
-					"prometheus.coreos.com/name": name,
-					"prometheus.coreos.com/type": "prometheus",
+					"app":        "prometheus",
+					"prometheus": name,
 				},
 				Annotations: map[string]string{
 					"pod.alpha.kubernetes.io/initialized": "true",
