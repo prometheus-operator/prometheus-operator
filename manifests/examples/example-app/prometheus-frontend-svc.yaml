@@ -2,7 +2,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-frontend
-  namespace: default
 spec:
   type: NodePort
   ports:
@@ -12,5 +11,4 @@ spec:
     protocol: TCP
     targetPort: web
   selector:
-    prometheus.coreos.com/type: prometheus
-    prometheus.coreos.com/name: prometheus-frontend
+    prometheus: prometheus-frontend

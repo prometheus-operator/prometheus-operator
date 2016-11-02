@@ -13,8 +13,8 @@ kctl() {
 kctl apply -f manifests/prometheus-operator.yaml
 
 # Wait for TPRs to be ready.
-until kctl get servicemonitor; do sleep 0.1; done
-until kctl get prometheus; do sleep 0.1; done
+until kctl get servicemonitor; do sleep 1; done
+until kctl get prometheus; do sleep 1; done
 
 kctl apply -f manifests/exporters
 kctl apply -f manifests/grafana

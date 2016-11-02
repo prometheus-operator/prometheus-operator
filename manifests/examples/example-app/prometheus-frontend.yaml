@@ -1,4 +1,4 @@
-apiVersion: prometheus.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1alpha1
 kind: Prometheus
 metadata:
   name: prometheus-frontend
@@ -6,7 +6,8 @@ metadata:
   labels:
     prometheus: frontend
 spec:
+  version: v1.3.0
   serviceMonitors:
   - selector:
       matchLabels:
-        team: frontend
+        tier: frontend

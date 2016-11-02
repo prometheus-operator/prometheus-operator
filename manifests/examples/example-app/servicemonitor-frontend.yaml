@@ -1,14 +1,13 @@
-apiVersion: prometheus.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
   name: frontend
-  namespace: default
   labels:
-    team: frontend
+    tier: frontend
 spec:
   selector:
     matchLabels:
-      team: frontend
+      tier: frontend
   endpoints:
   - port: web
     interval: 10s

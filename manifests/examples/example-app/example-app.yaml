@@ -1,11 +1,9 @@
 kind: Service
-apiVersion: "v1"
+apiVersion: v1
 metadata: 
   name: example-app
-  namespace: production
   labels:
     tier: frontend
-    team: frontend
   annotations:
     prometheus.io/scrape: 'true'
 spec: 
@@ -21,9 +19,8 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: example-app
-  namespace: production
 spec:
-  replicas: 5
+  replicas: 4
   template:
     metadata:
       labels:
