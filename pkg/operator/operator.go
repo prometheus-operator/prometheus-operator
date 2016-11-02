@@ -46,9 +46,9 @@ const (
 	tprPrometheus     = "prometheus.monitoring.coreos.com"
 )
 
-// Controller manages lify cycle of Prometheus deployments and
+// Operator manages lify cycle of Prometheus deployments and
 // monitoring configurations.
-type Controller struct {
+type Operator struct {
 	kclient *kubernetes.Clientset
 	pclient *rest.RESTClient
 	logger  log.Logger
@@ -64,7 +64,7 @@ type Controller struct {
 	host string
 }
 
-// Config defines configuration parameters for the Controller.
+// Config defines configuration parameters for the Operator.
 type Config struct {
 	Host        string
 	TLSInsecure bool
@@ -72,7 +72,7 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(c Config) (*Controller, error) {
+func New(c Config) (*Operator, error) {
 	cfg, err := newClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func New(c Config) (*Controller, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Controller{
+	return &Operator{
 		kclient: client,
 		pclient: promclient,
 		logger:  logger,
@@ -98,7 +98,7 @@ func New(c Config) (*Controller, error) {
 }
 
 // Run the controller.
-func (c *Controller) Run(stopc <-chan struct{}) error {
+func (c *Operator) Run(stopc <-chan struct{}) error {
 	defer c.queue.close()
 	go c.worker()
 
@@ -257,11 +257,11 @@ func (q *queue) pop() (*spec.Prometheus, bool) {
 
 var keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
 
-func (c *Controller) enqueuePrometheus(p interface{}) {
+func (c *Operator) enqueuePrometheus(p interface{}) {
 	c.queue.add(p.(*spec.Prometheus))
 }
 
-func (c *Controller) enqueuePrometheusIf(f func(p *spec.Prometheus) bool) {
+func (c *Operator) enqueuePrometheusIf(f func(p *spec.Prometheus) bool) {
 	cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(o interface{}) {
 		if f(o.(*spec.Prometheus)) {
 			c.enqueuePrometheus(o.(*spec.Prometheus))
@@ -269,7 +269,7 @@ func (c *Controller) enqueuePrometheusIf(f func(p *spec.Prometheus) bool) {
 	})
 }
 
-func (c *Controller) enqueueAll() {
+func (c *Operator) enqueueAll() {
 	cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(o interface{}) {
 		c.enqueuePrometheus(o.(*spec.Prometheus))
 	})
@@ -277,7 +277,7 @@ func (c *Controller) enqueueAll() {
 
 // worker runs a worker thread that just dequeues items, processes them, and marks them done.
 // It enforces that the syncHandler is never invoked concurrently with the same key.
-func (c *Controller) worker() {
+func (c *Operator) worker() {
 	for {
 		p, ok := c.queue.pop()
 		if !ok {
@@ -289,7 +289,7 @@ func (c *Controller) worker() {
 	}
 }
 
-func (c *Controller) prometheusForDeployment(d *v1alpha1.PetSet) *spec.Prometheus {
+func (c *Operator) prometheusForDeployment(d *v1alpha1.PetSet) *spec.Prometheus {
 	key, err := keyFunc(d)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
@@ -307,7 +307,7 @@ func (c *Controller) prometheusForDeployment(d *v1alpha1.PetSet) *spec.Prometheu
 	return p.(*spec.Prometheus)
 }
 
-func (c *Controller) deletePetSet(o interface{}) {
+func (c *Operator) deletePetSet(o interface{}) {
 	d := o.(*v1alpha1.PetSet)
 	// Wake up Prometheus resource the deployment belongs to.
 	if p := c.prometheusForDeployment(d); p != nil {
@@ -315,7 +315,7 @@ func (c *Controller) deletePetSet(o interface{}) {
 	}
 }
 
-func (c *Controller) addPetSet(o interface{}) {
+func (c *Operator) addPetSet(o interface{}) {
 	d := o.(*v1alpha1.PetSet)
 	// Wake up Prometheus resource the deployment belongs to.
 	if p := c.prometheusForDeployment(d); p != nil {
@@ -323,7 +323,7 @@ func (c *Controller) addPetSet(o interface{}) {
 	}
 }
 
-func (c *Controller) updatePetSet(oldo, curo interface{}) {
+func (c *Operator) updatePetSet(oldo, curo interface{}) {
 	old := oldo.(*v1alpha1.PetSet)
 	cur := curo.(*v1alpha1.PetSet)
 
@@ -341,7 +341,7 @@ func (c *Controller) updatePetSet(oldo, curo interface{}) {
 	}
 }
 
-func (c *Controller) reconcile(p *spec.Prometheus) error {
+func (c *Operator) reconcile(p *spec.Prometheus) error {
 	key, err := keyFunc(p)
 	if err != nil {
 		return err
@@ -451,7 +451,7 @@ func podRunningAndReady(pod v1.Pod) (bool, error) {
 // create new pods.
 //
 // TODO(fabxc): remove this once the PetSet controller learns how to do rolling updates.
-func (c *Controller) syncVersion(p *spec.Prometheus) error {
+func (c *Operator) syncVersion(p *spec.Prometheus) error {
 	selector, err := labels.Parse("app=prometheus,prometheus=" + p.Name)
 	if err != nil {
 		return err
@@ -493,7 +493,7 @@ Outer:
 	}
 }
 
-func (c *Controller) deletePrometheus(p *spec.Prometheus) error {
+func (c *Operator) deletePrometheus(p *spec.Prometheus) error {
 	// Update the replica count to 0 and wait for all pods to be deleted.
 	psetClient := c.kclient.Apps().PetSets(p.Namespace)
 
@@ -555,7 +555,7 @@ func (c *Controller) deletePrometheus(p *spec.Prometheus) error {
 	return nil
 }
 
-func (c *Controller) createConfig(p *spec.Prometheus) error {
+func (c *Operator) createConfig(p *spec.Prometheus) error {
 	smons, err := c.selectServiceMonitors(p)
 	if err != nil {
 		return err
@@ -589,7 +589,7 @@ func (c *Controller) createConfig(p *spec.Prometheus) error {
 	return err
 }
 
-func (c *Controller) selectServiceMonitors(p *spec.Prometheus) (map[string]*spec.ServiceMonitor, error) {
+func (c *Operator) selectServiceMonitors(p *spec.Prometheus) (map[string]*spec.ServiceMonitor, error) {
 	// Selectors might overlap. Deduplicate them along the keyFunc.
 	res := make(map[string]*spec.ServiceMonitor)
 
@@ -614,7 +614,7 @@ func (c *Controller) selectServiceMonitors(p *spec.Prometheus) (map[string]*spec
 	return res, nil
 }
 
-func (c *Controller) createTPRs() error {
+func (c *Operator) createTPRs() error {
 	tprs := []*extensionsobj.ThirdPartyResource{
 		{
 			ObjectMeta: v1.ObjectMeta{

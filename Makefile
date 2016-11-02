@@ -8,6 +8,7 @@ build:
 	go build github.com/coreos/prometheus-operator/cmd/operator
 
 container:
+	GOOS=linux $(MAKE) build
 	docker build -t $(REPO):$(TAG) .
 
 .PHONY: all build container
