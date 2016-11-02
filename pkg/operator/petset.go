@@ -35,7 +35,7 @@ func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string
 	}
 	version := p.Spec.Version
 	if version == "" {
-		version = "v1.3.0-beta.0"
+		version = "v1.3.0"
 	}
 	replicas := p.Spec.Replicas
 	if replicas < 1 {
