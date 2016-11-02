@@ -42,9 +42,9 @@ type PrometheusSpec struct {
 	Version            string                    `json:"version"`
 	BaseImage          string                    `json:"baseImage"`
 	Replicas           int32                     `json:"replicas"`
+	Retention          string                    `json:"retention"`
 	Storage            *StorageSpec              `json:"storage"`
 	Alerting           AlertingSpec              `json:"alerting"`
-	// Retention       string                     `json:"retention"`
 	// Replicas        int                        `json:"replicas"`
 	// Resources       apiV1.ResourceRequirements `json:"resources"`
 	// Alerting        AlertingSpec               `json:"alerting"`

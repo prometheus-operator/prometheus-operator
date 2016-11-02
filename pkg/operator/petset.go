@@ -41,13 +41,17 @@ func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string
 	if replicas < 1 {
 		replicas = 1
 	}
+	retention := p.Spec.Retention
+	if retention == "" {
+		retention = "24h"
+	}
 	image := fmt.Sprintf("%s:%s", baseImage, version)
 
 	petset := &v1alpha1.PetSet{
 		ObjectMeta: v1.ObjectMeta{
 			Name: p.Name,
 		},
-		Spec: makePetSetSpec(p.Name, image, version, replicas, alertmanagers),
+		Spec: makePetSetSpec(p.Name, image, version, retention, replicas, alertmanagers),
 	}
 	if vc := p.Spec.Storage; vc == nil {
 		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -120,7 +124,7 @@ func makePetSetService(p *spec.Prometheus) *v1.Service {
 	return svc
 }
 
-func makePetSetSpec(name, image, version string, replicas int32, alertmanagers []string) v1alpha1.PetSetSpec {
+func makePetSetSpec(name, image, version, retention string, replicas int32, alertmanagers []string) v1alpha1.PetSetSpec {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -151,7 +155,7 @@ func makePetSetSpec(name, image, version string, replicas int32, alertmanagers [
 							},
 						},
 						Args: []string{
-							"-storage.local.retention=12h",
+							"-storage.local.retention=" + retention,
 							"-storage.local.memory-chunks=500000",
 							"-storage.local.path=/var/prometheus/data",
 							"-config.file=/etc/prometheus/config/prometheus.yaml",
