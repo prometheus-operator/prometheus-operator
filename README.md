@@ -6,14 +6,57 @@ monitoring setup working.
 
 ## Prerequisites
 
-First, you need a running Kubernetes cluster. If you don't have one, follow
-the instructions of [bootkube](https://github.com/kubernetes-incubator/bootkube)
-or [minikube](https://github.com/kubernetes/minikube).
+First, you need a running Kubernetes cluster. If you don't have one, follow the
+instructions of [bootkube](https://github.com/kubernetes-incubator/bootkube) or
+[minikube](https://github.com/kubernetes/minikube). Some sample contents of this
+repository are adapted to work with a [multi-node setup](https://github.com/kubernetes-incubator/bootkube/tree/master/hack/multi-node)
+using [bootkube](https://github.com/kubernetes-incubator/bootkube).
 
-etcd is an important component of a working Kubernetes cluster, but it's deployed
-outside of it. The monitoring setup below assumes that it is made visible from
-within the cluster through a headless Kubernetes service.
-An example for bootkube's multi-vagrant setup is [here](/manifests/etcd/etcd-bootkube-vagrant-multi.yaml).
+Prometheus discovers targets via kubernetes endpoints objects. A kubernetes
+service automatically populates an endpoints object, therefore Prometheus can
+automatically find and pick up all services within a kubernetes cluster. By
+default there is a service for the kubernetes apiserver. For other kubernetes
+objects to be monitored headless services must be setup for them to be
+discovered by Prometheus.
+
+For the `kube-scheduler` and `kube-controller-manager` there are headless
+services prepared, simply add them to your running cluster:
+
+```bash
+kubectl -n kube-system create manifests/k8s/
+```
+
+> Hint: if you use this for a cluster not created with bootkube, make sure you
+> populate an endpoints object with the address to your `kube-scheduler` and
+> `kube-controller-manager`, or adapt the label selectors to match your setup.
+
+Aside from kubernetes specific components, etcd is an important component of a
+working Kubernetes cluster, but it's deployed outside of it. This monitoring
+setup assumes that it is made visible from within the cluster through a
+kubernetes endpoints object.
+
+An example for bootkube's multi-node vagrant setup is [here](/manifests/etcd/etcd-bootkube-vagrant-multi.yaml).
+
+> Hint: this is merely an example for a local setup. The addresses will have to
+> be adapted for a setup, that is not a single etcd bootkube created cluster.
+
+Before you continue, you should have endpoints objects for:
+
+* `apiserver` (called `kubernetes` here)
+* `kube-controller-manager`
+* `kube-scheduler`
+* `etcd` (called `etcd-k8s` to make clear this is the etcd used by kubernetes)
+
+For example:
+
+```bash
+$ kubectl get endpoints --all-namespaces
+NAMESPACE     NAME                                           ENDPOINTS          AGE
+default       kubernetes                                     172.17.4.101:443   2h
+kube-system   kube-controller-manager-prometheus-discovery   10.2.30.2:10252    1h
+kube-system   kube-scheduler-prometheus-discovery            10.2.30.4:10251    1h
+monitoring    etcd-k8s                                       172.17.4.51:2379   1h
+```
 
 ## Monitoring Kubernetes
 
@@ -38,9 +81,9 @@ To tear it all down again, run:
 hack/cluster-monitoring/teardown
 ```
 
-*All services in the manifest still contain the `prometheus.io/scrape = true` annotations. It is not
-used by the Prometheus controller. They remain for convential deployments as in
-[this example configuration](https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml).*
+> All services in the manifest still contain the `prometheus.io/scrape = true`
+> annotations. It is not used by the Prometheus controller. They remain for
+> pre Prometheus v1.3.0 deployments as in [this example configuration](https://github.com/prometheus/prometheus/blob/6703404cb431f57ca4c5097bc2762438d3c1968e/documentation/examples/prometheus-kubernetes.yml).
 
 ## Monitoring custom services
 
@@ -82,8 +125,6 @@ Grafana data sources.
 
 * Incorporate [Alertmanager controller](https://github.com/coreos/kube-alertmanager-controller)
 * Grafana controller that dynamically discovers and deploys dashboards from ConfigMaps
-* Collection of base alerting for cluster monitoring
 * KPM/Helm packages to easily provide production-ready cluster-monitoring setup (essentially contents of `hack/cluster-monitoring`)
 * Add meta-monitoring to default cluster monitoring setup
-
 
