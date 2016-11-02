@@ -60,7 +60,7 @@ metadata:
     prometheus: "mobile"
 spec:
   baseImage: quay.io/prometheus/prometheus # default
-  version: v1.3.0-beta.0                   # default, must match image tag
+  version: v1.3.0                          # default, must match image tag
   replicas: 2                              # defaults to 1
   serviceMonitors:
   - selector:
@@ -96,3 +96,4 @@ Roughly in order of importance:
 * Resource limits for deployed servers and auto-tuned storage flags based on them
 * Retention configuration; potentially auto-adapting to remaining storage on persistent volume
 * Automatic horizontal sharding
+
