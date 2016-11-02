@@ -1,6 +1,6 @@
-# Prometheus Controller
+# Prometheus Operator
 
-The Prometheus Controller for Kubernetes provides easy monitoring definitions
+The Prometheus Operator for Kubernetes provides easy monitoring definitions
 for Kubernetes services and deployment and management of Prometheus instances.
 
 ## Third party resources
@@ -45,7 +45,7 @@ The controller generates Prometheus `job` names of the pattern `<>`.
 
 The Prometheus TPR selects ServiceMonitors by their labels and specifies additional
 configuration for the deployed Prometheus server instances.
-The Controller watches Prometheus objects and deploys actual Prometheus servers
+The Operator watches Prometheus objects and deploys actual Prometheus servers
 configured to match the ServiceMonitor definitions the object selects.
 
 Example of defining a Prometheus server deployment, that monitors all services that
