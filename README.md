@@ -28,7 +28,7 @@ spec:
   selector:
     matchLabels:
       framework: gokit
-      team:       mobile
+      team:      mobile
   # Endpoints of the service or their underlying pods that can be monitored.
   endpoints:
   - port: web            # Name of the service port.
@@ -60,13 +60,23 @@ metadata:
     prometheus: "mobile"
 spec:
   baseImage: quay.io/prometheus/prometheus # default
-  version: v1.3.0-beta.0                   # default, must match image tag
+  version: v1.3.0                          # default, must match image tag
   replicas: 2                              # defaults to 1
   serviceMonitors:
   - selector:
       matchLabels:
         team: mobile
   evaluationInterval: 30s
+  alerting:
+    # namespace/name of Alertmanager services.
+    alertmanagers:
+    - namespace: monitoring
+      name: alertmanager
+  storage:
+    # Options for persistent volume claims created for each instance
+    class: "ssd"    # storage class name
+    resources:
+      requests: 20Gi
 ```
 
 ## Installation
