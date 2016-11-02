@@ -17,7 +17,29 @@ of the service endpoints. This is also made possible by the Prometheus Operator.
 
 ## Specification
 
-...
+### `ServiceMonitor`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| spec | Specification of the ServiceMonitor object. | true | ServiceMonitorSpec | |
+
+### `ServiceMonitorSpec`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| selector | Label selector for services the `ServiceMonitor` applies to. | true | [unversioned.LabelSelector](http://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | |
+| endpoints | The endpoints to be monitored for endpoints of the selected services. | true | Endpoint array | |
+
+### `Endpoint`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| port | Name of the service port this endpoint refers to. Mutually exclusive with targetPort. | false | string | |
+| targetPort | Name or number of the target port of the endpoint. Mutually exclusive with port. | false | integer or string | |
+| path | HTTP path to scrape for metrics. | false | string | /metrics |
+| scheme | HTTP scheme to use for scraping | false | string | http |
+| interval | Interval at which metrics should be scraped | false | duration | 30s |
+
 
 ## Current state and roadmap
 
