@@ -36,6 +36,9 @@ working cluster, but is typically deployed outside of it. This monitoring
 setup assumes that it is made visible from within the cluster through a headless
 service as well.
 
+> Note that minikube hides some components like etcd so to see the extend of
+> this setup we recommend setting up a [local cluster using bootkube](https://github.com/kubernetes-incubator/bootkube/tree/master/hack/multi-node).
+
 An example for bootkube's multi-node vagrant setup is [here](/manifests/etcd/etcd-bootkube-vagrant-multi.yaml).
 
 > Hint: this is merely an example for a local setup. The addresses will have to
