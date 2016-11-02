@@ -23,7 +23,51 @@ still benefiting from the Operator's capabilities of managing Prometheus setups.
 
 ## Specification
 
-...
+### `Prometheus`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| spec | Specification of the Prometheus object | true | PrometheusSpec | |
+
+### `PrometheusSpec`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| serviceMonitors | The `ServiceMonitor` TPRs to be covered by the Prometheus instances. | false | ServiceMonitorSelection array | |
+| version | Prometheus version to deploy. Must match a tag of the container image. | false | string | v1.3.0 |
+| baseImage | The base container image (without tag) to use. | false | string | quay.io/prometheus/prometheus |
+| replicas | Number of Prometheus instances to deploy. | false | integer (int32) | 1 |
+| evaluationInterval | Interval at which alerting and recording rules are evaluated. | false | duration | 60s |
+| retention | The duration for which ingested metrics are stored. | false | duration | 24h |
+| storage | Configuration of persistent storage volumes to attach to deployed Prometheus pods. | false | StorageSpec |  |
+| alerting | Configuration of alerting | false | AlertingSpec |  |
+
+### `ServiceMonitorSelection`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| selector | Label selector for `ServiceMonitor` TPRs to be covered by the Prometheus instances. | true | [unversioned.LabelSelector](http://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | |
+
+### `StorageSpec`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| class | The storage class to use. | false | string | |
+| selector | Selector over candidate persistent volumes. | false | [unversioned.LabelSelector](http://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | |
+| resources | Resource requirements for the created persistent volume claim. | false | [v1.ResourceRequirements](http://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements)| |
+
+### `AlertingSpec`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| alertmanagers | Alertmanagers alerts are sent to.  | false | AlertmanagerEndpoints array | |
+
+### `AlertmanagerEndpoints`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| namespace | Namespace of the Alertmanager endpoints. | true | string | |
+| name | Name of the Alertmanager endpoints. This equals the targeted. Alertmanager service. | true | string | 
 
 
 ## Current state and roadmap
