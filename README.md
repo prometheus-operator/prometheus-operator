@@ -12,12 +12,13 @@ instructions of [bootkube](https://github.com/kubernetes-incubator/bootkube) or
 repository are adapted to work with a [multi-node setup](https://github.com/kubernetes-incubator/bootkube/tree/master/hack/multi-node)
 using [bootkube](https://github.com/kubernetes-incubator/bootkube).
 
-Prometheus discovers targets via kubernetes endpoints objects. A kubernetes
-service automatically populates an endpoints object, therefore Prometheus can
-automatically find and pick up all services within a kubernetes cluster. By
-default there is a service for the kubernetes apiserver. For other kubernetes
-objects to be monitored headless services must be setup for them to be
-discovered by Prometheus.
+Prometheus discovers targets via Kubernetes endpoints objects, which are automatically
+populated by Kubernetes services. Therefore Prometheus can
+automatically find and pick up all services within a cluster. By
+default there is a service for the Kubernetes API server. For other Kubernetes
+core components to be monitored, headless services must be setup for them to be
+discovered by Prometheus as they may be deployed differently depending
+on the cluster.
 
 For the `kube-scheduler` and `kube-controller-manager` there are headless
 services prepared, simply add them to your running cluster:
@@ -30,10 +31,10 @@ kubectl -n kube-system create manifests/k8s/
 > populate an endpoints object with the address to your `kube-scheduler` and
 > `kube-controller-manager`, or adapt the label selectors to match your setup.
 
-Aside from kubernetes specific components, etcd is an important component of a
-working Kubernetes cluster, but it's deployed outside of it. This monitoring
-setup assumes that it is made visible from within the cluster through a
-kubernetes endpoints object.
+Aside from Kubernetes specific components, etcd is an important part of a
+working cluster, but is typically deployed outside of it. This monitoring
+setup assumes that it is made visible from within the cluster through a headless
+service as well.
 
 An example for bootkube's multi-node vagrant setup is [here](/manifests/etcd/etcd-bootkube-vagrant-multi.yaml).
 
@@ -60,7 +61,7 @@ monitoring    etcd-k8s                                       172.17.4.51:2379   
 
 ## Monitoring Kubernetes
 
-The manifests used here use the [Prometheus controller](https://github.com/coreos/kube-prometheus-controller),
+The manifests used here use the [Prometheus Operator](https://github.com/coreos/prometheus-operator),
 which manages Prometheus servers and their configuration in your cluster. To install the
 controller, the [node_exporter](https://github.com/prometheus/node_exporter),
 [Grafana](https://grafana.org) including default dashboards, and the Prometheus server, run:
