@@ -64,15 +64,17 @@ func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string
 		pvc := v1.PersistentVolumeClaim{
 			ObjectMeta: v1.ObjectMeta{
 				Name: fmt.Sprintf("%s-db", p.Name),
-				Annotations: map[string]string{
-					"volume.beta.kubernetes.io/storage-class": vc.Class,
-				},
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
 				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 				Resources:   vc.Resources,
 				Selector:    vc.Selector,
 			},
+		}
+		if len(vc.Class) > 0 {
+			pvc.ObjectMeta.Annotations = map[string]string{
+				"volume.beta.kubernetes.io/storage-class": vc.Class,
+			}
 		}
 		petset.Spec.VolumeClaimTemplates = append(petset.Spec.VolumeClaimTemplates, pvc)
 	}
