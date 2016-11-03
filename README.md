@@ -9,14 +9,14 @@ services and deployment and management of Prometheus instances.
 
 Once installed the Prometheus Operator provides the following features:
 
-* **Create/Destroy** Easily launch a Prometheus instance for your Kubernetes namespace,
+* **Create/Destroy**: Easily launch a Prometheus instance for your Kubernetes namespace,
   a specific application or team easily using the Operator.
 
 * **Simple Configuration**: Configure the fundamentals of Prometheus like versions, persistence, 
   retention policies, and replicas from a native Kubernetes resource.
 
 * **Target Services via Labels**: Automatically generate monitoring target configurations based
-  on familiar Kubernetes label queries; no need to learn of learning a Prometheus specific configuration language.
+  on familiar Kubernetes label queries; no need to learn a Prometheus specific configuration language.
 
 
 ## Third party resources
@@ -33,7 +33,7 @@ The Operator acts on two third party resources (TPRs):
 
 ## Installation
 
-You can install the Operator inside of your cluster by running
+You can install the Operator inside of your cluster by running the following command:
 
 ```
 kubectl apply -f deployment.yaml
