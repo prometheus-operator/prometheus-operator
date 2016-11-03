@@ -1,3 +1,5 @@
+# NOTE: These rules were kindly contributed by the SoundCloud engineering team.
+
 ### Container resources ###
 
 cluster_namespace_controller_pod_container:spec_memory_limit_bytes =
