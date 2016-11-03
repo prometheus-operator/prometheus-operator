@@ -1,18 +1,15 @@
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: prometheus-k8s
 data:
   prometheus.yaml: |
     global:
-      evaluation_interval: 30s
+      scrape_interval: 15s
+      evaluation_interval: 15s
 
     rule_files:
-      - /etc/prometheus/rules/*.rules
+    - /etc/prometheus/rules/*.rules
 
     scrape_configs:
     - job_name: kubelets
-      scrape_interval: 20s
       scheme: https
       tls_config:
         ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -27,7 +24,6 @@ data:
     # Scrapes the endpoint lists for the Kubernetes API server, kube-state-metrics,
     # and node-exporter, which we all consider part of a default setup.
     - job_name: standard-endpoints
-      scrape_interval: 20s
       tls_config:
         ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         # As for kubelets, certificate validation fails for the API server (node)
@@ -54,7 +50,6 @@ data:
     # Scrapes the endpoint lists for the kube-dns server. Which we consider
     # part of a default setup.
     - job_name: kube-components
-      scrape_interval: 20s
       tls_config:
         ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
       bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -74,3 +69,7 @@ data:
       - action: keep
         source_labels: [__meta_kubernetes_endpoint_port_name]
         regex: "prometheus"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: prometheus-k8s

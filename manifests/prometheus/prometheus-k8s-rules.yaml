@@ -53,6 +53,8 @@ data:
     \   summary = \"high fsync durations\",\n    description = \"ectd instance {{
     $labels.instance }} fync durations are high\",\n  }\n"
   kubernetes.rules: |+
+    # NOTE: These rules were kindly contributed by the SoundCloud engineering team.
+
     ### Container resources ###
 
     cluster_namespace_controller_pod_container:spec_memory_limit_bytes =
