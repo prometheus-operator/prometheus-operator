@@ -65,7 +65,7 @@ func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string
 			ObjectMeta: v1.ObjectMeta{
 				Name: fmt.Sprintf("%s-db", p.Name),
 				Annotations: map[string]string{
-					"volume.alpha.kubernetes.io/storage-class": vc.Class,
+					"volume.beta.kubernetes.io/storage-class": vc.Class,
 				},
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
