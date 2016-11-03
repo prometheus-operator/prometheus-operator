@@ -1,19 +1,19 @@
 apiVersion: extensions/v1beta1
-kind: ReplicaSet
+kind: Deployment
 metadata:
-  name: prometheus-controller
+  name: prometheus-operator
   labels:
-    controller: prometheus 
+    operator: prometheus
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        controller: prometheus
+        operator: prometheus
     spec:
       containers:
-       - name: prometheus-controller
-         image: quay.io/coreos/kube-prometheus-controller:latest
+       - name: prometheus-operator
+         image: quay.io/coreos/prometheus-operator:latest
          resources:
            requests:
              cpu: 100m
