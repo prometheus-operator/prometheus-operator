@@ -1,7 +1,8 @@
 # Prometheus Operator
 
-The Prometheus Operator for Kubernetes provides easy monitoring definitions
-for Kubernetes services and deployment and management of Prometheus instances.
+**Project status: *alpha*** Not all planned feature are completed. The API, spec, status and other user facing objects are subject to change. We do not support backward-compability for the alpha releases.
+
+The Prometheus Operator for Kubernetes provides easy monitoring definitions for Kubernetes services and deployment and management of Prometheus instances.
 
 ## Third party resources
 
