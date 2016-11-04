@@ -251,7 +251,7 @@ ALERT K8SApiserverDown
 
 # Disable for non HA kubernetes setups.
 ALERT K8SApiserverDown
-  IF absent({job="kubernetes"}) or (count by(cluster) (up{job="kubernetes"} == 1) < count by(cluster) (up{job="kubernetes"})
+  IF absent({job="kubernetes"}) or (count by(cluster) (up{job="kubernetes"} == 1) < count by(cluster) (up{job="kubernetes"}))
   FOR 5m
   LABELS {
     service = "k8s",
