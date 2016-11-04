@@ -1,3 +1,5 @@
+# NOTE: These rules were kindly contributed by the SoundCloud engineering team.
+
 ### Container resources ###
 
 cluster_namespace_controller_pod_container:spec_memory_limit_bytes =
@@ -249,7 +251,7 @@ ALERT K8SApiserverDown
 
 # Disable for non HA kubernetes setups.
 ALERT K8SApiserverDown
-  IF absent({job="kubernetes"}) or count by(cluster) (up{job="kubernetes"} == 1) < 2
+  IF absent({job="kubernetes"}) or (count by(cluster) (up{job="kubernetes"} == 1) < count by(cluster) (up{job="kubernetes"}))
   FOR 5m
   LABELS {
     service = "k8s",
@@ -361,7 +363,7 @@ ALERT K8STooManyOpenFiles
 ALERT K8SApiServerLatency
   IF histogram_quantile(
       0.99,
-      sum without (instance,node,resource) (apiserver_request_latencies_bucket{verb!~"CONNECT|WATCHLIST"})
+      sum without (instance,node,resource) (apiserver_request_latencies_bucket{verb!~"CONNECT|WATCHLIST|WATCH"})
     ) / 1e6 > 1.0
   FOR 10m
   LABELS {
