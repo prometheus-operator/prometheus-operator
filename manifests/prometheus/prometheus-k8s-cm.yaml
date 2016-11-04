@@ -37,7 +37,7 @@ data:
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_service_name]
-        regex: kubernetes|node-exporter|kube-state-metrics|etcd-k8s
+        regex: prometheus|kubernetes|node-exporter|kube-state-metrics|etcd-k8s
       - action: replace
         source_labels: [__meta_kubernetes_service_name]
         target_label: job
