@@ -299,7 +299,7 @@
               "yaxis": 2
             }
           ],
-          "span": 10,
+          "span": 9,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -395,7 +395,7 @@
               "to": "null"
             }
           ],
-          "span": 2,
+          "span": 3,
           "sparkline": {
             "fillColor": "rgba(31, 118, 189, 0.18)",
             "full": false,
@@ -487,7 +487,7 @@
               "yaxis": 2
             }
           ],
-          "span": 10,
+          "span": 9,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -597,7 +597,7 @@
               "to": "null"
             }
           ],
-          "span": 2,
+          "span": 3,
           "sparkline": {
             "fillColor": "rgba(31, 118, 189, 0.18)",
             "full": false,
@@ -606,7 +606,7 @@
           },
           "targets": [
             {
-              "expr": "min(node_filesystem_free{device!=\"rootfs\",instance=~\"$server\"} / node_filesystem_size{device!=\"rootfs\",instance=~\"$server\"})",
+              "expr": "sum(node_filesystem_free{device!=\"rootfs\",instance=~\"$server\"}) / sum(node_filesystem_size{device!=\"rootfs\",instance=~\"$server\"})",
               "intervalFactor": 2,
               "refId": "A",
               "step": 60,
@@ -614,7 +614,7 @@
             }
           ],
           "thresholds": "0.10, 0.25",
-          "title": "Free disk space (lowest mountpoint)",
+          "title": "Free disk space",
           "type": "singlestat",
           "valueFontSize": "80%",
           "valueMaps": [
@@ -876,7 +876,7 @@
   },
   "refresh": false,
   "schemaVersion": 12,
-  "version": 0,
+  "version": 1,
   "links": [],
   "gnetId": 22
 }
