@@ -18,11 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 
-	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 )
@@ -45,60 +41,17 @@ func init() {
 	flagset.Parse(os.Args[1:])
 }
 
-func Main() int {
+func main() {
 	if analyticsEnabled {
 		analytics.Enable()
 	}
-
-	po, err := prometheus.New(cfg)
+	c, err := prometheus.New(cfg)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
-		return 1
+		os.Exit(1)
 	}
-
-	ao, err := alertmanager.New(cfg)
-	if err != nil {
+	if err := c.Run(make(chan struct{})); err != nil {
 		fmt.Fprint(os.Stderr, err)
-		return 1
+		os.Exit(1)
 	}
-
-	stopc := make(chan struct{})
-	errc := make(chan error)
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		if err := po.Run(stopc); err != nil {
-			errc <- err
-		}
-		wg.Done()
-	}()
-
-	wg.Add(1)
-	go func() {
-		if err := ao.Run(stopc); err != nil {
-			errc <- err
-		}
-		wg.Done()
-	}()
-
-	term := make(chan os.Signal)
-	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
-	select {
-	case <-term:
-		fmt.Fprint(os.Stdout, "Received SIGTERM, exiting gracefully...")
-		close(stopc)
-		wg.Wait()
-	case <-errc:
-		fmt.Fprintf(os.Stderr, "Unhandled error received. Exiting...")
-		close(stopc)
-		wg.Wait()
-		return 1
-	}
-
-	return 0
-}
-
-func main() {
-	os.Exit(Main())
 }

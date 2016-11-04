@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package operator
+package alertmanager
 
 import (
 	"encoding/json"
@@ -30,7 +30,7 @@ import (
 
 const resyncPeriod = 5 * time.Minute
 
-func newPrometheusRESTClient(c rest.Config) (*rest.RESTClient, error) {
+func newAlertmanagerRESTClient(c rest.Config) (*rest.RESTClient, error) {
 	c.APIPath = "/apis"
 	c.GroupVersion = &unversioned.GroupVersion{
 		Group:   "monitoring.coreos.com",
@@ -41,19 +41,19 @@ func newPrometheusRESTClient(c rest.Config) (*rest.RESTClient, error) {
 	return rest.RESTClientFor(&c)
 }
 
-type prometheusDecoder struct {
+type alertmanagerDecoder struct {
 	dec   *json.Decoder
 	close func() error
 }
 
-func (d *prometheusDecoder) Close() {
+func (d *alertmanagerDecoder) Close() {
 	d.close()
 }
 
-func (d *prometheusDecoder) Decode() (action watch.EventType, object runtime.Object, err error) {
+func (d *alertmanagerDecoder) Decode() (action watch.EventType, object runtime.Object, err error) {
 	var e struct {
 		Type   watch.EventType
-		Object spec.Prometheus
+		Object spec.Alertmanager
 	}
 	if err := d.dec.Decode(&e); err != nil {
 		return watch.Error, nil, err
@@ -61,13 +61,13 @@ func (d *prometheusDecoder) Decode() (action watch.EventType, object runtime.Obj
 	return e.Type, &e.Object, nil
 }
 
-// NewPrometheusListWatch returns a new ListWatch on the Prometheus resource.
-func NewPrometheusListWatch(client *rest.RESTClient) *cache.ListWatch {
+// NewAlertmanagerListWatch returns a new ListWatch on the Alertmanager resource.
+func NewAlertmanagerListWatch(client *rest.RESTClient) *cache.ListWatch {
 	return &cache.ListWatch{
 		ListFunc: func(options api.ListOptions) (runtime.Object, error) {
 			req := client.Get().
 				Namespace(api.NamespaceAll).
-				Resource("prometheuses").
+				Resource("alertmanagers").
 				// VersionedParams(&options, api.ParameterCodec)
 				FieldsSelectorParam(nil)
 
@@ -75,77 +75,21 @@ func NewPrometheusListWatch(client *rest.RESTClient) *cache.ListWatch {
 			if err != nil {
 				return nil, err
 			}
-			var p spec.PrometheusList
+			var p spec.AlertmanagerList
 			return &p, json.Unmarshal(b, &p)
 		},
 		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
 			r, err := client.Get().
 				Prefix("watch").
 				Namespace(api.NamespaceAll).
-				Resource("prometheuses").
+				Resource("alertmanagers").
 				// VersionedParams(&options, api.ParameterCodec).
 				FieldsSelectorParam(nil).
 				Stream()
 			if err != nil {
 				return nil, err
 			}
-			return watch.NewStreamWatcher(&prometheusDecoder{
-				dec:   json.NewDecoder(r),
-				close: r.Close,
-			}), nil
-		},
-	}
-}
-
-type serviceMonitorDecoder struct {
-	dec   *json.Decoder
-	close func() error
-}
-
-func (d *serviceMonitorDecoder) Close() {
-	d.close()
-}
-
-func (d *serviceMonitorDecoder) Decode() (action watch.EventType, object runtime.Object, err error) {
-	var e struct {
-		Type   watch.EventType
-		Object spec.ServiceMonitor
-	}
-	if err := d.dec.Decode(&e); err != nil {
-		return watch.Error, nil, err
-	}
-	return e.Type, &e.Object, nil
-}
-
-// NewServiceMonitorListWatch returns a new ListWatch on the ServiceMonitor resource.
-func NewServiceMonitorListWatch(client *rest.RESTClient) *cache.ListWatch {
-	return &cache.ListWatch{
-		ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-			req := client.Get().
-				Namespace(api.NamespaceAll).
-				Resource("servicemonitors").
-				// VersionedParams(&options, api.ParameterCodec)
-				FieldsSelectorParam(nil)
-
-			b, err := req.DoRaw()
-			if err != nil {
-				return nil, err
-			}
-			var sm spec.ServiceMonitorList
-			return &sm, json.Unmarshal(b, &sm)
-		},
-		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-			r, err := client.Get().
-				Prefix("watch").
-				Namespace(api.NamespaceAll).
-				Resource("servicemonitors").
-				// VersionedParams(&options, api.ParameterCodec).
-				FieldsSelectorParam(nil).
-				Stream()
-			if err != nil {
-				return nil, err
-			}
-			return watch.NewStreamWatcher(&serviceMonitorDecoder{
+			return watch.NewStreamWatcher(&alertmanagerDecoder{
 				dec:   json.NewDecoder(r),
 				close: r.Close,
 			}), nil
