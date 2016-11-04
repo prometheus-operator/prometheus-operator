@@ -2,6 +2,7 @@ apiVersion: v1
 data:
   all-nodes-dashboard.json: |-
     {
+      "dashboard": {
       "__inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -869,9 +870,20 @@ data:
       "version": 10,
       "links": [],
       "gnetId": 22
+    },
+        "inputs": [
+            {
+                "name": "DS_PROMETHEUS",
+                "pluginId": "prometheus",
+                "type": "datasource",
+                "value": "prometheus"
+            }
+        ],
+        "overwrite": true
     }
   deployment-dashboard.json: |-
     {
+      "dashboard": {
       "__inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -1676,8 +1688,18 @@ data:
       "version": 2,
       "links": [],
       "gnetId": null
+    },
+        "inputs": [
+            {
+                "name": "DS_PROMETHEUS",
+                "pluginId": "prometheus",
+                "type": "datasource",
+                "value": "prometheus"
+            }
+        ],
+        "overwrite": true
     }
-  grafana-kubernetes-pods-dashboard.json: |
+  kubernetes-pods-dashboard.json: |
     {
         "dashboard": {
             "__inputs": [
@@ -2089,6 +2111,7 @@ data:
     }
   node-dashboard.json: |-
     {
+      "dashboard": {
       "__inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -2969,6 +2992,16 @@ data:
       "version": 1,
       "links": [],
       "gnetId": 22
+    },
+        "inputs": [
+            {
+                "name": "DS_PROMETHEUS",
+                "pluginId": "prometheus",
+                "type": "datasource",
+                "value": "prometheus"
+            }
+        ],
+        "overwrite": true
     }
   prometheus-datasource.json: |
     {

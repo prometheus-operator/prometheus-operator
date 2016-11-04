@@ -1,4 +1,5 @@
 {
+  "dashboard": {
   "__inputs": [
     {
       "name": "DS_PROMETHEUS",
@@ -879,4 +880,14 @@
   "version": 1,
   "links": [],
   "gnetId": 22
+},
+    "inputs": [
+        {
+            "name": "DS_PROMETHEUS",
+            "pluginId": "prometheus",
+            "type": "datasource",
+            "value": "prometheus"
+        }
+    ],
+    "overwrite": true
 }
