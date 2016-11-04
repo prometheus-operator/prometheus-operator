@@ -46,4 +46,4 @@ make
 hack/run-external.sh <kubectl cluster name>
 ```
 
-**The controller collects anonymous usage statistics to help us learning how the software is being used and how we can improve it. To disbale collection, run the controller with the flag `-analytics=false`**
+**The controller collects anonymous usage statistics to help us learning how the software is being used and how we can improve it. To disbale collection, run the operator with the flag `-analytics=false`**
