@@ -177,7 +177,7 @@ func makePetSetSpec(name, image, version, retention string, replicas int32, aler
 							{
 								Name:      fmt.Sprintf("%s-db", name),
 								MountPath: "/var/prometheus/data",
-								SubPath: "prometheus",
+								SubPath:   "prometheus-db",
 							},
 						},
 						ReadinessProbe: &v1.Probe{
