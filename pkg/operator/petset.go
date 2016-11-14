@@ -42,6 +42,9 @@ func makePetSet(p spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string)
 	if p.Spec.Retention == "" {
 		p.Spec.Retention = "24h"
 	}
+	if _, ok := p.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
+		p.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("2Gi")
+	}
 
 	petset := &v1alpha1.PetSet{
 		ObjectMeta: v1.ObjectMeta{
@@ -127,6 +130,18 @@ func makePetSetSpec(p spec.Prometheus, alertmanagers []string) v1alpha1.PetSetSp
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
 
+	// We attempt to specify decent storage tuning flags based on how much the
+	// requested memory can fit. The user has to specify an appropriate buffering
+	// in memory limits to catch increased memory usage during query bursts.
+	// More info: https://prometheus.io/docs/operating/storage/.
+	reqMem := p.Spec.Resources.Requests[v1.ResourceMemory]
+	// 1024 byte is the fixed chunk size. With increasing number of chunks actually
+	// in memory, overhead owed to their management, higher ingestion buffers, etc.
+	// increases.
+	// We are conservative for now an assume this to be 80% as the Kubernetes environment
+	// generally has a very high time series churn.
+	memChunks := reqMem.Value() / 1024 / 5
+
 	return v1alpha1.PetSetSpec{
 		ServiceName: "prometheus",
 		Replicas:    &p.Spec.Replicas,
@@ -154,7 +169,9 @@ func makePetSetSpec(p spec.Prometheus, alertmanagers []string) v1alpha1.PetSetSp
 						},
 						Args: []string{
 							"-storage.local.retention=" + p.Spec.Retention,
-							"-storage.local.memory-chunks=500000",
+							"-storage.local.memory-chunks=" + fmt.Sprintf("%d", memChunks),
+							"-storage.local.max-chunks-to-persist" + fmt.Sprintf("%d", memChunks/2),
+							"-storage.local.num-fingerprint-mutexes=4096",
 							"-storage.local.path=/var/prometheus/data",
 							"-config.file=/etc/prometheus/config/prometheus.yaml",
 							"-alertmanager.url=" + strings.Join(alertmanagers, ","),
@@ -207,8 +224,8 @@ func makePetSetSpec(p spec.Prometheus, alertmanagers []string) v1alpha1.PetSetSp
 						},
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{
-								"cpu":    resource.MustParse("5m"),
-								"memory": resource.MustParse("5Mi"),
+								v1.ResourceCPU:    resource.MustParse("5m"),
+								v1.ResourceMemory: resource.MustParse("10Mi"),
 							},
 						},
 					}, {
