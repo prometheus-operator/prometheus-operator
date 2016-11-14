@@ -418,12 +418,12 @@ func (c *Operator) reconcile(p *spec.Prometheus) error {
 	}
 
 	if !exists {
-		if _, err := psetClient.Create(makePetSet(p, nil, am)); err != nil {
+		if _, err := psetClient.Create(makePetSet(*p, nil, am)); err != nil {
 			return fmt.Errorf("create petset: %s", err)
 		}
 		return nil
 	}
-	if _, err := psetClient.Update(makePetSet(p, obj.(*v1alpha1.PetSet), am)); err != nil {
+	if _, err := psetClient.Update(makePetSet(*p, obj.(*v1alpha1.PetSet), am)); err != nil {
 		return err
 	}
 
