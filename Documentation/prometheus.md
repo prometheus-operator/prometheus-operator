@@ -41,6 +41,7 @@ still benefiting from the Operator's capabilities of managing Prometheus setups.
 | retention | The duration for which ingested metrics are stored. | false | duration | 24h |
 | storage | Configuration of persistent storage volumes to attach to deployed Prometheus pods. | false | StorageSpec |  |
 | alerting | Configuration of alerting | false | AlertingSpec |  |
+| resources | Resource requirements of single Prometheus server | false | [v1.ResourceRequirements](http://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements) |  | 
 
 ### `ServiceMonitorSelection`
 
