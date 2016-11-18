@@ -45,8 +45,7 @@ type PrometheusSpec struct {
 	Retention          string                    `json:"retention"`
 	Storage            *StorageSpec              `json:"storage"`
 	Alerting           AlertingSpec              `json:"alerting"`
-	// Replicas        int                        `json:"replicas"`
-	// Resources       apiV1.ResourceRequirements `json:"resources"`
+	Resources          v1.ResourceRequirements   `json:"resources"`
 	// Alerting        AlertingSpec               `json:"alerting"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Persistence...

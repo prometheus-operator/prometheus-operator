@@ -19,39 +19,38 @@ import (
 	"strings"
 
 	"github.com/coreos/prometheus-operator/pkg/spec"
+	"k8s.io/client-go/1.5/pkg/api/resource"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/apps/v1alpha1"
 	"k8s.io/client-go/1.5/pkg/util/intstr"
 )
 
-func makePetSet(p *spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string) *v1alpha1.PetSet {
+func makePetSet(p spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string) *v1alpha1.PetSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
 
-	baseImage := p.Spec.BaseImage
-	if baseImage == "" {
-		baseImage = "quay.io/prometheus/prometheus"
+	if p.Spec.BaseImage == "" {
+		p.Spec.BaseImage = "quay.io/prometheus/prometheus"
 	}
-	version := p.Spec.Version
-	if version == "" {
-		version = "v1.3.0"
+	if p.Spec.Version == "" {
+		p.Spec.Version = "v1.3.0"
 	}
-	replicas := p.Spec.Replicas
-	if replicas < 1 {
-		replicas = 1
+	if p.Spec.Replicas < 1 {
+		p.Spec.Replicas = 1
 	}
-	retention := p.Spec.Retention
-	if retention == "" {
-		retention = "24h"
+	if p.Spec.Retention == "" {
+		p.Spec.Retention = "24h"
 	}
-	image := fmt.Sprintf("%s:%s", baseImage, version)
+	if _, ok := p.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
+		p.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("2Gi")
+	}
 
 	petset := &v1alpha1.PetSet{
 		ObjectMeta: v1.ObjectMeta{
 			Name: p.Name,
 		},
-		Spec: makePetSetSpec(p.Name, image, version, retention, replicas, alertmanagers),
+		Spec: makePetSetSpec(p, alertmanagers),
 	}
 	if vc := p.Spec.Storage; vc == nil {
 		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -126,19 +125,31 @@ func makePetSetService(p *spec.Prometheus) *v1.Service {
 	return svc
 }
 
-func makePetSetSpec(name, image, version, retention string, replicas int32, alertmanagers []string) v1alpha1.PetSetSpec {
+func makePetSetSpec(p spec.Prometheus, alertmanagers []string) v1alpha1.PetSetSpec {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
 
+	// We attempt to specify decent storage tuning flags based on how much the
+	// requested memory can fit. The user has to specify an appropriate buffering
+	// in memory limits to catch increased memory usage during query bursts.
+	// More info: https://prometheus.io/docs/operating/storage/.
+	reqMem := p.Spec.Resources.Requests[v1.ResourceMemory]
+	// 1024 byte is the fixed chunk size. With increasing number of chunks actually
+	// in memory, overhead owed to their management, higher ingestion buffers, etc.
+	// increases.
+	// We are conservative for now an assume this to be 80% as the Kubernetes environment
+	// generally has a very high time series churn.
+	memChunks := reqMem.Value() / 1024 / 5
+
 	return v1alpha1.PetSetSpec{
 		ServiceName: "prometheus",
-		Replicas:    &replicas,
+		Replicas:    &p.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: v1.ObjectMeta{
 				Labels: map[string]string{
 					"app":        "prometheus",
-					"prometheus": name,
+					"prometheus": p.Name,
 				},
 				Annotations: map[string]string{
 					"pod.alpha.kubernetes.io/initialized": "true",
@@ -148,7 +159,7 @@ func makePetSetSpec(name, image, version, retention string, replicas int32, aler
 				Containers: []v1.Container{
 					{
 						Name:  "prometheus",
-						Image: image,
+						Image: fmt.Sprintf("%s:%s", p.Spec.BaseImage, p.Spec.Version),
 						Ports: []v1.ContainerPort{
 							{
 								Name:          "web",
@@ -157,8 +168,10 @@ func makePetSetSpec(name, image, version, retention string, replicas int32, aler
 							},
 						},
 						Args: []string{
-							"-storage.local.retention=" + retention,
-							"-storage.local.memory-chunks=500000",
+							"-storage.local.retention=" + p.Spec.Retention,
+							"-storage.local.memory-chunks=" + fmt.Sprintf("%d", memChunks),
+							"-storage.local.max-chunks-to-persist" + fmt.Sprintf("%d", memChunks/2),
+							"-storage.local.num-fingerprint-mutexes=4096",
 							"-storage.local.path=/var/prometheus/data",
 							"-config.file=/etc/prometheus/config/prometheus.yaml",
 							"-alertmanager.url=" + strings.Join(alertmanagers, ","),
@@ -175,7 +188,7 @@ func makePetSetSpec(name, image, version, retention string, replicas int32, aler
 								MountPath: "/etc/prometheus/rules",
 							},
 							{
-								Name:      fmt.Sprintf("%s-db", name),
+								Name:      fmt.Sprintf("%s-db", p.Name),
 								MountPath: "/var/prometheus/data",
 								SubPath:   "prometheus-db",
 							},
@@ -194,6 +207,7 @@ func makePetSetSpec(name, image, version, retention string, replicas int32, aler
 							// Wait up to 5 minutes.
 							FailureThreshold: 100,
 						},
+						Resources: p.Spec.Resources,
 					}, {
 						Name:  "config-reloader",
 						Image: "jimmidyson/configmap-reload",
@@ -206,6 +220,12 @@ func makePetSetSpec(name, image, version, retention string, replicas int32, aler
 								Name:      "config",
 								ReadOnly:  true,
 								MountPath: "/etc/prometheus/config",
+							},
+						},
+						Resources: v1.ResourceRequirements{
+							Limits: v1.ResourceList{
+								v1.ResourceCPU:    resource.MustParse("5m"),
+								v1.ResourceMemory: resource.MustParse("10Mi"),
 							},
 						},
 					}, {
@@ -231,7 +251,7 @@ func makePetSetSpec(name, image, version, retention string, replicas int32, aler
 						VolumeSource: v1.VolumeSource{
 							ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+									Name: p.Name,
 								},
 							},
 						},
@@ -241,7 +261,7 @@ func makePetSetSpec(name, image, version, retention string, replicas int32, aler
 						VolumeSource: v1.VolumeSource{
 							ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: fmt.Sprintf("%s-rules", name),
+									Name: fmt.Sprintf("%s-rules", p.Name),
 								},
 							},
 						},
