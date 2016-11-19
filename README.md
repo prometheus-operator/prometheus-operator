@@ -79,7 +79,7 @@ sidecar container aims to emulate the behavior, by keeping the Grafana database 
 with the provided ConfigMap. Hence, the Grafana pod is effectively stateless.
 This allows managing dashboards via `git` etc. and easily deploying them via CD pipelines.
 
-In the future, a separate Grafana opeartor will support gathering dashboards from multiple
+In the future, a separate Grafana operator will support gathering dashboards from multiple
 ConfigMaps based on label selection.
 
 ## Roadmap
