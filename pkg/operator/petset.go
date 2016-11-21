@@ -42,6 +42,10 @@ func makePetSet(p spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string)
 	if p.Spec.Retention == "" {
 		p.Spec.Retention = "24h"
 	}
+
+	if p.Spec.Resources.Requests == nil {
+		p.Spec.Resources.Requests = v1.ResourceList{}
+	}
 	if _, ok := p.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
 		p.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("2Gi")
 	}
