@@ -174,7 +174,7 @@ func makePetSetSpec(p spec.Prometheus, alertmanagers []string) v1alpha1.PetSetSp
 						Args: []string{
 							"-storage.local.retention=" + p.Spec.Retention,
 							"-storage.local.memory-chunks=" + fmt.Sprintf("%d", memChunks),
-							"-storage.local.max-chunks-to-persist" + fmt.Sprintf("%d", memChunks/2),
+							"-storage.local.max-chunks-to-persist=" + fmt.Sprintf("%d", memChunks/2),
 							"-storage.local.num-fingerprint-mutexes=4096",
 							"-storage.local.path=/var/prometheus/data",
 							"-config.file=/etc/prometheus/config/prometheus.yaml",
