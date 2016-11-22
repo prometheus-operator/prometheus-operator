@@ -96,7 +96,7 @@ on startup. Thus the Prometheus pods have to be restarted manually if the
 endpoints change.
 PetSets or manually maintained headless services in Kubernetes, allow to
 provide stable URLs working around this. In the future, Prometheus will allow
-for dynmaic service discovery of Alertmanagers ([tracking issue](https://github.com/prometheus/prometheus/issues/2057)). 
+for dynamic service discovery of Alertmanagers ([tracking issue](https://github.com/prometheus/prometheus/issues/2057)). 
 
 ### Cluster-wide version
 
