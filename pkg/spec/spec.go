@@ -108,3 +108,32 @@ type ServiceMonitorList struct {
 
 	Items []*ServiceMonitor `json:"items"`
 }
+
+type Alertmanager struct {
+	unversioned.TypeMeta `json:",inline"`
+	v1.ObjectMeta        `json:"metadata,omitempty"`
+	Spec                 AlertmanagerSpec `json:"spec"`
+}
+
+type AlertmanagerSpec struct {
+	// Version the cluster should be on.
+	Version string `json:"version"`
+	// Base image that is used to deploy pods.
+	BaseImage string `json:"baseImage"`
+	// Size is the expected size of the alertmanager cluster. The controller will
+	// eventually make the size of the running cluster equal to the expected
+	// size.
+	Replicas int32 `json:"replicas"`
+	// Storage is the definition of how storage will be used by the Alertmanager
+	// instances.
+	Storage *StorageSpec `json:"storage"`
+}
+
+type AlertmanagerList struct {
+	unversioned.TypeMeta `json:",inline"`
+	// Standard list metadata
+	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	unversioned.ListMeta `json:"metadata,omitempty"`
+	// Items is a list of third party objects
+	Items []Alertmanager `json:"items"`
+}

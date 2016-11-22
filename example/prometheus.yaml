@@ -17,4 +17,4 @@ spec:
   alerting:
     alertmanagers:
     - namespace: monitoring
-      name: alertmanager-cluster
+      name: alertmanager-main
