@@ -27,6 +27,7 @@ of the service endpoints. This is also made possible by the Prometheus Operator.
 
 | Name | Description | Required | Schema | Default |
 | ---- | ----------- | -------- | ------ | ------- |
+| jobLabel | Service label of which the value is used to assemble a job name of the form `<label value>-<port>`. If no label is specified, the service name is used. | false | string |  |
 | selector | Label selector for services the `ServiceMonitor` applies to. | true | [unversioned.LabelSelector](http://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | |
 | endpoints | The endpoints to be monitored for endpoints of the selected services. | true | Endpoint array | |
 
