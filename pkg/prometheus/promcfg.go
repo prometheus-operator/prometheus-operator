@@ -106,6 +106,19 @@ scrape_configs:
     target_label: "job"
     replacement: "${1}-{{ $ep.TargetPort.String }}"
   {{- end}}
+  {{- if ne $mon.Spec.JobLabel "" }}
+    {{- if ne $ep.Port "" }}
+  - source_labels: ["__meta_kubernetes_service_label_{{ $mon.Spec.JobLabel }}"]
+    regex: "(.+)"
+    target_label: "job"
+    replacement: "${1}-{{ $ep.Port }}"
+    {{- else if ne $ep.TargetPort.String "" }}
+  - source_labels: ["__meta_kubernetes_service_label_{{ $mon.Spec.JobLabel }}"]
+    regex: "(.+)"
+    target_label: "job"
+    replacement: "${1}-{{ $ep.TargetPort.String }}"
+    {{- end}}
+  {{- end}}
 {{- end }}
 {{- end }}
 {{- end }}

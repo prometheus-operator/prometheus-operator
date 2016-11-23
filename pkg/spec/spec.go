@@ -85,6 +85,7 @@ type ServiceMonitor struct {
 
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 type ServiceMonitorSpec struct {
+	JobLabel  string                    `json:"jobLabel"`
 	Endpoints []Endpoint                `json:"endpoints"`
 	Selector  unversioned.LabelSelector `json:"selector"`
 	// AllNamespaces     bool                      `json:"allNamespaces"`
