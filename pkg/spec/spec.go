@@ -85,9 +85,10 @@ type ServiceMonitor struct {
 
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 type ServiceMonitorSpec struct {
-	JobLabel  string                    `json:"jobLabel"`
-	Endpoints []Endpoint                `json:"endpoints"`
-	Selector  unversioned.LabelSelector `json:"selector"`
+	JobLabel          string                    `json:"jobLabel"`
+	Endpoints         []Endpoint                `json:"endpoints"`
+	Selector          unversioned.LabelSelector `json:"selector"`
+	NamespaceSelector *Selector                 `json:"namespaceSelector"`
 	// AllNamespaces     bool                      `json:"allNamespaces"`
 	// Namespaces        []string                  `json:"namespaces"`
 	// NamespaceSelector unversioned.LabelSelector `json:"namespaceSelector"`
@@ -137,4 +138,10 @@ type AlertmanagerList struct {
 	unversioned.ListMeta `json:"metadata,omitempty"`
 	// Items is a list of third party objects
 	Items []Alertmanager `json:"items"`
+}
+
+type Selector struct {
+	unversioned.LabelSelector `json:",inline"`
+	Any                       bool     `json:"any,omitempty"`
+	MatchNames                []string `json:"matchNames,omitempty"`
 }

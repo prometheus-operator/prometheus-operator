@@ -15,7 +15,6 @@
 package prometheus
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -561,12 +560,9 @@ func (c *Operator) createConfig(p *spec.Prometheus) error {
 		return err
 	}
 	// Update config map based on the most recent configuration.
-	var buf bytes.Buffer
-	if err := configTmpl.Execute(&buf, &templateConfig{
-		ServiceMonitors: smons,
-		Prometheus:      p.Spec,
-	}); err != nil {
-		return err
+	b, err := generateConfig(p, smons)
+	if err != nil {
+		return fmt.Errorf("generating config failed: %s", err)
 	}
 
 	cm := &v1.ConfigMap{
@@ -574,7 +570,7 @@ func (c *Operator) createConfig(p *spec.Prometheus) error {
 			Name: p.Name,
 		},
 		Data: map[string]string{
-			"prometheus.yaml": buf.String(),
+			"prometheus.yaml": string(b),
 		},
 	}
 
