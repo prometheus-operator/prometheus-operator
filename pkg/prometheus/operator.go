@@ -16,12 +16,12 @@ package prometheus
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/coreos/prometheus-operator/pkg/analytics"
+	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/spec"
 
 	"github.com/go-kit/kit/log"
@@ -34,7 +34,6 @@ import (
 	extensionsobj "k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/1.5/pkg/labels"
 	utilruntime "k8s.io/client-go/1.5/pkg/util/runtime"
-	"k8s.io/client-go/1.5/pkg/util/wait"
 	"k8s.io/client-go/1.5/rest"
 	"k8s.io/client-go/1.5/tools/cache"
 )
@@ -80,7 +79,7 @@ func New(c Config, logger log.Logger) (*Operator, error) {
 		return nil, err
 	}
 
-	promclient, err := newPrometheusRESTClient(*cfg)
+	promclient, err := NewPrometheusRESTClient(*cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -426,20 +425,13 @@ func (c *Operator) reconcile(p *spec.Prometheus) error {
 	return c.syncVersion(p)
 }
 
-func podRunningAndReady(pod v1.Pod) (bool, error) {
-	switch pod.Status.Phase {
-	case v1.PodFailed, v1.PodSucceeded:
-		return false, fmt.Errorf("pod completed")
-	case v1.PodRunning:
-		for _, cond := range pod.Status.Conditions {
-			if cond.Type != v1.PodReady {
-				continue
-			}
-			return cond.Status == v1.ConditionTrue, nil
-		}
-		return false, fmt.Errorf("pod ready conditation not found")
+func ListOptions(name string) api.ListOptions {
+	return api.ListOptions{
+		LabelSelector: labels.SelectorFromSet(map[string]string{
+			"app":        "prometheus",
+			"prometheus": name,
+		}),
 	}
-	return false, nil
 }
 
 // syncVersion ensures that all running pods for a Prometheus have the required version.
@@ -450,15 +442,12 @@ func podRunningAndReady(pod v1.Pod) (bool, error) {
 func (c *Operator) syncVersion(p *spec.Prometheus) error {
 	fmt.Println("sync version")
 	defer fmt.Println("sync version complete")
-	selector, err := labels.Parse("app=prometheus,prometheus=" + p.Name)
-	if err != nil {
-		return err
-	}
+	opts := ListOptions(p.Name)
 	podClient := c.kclient.Core().Pods(p.Namespace)
 
 Outer:
 	for {
-		pods, err := podClient.List(api.ListOptions{LabelSelector: selector})
+		pods, err := podClient.List(opts)
 		if err != nil {
 			return err
 		}
@@ -466,7 +455,7 @@ Outer:
 			return nil
 		}
 		for _, cp := range pods.Items {
-			ready, err := podRunningAndReady(cp)
+			ready, err := k8sutil.PodRunningAndReady(cp)
 			if err != nil {
 				return err
 			}
@@ -639,41 +628,11 @@ func (c *Operator) createTPRs() error {
 	}
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	err := wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
-		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/monitoring.coreos.com/v1alpha1/prometheuses")
-		if err != nil {
-			return false, err
-		}
-		defer resp.Body.Close()
-
-		switch resp.StatusCode {
-		case http.StatusOK:
-			return true, nil
-		case http.StatusNotFound: // not set up yet. wait.
-			return false, nil
-		default:
-			return false, fmt.Errorf("invalid status code: %v", resp.Status)
-		}
-	})
+	err := k8sutil.WaitForMonitoringTPRReady(c.kclient.CoreClient.Client, c.host, "prometheuses")
 	if err != nil {
 		return err
 	}
-	return wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
-		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/monitoring.coreos.com/v1alpha1/servicemonitors")
-		if err != nil {
-			return false, err
-		}
-		defer resp.Body.Close()
-
-		switch resp.StatusCode {
-		case http.StatusOK:
-			return true, nil
-		case http.StatusNotFound: // not set up yet. wait.
-			return false, nil
-		default:
-			return false, fmt.Errorf("invalid status code: %v", resp.Status)
-		}
-	})
+	return k8sutil.WaitForMonitoringTPRReady(c.kclient.CoreClient.Client, c.host, "servicemonitors")
 }
 
 func newClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*rest.Config, error) {

@@ -30,7 +30,7 @@ import (
 
 const resyncPeriod = 5 * time.Minute
 
-func newPrometheusRESTClient(c rest.Config) (*rest.RESTClient, error) {
+func NewPrometheusRESTClient(c rest.Config) (*rest.RESTClient, error) {
 	c.APIPath = "/apis"
 	c.GroupVersion = &unversioned.GroupVersion{
 		Group:   "monitoring.coreos.com",

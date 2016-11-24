@@ -31,12 +31,6 @@
 			"revisionTime": "2016-10-23T20:27:10Z"
 		},
 		{
-			"checksumSHA1": "htjvdG/znrHmFYRQBqA2vHrJsF4=",
-			"path": "github.com/Sirupsen/logrus",
-			"revision": "f3cfb454f4c209e6668c95216c4744b8fddb2356",
-			"revisionTime": "2016-06-01T11:32:10Z"
-		},
-		{
 			"checksumSHA1": "n+s4YwtzpMWW5Rt0dEaQa7NHDGQ=",
 			"origin": "k8s.io/client-go/1.5/vendor/github.com/blang/semver",
 			"path": "github.com/blang/semver",
@@ -230,6 +224,20 @@
 			"revisionTime": "2016-10-23T20:27:10Z"
 		},
 		{
+			"checksumSHA1": "M2RFSWau6GJ6xlOrKCY8+xtrIy0=",
+			"origin": "k8s.io/client-go/1.5/vendor/github.com/howeyc/gopass",
+			"path": "github.com/howeyc/gopass",
+			"revision": "d72c0e162789e1bbb33c33cfa26858a1375efe01",
+			"revisionTime": "2016-10-15T19:23:47Z"
+		},
+		{
+			"checksumSHA1": "N98bv57tSy3teDJwIxXwBX2THds=",
+			"origin": "k8s.io/client-go/1.5/vendor/github.com/imdario/mergo",
+			"path": "github.com/imdario/mergo",
+			"revision": "d72c0e162789e1bbb33c33cfa26858a1375efe01",
+			"revisionTime": "2016-10-15T19:23:47Z"
+		},
+		{
 			"checksumSHA1": "9ZVOEbIXnTuYpVqce4en8rwlkPE=",
 			"origin": "k8s.io/client-go/1.5/vendor/github.com/jonboulle/clockwork",
 			"path": "github.com/jonboulle/clockwork",
@@ -290,6 +298,13 @@
 			"path": "github.com/ugorji/go/codec",
 			"revision": "843f7c4f28b1f647f664f883697107d5c02c5acc",
 			"revisionTime": "2016-10-23T20:27:10Z"
+		},
+		{
+			"checksumSHA1": "H7UkOZUU9oZSNPZDzaFHAvW0Z1I=",
+			"origin": "k8s.io/client-go/1.5/vendor/golang.org/x/crypto/ssh/terminal",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "d72c0e162789e1bbb33c33cfa26858a1375efe01",
+			"revisionTime": "2016-10-15T19:23:47Z"
 		},
 		{
 			"checksumSHA1": "jmDEnHmGflXf/8uGh9ph9DE+48Y=",
@@ -499,6 +514,18 @@
 			"path": "google.golang.org/appengine/internal/remote_api",
 			"revision": "843f7c4f28b1f647f664f883697107d5c02c5acc",
 			"revisionTime": "2016-10-23T20:27:10Z"
+		},
+		{
+			"checksumSHA1": "QtAbHtHmDzcf6vOV9eqlCpKgjiw=",
+			"path": "google.golang.org/appengine/internal/urlfetch",
+			"revision": "150dc57a1b433e64154302bdc40b6bb8aefa313a",
+			"revisionTime": "2016-09-29T07:07:04Z"
+		},
+		{
+			"checksumSHA1": "akOV9pYnCbcPA8wJUutSQVibdyg=",
+			"path": "google.golang.org/appengine/urlfetch",
+			"revision": "150dc57a1b433e64154302bdc40b6bb8aefa313a",
+			"revisionTime": "2016-09-29T07:07:04Z"
 		},
 		{
 			"checksumSHA1": "pfQwQtWlFezJq0Viroa/L+v+yDM=",
@@ -983,6 +1010,12 @@
 			"revisionTime": "2016-10-23T20:27:10Z"
 		},
 		{
+			"checksumSHA1": "Sbkot7HTnigUdo1Y0er9TQtgNz0=",
+			"path": "k8s.io/client-go/1.5/pkg/util/homedir",
+			"revision": "d72c0e162789e1bbb33c33cfa26858a1375efe01",
+			"revisionTime": "2016-10-15T19:23:47Z"
+		},
+		{
 			"checksumSHA1": "ByO18NbZwiifFr8qtLyfJAHXguA=",
 			"path": "k8s.io/client-go/1.5/pkg/util/integer",
 			"revision": "843f7c4f28b1f647f664f883697107d5c02c5acc",
@@ -1109,16 +1142,40 @@
 			"revisionTime": "2016-10-23T20:27:10Z"
 		},
 		{
+			"checksumSHA1": "3cEzQO9dFGa/ayLSod6dI2P9uv0=",
+			"path": "k8s.io/client-go/1.5/tools/auth",
+			"revision": "d72c0e162789e1bbb33c33cfa26858a1375efe01",
+			"revisionTime": "2016-10-15T19:23:47Z"
+		},
+		{
 			"checksumSHA1": "Gbe0Vs9hkI7X5hhbXUuWdRFffSI=",
 			"path": "k8s.io/client-go/1.5/tools/cache",
 			"revision": "843f7c4f28b1f647f664f883697107d5c02c5acc",
 			"revisionTime": "2016-10-23T20:27:10Z"
 		},
 		{
+			"checksumSHA1": "uIOKVNbw9A0tpnWFIpkQuSmJEuM=",
+			"path": "k8s.io/client-go/1.5/tools/clientcmd",
+			"revision": "d72c0e162789e1bbb33c33cfa26858a1375efe01",
+			"revisionTime": "2016-10-15T19:23:47Z"
+		},
+		{
 			"checksumSHA1": "K/oOznXABjqSS1c2Fs407c5F8KA=",
 			"path": "k8s.io/client-go/1.5/tools/clientcmd/api",
 			"revision": "843f7c4f28b1f647f664f883697107d5c02c5acc",
 			"revisionTime": "2016-10-23T20:27:10Z"
+		},
+		{
+			"checksumSHA1": "zvHTXHvPRBmtudMiLG/wW18riDs=",
+			"path": "k8s.io/client-go/1.5/tools/clientcmd/api/latest",
+			"revision": "d72c0e162789e1bbb33c33cfa26858a1375efe01",
+			"revisionTime": "2016-10-15T19:23:47Z"
+		},
+		{
+			"checksumSHA1": "zof0OTr7mTbivg6ZXKTZQAu6Ssg=",
+			"path": "k8s.io/client-go/1.5/tools/clientcmd/api/v1",
+			"revision": "d72c0e162789e1bbb33c33cfa26858a1375efe01",
+			"revisionTime": "2016-10-15T19:23:47Z"
 		},
 		{
 			"checksumSHA1": "c1PQ4WJRfpA9BYcFHW2+46hu5IE=",
