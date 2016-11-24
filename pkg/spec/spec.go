@@ -37,14 +37,14 @@ type PrometheusList struct {
 
 // PrometheusSpec holds specification parameters of a Prometheus deployment.
 type PrometheusSpec struct {
-	ServiceMonitors []ServiceMonitorSelection `json:"serviceMonitors"`
-	Version         string                    `json:"version"`
-	BaseImage       string                    `json:"baseImage"`
-	Replicas        int32                     `json:"replicas"`
-	Retention       string                    `json:"retention"`
-	Storage         *StorageSpec              `json:"storage"`
-	Alerting        AlertingSpec              `json:"alerting"`
-	Resources       v1.ResourceRequirements   `json:"resources"`
+	ServiceMonitorSelector *unversioned.LabelSelector `json:"serviceMonitorSelector"`
+	Version                string                     `json:"version"`
+	BaseImage              string                     `json:"baseImage"`
+	Replicas               int32                      `json:"replicas"`
+	Retention              string                     `json:"retention"`
+	Storage                *StorageSpec               `json:"storage"`
+	Alerting               AlertingSpec               `json:"alerting"`
+	Resources              v1.ResourceRequirements    `json:"resources"`
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...
@@ -67,11 +67,6 @@ type StorageSpec struct {
 type AlertmanagerEndpoints struct {
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
-}
-
-// ServiceMonitorSelection selects service monitors by their labels.
-type ServiceMonitorSelection struct {
-	Selector unversioned.LabelSelector `json:"selector"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.

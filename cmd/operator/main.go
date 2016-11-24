@@ -25,6 +25,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	"github.com/go-kit/kit/log"
 )
 
 var (
@@ -46,17 +47,20 @@ func init() {
 }
 
 func Main() int {
+	logger := log.NewContext(log.NewLogfmtLogger(os.Stdout)).
+		With("ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
+
 	if analyticsEnabled {
 		analytics.Enable()
 	}
 
-	po, err := prometheus.New(cfg)
+	po, err := prometheus.New(cfg, logger.With("operator", "prometheus"))
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return 1
 	}
 
-	ao, err := alertmanager.New(cfg)
+	ao, err := alertmanager.New(cfg, logger.With("operator", "alertmanager"))
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return 1

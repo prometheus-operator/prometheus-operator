@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -71,7 +70,7 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(c Config) (*Operator, error) {
+func New(c Config, logger log.Logger) (*Operator, error) {
 	cfg, err := newClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
 		return nil, err
@@ -80,8 +79,6 @@ func New(c Config) (*Operator, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger := log.NewContext(log.NewLogfmtLogger(os.Stdout)).
-		With("ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 
 	promclient, err := newPrometheusRESTClient(*cfg)
 	if err != nil {
@@ -357,15 +354,15 @@ func (c *Operator) reconcile(p *spec.Prometheus) error {
 		// Doing so just based on the deletion event is not reliable, so
 		// we have to garbage collect the controller-created resources in some other way.
 		//
-		// Let's rely on the index key matching that of the created configmap and replica
-		// set for now. This does not work if we delete Prometheus resources as the
+		// Let's rely on the index key matching that of the created configmap and PetSet for now.
+		// This does not work if we delete Prometheus resources as the
 		// controller is not running – that could be solved via garbage collection later.
 		return c.deletePrometheus(p)
 	}
 
 	// If no service monitor selectors are configured, the user wants to manage
 	// configuration himself.
-	if len(p.Spec.ServiceMonitors) > 0 {
+	if p.Spec.ServiceMonitorSelector != nil {
 		// We just always regenerate the configuration to be safe.
 		if err := c.createConfig(p); err != nil {
 			return err
@@ -451,6 +448,8 @@ func podRunningAndReady(pod v1.Pod) (bool, error) {
 //
 // TODO(fabxc): remove this once the PetSet controller learns how to do rolling updates.
 func (c *Operator) syncVersion(p *spec.Prometheus) error {
+	fmt.Println("sync version")
+	defer fmt.Println("sync version complete")
 	selector, err := labels.Parse("app=prometheus,prometheus=" + p.Name)
 	if err != nil {
 		return err
@@ -589,24 +588,23 @@ func (c *Operator) selectServiceMonitors(p *spec.Prometheus) (map[string]*spec.S
 	// Selectors might overlap. Deduplicate them along the keyFunc.
 	res := make(map[string]*spec.ServiceMonitor)
 
-	for _, smon := range p.Spec.ServiceMonitors {
-		selector, err := unversioned.LabelSelectorAsSelector(&smon.Selector)
-		if err != nil {
-			return nil, err
-		}
-
-		// Only service monitors within the same namespace as the Prometheus
-		// object can belong to it.
-		cache.ListAllByNamespace(c.smonInf.GetIndexer(), p.Namespace, selector, func(obj interface{}) {
-			k, err := keyFunc(obj)
-			if err != nil {
-				// Keep going for other items.
-				utilruntime.HandleError(fmt.Errorf("key func failed: %s", err))
-				return
-			}
-			res[k] = obj.(*spec.ServiceMonitor)
-		})
+	selector, err := unversioned.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
+	if err != nil {
+		return nil, err
 	}
+
+	// Only service monitors within the same namespace as the Prometheus
+	// object can belong to it.
+	cache.ListAllByNamespace(c.smonInf.GetIndexer(), p.Namespace, selector, func(obj interface{}) {
+		k, err := keyFunc(obj)
+		if err != nil {
+			// Keep going for other items.
+			utilruntime.HandleError(fmt.Errorf("key func failed: %s", err))
+			return
+		}
+		res[k] = obj.(*spec.ServiceMonitor)
+	})
+
 	return res, nil
 }
 
