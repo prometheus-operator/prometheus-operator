@@ -86,7 +86,7 @@ type ServiceMonitorSpec struct {
 	JobLabel          string                    `json:"jobLabel"`
 	Endpoints         []Endpoint                `json:"endpoints"`
 	Selector          unversioned.LabelSelector `json:"selector"`
-	NamespaceSelector *Selector                 `json:"namespaceSelector"`
+	NamespaceSelector Selector                  `json:"namespaceSelector"`
 	// AllNamespaces     bool                      `json:"allNamespaces"`
 	// Namespaces        []string                  `json:"namespaces"`
 	// NamespaceSelector unversioned.LabelSelector `json:"namespaceSelector"`
@@ -139,7 +139,10 @@ type AlertmanagerList struct {
 }
 
 type Selector struct {
-	unversioned.LabelSelector `json:",inline"`
-	Any                       bool     `json:"any,omitempty"`
-	MatchNames                []string `json:"matchNames,omitempty"`
+	Any        bool     `json:"any,omitempty"`
+	MatchNames []string `json:"matchNames,omitempty"`
+
+	// TODO(fabxc): this should embed unversioned.LabelSelector eventually.
+	// Currently the selector is only used for namespaces which require more complex
+	// implementation to support label selections.
 }

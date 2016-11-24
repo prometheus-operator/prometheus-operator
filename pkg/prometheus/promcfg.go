@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"strings"
 
 	yaml "gopkg.in/yaml.v1"
 
@@ -67,11 +68,41 @@ func generateServiceMonitorConfig(m *spec.ServiceMonitor, ep spec.Endpoint, i in
 	var relabelings []interface{}
 
 	// Filter targets by services selected by the monitor.
+	//
+	// matchExpressions is not supported for now.
 	for k, v := range m.Spec.Selector.MatchLabels {
 		relabelings = append(relabelings, map[string]interface{}{
 			"action":        "keep",
 			"source_labels": []string{"__meta_kubernetes_service_label_" + k},
 			"regex":         v,
+		})
+	}
+
+	// Filter targets based on the namespace selection configuration.
+	// By default we only discover services within the namespace of the
+	// ServiceMonitor.
+	// Selections allow extending this to all namespaces or to a subset
+	// of them specified by label or name matching.
+	//
+	// Label selections are not supported yet as they require either supported
+	// in the upstream SD integration or require out-of-band implementation
+	// in the operator with configuration reload.
+	//
+	// There's no explicit nil for the selector, we decide for the default
+	// case if it's all zero values.
+	nsel := m.Spec.NamespaceSelector
+
+	if !nsel.Any && len(nsel.MatchNames) == 0 {
+		relabelings = append(relabelings, map[string]interface{}{
+			"action":        "keep",
+			"source_labels": []string{"__meta_kubernetes_namespace"},
+			"regex":         m.Namespace,
+		})
+	} else if len(nsel.MatchNames) > 0 {
+		relabelings = append(relabelings, map[string]interface{}{
+			"action":        "keep",
+			"source_labels": []string{"__meta_kubernetes_namespace"},
+			"regex":         strings.Join(nsel.MatchNames, "|"),
 		})
 	}
 
