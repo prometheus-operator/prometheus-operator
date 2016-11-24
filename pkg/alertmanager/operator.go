@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -60,7 +59,7 @@ type Operator struct {
 }
 
 // New creates a new controller.
-func New(c prometheus.Config) (*Operator, error) {
+func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 	cfg, err := newClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
 		return nil, err
@@ -69,8 +68,6 @@ func New(c prometheus.Config) (*Operator, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger := log.NewContext(log.NewLogfmtLogger(os.Stdout)).
-		With("ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 
 	promclient, err := newAlertmanagerRESTClient(*cfg)
 	if err != nil {

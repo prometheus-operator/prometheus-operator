@@ -5,15 +5,11 @@ metadata:
   labels:
     prometheus: "main"
 spec:
-  replicas: 2
-  version: v1.3.0
-  serviceMonitors:
-  - selector:
-      matchLabels:
-        app: example-app
-  - selector:
-      matchLabels:
-        app: node-exporter
+  replicas: 1
+  version: v1.3.1
+  serviceMonitorSelector:
+    matchExpressions:
+    - {key: app, operator: In, values: [node-exporter, example-app]}
   alerting:
     alertmanagers:
     - namespace: monitoring
