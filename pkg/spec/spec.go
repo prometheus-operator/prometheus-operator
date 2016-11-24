@@ -37,18 +37,16 @@ type PrometheusList struct {
 
 // PrometheusSpec holds specification parameters of a Prometheus deployment.
 type PrometheusSpec struct {
-	ServiceMonitors    []ServiceMonitorSelection `json:"serviceMonitors"`
-	EvaluationInterval string                    `json:"evaluationInterval"`
-	Version            string                    `json:"version"`
-	BaseImage          string                    `json:"baseImage"`
-	Replicas           int32                     `json:"replicas"`
-	Retention          string                    `json:"retention"`
-	Storage            *StorageSpec              `json:"storage"`
-	Alerting           AlertingSpec              `json:"alerting"`
-	Resources          v1.ResourceRequirements   `json:"resources"`
-	// Alerting        AlertingSpec               `json:"alerting"`
+	ServiceMonitors []ServiceMonitorSelection `json:"serviceMonitors"`
+	Version         string                    `json:"version"`
+	BaseImage       string                    `json:"baseImage"`
+	Replicas        int32                     `json:"replicas"`
+	Retention       string                    `json:"retention"`
+	Storage         *StorageSpec              `json:"storage"`
+	Alerting        AlertingSpec              `json:"alerting"`
+	Resources       v1.ResourceRequirements   `json:"resources"`
+	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
-	// Persistence...
 	// Sharding...
 }
 
@@ -85,9 +83,10 @@ type ServiceMonitor struct {
 
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 type ServiceMonitorSpec struct {
-	JobLabel  string                    `json:"jobLabel"`
-	Endpoints []Endpoint                `json:"endpoints"`
-	Selector  unversioned.LabelSelector `json:"selector"`
+	JobLabel          string                    `json:"jobLabel"`
+	Endpoints         []Endpoint                `json:"endpoints"`
+	Selector          unversioned.LabelSelector `json:"selector"`
+	NamespaceSelector Selector                  `json:"namespaceSelector"`
 	// AllNamespaces     bool                      `json:"allNamespaces"`
 	// Namespaces        []string                  `json:"namespaces"`
 	// NamespaceSelector unversioned.LabelSelector `json:"namespaceSelector"`
@@ -137,4 +136,13 @@ type AlertmanagerList struct {
 	unversioned.ListMeta `json:"metadata,omitempty"`
 	// Items is a list of third party objects
 	Items []Alertmanager `json:"items"`
+}
+
+type Selector struct {
+	Any        bool     `json:"any,omitempty"`
+	MatchNames []string `json:"matchNames,omitempty"`
+
+	// TODO(fabxc): this should embed unversioned.LabelSelector eventually.
+	// Currently the selector is only used for namespaces which require more complex
+	// implementation to support label selections.
 }

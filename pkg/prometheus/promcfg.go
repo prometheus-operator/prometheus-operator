@@ -15,111 +15,209 @@
 package prometheus
 
 import (
-	"html/template"
+	"fmt"
+	"strings"
+
+	yaml "gopkg.in/yaml.v2"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
 
 	"github.com/coreos/prometheus-operator/pkg/spec"
 )
 
-type templateConfig struct {
-	Prometheus      spec.PrometheusSpec
-	ServiceMonitors map[string]*spec.ServiceMonitor
+func generateConfig(p *spec.Prometheus, mons map[string]*spec.ServiceMonitor) ([]byte, error) {
+	cfg := map[string]interface{}{}
+
+	cfg["global"] = map[string]string{
+		"evaluation_interval": "30s",
+		"scrape_interval":     "30s",
+	}
+
+	cfg["rule_files"] = []string{"/etc/prometheus/rules/*.rules"}
+
+	var scrapeConfigs []interface{}
+	for _, mon := range mons {
+		for i, ep := range mon.Spec.Endpoints {
+			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mon, ep, i))
+		}
+	}
+
+	cfg["scrape_configs"] = scrapeConfigs
+
+	return yaml.Marshal(cfg)
 }
 
-var configTmpl = template.Must(template.New("config").Parse(`
-{{- block "globals" . }}
-global:
-  {{- if ne .Prometheus.EvaluationInterval "" }}
-  evaluation_interval: {{ .Prometheus.EvaluationInterval }}
-  {{- else }}
-  evaluation_interval: 30s
-  {{- end }}
-{{- end}}
+func generateServiceMonitorConfig(m *spec.ServiceMonitor, ep spec.Endpoint, i int) interface{} {
+	cfg := map[string]interface{}{
+		"job_name": fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+		"kubernetes_sd_configs": []map[string]interface{}{
+			{
+				"role": "endpoints",
+			},
+		},
+	}
 
-rule_files:
-- /etc/prometheus/rules/*.rules
+	if ep.Interval != "" {
+		cfg["scrape_interval"] = ep.Interval
+	}
+	if ep.Path != "" {
+		cfg["metrics_path"] = ep.Path
+	}
+	if ep.Scheme != "" {
+		cfg["scheme"] = ep.Scheme
+	}
 
-{{ block "scrapeConfigs" . }}
-scrape_configs:
-{{- range $mon := .ServiceMonitors }}
-{{- range $i, $ep := $mon.Spec.Endpoints }}
-- job_name: "{{ $mon.Namespace }}/{{ $mon.Name }}/{{ $i }}"
+	var relabelings []interface{}
 
-  {{- if ne $ep.Interval "" }}
-  scrape_interval: "{{ $ep.Interval }}"
-  {{- end }}
-  {{- if ne $ep.Path "" }}
-  metrics_path: "{{ $ep.Path }}"
-  {{- end }}
-  {{- if ne $ep.Scheme "" }}
-  scheme: "{{ $ep.Scheme }}"
-  {{- end }}
+	// Filter targets by services selected by the monitor.
 
-  kubernetes_sd_configs:
-  - role: endpoints
+	// Exact label matches.
+	for k, v := range m.Spec.Selector.MatchLabels {
+		relabelings = append(relabelings, map[string]interface{}{
+			"action":        "keep",
+			"source_labels": []string{"__meta_kubernetes_service_label_" + k},
+			"regex":         v,
+		})
+	}
+	// Set based label matching. We have to map the valid relations
+	// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
+	for _, exp := range m.Spec.Selector.MatchExpressions {
+		switch exp.Operator {
+		case unversioned.LabelSelectorOpIn:
+			relabelings = append(relabelings, map[string]interface{}{
+				"action":        "keep",
+				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"regex":         strings.Join(exp.Values, "|"),
+			})
+		case unversioned.LabelSelectorOpNotIn:
+			relabelings = append(relabelings, map[string]interface{}{
+				"action":        "drop",
+				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"regex":         strings.Join(exp.Values, "|"),
+			})
+		case unversioned.LabelSelectorOpExists:
+			relabelings = append(relabelings, map[string]interface{}{
+				"action":        "keep",
+				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"regex":         ".+",
+			})
+		case unversioned.LabelSelectorOpDoesNotExist:
+			relabelings = append(relabelings, map[string]interface{}{
+				"action":        "drop",
+				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"regex":         ".+",
+			})
+		}
+	}
 
-  relabel_configs:
-  # 
-  # FILTERING
-  #
-  {{- range $k, $v := $mon.Spec.Selector.MatchLabels }}
-  - action: "keep"
-    source_labels: ["__meta_kubernetes_service_label_{{ $k }}"]
-    regex: "{{ $v }}"
-  {{- end }}
-  {{- if ne $ep.Port "" }}
-  - action: "keep"
-    source_labels: ["__meta_kubernetes_endpoint_port_name"]
-    regex: "{{ $ep.Port }}"
-  {{- else if ne $ep.TargetPort.StrVal "" }}
-  - action: "keep"
-    source_labels: ["__meta_kubernetes_pod_container_port_name"]
-    regex: "{{ $ep.TargetPort.String }}"
-  {{- else if ne $ep.TargetPort.IntVal 0 }}
-  - action: "keep"
-    source_labels: ["__meta_kubernetes_pod_container_port_number"]
-    regex: "{{ $ep.TargetPort.String }}"
-  {{- end }}
-  # 
-  # TARGET LABELS
-  #
-  - source_labels: ["__meta_kubernetes_namespace"]
-    target_label: "namespace"
-  - action: "labelmap"
-    regex: "__meta_kubernetes_service_label_(.+)"
-    replacement: "svc_$1"
-  - # Drop 'pod_template_hash' label that's set by deployment controller.
-    action: replace
-    target_label: "__meta_kubernetes_pod_label_pod_template_hash"
-    replacement: ""
-  - action: "labelmap"
-    regex: "__meta_kubernetes_pod_label_(.+)"
-    replacement: "pod_$1"
-  # 
-  # JOB LABEL
-  #
-  {{- if ne $ep.Port "" }}
-  - source_labels: ["__meta_kubernetes_service_name"]
-    target_label: "job"
-    replacement: "${1}-{{ $ep.Port }}"
-  {{- else if ne $ep.TargetPort.String "" }}
-  - source_labels: ["__meta_kubernetes_service_name"]
-    target_label: "job"
-    replacement: "${1}-{{ $ep.TargetPort.String }}"
-  {{- end}}
-  {{- if ne $mon.Spec.JobLabel "" }}
-    {{- if ne $ep.Port "" }}
-  - source_labels: ["__meta_kubernetes_service_label_{{ $mon.Spec.JobLabel }}"]
-    regex: "(.+)"
-    target_label: "job"
-    replacement: "${1}-{{ $ep.Port }}"
-    {{- else if ne $ep.TargetPort.String "" }}
-  - source_labels: ["__meta_kubernetes_service_label_{{ $mon.Spec.JobLabel }}"]
-    regex: "(.+)"
-    target_label: "job"
-    replacement: "${1}-{{ $ep.TargetPort.String }}"
-    {{- end}}
-  {{- end}}
-{{- end }}
-{{- end }}
-{{- end }}
-`))
+	// Filter targets based on the namespace selection configuration.
+	// By default we only discover services within the namespace of the
+	// ServiceMonitor.
+	// Selections allow extending this to all namespaces or to a subset
+	// of them specified by label or name matching.
+	//
+	// Label selections are not supported yet as they require either supported
+	// in the upstream SD integration or require out-of-band implementation
+	// in the operator with configuration reload.
+	//
+	// There's no explicit nil for the selector, we decide for the default
+	// case if it's all zero values.
+	nsel := m.Spec.NamespaceSelector
+
+	if !nsel.Any && len(nsel.MatchNames) == 0 {
+		relabelings = append(relabelings, map[string]interface{}{
+			"action":        "keep",
+			"source_labels": []string{"__meta_kubernetes_namespace"},
+			"regex":         m.Namespace,
+		})
+	} else if len(nsel.MatchNames) > 0 {
+		relabelings = append(relabelings, map[string]interface{}{
+			"action":        "keep",
+			"source_labels": []string{"__meta_kubernetes_namespace"},
+			"regex":         strings.Join(nsel.MatchNames, "|"),
+		})
+	}
+
+	// Filter targets based on correct port for the endpoint.
+	if ep.Port != "" {
+		relabelings = append(relabelings, map[string]interface{}{
+			"action":        "keep",
+			"source_labels": []string{"__meta_kubernetes_endpoint_port_name"},
+			"regex":         ep.Port,
+		})
+	} else if ep.TargetPort.StrVal != "" {
+		relabelings = append(relabelings, map[string]interface{}{
+			"action":        "keep",
+			"source_labels": []string{"__meta_kubernetes_container_port_name"},
+			"regex":         ep.TargetPort.String(),
+		})
+	} else if ep.TargetPort.IntVal != 0 {
+		relabelings = append(relabelings, map[string]interface{}{
+			"action":        "keep",
+			"source_labels": []string{"__meta_kubernetes_container_port_number"},
+			"regex":         ep.TargetPort.String(),
+		})
+	}
+
+	// Relabel namespace and pod and service labels into proper labels.
+	relabelings = append(relabelings, []interface{}{
+		map[string]interface{}{
+			"source_labels": []string{"__meta_kubernetes_namespace"},
+			"target_label":  "namespace",
+		},
+		map[string]interface{}{
+			"action":      "labelmap",
+			"regex":       "__meta_kubernetes_service_label_(.+)",
+			"replacement": "svc_$1",
+		},
+		map[string]interface{}{
+			"action":       "replace",
+			"target_label": "__meta_kubernetes_pod_label_pod_template_hash",
+			"replacement":  "",
+		},
+		map[string]interface{}{
+			"action":      "labelmap",
+			"regex":       "__meta_kubernetes_pod_label_(.+)",
+			"replacement": "pod_$1",
+		},
+	}...)
+
+	// By default, generate a safe job name from the service name and scraped port.
+	// We also keep this around if a jobLabel is set in case the targets don't actually
+	// have a value for it.
+	if ep.Port != "" {
+		relabelings = append(relabelings, map[string]interface{}{
+			"source_labels": []string{"__meta_kubernetes_service_name"},
+			"target_label":  "job",
+			"replacement":   "${1}-" + ep.Port,
+		})
+	} else if ep.TargetPort.String() != "" {
+		relabelings = append(relabelings, map[string]interface{}{
+			"source_labels": []string{"__meta_kubernetes_service_name"},
+			"target_label":  "job",
+			"replacement":   "${1}-" + ep.TargetPort.String(),
+		})
+	}
+	// Generate a job name with a base label. Same as above, just that we
+	// get the base from the label, if present.
+	if m.Spec.JobLabel != "" {
+		if ep.Port != "" {
+			relabelings = append(relabelings, map[string]interface{}{
+				"source_labels": []string{"__meta_kubernetes_service_label_" + m.Spec.JobLabel},
+				"target_label":  "job",
+				"regex":         "(.+)",
+				"replacement":   "${1}-" + ep.Port,
+			})
+		} else if ep.TargetPort.String() != "" {
+			relabelings = append(relabelings, map[string]interface{}{
+				"source_labels": []string{"__meta_kubernetes_service_label_" + m.Spec.JobLabel},
+				"target_label":  "job",
+				"regex":         "(.+)",
+				"replacement":   "${1}-" + ep.TargetPort.String(),
+			})
+		}
+	}
+
+	cfg["relabel_configs"] = relabelings
+
+	return cfg
+}
