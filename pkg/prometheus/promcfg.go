@@ -25,14 +25,11 @@ import (
 func generateConfig(p *spec.Prometheus, mons map[string]*spec.ServiceMonitor) ([]byte, error) {
 	cfg := map[string]interface{}{}
 
-	global := map[string]string{
+	cfg["global"] = map[string]string{
 		"evaluation_interval": "30s",
-	}
-	if p.Spec.EvaluationInterval != "" {
-		global["evaluation_interval"] = p.Spec.EvaluationInterval
+		"scrape_interval":     "30s",
 	}
 
-	cfg["global"] = global
 	cfg["rule_files"] = []string{"/etc/prometheus/rules/*.rules"}
 
 	var scrapeConfigs []interface{}
