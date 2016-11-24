@@ -18,7 +18,8 @@ import (
 	"fmt"
 	"strings"
 
-	yaml "gopkg.in/yaml.v1"
+	yaml "gopkg.in/yaml.v2"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
 
 	"github.com/coreos/prometheus-operator/pkg/spec"
 )
@@ -68,14 +69,44 @@ func generateServiceMonitorConfig(m *spec.ServiceMonitor, ep spec.Endpoint, i in
 	var relabelings []interface{}
 
 	// Filter targets by services selected by the monitor.
-	//
-	// matchExpressions is not supported for now.
+
+	// Exact label matches.
 	for k, v := range m.Spec.Selector.MatchLabels {
 		relabelings = append(relabelings, map[string]interface{}{
 			"action":        "keep",
 			"source_labels": []string{"__meta_kubernetes_service_label_" + k},
 			"regex":         v,
 		})
+	}
+	// Set based label matching. We have to map the valid relations
+	// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
+	for _, exp := range m.Spec.Selector.MatchExpressions {
+		switch exp.Operator {
+		case unversioned.LabelSelectorOpIn:
+			relabelings = append(relabelings, map[string]interface{}{
+				"action":        "keep",
+				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"regex":         strings.Join(exp.Values, "|"),
+			})
+		case unversioned.LabelSelectorOpNotIn:
+			relabelings = append(relabelings, map[string]interface{}{
+				"action":        "drop",
+				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"regex":         strings.Join(exp.Values, "|"),
+			})
+		case unversioned.LabelSelectorOpExists:
+			relabelings = append(relabelings, map[string]interface{}{
+				"action":        "keep",
+				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"regex":         ".+",
+			})
+		case unversioned.LabelSelectorOpDoesNotExist:
+			relabelings = append(relabelings, map[string]interface{}{
+				"action":        "drop",
+				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"regex":         ".+",
+			})
+		}
 	}
 
 	// Filter targets based on the namespace selection configuration.
