@@ -22,6 +22,7 @@ import (
 
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/coreos/prometheus-operator/pkg/queue"
 	"github.com/coreos/prometheus-operator/pkg/spec"
 
 	"github.com/go-kit/kit/log"
@@ -62,7 +63,7 @@ type Operator struct {
 	psetInf cache.SharedIndexInformer
 	epntInf cache.SharedIndexInformer
 
-	queue *queue
+	queue *queue.Queue
 
 	host string
 }
@@ -75,8 +76,8 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(c Config, logger log.Logger) (*Operator, error) {
-	cfg, err := newClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
+func New(conf Config, logger log.Logger) (*Operator, error) {
+	cfg, err := newClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -89,43 +90,12 @@ func New(c Config, logger log.Logger) (*Operator, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Operator{
+	c := &Operator{
 		kclient: client,
 		pclient: promclient,
 		logger:  logger,
-		queue:   newQueue(200),
+		queue:   queue.New(),
 		host:    cfg.Host,
-	}, nil
-}
-
-// Run the controller.
-func (c *Operator) Run(stopc <-chan struct{}) error {
-	defer c.queue.close()
-	go c.worker()
-
-	errChan := make(chan error)
-	go func() {
-		v, err := c.kclient.Discovery().ServerVersion()
-		if err != nil {
-			errChan <- fmt.Errorf("communicating with server failed: %s", err)
-			return
-		}
-		c.logger.Log("msg", "connection established", "cluster-version", v)
-
-		if err := c.createTPRs(); err != nil {
-			errChan <- err
-			return
-		}
-		errChan <- nil
-	}()
-
-	select {
-	case err := <-errChan:
-		if err != nil {
-			return err
-		}
-	case <-stopc:
-		return nil
 	}
 
 	c.promInf = cache.NewSharedIndexInformer(
@@ -146,20 +116,9 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	)
 
 	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(p interface{}) {
-			c.logger.Log("msg", "enqueuePrometheus", "trigger", "prom add")
-			analytics.PrometheusCreated()
-			c.enqueuePrometheus(p)
-		},
-		DeleteFunc: func(p interface{}) {
-			c.logger.Log("msg", "enqueuePrometheus", "trigger", "prom del")
-			analytics.PrometheusDeleted()
-			c.enqueuePrometheus(p)
-		},
-		UpdateFunc: func(_, p interface{}) {
-			c.logger.Log("msg", "enqueuePrometheus", "trigger", "prom update")
-			c.enqueuePrometheus(p)
-		},
+		AddFunc:    c.addPrometheus,
+		DeleteFunc: c.deletePrometheus,
+		UpdateFunc: c.updatePrometheus,
 	})
 	c.smonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(_ interface{}) {
@@ -198,6 +157,25 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		},
 	})
 
+	return c, nil
+}
+
+// Run the controller.
+func (c *Operator) Run(stopc <-chan struct{}) error {
+	defer c.queue.ShutDown()
+
+	v, err := c.kclient.Discovery().ServerVersion()
+	if err != nil {
+		return fmt.Errorf("communicating with server failed: %s", err)
+	}
+	c.logger.Log("msg", "connection established", "cluster-version", v)
+
+	if err := c.createTPRs(); err != nil {
+		return err
+	}
+
+	go c.worker()
+
 	go c.promInf.Run(stopc)
 	go c.smonInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
@@ -207,39 +185,57 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	return nil
 }
 
-type queue struct {
-	ch chan *spec.Prometheus
-}
-
-func newQueue(size int) *queue {
-	return &queue{ch: make(chan *spec.Prometheus, size)}
-}
-
-func (q *queue) add(p *spec.Prometheus) { q.ch <- p }
-func (q *queue) close()                 { close(q.ch) }
-
-func (q *queue) pop() (*spec.Prometheus, bool) {
-	p, ok := <-q.ch
-	return p, ok
-}
-
 var keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
 
-func (c *Operator) enqueuePrometheus(p interface{}) {
-	c.queue.add(p.(*spec.Prometheus))
+func (c *Operator) addPrometheus(obj interface{}) {
+	key, err := keyFunc(obj)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+		return
+	}
+
+	analytics.PrometheusCreated()
+	c.logger.Log("msg", "Prometheus added", "key", key)
+
+	c.queue.Add(key)
 }
 
-func (c *Operator) enqueuePrometheusIf(f func(p *spec.Prometheus) bool) {
-	cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(o interface{}) {
-		if f(o.(*spec.Prometheus)) {
-			c.enqueuePrometheus(o.(*spec.Prometheus))
-		}
-	})
+func (c *Operator) deletePrometheus(obj interface{}) {
+	key, err := keyFunc(obj)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+		return
+	}
+
+	analytics.PrometheusDeleted()
+	c.logger.Log("msg", "Prometheus deleted", "key", key)
+
+	c.queue.Add(key)
+}
+
+func (c *Operator) updatePrometheus(old, cur interface{}) {
+	// oldp := old.(*spec.Prometheus)
+	// curp := cur.(*spec.Prometheus)
+
+	key, err := keyFunc(cur)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+		return
+	}
+
+	c.logger.Log("msg", "Prometheus updated", "key", key)
+
+	c.queue.Add(key)
 }
 
 func (c *Operator) enqueueAll() {
-	cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(o interface{}) {
-		c.enqueuePrometheus(o.(*spec.Prometheus))
+	cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
+		key, err := keyFunc(obj)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+			return
+		}
+		c.queue.Add(key)
 	})
 }
 
@@ -247,13 +243,24 @@ func (c *Operator) enqueueAll() {
 // It enforces that the syncHandler is never invoked concurrently with the same key.
 func (c *Operator) worker() {
 	for {
-		p, ok := c.queue.pop()
-		if !ok {
+		key, quit := c.queue.Get()
+		if quit {
 			return
 		}
-		if err := c.reconcile(p); err != nil {
-			utilruntime.HandleError(fmt.Errorf("reconciliation failed: %s", err))
+		if err := c.sync(key.(string)); err != nil {
+			utilruntime.HandleError(fmt.Errorf("reconciliation failed, re-enqueueing: %s", err))
+			// We only mark the item as done after waiting. In the meantime
+			// other items can be processed but the same item won't be processed again.
+			// This is a trivial form of rate-limiting that is sufficient for our throughput
+			// and latency expectations.
+			go func() {
+				time.Sleep(3 * time.Second)
+				c.queue.Done(key)
+			}()
+			continue
 		}
+
+		c.queue.Done(key)
 	}
 }
 
@@ -275,19 +282,37 @@ func (c *Operator) prometheusForDeployment(d *v1alpha1.PetSet) *spec.Prometheus 
 	return p.(*spec.Prometheus)
 }
 
-func (c *Operator) deletePetSet(o interface{}) {
-	d := o.(*v1alpha1.PetSet)
-	// Wake up Prometheus resource the deployment belongs to.
-	if p := c.prometheusForDeployment(d); p != nil {
-		c.enqueuePrometheus(p)
+func (c *Operator) deletePetSet(obj interface{}) {
+	key, err := keyFunc(obj)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+		return
 	}
+
+	_, exists, err := c.promInf.GetIndexer().GetByKey(key)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("get PetSet from index: %s", err))
+		return
+	}
+	// No Prometheus setup this PetSet relates to.
+	if !exists {
+		return
+	}
+
+	c.queue.Add(key)
 }
 
-func (c *Operator) addPetSet(o interface{}) {
-	d := o.(*v1alpha1.PetSet)
+func (c *Operator) addPetSet(obj interface{}) {
+	key, err := keyFunc(obj)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+		return
+	}
+
+	d := obj.(*v1alpha1.PetSet)
 	// Wake up Prometheus resource the deployment belongs to.
 	if p := c.prometheusForDeployment(d); p != nil {
-		c.enqueuePrometheus(p)
+		c.queue.Add(key)
 	}
 }
 
@@ -303,20 +328,22 @@ func (c *Operator) updatePetSet(oldo, curo interface{}) {
 		return
 	}
 
+	key, err := keyFunc(curo)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+		return
+	}
+
 	// Wake up Prometheus resource the deployment belongs to.
 	if p := c.prometheusForDeployment(cur); p != nil {
-		c.enqueuePrometheus(p)
+		c.queue.Add(key)
 	}
 }
 
-func (c *Operator) reconcile(p *spec.Prometheus) error {
-	key, err := keyFunc(p)
-	if err != nil {
-		return err
-	}
+func (c *Operator) sync(key string) error {
 	c.logger.Log("msg", "reconcile prometheus", "key", key)
 
-	_, exists, err := c.promInf.GetStore().GetByKey(key)
+	obj, exists, err := c.promInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
 	}
@@ -329,8 +356,10 @@ func (c *Operator) reconcile(p *spec.Prometheus) error {
 		// Let's rely on the index key matching that of the created configmap and PetSet for now.
 		// This does not work if we delete Prometheus resources as the
 		// controller is not running – that could be solved via garbage collection later.
-		return c.deletePrometheus(p)
+		return c.destroyPrometheus(key)
 	}
+
+	p := obj.(*spec.Prometheus)
 
 	// If no service monitor selectors are configured, the user wants to manage
 	// configuration himself.
@@ -357,12 +386,8 @@ func (c *Operator) reconcile(p *spec.Prometheus) error {
 	}
 
 	psetClient := c.kclient.Apps().PetSets(p.Namespace)
-	// Ensure we have a replica set running Prometheus deployed.
-	// XXX: Selecting by ObjectMeta.Name gives an error. So use the label for now.
-	psetQ := &v1alpha1.PetSet{}
-	psetQ.Namespace = p.Namespace
-	psetQ.Name = p.Name
-	obj, exists, err := c.psetInf.GetStore().Get(psetQ)
+	// Ensure we have a PetSet running Prometheus deployed.
+	obj, exists, err = c.psetInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
 	}
@@ -377,7 +402,7 @@ func (c *Operator) reconcile(p *spec.Prometheus) error {
 		return err
 	}
 
-	return c.syncVersion(p)
+	return c.syncVersion(key, p)
 }
 
 func ListOptions(name string) api.ListOptions {
@@ -394,78 +419,83 @@ func ListOptions(name string) api.ListOptions {
 // create new pods.
 //
 // TODO(fabxc): remove this once the PetSet controller learns how to do rolling updates.
-func (c *Operator) syncVersion(p *spec.Prometheus) error {
-	fmt.Println("sync version")
-	defer fmt.Println("sync version complete")
-	opts := ListOptions(p.Name)
+func (c *Operator) syncVersion(key string, p *spec.Prometheus) error {
 	podClient := c.kclient.Core().Pods(p.Namespace)
 
-Outer:
-	for {
-		pods, err := podClient.List(opts)
-		if err != nil {
-			return err
-		}
-		if len(pods.Items) == 0 {
-			return nil
-		}
-		for _, cp := range pods.Items {
-			ready, err := k8sutil.PodRunningAndReady(cp)
-			if err != nil {
-				return err
-			}
-			if !ready {
-				time.Sleep(200 * time.Millisecond)
-				continue Outer
-			}
-		}
-		var pod *v1.Pod
-		for _, cp := range pods.Items {
-			if !strings.HasSuffix(cp.Spec.Containers[0].Image, p.Spec.Version) {
-				pod = &cp
-				break
-			}
-		}
-		if pod == nil {
-			return nil
-		}
-		if err := podClient.Delete(pod.Name, nil); err != nil {
-			return err
-		}
+	pods, err := podClient.List(ListOptions(p.Name))
+	if err != nil {
+		return err
 	}
+
+	// If the PetSet is still busy scaling, don't interfere by killing pods.
+	// We enqueue ourselves again to until the PetSet is ready.
+	if len(pods.Items) != int(p.Spec.Replicas) {
+		return fmt.Errorf("scaling in progress")
+	}
+	if len(pods.Items) == 0 {
+		return nil
+	}
+
+	var oldPods []*v1.Pod
+	allReady := true
+	// Only proceed if all existing pods are running and ready.
+	for _, pod := range pods.Items {
+		ready, err := k8sutil.PodRunningAndReady(pod)
+		if err != nil {
+			c.logger.Log("msg", "cannot determine pod ready state", "err", err)
+		}
+		if ready {
+			// TODO(fabxc): detect other fields of the pod template that are mutable.
+			if !strings.HasSuffix(pod.Spec.Containers[0].Image, p.Spec.Version) {
+				oldPods = append(oldPods, &pod)
+			}
+			continue
+		}
+		allReady = false
+	}
+
+	if len(oldPods) == 0 {
+		return nil
+	}
+	if !allReady {
+		return fmt.Errorf("waiting for pods to become ready")
+	}
+
+	// TODO(fabxc): delete oldest pod first.
+	if err := podClient.Delete(oldPods[0].Name, nil); err != nil {
+		return err
+	}
+	// If there are further pods that need updating, we enqueue ourselves again.
+	if len(oldPods) > 1 {
+		return fmt.Errorf("%d out-of-date pods remaining", len(oldPods)-1)
+	}
+	return nil
 }
 
-func (c *Operator) deletePrometheus(p *spec.Prometheus) error {
+func (c *Operator) destroyPrometheus(key string) error {
+	obj, exists, err := c.psetInf.GetStore().GetByKey(key)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return nil
+	}
+	pset := obj.(*v1alpha1.PetSet)
+	*pset.Spec.Replicas = 0
+
 	// Update the replica count to 0 and wait for all pods to be deleted.
-	psetClient := c.kclient.Apps().PetSets(p.Namespace)
+	psetClient := c.kclient.Apps().PetSets(pset.Namespace)
 
-	key, err := keyFunc(p)
-	if err != nil {
-		return err
-	}
-	oldPsetO, _, err := c.psetInf.GetStore().GetByKey(key)
-	if err != nil {
-		return err
-	}
-	oldPset := oldPsetO.(*v1alpha1.PetSet)
-	zero := int32(0)
-	oldPset.Spec.Replicas = &zero
-
-	if _, err := psetClient.Update(oldPset); err != nil {
+	if _, err := psetClient.Update(pset); err != nil {
 		return err
 	}
 
-	// XXX: Selecting by ObjectMeta.Name gives an error. So use the label for now.
-	selector, err := labels.Parse("app=prometheus,prometheus=" + p.Name)
-	if err != nil {
-		return err
-	}
-	podClient := c.kclient.Core().Pods(p.Namespace)
+	podClient := c.kclient.Core().Pods(pset.Namespace)
 
 	// TODO(fabxc): temprorary solution until PetSet status provides necessary info to know
 	// whether scale-down completed.
 	for {
-		pods, err := podClient.List(api.ListOptions{LabelSelector: selector})
+		pods, err := podClient.List(ListOptions(pset.Name))
 		if err != nil {
 			return err
 		}
@@ -476,22 +506,19 @@ func (c *Operator) deletePrometheus(p *spec.Prometheus) error {
 	}
 
 	// Deployment scaled down, we can delete it.
-	if err := psetClient.Delete(p.Name, nil); err != nil {
+	if err := psetClient.Delete(pset.Name, nil); err != nil {
 		return err
 	}
-
-	// if err := c.kclient.Core().Services(p.Namespace).Delete(fmt.Sprintf("%s-petset", p.Name), nil); err != nil {
-	// 	return err
-	// }
 
 	// Delete the auto-generate configuration.
 	// TODO(fabxc): add an ownerRef at creation so we don't delete config maps
 	// manually created for Prometheus servers with no ServiceMonitor selectors.
-	cm := c.kclient.Core().ConfigMaps(p.Namespace)
-	if err := cm.Delete(p.Name, nil); err != nil {
+	cm := c.kclient.Core().ConfigMaps(pset.Namespace)
+
+	if err := cm.Delete(pset.Name, nil); err != nil {
 		return err
 	}
-	if err := cm.Delete(fmt.Sprintf("%s-rules", p.Name), nil); err != nil {
+	if err := cm.Delete(fmt.Sprintf("%s-rules", pset.Name), nil); err != nil {
 		return err
 	}
 	return nil
