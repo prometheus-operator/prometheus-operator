@@ -123,10 +123,6 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		cache.NewListWatchFromClient(c.kclient.Apps().GetRESTClient(), "petsets", api.NamespaceAll, nil),
 		&v1alpha1.PetSet{}, resyncPeriod, cache.Indexers{},
 	)
-	c.epntInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Core().GetRESTClient(), "endpoints", api.NamespaceAll, nil),
-		&v1.Endpoints{}, resyncPeriod, cache.Indexers{},
-	)
 
 	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(p interface{}) {
@@ -180,53 +176,13 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 			c.updatePetSet(old, cur)
 		},
 	})
-	c.epntInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		// TODO(brancz): refactor duplication.
-		AddFunc: func(o interface{}) {
-			e := o.(*v1.Endpoints)
-			c.enqueuePrometheusIf(func(p *spec.Prometheus) bool {
-				for _, a := range p.Spec.Alerting.Alertmanagers {
-					if a.Namespace == e.ObjectMeta.Namespace && a.Name == e.ObjectMeta.Name {
-						c.logger.Log("msg", "enqueuePrometheus", "trigger", "am service add")
-						return true
-					}
-				}
-				return false
-			})
-		},
-		UpdateFunc: func(_, cur interface{}) {
-			e := cur.(*v1.Endpoints)
-			c.enqueuePrometheusIf(func(p *spec.Prometheus) bool {
-				for _, a := range p.Spec.Alerting.Alertmanagers {
-					if a.Namespace == e.ObjectMeta.Namespace && a.Name == e.ObjectMeta.Name {
-						c.logger.Log("msg", "enqueuePrometheus", "trigger", "am service update", "namespace", e.ObjectMeta.Namespace, "name", e.ObjectMeta.Name)
-						return true
-					}
-				}
-				return false
-			})
-		},
-		DeleteFunc: func(o interface{}) {
-			e := o.(*v1.Endpoints)
-			c.enqueuePrometheusIf(func(p *spec.Prometheus) bool {
-				for _, a := range p.Spec.Alerting.Alertmanagers {
-					if a.Namespace == e.ObjectMeta.Namespace && a.Name == e.ObjectMeta.Name {
-						c.logger.Log("msg", "enqueuePrometheus", "trigger", "am service delete")
-						return true
-					}
-				}
-				return false
-			})
-		},
-	})
 
 	go c.promInf.Run(stopc)
 	go c.smonInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
 	go c.psetInf.Run(stopc)
-	go c.epntInf.Run(stopc)
 
-	for !c.promInf.HasSynced() || !c.smonInf.HasSynced() || !c.cmapInf.HasSynced() || !c.psetInf.HasSynced() || !c.epntInf.HasSynced() {
+	for !c.promInf.HasSynced() || !c.smonInf.HasSynced() || !c.cmapInf.HasSynced() || !c.psetInf.HasSynced() {
 		time.Sleep(100 * time.Millisecond)
 	}
 
@@ -394,31 +350,13 @@ func (c *Operator) reconcile(p *spec.Prometheus) error {
 		return err
 	}
 
-	am := []string{}
-	for _, eselector := range p.Spec.Alerting.Alertmanagers {
-		epntQ := &v1.Endpoints{}
-		epntQ.Name = eselector.Name
-		epntQ.Namespace = eselector.Namespace
-		obj, exists, err := c.epntInf.GetStore().Get(epntQ)
-		if err != nil {
-			return err
-		}
-		if exists {
-			for _, s := range obj.(*v1.Endpoints).Subsets {
-				for _, a := range s.Addresses {
-					am = append(am, fmt.Sprintf("http://%s:%d", a.IP, s.Ports[0].Port))
-				}
-			}
-		}
-	}
-
 	if !exists {
-		if _, err := psetClient.Create(makePetSet(*p, nil, am)); err != nil {
+		if _, err := psetClient.Create(makePetSet(*p, nil)); err != nil {
 			return fmt.Errorf("create petset: %s", err)
 		}
 		return nil
 	}
-	if _, err := psetClient.Update(makePetSet(*p, obj.(*v1alpha1.PetSet), am)); err != nil {
+	if _, err := psetClient.Update(makePetSet(*p, obj.(*v1alpha1.PetSet))); err != nil {
 		return err
 	}
 

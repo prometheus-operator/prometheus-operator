@@ -40,8 +40,15 @@ func generateConfig(p *spec.Prometheus, mons map[string]*spec.ServiceMonitor) ([
 			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mon, ep, i))
 		}
 	}
+	var alertmanagerConfigs []interface{}
+	for _, am := range p.Spec.Alerting.Alertmanagers {
+		alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(am))
+	}
 
 	cfg["scrape_configs"] = scrapeConfigs
+	cfg["alerting"] = map[string]interface{}{
+		"alertmanagers": alertmanagerConfigs,
+	}
 
 	return yaml.Marshal(cfg)
 }
@@ -218,6 +225,47 @@ func generateServiceMonitorConfig(m *spec.ServiceMonitor, ep spec.Endpoint, i in
 	}
 
 	cfg["relabel_configs"] = relabelings
+
+	return cfg
+}
+
+func generateAlertmanagerConfig(am spec.AlertmanagerEndpoints) interface{} {
+	cfg := map[string]interface{}{
+		"kubernetes_sd_configs": []map[string]interface{}{
+			{
+				"role": "endpoints",
+			},
+		},
+	}
+	var relabelings []interface{}
+
+	cfg["relabel_configs"] = relabelings
+	cfg["scheme"] = am.Scheme
+
+	relabelings = append(relabelings, map[string]interface{}{
+		"action":        "keep",
+		"source_labels": []string{"__meta_kubernetes_service_name"},
+		"regex":         am.Name,
+	})
+	relabelings = append(relabelings, map[string]interface{}{
+		"action":        "keep",
+		"source_labels": []string{"__meta_kubernetes_namespace"},
+		"regex":         am.Namespace,
+	})
+
+	if am.Port.StrVal != "" {
+		relabelings = append(relabelings, map[string]interface{}{
+			"action":        "keep",
+			"source_labels": []string{"__meta_kubernetes_service_port_name"},
+			"regex":         am.Port.String(),
+		})
+	} else if am.Port.IntVal != 0 {
+		relabelings = append(relabelings, map[string]interface{}{
+			"action":        "keep",
+			"source_labels": []string{"__meta_kubernetes_service_port_number"},
+			"regex":         am.Port.String(),
+		})
+	}
 
 	return cfg
 }
