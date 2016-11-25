@@ -69,6 +69,8 @@ still benefiting from the Operator's capabilities of managing Prometheus setups.
 | ---- | ----------- | -------- | ------ | ------- |
 | namespace | Namespace of the Alertmanager endpoints. | true | string | |
 | name | Name of the Alertmanager endpoints. This equals the targeted. Alertmanager service. | true | string | 
+| port | Name or number of the service port to push alerts to | required | integer or string |
+| scheme | HTTP scheme to use when pushing alerts | false | http |
 
 
 ## Current state and roadmap

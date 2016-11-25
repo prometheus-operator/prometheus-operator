@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/coreos/prometheus-operator/pkg/spec"
 	"k8s.io/client-go/1.5/pkg/api/resource"
@@ -25,7 +24,7 @@ import (
 	"k8s.io/client-go/1.5/pkg/util/intstr"
 )
 
-func makePetSet(p spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string) *v1alpha1.PetSet {
+func makePetSet(p spec.Prometheus, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -34,7 +33,7 @@ func makePetSet(p spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string)
 		p.Spec.BaseImage = "quay.io/prometheus/prometheus"
 	}
 	if p.Spec.Version == "" {
-		p.Spec.Version = "v1.3.0"
+		p.Spec.Version = "v1.4.0"
 	}
 	if p.Spec.Replicas < 1 {
 		p.Spec.Replicas = 1
@@ -54,7 +53,7 @@ func makePetSet(p spec.Prometheus, old *v1alpha1.PetSet, alertmanagers []string)
 		ObjectMeta: v1.ObjectMeta{
 			Name: p.Name,
 		},
-		Spec: makePetSetSpec(p, alertmanagers),
+		Spec: makePetSetSpec(p),
 	}
 	if vc := p.Spec.Storage; vc == nil {
 		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -129,7 +128,7 @@ func makePetSetService(p *spec.Prometheus) *v1.Service {
 	return svc
 }
 
-func makePetSetSpec(p spec.Prometheus, alertmanagers []string) v1alpha1.PetSetSpec {
+func makePetSetSpec(p spec.Prometheus) v1alpha1.PetSetSpec {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -178,7 +177,6 @@ func makePetSetSpec(p spec.Prometheus, alertmanagers []string) v1alpha1.PetSetSp
 							"-storage.local.num-fingerprint-mutexes=4096",
 							"-storage.local.path=/var/prometheus/data",
 							"-config.file=/etc/prometheus/config/prometheus.yaml",
-							"-alertmanager.url=" + strings.Join(alertmanagers, ","),
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{

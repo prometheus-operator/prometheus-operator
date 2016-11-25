@@ -65,8 +65,10 @@ type StorageSpec struct {
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
 // containing alertmanager IPs to fire alerts against.
 type AlertmanagerEndpoints struct {
-	Namespace string `json:"namespace"`
-	Name      string `json:"name"`
+	Namespace string             `json:"namespace"`
+	Name      string             `json:"name"`
+	Port      intstr.IntOrString `json:"port"`
+	Scheme    string             `json:"scheme"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.
