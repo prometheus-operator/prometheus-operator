@@ -363,8 +363,6 @@ func (c *Operator) handleUpdatePetSet(oldo, curo interface{}) {
 }
 
 func (c *Operator) sync(key string) error {
-	c.logger.Log("msg", "sync prometheus", "key", key)
-
 	obj, exists, err := c.promInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
@@ -382,6 +380,11 @@ func (c *Operator) sync(key string) error {
 	}
 
 	p := obj.(*spec.Prometheus)
+	if p.Spec.Paused {
+		return nil
+	}
+
+	c.logger.Log("msg", "sync prometheus", "key", key)
 
 	// If no service monitor selectors are configured, the user wants to manage
 	// configuration himself.
