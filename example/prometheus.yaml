@@ -12,8 +12,9 @@ spec:
     - {key: app, operator: In, values: [node-exporter, example-app]}
   alerting:
     alertmanagers:
-    - namespace: monitoring
-      name: alertmanager-main
+    - namespace: default
+      name: alertmanager
+      port: web
   resources:
     requests:
       memory: 400Mi

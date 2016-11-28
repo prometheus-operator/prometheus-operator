@@ -230,17 +230,19 @@ func generateServiceMonitorConfig(m *spec.ServiceMonitor, ep spec.Endpoint, i in
 }
 
 func generateAlertmanagerConfig(am spec.AlertmanagerEndpoints) interface{} {
+	if am.Scheme == "" {
+		am.Scheme = "http"
+	}
 	cfg := map[string]interface{}{
 		"kubernetes_sd_configs": []map[string]interface{}{
 			{
 				"role": "endpoints",
 			},
 		},
+		"scheme": am.Scheme,
 	}
-	var relabelings []interface{}
 
-	cfg["relabel_configs"] = relabelings
-	cfg["scheme"] = am.Scheme
+	var relabelings []interface{}
 
 	relabelings = append(relabelings, map[string]interface{}{
 		"action":        "keep",
@@ -256,16 +258,18 @@ func generateAlertmanagerConfig(am spec.AlertmanagerEndpoints) interface{} {
 	if am.Port.StrVal != "" {
 		relabelings = append(relabelings, map[string]interface{}{
 			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_service_port_name"},
+			"source_labels": []string{"__meta_kubernetes_endpoint_port_name"},
 			"regex":         am.Port.String(),
 		})
 	} else if am.Port.IntVal != 0 {
 		relabelings = append(relabelings, map[string]interface{}{
 			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_service_port_number"},
+			"source_labels": []string{"__meta_kubernetes_container_port_number"},
 			"regex":         am.Port.String(),
 		})
 	}
+
+	cfg["relabel_configs"] = relabelings
 
 	return cfg
 }
