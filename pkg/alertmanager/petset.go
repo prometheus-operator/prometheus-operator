@@ -24,20 +24,20 @@ import (
 	"k8s.io/client-go/1.5/pkg/util/intstr"
 )
 
-func makePetSet(namespace string, p *spec.Alertmanager, old *v1alpha1.PetSet) *v1alpha1.PetSet {
+func makePetSet(am *spec.Alertmanager, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
 
-	baseImage := p.Spec.BaseImage
+	baseImage := am.Spec.BaseImage
 	if baseImage == "" {
 		baseImage = "quay.io/prometheus/alertmanager"
 	}
-	version := p.Spec.Version
+	version := am.Spec.Version
 	if version == "" {
-		version = "v0.5.0"
+		version = "v0.5.1"
 	}
-	replicas := p.Spec.Replicas
+	replicas := am.Spec.Replicas
 	if replicas < 1 {
 		replicas = 1
 	}
@@ -45,13 +45,13 @@ func makePetSet(namespace string, p *spec.Alertmanager, old *v1alpha1.PetSet) *v
 
 	petset := &v1alpha1.PetSet{
 		ObjectMeta: v1.ObjectMeta{
-			Name: p.Name,
+			Name: am.Name,
 		},
-		Spec: makePetSetSpec(namespace, p.Name, image, version, replicas),
+		Spec: makePetSetSpec(am.Namespace, am.Name, image, version, replicas),
 	}
-	if vc := p.Spec.Storage; vc == nil {
+	if vc := am.Spec.Storage; vc == nil {
 		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: fmt.Sprintf("%s-db", p.Name),
+			Name: fmt.Sprintf("%s-db", am.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
@@ -59,7 +59,7 @@ func makePetSet(namespace string, p *spec.Alertmanager, old *v1alpha1.PetSet) *v
 	} else {
 		pvc := v1.PersistentVolumeClaim{
 			ObjectMeta: v1.ObjectMeta{
-				Name: fmt.Sprintf("%s-db", p.Name),
+				Name: fmt.Sprintf("%s-db", am.Name),
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
 				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
@@ -113,10 +113,10 @@ func makePetSetService(p *spec.Alertmanager) *v1.Service {
 func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.PetSetSpec {
 	commands := []string{
 		"/bin/alertmanager",
-		fmt.Sprintf("-config.file=%s", "/etc/prometheus/config/alertmanager.yaml"),
+		fmt.Sprintf("-config.file=%s", "/etc/alertmanager/config/alertmanager.yaml"),
 		fmt.Sprintf("-web.listen-address=:%d", 9093),
 		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
-		fmt.Sprintf("-storage.path=%s", "/etc/prometheus/data"),
+		fmt.Sprintf("-storage.path=%s", "/etc/alertmanager/data"),
 	}
 	for i := int32(0); i < replicas; i++ {
 		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", name, i, "alertmanager", ns))
@@ -158,11 +158,11 @@ func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.Pe
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config-volume",
-								MountPath: "/etc/prometheus/config",
+								MountPath: "/etc/alertmanager/config",
 							},
 							{
 								Name:      fmt.Sprintf("%s-db", name),
-								MountPath: "/var/prometheus/data",
+								MountPath: "/var/alertmanager/data",
 								SubPath:   "alertmanager-db",
 							},
 						},
@@ -171,13 +171,13 @@ func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.Pe
 						Image: "jimmidyson/configmap-reload",
 						Args: []string{
 							"-webhook-url=http://localhost:9093/-/reload",
-							"-volume-dir=/etc/prometheus/config",
+							"-volume-dir=/etc/alertmanager/config",
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config-volume",
 								ReadOnly:  true,
-								MountPath: "/etc/prometheus/config",
+								MountPath: "/etc/alertmanager/config",
 							},
 						},
 						Resources: v1.ResourceRequirements{
