@@ -35,7 +35,7 @@ func makePetSet(am *spec.Alertmanager, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 	}
 	version := am.Spec.Version
 	if version == "" {
-		version = "v0.5.0"
+		version = "v0.5.1"
 	}
 	replicas := am.Spec.Replicas
 	if replicas < 1 {
