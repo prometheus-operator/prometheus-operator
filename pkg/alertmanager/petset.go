@@ -113,10 +113,10 @@ func makePetSetService(p *spec.Alertmanager) *v1.Service {
 func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.PetSetSpec {
 	commands := []string{
 		"/bin/alertmanager",
-		fmt.Sprintf("-config.file=%s", "/etc/prometheus/config/alertmanager.yaml"),
+		fmt.Sprintf("-config.file=%s", "/etc/alertmanager/config/alertmanager.yaml"),
 		fmt.Sprintf("-web.listen-address=:%d", 9093),
 		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
-		fmt.Sprintf("-storage.path=%s", "/etc/prometheus/data"),
+		fmt.Sprintf("-storage.path=%s", "/etc/alertmanager/data"),
 	}
 	for i := int32(0); i < replicas; i++ {
 		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", name, i, "alertmanager", ns))
@@ -158,11 +158,11 @@ func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.Pe
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config-volume",
-								MountPath: "/etc/prometheus/config",
+								MountPath: "/etc/alertmanager/config",
 							},
 							{
 								Name:      fmt.Sprintf("%s-db", name),
-								MountPath: "/var/prometheus/data",
+								MountPath: "/var/alertmanager/data",
 								SubPath:   "alertmanager-db",
 							},
 						},
@@ -171,13 +171,13 @@ func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.Pe
 						Image: "jimmidyson/configmap-reload",
 						Args: []string{
 							"-webhook-url=http://localhost:9093/-/reload",
-							"-volume-dir=/etc/prometheus/config",
+							"-volume-dir=/etc/alertmanager/config",
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config-volume",
 								ReadOnly:  true,
-								MountPath: "/etc/prometheus/config",
+								MountPath: "/etc/alertmanager/config",
 							},
 						},
 						Resources: v1.ResourceRequirements{

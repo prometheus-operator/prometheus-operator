@@ -187,7 +187,7 @@ func (c *Operator) enqueue(obj interface{}) {
 	c.queue.Add(key)
 }
 
-// enqueueForNamespace enqueues all Prometheus object keys that belong to the given namespace.
+// enqueueForNamespace enqueues all Alertmanager object keys that belong to the given namespace.
 func (c *Operator) enqueueForNamespace(ns string) {
 	cache.ListAll(c.alrtInf.GetStore(), labels.Everything(), func(obj interface{}) {
 		am := obj.(*spec.Alertmanager)
