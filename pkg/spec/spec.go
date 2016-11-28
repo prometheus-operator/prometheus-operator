@@ -39,6 +39,7 @@ type PrometheusList struct {
 type PrometheusSpec struct {
 	ServiceMonitorSelector *unversioned.LabelSelector `json:"serviceMonitorSelector"`
 	Version                string                     `json:"version"`
+	Paused                 bool                       `json:"paused"`
 	BaseImage              string                     `json:"baseImage"`
 	Replicas               int32                      `json:"replicas"`
 	Retention              string                     `json:"retention"`
