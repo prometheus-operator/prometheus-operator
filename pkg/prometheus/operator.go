@@ -62,7 +62,6 @@ type Operator struct {
 	smonInf cache.SharedIndexInformer
 	cmapInf cache.SharedIndexInformer
 	psetInf cache.SharedIndexInformer
-	epntInf cache.SharedIndexInformer
 
 	queue *queue.Queue
 
