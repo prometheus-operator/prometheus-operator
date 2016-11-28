@@ -30,6 +30,7 @@ import (
 	"k8s.io/client-go/1.5/kubernetes"
 	"k8s.io/client-go/1.5/pkg/api"
 	apierrors "k8s.io/client-go/1.5/pkg/api/errors"
+	"k8s.io/client-go/1.5/pkg/api/meta"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/apps/v1alpha1"
 	extensionsobj "k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
@@ -37,7 +38,6 @@ import (
 	utilruntime "k8s.io/client-go/1.5/pkg/util/runtime"
 	"k8s.io/client-go/1.5/rest"
 	"k8s.io/client-go/1.5/tools/cache"
-	"k8s.io/kubernetes/pkg/api/meta"
 )
 
 const (
@@ -365,39 +365,54 @@ func listOptions(name string) api.ListOptions {
 func (c *Operator) syncVersion(am *spec.Alertmanager) error {
 	podClient := c.kclient.Core().Pods(am.Namespace)
 
-Outer:
-	for {
-		pods, err := podClient.List(listOptions(am.Name))
-		if err != nil {
-			return err
-		}
-		if len(pods.Items) == 0 {
-			return nil
-		}
-		for _, cp := range pods.Items {
-			ready, err := k8sutil.PodRunningAndReady(cp)
-			if err != nil {
-				return err
-			}
-			if !ready {
-				time.Sleep(200 * time.Millisecond)
-				continue Outer
-			}
-		}
-		var pod *v1.Pod
-		for _, cp := range pods.Items {
-			if !strings.HasSuffix(cp.Spec.Containers[0].Image, am.Spec.Version) {
-				pod = &cp
-				break
-			}
-		}
-		if pod == nil {
-			return nil
-		}
-		if err := podClient.Delete(pod.Name, nil); err != nil {
-			return err
-		}
+	pods, err := podClient.List(listOptions(am.Name))
+	if err != nil {
+		return err
 	}
+
+	// If the PetSet is still busy scaling, don't interfere by killing pods.
+	// We enqueue ourselves again to until the PetSet is ready.
+	if len(pods.Items) != int(am.Spec.Replicas) {
+		return fmt.Errorf("scaling in progress")
+	}
+	if len(pods.Items) == 0 {
+		return nil
+	}
+
+	var oldPods []*v1.Pod
+	allReady := true
+	// Only proceed if all existing pods are running and ready.
+	for _, pod := range pods.Items {
+		ready, err := k8sutil.PodRunningAndReady(pod)
+		if err != nil {
+			c.logger.Log("msg", "cannot determine pod ready state", "err", err)
+		}
+		if ready {
+			// TODO(fabxc): detect other fields of the pod template that are mutable.
+			if !strings.HasSuffix(pod.Spec.Containers[0].Image, am.Spec.Version) {
+				oldPods = append(oldPods, &pod)
+			}
+			continue
+		}
+		allReady = false
+	}
+
+	if len(oldPods) == 0 {
+		return nil
+	}
+	if !allReady {
+		return fmt.Errorf("waiting for pods to become ready")
+	}
+
+	// TODO(fabxc): delete oldest pod first.
+	if err := podClient.Delete(oldPods[0].Name, nil); err != nil {
+		return err
+	}
+	// If there are further pods that need updating, we enqueue ourselves again.
+	if len(oldPods) > 1 {
+		return fmt.Errorf("%d out-of-date pods remaining", len(oldPods)-1)
+	}
+	return nil
 }
 
 func (c *Operator) destroyAlertmanager(key string) error {
