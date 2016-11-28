@@ -1,7 +1,7 @@
 all: build
 
-REPO = quay.io/coreos/prometheus-operator
-TAG = latest
+REPO=quay.io/coreos/prometheus-operator
+TAG=$(shell git rev-parse --short HEAD)
 
 build:
 	./scripts/check_license.sh
@@ -11,8 +11,8 @@ container:
 	GOOS=linux $(MAKE) build
 	docker build -t $(REPO):$(TAG) .
 
-e2e:
-	go test -v ./test/e2e/ --kubeconfig "$(HOME)/.kube/config" --operator-image=quay.io/coreos/prometheus-operator
+e2e: container
+	go test -v ./test/e2e/ --kubeconfig "$(HOME)/.kube/config" --operator-image=quay.io/coreos/prometheus-operator:$(TAG)
 
 clean-e2e:
 	kubectl delete namespace prometheus-operator-e2e-tests
