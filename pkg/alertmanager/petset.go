@@ -24,20 +24,20 @@ import (
 	"k8s.io/client-go/1.5/pkg/util/intstr"
 )
 
-func makePetSet(namespace string, p *spec.Alertmanager, old *v1alpha1.PetSet) *v1alpha1.PetSet {
+func makePetSet(am *spec.Alertmanager, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
 
-	baseImage := p.Spec.BaseImage
+	baseImage := am.Spec.BaseImage
 	if baseImage == "" {
 		baseImage = "quay.io/prometheus/alertmanager"
 	}
-	version := p.Spec.Version
+	version := am.Spec.Version
 	if version == "" {
 		version = "v0.5.0"
 	}
-	replicas := p.Spec.Replicas
+	replicas := am.Spec.Replicas
 	if replicas < 1 {
 		replicas = 1
 	}
@@ -45,13 +45,13 @@ func makePetSet(namespace string, p *spec.Alertmanager, old *v1alpha1.PetSet) *v
 
 	petset := &v1alpha1.PetSet{
 		ObjectMeta: v1.ObjectMeta{
-			Name: p.Name,
+			Name: am.Name,
 		},
-		Spec: makePetSetSpec(namespace, p.Name, image, version, replicas),
+		Spec: makePetSetSpec(am.Namespace, am.Name, image, version, replicas),
 	}
-	if vc := p.Spec.Storage; vc == nil {
+	if vc := am.Spec.Storage; vc == nil {
 		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: fmt.Sprintf("%s-db", p.Name),
+			Name: fmt.Sprintf("%s-db", am.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
@@ -59,7 +59,7 @@ func makePetSet(namespace string, p *spec.Alertmanager, old *v1alpha1.PetSet) *v
 	} else {
 		pvc := v1.PersistentVolumeClaim{
 			ObjectMeta: v1.ObjectMeta{
-				Name: fmt.Sprintf("%s-db", p.Name),
+				Name: fmt.Sprintf("%s-db", am.Name),
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
 				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},

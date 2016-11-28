@@ -211,9 +211,6 @@ func (c *Operator) handleDeletePrometheus(obj interface{}) {
 }
 
 func (c *Operator) handleUpdatePrometheus(old, cur interface{}) {
-	// oldp := old.(*spec.Prometheus)
-	// curp := cur.(*spec.Prometheus)
-
 	key, ok := c.keyFunc(cur)
 	if !ok {
 		return
@@ -546,7 +543,7 @@ func (c *Operator) destroyPrometheus(key string) error {
 		time.Sleep(50 * time.Millisecond)
 	}
 
-	// Deployment scaled down, we can delete it.
+	// PetSet scaled down, we can delete it.
 	if err := psetClient.Delete(pset.Name, nil); err != nil {
 		return err
 	}

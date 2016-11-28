@@ -23,6 +23,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	"github.com/coreos/prometheus-operator/pkg/queue"
 	"github.com/coreos/prometheus-operator/pkg/spec"
 
 	"github.com/go-kit/kit/log"
@@ -36,6 +37,7 @@ import (
 	utilruntime "k8s.io/client-go/1.5/pkg/util/runtime"
 	"k8s.io/client-go/1.5/rest"
 	"k8s.io/client-go/1.5/tools/cache"
+	"k8s.io/kubernetes/pkg/api/meta"
 )
 
 const (
@@ -57,7 +59,7 @@ type Operator struct {
 	alrtInf cache.SharedIndexInformer
 	psetInf cache.SharedIndexInformer
 
-	queue *queue
+	queue *queue.Queue
 
 	host string
 }
@@ -81,14 +83,14 @@ func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 		kclient: client,
 		pclient: promclient,
 		logger:  logger,
-		queue:   newQueue(200),
+		queue:   queue.New(),
 		host:    cfg.Host,
 	}, nil
 }
 
 // Run the controller.
 func (c *Operator) Run(stopc <-chan struct{}) error {
-	defer c.queue.close()
+	defer c.queue.ShutDown()
 	go c.worker()
 
 	errChan := make(chan error)
@@ -127,34 +129,14 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	)
 
 	c.alrtInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(p interface{}) {
-			c.logger.Log("msg", "enqueueAlertmanager", "trigger", "alertmanager add")
-			analytics.AlertmanagerCreated()
-			c.enqueueAlertmanager(p)
-		},
-		DeleteFunc: func(p interface{}) {
-			c.logger.Log("msg", "enqueueAlertmanager", "trigger", "alertmanager del")
-			analytics.AlertmanagerDeleted()
-			c.enqueueAlertmanager(p)
-		},
-		UpdateFunc: func(_, p interface{}) {
-			c.logger.Log("msg", "enqueueAlertmanager", "trigger", "alertmanager update")
-			c.enqueueAlertmanager(p)
-		},
+		AddFunc:    c.handleAlertmanagerAdd,
+		DeleteFunc: c.handleAlertmanagerDelete,
+		UpdateFunc: c.handleAlertmanagerUpdate,
 	})
 	c.psetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(d interface{}) {
-			c.logger.Log("msg", "addPetSet", "trigger", "petset add")
-			c.addPetSet(d)
-		},
-		DeleteFunc: func(d interface{}) {
-			c.logger.Log("msg", "deletePetSet", "trigger", "petset delete")
-			c.deletePetSet(d)
-		},
-		UpdateFunc: func(old, cur interface{}) {
-			c.logger.Log("msg", "updatePetSet", "trigger", "petset update")
-			c.updatePetSet(old, cur)
-		},
+		AddFunc:    c.handlePetSetAdd,
+		DeleteFunc: c.handlePetSetDelete,
+		UpdateFunc: c.handlePetSetUpdate,
 	})
 
 	go c.alrtInf.Run(stopc)
@@ -164,31 +146,54 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	return nil
 }
 
-type queue struct {
-	ch chan *spec.Alertmanager
+func (c *Operator) keyFunc(obj interface{}) (string, bool) {
+	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
+	if err != nil {
+		c.logger.Log("msg", "creating key failed", "err", err)
+		return k, false
+	}
+	return k, true
 }
 
-func newQueue(size int) *queue {
-	return &queue{ch: make(chan *spec.Alertmanager, size)}
+func (c *Operator) getObject(obj interface{}) (meta.Object, bool) {
+	ts, ok := obj.(cache.DeletedFinalStateUnknown)
+	if ok {
+		obj = ts.Obj
+	}
+
+	o, err := meta.Accessor(obj)
+	if err != nil {
+		c.logger.Log("msg", "get object failed", "err", err)
+		return nil, false
+	}
+	return o, true
 }
 
-func (q *queue) add(p *spec.Alertmanager) { q.ch <- p }
-func (q *queue) close()                   { close(q.ch) }
+// enqueue adds a key to the queue. If obj is a key already it gets added directly.
+// Otherwise, the key is extracted via keyFunc.
+func (c *Operator) enqueue(obj interface{}) {
+	if obj == nil {
+		return
+	}
 
-func (q *queue) pop() (*spec.Alertmanager, bool) {
-	p, ok := <-q.ch
-	return p, ok
+	key, ok := obj.(string)
+	if !ok {
+		key, ok = c.keyFunc(obj)
+		if !ok {
+			return
+		}
+	}
+
+	c.queue.Add(key)
 }
 
-var keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
-
-func (c *Operator) enqueueAlertmanager(p interface{}) {
-	c.queue.add(p.(*spec.Alertmanager))
-}
-
-func (c *Operator) enqueueAll() {
-	cache.ListAll(c.alrtInf.GetStore(), labels.Everything(), func(o interface{}) {
-		c.enqueueAlertmanager(o.(*spec.Alertmanager))
+// enqueueForNamespace enqueues all Prometheus object keys that belong to the given namespace.
+func (c *Operator) enqueueForNamespace(ns string) {
+	cache.ListAll(c.alrtInf.GetStore(), labels.Everything(), func(obj interface{}) {
+		am := obj.(*spec.Alertmanager)
+		if am.Namespace == ns {
+			c.enqueue(am)
+		}
 	})
 }
 
@@ -196,20 +201,30 @@ func (c *Operator) enqueueAll() {
 // It enforces that the syncHandler is never invoked concurrently with the same key.
 func (c *Operator) worker() {
 	for {
-		p, ok := c.queue.pop()
-		if !ok {
+		key, quit := c.queue.Get()
+		if quit {
 			return
 		}
-		if err := c.reconcile(p); err != nil {
-			utilruntime.HandleError(fmt.Errorf("reconciliation failed: %s", err))
+		if err := c.sync(key.(string)); err != nil {
+			utilruntime.HandleError(fmt.Errorf("reconciliation failed, re-enqueueing: %s", err))
+			// We only mark the item as done after waiting. In the meantime
+			// other items can be processed but the same item won't be processed again.
+			// This is a trivial form of rate-limiting that is sufficient for our throughput
+			// and latency expectations.
+			go func() {
+				time.Sleep(3 * time.Second)
+				c.queue.Done(key)
+			}()
+			continue
 		}
+
+		c.queue.Done(key)
 	}
 }
 
-func (c *Operator) alertmanagerForPetSet(p *v1alpha1.PetSet) *spec.Alertmanager {
-	key, err := keyFunc(p)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+func (c *Operator) alertmanagerForPetSet(ps interface{}) *spec.Alertmanager {
+	key, ok := c.keyFunc(ps)
+	if !ok {
 		return nil
 	}
 	// Namespace/Name are one-to-one so the key will find the respective Alertmanager resource.
@@ -224,23 +239,51 @@ func (c *Operator) alertmanagerForPetSet(p *v1alpha1.PetSet) *spec.Alertmanager 
 	return a.(*spec.Alertmanager)
 }
 
-func (c *Operator) deletePetSet(o interface{}) {
-	p := o.(*v1alpha1.PetSet)
-	// Wake up Alertmanager resource the deployment belongs to.
-	if a := c.alertmanagerForPetSet(p); a != nil {
-		c.enqueueAlertmanager(a)
+func (c *Operator) handleAlertmanagerAdd(obj interface{}) {
+	key, ok := c.keyFunc(obj)
+	if !ok {
+		return
+	}
+
+	analytics.AlertmanagerCreated()
+	c.logger.Log("msg", "Alertmanager added", "key", key)
+	c.enqueue(key)
+}
+
+func (c *Operator) handleAlertmanagerDelete(obj interface{}) {
+	key, ok := c.keyFunc(obj)
+	if !ok {
+		return
+	}
+
+	analytics.AlertmanagerDeleted()
+	c.logger.Log("msg", "Alertmanager deleted", "key", key)
+	c.enqueue(key)
+}
+
+func (c *Operator) handleAlertmanagerUpdate(old, cur interface{}) {
+	key, ok := c.keyFunc(cur)
+	if !ok {
+		return
+	}
+
+	c.logger.Log("msg", "Alertmanager updated", "key", key)
+	c.enqueue(key)
+}
+
+func (c *Operator) handlePetSetDelete(obj interface{}) {
+	if a := c.alertmanagerForPetSet(obj); a != nil {
+		c.enqueue(a)
 	}
 }
 
-func (c *Operator) addPetSet(o interface{}) {
-	p := o.(*v1alpha1.PetSet)
-	// Wake up Alertmanager resource the deployment belongs to.
-	if a := c.alertmanagerForPetSet(p); a != nil {
-		c.enqueueAlertmanager(a)
+func (c *Operator) handlePetSetAdd(obj interface{}) {
+	if a := c.alertmanagerForPetSet(obj); a != nil {
+		c.enqueue(a)
 	}
 }
 
-func (c *Operator) updatePetSet(oldo, curo interface{}) {
+func (c *Operator) handlePetSetUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1alpha1.PetSet)
 	cur := curo.(*v1alpha1.PetSet)
 
@@ -254,18 +297,12 @@ func (c *Operator) updatePetSet(oldo, curo interface{}) {
 
 	// Wake up Alertmanager resource the deployment belongs to.
 	if a := c.alertmanagerForPetSet(cur); a != nil {
-		c.enqueueAlertmanager(a)
+		c.enqueue(a)
 	}
 }
 
-func (c *Operator) reconcile(p *spec.Alertmanager) error {
-	key, err := keyFunc(p)
-	if err != nil {
-		return err
-	}
-	c.logger.Log("msg", "reconcile alertmanager", "key", key)
-
-	_, exists, err := c.alrtInf.GetStore().GetByKey(key)
+func (c *Operator) sync(key string) error {
+	obj, exists, err := c.alrtInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
 	}
@@ -278,51 +315,46 @@ func (c *Operator) reconcile(p *spec.Alertmanager) error {
 		// Let's rely on the index key matching that of the created configmap and replica
 		// set for now. This does not work if we delete Alertmanager resources as the
 		// controller is not running – that could be solved via garbage collection later.
-		return c.deleteAlertmanager(p)
+		return c.destroyAlertmanager(key)
 	}
 
+	am := obj.(*spec.Alertmanager)
+
+	c.logger.Log("msg", "sync alertmanager", "key", key)
+
 	// Create governing service if it doesn't exist.
-	svcClient := c.kclient.Core().Services(p.Namespace)
-	if _, err := svcClient.Create(makePetSetService(p)); err != nil && !apierrors.IsAlreadyExists(err) {
+	svcClient := c.kclient.Core().Services(am.Namespace)
+	if _, err := svcClient.Create(makePetSetService(am)); err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("create petset service: %s", err)
 	}
 
-	psetClient := c.kclient.Apps().PetSets(p.Namespace)
-	psetQ := &v1alpha1.PetSet{}
-	psetQ.Namespace = p.Namespace
-	psetQ.Name = p.Name
-	obj, exists, err := c.psetInf.GetStore().Get(psetQ)
+	psetClient := c.kclient.Apps().PetSets(am.Namespace)
+	// Ensure we have a PetSet running Alertmanager deployed.
+	obj, exists, err = c.psetInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
 	}
 
 	if !exists {
-		if _, err := psetClient.Create(makePetSet(p.Namespace, p, nil)); err != nil {
+		if _, err := psetClient.Create(makePetSet(am, nil)); err != nil {
 			return fmt.Errorf("create petset: %s", err)
 		}
 		return nil
 	}
-	if _, err := psetClient.Update(makePetSet(p.Namespace, p, obj.(*v1alpha1.PetSet))); err != nil {
+	if _, err := psetClient.Update(makePetSet(am, obj.(*v1alpha1.PetSet))); err != nil {
 		return err
 	}
 
-	return c.syncVersion(p)
+	return c.syncVersion(am)
 }
 
-func podRunningAndReady(pod v1.Pod) (bool, error) {
-	switch pod.Status.Phase {
-	case v1.PodFailed, v1.PodSucceeded:
-		return false, fmt.Errorf("pod completed")
-	case v1.PodRunning:
-		for _, cond := range pod.Status.Conditions {
-			if cond.Type != v1.PodReady {
-				continue
-			}
-			return cond.Status == v1.ConditionTrue, nil
-		}
-		return false, fmt.Errorf("pod ready conditation not found")
+func listOptions(name string) api.ListOptions {
+	return api.ListOptions{
+		LabelSelector: labels.SelectorFromSet(map[string]string{
+			"app":          "alertmanager",
+			"alertmanager": name,
+		}),
 	}
-	return false, nil
 }
 
 // syncVersion ensures that all running pods for a Alertmanager have the required version.
@@ -330,16 +362,12 @@ func podRunningAndReady(pod v1.Pod) (bool, error) {
 // create new pods.
 //
 // TODO(fabxc): remove this once the PetSet controller learns how to do rolling updates.
-func (c *Operator) syncVersion(p *spec.Alertmanager) error {
-	selector, err := labels.Parse("app=alertmanager,alertmanager=" + p.Name)
-	if err != nil {
-		return err
-	}
-	podClient := c.kclient.Core().Pods(p.Namespace)
+func (c *Operator) syncVersion(am *spec.Alertmanager) error {
+	podClient := c.kclient.Core().Pods(am.Namespace)
 
 Outer:
 	for {
-		pods, err := podClient.List(api.ListOptions{LabelSelector: selector})
+		pods, err := podClient.List(listOptions(am.Name))
 		if err != nil {
 			return err
 		}
@@ -347,7 +375,7 @@ Outer:
 			return nil
 		}
 		for _, cp := range pods.Items {
-			ready, err := podRunningAndReady(cp)
+			ready, err := k8sutil.PodRunningAndReady(cp)
 			if err != nil {
 				return err
 			}
@@ -358,7 +386,7 @@ Outer:
 		}
 		var pod *v1.Pod
 		for _, cp := range pods.Items {
-			if !strings.HasSuffix(cp.Spec.Containers[0].Image, p.Spec.Version) {
+			if !strings.HasSuffix(cp.Spec.Containers[0].Image, am.Spec.Version) {
 				pod = &cp
 				break
 			}
@@ -372,37 +400,30 @@ Outer:
 	}
 }
 
-func (c *Operator) deleteAlertmanager(p *spec.Alertmanager) error {
+func (c *Operator) destroyAlertmanager(key string) error {
+	obj, exists, err := c.psetInf.GetStore().GetByKey(key)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return nil
+	}
+	pset := obj.(*v1alpha1.PetSet)
+	*pset.Spec.Replicas = 0
+
 	// Update the replica count to 0 and wait for all pods to be deleted.
-	psetClient := c.kclient.Apps().PetSets(p.Namespace)
+	psetClient := c.kclient.Apps().PetSets(pset.Namespace)
 
-	key, err := keyFunc(p)
-	if err != nil {
-		return err
-	}
-	oldPsetO, _, err := c.psetInf.GetStore().GetByKey(key)
-	if err != nil {
-		return err
-	}
-	oldPset := oldPsetO.(*v1alpha1.PetSet)
-	zero := int32(0)
-	oldPset.Spec.Replicas = &zero
-
-	if _, err := psetClient.Update(oldPset); err != nil {
+	if _, err := psetClient.Update(pset); err != nil {
 		return err
 	}
 
-	// XXX: Selecting by ObjectMeta.Name gives an error. So use the label for now.
-	selector, err := labels.Parse("app=alertmanager,alertmanager=" + p.Name)
-	if err != nil {
-		return err
-	}
-	podClient := c.kclient.Core().Pods(p.Namespace)
+	podClient := c.kclient.Core().Pods(pset.Namespace)
 
 	// TODO(fabxc): temporary solution until PetSet status provides necessary info to know
 	// whether scale-down completed.
 	for {
-		pods, err := podClient.List(api.ListOptions{LabelSelector: selector})
+		pods, err := podClient.List(listOptions(pset.Name))
 		if err != nil {
 			return err
 		}
@@ -412,23 +433,19 @@ func (c *Operator) deleteAlertmanager(p *spec.Alertmanager) error {
 		time.Sleep(50 * time.Millisecond)
 	}
 
-	// Deployment scaled down, we can delete it.
-	if err := psetClient.Delete(p.Name, nil); err != nil {
+	// PetSet scaled down, we can delete it.
+	if err := psetClient.Delete(pset.Name, nil); err != nil {
 		return err
 	}
-
-	// if err := c.kclient.Core().Services(p.Namespace).Delete(fmt.Sprintf("%s-petset", p.Name), nil); err != nil {
-	// 	return err
-	// }
 
 	// Delete the auto-generate configuration.
 	// TODO(fabxc): add an ownerRef at creation so we don't delete config maps
 	// manually created for Alertmanager servers with no ServiceMonitor selectors.
-	cm := c.kclient.Core().ConfigMaps(p.Namespace)
-	if err := cm.Delete(p.Name, nil); err != nil {
+	cm := c.kclient.Core().ConfigMaps(pset.Namespace)
+	if err := cm.Delete(pset.Name, nil); err != nil {
 		return err
 	}
-	if err := cm.Delete(fmt.Sprintf("%s-rules", p.Name), nil); err != nil {
+	if err := cm.Delete(fmt.Sprintf("%s-rules", pset.Name), nil); err != nil {
 		return err
 	}
 	return nil
