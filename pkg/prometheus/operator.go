@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/1.5/kubernetes"
 	"k8s.io/client-go/1.5/pkg/api"
 	apierrors "k8s.io/client-go/1.5/pkg/api/errors"
+	"k8s.io/client-go/1.5/pkg/api/meta"
 	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/apps/v1alpha1"
@@ -116,45 +117,22 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	)
 
 	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.addPrometheus,
-		DeleteFunc: c.deletePrometheus,
-		UpdateFunc: c.updatePrometheus,
+		AddFunc:    c.handleAddPrometheus,
+		DeleteFunc: c.handleDeletePrometheus,
+		UpdateFunc: c.handleUpdatePrometheus,
 	})
 	c.smonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(_ interface{}) {
-			c.logger.Log("msg", "enqueueAll", "trigger", "smon add")
-			c.enqueueAll()
-		},
-		DeleteFunc: func(_ interface{}) {
-			c.logger.Log("msg", "enqueueAll", "trigger", "smon del")
-			c.enqueueAll()
-		},
-		UpdateFunc: func(_, _ interface{}) {
-			c.logger.Log("msg", "enqueueAll", "trigger", "smon update")
-			c.enqueueAll()
-		},
+		AddFunc:    c.handleSmonAdd,
+		DeleteFunc: c.handleSmonDelete,
+		UpdateFunc: c.handleSmonUpdate,
 	})
 	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		// TODO(fabxc): only enqueue Prometheus the ConfigMap belonged to.
-		DeleteFunc: func(_ interface{}) {
-			c.logger.Log("msg", "enqueueAll", "trigger", "cmap del")
-			c.enqueueAll()
-		},
+		DeleteFunc: c.handleConfigmapDelete,
 	})
 	c.psetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		// TODO(fabxc): only enqueue Prometheus an affected deployment belonged to.
-		AddFunc: func(d interface{}) {
-			c.logger.Log("msg", "addDeployment", "trigger", "depl add")
-			c.addPetSet(d)
-		},
-		DeleteFunc: func(d interface{}) {
-			c.logger.Log("msg", "deleteDeployment", "trigger", "depl delete")
-			c.deletePetSet(d)
-		},
-		UpdateFunc: func(old, cur interface{}) {
-			c.logger.Log("msg", "updateDeployment", "trigger", "depl update")
-			c.updatePetSet(old, cur)
-		},
+		AddFunc:    c.handleAddPetSet,
+		DeleteFunc: c.handleDeletePetSet,
+		UpdateFunc: c.handleUpdatePetSet,
 	})
 
 	return c, nil
@@ -201,57 +179,131 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	return nil
 }
 
-var keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
-
-func (c *Operator) addPrometheus(obj interface{}) {
-	key, err := keyFunc(obj)
+func (c *Operator) keyFunc(obj interface{}) (string, bool) {
+	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+		c.logger.Log("msg", "creating key failed", "err", err)
+		return k, false
+	}
+	return k, true
+}
+
+func (c *Operator) handleAddPrometheus(obj interface{}) {
+	key, ok := c.keyFunc(obj)
+	if !ok {
 		return
 	}
 
 	analytics.PrometheusCreated()
 	c.logger.Log("msg", "Prometheus added", "key", key)
-
-	c.queue.Add(key)
+	c.enqueue(key)
 }
 
-func (c *Operator) deletePrometheus(obj interface{}) {
-	key, err := keyFunc(obj)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+func (c *Operator) handleDeletePrometheus(obj interface{}) {
+	key, ok := c.keyFunc(obj)
+	if !ok {
 		return
 	}
 
 	analytics.PrometheusDeleted()
 	c.logger.Log("msg", "Prometheus deleted", "key", key)
-
-	c.queue.Add(key)
+	c.enqueue(key)
 }
 
-func (c *Operator) updatePrometheus(old, cur interface{}) {
+func (c *Operator) handleUpdatePrometheus(old, cur interface{}) {
 	// oldp := old.(*spec.Prometheus)
 	// curp := cur.(*spec.Prometheus)
 
-	key, err := keyFunc(cur)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+	key, ok := c.keyFunc(cur)
+	if !ok {
 		return
 	}
 
 	c.logger.Log("msg", "Prometheus updated", "key", key)
+	c.enqueue(key)
+}
+
+func (c *Operator) handleSmonAdd(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleSmonUpdate(old, cur interface{}) {
+	o, ok := c.getObject(cur)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleSmonDelete(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleConfigmapDelete(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if !ok {
+		return
+	}
+
+	key, ok := c.keyFunc(o)
+	if !ok {
+		return
+	}
+	key = strings.TrimSuffix(key, "-rules")
+
+	_, exists, err := c.promInf.GetIndexer().GetByKey(key)
+	if err != nil {
+		c.logger.Log("msg", "index lookup failed", "err", err)
+	}
+	if exists {
+		c.enqueue(key)
+	}
+}
+
+func (c *Operator) getObject(obj interface{}) (meta.Object, bool) {
+	ts, ok := obj.(cache.DeletedFinalStateUnknown)
+	if ok {
+		obj = ts.Obj
+	}
+
+	o, err := meta.Accessor(obj)
+	if err != nil {
+		c.logger.Log("msg", "get object failed", "err", err)
+		return nil, false
+	}
+	return o, true
+}
+
+// enqueue adds a key to the queue. If obj is a key already it gets added directly.
+// Otherwise, the key is extracted via keyFunc.
+func (c *Operator) enqueue(obj interface{}) {
+	if obj == nil {
+		return
+	}
+
+	key, ok := obj.(string)
+	if !ok {
+		key, ok = c.keyFunc(obj)
+		if !ok {
+			return
+		}
+	}
 
 	c.queue.Add(key)
 }
 
-func (c *Operator) enqueueAll() {
+// enqueueForNamespace enqueues all Prometheus object keys that belong to the given namespace.
+func (c *Operator) enqueueForNamespace(ns string) {
 	cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
-		key, err := keyFunc(obj)
-		if err != nil {
-			utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
-			return
+		p := obj.(*spec.Prometheus)
+		if p.Namespace == ns {
+			c.enqueue(p)
 		}
-		c.queue.Add(key)
 	})
 }
 
@@ -280,16 +332,15 @@ func (c *Operator) worker() {
 	}
 }
 
-func (c *Operator) prometheusForDeployment(d *v1alpha1.PetSet) *spec.Prometheus {
-	key, err := keyFunc(d)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
+func (c *Operator) prometheusForPetSet(ps interface{}) *spec.Prometheus {
+	key, ok := c.keyFunc(ps)
+	if !ok {
 		return nil
 	}
 	// Namespace/Name are one-to-one so the key will find the respective Prometheus resource.
 	p, exists, err := c.promInf.GetStore().GetByKey(key)
 	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("get Prometheus resource: %s", err))
+		c.logger.Log("msg", "Prometheus lookup failed", "err", err)
 		return nil
 	}
 	if !exists {
@@ -298,41 +349,19 @@ func (c *Operator) prometheusForDeployment(d *v1alpha1.PetSet) *spec.Prometheus 
 	return p.(*spec.Prometheus)
 }
 
-func (c *Operator) deletePetSet(obj interface{}) {
-	key, err := keyFunc(obj)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
-		return
-	}
-
-	_, exists, err := c.promInf.GetIndexer().GetByKey(key)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("get PetSet from index: %s", err))
-		return
-	}
-	// No Prometheus setup this PetSet relates to.
-	if !exists {
-		return
-	}
-
-	c.queue.Add(key)
-}
-
-func (c *Operator) addPetSet(obj interface{}) {
-	key, err := keyFunc(obj)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
-		return
-	}
-
-	d := obj.(*v1alpha1.PetSet)
-	// Wake up Prometheus resource the deployment belongs to.
-	if p := c.prometheusForDeployment(d); p != nil {
-		c.queue.Add(key)
+func (c *Operator) handleDeletePetSet(obj interface{}) {
+	if ps := c.prometheusForPetSet(obj); ps != nil {
+		c.enqueue(ps)
 	}
 }
 
-func (c *Operator) updatePetSet(oldo, curo interface{}) {
+func (c *Operator) handleAddPetSet(obj interface{}) {
+	if ps := c.prometheusForPetSet(obj); ps != nil {
+		c.enqueue(ps)
+	}
+}
+
+func (c *Operator) handleUpdatePetSet(oldo, curo interface{}) {
 	old := oldo.(*v1alpha1.PetSet)
 	cur := curo.(*v1alpha1.PetSet)
 
@@ -344,21 +373,12 @@ func (c *Operator) updatePetSet(oldo, curo interface{}) {
 		return
 	}
 
-	key, err := keyFunc(curo)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("creating key: %s", err))
-		return
-	}
-
-	// Wake up Prometheus resource the deployment belongs to.
-	if p := c.prometheusForDeployment(cur); p != nil {
-		c.queue.Add(key)
+	if ps := c.prometheusForPetSet(cur); ps != nil {
+		c.enqueue(ps)
 	}
 }
 
 func (c *Operator) sync(key string) error {
-	c.logger.Log("msg", "reconcile prometheus", "key", key)
-
 	obj, exists, err := c.promInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
@@ -376,6 +396,11 @@ func (c *Operator) sync(key string) error {
 	}
 
 	p := obj.(*spec.Prometheus)
+	if p.Spec.Paused {
+		return nil
+	}
+
+	c.logger.Log("msg", "sync prometheus", "key", key)
 
 	// If no service monitor selectors are configured, the user wants to manage
 	// configuration himself.
@@ -583,13 +608,10 @@ func (c *Operator) selectServiceMonitors(p *spec.Prometheus) (map[string]*spec.S
 	// Only service monitors within the same namespace as the Prometheus
 	// object can belong to it.
 	cache.ListAllByNamespace(c.smonInf.GetIndexer(), p.Namespace, selector, func(obj interface{}) {
-		k, err := keyFunc(obj)
-		if err != nil {
-			// Keep going for other items.
-			utilruntime.HandleError(fmt.Errorf("key func failed: %s", err))
-			return
+		k, ok := c.keyFunc(obj)
+		if ok {
+			res[k] = obj.(*spec.ServiceMonitor)
 		}
-		res[k] = obj.(*spec.ServiceMonitor)
 	})
 
 	return res, nil

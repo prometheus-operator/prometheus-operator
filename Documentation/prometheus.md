@@ -35,6 +35,7 @@ still benefiting from the Operator's capabilities of managing Prometheus setups.
 | ---- | ----------- | -------- | ------ | ------- |
 | serviceMonitorSelector | The `ServiceMonitor` TPRs to be covered by the Prometheus instances. | false | [unversioned.LabelSelector](http://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | |
 | version | Prometheus version to deploy. Must match a tag of the container image. | false | string | v1.3.0 |
+| paused | If true, the operator won't process any changes affecting the Prometheus setup | false | bool | false |
 | baseImage | The base container image (without tag) to use. | false | string | quay.io/prometheus/prometheus |
 | replicas | Number of Prometheus instances to deploy. | false | integer (int32) | 1 |
 | retention | The duration for which ingested metrics are stored. | false | duration | 24h |
