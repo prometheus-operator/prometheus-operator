@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"time"
 
+	"k8s.io/client-go/1.5/pkg/api/errors"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/util/wait"
 	"k8s.io/client-go/1.5/rest"
@@ -31,19 +32,23 @@ func WaitForTPRReady(restClient *rest.RESTClient, tprGroup, tprVersion, tprName 
 		res := restClient.Get().AbsPath("apis", tprGroup, tprVersion, tprName).Do()
 		err := res.Error()
 		if err != nil {
+			// RESTClient returns *errors.StatusError for any status codes < 200 or > 206
+			// and http.Client.Do errors are returned directly.
+			if se, ok := err.(*errors.StatusError); ok {
+				if se.Status().Code == http.StatusNotFound {
+					return false, nil
+				}
+			}
 			return false, err
 		}
 
 		var statusCode int
 		res.StatusCode(&statusCode)
-		switch statusCode {
-		case http.StatusOK:
-			return true, nil
-		case http.StatusNotFound: // not set up yet. wait.
-			return false, nil
-		default:
+		if statusCode != http.StatusOK {
 			return false, fmt.Errorf("invalid status code: %d", statusCode)
 		}
+
+		return true, nil
 	})
 }
 
