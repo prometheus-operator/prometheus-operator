@@ -109,6 +109,10 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	if err != nil {
 		return err
 	}
+	if opImage != "" {
+		// Override operator image used, if specified when running tests.
+		deploy.Spec.Template.Spec.Containers[0].Image = opImage
+	}
 
 	err = f.createDeployment(&deploy)
 	if err != nil {
