@@ -185,6 +185,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		if err != nil {
 			return err
 		}
+		c.logger.Log("msg", "TPR API endpoints ready")
 	case <-stopc:
 		return nil
 	}
