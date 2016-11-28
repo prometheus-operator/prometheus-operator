@@ -33,21 +33,14 @@ still benefiting from the Operator's capabilities of managing Prometheus setups.
 
 | Name | Description | Required | Schema | Default |
 | ---- | ----------- | -------- | ------ | ------- |
-| serviceMonitors | The `ServiceMonitor` TPRs to be covered by the Prometheus instances. | false | ServiceMonitorSelection array | |
+| serviceMonitorSelector | The `ServiceMonitor` TPRs to be covered by the Prometheus instances. | false | [unversioned.LabelSelector](http://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | |
 | version | Prometheus version to deploy. Must match a tag of the container image. | false | string | v1.3.0 |
 | baseImage | The base container image (without tag) to use. | false | string | quay.io/prometheus/prometheus |
 | replicas | Number of Prometheus instances to deploy. | false | integer (int32) | 1 |
-| evaluationInterval | Interval at which alerting and recording rules are evaluated. | false | duration | 60s |
 | retention | The duration for which ingested metrics are stored. | false | duration | 24h |
 | storage | Configuration of persistent storage volumes to attach to deployed Prometheus pods. | false | StorageSpec |  |
 | alerting | Configuration of alerting | false | AlertingSpec |  |
 | resources | Resource requirements of single Prometheus server | false | [v1.ResourceRequirements](http://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements) |  | 
-
-### `ServiceMonitorSelection`
-
-| Name | Description | Required | Schema | Default |
-| ---- | ----------- | -------- | ------ | ------- |
-| selector | Label selector for `ServiceMonitor` TPRs to be covered by the Prometheus instances. | true | [unversioned.LabelSelector](http://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | |
 
 ### `StorageSpec`
 
@@ -68,7 +61,7 @@ still benefiting from the Operator's capabilities of managing Prometheus setups.
 | Name | Description | Required | Schema | Default |
 | ---- | ----------- | -------- | ------ | ------- |
 | namespace | Namespace of the Alertmanager endpoints. | true | string | |
-| name | Name of the Alertmanager endpoints. This equals the targeted. Alertmanager service. | true | string | 
+| name | Name of the Alertmanager endpoints. This equals the targeted Alertmanager service. | true | string | 
 | port | Name or number of the service port to push alerts to | required | integer or string |
 | scheme | HTTP scheme to use when pushing alerts | false | http |
 
