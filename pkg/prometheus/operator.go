@@ -164,14 +164,30 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 func (c *Operator) Run(stopc <-chan struct{}) error {
 	defer c.queue.ShutDown()
 
-	v, err := c.kclient.Discovery().ServerVersion()
-	if err != nil {
-		return fmt.Errorf("communicating with server failed: %s", err)
-	}
-	c.logger.Log("msg", "connection established", "cluster-version", v)
+	errChan := make(chan error)
+	go func() {
+		v, err := c.kclient.Discovery().ServerVersion()
+		if err != nil {
+			errChan <- fmt.Errorf("communicating with server failed: %s", err)
+			return
+		}
+		c.logger.Log("msg", "connection established", "cluster-version", v)
 
-	if err := c.createTPRs(); err != nil {
-		return err
+		if err := c.createTPRs(); err != nil {
+			errChan <- err
+			return
+		}
+		errChan <- nil
+	}()
+
+	select {
+	case err := <-errChan:
+		if err != nil {
+			return err
+		}
+		c.logger.Log("msg", "TPR API endpoints ready")
+	case <-stopc:
+		return nil
 	}
 
 	go c.worker()
