@@ -103,14 +103,29 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	defer c.queue.close()
 	go c.worker()
 
-	v, err := c.kclient.Discovery().ServerVersion()
-	if err != nil {
-		return fmt.Errorf("communicating with server failed: %s", err)
-	}
-	c.logger.Log("msg", "connection established", "cluster-version", v)
+	errChan := make(chan error)
+	go func() {
+		v, err := c.kclient.Discovery().ServerVersion()
+		if err != nil {
+			errChan <- fmt.Errorf("communicating with server failed: %s", err)
+			return
+		}
+		c.logger.Log("msg", "connection established", "cluster-version", v)
 
-	if err := c.createTPRs(); err != nil {
-		return err
+		if err := c.createTPRs(); err != nil {
+			errChan <- err
+			return
+		}
+		errChan <- nil
+	}()
+
+	select {
+	case err := <-errChan:
+		if err != nil {
+			return err
+		}
+	case <-stopc:
+		return nil
 	}
 
 	c.promInf = cache.NewSharedIndexInformer(
@@ -187,10 +202,6 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.smonInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
 	go c.psetInf.Run(stopc)
-
-	for !c.promInf.HasSynced() || !c.smonInf.HasSynced() || !c.cmapInf.HasSynced() || !c.psetInf.HasSynced() {
-		time.Sleep(100 * time.Millisecond)
-	}
 
 	<-stopc
 	return nil
