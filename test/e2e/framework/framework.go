@@ -33,6 +33,7 @@ import (
 	"k8s.io/client-go/1.5/tools/clientcmd"
 
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/coreos/prometheus-operator/pkg/spec"
 )
 
@@ -121,17 +122,12 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 	f.OperatorPod = &pl.Items[0]
 
-	err = k8sutil.WaitForMonitoringTPRReady(f.HTTPClient, f.MasterHost, "prometheuses")
+	err = k8sutil.WaitForTPRReady(f.KubeClient.Core().GetRESTClient(), prometheus.TPRGroup, prometheus.TPRVersion, prometheus.TPRPrometheusesKind)
 	if err != nil {
 		return err
 	}
 
-	err = k8sutil.WaitForMonitoringTPRReady(f.HTTPClient, f.MasterHost, "servicemonitors")
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k8sutil.WaitForTPRReady(f.KubeClient.Core().GetRESTClient(), prometheus.TPRGroup, prometheus.TPRVersion, prometheus.TPRServiceMonitorsKind)
 }
 
 // Teardown tears down a previously initialized test environment.

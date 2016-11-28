@@ -39,8 +39,14 @@ import (
 )
 
 const (
-	tprServiceMonitor = "service-monitor.monitoring.coreos.com"
-	tprPrometheus     = "prometheus.monitoring.coreos.com"
+	TPRGroup   = "monitoring.coreos.com"
+	TPRVersion = "v1alpha1"
+
+	TPRPrometheusesKind    = "prometheuses"
+	TPRServiceMonitorsKind = "servicemonitors"
+
+	tprServiceMonitor = "service-monitor." + TPRGroup
+	tprPrometheus     = "prometheus." + TPRGroup
 )
 
 // Operator manages lify cycle of Prometheus deployments and
@@ -542,7 +548,7 @@ func (c *Operator) createTPRs() error {
 				Name: tprServiceMonitor,
 			},
 			Versions: []extensionsobj.APIVersion{
-				{Name: "v1alpha1"},
+				{Name: TPRVersion},
 			},
 			Description: "Prometheus monitoring for a service",
 		},
@@ -551,7 +557,7 @@ func (c *Operator) createTPRs() error {
 				Name: tprPrometheus,
 			},
 			Versions: []extensionsobj.APIVersion{
-				{Name: "v1alpha1"},
+				{Name: TPRVersion},
 			},
 			Description: "Managed Prometheus server",
 		},
@@ -566,11 +572,11 @@ func (c *Operator) createTPRs() error {
 	}
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	err := k8sutil.WaitForMonitoringTPRReady(c.kclient.CoreClient.Client, c.host, "prometheuses")
+	err := k8sutil.WaitForTPRReady(c.kclient.CoreClient.GetRESTClient(), TPRGroup, TPRVersion, TPRPrometheusesKind)
 	if err != nil {
 		return err
 	}
-	return k8sutil.WaitForMonitoringTPRReady(c.kclient.CoreClient.Client, c.host, "servicemonitors")
+	return k8sutil.WaitForTPRReady(c.kclient.CoreClient.GetRESTClient(), TPRGroup, TPRVersion, TPRServiceMonitorsKind)
 }
 
 func newClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*rest.Config, error) {

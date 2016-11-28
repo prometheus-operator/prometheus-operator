@@ -16,12 +16,12 @@ package alertmanager
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/coreos/prometheus-operator/pkg/analytics"
+	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/coreos/prometheus-operator/pkg/spec"
 
@@ -34,13 +34,17 @@ import (
 	extensionsobj "k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/1.5/pkg/labels"
 	utilruntime "k8s.io/client-go/1.5/pkg/util/runtime"
-	"k8s.io/client-go/1.5/pkg/util/wait"
 	"k8s.io/client-go/1.5/rest"
 	"k8s.io/client-go/1.5/tools/cache"
 )
 
 const (
-	tprAlertmanager = "alertmanager.monitoring.coreos.com"
+	TPRGroup   = "monitoring.coreos.com"
+	TPRVersion = "v1alpha1"
+
+	TPRAlertmanagersKind = "alertmanagers"
+
+	tprAlertmanager = "alertmanager." + TPRGroup
 )
 
 // Operator manages lify cycle of Alertmanager deployments and
@@ -425,7 +429,7 @@ func (c *Operator) createTPRs() error {
 				Name: tprAlertmanager,
 			},
 			Versions: []extensionsobj.APIVersion{
-				{Name: "v1alpha1"},
+				{Name: TPRVersion},
 			},
 			Description: "Managed Alertmanager cluster",
 		},
@@ -440,22 +444,7 @@ func (c *Operator) createTPRs() error {
 	}
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	return wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
-		resp, err := c.kclient.CoreClient.Client.Get(c.host + "/apis/monitoring.coreos.com/v1alpha1/alertmanagers")
-		if err != nil {
-			return false, err
-		}
-		defer resp.Body.Close()
-
-		switch resp.StatusCode {
-		case http.StatusOK:
-			return true, nil
-		case http.StatusNotFound: // not set up yet. wait.
-			return false, nil
-		default:
-			return false, fmt.Errorf("invalid status code: %v", resp.Status)
-		}
-	})
+	return k8sutil.WaitForTPRReady(c.kclient.CoreClient.GetRESTClient(), TPRGroup, TPRVersion, TPRAlertmanagersKind)
 }
 
 func newClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*rest.Config, error) {

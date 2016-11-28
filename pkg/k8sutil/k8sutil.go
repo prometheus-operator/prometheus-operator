@@ -21,25 +21,28 @@ import (
 
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/util/wait"
+	"k8s.io/client-go/1.5/rest"
 )
 
-// WaitForMonitoringTPRReady waits for a third party resource to be available
+// WaitForTPRReady waits for a third party resource to be available
 // for use.
-func WaitForMonitoringTPRReady(httpClient *http.Client, host, tprName string) error {
+func WaitForTPRReady(restClient *rest.RESTClient, tprGroup, tprVersion, tprName string) error {
 	return wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
-		resp, err := httpClient.Get(host + "/apis/monitoring.coreos.com/v1alpha1/" + tprName)
+		res := restClient.Get().AbsPath("apis", tprGroup, tprVersion, tprName).Do()
+		err := res.Error()
 		if err != nil {
 			return false, err
 		}
-		defer resp.Body.Close()
 
-		switch resp.StatusCode {
+		var statusCode int
+		res.StatusCode(&statusCode)
+		switch statusCode {
 		case http.StatusOK:
 			return true, nil
 		case http.StatusNotFound: // not set up yet. wait.
 			return false, nil
 		default:
-			return false, fmt.Errorf("invalid status code: %v", resp.Status)
+			return false, fmt.Errorf("invalid status code: %d", statusCode)
 		}
 	})
 }
