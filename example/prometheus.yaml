@@ -5,12 +5,16 @@ metadata:
   labels:
     prometheus: "main"
 spec:
-  replicas: 1
-  version: v1.3.1
+  replicas: 2
+  version: v1.4.0
   serviceMonitorSelector:
     matchExpressions:
     - {key: app, operator: In, values: [node-exporter, example-app]}
   alerting:
     alertmanagers:
-    - namespace: monitoring
-      name: alertmanager-main
+    - namespace: default
+      name: alertmanager
+      port: web
+  resources:
+    requests:
+      memory: 400Mi
