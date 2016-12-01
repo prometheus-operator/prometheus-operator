@@ -18,6 +18,13 @@ Once installed the Prometheus Operator provides the following features:
 * **Target Services via Labels**: Automatically generate monitoring target configurations based
   on familiar Kubernetes label queries; no need to learn a Prometheus specific configuration language.
 
+For an introduction to the Prometheus Operator have a look at the [blog
+post](https://coreos.com/blog/the-prometheus-operator.html) we wrote about it.
+
+See [kube-prometheus](https://github.com/coreos/kube-prometheus) for a
+collection of resources to start monitoring Kubernetes and applications running
+on Kubernetes with the Prometheus Operator within minutes.
+
 
 ## Third party resources
 
