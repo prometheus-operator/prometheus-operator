@@ -18,6 +18,13 @@ Once installed the Prometheus Operator provides the following features:
 * **Target Services via Labels**: Automatically generate monitoring target configurations based
   on familiar Kubernetes label queries; no need to learn a Prometheus specific configuration language.
 
+For an introduction to the Prometheus Operator, see the initial [blog
+post](https://coreos.com/blog/the-prometheus-operator.html).
+
+See [kube-prometheus](https://github.com/coreos/kube-prometheus) for a
+collection of resources that can be used to start monitoring Kubernetes
+and applications running on top of it within minutes.
+
 
 ## Third party resources
 
@@ -33,13 +40,13 @@ The Operator acts on two third party resources (TPRs):
 
 ## Installation
 
-You can install the Operator inside of your cluster by running the following command:
+Install the Operator inside a cluster by running the following command:
 
 ```
 kubectl apply -f deployment.yaml
 ```
 
-To run the Operator outside of your cluster:
+To run the Operator outside of a cluster:
 
 ```
 make
