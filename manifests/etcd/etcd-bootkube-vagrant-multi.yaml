@@ -5,8 +5,6 @@ metadata:
   labels:
     app: etcd
     etcd: k8s
-  annotations:
-    prometheus.io/scrape: 'true'
 spec:
   type: ClusterIP
   clusterIP: None

@@ -4,8 +4,6 @@ metadata:
   name: example-app
   labels:
     tier: frontend
-  annotations:
-    prometheus.io/scrape: 'true'
 spec: 
   selector: 
     app: example-app 

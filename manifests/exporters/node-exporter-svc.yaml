@@ -3,8 +3,6 @@ kind: Service
 metadata:
   labels:
     app: node-exporter
-  annotations:
-    prometheus.io/scrape: 'true'
   name: node-exporter
 spec:
   type: ClusterIP

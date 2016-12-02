@@ -43,10 +43,6 @@ To tear it all down again, run:
 hack/cluster-monitoring/teardown
 ```
 
-> All services in the manifest still contain the `prometheus.io/scrape = true`
-> annotations. It is not used by the Prometheus Operator. They remain for
-> pre Prometheus v1.3.0 deployments as in [this example configuration](https://github.com/prometheus/prometheus/blob/6703404cb431f57ca4c5097bc2762438d3c1968e/documentation/examples/prometheus-kubernetes.yml).
-
 ## Monitoring custom services
 
 The example manifests in [/manifests/examples/example-app](/manifests/examples/example-app)
