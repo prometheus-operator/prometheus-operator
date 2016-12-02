@@ -6,7 +6,7 @@ metadata:
   labels:
     prometheus: frontend
 spec:
-  version: v1.3.0
+  version: v1.4.1
   serviceMonitors:
   - selector:
       matchLabels:
@@ -18,3 +18,8 @@ spec:
       # production use. This value is mainly meant for demonstration/testing
       # purposes.
       memory: 400Mi
+  alerting:
+    alertmanagers:
+    - namespace: monitoring
+      name: alertmanager-main
+      port: web
