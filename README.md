@@ -28,7 +28,7 @@ and applications running on top of it within minutes.
 
 ## Third party resources
 
-The Operator acts on two third party resources (TPRs):
+The Operator acts on the following third party resources (TPRs):
 
 * **[`Prometheus`](./Documentation/prometheus.md)**, which defines a desired Prometheus deployment.
   The Operator ensures at all times that a deployment matching the resource definition is running.
@@ -36,6 +36,9 @@ The Operator acts on two third party resources (TPRs):
 * **[`ServiceMonitor`](./Documentation/service-monitor.md)**, which declaratively specifies how groups
   of services should be monitored. The Operator automatically generates Prometheus scrape configuration
   based on the definition.
+
+* **[`Alertmanager`](./Documentation/alertmanager.md)**, which defines a desired Alertmanager deployment.
+  The Operator ensures at all times that a deployment matching the resource definition is running.
 
 
 ## Installation
