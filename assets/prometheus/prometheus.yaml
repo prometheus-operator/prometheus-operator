@@ -65,4 +65,4 @@ scrape_configs:
     regex: "kube-(.*)-prometheus-discovery"
   - action: keep
     source_labels: [__meta_kubernetes_endpoint_port_name]
-    regex: "prometheus"
+    regex: "prometheus.*"
