@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -77,7 +76,7 @@ type Config struct {
 
 // New creates a new controller.
 func New(conf Config, logger log.Logger) (*Operator, error) {
-	cfg, err := newClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
+	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -649,31 +648,4 @@ func (c *Operator) createTPRs() error {
 		return err
 	}
 	return k8sutil.WaitForTPRReady(c.kclient.CoreClient.GetRESTClient(), TPRGroup, TPRVersion, TPRServiceMonitorsKind)
-}
-
-func newClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*rest.Config, error) {
-	var cfg *rest.Config
-	var err error
-
-	if len(host) == 0 {
-		if cfg, err = rest.InClusterConfig(); err != nil {
-			return nil, err
-		}
-	} else {
-		cfg = &rest.Config{
-			Host: host,
-		}
-		hostURL, err := url.Parse(host)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing host url %s : %v", host, err)
-		}
-		if hostURL.Scheme == "https" {
-			cfg.TLSClientConfig = *tlsConfig
-			cfg.Insecure = tlsInsecure
-		}
-	}
-	cfg.QPS = 100
-	cfg.Burst = 100
-
-	return cfg, nil
 }

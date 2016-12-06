@@ -1,0 +1,87 @@
+// Copyright 2016 The prometheus-operator Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package api
+
+import (
+	"encoding/json"
+	"net/http"
+	"regexp"
+
+	"github.com/go-kit/kit/log"
+
+	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/coreos/prometheus-operator/pkg/prometheus"
+)
+
+type API struct {
+	client *prometheus.MonitoringClient
+	logger log.Logger
+}
+
+func New(conf prometheus.Config, l log.Logger) (*API, error) {
+	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := prometheus.NewForConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &API{
+		client: c,
+		logger: l,
+	}, nil
+}
+
+var (
+	prometheusRoute = regexp.MustCompile("/apis/monitoring.coreos.com/v1alpha1/namespaces/(.*)/prometheuses/(.*)/status")
+)
+
+func (api *API) Register(mux *http.ServeMux) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		if prometheusRoute.MatchString(req.URL.Path) {
+			api.prometheusStatus(w, req)
+		} else {
+			w.WriteHeader(404)
+		}
+	})
+}
+
+func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	matches := prometheusRoute.FindAllStringSubmatch(req.URL.Path, -1)
+	ns := matches[0][1]
+	name := matches[0][2]
+
+	p, err := api.client.Prometheuses(ns).Get(name)
+	if err != nil {
+		if k8sutil.IsResourceNotFoundError(err) {
+			w.WriteHeader(404)
+		}
+		api.logger.Log("error", err)
+		return
+	}
+
+	b, err := json.Marshal(p)
+	if err != nil {
+		api.logger.Log("error", err)
+		return
+	}
+	w.Write(b)
+}

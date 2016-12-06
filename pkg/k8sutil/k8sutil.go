@@ -17,9 +17,11 @@ package k8sutil
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"k8s.io/client-go/1.5/pkg/api/errors"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/util/wait"
 	"k8s.io/client-go/1.5/rest"
@@ -68,4 +70,42 @@ func PodRunningAndReady(pod v1.Pod) (bool, error) {
 		return false, fmt.Errorf("pod ready condition not found")
 	}
 	return false, nil
+}
+
+func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*rest.Config, error) {
+	var cfg *rest.Config
+	var err error
+
+	if len(host) == 0 {
+		if cfg, err = rest.InClusterConfig(); err != nil {
+			return nil, err
+		}
+	} else {
+		cfg = &rest.Config{
+			Host: host,
+		}
+		hostURL, err := url.Parse(host)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing host url %s : %v", host, err)
+		}
+		if hostURL.Scheme == "https" {
+			cfg.TLSClientConfig = *tlsConfig
+			cfg.Insecure = tlsInsecure
+		}
+	}
+	cfg.QPS = 100
+	cfg.Burst = 100
+
+	return cfg, nil
+}
+
+func IsResourceNotFoundError(err error) bool {
+	se, ok := err.(*errors.StatusError)
+	if !ok {
+		return false
+	}
+	if se.Status().Code == http.StatusNotFound && se.Status().Reason == unversioned.StatusReasonNotFound {
+		return true
+	}
+	return false
 }
