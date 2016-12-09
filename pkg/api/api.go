@@ -20,14 +20,16 @@ import (
 	"regexp"
 
 	"github.com/go-kit/kit/log"
+	"k8s.io/client-go/1.5/kubernetes"
 
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 )
 
 type API struct {
-	client *prometheus.MonitoringClient
-	logger log.Logger
+	kclient *kubernetes.Clientset
+	pclient *prometheus.MonitoringClient
+	logger  log.Logger
 }
 
 func New(conf prometheus.Config, l log.Logger) (*API, error) {
@@ -36,14 +38,20 @@ func New(conf prometheus.Config, l log.Logger) (*API, error) {
 		return nil, err
 	}
 
-	c, err := prometheus.NewForConfig(cfg)
+	kclient, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	pclient, err := prometheus.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &API{
-		client: c,
-		logger: l,
+		kclient: kclient,
+		pclient: pclient,
+		logger:  l,
 	}, nil
 }
 
@@ -61,15 +69,32 @@ func (api *API) Register(mux *http.ServeMux) {
 	})
 }
 
+type objectReference struct {
+	name      string
+	namespace string
+}
+
+func parsePrometheusStatusUrl(path string) objectReference {
+	matches := prometheusRoute.FindAllStringSubmatch(path, -1)
+	ns := ""
+	name := ""
+	if len(matches) == 1 {
+		if len(matches[0]) == 3 {
+			ns = matches[0][1]
+			name = matches[0][2]
+		}
+	}
+
+	return objectReference{
+		name:      name,
+		namespace: ns,
+	}
+}
+
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
+	or := parsePrometheusStatusUrl(req.URL.Path)
 
-	matches := prometheusRoute.FindAllStringSubmatch(req.URL.Path, -1)
-	ns := matches[0][1]
-	name := matches[0][2]
-
-	p, err := api.client.Prometheuses(ns).Get(name)
+	p, err := api.pclient.Prometheuses(or.namespace).Get(or.name)
 	if err != nil {
 		if k8sutil.IsResourceNotFoundError(err) {
 			w.WriteHeader(404)
@@ -78,10 +103,18 @@ func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	status, _, err := prometheus.PrometheusStatus(api.kclient, p)
+	if err != nil {
+		api.logger.Log("error", err)
+	}
+	p.Status = *status
+
 	b, err := json.Marshal(p)
 	if err != nil {
 		api.logger.Log("error", err)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
 	w.Write(b)
 }

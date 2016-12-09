@@ -456,49 +456,28 @@ func ListOptions(name string) api.ListOptions {
 //
 // TODO(fabxc): remove this once the PetSet controller learns how to do rolling updates.
 func (c *Operator) syncVersion(key string, p *spec.Prometheus) error {
-	podClient := c.kclient.Core().Pods(p.Namespace)
-
-	pods, err := podClient.List(ListOptions(p.Name))
+	status, oldPods, err := PrometheusStatus(c.kclient, p)
 	if err != nil {
 		return err
 	}
 
 	// If the PetSet is still busy scaling, don't interfere by killing pods.
 	// We enqueue ourselves again to until the PetSet is ready.
-	if len(pods.Items) != int(p.Spec.Replicas) {
+	if status.Replicas != p.Spec.Replicas {
 		return fmt.Errorf("scaling in progress")
 	}
-	if len(pods.Items) == 0 {
+	if status.Replicas == 0 {
 		return nil
 	}
-
-	var oldPods []*v1.Pod
-	allReady := true
-	// Only proceed if all existing pods are running and ready.
-	for _, pod := range pods.Items {
-		ready, err := k8sutil.PodRunningAndReady(pod)
-		if err != nil {
-			c.logger.Log("msg", "cannot determine pod ready state", "err", err)
-		}
-		if ready {
-			// TODO(fabxc): detect other fields of the pod template that are mutable.
-			if !strings.HasSuffix(pod.Spec.Containers[0].Image, p.Spec.Version) {
-				oldPods = append(oldPods, &pod)
-			}
-			continue
-		}
-		allReady = false
-	}
-
 	if len(oldPods) == 0 {
 		return nil
 	}
-	if !allReady {
+	if status.UnavailableReplicas > 0 {
 		return fmt.Errorf("waiting for pods to become ready")
 	}
 
 	// TODO(fabxc): delete oldest pod first.
-	if err := podClient.Delete(oldPods[0].Name, nil); err != nil {
+	if err := c.kclient.Core().Pods(p.Namespace).Delete(oldPods[0].Name, nil); err != nil {
 		return err
 	}
 	// If there are further pods that need updating, we enqueue ourselves again.
@@ -506,6 +485,38 @@ func (c *Operator) syncVersion(key string, p *spec.Prometheus) error {
 		return fmt.Errorf("%d out-of-date pods remaining", len(oldPods)-1)
 	}
 	return nil
+}
+
+func PrometheusStatus(kclient *kubernetes.Clientset, p *spec.Prometheus) (*spec.PrometheusStatus, []*v1.Pod, error) {
+	res := &spec.PrometheusStatus{}
+
+	pods, err := kclient.Core().Pods(p.Namespace).List(ListOptions(p.Name))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res.Replicas = int32(len(pods.Items))
+
+	var oldPods []*v1.Pod
+	for _, pod := range pods.Items {
+		ready, err := k8sutil.PodRunningAndReady(pod)
+		if err != nil {
+			return nil, nil, fmt.Errorf("cannot determine pod ready state: %s", err)
+		}
+		if ready {
+			res.AvailableReplicas++
+			// TODO(fabxc): detect other fields of the pod template that are mutable.
+			if strings.HasSuffix(pod.Spec.Containers[0].Image, p.Spec.Version) {
+				res.UpdatedReplicas++
+			} else {
+				oldPods = append(oldPods, &pod)
+			}
+			continue
+		}
+		res.UnavailableReplicas++
+	}
+
+	return res, oldPods, nil
 }
 
 func (c *Operator) destroyPrometheus(key string) error {
