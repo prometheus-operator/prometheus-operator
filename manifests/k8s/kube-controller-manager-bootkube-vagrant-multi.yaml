@@ -4,8 +4,6 @@ metadata:
   name: kube-controller-manager-prometheus-discovery
   labels:
     k8s-app: kube-controller-manager
-  annotations:
-    prometheus.io/scrape: 'true'
 spec:
   selector:
     k8s-app: kube-controller-manager

@@ -4,8 +4,6 @@ metadata:
   name: kube-scheduler-prometheus-discovery
   labels:
     k8s-app: kube-scheduler
-  annotations:
-    prometheus.io/scrape: 'true'
 spec:
   selector:
     k8s-app: kube-scheduler
