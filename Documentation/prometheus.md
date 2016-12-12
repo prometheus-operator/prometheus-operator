@@ -8,13 +8,13 @@ which the deployed Prometheus instances send alerts to.
 For each `Prometheus` TPR, the Operator deploys a properly configured PetSet
 in the same namespace. The Prometheus pods are configured to include two
 ConfigMaps, `<prometheus-name>` and `<prometheus-name>-rules`, which respectively
-hold the used configuration file and multiple Prometheus rule files, which may 
+hold the used configuration file and multiple Prometheus rule files that may 
 contain alerting and recording rules. 
 
 The TPR allows to specify which [`ServiceMonitor`s](./service-monitor.md)
 should be covered by the deployed Prometheus instances based on label selection.
-The Operator than generates a configuration based on the included `ServiceMonitor`s
-and updates it in the ConfigMap. It continously does so for all changes that
+The Operator then generates a configuration based on the included `ServiceMonitor`s
+and updates it in the ConfigMap. It continuously does so for all changes that
 are made to `ServiceMonitor`s or the `Prometheus` TPR itself.
 
 If no selection of `ServiceMonitor`s is provided, the Operator leaves management
@@ -63,7 +63,7 @@ still benefiting from the Operator's capabilities of managing Prometheus setups.
 | ---- | ----------- | -------- | ------ | ------- |
 | namespace | Namespace of the Alertmanager endpoints. | true | string | |
 | name | Name of the Alertmanager endpoints. This equals the targeted Alertmanager service. | true | string | 
-| port | Name or number of the service port to push alerts to | required | integer or string |
+| port | Name or number of the service port to push alerts to | false | integer or string |
 | scheme | HTTP scheme to use when pushing alerts | false | http |
 
 
@@ -79,7 +79,7 @@ in arbitrary ConfigMaps by their labels.
 Intuitively, it seems fitting to define in each `ServiceMonitor` which rule files (based 
 label selections over ConfigMaps) should be deployed with it.
 However, rules act upon all metrics in a Prometheus server. Hence, defining the
-relationship in each`ServiceMonitor` may cause undesired interference.
+relationship in each `ServiceMonitor` may cause undesired interference.
  
 ### Alerting
 
@@ -90,7 +90,7 @@ of this service.
 Currently Prometheus only allows to configure Alertmanager URLs via flags
 on startup. Thus the Prometheus pods have to be restarted manually if the 
 endpoints change.
-PetSets or manually maintained headless services in Kubernetes, allow to
+PetSets or manually maintained headless services in Kubernetes allow to
 provide stable URLs working around this. In the future, Prometheus will allow
 for dynamic service discovery of Alertmanagers ([tracking issue](https://github.com/prometheus/prometheus/issues/2057)). 
 
@@ -111,13 +111,13 @@ it brought up as data sources in potential Grafana deployments.
 Prometheus instances are deployed with default values for requested and maximum
 resource usage of CPU and memory. This will be made configurable in the `Prometheus` 
 TPR eventually.
-Prometheus comes with a variety of configuration flags for its storage engine, that
+Prometheus comes with a variety of configuration flags for its storage engine that
 have to be tuned for better performance in large Prometheus servers. It will be the
 operators job to tune those correctly to be aligned with the experiences load
 and the resource limits configured by the user.
 
-### Horzintal sharding
+### Horizontal sharding
 
-Prometheus has basic capabilities to run horizontally shareded setups. This is only
+Prometheus has basic capabilities to run horizontally sharded setups. This is only
 necessary in the largest of clusters. The Operator is an ideal candidate to manage the
 sharding process and make it appear seamless to the user.
