@@ -80,7 +80,6 @@ ConfigMaps based on label selection.
 
 ## Roadmap
 
-* Alertmanager Operator automatically handling HA clusters
 * Grafana Operator that dynamically discovers and deploys dashboards from ConfigMaps
 * KPM/Helm packages to easily provide production-ready cluster-monitoring setup (essentially contents of `hack/cluster-monitoring`)
 * Add meta-monitoring to default cluster monitoring setup
