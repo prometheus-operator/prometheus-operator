@@ -24,6 +24,7 @@ which manages Prometheus servers and their configuration in a cluster. With a si
 * A Prometheus configuration covering monitoring of all Kubernetes core components and exporters
 * A default set of alerting rules on the cluster component's health
 * A Grafana instance serving dashboards on cluster metrics
+* A three node highly available Alertmanager cluster
 
 Simply run:
 
@@ -35,6 +36,7 @@ hack/cluster-monitoring/deploy
 After all pods are ready, you can reach:
 
 * Prometheus UI on node port `30900`
+* Alertmanager UI on node port `30903`
 * Grafana on node port `30902`
 
 To tear it all down again, run:
@@ -57,7 +59,9 @@ hack/example-service-monitoring/deploy
 ```
 
 After all pods are ready you can reach the Prometheus server on node port `30100` and observe
-how it monitors the service as specified.
+how it monitors the service as specified. Same as before, this Prometheus server automatically
+discovers the Alertmanager cluster deployed in the [Monitoring Kubernetes](#Monitoring-Kubernetes)
+section.
 
 Teardown:
 
