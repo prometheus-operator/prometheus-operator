@@ -453,16 +453,6 @@ func (c *Operator) destroyAlertmanager(key string) error {
 		return err
 	}
 
-	// Delete the auto-generate configuration.
-	// TODO(fabxc): add an ownerRef at creation so we don't delete config maps
-	// manually created for Alertmanager servers with no ServiceMonitor selectors.
-	cm := c.kclient.Core().ConfigMaps(pset.Namespace)
-	if err := cm.Delete(pset.Name, nil); err != nil {
-		return err
-	}
-	if err := cm.Delete(fmt.Sprintf("%s-rules", pset.Name), nil); err != nil {
-		return err
-	}
 	return nil
 }
 
