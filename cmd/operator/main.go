@@ -113,12 +113,13 @@ func Main() int {
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
 	select {
 	case <-term:
-		fmt.Fprint(os.Stdout, "Received SIGTERM, exiting gracefully...")
+		logger.Log("msg", "Received SIGTERM, exiting gracefully...")
 		l.Close()
 		close(stopc)
 		wg.Wait()
-	case <-errc:
-		fmt.Fprintf(os.Stderr, "Unhandled error received. Exiting...")
+	case err := <-errc:
+		logger.Log("msg", "Unhandled error received. Exiting...", "err", err)
+		l.Close()
 		close(stopc)
 		wg.Wait()
 		return 1
