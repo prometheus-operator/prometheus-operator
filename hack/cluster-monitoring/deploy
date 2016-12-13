@@ -19,3 +19,4 @@ until kctl get prometheus; do sleep 1; done
 kctl apply -f manifests/exporters
 kctl apply -f manifests/grafana
 kctl apply -f manifests/prometheus
+kctl apply -f manifests/alertmanager

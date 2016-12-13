@@ -7,10 +7,9 @@ metadata:
     prometheus: frontend
 spec:
   version: v1.4.1
-  serviceMonitors:
-  - selector:
-      matchLabels:
-        tier: frontend
+  serviceMonitorSelector:
+    matchLabels:
+      tier: frontend
   resources:
     requests:
       # 2Gi is default, but won't schedule if you don't have a node with >2Gi
