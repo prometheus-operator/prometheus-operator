@@ -16,7 +16,6 @@ package alertmanager
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -66,7 +65,7 @@ type Operator struct {
 
 // New creates a new controller.
 func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
-	cfg, err := newClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
+	cfg, err := k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -489,31 +488,4 @@ func (c *Operator) createTPRs() error {
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
 	return k8sutil.WaitForTPRReady(c.kclient.CoreClient.GetRESTClient(), TPRGroup, TPRVersion, TPRAlertmanagersKind)
-}
-
-func newClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientConfig) (*rest.Config, error) {
-	var cfg *rest.Config
-	var err error
-
-	if len(host) == 0 {
-		if cfg, err = rest.InClusterConfig(); err != nil {
-			return nil, err
-		}
-	} else {
-		cfg = &rest.Config{
-			Host: host,
-		}
-		hostURL, err := url.Parse(host)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing host url %s : %v", host, err)
-		}
-		if hostURL.Scheme == "https" {
-			cfg.TLSClientConfig = *tlsConfig
-			cfg.Insecure = tlsInsecure
-		}
-	}
-	cfg.QPS = 100
-	cfg.Burst = 100
-
-	return cfg, nil
 }

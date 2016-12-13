@@ -24,7 +24,8 @@ import (
 type Prometheus struct {
 	unversioned.TypeMeta `json:",inline"`
 	v1.ObjectMeta        `json:"metadata,omitempty"`
-	Spec                 PrometheusSpec `json:"spec"`
+	Spec                 PrometheusSpec   `json:"spec"`
+	Status               PrometheusStatus `json:"status,omitempty"`
 }
 
 // PrometheusList is a list of Prometheuses.
@@ -49,6 +50,23 @@ type PrometheusSpec struct {
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...
+}
+
+type PrometheusStatus struct {
+	// Total number of non-terminated pods targeted by this Prometheus deployment
+	// (their labels match the selector).
+	Replicas int32 `json:"replicas"`
+
+	// Total number of non-terminated pods targeted by this Prometheus deployment
+	// that have the desired version spec.
+	UpdatedReplicas int32 `json:"updatedReplicas"`
+
+	// Total number of available pods (ready for at least minReadySeconds)
+	// targeted by this Prometheus deployment.
+	AvailableReplicas int32 `json:"availableReplicas"`
+
+	// Total number of unavailable pods targeted by this Prometheus deployment.
+	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
 
 // AlertingSpec defines paramters for alerting configuration of Prometheus servers.

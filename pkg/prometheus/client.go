@@ -30,6 +30,23 @@ import (
 
 const resyncPeriod = 5 * time.Minute
 
+type MonitoringClient struct {
+	*rest.RESTClient
+}
+
+func (c *MonitoringClient) Prometheuses(namespace string) PrometheusInterface {
+	return newPrometheuses(c, namespace)
+}
+
+func NewForConfig(c *rest.Config) (*MonitoringClient, error) {
+	client, err := NewPrometheusRESTClient(*c)
+	if err != nil {
+		return nil, err
+	}
+
+	return &MonitoringClient{client}, nil
+}
+
 func NewPrometheusRESTClient(c rest.Config) (*rest.RESTClient, error) {
 	c.APIPath = "/apis"
 	c.GroupVersion = &unversioned.GroupVersion{
@@ -39,6 +56,37 @@ func NewPrometheusRESTClient(c rest.Config) (*rest.RESTClient, error) {
 	// TODO(fabxc): is this even used with our custom list/watch functions?
 	c.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: api.Codecs}
 	return rest.RESTClientFor(&c)
+}
+
+type PrometheusInterface interface {
+	Get(name string) (*spec.Prometheus, error)
+}
+
+type prometheuses struct {
+	client *MonitoringClient
+	ns     string
+}
+
+func newPrometheuses(c *MonitoringClient, namespace string) *prometheuses {
+	return &prometheuses{
+		client: c,
+		ns:     namespace,
+	}
+}
+
+func (p *prometheuses) Get(name string) (result *spec.Prometheus, err error) {
+	result = &spec.Prometheus{}
+	req := p.client.Get().
+		Namespace(p.ns).
+		Resource("prometheuses").
+		Name(name)
+	body, err := req.DoRaw()
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(body, &result)
+	return
 }
 
 type prometheusDecoder struct {
