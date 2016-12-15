@@ -341,18 +341,6 @@ data:
         description = "There is no running K8S controller manager. Deployments and replication controllers are not making progress.",
       }
 
-    ALERT K8SMoreThanOneController
-      IF count by (job,cluster) (up{job=~"kube-scheduler|kube-controller-manager"}) > 1
-      FOR 5m
-      LABELS {
-        service = "k8s",
-        severity = "critical",
-      }
-      ANNOTATIONS {
-        summary = "More than one controller node is active",
-        description = "There is more than one {{ $labels.job }} managing the cluster. Cluster behaviour is undefined.",
-      }
-
     ALERT K8SConntrackTableFull
       IF 100*node_nf_conntrack_entries / node_nf_conntrack_entries_limit > 50
       FOR 10m

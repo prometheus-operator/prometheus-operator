@@ -1,3 +1,22 @@
+alerting:
+  alertmanagers:
+  - kubernetes_sd_configs:
+    - role: endpoints
+    relabel_configs:
+    - action: keep
+      regex: alertmanager-main
+      source_labels:
+      - __meta_kubernetes_service_name
+    - action: keep
+      regex: monitoring
+      source_labels:
+      - __meta_kubernetes_namespace
+    - action: keep
+      regex: web
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+    scheme: http
+
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
