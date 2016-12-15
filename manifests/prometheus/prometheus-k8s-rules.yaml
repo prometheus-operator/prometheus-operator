@@ -226,7 +226,7 @@ data:
       histogram_quantile(0.5,sum by (le,cluster) (scheduler_binding_latency_microseconds_bucket)) / 1e6
 
     ALERT K8SNodeDown
-      IF up{job="kubelets"} == 0
+      IF up{job="kubelet"} == 0
       FOR 1h
       LABELS {
         service = "k8s",
@@ -281,7 +281,7 @@ data:
       }
 
     ALERT K8SKubeletDown
-      IF absent(up{job="kubelets"}) or count by (cluster) (up{job="kubelets"} == 0) / count by (cluster) (up{job="kubelets"}) > 0.1
+      IF absent(up{job="kubelet"}) or count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.1
       FOR 1h
       LABELS {
         service = "k8s",
@@ -378,7 +378,7 @@ data:
       }
 
     ALERT K8STooManyOpenFiles
-      IF 100*process_open_fds{job=~"kubelets|kubernetes"} / process_max_fds > 50
+      IF 100*process_open_fds{job=~"kubelet|kubernetes"} / process_max_fds > 50
       FOR 10m
       LABELS {
         service = "k8s",
@@ -390,7 +390,7 @@ data:
       }
 
     ALERT K8STooManyOpenFiles
-      IF 100*process_open_fds{job=~"kubelets|kubernetes"} / process_max_fds > 80
+      IF 100*process_open_fds{job=~"kubelet|kubernetes"} / process_max_fds > 80
       FOR 10m
       LABELS {
         service = "k8s",

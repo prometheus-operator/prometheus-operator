@@ -3,12 +3,13 @@ kind: Service
 metadata:
   labels:
     app: node-exporter
+    k8s-app: node-exporter
   name: node-exporter
 spec:
   type: ClusterIP
   clusterIP: None
   ports:
-  - name: metrics
+  - name: http-metrics
     port: 9100
     protocol: TCP
   selector:

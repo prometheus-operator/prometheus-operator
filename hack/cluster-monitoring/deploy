@@ -26,7 +26,6 @@ echo "done!"
 kctl apply -f manifests/exporters
 kctl apply -f manifests/grafana
 
-kctl apply -f manifests/prometheus/prometheus-k8s-cm.yaml
 kctl apply -f manifests/prometheus/prometheus-k8s-rules.yaml
 kctl apply -f manifests/prometheus/prometheus-k8s-svc.yaml
 
@@ -36,6 +35,7 @@ kctl apply -f manifests/alertmanager/alertmanager-service.yaml
 # `kubectl apply` is currently not working for third party resources so we are
 # using `kubectl create` here for the time being.
 # (https://github.com/kubernetes/kubernetes/issues/29542)
+kctl create -f manifests/prometheus/prometheus-k8s-servicemonitor.yaml
 kctl create -f manifests/prometheus/prometheus-k8s.yaml
 kctl create -f manifests/alertmanager/alertmanager.yaml
 
