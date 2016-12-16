@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
@@ -23,6 +24,14 @@ import (
 
 	"github.com/coreos/prometheus-operator/pkg/spec"
 )
+
+var (
+	invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
+)
+
+func sanitizeLabelName(name string) string {
+	return invalidLabelCharRE.ReplaceAllString(name, "_")
+}
 
 func generateConfig(p *spec.Prometheus, mons map[string]*spec.ServiceMonitor) ([]byte, error) {
 	cfg := map[string]interface{}{}
@@ -81,7 +90,7 @@ func generateServiceMonitorConfig(m *spec.ServiceMonitor, ep spec.Endpoint, i in
 	for k, v := range m.Spec.Selector.MatchLabels {
 		relabelings = append(relabelings, map[string]interface{}{
 			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_service_label_" + k},
+			"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k)},
 			"regex":         v,
 		})
 	}
@@ -92,25 +101,25 @@ func generateServiceMonitorConfig(m *spec.ServiceMonitor, ep spec.Endpoint, i in
 		case unversioned.LabelSelectorOpIn:
 			relabelings = append(relabelings, map[string]interface{}{
 				"action":        "keep",
-				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
 				"regex":         strings.Join(exp.Values, "|"),
 			})
 		case unversioned.LabelSelectorOpNotIn:
 			relabelings = append(relabelings, map[string]interface{}{
 				"action":        "drop",
-				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
 				"regex":         strings.Join(exp.Values, "|"),
 			})
 		case unversioned.LabelSelectorOpExists:
 			relabelings = append(relabelings, map[string]interface{}{
 				"action":        "keep",
-				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
 				"regex":         ".+",
 			})
 		case unversioned.LabelSelectorOpDoesNotExist:
 			relabelings = append(relabelings, map[string]interface{}{
 				"action":        "drop",
-				"source_labels": []string{"__meta_kubernetes_service_label_" + exp.Key},
+				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
 				"regex":         ".+",
 			})
 		}
@@ -209,14 +218,14 @@ func generateServiceMonitorConfig(m *spec.ServiceMonitor, ep spec.Endpoint, i in
 	if m.Spec.JobLabel != "" {
 		if ep.Port != "" {
 			relabelings = append(relabelings, map[string]interface{}{
-				"source_labels": []string{"__meta_kubernetes_service_label_" + m.Spec.JobLabel},
+				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(m.Spec.JobLabel)},
 				"target_label":  "job",
 				"regex":         "(.+)",
 				"replacement":   "${1}-" + ep.Port,
 			})
 		} else if ep.TargetPort.String() != "" {
 			relabelings = append(relabelings, map[string]interface{}{
-				"source_labels": []string{"__meta_kubernetes_service_label_" + m.Spec.JobLabel},
+				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(m.Spec.JobLabel)},
 				"target_label":  "job",
 				"regex":         "(.+)",
 				"replacement":   "${1}-" + ep.TargetPort.String(),
