@@ -115,11 +115,18 @@ type ServiceMonitorSpec struct {
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 type Endpoint struct {
-	Port       string             `json:"port"`
-	TargetPort intstr.IntOrString `json:"targetPort"`
-	Path       string             `json:"path"`
-	Scheme     string             `json:"scheme"`
-	Interval   string             `json:"interval"`
+	Port            string             `json:"port"`
+	TargetPort      intstr.IntOrString `json:"targetPort"`
+	Path            string             `json:"path"`
+	Scheme          string             `json:"scheme"`
+	Interval        string             `json:"interval"`
+	TlsConfig       *TlsConfig         `json:"tlsConfig"`
+	BearerTokenFile string             `json:"bearerTokenFile"`
+}
+
+type TlsConfig struct {
+	CaFile             string `json:"caFile,omitempty"`
+	InsecureSkipVerify bool   `json:"insecureSkipVerify,omitempty"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

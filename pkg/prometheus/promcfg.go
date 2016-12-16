@@ -81,6 +81,18 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	if ep.Scheme != "" {
 		cfg["scheme"] = ep.Scheme
 	}
+	if ep.TlsConfig != nil {
+		tlsConfig := map[string]interface{}{
+			"insecure_skip_verify": ep.TlsConfig.InsecureSkipVerify,
+		}
+		if ep.TlsConfig.CaFile != "" {
+			tlsConfig["ca_file"] = ep.TlsConfig.CaFile
+		}
+		cfg["tls_config"] = tlsConfig
+	}
+	if ep.BearerTokenFile != "" {
+		cfg["bearer_token_file"] = ep.BearerTokenFile
+	}
 
 	var relabelings []interface{}
 
