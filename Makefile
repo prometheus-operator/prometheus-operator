@@ -12,7 +12,7 @@ container:
 	docker build -t $(REPO):$(TAG) .
 
 e2e: container
-	go test -v ./test/e2e/ --kubeconfig "$(HOME)/.kube/config" --operator-image=quay.io/coreos/prometheus-operator:$(TAG)
+	go test -v ./test/e2e/ --kubeconfig "$(HOME)/.kube/config" --operator-image=quay.io/coreos/prometheus-operator:$(TAG) --namespace=prometheus-operator-e2e-tests-$(TAG)
 
 clean-e2e:
 	kubectl delete namespace prometheus-operator-e2e-tests

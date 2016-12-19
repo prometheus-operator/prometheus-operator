@@ -17,14 +17,15 @@ package prometheus
 import (
 	"fmt"
 
+	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/apps/v1beta1"
+	"k8s.io/client-go/pkg/util/intstr"
+
 	"github.com/coreos/prometheus-operator/pkg/spec"
-	"k8s.io/client-go/1.5/pkg/api/resource"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/apps/v1alpha1"
-	"k8s.io/client-go/1.5/pkg/util/intstr"
 )
 
-func makePetSet(p spec.Prometheus, old *v1alpha1.PetSet) *v1alpha1.PetSet {
+func makeStatefulSet(p spec.Prometheus, old *v1beta1.StatefulSet) *v1beta1.StatefulSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -49,14 +50,14 @@ func makePetSet(p spec.Prometheus, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 		p.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("2Gi")
 	}
 
-	petset := &v1alpha1.PetSet{
+	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
 			Name: p.Name,
 		},
-		Spec: makePetSetSpec(p),
+		Spec: makeStatefulSetSpec(p),
 	}
 	if vc := p.Spec.Storage; vc == nil {
-		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: fmt.Sprintf("%s-db", p.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
@@ -78,13 +79,13 @@ func makePetSet(p spec.Prometheus, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 				"volume.beta.kubernetes.io/storage-class": vc.Class,
 			}
 		}
-		petset.Spec.VolumeClaimTemplates = append(petset.Spec.VolumeClaimTemplates, pvc)
+		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, pvc)
 	}
 
 	if old != nil {
-		petset.Annotations = old.Annotations
+		statefulset.Annotations = old.Annotations
 	}
-	return petset
+	return statefulset
 }
 
 func makeEmptyConfig(name string) *v1.ConfigMap {
@@ -106,7 +107,7 @@ func makeEmptyRules(name string) *v1.ConfigMap {
 	}
 }
 
-func makePetSetService(p *spec.Prometheus) *v1.Service {
+func makeStatefulSetService(p *spec.Prometheus) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
 			Name: "prometheus",
@@ -128,7 +129,7 @@ func makePetSetService(p *spec.Prometheus) *v1.Service {
 	return svc
 }
 
-func makePetSetSpec(p spec.Prometheus) v1alpha1.PetSetSpec {
+func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -145,7 +146,7 @@ func makePetSetSpec(p spec.Prometheus) v1alpha1.PetSetSpec {
 	// generally has a very high time series churn.
 	memChunks := reqMem.Value() / 1024 / 5
 
-	return v1alpha1.PetSetSpec{
+	return v1beta1.StatefulSetSpec{
 		ServiceName: "prometheus",
 		Replicas:    &p.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
@@ -153,9 +154,6 @@ func makePetSetSpec(p spec.Prometheus) v1alpha1.PetSetSpec {
 				Labels: map[string]string{
 					"app":        "prometheus",
 					"prometheus": p.Name,
-				},
-				Annotations: map[string]string{
-					"pod.alpha.kubernetes.io/initialized": "true",
 				},
 			},
 			Spec: v1.PodSpec{

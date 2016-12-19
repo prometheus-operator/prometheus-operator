@@ -15,38 +15,38 @@
 package spec
 
 import (
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/util/intstr"
+	"k8s.io/client-go/pkg/api/v1"
+	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/util/intstr"
 )
 
 // Prometheus defines a Prometheus deployment.
 type Prometheus struct {
-	unversioned.TypeMeta `json:",inline"`
-	v1.ObjectMeta        `json:"metadata,omitempty"`
-	Spec                 PrometheusSpec   `json:"spec"`
-	Status               PrometheusStatus `json:"status,omitempty"`
+	metav1.TypeMeta `json:",inline"`
+	v1.ObjectMeta   `json:"metadata,omitempty"`
+	Spec            PrometheusSpec   `json:"spec"`
+	Status          PrometheusStatus `json:"status,omitempty"`
 }
 
 // PrometheusList is a list of Prometheuses.
 type PrometheusList struct {
-	unversioned.TypeMeta `json:",inline"`
-	unversioned.ListMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []*Prometheus `json:"items"`
 }
 
 // PrometheusSpec holds specification parameters of a Prometheus deployment.
 type PrometheusSpec struct {
-	ServiceMonitorSelector *unversioned.LabelSelector `json:"serviceMonitorSelector"`
-	Version                string                     `json:"version"`
-	Paused                 bool                       `json:"paused"`
-	BaseImage              string                     `json:"baseImage"`
-	Replicas               int32                      `json:"replicas"`
-	Retention              string                     `json:"retention"`
-	Storage                *StorageSpec               `json:"storage"`
-	Alerting               AlertingSpec               `json:"alerting"`
-	Resources              v1.ResourceRequirements    `json:"resources"`
+	ServiceMonitorSelector *metav1.LabelSelector   `json:"serviceMonitorSelector"`
+	Version                string                  `json:"version"`
+	Paused                 bool                    `json:"paused"`
+	BaseImage              string                  `json:"baseImage"`
+	Replicas               int32                   `json:"replicas"`
+	Retention              string                  `json:"retention"`
+	Storage                *StorageSpec            `json:"storage"`
+	Alerting               AlertingSpec            `json:"alerting"`
+	Resources              v1.ResourceRequirements `json:"resources"`
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...
@@ -76,9 +76,9 @@ type AlertingSpec struct {
 
 // StorageSpec defines the configured storage for a group Prometheus servers.
 type StorageSpec struct {
-	Class     string                     `json:"class"`
-	Selector  *unversioned.LabelSelector `json:"selector"`
-	Resources v1.ResourceRequirements    `json:"resources"`
+	Class     string                  `json:"class"`
+	Selector  *metav1.LabelSelector   `json:"selector"`
+	Resources v1.ResourceRequirements `json:"resources"`
 }
 
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
@@ -92,20 +92,20 @@ type AlertmanagerEndpoints struct {
 
 // ServiceMonitor defines monitoring for a set of services.
 type ServiceMonitor struct {
-	unversioned.TypeMeta `json:",inline"`
-	v1.ObjectMeta        `json:"metadata,omitempty"`
-	Spec                 ServiceMonitorSpec `json:"spec"`
+	metav1.TypeMeta `json:",inline"`
+	v1.ObjectMeta   `json:"metadata,omitempty"`
+	Spec            ServiceMonitorSpec `json:"spec"`
 }
 
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 type ServiceMonitorSpec struct {
-	JobLabel          string                    `json:"jobLabel"`
-	Endpoints         []Endpoint                `json:"endpoints"`
-	Selector          unversioned.LabelSelector `json:"selector"`
-	NamespaceSelector Selector                  `json:"namespaceSelector"`
+	JobLabel          string               `json:"jobLabel"`
+	Endpoints         []Endpoint           `json:"endpoints"`
+	Selector          metav1.LabelSelector `json:"selector"`
+	NamespaceSelector Selector             `json:"namespaceSelector"`
 	// AllNamespaces     bool                      `json:"allNamespaces"`
 	// Namespaces        []string                  `json:"namespaces"`
-	// NamespaceSelector unversioned.LabelSelector `json:"namespaceSelector"`
+	// NamespaceSelector metav1.LabelSelector `json:"namespaceSelector"`
 }
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.
@@ -119,16 +119,16 @@ type Endpoint struct {
 
 // ServiceMonitorList is a list of ServiceMonitors.
 type ServiceMonitorList struct {
-	unversioned.TypeMeta `json:",inline"`
-	unversioned.ListMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []*ServiceMonitor `json:"items"`
 }
 
 type Alertmanager struct {
-	unversioned.TypeMeta `json:",inline"`
-	v1.ObjectMeta        `json:"metadata,omitempty"`
-	Spec                 AlertmanagerSpec `json:"spec"`
+	metav1.TypeMeta `json:",inline"`
+	v1.ObjectMeta   `json:"metadata,omitempty"`
+	Spec            AlertmanagerSpec `json:"spec"`
 }
 
 type AlertmanagerSpec struct {
@@ -146,10 +146,10 @@ type AlertmanagerSpec struct {
 }
 
 type AlertmanagerList struct {
-	unversioned.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	unversioned.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 	// Items is a list of third party objects
 	Items []Alertmanager `json:"items"`
 }
@@ -158,7 +158,7 @@ type Selector struct {
 	Any        bool     `json:"any,omitempty"`
 	MatchNames []string `json:"matchNames,omitempty"`
 
-	// TODO(fabxc): this should embed unversioned.LabelSelector eventually.
+	// TODO(fabxc): this should embed metav1.LabelSelector eventually.
 	// Currently the selector is only used for namespaces which require more complex
 	// implementation to support label selections.
 }

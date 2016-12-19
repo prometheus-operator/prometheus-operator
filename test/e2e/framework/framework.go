@@ -23,14 +23,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"k8s.io/client-go/1.5/kubernetes"
-	v1client "k8s.io/client-go/1.5/kubernetes/typed/core/v1"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/1.5/pkg/labels"
-	"k8s.io/client-go/1.5/pkg/util/yaml"
-	"k8s.io/client-go/1.5/tools/clientcmd"
+	"k8s.io/client-go/kubernetes"
+	v1client "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/fields"
+	"k8s.io/client-go/pkg/util/yaml"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
@@ -57,7 +57,7 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 		return nil, err
 	}
 
-	httpc := cli.Core().GetRESTClient().Client
+	httpc := cli.CoreV1().RESTClient().(*rest.RESTClient).Client
 	if err != nil {
 		return nil, err
 	}
@@ -119,19 +119,19 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 		return err
 	}
 
-	opts := api.ListOptions{LabelSelector: labels.SelectorFromSet(deploy.Spec.Template.ObjectMeta.Labels)}
+	opts := v1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
 	pl, err := f.WaitForPodsReady(60*time.Second, 1, opts)
 	if err != nil {
 		return err
 	}
 	f.OperatorPod = &pl.Items[0]
 
-	err = k8sutil.WaitForTPRReady(f.KubeClient.Core().GetRESTClient(), prometheus.TPRGroup, prometheus.TPRVersion, prometheus.TPRPrometheusesKind)
+	err = k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), prometheus.TPRGroup, prometheus.TPRVersion, prometheus.TPRPrometheusesKind)
 	if err != nil {
 		return err
 	}
 
-	return k8sutil.WaitForTPRReady(f.KubeClient.Core().GetRESTClient(), prometheus.TPRGroup, prometheus.TPRVersion, prometheus.TPRServiceMonitorsKind)
+	return k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), prometheus.TPRGroup, prometheus.TPRVersion, prometheus.TPRServiceMonitorsKind)
 }
 
 // Teardown tears down a previously initialized test environment.
@@ -145,11 +145,11 @@ func (f *Framework) Teardown() error {
 
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
-func (f *Framework) WaitForPodsReady(timeout time.Duration, expectedReplicas int, opts api.ListOptions) (*v1.PodList, error) {
+func (f *Framework) WaitForPodsReady(timeout time.Duration, expectedReplicas int, opts v1.ListOptions) (*v1.PodList, error) {
 	return waitForPodsReady(f.KubeClient.Core(), timeout, expectedReplicas, f.Namespace.Name, opts)
 }
 
-func waitForPodsReady(client v1client.CoreInterface, timeout time.Duration, expectedRunning int, namespace string, opts api.ListOptions) (*v1.PodList, error) {
+func waitForPodsReady(client v1client.CoreV1Interface, timeout time.Duration, expectedRunning int, namespace string, opts v1.ListOptions) (*v1.PodList, error) {
 	t := time.After(timeout)
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()

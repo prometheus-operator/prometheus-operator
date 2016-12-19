@@ -17,14 +17,15 @@ package alertmanager
 import (
 	"fmt"
 
+	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/apps/v1beta1"
+	"k8s.io/client-go/pkg/util/intstr"
+
 	"github.com/coreos/prometheus-operator/pkg/spec"
-	"k8s.io/client-go/1.5/pkg/api/resource"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/apps/v1alpha1"
-	"k8s.io/client-go/1.5/pkg/util/intstr"
 )
 
-func makePetSet(am *spec.Alertmanager, old *v1alpha1.PetSet) *v1alpha1.PetSet {
+func makeStatefulSet(am *spec.Alertmanager, old *v1beta1.StatefulSet) *v1beta1.StatefulSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -43,14 +44,14 @@ func makePetSet(am *spec.Alertmanager, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 	}
 	image := fmt.Sprintf("%s:%s", baseImage, version)
 
-	petset := &v1alpha1.PetSet{
+	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
 			Name: am.Name,
 		},
-		Spec: makePetSetSpec(am.Namespace, am.Name, image, version, replicas),
+		Spec: makeStatefulSetSpec(am.Namespace, am.Name, image, version, replicas),
 	}
 	if vc := am.Spec.Storage; vc == nil {
-		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: fmt.Sprintf("%s-db", am.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
@@ -72,16 +73,16 @@ func makePetSet(am *spec.Alertmanager, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 				"volume.beta.kubernetes.io/storage-class": vc.Class,
 			}
 		}
-		petset.Spec.VolumeClaimTemplates = append(petset.Spec.VolumeClaimTemplates, pvc)
+		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, pvc)
 	}
 
 	if old != nil {
-		petset.Annotations = old.Annotations
+		statefulset.Annotations = old.Annotations
 	}
-	return petset
+	return statefulset
 }
 
-func makePetSetService(p *spec.Alertmanager) *v1.Service {
+func makeStatefulSetService(p *spec.Alertmanager) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
 			Name: "alertmanager",
@@ -110,7 +111,7 @@ func makePetSetService(p *spec.Alertmanager) *v1.Service {
 	return svc
 }
 
-func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.PetSetSpec {
+func makeStatefulSetSpec(ns, name, image, version string, replicas int32) v1beta1.StatefulSetSpec {
 	commands := []string{
 		"/bin/alertmanager",
 		fmt.Sprintf("-config.file=%s", "/etc/alertmanager/config/alertmanager.yaml"),
@@ -123,7 +124,7 @@ func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.Pe
 	}
 
 	terminationGracePeriod := int64(0)
-	return v1alpha1.PetSetSpec{
+	return v1beta1.StatefulSetSpec{
 		ServiceName: "alertmanager",
 		Replicas:    &replicas,
 		Template: v1.PodTemplateSpec{
@@ -131,9 +132,6 @@ func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.Pe
 				Labels: map[string]string{
 					"app":          "alertmanager",
 					"alertmanager": name,
-				},
-				Annotations: map[string]string{
-					"pod.alpha.kubernetes.io/initialized": "true",
 				},
 			},
 			Spec: v1.PodSpec{

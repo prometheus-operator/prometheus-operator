@@ -18,14 +18,16 @@ import (
 	"encoding/json"
 	"time"
 
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/runtime"
+	"k8s.io/client-go/pkg/runtime/schema"
+	"k8s.io/client-go/pkg/runtime/serializer"
+	"k8s.io/client-go/pkg/watch"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
+
 	"github.com/coreos/prometheus-operator/pkg/spec"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/runtime"
-	"k8s.io/client-go/1.5/pkg/runtime/serializer"
-	"k8s.io/client-go/1.5/pkg/watch"
-	"k8s.io/client-go/1.5/rest"
-	"k8s.io/client-go/1.5/tools/cache"
 )
 
 const resyncPeriod = 5 * time.Minute
@@ -49,7 +51,7 @@ func NewForConfig(c *rest.Config) (*MonitoringClient, error) {
 
 func NewPrometheusRESTClient(c rest.Config) (*rest.RESTClient, error) {
 	c.APIPath = "/apis"
-	c.GroupVersion = &unversioned.GroupVersion{
+	c.GroupVersion = &schema.GroupVersion{
 		Group:   "monitoring.coreos.com",
 		Version: "v1alpha1",
 	}
@@ -112,11 +114,11 @@ func (d *prometheusDecoder) Decode() (action watch.EventType, object runtime.Obj
 // NewPrometheusListWatch returns a new ListWatch on the Prometheus resource.
 func NewPrometheusListWatch(client *rest.RESTClient) *cache.ListWatch {
 	return &cache.ListWatch{
-		ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+		ListFunc: cache.ListFunc(func(options v1.ListOptions) (runtime.Object, error) {
 			req := client.Get().
-				Namespace(api.NamespaceAll).
+				Namespace(v1.NamespaceAll).
 				Resource("prometheuses").
-				// VersionedParams(&options, api.ParameterCodec)
+				// VersionedParams(&options, v1.ParameterCodec)
 				FieldsSelectorParam(nil)
 
 			b, err := req.DoRaw()
@@ -125,13 +127,13 @@ func NewPrometheusListWatch(client *rest.RESTClient) *cache.ListWatch {
 			}
 			var p spec.PrometheusList
 			return &p, json.Unmarshal(b, &p)
-		},
-		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+		}),
+		WatchFunc: cache.WatchFunc(func(options v1.ListOptions) (watch.Interface, error) {
 			r, err := client.Get().
 				Prefix("watch").
-				Namespace(api.NamespaceAll).
+				Namespace(v1.NamespaceAll).
 				Resource("prometheuses").
-				// VersionedParams(&options, api.ParameterCodec).
+				// VersionedParams(&options, v1.ParameterCodec).
 				FieldsSelectorParam(nil).
 				Stream()
 			if err != nil {
@@ -141,7 +143,7 @@ func NewPrometheusListWatch(client *rest.RESTClient) *cache.ListWatch {
 				dec:   json.NewDecoder(r),
 				close: r.Close,
 			}), nil
-		},
+		}),
 	}
 }
 
@@ -168,11 +170,11 @@ func (d *serviceMonitorDecoder) Decode() (action watch.EventType, object runtime
 // NewServiceMonitorListWatch returns a new ListWatch on the ServiceMonitor resource.
 func NewServiceMonitorListWatch(client *rest.RESTClient) *cache.ListWatch {
 	return &cache.ListWatch{
-		ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+		ListFunc: cache.ListFunc(func(options v1.ListOptions) (runtime.Object, error) {
 			req := client.Get().
-				Namespace(api.NamespaceAll).
+				Namespace(v1.NamespaceAll).
 				Resource("servicemonitors").
-				// VersionedParams(&options, api.ParameterCodec)
+				// VersionedParams(&options, v1.ParameterCodec)
 				FieldsSelectorParam(nil)
 
 			b, err := req.DoRaw()
@@ -181,13 +183,13 @@ func NewServiceMonitorListWatch(client *rest.RESTClient) *cache.ListWatch {
 			}
 			var sm spec.ServiceMonitorList
 			return &sm, json.Unmarshal(b, &sm)
-		},
-		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+		}),
+		WatchFunc: cache.WatchFunc(func(options v1.ListOptions) (watch.Interface, error) {
 			r, err := client.Get().
 				Prefix("watch").
-				Namespace(api.NamespaceAll).
+				Namespace(v1.NamespaceAll).
 				Resource("servicemonitors").
-				// VersionedParams(&options, api.ParameterCodec).
+				// VersionedParams(&options, v1.ParameterCodec).
 				FieldsSelectorParam(nil).
 				Stream()
 			if err != nil {
@@ -197,6 +199,6 @@ func NewServiceMonitorListWatch(client *rest.RESTClient) *cache.ListWatch {
 				dec:   json.NewDecoder(r),
 				close: r.Close,
 			}), nil
-		},
+		}),
 	}
 }
