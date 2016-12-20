@@ -20,16 +20,16 @@ import (
 	"net/url"
 	"time"
 
-	"k8s.io/client-go/1.5/pkg/api/errors"
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/util/wait"
-	"k8s.io/client-go/1.5/rest"
+	"k8s.io/client-go/pkg/api/errors"
+	"k8s.io/client-go/pkg/api/v1"
+	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/util/wait"
+	"k8s.io/client-go/rest"
 )
 
 // WaitForTPRReady waits for a third party resource to be available
 // for use.
-func WaitForTPRReady(restClient *rest.RESTClient, tprGroup, tprVersion, tprName string) error {
+func WaitForTPRReady(restClient rest.Interface, tprGroup, tprVersion, tprName string) error {
 	return wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
 		res := restClient.Get().AbsPath("apis", tprGroup, tprVersion, tprName).Do()
 		err := res.Error()
@@ -104,7 +104,7 @@ func IsResourceNotFoundError(err error) bool {
 	if !ok {
 		return false
 	}
-	if se.Status().Code == http.StatusNotFound && se.Status().Reason == unversioned.StatusReasonNotFound {
+	if se.Status().Code == http.StatusNotFound && se.Status().Reason == metav1.StatusReasonNotFound {
 		return true
 	}
 	return false

@@ -20,7 +20,7 @@ import (
 	"regexp"
 
 	"github.com/go-kit/kit/log"
-	"k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"

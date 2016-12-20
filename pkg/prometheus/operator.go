@@ -25,18 +25,19 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/spec"
 
 	"github.com/go-kit/kit/log"
-	"k8s.io/client-go/1.5/kubernetes"
-	"k8s.io/client-go/1.5/pkg/api"
-	apierrors "k8s.io/client-go/1.5/pkg/api/errors"
-	"k8s.io/client-go/1.5/pkg/api/meta"
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/apps/v1alpha1"
-	extensionsobj "k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/1.5/pkg/labels"
-	utilruntime "k8s.io/client-go/1.5/pkg/util/runtime"
-	"k8s.io/client-go/1.5/rest"
-	"k8s.io/client-go/1.5/tools/cache"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api"
+	apierrors "k8s.io/client-go/pkg/api/errors"
+	"k8s.io/client-go/pkg/api/meta"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/apps/v1beta1"
+	extensionsobj "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/fields"
+	"k8s.io/client-go/pkg/labels"
+	utilruntime "k8s.io/client-go/pkg/util/runtime"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 )
 
 const (
@@ -60,7 +61,7 @@ type Operator struct {
 	promInf cache.SharedIndexInformer
 	smonInf cache.SharedIndexInformer
 	cmapInf cache.SharedIndexInformer
-	psetInf cache.SharedIndexInformer
+	ssetInf cache.SharedIndexInformer
 
 	queue *queue.Queue
 
@@ -106,12 +107,12 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		&spec.ServiceMonitor{}, resyncPeriod, cache.Indexers{},
 	)
 	c.cmapInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Core().GetRESTClient(), "configmaps", api.NamespaceAll, nil),
+		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", api.NamespaceAll, nil),
 		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{},
 	)
-	c.psetInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Apps().GetRESTClient(), "petsets", api.NamespaceAll, nil),
-		&v1alpha1.PetSet{}, resyncPeriod, cache.Indexers{},
+	c.ssetInf = cache.NewSharedIndexInformer(
+		cache.NewListWatchFromClient(c.kclient.Apps().RESTClient(), "statefulsets", api.NamespaceAll, nil),
+		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
 
 	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -127,10 +128,10 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: c.handleConfigmapDelete,
 	})
-	c.psetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleAddPetSet,
-		DeleteFunc: c.handleDeletePetSet,
-		UpdateFunc: c.handleUpdatePetSet,
+	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleAddStatefulSet,
+		DeleteFunc: c.handleDeleteStatefulSet,
+		UpdateFunc: c.handleUpdateStatefulSet,
 	})
 
 	return c, nil
@@ -171,7 +172,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.promInf.Run(stopc)
 	go c.smonInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
-	go c.psetInf.Run(stopc)
+	go c.ssetInf.Run(stopc)
 
 	<-stopc
 	return nil
@@ -327,7 +328,7 @@ func (c *Operator) worker() {
 	}
 }
 
-func (c *Operator) prometheusForPetSet(ps interface{}) *spec.Prometheus {
+func (c *Operator) prometheusForStatefulSet(ps interface{}) *spec.Prometheus {
 	key, ok := c.keyFunc(ps)
 	if !ok {
 		return nil
@@ -344,21 +345,21 @@ func (c *Operator) prometheusForPetSet(ps interface{}) *spec.Prometheus {
 	return p.(*spec.Prometheus)
 }
 
-func (c *Operator) handleDeletePetSet(obj interface{}) {
-	if ps := c.prometheusForPetSet(obj); ps != nil {
+func (c *Operator) handleDeleteStatefulSet(obj interface{}) {
+	if ps := c.prometheusForStatefulSet(obj); ps != nil {
 		c.enqueue(ps)
 	}
 }
 
-func (c *Operator) handleAddPetSet(obj interface{}) {
-	if ps := c.prometheusForPetSet(obj); ps != nil {
+func (c *Operator) handleAddStatefulSet(obj interface{}) {
+	if ps := c.prometheusForStatefulSet(obj); ps != nil {
 		c.enqueue(ps)
 	}
 }
 
-func (c *Operator) handleUpdatePetSet(oldo, curo interface{}) {
-	old := oldo.(*v1alpha1.PetSet)
-	cur := curo.(*v1alpha1.PetSet)
+func (c *Operator) handleUpdateStatefulSet(oldo, curo interface{}) {
+	old := oldo.(*v1beta1.StatefulSet)
+	cur := curo.(*v1beta1.StatefulSet)
 
 	c.logger.Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
@@ -368,7 +369,7 @@ func (c *Operator) handleUpdatePetSet(oldo, curo interface{}) {
 		return
 	}
 
-	if ps := c.prometheusForPetSet(cur); ps != nil {
+	if ps := c.prometheusForStatefulSet(cur); ps != nil {
 		c.enqueue(ps)
 	}
 }
@@ -384,7 +385,7 @@ func (c *Operator) sync(key string) error {
 		// Doing so just based on the deletion event is not reliable, so
 		// we have to garbage collect the controller-created resources in some other way.
 		//
-		// Let's rely on the index key matching that of the created configmap and PetSet for now.
+		// Let's rely on the index key matching that of the created configmap and StatefulSet for now.
 		// This does not work if we delete Prometheus resources as the
 		// controller is not running – that could be solved via garbage collection later.
 		return c.destroyPrometheus(key)
@@ -417,52 +418,52 @@ func (c *Operator) sync(key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(p.Namespace)
-	if _, err := svcClient.Create(makePetSetService(p)); err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("create petset service: %s", err)
+	if _, err := svcClient.Create(makeStatefulSetService(p)); err != nil && !apierrors.IsAlreadyExists(err) {
+		return fmt.Errorf("create statefulset service: %s", err)
 	}
 
-	psetClient := c.kclient.Apps().PetSets(p.Namespace)
-	// Ensure we have a PetSet running Prometheus deployed.
-	obj, exists, err = c.psetInf.GetIndexer().GetByKey(key)
+	ssetClient := c.kclient.Apps().StatefulSets(p.Namespace)
+	// Ensure we have a StatefulSet running Prometheus deployed.
+	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
 	}
 
 	if !exists {
-		if _, err := psetClient.Create(makePetSet(*p, nil)); err != nil {
-			return fmt.Errorf("create petset: %s", err)
+		if _, err := ssetClient.Create(makeStatefulSet(*p, nil)); err != nil {
+			return fmt.Errorf("create statefulset: %s", err)
 		}
 		return nil
 	}
-	if _, err := psetClient.Update(makePetSet(*p, obj.(*v1alpha1.PetSet))); err != nil {
+	if _, err := ssetClient.Update(makeStatefulSet(*p, obj.(*v1beta1.StatefulSet))); err != nil {
 		return err
 	}
 
 	return c.syncVersion(key, p)
 }
 
-func ListOptions(name string) api.ListOptions {
-	return api.ListOptions{
-		LabelSelector: labels.SelectorFromSet(map[string]string{
+func ListOptions(name string) v1.ListOptions {
+	return v1.ListOptions{
+		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
 			"app":        "prometheus",
 			"prometheus": name,
-		}),
+		})).String(),
 	}
 }
 
 // syncVersion ensures that all running pods for a Prometheus have the required version.
-// It kills pods with the wrong version one-after-one and lets the PetSet controller
+// It kills pods with the wrong version one-after-one and lets the StatefulSet controller
 // create new pods.
 //
-// TODO(fabxc): remove this once the PetSet controller learns how to do rolling updates.
+// TODO(fabxc): remove this once the StatefulSet controller learns how to do rolling updates.
 func (c *Operator) syncVersion(key string, p *spec.Prometheus) error {
 	status, oldPods, err := PrometheusStatus(c.kclient, p)
 	if err != nil {
 		return err
 	}
 
-	// If the PetSet is still busy scaling, don't interfere by killing pods.
-	// We enqueue ourselves again to until the PetSet is ready.
+	// If the StatefulSet is still busy scaling, don't interfere by killing pods.
+	// We enqueue ourselves again to until the StatefulSet is ready.
 	if status.Replicas != p.Spec.Replicas {
 		return fmt.Errorf("scaling in progress")
 	}
@@ -520,29 +521,29 @@ func PrometheusStatus(kclient *kubernetes.Clientset, p *spec.Prometheus) (*spec.
 }
 
 func (c *Operator) destroyPrometheus(key string) error {
-	obj, exists, err := c.psetInf.GetStore().GetByKey(key)
+	obj, exists, err := c.ssetInf.GetStore().GetByKey(key)
 	if err != nil {
 		return err
 	}
 	if !exists {
 		return nil
 	}
-	pset := obj.(*v1alpha1.PetSet)
-	*pset.Spec.Replicas = 0
+	sset := obj.(*v1beta1.StatefulSet)
+	*sset.Spec.Replicas = 0
 
 	// Update the replica count to 0 and wait for all pods to be deleted.
-	psetClient := c.kclient.Apps().PetSets(pset.Namespace)
+	ssetClient := c.kclient.Apps().StatefulSets(sset.Namespace)
 
-	if _, err := psetClient.Update(pset); err != nil {
+	if _, err := ssetClient.Update(sset); err != nil {
 		return err
 	}
 
-	podClient := c.kclient.Core().Pods(pset.Namespace)
+	podClient := c.kclient.Core().Pods(sset.Namespace)
 
-	// TODO(fabxc): temprorary solution until PetSet status provides necessary info to know
+	// TODO(fabxc): temprorary solution until StatefulSet status provides necessary info to know
 	// whether scale-down completed.
 	for {
-		pods, err := podClient.List(ListOptions(pset.Name))
+		pods, err := podClient.List(ListOptions(sset.Name))
 		if err != nil {
 			return err
 		}
@@ -552,20 +553,20 @@ func (c *Operator) destroyPrometheus(key string) error {
 		time.Sleep(50 * time.Millisecond)
 	}
 
-	// PetSet scaled down, we can delete it.
-	if err := psetClient.Delete(pset.Name, nil); err != nil {
+	// StatefulSet scaled down, we can delete it.
+	if err := ssetClient.Delete(sset.Name, nil); err != nil {
 		return err
 	}
 
 	// Delete the auto-generate configuration.
 	// TODO(fabxc): add an ownerRef at creation so we don't delete config maps
 	// manually created for Prometheus servers with no ServiceMonitor selectors.
-	cm := c.kclient.Core().ConfigMaps(pset.Namespace)
+	cm := c.kclient.Core().ConfigMaps(sset.Namespace)
 
-	if err := cm.Delete(pset.Name, nil); err != nil {
+	if err := cm.Delete(sset.Name, nil); err != nil {
 		return err
 	}
-	if err := cm.Delete(fmt.Sprintf("%s-rules", pset.Name), nil); err != nil {
+	if err := cm.Delete(fmt.Sprintf("%s-rules", sset.Name), nil); err != nil {
 		return err
 	}
 	return nil
@@ -591,9 +592,9 @@ func (c *Operator) createConfig(p *spec.Prometheus) error {
 		},
 	}
 
-	cmClient := c.kclient.Core().ConfigMaps(p.Namespace)
+	cmClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
 
-	_, err = cmClient.Get(p.Name)
+	_, err = cmClient.Get(p.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		_, err = cmClient.Create(cm)
 	} else if err == nil {
@@ -606,7 +607,7 @@ func (c *Operator) selectServiceMonitors(p *spec.Prometheus) (map[string]*spec.S
 	// Selectors might overlap. Deduplicate them along the keyFunc.
 	res := make(map[string]*spec.ServiceMonitor)
 
-	selector, err := unversioned.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
+	selector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -654,9 +655,9 @@ func (c *Operator) createTPRs() error {
 	}
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	err := k8sutil.WaitForTPRReady(c.kclient.CoreClient.GetRESTClient(), TPRGroup, TPRVersion, TPRPrometheusesKind)
+	err := k8sutil.WaitForTPRReady(c.kclient.CoreV1().RESTClient(), TPRGroup, TPRVersion, TPRPrometheusesKind)
 	if err != nil {
 		return err
 	}
-	return k8sutil.WaitForTPRReady(c.kclient.CoreClient.GetRESTClient(), TPRGroup, TPRVersion, TPRServiceMonitorsKind)
+	return k8sutil.WaitForTPRReady(c.kclient.CoreV1().RESTClient(), TPRGroup, TPRVersion, TPRServiceMonitorsKind)
 }

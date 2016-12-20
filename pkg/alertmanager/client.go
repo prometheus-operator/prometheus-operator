@@ -19,27 +19,15 @@ import (
 	"time"
 
 	"github.com/coreos/prometheus-operator/pkg/spec"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/runtime"
-	"k8s.io/client-go/1.5/pkg/runtime/serializer"
-	"k8s.io/client-go/1.5/pkg/watch"
-	"k8s.io/client-go/1.5/rest"
-	"k8s.io/client-go/1.5/tools/cache"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/runtime"
+	"k8s.io/client-go/pkg/watch"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 )
 
 const resyncPeriod = 5 * time.Minute
-
-func newAlertmanagerRESTClient(c rest.Config) (*rest.RESTClient, error) {
-	c.APIPath = "/apis"
-	c.GroupVersion = &unversioned.GroupVersion{
-		Group:   "monitoring.coreos.com",
-		Version: "v1alpha1",
-	}
-	// TODO(fabxc): is this even used with our custom list/watch functions?
-	c.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: api.Codecs}
-	return rest.RESTClientFor(&c)
-}
 
 type alertmanagerDecoder struct {
 	dec   *json.Decoder
@@ -64,7 +52,7 @@ func (d *alertmanagerDecoder) Decode() (action watch.EventType, object runtime.O
 // NewAlertmanagerListWatch returns a new ListWatch on the Alertmanager resource.
 func NewAlertmanagerListWatch(client *rest.RESTClient) *cache.ListWatch {
 	return &cache.ListWatch{
-		ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+		ListFunc: cache.ListFunc(func(options v1.ListOptions) (runtime.Object, error) {
 			req := client.Get().
 				Namespace(api.NamespaceAll).
 				Resource("alertmanagers").
@@ -77,8 +65,8 @@ func NewAlertmanagerListWatch(client *rest.RESTClient) *cache.ListWatch {
 			}
 			var p spec.AlertmanagerList
 			return &p, json.Unmarshal(b, &p)
-		},
-		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+		}),
+		WatchFunc: cache.WatchFunc(func(options v1.ListOptions) (watch.Interface, error) {
 			r, err := client.Get().
 				Prefix("watch").
 				Namespace(api.NamespaceAll).
@@ -93,6 +81,6 @@ func NewAlertmanagerListWatch(client *rest.RESTClient) *cache.ListWatch {
 				dec:   json.NewDecoder(r),
 				close: r.Close,
 			}), nil
-		},
+		}),
 	}
 }
