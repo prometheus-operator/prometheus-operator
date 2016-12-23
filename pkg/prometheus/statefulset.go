@@ -190,7 +190,7 @@ func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 							{
 								Name:      fmt.Sprintf("%s-db", p.Name),
 								MountPath: "/var/prometheus/data",
-								SubPath:   "prometheus-db",
+								SubPath:   subPathForStorage(p.Spec.Storage),
 							},
 						},
 						ReadinessProbe: &v1.Probe{
@@ -270,4 +270,12 @@ func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 			},
 		},
 	}
+}
+
+func subPathForStorage(s *spec.StorageSpec) string {
+	if s == nil {
+		return ""
+	}
+
+	return "prometheus-db"
 }

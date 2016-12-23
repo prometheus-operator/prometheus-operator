@@ -30,25 +30,21 @@ func makeStatefulSet(am *spec.Alertmanager, old *v1beta1.StatefulSet) *v1beta1.S
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
 
-	baseImage := am.Spec.BaseImage
-	if baseImage == "" {
-		baseImage = "quay.io/prometheus/alertmanager"
+	if am.Spec.BaseImage == "" {
+		am.Spec.BaseImage = "quay.io/prometheus/alertmanager"
 	}
-	version := am.Spec.Version
-	if version == "" {
-		version = "v0.5.1"
+	if am.Spec.Version == "" {
+		am.Spec.Version = "v0.5.1"
 	}
-	replicas := am.Spec.Replicas
-	if replicas < 1 {
-		replicas = 1
+	if am.Spec.Replicas < 1 {
+		am.Spec.Replicas = 1
 	}
-	image := fmt.Sprintf("%s:%s", baseImage, version)
 
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
 			Name: am.Name,
 		},
-		Spec: makeStatefulSetSpec(am.Namespace, am.Name, image, version, replicas),
+		Spec: makeStatefulSetSpec(am),
 	}
 	if vc := am.Spec.Storage; vc == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -111,7 +107,9 @@ func makeStatefulSetService(p *spec.Alertmanager) *v1.Service {
 	return svc
 }
 
-func makeStatefulSetSpec(ns, name, image, version string, replicas int32) v1beta1.StatefulSetSpec {
+func makeStatefulSetSpec(a *spec.Alertmanager) v1beta1.StatefulSetSpec {
+	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Version)
+
 	commands := []string{
 		"/bin/alertmanager",
 		fmt.Sprintf("-config.file=%s", "/etc/alertmanager/config/alertmanager.yaml"),
@@ -119,19 +117,19 @@ func makeStatefulSetSpec(ns, name, image, version string, replicas int32) v1beta
 		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
 		fmt.Sprintf("-storage.path=%s", "/etc/alertmanager/data"),
 	}
-	for i := int32(0); i < replicas; i++ {
-		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", name, i, "alertmanager", ns))
+	for i := int32(0); i < a.Spec.Replicas; i++ {
+		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", a.Name, i, "alertmanager", a.Namespace))
 	}
 
 	terminationGracePeriod := int64(0)
 	return v1beta1.StatefulSetSpec{
 		ServiceName: "alertmanager",
-		Replicas:    &replicas,
+		Replicas:    &a.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: v1.ObjectMeta{
 				Labels: map[string]string{
 					"app":          "alertmanager",
-					"alertmanager": name,
+					"alertmanager": a.Name,
 				},
 			},
 			Spec: v1.PodSpec{
@@ -139,7 +137,7 @@ func makeStatefulSetSpec(ns, name, image, version string, replicas int32) v1beta
 				Containers: []v1.Container{
 					{
 						Command: commands,
-						Name:    name,
+						Name:    a.Name,
 						Image:   image,
 						Ports: []v1.ContainerPort{
 							{
@@ -159,9 +157,9 @@ func makeStatefulSetSpec(ns, name, image, version string, replicas int32) v1beta
 								MountPath: "/etc/alertmanager/config",
 							},
 							{
-								Name:      fmt.Sprintf("%s-db", name),
+								Name:      fmt.Sprintf("%s-db", a.Name),
 								MountPath: "/var/alertmanager/data",
-								SubPath:   "alertmanager-db",
+								SubPath:   subPathForStorage(a.Spec.Storage),
 							},
 						},
 					}, {
@@ -192,7 +190,7 @@ func makeStatefulSetSpec(ns, name, image, version string, replicas int32) v1beta
 						VolumeSource: v1.VolumeSource{
 							ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+									Name: a.Name,
 								},
 							},
 						},
@@ -201,4 +199,12 @@ func makeStatefulSetSpec(ns, name, image, version string, replicas int32) v1beta
 			},
 		},
 	}
+}
+
+func subPathForStorage(s *spec.StorageSpec) string {
+	if s == nil {
+		return ""
+	}
+
+	return "alertmanager-db"
 }
