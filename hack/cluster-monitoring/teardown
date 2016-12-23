@@ -4,8 +4,12 @@ if [ -z "${KUBECONFIG}" ]; then
     KUBECONFIG=~/.kube/config
 fi
 
+if [ -z "${NAMESPACE}" ]; then
+    NAMESPACE=monitoring
+fi
+
 kctl() {
-    kubectl --kubeconfig="$KUBECONFIG" -n "monitoring" "$@"
+    kubectl --kubeconfig="$KUBECONFIG" -n "$NAMESPACE" "$@"
 }
 
 kctl delete -f manifests/exporters

@@ -10,11 +10,11 @@ spec:
   type: ClusterIP
   clusterIP: None
   ports:
-  - name: prometheus-skydns
+  - name: http-metrics-skydns
     port: 10055
     targetPort: 10055
     protocol: TCP
-  - name: prometheus-dnsmasq
+  - name: http-metrics-dnsmasq
     port: 10054
     targetPort: 10054
     protocol: TCP
