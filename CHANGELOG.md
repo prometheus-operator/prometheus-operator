@@ -1,3 +1,7 @@
+## 0.2.1 / 2016-12-23
+
+* [BUGFIX] Fix `subPath` behavior when not using storage provisioning
+
 ## 0.2.0 / 2016-12-20
 
 This release requires a Kubernetes cluster >=1.5.0. See the readme for
