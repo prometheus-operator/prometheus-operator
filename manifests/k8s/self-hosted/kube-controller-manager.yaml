@@ -10,7 +10,7 @@ spec:
   type: ClusterIP
   clusterIP: None
   ports:
-  - name: prometheus
+  - name: http-metrics
     port: 10252
     targetPort: 10252
     protocol: TCP

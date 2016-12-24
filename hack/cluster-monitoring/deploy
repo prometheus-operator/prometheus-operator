@@ -4,19 +4,24 @@ if [ -z "${KUBECONFIG}" ]; then
     KUBECONFIG=~/.kube/config
 fi
 
-kubectl --kubeconfig="$KUBECONFIG" create namespace monitoring
+if [ -z "${NAMESPACE}" ]; then
+    NAMESPACE=monitoring
+fi
+
+kubectl --kubeconfig="$KUBECONFIG" create namespace "$NAMESPACE"
 
 kctl() {
-    kubectl --kubeconfig="$KUBECONFIG" -n "monitoring" "$@"
+    kubectl --kubeconfig="$KUBECONFIG" -n "$NAMESPACE" "$@"
 }
 
-kctl apply -f manifests/prometheus-operator.yaml
+kctl create -f manifests/prometheus-operator.yaml
 
 # Wait for TPRs to be ready.
 until kctl get servicemonitor; do sleep 1; done
 until kctl get prometheus; do sleep 1; done
+until kctl get alertmanager; do sleep 1; done
 
-kctl apply -f manifests/exporters
-kctl apply -f manifests/grafana
-kctl apply -f manifests/prometheus
-kctl apply -f manifests/alertmanager
+kctl create -f manifests/exporters
+kctl create -f manifests/grafana
+kctl create -f manifests/prometheus
+kctl create -f manifests/alertmanager

@@ -3,8 +3,7 @@ kind: Service
 metadata:
   name: etcd-k8s
   labels:
-    app: etcd
-    etcd: k8s
+    k8s-app: etcd
 spec:
   type: ClusterIP
   clusterIP: None
@@ -18,8 +17,7 @@ kind: Endpoints
 metadata:
   name: etcd-k8s
   labels:
-    app: etcd
-    etcd: k8s
+    k8s-app: etcd
 subsets:
 - addresses:
   - ip: 172.17.4.51
