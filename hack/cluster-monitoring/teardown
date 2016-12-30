@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -z "${KUBECONFIG}" ]; then
-    KUBECONFIG=~/.kube/config
+    export KUBECONFIG=~/.kube/config
 fi
 
 if [ -z "${NAMESPACE}" ]; then
@@ -9,7 +9,7 @@ if [ -z "${NAMESPACE}" ]; then
 fi
 
 kctl() {
-    kubectl --kubeconfig="$KUBECONFIG" -n "$NAMESPACE" "$@"
+    kubectl --namespace "$NAMESPACE" "$@"
 }
 
 kctl delete -f manifests/exporters
