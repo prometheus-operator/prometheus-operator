@@ -16,6 +16,8 @@ package prometheus
 
 import (
 	"fmt"
+	"net/url"
+	"path"
 
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
@@ -146,6 +148,23 @@ func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 	// generally has a very high time series churn.
 	memChunks := reqMem.Value() / 1024 / 5
 
+	promArgs := []string{
+		"-storage.local.retention=" + p.Spec.Retention,
+		"-storage.local.memory-chunks=" + fmt.Sprintf("%d", memChunks),
+		"-storage.local.max-chunks-to-persist=" + fmt.Sprintf("%d", memChunks/2),
+		"-storage.local.num-fingerprint-mutexes=4096",
+		"-storage.local.path=/var/prometheus/data",
+		"-config.file=/etc/prometheus/config/prometheus.yaml",
+	}
+	webRoutePrefix := ""
+	if p.Spec.ExternalURL != "" {
+		promArgs = append(promArgs, "-web.external-url="+p.Spec.ExternalURL)
+		extUrl, err := url.Parse(p.Spec.ExternalURL)
+		if err == nil {
+			webRoutePrefix = extUrl.Path
+		}
+	}
+
 	return v1beta1.StatefulSetSpec{
 		ServiceName: "prometheus",
 		Replicas:    &p.Spec.Replicas,
@@ -168,14 +187,7 @@ func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 								Protocol:      v1.ProtocolTCP,
 							},
 						},
-						Args: []string{
-							"-storage.local.retention=" + p.Spec.Retention,
-							"-storage.local.memory-chunks=" + fmt.Sprintf("%d", memChunks),
-							"-storage.local.max-chunks-to-persist=" + fmt.Sprintf("%d", memChunks/2),
-							"-storage.local.num-fingerprint-mutexes=4096",
-							"-storage.local.path=/var/prometheus/data",
-							"-config.file=/etc/prometheus/config/prometheus.yaml",
-						},
+						Args: promArgs,
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config",
@@ -196,7 +208,7 @@ func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 						ReadinessProbe: &v1.Probe{
 							Handler: v1.Handler{
 								HTTPGet: &v1.HTTPGetAction{
-									Path: "/status",
+									Path: path.Clean(webRoutePrefix + "/status"),
 									Port: intstr.FromString("web"),
 								},
 							},
