@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
 if [ -z "${KUBECONFIG}" ]; then
-    KUBECONFIG=~/.kube/config
+    export KUBECONFIG=~/.kube/config
 fi
 
 if [ -z "${NAMESPACE}" ]; then
     NAMESPACE=monitoring
 fi
 
-kubectl --kubeconfig="$KUBECONFIG" create namespace "$NAMESPACE"
+kubectl create namespace "$NAMESPACE"
 
 kctl() {
-    kubectl --kubeconfig="$KUBECONFIG" -n "$NAMESPACE" "$@"
+    kubectl --namespace "$NAMESPACE" "$@"
 }
 
 kctl create -f manifests/prometheus-operator.yaml
