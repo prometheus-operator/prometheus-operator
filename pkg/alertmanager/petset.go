@@ -47,7 +47,7 @@ func makePetSet(am *spec.Alertmanager, old *v1alpha1.PetSet) *v1alpha1.PetSet {
 		ObjectMeta: v1.ObjectMeta{
 			Name: am.Name,
 		},
-		Spec: makePetSetSpec(am.Namespace, am.Name, image, version, replicas),
+		Spec: makePetSetSpec(am.Namespace, am.Name, image, version, am.Spec.ExternalURL, replicas),
 	}
 	if vc := am.Spec.Storage; vc == nil {
 		petset.Spec.Template.Spec.Volumes = append(petset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -110,7 +110,7 @@ func makePetSetService(p *spec.Alertmanager) *v1.Service {
 	return svc
 }
 
-func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.PetSetSpec {
+func makePetSetSpec(ns, name, image, version, externalUrl string, replicas int32) v1alpha1.PetSetSpec {
 	commands := []string{
 		"/bin/alertmanager",
 		fmt.Sprintf("-config.file=%s", "/etc/alertmanager/config/alertmanager.yaml"),
@@ -118,8 +118,13 @@ func makePetSetSpec(ns, name, image, version string, replicas int32) v1alpha1.Pe
 		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
 		fmt.Sprintf("-storage.path=%s", "/etc/alertmanager/data"),
 	}
+
 	for i := int32(0); i < replicas; i++ {
 		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", name, i, "alertmanager", ns))
+	}
+
+	if externalUrl != "" {
+		commands = append(commands, "-web.external-url="+externalUrl)
 	}
 
 	terminationGracePeriod := int64(0)

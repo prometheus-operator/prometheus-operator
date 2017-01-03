@@ -44,6 +44,7 @@ type PrometheusSpec struct {
 	BaseImage              string                     `json:"baseImage"`
 	Replicas               int32                      `json:"replicas"`
 	Retention              string                     `json:"retention"`
+	ExternalURL            string                     `json:"externalUrl"`
 	Storage                *StorageSpec               `json:"storage"`
 	Alerting               AlertingSpec               `json:"alerting"`
 	Resources              v1.ResourceRequirements    `json:"resources"`
@@ -143,6 +144,13 @@ type AlertmanagerSpec struct {
 	// Storage is the definition of how storage will be used by the Alertmanager
 	// instances.
 	Storage *StorageSpec `json:"storage"`
+	// ExternalURL is the URL under which Alertmanager is externally reachable
+	// (for example, if Alertmanager is served via a reverse proxy). Used for
+	// generating relative and absolute links back to Alertmanager itself. If the
+	// URL has a path portion, it will be used to prefix all HTTP endpoints
+	// served by Alertmanager. If omitted, relevant URL components will be
+	// derived automatically.
+	ExternalURL string `json:"externalUrl,omitempty"`
 }
 
 type AlertmanagerList struct {
