@@ -8,3 +8,4 @@ kubectl create configmap --dry-run=true prometheus-k8s-rules --from-file=assets/
 
 # Generate Dashboard ConfigMap
 kubectl create configmap --dry-run=true grafana-dashboards --from-file=assets/grafana/ -oyaml > manifests/grafana/grafana-cm.yaml
+
