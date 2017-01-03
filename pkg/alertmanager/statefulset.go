@@ -117,6 +117,11 @@ func makeStatefulSetSpec(a *spec.Alertmanager) v1beta1.StatefulSetSpec {
 		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
 		fmt.Sprintf("-storage.path=%s", "/etc/alertmanager/data"),
 	}
+
+	if a.Spec.ExternalURL != "" {
+		commands = append(commands, "-web.external-url="+a.Spec.ExternalURL)
+	}
+
 	for i := int32(0); i < a.Spec.Replicas; i++ {
 		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", a.Name, i, "alertmanager", a.Namespace))
 	}
