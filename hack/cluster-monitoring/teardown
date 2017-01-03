@@ -21,3 +21,4 @@ kctl delete -f manifests/alertmanager
 sleep 5
 
 kctl delete -f manifests/prometheus-operator.yaml
+

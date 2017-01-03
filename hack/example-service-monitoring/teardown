@@ -5,3 +5,4 @@ if [ -z "${KUBECONFIG}" ]; then
 fi
 
 kubectl --kubeconfig="$KUBECONFIG" delete -f manifests/examples/example-app
+

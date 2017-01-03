@@ -4,4 +4,8 @@ if [ -z "${KUBECONFIG}" ]; then
     KUBECONFIG=~/.kube/config
 fi
 
-kubectl --kubeconfig="$KUBECONFIG" create -f manifests/examples/example-app
+kubectl --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/prometheus-frontend-svc.yaml
+kubectl --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/example-app.yaml
+kubectl --kubeconfig="$KUBECONFIG" create -f manifests/examples/example-app/prometheus-frontend.yaml
+kubectl --kubeconfig="$KUBECONFIG" create -f manifests/examples/example-app/servicemonitor-frontend.yaml
+
