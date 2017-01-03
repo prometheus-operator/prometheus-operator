@@ -1,3 +1,13 @@
+## 0.2.2 / 2017-01-03
+
+* [FEATURE] Add ability to set the external url the Prometheus/Alertmanager instances will be available under.
+
+## 0.1.2 / 2017-01-03
+
+The `0.1.x` releases are backport releases with Kubernetes `v1.4.x` compatibility.
+
+* [FEATURE] Add ability to set the external url the Prometheus/Alertmanager instances will be available under.
+
 ## 0.2.1 / 2016-12-23
 
 * [BUGFIX] Fix `subPath` behavior when not using storage provisioning
