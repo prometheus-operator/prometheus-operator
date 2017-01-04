@@ -16,6 +16,8 @@ package alertmanager
 
 import (
 	"fmt"
+	"net/url"
+	"path"
 
 	"github.com/coreos/prometheus-operator/pkg/spec"
 	"k8s.io/client-go/1.5/pkg/api/resource"
@@ -110,7 +112,7 @@ func makePetSetService(p *spec.Alertmanager) *v1.Service {
 	return svc
 }
 
-func makePetSetSpec(ns, name, image, version, externalUrl string, replicas int32) v1alpha1.PetSetSpec {
+func makePetSetSpec(ns, name, image, version, externalURL string, replicas int32) v1alpha1.PetSetSpec {
 	commands := []string{
 		"/bin/alertmanager",
 		fmt.Sprintf("-config.file=%s", "/etc/alertmanager/config/alertmanager.yaml"),
@@ -123,8 +125,23 @@ func makePetSetSpec(ns, name, image, version, externalUrl string, replicas int32
 		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", name, i, "alertmanager", ns))
 	}
 
-	if externalUrl != "" {
-		commands = append(commands, "-web.external-url="+externalUrl)
+	webRoutePrefix := ""
+	if externalURL != "" {
+		commands = append(commands, "-web.external-url="+externalURL)
+		extUrl, err := url.Parse(externalURL)
+		if err == nil {
+			webRoutePrefix = extUrl.Path
+		}
+	}
+
+	localReloadURL := &url.URL{
+		Scheme: "http",
+		Host:   "localhost:9093",
+		Path:   path.Clean(webRoutePrefix + "/-/reload"),
+	}
+
+	if externalURL != "" {
+		commands = append(commands, "-web.external-url="+externalURL)
 	}
 
 	terminationGracePeriod := int64(0)
@@ -175,7 +192,7 @@ func makePetSetSpec(ns, name, image, version, externalUrl string, replicas int32
 						Name:  "config-reloader",
 						Image: "jimmidyson/configmap-reload",
 						Args: []string{
-							"-webhook-url=http://localhost:9093/-/reload",
+							fmt.Sprintf("-webhook-url=%s", localReloadURL),
 							"-volume-dir=/etc/alertmanager/config",
 						},
 						VolumeMounts: []v1.VolumeMount{
