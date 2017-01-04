@@ -16,6 +16,8 @@ package alertmanager
 
 import (
 	"fmt"
+	"net/url"
+	"path"
 
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
@@ -118,8 +120,19 @@ func makeStatefulSetSpec(a *spec.Alertmanager) v1beta1.StatefulSetSpec {
 		fmt.Sprintf("-storage.path=%s", "/etc/alertmanager/data"),
 	}
 
+	webRoutePrefix := ""
 	if a.Spec.ExternalURL != "" {
 		commands = append(commands, "-web.external-url="+a.Spec.ExternalURL)
+		extUrl, err := url.Parse(a.Spec.ExternalURL)
+		if err == nil {
+			webRoutePrefix = extUrl.Path
+		}
+	}
+
+	localReloadURL := &url.URL{
+		Scheme: "http",
+		Host:   "localhost:9093",
+		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
 	for i := int32(0); i < a.Spec.Replicas; i++ {
@@ -171,7 +184,7 @@ func makeStatefulSetSpec(a *spec.Alertmanager) v1beta1.StatefulSetSpec {
 						Name:  "config-reloader",
 						Image: "jimmidyson/configmap-reload",
 						Args: []string{
-							"-webhook-url=http://localhost:9093/-/reload",
+							fmt.Sprintf("-webhook-url=%s", localReloadURL),
 							"-volume-dir=/etc/alertmanager/config",
 						},
 						VolumeMounts: []v1.VolumeMount{

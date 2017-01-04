@@ -156,6 +156,7 @@ func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 		"-storage.local.path=/var/prometheus/data",
 		"-config.file=/etc/prometheus/config/prometheus.yaml",
 	}
+
 	webRoutePrefix := ""
 	if p.Spec.ExternalURL != "" {
 		promArgs = append(promArgs, "-web.external-url="+p.Spec.ExternalURL)
@@ -163,6 +164,12 @@ func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 		if err == nil {
 			webRoutePrefix = extUrl.Path
 		}
+	}
+
+	localReloadURL := &url.URL{
+		Scheme: "http",
+		Host:   "localhost:9090",
+		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
 	return v1beta1.StatefulSetSpec{
@@ -224,7 +231,7 @@ func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 						Name:  "config-reloader",
 						Image: "jimmidyson/configmap-reload",
 						Args: []string{
-							"-webhook-url=http://localhost:9090/-/reload",
+							fmt.Sprintf("-webhook-url=%s", localReloadURL),
 							"-volume-dir=/etc/prometheus/config",
 						},
 						VolumeMounts: []v1.VolumeMount{
@@ -244,7 +251,7 @@ func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 						Name:  "rules-reloader",
 						Image: "jimmidyson/configmap-reload",
 						Args: []string{
-							"-webhook-url=http://localhost:9090/-/reload",
+							fmt.Sprintf("-webhook-url=%s", localReloadURL),
 							"-volume-dir=/etc/prometheus/rules/",
 						},
 						VolumeMounts: []v1.VolumeMount{
