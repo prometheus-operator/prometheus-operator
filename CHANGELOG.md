@@ -1,3 +1,13 @@
+## 0.2.3 / 2017-01-05
+
+* [BUGFIX] Fix config reloading when using external url.
+
+## 0.1.3 / 2017-01-05
+
+The `0.1.x` releases are backport releases with Kubernetes `v1.4.x` compatibility.
+
+* [BUGFIX] Fix config reloading when using external url.
+
 ## 0.2.2 / 2017-01-03
 
 * [FEATURE] Add ability to set the external url the Prometheus/Alertmanager instances will be available under.
