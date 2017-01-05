@@ -15,8 +15,6 @@
 package framework
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -34,7 +32,6 @@ import (
 
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
-	"github.com/coreos/prometheus-operator/pkg/spec"
 )
 
 type Framework struct {
@@ -188,86 +185,6 @@ func (f *Framework) CreateDeployment(kclient kubernetes.Interface, ns string, de
 		return err
 	}
 
-	return nil
-}
-
-func (f *Framework) CreatePrometheus(e *spec.Prometheus) (*spec.Prometheus, error) {
-	b, err := json.Marshal(e)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := f.HTTPClient.Post(
-		fmt.Sprintf("%s/apis/monitoring.coreos.com/v1alpha1/namespaces/%s/prometheuses", f.MasterHost, f.Namespace.Name),
-		"application/json", bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("unexpected status: %v", resp.Status)
-	}
-	decoder := yaml.NewYAMLOrJSONDecoder(resp.Body, 100)
-	res := &spec.Prometheus{}
-	if err := decoder.Decode(res); err != nil {
-		return nil, err
-	}
-	return res, nil
-}
-
-func (f *Framework) DeletePrometheus(name string) error {
-	req, err := http.NewRequest("DELETE",
-		fmt.Sprintf("%s/apis/monitoring.coreos.com/v1alpha1/namespaces/%s/prometheuses/%s", f.MasterHost, f.Namespace.Name, name), nil)
-	if err != nil {
-		return err
-	}
-	resp, err := f.HTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status: %v", resp.Status)
-	}
-	return nil
-}
-
-func (f *Framework) CreateAlertmanager(e *spec.Alertmanager) (*spec.Alertmanager, error) {
-	b, err := json.Marshal(e)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := f.HTTPClient.Post(
-		fmt.Sprintf("%s/apis/monitoring.coreos.com/v1alpha1/namespaces/%s/alertmanagers", f.MasterHost, f.Namespace.Name),
-		"application/json", bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("unexpected status: %v", resp.Status)
-	}
-	decoder := yaml.NewYAMLOrJSONDecoder(resp.Body, 100)
-	res := &spec.Alertmanager{}
-	if err := decoder.Decode(res); err != nil {
-		return nil, err
-	}
-	return res, nil
-}
-
-func (f *Framework) DeleteAlertmanager(name string) error {
-	req, err := http.NewRequest("DELETE",
-		fmt.Sprintf("%s/apis/monitoring.coreos.com/v1alpha1/namespaces/%s/alertmanagers/%s", f.MasterHost, f.Namespace.Name, name), nil)
-	if err != nil {
-		return err
-	}
-	resp, err := f.HTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status: %v", resp.Status)
-	}
 	return nil
 }
 

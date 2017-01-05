@@ -16,40 +16,18 @@ package e2e
 
 import (
 	"testing"
-	"time"
-
-	"k8s.io/client-go/pkg/api/v1"
-
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
-	"github.com/coreos/prometheus-operator/pkg/spec"
 )
 
-func TestPrometheusCreateCluster(t *testing.T) {
-	spec := &spec.Prometheus{
-		ObjectMeta: v1.ObjectMeta{
-			Name: "prometheus-test",
-		},
-		Spec: spec.PrometheusSpec{
-			Replicas: 1,
-		},
-	}
-
-	_, err := framework.CreatePrometheus(spec)
-	if err != nil {
-		t.Fatal(err)
-	}
+func TestPrometheusCreateDeleteCluster(t *testing.T) {
+	name := "prometheus-test"
 
 	defer func() {
-		if err := framework.DeletePrometheus("prometheus-test"); err != nil {
+		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
 			t.Fatal(err)
-		}
-
-		if _, err := framework.WaitForPodsReady(time.Minute*2, 0, prometheus.ListOptions("prometheus-test")); err != nil {
-			t.Fatalf("failed to teardown Prometheus instances: %v", err)
 		}
 	}()
 
-	if _, err := framework.WaitForPodsReady(time.Minute*2, 1, prometheus.ListOptions("prometheus-test")); err != nil {
-		t.Fatalf("failed to create 1 Prometheus instances: %v", err)
+	if err := framework.CreatePrometheusAndWaitUntilReady(framework.MakeBasicPrometheus(name, 1)); err != nil {
+		t.Fatal(err)
 	}
 }
