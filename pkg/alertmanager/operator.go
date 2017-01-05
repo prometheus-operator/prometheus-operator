@@ -349,7 +349,7 @@ func (c *Operator) sync(key string) error {
 	return c.syncVersion(am)
 }
 
-func listOptions(name string) v1.ListOptions {
+func ListOptions(name string) v1.ListOptions {
 	return v1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
 			"app":          "alertmanager",
@@ -366,7 +366,7 @@ func listOptions(name string) v1.ListOptions {
 func (c *Operator) syncVersion(am *spec.Alertmanager) error {
 	podClient := c.kclient.Core().Pods(am.Namespace)
 
-	pods, err := podClient.List(listOptions(am.Name))
+	pods, err := podClient.List(ListOptions(am.Name))
 	if err != nil {
 		return err
 	}
@@ -439,7 +439,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 	// TODO(fabxc): temporary solution until StatefulSet status provides necessary info to know
 	// whether scale-down completed.
 	for {
-		pods, err := podClient.List(listOptions(sset.Name))
+		pods, err := podClient.List(ListOptions(sset.Name))
 		if err != nil {
 			return err
 		}

@@ -24,7 +24,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/spec"
 )
 
-func TestCreateCluster(t *testing.T) {
+func TestPrometheusCreateCluster(t *testing.T) {
 	spec := &spec.Prometheus{
 		ObjectMeta: v1.ObjectMeta{
 			Name: "prometheus-test",
@@ -42,6 +42,10 @@ func TestCreateCluster(t *testing.T) {
 	defer func() {
 		if err := framework.DeletePrometheus("prometheus-test"); err != nil {
 			t.Fatal(err)
+		}
+
+		if _, err := framework.WaitForPodsReady(time.Minute*2, 0, prometheus.ListOptions("prometheus-test")); err != nil {
+			t.Fatalf("failed to teardown Prometheus instances: %v", err)
 		}
 	}()
 
