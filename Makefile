@@ -1,7 +1,7 @@
 all: build
 
-REPO=quay.io/coreos/prometheus-operator
-TAG=$(shell git rev-parse --short HEAD)
+REPO?=quay.io/coreos/prometheus-operator
+TAG?=$(shell git rev-parse --short HEAD)
 
 build:
 	./scripts/check_license.sh
