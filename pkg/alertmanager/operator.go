@@ -20,10 +20,10 @@ import (
 	"time"
 
 	"github.com/coreos/prometheus-operator/pkg/analytics"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/coreos/prometheus-operator/pkg/queue"
-	"github.com/coreos/prometheus-operator/pkg/spec"
 
 	"github.com/go-kit/kit/log"
 	"k8s.io/client-go/kubernetes"
@@ -36,24 +36,20 @@ import (
 	"k8s.io/client-go/pkg/fields"
 	"k8s.io/client-go/pkg/labels"
 	utilruntime "k8s.io/client-go/pkg/util/runtime"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 )
 
 const (
-	TPRGroup   = "monitoring.coreos.com"
-	TPRVersion = "v1alpha1"
+	tprAlertmanager = "alertmanager." + v1alpha1.TPRGroup
 
-	TPRAlertmanagersKind = "alertmanagers"
-
-	tprAlertmanager = "alertmanager." + TPRGroup
+	resyncPeriod = 5 * time.Minute
 )
 
 // Operator manages lify cycle of Alertmanager deployments and
 // monitoring configurations.
 type Operator struct {
 	kclient *kubernetes.Clientset
-	pclient *rest.RESTClient
+	mclient *v1alpha1.MonitoringV1alpha1Client
 	logger  log.Logger
 
 	alrtInf cache.SharedIndexInformer
@@ -75,14 +71,14 @@ func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 		return nil, err
 	}
 
-	promclient, err := prometheus.NewPrometheusRESTClient(*cfg)
+	mclient, err := v1alpha1.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Operator{
 		kclient: client,
-		pclient: promclient,
+		mclient: mclient,
 		logger:  logger,
 		queue:   queue.New(),
 		host:    cfg.Host,
@@ -121,8 +117,11 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	}
 
 	c.alrtInf = cache.NewSharedIndexInformer(
-		NewAlertmanagerListWatch(c.pclient),
-		&spec.Alertmanager{}, resyncPeriod, cache.Indexers{},
+		&cache.ListWatch{
+			ListFunc:  c.mclient.Alertmanagers(api.NamespaceAll).List,
+			WatchFunc: c.mclient.Alertmanagers(api.NamespaceAll).Watch,
+		},
+		&v1alpha1.Alertmanager{}, resyncPeriod, cache.Indexers{},
 	)
 	c.ssetInf = cache.NewSharedIndexInformer(
 		cache.NewListWatchFromClient(c.kclient.Apps().RESTClient(), "statefulsets", api.NamespaceAll, nil),
@@ -191,7 +190,7 @@ func (c *Operator) enqueue(obj interface{}) {
 // enqueueForNamespace enqueues all Alertmanager object keys that belong to the given namespace.
 func (c *Operator) enqueueForNamespace(ns string) {
 	cache.ListAll(c.alrtInf.GetStore(), labels.Everything(), func(obj interface{}) {
-		am := obj.(*spec.Alertmanager)
+		am := obj.(*v1alpha1.Alertmanager)
 		if am.Namespace == ns {
 			c.enqueue(am)
 		}
@@ -223,7 +222,7 @@ func (c *Operator) worker() {
 	}
 }
 
-func (c *Operator) alertmanagerForStatefulSet(ps interface{}) *spec.Alertmanager {
+func (c *Operator) alertmanagerForStatefulSet(ps interface{}) *v1alpha1.Alertmanager {
 	key, ok := c.keyFunc(ps)
 	if !ok {
 		return nil
@@ -237,7 +236,7 @@ func (c *Operator) alertmanagerForStatefulSet(ps interface{}) *spec.Alertmanager
 	if !exists {
 		return nil
 	}
-	return a.(*spec.Alertmanager)
+	return a.(*v1alpha1.Alertmanager)
 }
 
 func (c *Operator) handleAlertmanagerAdd(obj interface{}) {
@@ -319,7 +318,7 @@ func (c *Operator) sync(key string) error {
 		return c.destroyAlertmanager(key)
 	}
 
-	am := obj.(*spec.Alertmanager)
+	am := obj.(*v1alpha1.Alertmanager)
 
 	c.logger.Log("msg", "sync alertmanager", "key", key)
 
@@ -363,7 +362,7 @@ func ListOptions(name string) v1.ListOptions {
 // create new pods.
 //
 // TODO(fabxc): remove this once the StatefulSet controller learns how to do rolling updates.
-func (c *Operator) syncVersion(am *spec.Alertmanager) error {
+func (c *Operator) syncVersion(am *v1alpha1.Alertmanager) error {
 	podClient := c.kclient.Core().Pods(am.Namespace)
 
 	pods, err := podClient.List(ListOptions(am.Name))
@@ -464,7 +463,7 @@ func (c *Operator) createTPRs() error {
 				Name: tprAlertmanager,
 			},
 			Versions: []extensionsobj.APIVersion{
-				{Name: TPRVersion},
+				{Name: v1alpha1.TPRVersion},
 			},
 			Description: "Managed Alertmanager cluster",
 		},
@@ -479,5 +478,5 @@ func (c *Operator) createTPRs() error {
 	}
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	return k8sutil.WaitForTPRReady(c.kclient.CoreV1().RESTClient(), TPRGroup, TPRVersion, TPRAlertmanagersKind)
+	return k8sutil.WaitForTPRReady(c.kclient.CoreV1().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRAlertmanagerName)
 }

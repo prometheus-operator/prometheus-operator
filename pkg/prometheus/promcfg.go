@@ -22,7 +22,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
 
-	"github.com/coreos/prometheus-operator/pkg/spec"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
 
 var (
@@ -33,7 +33,7 @@ func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
 }
 
-func generateConfig(p *spec.Prometheus, mons map[string]*spec.ServiceMonitor) ([]byte, error) {
+func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor) ([]byte, error) {
 	cfg := map[string]interface{}{}
 
 	cfg["global"] = map[string]string{
@@ -62,7 +62,7 @@ func generateConfig(p *spec.Prometheus, mons map[string]*spec.ServiceMonitor) ([
 	return yaml.Marshal(cfg)
 }
 
-func generateServiceMonitorConfig(m *spec.ServiceMonitor, ep spec.Endpoint, i int) interface{} {
+func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int) interface{} {
 	cfg := map[string]interface{}{
 		"job_name": fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
 		"kubernetes_sd_configs": []map[string]interface{}{
@@ -238,7 +238,7 @@ func generateServiceMonitorConfig(m *spec.ServiceMonitor, ep spec.Endpoint, i in
 	return cfg
 }
 
-func generateAlertmanagerConfig(am spec.AlertmanagerEndpoints) interface{} {
+func generateAlertmanagerConfig(am v1alpha1.AlertmanagerEndpoints) interface{} {
 	if am.Scheme == "" {
 		am.Scheme = "http"
 	}

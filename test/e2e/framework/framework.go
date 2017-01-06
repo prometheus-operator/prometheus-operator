@@ -30,12 +30,13 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
 )
 
 type Framework struct {
 	KubeClient  kubernetes.Interface
+	MonClient   *v1alpha1.MonitoringV1alpha1Client
 	HTTPClient  *http.Client
 	MasterHost  string
 	Namespace   *v1.Namespace
@@ -59,6 +60,11 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 		return nil, err
 	}
 
+	mclient, err := v1alpha1.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
 	namespace, err := cli.Core().Namespaces().Create(&v1.Namespace{
 		ObjectMeta: v1.ObjectMeta{
 			Name: ns,
@@ -71,6 +77,7 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 	f := &Framework{
 		MasterHost: config.Host,
 		KubeClient: cli,
+		MonClient:  mclient,
 		HTTPClient: httpc,
 		Namespace:  namespace,
 	}
@@ -123,12 +130,17 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 	f.OperatorPod = &pl.Items[0]
 
-	err = k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), prometheus.TPRGroup, prometheus.TPRVersion, prometheus.TPRPrometheusesKind)
+	err = k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRPrometheusName)
 	if err != nil {
 		return err
 	}
 
-	return k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), prometheus.TPRGroup, prometheus.TPRVersion, prometheus.TPRServiceMonitorsKind)
+	err = k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRServiceMonitorName)
+	if err != nil {
+		return err
+	}
+
+	return k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRAlertmanagerName)
 }
 
 // Teardown tears down a previously initialized test environment.

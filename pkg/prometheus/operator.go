@@ -20,9 +20,9 @@ import (
 	"time"
 
 	"github.com/coreos/prometheus-operator/pkg/analytics"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/queue"
-	"github.com/coreos/prometheus-operator/pkg/spec"
 
 	"github.com/go-kit/kit/log"
 	"k8s.io/client-go/kubernetes"
@@ -41,21 +41,17 @@ import (
 )
 
 const (
-	TPRGroup   = "monitoring.coreos.com"
-	TPRVersion = "v1alpha1"
+	tprServiceMonitor = "service-monitor." + v1alpha1.TPRGroup
+	tprPrometheus     = "prometheus." + v1alpha1.TPRGroup
 
-	TPRPrometheusesKind    = "prometheuses"
-	TPRServiceMonitorsKind = "servicemonitors"
-
-	tprServiceMonitor = "service-monitor." + TPRGroup
-	tprPrometheus     = "prometheus." + TPRGroup
+	resyncPeriod = 5 * time.Minute
 )
 
 // Operator manages lify cycle of Prometheus deployments and
 // monitoring configurations.
 type Operator struct {
 	kclient *kubernetes.Clientset
-	pclient *rest.RESTClient
+	mclient *v1alpha1.MonitoringV1alpha1Client
 	logger  log.Logger
 
 	promInf cache.SharedIndexInformer
@@ -86,25 +82,31 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		return nil, err
 	}
 
-	promclient, err := NewPrometheusRESTClient(*cfg)
+	mclient, err := v1alpha1.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 	c := &Operator{
 		kclient: client,
-		pclient: promclient,
+		mclient: mclient,
 		logger:  logger,
 		queue:   queue.New(),
 		host:    cfg.Host,
 	}
 
 	c.promInf = cache.NewSharedIndexInformer(
-		NewPrometheusListWatch(c.pclient),
-		&spec.Prometheus{}, resyncPeriod, cache.Indexers{},
+		&cache.ListWatch{
+			ListFunc:  mclient.Prometheuses(api.NamespaceAll).List,
+			WatchFunc: mclient.Prometheuses(api.NamespaceAll).Watch,
+		},
+		&v1alpha1.Prometheus{}, resyncPeriod, cache.Indexers{},
 	)
 	c.smonInf = cache.NewSharedIndexInformer(
-		NewServiceMonitorListWatch(c.pclient),
-		&spec.ServiceMonitor{}, resyncPeriod, cache.Indexers{},
+		&cache.ListWatch{
+			ListFunc:  mclient.ServiceMonitors(api.NamespaceAll).List,
+			WatchFunc: mclient.ServiceMonitors(api.NamespaceAll).Watch,
+		},
+		&v1alpha1.ServiceMonitor{}, resyncPeriod, cache.Indexers{},
 	)
 	c.cmapInf = cache.NewSharedIndexInformer(
 		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", api.NamespaceAll, nil),
@@ -296,7 +298,7 @@ func (c *Operator) enqueue(obj interface{}) {
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the given namespace.
 func (c *Operator) enqueueForNamespace(ns string) {
 	cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
-		p := obj.(*spec.Prometheus)
+		p := obj.(*v1alpha1.Prometheus)
 		if p.Namespace == ns {
 			c.enqueue(p)
 		}
@@ -328,7 +330,7 @@ func (c *Operator) worker() {
 	}
 }
 
-func (c *Operator) prometheusForStatefulSet(ps interface{}) *spec.Prometheus {
+func (c *Operator) prometheusForStatefulSet(ps interface{}) *v1alpha1.Prometheus {
 	key, ok := c.keyFunc(ps)
 	if !ok {
 		return nil
@@ -342,7 +344,7 @@ func (c *Operator) prometheusForStatefulSet(ps interface{}) *spec.Prometheus {
 	if !exists {
 		return nil
 	}
-	return p.(*spec.Prometheus)
+	return p.(*v1alpha1.Prometheus)
 }
 
 func (c *Operator) handleDeleteStatefulSet(obj interface{}) {
@@ -391,7 +393,7 @@ func (c *Operator) sync(key string) error {
 		return c.destroyPrometheus(key)
 	}
 
-	p := obj.(*spec.Prometheus)
+	p := obj.(*v1alpha1.Prometheus)
 	if p.Spec.Paused {
 		return nil
 	}
@@ -456,7 +458,7 @@ func ListOptions(name string) v1.ListOptions {
 // create new pods.
 //
 // TODO(fabxc): remove this once the StatefulSet controller learns how to do rolling updates.
-func (c *Operator) syncVersion(key string, p *spec.Prometheus) error {
+func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
 	status, oldPods, err := PrometheusStatus(c.kclient, p)
 	if err != nil {
 		return err
@@ -488,8 +490,8 @@ func (c *Operator) syncVersion(key string, p *spec.Prometheus) error {
 	return nil
 }
 
-func PrometheusStatus(kclient *kubernetes.Clientset, p *spec.Prometheus) (*spec.PrometheusStatus, []*v1.Pod, error) {
-	res := &spec.PrometheusStatus{}
+func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v1alpha1.PrometheusStatus, []*v1.Pod, error) {
+	res := &v1alpha1.PrometheusStatus{}
 
 	pods, err := kclient.Core().Pods(p.Namespace).List(ListOptions(p.Name))
 	if err != nil {
@@ -572,7 +574,7 @@ func (c *Operator) destroyPrometheus(key string) error {
 	return nil
 }
 
-func (c *Operator) createConfig(p *spec.Prometheus) error {
+func (c *Operator) createConfig(p *v1alpha1.Prometheus) error {
 	smons, err := c.selectServiceMonitors(p)
 	if err != nil {
 		return err
@@ -603,9 +605,9 @@ func (c *Operator) createConfig(p *spec.Prometheus) error {
 	return err
 }
 
-func (c *Operator) selectServiceMonitors(p *spec.Prometheus) (map[string]*spec.ServiceMonitor, error) {
+func (c *Operator) selectServiceMonitors(p *v1alpha1.Prometheus) (map[string]*v1alpha1.ServiceMonitor, error) {
 	// Selectors might overlap. Deduplicate them along the keyFunc.
-	res := make(map[string]*spec.ServiceMonitor)
+	res := make(map[string]*v1alpha1.ServiceMonitor)
 
 	selector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
 	if err != nil {
@@ -617,7 +619,7 @@ func (c *Operator) selectServiceMonitors(p *spec.Prometheus) (map[string]*spec.S
 	cache.ListAllByNamespace(c.smonInf.GetIndexer(), p.Namespace, selector, func(obj interface{}) {
 		k, ok := c.keyFunc(obj)
 		if ok {
-			res[k] = obj.(*spec.ServiceMonitor)
+			res[k] = obj.(*v1alpha1.ServiceMonitor)
 		}
 	})
 
@@ -631,7 +633,7 @@ func (c *Operator) createTPRs() error {
 				Name: tprServiceMonitor,
 			},
 			Versions: []extensionsobj.APIVersion{
-				{Name: TPRVersion},
+				{Name: v1alpha1.TPRVersion},
 			},
 			Description: "Prometheus monitoring for a service",
 		},
@@ -640,7 +642,7 @@ func (c *Operator) createTPRs() error {
 				Name: tprPrometheus,
 			},
 			Versions: []extensionsobj.APIVersion{
-				{Name: TPRVersion},
+				{Name: v1alpha1.TPRVersion},
 			},
 			Description: "Managed Prometheus server",
 		},
@@ -655,9 +657,9 @@ func (c *Operator) createTPRs() error {
 	}
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	err := k8sutil.WaitForTPRReady(c.kclient.CoreV1().RESTClient(), TPRGroup, TPRVersion, TPRPrometheusesKind)
+	err := k8sutil.WaitForTPRReady(c.kclient.CoreV1().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRPrometheusName)
 	if err != nil {
 		return err
 	}
-	return k8sutil.WaitForTPRReady(c.kclient.CoreV1().RESTClient(), TPRGroup, TPRVersion, TPRServiceMonitorsKind)
+	return k8sutil.WaitForTPRReady(c.kclient.CoreV1().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRServiceMonitorName)
 }

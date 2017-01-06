@@ -22,13 +22,14 @@ import (
 	"github.com/go-kit/kit/log"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 )
 
 type API struct {
 	kclient *kubernetes.Clientset
-	pclient *prometheus.MonitoringClient
+	mclient *v1alpha1.MonitoringV1alpha1Client
 	logger  log.Logger
 }
 
@@ -43,14 +44,14 @@ func New(conf prometheus.Config, l log.Logger) (*API, error) {
 		return nil, err
 	}
 
-	pclient, err := prometheus.NewForConfig(cfg)
+	mclient, err := v1alpha1.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &API{
 		kclient: kclient,
-		pclient: pclient,
+		mclient: mclient,
 		logger:  l,
 	}, nil
 }
@@ -94,7 +95,7 @@ func parsePrometheusStatusUrl(path string) objectReference {
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 	or := parsePrometheusStatusUrl(req.URL.Path)
 
-	p, err := api.pclient.Prometheuses(or.namespace).Get(or.name)
+	p, err := api.mclient.Prometheuses(or.namespace).Get(or.name)
 	if err != nil {
 		if k8sutil.IsResourceNotFoundError(err) {
 			w.WriteHeader(404)

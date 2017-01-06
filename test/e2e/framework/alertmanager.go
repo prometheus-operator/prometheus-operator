@@ -15,17 +15,13 @@
 package framework
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/util/yaml"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	"github.com/coreos/prometheus-operator/pkg/spec"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
 
 var ValidAlertmanagerConfig = `global:
@@ -42,58 +38,18 @@ receivers:
   - url: 'http://alertmanagerwh:30500/'
 `
 
-func (f *Framework) CreateAlertmanager(e *spec.Alertmanager) (*spec.Alertmanager, error) {
-	b, err := json.Marshal(e)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := f.HTTPClient.Post(
-		fmt.Sprintf("%s/apis/monitoring.coreos.com/v1alpha1/namespaces/%s/alertmanagers", f.MasterHost, f.Namespace.Name),
-		"application/json", bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("unexpected status: %v", resp.Status)
-	}
-	decoder := yaml.NewYAMLOrJSONDecoder(resp.Body, 100)
-	res := &spec.Alertmanager{}
-	if err := decoder.Decode(res); err != nil {
-		return nil, err
-	}
-	return res, nil
-}
-
-func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *spec.Alertmanager {
-	return &spec.Alertmanager{
+func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *v1alpha1.Alertmanager {
+	return &v1alpha1.Alertmanager{
 		ObjectMeta: v1.ObjectMeta{
 			Name: name,
 		},
-		Spec: spec.AlertmanagerSpec{
+		Spec: v1alpha1.AlertmanagerSpec{
 			Replicas: replicas,
 		},
 	}
 }
 
-func (f *Framework) DeleteAlertmanager(name string) error {
-	req, err := http.NewRequest("DELETE",
-		fmt.Sprintf("%s/apis/monitoring.coreos.com/v1alpha1/namespaces/%s/alertmanagers/%s", f.MasterHost, f.Namespace.Name, name), nil)
-	if err != nil {
-		return err
-	}
-	resp, err := f.HTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status: %v", resp.Status)
-	}
-	return nil
-}
-
-func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *spec.Alertmanager) error {
+func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager) error {
 	_, err := f.KubeClient.CoreV1().ConfigMaps(f.Namespace.Name).Create(
 		&v1.ConfigMap{
 			ObjectMeta: v1.ObjectMeta{
@@ -108,7 +64,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *spec.Alertmanager) er
 		return err
 	}
 
-	_, err = f.CreateAlertmanager(a)
+	_, err = f.MonClient.Alertmanagers(f.Namespace.Name).Create(a)
 	if err != nil {
 		return err
 	}
@@ -121,7 +77,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *spec.Alertmanager) er
 }
 
 func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(name string) error {
-	if err := f.DeleteAlertmanager(name); err != nil {
+	if err := f.MonClient.Alertmanagers(f.Namespace.Name).Delete(name, nil); err != nil {
 		return err
 	}
 
