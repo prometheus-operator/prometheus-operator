@@ -1196,6 +1196,12 @@
 			"revisionTime": "2016-12-17T15:19:41Z"
 		},
 		{
+			"checksumSHA1": "8OmPeXMu5pavjOjPfh4CVKcqpv4=",
+			"path": "k8s.io/client-go/dynamic",
+			"revision": "5fe6fc56cb38d04ef4af601a03599c984229dea2",
+			"revisionTime": "2016-12-17T15:19:41Z"
+		},
+		{
 			"checksumSHA1": "LKZOLJW3XFi77HYufnVS30uYDg0=",
 			"path": "k8s.io/client-go/kubernetes",
 			"revision": "5fe6fc56cb38d04ef4af601a03599c984229dea2",
