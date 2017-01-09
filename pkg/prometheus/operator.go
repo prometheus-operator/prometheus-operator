@@ -491,7 +491,7 @@ func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
 }
 
 func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v1alpha1.PrometheusStatus, []*v1.Pod, error) {
-	res := &v1alpha1.PrometheusStatus{}
+	res := &v1alpha1.PrometheusStatus{Paused: p.Spec.Paused}
 
 	pods, err := kclient.Core().Pods(p.Namespace).List(ListOptions(p.Name))
 	if err != nil {
