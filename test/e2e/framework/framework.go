@@ -15,8 +15,6 @@
 package framework
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -32,13 +30,13 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
-	"github.com/coreos/prometheus-operator/pkg/spec"
 )
 
 type Framework struct {
 	KubeClient  kubernetes.Interface
+	MonClient   *v1alpha1.MonitoringV1alpha1Client
 	HTTPClient  *http.Client
 	MasterHost  string
 	Namespace   *v1.Namespace
@@ -62,6 +60,11 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 		return nil, err
 	}
 
+	mclient, err := v1alpha1.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
 	namespace, err := cli.Core().Namespaces().Create(&v1.Namespace{
 		ObjectMeta: v1.ObjectMeta{
 			Name: ns,
@@ -74,6 +77,7 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 	f := &Framework{
 		MasterHost: config.Host,
 		KubeClient: cli,
+		MonClient:  mclient,
 		HTTPClient: httpc,
 		Namespace:  namespace,
 	}
@@ -126,12 +130,17 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 	f.OperatorPod = &pl.Items[0]
 
-	err = k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), prometheus.TPRGroup, prometheus.TPRVersion, prometheus.TPRPrometheusesKind)
+	err = k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRPrometheusName)
 	if err != nil {
 		return err
 	}
 
-	return k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), prometheus.TPRGroup, prometheus.TPRVersion, prometheus.TPRServiceMonitorsKind)
+	err = k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRServiceMonitorName)
+	if err != nil {
+		return err
+	}
+
+	return k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRAlertmanagerName)
 }
 
 // Teardown tears down a previously initialized test environment.
@@ -165,7 +174,7 @@ func waitForPodsReady(client v1client.CoreV1Interface, timeout time.Duration, ex
 			}
 
 			runningAndReady := 0
-			if len(pl.Items) > 0 {
+			if len(pl.Items) >= 0 {
 				for _, p := range pl.Items {
 					isRunningAndReady, err := k8sutil.PodRunningAndReady(p)
 					if err != nil {
@@ -188,46 +197,6 @@ func (f *Framework) CreateDeployment(kclient kubernetes.Interface, ns string, de
 		return err
 	}
 
-	return nil
-}
-
-func (f *Framework) CreatePrometheus(e *spec.Prometheus) (*spec.Prometheus, error) {
-	b, err := json.Marshal(e)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := f.HTTPClient.Post(
-		fmt.Sprintf("%s/apis/monitoring.coreos.com/v1alpha1/namespaces/%s/prometheuses", f.MasterHost, f.Namespace.Name),
-		"application/json", bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("unexpected status: %v", resp.Status)
-	}
-	decoder := yaml.NewYAMLOrJSONDecoder(resp.Body, 100)
-	res := &spec.Prometheus{}
-	if err := decoder.Decode(res); err != nil {
-		return nil, err
-	}
-	return res, nil
-}
-
-func (f *Framework) DeletePrometheus(name string) error {
-	req, err := http.NewRequest("DELETE",
-		fmt.Sprintf("%s/apis/monitoring.coreos.com/v1alpha1/namespaces/%s/prometheuses/%s", f.MasterHost, f.Namespace.Name, name), nil)
-	if err != nil {
-		return err
-	}
-	resp, err := f.HTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status: %v", resp.Status)
-	}
 	return nil
 }
 

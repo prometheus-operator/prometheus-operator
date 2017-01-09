@@ -24,10 +24,10 @@ import (
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	"k8s.io/client-go/pkg/util/intstr"
 
-	"github.com/coreos/prometheus-operator/pkg/spec"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
 
-func makeStatefulSet(p spec.Prometheus, old *v1beta1.StatefulSet) *v1beta1.StatefulSet {
+func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.StatefulSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -109,7 +109,7 @@ func makeEmptyRules(name string) *v1.ConfigMap {
 	}
 }
 
-func makeStatefulSetService(p *spec.Prometheus) *v1.Service {
+func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
 			Name: "prometheus",
@@ -131,7 +131,7 @@ func makeStatefulSetService(p *spec.Prometheus) *v1.Service {
 	return svc
 }
 
-func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
+func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -291,7 +291,7 @@ func makeStatefulSetSpec(p spec.Prometheus) v1beta1.StatefulSetSpec {
 	}
 }
 
-func subPathForStorage(s *spec.StorageSpec) string {
+func subPathForStorage(s *v1alpha1.StorageSpec) string {
 	if s == nil {
 		return ""
 	}

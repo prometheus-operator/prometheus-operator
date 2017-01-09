@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spec
+package v1alpha1
 
 import (
 	"k8s.io/client-go/pkg/api/v1"
@@ -170,3 +170,6 @@ type Selector struct {
 	// Currently the selector is only used for namespaces which require more complex
 	// implementation to support label selections.
 }
+
+type ListOptions v1.ListOptions
+type DeleteOptions v1.DeleteOptions

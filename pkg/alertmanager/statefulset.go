@@ -24,10 +24,10 @@ import (
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	"k8s.io/client-go/pkg/util/intstr"
 
-	"github.com/coreos/prometheus-operator/pkg/spec"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
 
-func makeStatefulSet(am *spec.Alertmanager, old *v1beta1.StatefulSet) *v1beta1.StatefulSet {
+func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet) *v1beta1.StatefulSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -80,7 +80,7 @@ func makeStatefulSet(am *spec.Alertmanager, old *v1beta1.StatefulSet) *v1beta1.S
 	return statefulset
 }
 
-func makeStatefulSetService(p *spec.Alertmanager) *v1.Service {
+func makeStatefulSetService(p *v1alpha1.Alertmanager) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
 			Name: "alertmanager",
@@ -109,7 +109,7 @@ func makeStatefulSetService(p *spec.Alertmanager) *v1.Service {
 	return svc
 }
 
-func makeStatefulSetSpec(a *spec.Alertmanager) v1beta1.StatefulSetSpec {
+func makeStatefulSetSpec(a *v1alpha1.Alertmanager) v1beta1.StatefulSetSpec {
 	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Version)
 
 	commands := []string{
@@ -219,7 +219,7 @@ func makeStatefulSetSpec(a *spec.Alertmanager) v1beta1.StatefulSetSpec {
 	}
 }
 
-func subPathForStorage(s *spec.StorageSpec) string {
+func subPathForStorage(s *v1alpha1.StorageSpec) string {
 	if s == nil {
 		return ""
 	}
