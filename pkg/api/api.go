@@ -104,11 +104,10 @@ func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	status, _, err := prometheus.PrometheusStatus(api.kclient, p)
+	p.Status, _, err = prometheus.PrometheusStatus(api.kclient, p)
 	if err != nil {
 		api.logger.Log("error", err)
 	}
-	p.Status = *status
 
 	b, err := json.Marshal(p)
 	if err != nil {

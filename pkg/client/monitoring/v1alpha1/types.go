@@ -24,8 +24,8 @@ import (
 type Prometheus struct {
 	metav1.TypeMeta `json:",inline"`
 	v1.ObjectMeta   `json:"metadata,omitempty"`
-	Spec            PrometheusSpec   `json:"spec"`
-	Status          PrometheusStatus `json:"status,omitempty"`
+	Spec            PrometheusSpec    `json:"spec"`
+	Status          *PrometheusStatus `json:"status,omitempty"`
 }
 
 // PrometheusList is a list of Prometheuses.
