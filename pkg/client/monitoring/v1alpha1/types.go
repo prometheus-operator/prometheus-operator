@@ -24,8 +24,8 @@ import (
 type Prometheus struct {
 	metav1.TypeMeta `json:",inline"`
 	v1.ObjectMeta   `json:"metadata,omitempty"`
-	Spec            PrometheusSpec   `json:"spec"`
-	Status          PrometheusStatus `json:"status,omitempty"`
+	Spec            PrometheusSpec    `json:"spec"`
+	Status          *PrometheusStatus `json:"status,omitempty"`
 }
 
 // PrometheusList is a list of Prometheuses.
@@ -54,6 +54,10 @@ type PrometheusSpec struct {
 }
 
 type PrometheusStatus struct {
+	// Represents whether any actions on the underlaying managed objects are
+	// being performed. Only delete actions will be performed.
+	Paused bool `json:"paused"`
+
 	// Total number of non-terminated pods targeted by this Prometheus deployment
 	// (their labels match the selector).
 	Replicas int32 `json:"replicas"`
