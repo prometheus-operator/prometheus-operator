@@ -180,6 +180,18 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager) v1beta1.StatefulSetSpec {
 								SubPath:   subPathForStorage(a.Spec.Storage),
 							},
 						},
+						ReadinessProbe: &v1.Probe{
+							Handler: v1.Handler{
+								HTTPGet: &v1.HTTPGetAction{
+									Path: path.Clean(webRoutePrefix + "/api/v1/status"),
+									Port: intstr.FromString("web"),
+								},
+							},
+							InitialDelaySeconds: 3,
+							TimeoutSeconds:      3,
+							PeriodSeconds:       5,
+							FailureThreshold:    10,
+						},
 					}, {
 						Name:  "config-reloader",
 						Image: "jimmidyson/configmap-reload",

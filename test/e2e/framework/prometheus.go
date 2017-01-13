@@ -16,32 +16,109 @@ package framework
 
 import (
 	"fmt"
+	"log"
 	"time"
 
+	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
+	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/util/intstr"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 )
 
-func (f *Framework) MakeBasicPrometheus(name string, replicas int32) *v1alpha1.Prometheus {
+func (f *Framework) MakeBasicPrometheus(name, group string, replicas int32) *v1alpha1.Prometheus {
 	return &v1alpha1.Prometheus{
 		ObjectMeta: v1.ObjectMeta{
 			Name: name,
 		},
 		Spec: v1alpha1.PrometheusSpec{
 			Replicas: replicas,
+			Version:  "v1.4.0",
+			ServiceMonitorSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": group,
+				},
+			},
+			Resources: v1.ResourceRequirements{
+				Requests: v1.ResourceList{
+					v1.ResourceMemory: resource.MustParse("400Mi"),
+				},
+			},
+		},
+	}
+}
+
+func (f *Framework) AddAlertingToPrometheus(p *v1alpha1.Prometheus, name string) {
+	p.Spec.Alerting = v1alpha1.AlertingSpec{
+		Alertmanagers: []v1alpha1.AlertmanagerEndpoints{
+			v1alpha1.AlertmanagerEndpoints{
+				Namespace: f.Namespace.Name,
+				Name:      name,
+				Port:      intstr.FromString("web"),
+			},
+		},
+	}
+}
+
+func (f *Framework) MakeBasicServiceMonitor(name string) *v1alpha1.ServiceMonitor {
+	return &v1alpha1.ServiceMonitor{
+		ObjectMeta: v1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"group": name,
+			},
+		},
+		Spec: v1alpha1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": name,
+				},
+			},
+			Endpoints: []v1alpha1.Endpoint{
+				v1alpha1.Endpoint{
+					Port:     "web",
+					Interval: "30s",
+				},
+			},
+		},
+	}
+}
+
+func (f *Framework) MakePrometheusService(name, group string) *v1.Service {
+	return &v1.Service{
+		ObjectMeta: v1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"group": group,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Type: "NodePort",
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:       "web",
+					Port:       9090,
+					TargetPort: intstr.FromString("web"),
+					NodePort:   30900,
+				},
+			},
+			Selector: map[string]string{
+				"prometheus": name,
+			},
 		},
 	}
 }
 
 func (f *Framework) CreatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) error {
+	log.Printf("Creating Prometheus (%s/%s)", f.Namespace.Name, p.Name)
 	_, err := f.MonClient.Prometheuses(f.Namespace.Name).Create(p)
 	if err != nil {
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*2, int(p.Spec.Replicas), prometheus.ListOptions(p.Name))
+	_, err = f.WaitForPodsReady(time.Minute*2, int(p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
 	if err != nil {
 		return fmt.Errorf("failed to create %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -49,14 +126,39 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 	return nil
 }
 
+func (f *Framework) UpdatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) error {
+	log.Printf("Updating Prometheus (%s/%s)", f.Namespace.Name, p.Name)
+	_, err := f.MonClient.Prometheuses(f.Namespace.Name).Update(p)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.WaitForPodsReady(time.Minute*2, int(p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
+	if err != nil {
+		return fmt.Errorf("failed to update %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
+	}
+
+	return nil
+}
+
 func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
+	log.Printf("Deleting Prometheus (%s/%s)", f.Namespace.Name, name)
+	p, err := f.MonClient.Prometheuses(f.Namespace.Name).Get(name)
+	if err != nil {
+		return err
+	}
+
 	if err := f.MonClient.Prometheuses(f.Namespace.Name).Delete(name, nil); err != nil {
 		return err
 	}
 
-	if _, err := f.WaitForPodsReady(time.Minute*2, 0, prometheus.ListOptions(name)); err != nil {
+	if _, err := f.WaitForPodsReady(time.Minute*2, 0, promImage(p.Spec.Version), prometheus.ListOptions(name)); err != nil {
 		return fmt.Errorf("failed to teardown Prometheus instances (%s): %v", name, err)
 	}
 
 	return nil
+}
+
+func promImage(version string) string {
+	return fmt.Sprintf("quay.io/prometheus/prometheus:%s", version)
 }
