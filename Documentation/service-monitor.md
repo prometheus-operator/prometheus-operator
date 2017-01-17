@@ -29,6 +29,7 @@ of the service endpoints. This is also made possible by the Prometheus Operator.
 | ---- | ----------- | -------- | ------ | ------- |
 | jobLabel | Service label of which the value is used to assemble a job name of the form `<label value>-<port>`. If no label is specified, the service name is used. | false | string |  |
 | selector | Label selector for services the `ServiceMonitor` applies to. | true | [unversioned.LabelSelector](http://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | |
+| namespaceSelector | Namespaces from which services are selected. | false | NamespaceSelector | same namespace only |
 | endpoints | The endpoints to be monitored for endpoints of the selected services. | true | Endpoint array | |
 
 ### `Endpoint`
@@ -40,6 +41,13 @@ of the service endpoints. This is also made possible by the Prometheus Operator.
 | path | HTTP path to scrape for metrics. | false | string | /metrics |
 | scheme | HTTP scheme to use for scraping | false | string | http |
 | interval | Interval at which metrics should be scraped | false | duration | 30s |
+
+### `NamespaceSelector`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| any | Match any namespace | false | bool | false |
+| matchNames | Explicit list of namespace names to select | false | string array | |
 
 
 ## Current state and roadmap
