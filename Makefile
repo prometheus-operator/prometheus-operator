@@ -2,7 +2,7 @@ all: build
 
 REPO?=quay.io/coreos/prometheus-operator
 TAG?=$(shell git rev-parse --short HEAD)
-NAMESPACE?=prometheus-operator-e2e-tests-$(shell head /dev/urandom | tr -dc a-z0-9 | head -c 13 ; echo '')
+NAMESPACE?=prometheus-operator-e2e-tests-$(shell LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
 
 CLUSTER_IP?=$(shell minikube ip)
 

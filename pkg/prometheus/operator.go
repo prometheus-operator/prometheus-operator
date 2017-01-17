@@ -490,7 +490,7 @@ func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
 	return nil
 }
 
-func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v1alpha1.PrometheusStatus, []*v1.Pod, error) {
+func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v1alpha1.PrometheusStatus, []v1.Pod, error) {
 	res := &v1alpha1.PrometheusStatus{Paused: p.Spec.Paused}
 
 	pods, err := kclient.Core().Pods(p.Namespace).List(ListOptions(p.Name))
@@ -500,7 +500,7 @@ func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v
 
 	res.Replicas = int32(len(pods.Items))
 
-	var oldPods []*v1.Pod
+	var oldPods []v1.Pod
 	for _, pod := range pods.Items {
 		ready, err := k8sutil.PodRunningAndReady(pod)
 		if err != nil {
@@ -512,7 +512,7 @@ func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v
 			if strings.HasSuffix(pod.Spec.Containers[0].Image, p.Spec.Version) {
 				res.UpdatedReplicas++
 			} else {
-				oldPods = append(oldPods, &pod)
+				oldPods = append(oldPods, pod)
 			}
 			continue
 		}

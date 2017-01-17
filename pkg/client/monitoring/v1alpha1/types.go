@@ -146,7 +146,8 @@ type ServiceMonitorList struct {
 type Alertmanager struct {
 	metav1.TypeMeta `json:",inline"`
 	v1.ObjectMeta   `json:"metadata,omitempty"`
-	Spec            AlertmanagerSpec `json:"spec"`
+	Spec            AlertmanagerSpec    `json:"spec"`
+	Status          *AlertmanagerStatus `json:"status"`
 }
 
 type AlertmanagerSpec struct {
@@ -168,6 +169,9 @@ type AlertmanagerSpec struct {
 	// served by Alertmanager. If omitted, relevant URL components will be
 	// derived automatically.
 	ExternalURL string `json:"externalUrl,omitempty"`
+	// If set to true all actions on the underlaying managed objects are not
+	// goint to be performed, except for delete actions.
+	Paused bool `json:"paused"`
 }
 
 type AlertmanagerList struct {
@@ -177,6 +181,27 @@ type AlertmanagerList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// Items is a list of third party objects
 	Items []Alertmanager `json:"items"`
+}
+
+type AlertmanagerStatus struct {
+	// Represents whether any actions on the underlaying managed objects are
+	// being performed. Only delete actions will be performed.
+	Paused bool `json:"paused"`
+
+	// Total number of non-terminated pods targeted by this Alertmanager
+	// cluster (their labels match the selector).
+	Replicas int32 `json:"replicas"`
+
+	// Total number of non-terminated pods targeted by this Alertmanager
+	// cluster that have the desired version spec.
+	UpdatedReplicas int32 `json:"updatedReplicas"`
+
+	// Total number of available pods (ready for at least minReadySeconds)
+	// targeted by this Alertmanager cluster.
+	AvailableReplicas int32 `json:"availableReplicas"`
+
+	// Total number of unavailable pods targeted by this Alertmanager cluster.
+	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
 
 type NamespaceSelector struct {

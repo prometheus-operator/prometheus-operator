@@ -54,28 +54,28 @@ func TestAlertmanagerScaling(t *testing.T) {
 	}
 }
 
-//func TestAlertmanagerVersionMigration(t *testing.T) {
-//	name := "alertmanager-test"
-//
-//	defer func() {
-//		if err := framework.DeleteAlertmanagerAndWaitUntilGone(name); err != nil {
-//			t.Fatal(err)
-//		}
-//	}()
-//
-//	am := framework.MakeBasicAlertmanager(name, 3)
-//	am.Spec.Version = "v0.5.0"
-//	if err := framework.CreateAlertmanagerAndWaitUntilReady(am); err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	am.Spec.Version = "v0.5.1"
-//	if err := framework.UpdateAlertmanagerAndWaitUntilReady(am); err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	am.Spec.Version = "v0.5.0"
-//	if err := framework.UpdateAlertmanagerAndWaitUntilReady(am); err != nil {
-//		t.Fatal(err)
-//	}
-//}
+func TestAlertmanagerVersionMigration(t *testing.T) {
+	name := "alertmanager-test"
+
+	defer func() {
+		if err := framework.DeleteAlertmanagerAndWaitUntilGone(name); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	am := framework.MakeBasicAlertmanager(name, 3)
+	am.Spec.Version = "v0.5.0"
+	if err := framework.CreateAlertmanagerAndWaitUntilReady(am); err != nil {
+		t.Fatal(err)
+	}
+
+	am.Spec.Version = "v0.5.1"
+	if err := framework.UpdateAlertmanagerAndWaitUntilReady(am); err != nil {
+		t.Fatal(err)
+	}
+
+	am.Spec.Version = "v0.5.0"
+	if err := framework.UpdateAlertmanagerAndWaitUntilReady(am); err != nil {
+		t.Fatal(err)
+	}
+}

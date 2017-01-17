@@ -118,7 +118,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*2, int(p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
+	_, err = f.WaitForPodsReady(time.Minute*6, int(p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
 	if err != nil {
 		return fmt.Errorf("failed to create %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -133,7 +133,7 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*2, int(p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
+	_, err = f.WaitForPodsReady(time.Minute*6, int(p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
 	if err != nil {
 		return fmt.Errorf("failed to update %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -152,7 +152,7 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
 		return err
 	}
 
-	if _, err := f.WaitForPodsReady(time.Minute*2, 0, promImage(p.Spec.Version), prometheus.ListOptions(name)); err != nil {
+	if _, err := f.WaitForPodsReady(time.Minute*6, 0, promImage(p.Spec.Version), prometheus.ListOptions(name)); err != nil {
 		return fmt.Errorf("failed to teardown Prometheus instances (%s): %v", name, err)
 	}
 
