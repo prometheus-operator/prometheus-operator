@@ -107,10 +107,7 @@ type ServiceMonitorSpec struct {
 	JobLabel          string               `json:"jobLabel"`
 	Endpoints         []Endpoint           `json:"endpoints"`
 	Selector          metav1.LabelSelector `json:"selector"`
-	NamespaceSelector Selector             `json:"namespaceSelector"`
-	// AllNamespaces     bool                      `json:"allNamespaces"`
-	// Namespaces        []string                  `json:"namespaces"`
-	// NamespaceSelector metav1.LabelSelector `json:"namespaceSelector"`
+	NamespaceSelector NamespaceSelector    `json:"namespaceSelector"`
 }
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.
@@ -182,7 +179,7 @@ type AlertmanagerList struct {
 	Items []Alertmanager `json:"items"`
 }
 
-type Selector struct {
+type NamespaceSelector struct {
 	Any        bool     `json:"any,omitempty"`
 	MatchNames []string `json:"matchNames,omitempty"`
 
