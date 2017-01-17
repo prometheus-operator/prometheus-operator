@@ -115,11 +115,27 @@ type ServiceMonitorSpec struct {
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 type Endpoint struct {
-	Port       string             `json:"port"`
-	TargetPort intstr.IntOrString `json:"targetPort"`
-	Path       string             `json:"path"`
-	Scheme     string             `json:"scheme"`
-	Interval   string             `json:"interval"`
+	Port            string             `json:"port"`
+	TargetPort      intstr.IntOrString `json:"targetPort"`
+	Path            string             `json:"path"`
+	Scheme          string             `json:"scheme"`
+	Interval        string             `json:"interval"`
+	TLSConfig       *TLSConfig         `json:"tlsConfig"`
+	BearerTokenFile string             `json:"bearerTokenFile"`
+}
+
+// TLSConfig specifies TLS configuration parameters.
+type TLSConfig struct {
+	// The CA cert to use for the targets.
+	CAFile string `yaml:"caFile,omitempty"`
+	// The client cert file for the targets.
+	CertFile string `yaml:"certFile,omitempty"`
+	// The client key file for the targets.
+	KeyFile string `yaml:"keyFile,omitempty"`
+	// Used to verify the hostname for the targets.
+	ServerName string `yaml:"serverName,omitempty"`
+	// Disable target certificate validation.
+	InsecureSkipVerify bool `yaml:"insecureSkipVerify"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

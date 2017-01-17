@@ -40,6 +40,17 @@ of the service endpoints. This is also made possible by the Prometheus Operator.
 | path | HTTP path to scrape for metrics. | false | string | /metrics |
 | scheme | HTTP scheme to use for scraping | false | string | http |
 | interval | Interval at which metrics should be scraped | false | duration | 30s |
+| tlsConfig | TLS configuration to use when scraping the endpoint | false | TLSConfig | |
+
+### `TLSConfig`
+
+| Name | Description | Required | Schema | Default |
+| ---- | ----------- | -------- | ------ | ------- |
+| caFile | Path to the CA file. | false | string | |
+| certFile | Path to client certificate file | false | |
+| keyFile | Path to client key file | false | |
+| serverName | Server name used to verify host name | |
+| insecureSkipVerify | Skip certificate verification | false | bool | false |
 
 
 ## Current state and roadmap
