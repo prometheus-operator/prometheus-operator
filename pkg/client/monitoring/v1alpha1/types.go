@@ -120,13 +120,22 @@ type Endpoint struct {
 	Path            string             `json:"path"`
 	Scheme          string             `json:"scheme"`
 	Interval        string             `json:"interval"`
-	TlsConfig       *TlsConfig         `json:"tlsConfig"`
+	TLSConfig       *TLSConfig         `json:"tlsConfig"`
 	BearerTokenFile string             `json:"bearerTokenFile"`
 }
 
-type TlsConfig struct {
-	CaFile             string `json:"caFile,omitempty"`
-	InsecureSkipVerify bool   `json:"insecureSkipVerify,omitempty"`
+// TLSConfig specifies TLS configuration parameters.
+type TLSConfig struct {
+	// The CA cert to use for the targets.
+	CAFile string `yaml:"caFile,omitempty"`
+	// The client cert file for the targets.
+	CertFile string `yaml:"certFile,omitempty"`
+	// The client key file for the targets.
+	KeyFile string `yaml:"keyFile,omitempty"`
+	// Used to verify the hostname for the targets.
+	ServerName string `yaml:"serverName,omitempty"`
+	// Disable target certificate validation.
+	InsecureSkipVerify bool `yaml:"insecureSkipVerify"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

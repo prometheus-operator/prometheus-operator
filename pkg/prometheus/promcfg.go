@@ -81,12 +81,21 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	if ep.Scheme != "" {
 		cfg["scheme"] = ep.Scheme
 	}
-	if ep.TlsConfig != nil {
+	if ep.TLSConfig != nil {
 		tlsConfig := map[string]interface{}{
-			"insecure_skip_verify": ep.TlsConfig.InsecureSkipVerify,
+			"insecure_skip_verify": ep.TLSConfig.InsecureSkipVerify,
 		}
-		if ep.TlsConfig.CaFile != "" {
-			tlsConfig["ca_file"] = ep.TlsConfig.CaFile
+		if ep.TLSConfig.CAFile != "" {
+			tlsConfig["ca_file"] = ep.TLSConfig.CAFile
+		}
+		if ep.TLSConfig.CertFile != "" {
+			tlsConfig["cert_file"] = ep.TLSConfig.CertFile
+		}
+		if ep.TLSConfig.KeyFile != "" {
+			tlsConfig["key_file"] = ep.TLSConfig.KeyFile
+		}
+		if ep.TLSConfig.ServerName != "" {
+			tlsConfig["server_name"] = ep.TLSConfig.ServerName
 		}
 		cfg["tls_config"] = tlsConfig
 	}
