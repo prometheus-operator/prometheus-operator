@@ -44,7 +44,9 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet) *v1bet
 
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
-			Name: fmt.Sprintf("alertmanager-%s", am.Name),
+			Name:        fmt.Sprintf("alertmanager-%s", am.Name),
+			Labels:      am.ObjectMeta.Labels,
+			Annotations: am.ObjectMeta.Annotations,
 		},
 		Spec: makeStatefulSetSpec(am),
 	}

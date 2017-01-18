@@ -54,7 +54,9 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.S
 
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
-			Name: fmt.Sprintf("prometheus-%s", p.Name),
+			Name:        fmt.Sprintf("prometheus-%s", p.Name),
+			Labels:      p.ObjectMeta.Labels,
+			Annotations: p.ObjectMeta.Annotations,
 		},
 		Spec: makeStatefulSetSpec(p),
 	}
