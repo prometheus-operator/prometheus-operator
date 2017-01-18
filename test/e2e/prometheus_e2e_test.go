@@ -31,21 +31,19 @@ import (
 )
 
 func TestPrometheusCreateDeleteCluster(t *testing.T) {
-	name := "prometheus-test"
-
-	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
-			t.Fatal(err)
-		}
-	}()
+	name := "test"
 
 	if err := framework.CreatePrometheusAndWaitUntilReady(framework.MakeBasicPrometheus(name, name, 1)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestPrometheusScaleUpDownCluster(t *testing.T) {
-	name := "prometheus-test"
+	name := "test"
 
 	defer func() {
 		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
@@ -67,7 +65,7 @@ func TestPrometheusScaleUpDownCluster(t *testing.T) {
 }
 
 func TestPrometheusVersionMigration(t *testing.T) {
-	name := "prometheus-test"
+	name := "test"
 
 	defer func() {
 		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
@@ -94,7 +92,7 @@ func TestPrometheusVersionMigration(t *testing.T) {
 }
 
 func TestPrometheusDiscovery(t *testing.T) {
-	prometheusName := "prometheus-test"
+	prometheusName := "test"
 	group := "servicediscovery-test"
 
 	defer func() {
@@ -104,7 +102,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 		if err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Delete(group, nil); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Delete(prometheusName, nil); err != nil {
+		if err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Delete(fmt.Sprintf("prometheus-%s", prometheusName), nil); err != nil {
 			t.Fatal(err)
 		}
 	}()
@@ -128,7 +126,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 	}
 
 	log.Print("Validating Prometheus ConfigMap was created")
-	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(prometheusName, metav1.GetOptions{})
+	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Generated ConfigMap could not be retrieved: %s", err)
 	}
@@ -141,15 +139,15 @@ func TestPrometheusDiscovery(t *testing.T) {
 }
 
 func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
-	prometheusName := "prometheus-test"
-	alertmanagerName := "alertmanager-test"
+	prometheusName := "test"
+	alertmanagerName := "test"
 	group := "servicediscovery-test"
 
 	defer func() {
 		if err := framework.DeleteAlertmanagerAndWaitUntilGone(alertmanagerName); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Delete(alertmanagerName, nil); err != nil {
+		if err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Delete(fmt.Sprintf("alertmanager-%s", alertmanagerName), nil); err != nil {
 			t.Fatal(err)
 		}
 		if err := framework.DeletePrometheusAndWaitUntilGone(prometheusName); err != nil {
@@ -158,7 +156,7 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 		if err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Delete(group, nil); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Delete(prometheusName, nil); err != nil {
+		if err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Delete(fmt.Sprintf("prometheus-%s", prometheusName), nil); err != nil {
 			t.Fatal(err)
 		}
 	}()
@@ -183,7 +181,7 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	}
 
 	log.Print("Validating Prometheus ConfigMap was created")
-	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(prometheusName, metav1.GetOptions{})
+	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Generated ConfigMap could not be retrieved: %s", err)
 	}

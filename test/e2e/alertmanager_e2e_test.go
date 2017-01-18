@@ -19,7 +19,7 @@ import (
 )
 
 func TestAlertmanagerCreateDeleteCluster(t *testing.T) {
-	name := "alertmanager-test"
+	name := "test"
 
 	defer func() {
 		if err := framework.DeleteAlertmanagerAndWaitUntilGone(name); err != nil {
@@ -33,7 +33,7 @@ func TestAlertmanagerCreateDeleteCluster(t *testing.T) {
 }
 
 func TestAlertmanagerScaling(t *testing.T) {
-	name := "alertmanager-test"
+	name := "test"
 
 	defer func() {
 		if err := framework.DeleteAlertmanagerAndWaitUntilGone(name); err != nil {
@@ -55,7 +55,7 @@ func TestAlertmanagerScaling(t *testing.T) {
 }
 
 func TestAlertmanagerVersionMigration(t *testing.T) {
-	name := "alertmanager-test"
+	name := "test"
 
 	defer func() {
 		if err := framework.DeleteAlertmanagerAndWaitUntilGone(name); err != nil {

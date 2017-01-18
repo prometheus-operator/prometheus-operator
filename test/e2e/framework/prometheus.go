@@ -55,7 +55,7 @@ func (f *Framework) AddAlertingToPrometheus(p *v1alpha1.Prometheus, name string)
 		Alertmanagers: []v1alpha1.AlertmanagerEndpoints{
 			v1alpha1.AlertmanagerEndpoints{
 				Namespace: f.Namespace.Name,
-				Name:      name,
+				Name:      fmt.Sprintf("alertmanager-%s", name),
 				Port:      intstr.FromString("web"),
 			},
 		},
@@ -89,7 +89,7 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *v1alpha1.ServiceMonito
 func (f *Framework) MakePrometheusService(name, group string) *v1.Service {
 	return &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
-			Name: name,
+			Name: fmt.Sprintf("prometheus-%s", name),
 			Labels: map[string]string{
 				"group": group,
 			},

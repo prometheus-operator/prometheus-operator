@@ -55,7 +55,7 @@ func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *v1alpha1
 func (f *Framework) MakeAlertmanagerService(name, group string) *v1.Service {
 	return &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
-			Name: name,
+			Name: fmt.Sprintf("alertmanager-%s", name),
 			Labels: map[string]string{
 				"group": group,
 			},
@@ -82,7 +82,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 	_, err := f.KubeClient.CoreV1().ConfigMaps(f.Namespace.Name).Create(
 		&v1.ConfigMap{
 			ObjectMeta: v1.ObjectMeta{
-				Name: a.Name,
+				Name: fmt.Sprintf("alertmanager-%s", a.Name),
 			},
 			Data: map[string]string{
 				"alertmanager.yaml": ValidAlertmanagerConfig,
@@ -135,7 +135,7 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(name string) error {
 		return fmt.Errorf("failed to teardown Alertmanager (%s) instances: %v", name, err)
 	}
 
-	return f.KubeClient.CoreV1().ConfigMaps(f.Namespace.Name).Delete(name, nil)
+	return f.KubeClient.CoreV1().ConfigMaps(f.Namespace.Name).Delete(fmt.Sprintf("alertmanager-%s", name), nil)
 }
 
 func amImage(version string) string {

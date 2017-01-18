@@ -225,13 +225,14 @@ func (c *Operator) worker() {
 	}
 }
 
-func (c *Operator) alertmanagerForStatefulSet(ps interface{}) *v1alpha1.Alertmanager {
-	key, ok := c.keyFunc(ps)
+func (c *Operator) alertmanagerForStatefulSet(sset interface{}) *v1alpha1.Alertmanager {
+	key, ok := c.keyFunc(sset)
 	if !ok {
 		return nil
 	}
-	// Namespace/Name are one-to-one so the key will find the respective Alertmanager resource.
-	a, exists, err := c.alrtInf.GetStore().GetByKey(key)
+
+	aKey := statefulSetKeyToAlertmanagerKey(key)
+	a, exists, err := c.alrtInf.GetStore().GetByKey(aKey)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("get Alertmanager resource: %s", err))
 		return nil
@@ -240,6 +241,20 @@ func (c *Operator) alertmanagerForStatefulSet(ps interface{}) *v1alpha1.Alertman
 		return nil
 	}
 	return a.(*v1alpha1.Alertmanager)
+}
+
+func alertmanagerNameFromStatefulSetName(name string) string {
+	return strings.TrimPrefix(name, "alertmanager-")
+}
+
+func statefulSetKeyToAlertmanagerKey(key string) string {
+	keyParts := strings.Split(key, "/")
+	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "alertmanager-")
+}
+
+func alertmanagerKeyToStatefulSetKey(key string) string {
+	keyParts := strings.Split(key, "/")
+	return keyParts[0] + "/alertmanager-" + keyParts[1]
 }
 
 func (c *Operator) handleAlertmanagerAdd(obj interface{}) {
@@ -336,7 +351,7 @@ func (c *Operator) sync(key string) error {
 
 	ssetClient := c.kclient.Apps().StatefulSets(am.Namespace)
 	// Ensure we have a StatefulSet running Alertmanager deployed.
-	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(key)
+	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(alertmanagerKeyToStatefulSetKey(key))
 	if err != nil {
 		return err
 	}
@@ -433,7 +448,8 @@ func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager)
 }
 
 func (c *Operator) destroyAlertmanager(key string) error {
-	obj, exists, err := c.ssetInf.GetStore().GetByKey(key)
+	ssetKey := alertmanagerKeyToStatefulSetKey(key)
+	obj, exists, err := c.ssetInf.GetStore().GetByKey(ssetKey)
 	if err != nil {
 		return err
 	}
@@ -455,7 +471,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 	// TODO(fabxc): temporary solution until StatefulSet status provides necessary info to know
 	// whether scale-down completed.
 	for {
-		pods, err := podClient.List(ListOptions(sset.Name))
+		pods, err := podClient.List(ListOptions(alertmanagerNameFromStatefulSetName(sset.Name)))
 		if err != nil {
 			return err
 		}
