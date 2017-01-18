@@ -235,6 +235,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 						Args: []string{
 							fmt.Sprintf("-webhook-url=%s", localReloadURL),
 							"-volume-dir=/etc/prometheus/config",
+							"-volume-dir=/etc/prometheus/rules/",
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
@@ -242,25 +243,16 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 								ReadOnly:  true,
 								MountPath: "/etc/prometheus/config",
 							},
+							{
+								Name:      "rules",
+								ReadOnly:  true,
+								MountPath: "/etc/prometheus/rules",
+							},
 						},
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{
 								v1.ResourceCPU:    resource.MustParse("5m"),
 								v1.ResourceMemory: resource.MustParse("10Mi"),
-							},
-						},
-					}, {
-						Name:  "rules-reloader",
-						Image: "jimmidyson/configmap-reload",
-						Args: []string{
-							fmt.Sprintf("-webhook-url=%s", localReloadURL),
-							"-volume-dir=/etc/prometheus/rules/",
-						},
-						VolumeMounts: []v1.VolumeMount{
-							{
-								Name:      "rules",
-								ReadOnly:  true,
-								MountPath: "/etc/prometheus/rules",
 							},
 						},
 					},
