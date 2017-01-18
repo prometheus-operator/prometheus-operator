@@ -112,7 +112,7 @@ func makeEmptyRules(name string) *v1.ConfigMap {
 func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
-			Name: "prometheus",
+			Name: "prometheus-operated",
 		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",

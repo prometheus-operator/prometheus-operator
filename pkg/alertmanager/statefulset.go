@@ -83,7 +83,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet) *v1bet
 func makeStatefulSetService(p *v1alpha1.Alertmanager) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
-			Name: "alertmanager",
+			Name: "alertmanager-operated",
 		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",
