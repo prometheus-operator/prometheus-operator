@@ -155,7 +155,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager) v1beta1.StatefulSetSpec {
 				Containers: []v1.Container{
 					{
 						Command: commands,
-						Name:    a.Name,
+						Name:    "alertmanager",
 						Image:   image,
 						Ports: []v1.ContainerPort{
 							{
