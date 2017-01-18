@@ -76,19 +76,43 @@ func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 		return nil, err
 	}
 
-	return &Operator{
+	o := &Operator{
 		kclient: client,
 		mclient: mclient,
 		logger:  logger,
 		queue:   queue.New(),
 		host:    cfg.Host,
-	}, nil
+	}
+
+	o.alrtInf = cache.NewSharedIndexInformer(
+		&cache.ListWatch{
+			ListFunc:  o.mclient.Alertmanagers(api.NamespaceAll).List,
+			WatchFunc: o.mclient.Alertmanagers(api.NamespaceAll).Watch,
+		},
+		&v1alpha1.Alertmanager{}, resyncPeriod, cache.Indexers{},
+	)
+	o.ssetInf = cache.NewSharedIndexInformer(
+		cache.NewListWatchFromClient(o.kclient.Apps().RESTClient(), "statefulsets", api.NamespaceAll, nil),
+		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
+	)
+
+	o.alrtInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    o.handleAlertmanagerAdd,
+		DeleteFunc: o.handleAlertmanagerDelete,
+		UpdateFunc: o.handleAlertmanagerUpdate,
+	})
+	o.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    o.handleStatefulSetAdd,
+		DeleteFunc: o.handleStatefulSetDelete,
+		UpdateFunc: o.handleStatefulSetUpdate,
+	})
+
+	return o, nil
 }
 
 // Run the controller.
 func (c *Operator) Run(stopc <-chan struct{}) error {
 	defer c.queue.ShutDown()
-	go c.worker()
 
 	errChan := make(chan error)
 	go func() {
@@ -116,28 +140,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		return nil
 	}
 
-	c.alrtInf = cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc:  c.mclient.Alertmanagers(api.NamespaceAll).List,
-			WatchFunc: c.mclient.Alertmanagers(api.NamespaceAll).Watch,
-		},
-		&v1alpha1.Alertmanager{}, resyncPeriod, cache.Indexers{},
-	)
-	c.ssetInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Apps().RESTClient(), "statefulsets", api.NamespaceAll, nil),
-		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
-	)
-
-	c.alrtInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleAlertmanagerAdd,
-		DeleteFunc: c.handleAlertmanagerDelete,
-		UpdateFunc: c.handleAlertmanagerUpdate,
-	})
-	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleStatefulSetAdd,
-		DeleteFunc: c.handleStatefulSetDelete,
-		UpdateFunc: c.handleStatefulSetUpdate,
-	})
+	go c.worker()
 
 	go c.alrtInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
@@ -319,6 +322,9 @@ func (c *Operator) sync(key string) error {
 	}
 
 	am := obj.(*v1alpha1.Alertmanager)
+	if am.Spec.Paused {
+		return nil
+	}
 
 	c.logger.Log("msg", "sync alertmanager", "key", key)
 
@@ -362,50 +368,29 @@ func ListOptions(name string) v1.ListOptions {
 // create new pods.
 //
 // TODO(fabxc): remove this once the StatefulSet controller learns how to do rolling updates.
-func (c *Operator) syncVersion(am *v1alpha1.Alertmanager) error {
-	podClient := c.kclient.Core().Pods(am.Namespace)
-
-	pods, err := podClient.List(ListOptions(am.Name))
+func (c *Operator) syncVersion(a *v1alpha1.Alertmanager) error {
+	status, oldPods, err := AlertmanagerStatus(c.kclient, a)
 	if err != nil {
 		return err
 	}
 
 	// If the StatefulSet is still busy scaling, don't interfere by killing pods.
 	// We enqueue ourselves again to until the StatefulSet is ready.
-	if len(pods.Items) != int(am.Spec.Replicas) {
+	if status.Replicas != a.Spec.Replicas {
 		return fmt.Errorf("scaling in progress")
 	}
-	if len(pods.Items) == 0 {
+	if status.Replicas == 0 {
 		return nil
 	}
-
-	var oldPods []*v1.Pod
-	allReady := true
-	// Only proceed if all existing pods are running and ready.
-	for _, pod := range pods.Items {
-		ready, err := k8sutil.PodRunningAndReady(pod)
-		if err != nil {
-			c.logger.Log("msg", "cannot determine pod ready state", "err", err)
-		}
-		if ready {
-			// TODO(fabxc): detect other fields of the pod template that are mutable.
-			if !strings.HasSuffix(pod.Spec.Containers[0].Image, am.Spec.Version) {
-				oldPods = append(oldPods, &pod)
-			}
-			continue
-		}
-		allReady = false
-	}
-
 	if len(oldPods) == 0 {
 		return nil
 	}
-	if !allReady {
+	if status.UnavailableReplicas > 0 {
 		return fmt.Errorf("waiting for pods to become ready")
 	}
 
 	// TODO(fabxc): delete oldest pod first.
-	if err := podClient.Delete(oldPods[0].Name, nil); err != nil {
+	if err := c.kclient.Core().Pods(a.Namespace).Delete(oldPods[0].Name, nil); err != nil {
 		return err
 	}
 	// If there are further pods that need updating, we enqueue ourselves again.
@@ -413,6 +398,38 @@ func (c *Operator) syncVersion(am *v1alpha1.Alertmanager) error {
 		return fmt.Errorf("%d out-of-date pods remaining", len(oldPods)-1)
 	}
 	return nil
+}
+
+func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager) (*v1alpha1.AlertmanagerStatus, []v1.Pod, error) {
+	res := &v1alpha1.AlertmanagerStatus{Paused: a.Spec.Paused}
+
+	pods, err := kclient.Core().Pods(a.Namespace).List(ListOptions(a.Name))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res.Replicas = int32(len(pods.Items))
+
+	var oldPods []v1.Pod
+	for _, pod := range pods.Items {
+		ready, err := k8sutil.PodRunningAndReady(pod)
+		if err != nil {
+			return nil, nil, fmt.Errorf("cannot determine pod ready state: %s", err)
+		}
+		if ready {
+			res.AvailableReplicas++
+			// TODO(fabxc): detect other fields of the pod template that are mutable.
+			if strings.HasSuffix(pod.Spec.Containers[0].Image, a.Spec.Version) {
+				res.UpdatedReplicas++
+			} else {
+				oldPods = append(oldPods, pod)
+			}
+			continue
+		}
+		res.UnavailableReplicas++
+	}
+
+	return res, oldPods, nil
 }
 
 func (c *Operator) destroyAlertmanager(key string) error {

@@ -25,15 +25,19 @@ import (
 
 var framework *operatorFramework.Framework
 
+// Basic set of e2e tests for the operator:
+// - config reload (with and without external url)
+
 func TestMain(m *testing.M) {
 	kubeconfig := flag.String("kubeconfig", "", "kube config path, e.g. $HOME/.kube/config")
 	opImage := flag.String("operator-image", "", "operator image, e.g. quay.io/coreos/prometheus-operator")
 	ns := flag.String("namespace", "prometheus-operator-e2e-tests", "e2e test namespace")
+	ip := flag.String("cluster-ip", "", "ip of the kubernetes cluster to use for external requests")
 	flag.Parse()
 
 	log.Println("setting up e2e tests ...")
 	var err error
-	if framework, err = operatorFramework.New(*ns, *kubeconfig, *opImage); err != nil {
+	if framework, err = operatorFramework.New(*ns, *kubeconfig, *opImage, *ip); err != nil {
 		log.Printf("failed to setup framework: %v\n", err)
 		os.Exit(1)
 	}

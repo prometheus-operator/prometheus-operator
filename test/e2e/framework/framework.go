@@ -41,10 +41,11 @@ type Framework struct {
 	MasterHost  string
 	Namespace   *v1.Namespace
 	OperatorPod *v1.Pod
+	ClusterIP   string
 }
 
 // Setup setups a test framework and returns it.
-func New(ns, kubeconfig, opImage string) (*Framework, error) {
+func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, err
@@ -80,6 +81,7 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 		MonClient:  mclient,
 		HTTPClient: httpc,
 		Namespace:  namespace,
+		ClusterIP:  ip,
 	}
 
 	err = f.setup(opImage)
@@ -124,7 +126,7 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 
 	opts := v1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
-	pl, err := f.WaitForPodsReady(60*time.Second, 1, opts)
+	pl, err := f.WaitForPodsReady(60*time.Second, 1, opImage, opts)
 	if err != nil {
 		return err
 	}
@@ -154,11 +156,11 @@ func (f *Framework) Teardown() error {
 
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
-func (f *Framework) WaitForPodsReady(timeout time.Duration, expectedReplicas int, opts v1.ListOptions) (*v1.PodList, error) {
-	return waitForPodsReady(f.KubeClient.Core(), timeout, expectedReplicas, f.Namespace.Name, opts)
+func (f *Framework) WaitForPodsReady(timeout time.Duration, expectedReplicas int, image string, opts v1.ListOptions) (*v1.PodList, error) {
+	return waitForPodsReady(f.KubeClient.Core(), timeout, expectedReplicas, image, f.Namespace.Name, opts)
 }
 
-func waitForPodsReady(client v1client.CoreV1Interface, timeout time.Duration, expectedRunning int, namespace string, opts v1.ListOptions) (*v1.PodList, error) {
+func waitForPodsReady(client v1client.CoreV1Interface, timeout time.Duration, expectedRunning int, image, namespace string, opts v1.ListOptions) (*v1.PodList, error) {
 	t := time.After(timeout)
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
@@ -180,7 +182,8 @@ func waitForPodsReady(client v1client.CoreV1Interface, timeout time.Duration, ex
 					if err != nil {
 						return nil, err
 					}
-					if isRunningAndReady {
+
+					if isRunningAndReady && podRunsImage(p, image) {
 						runningAndReady++
 					}
 				}
@@ -190,6 +193,16 @@ func waitForPodsReady(client v1client.CoreV1Interface, timeout time.Duration, ex
 			}
 		}
 	}
+}
+
+func podRunsImage(p v1.Pod, image string) bool {
+	for _, c := range p.Spec.Containers {
+		if image == c.Image {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (f *Framework) CreateDeployment(kclient kubernetes.Interface, ns string, deploy *v1beta1.Deployment) error {
