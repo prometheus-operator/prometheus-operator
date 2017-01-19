@@ -48,6 +48,7 @@ type PrometheusSpec struct {
 	Storage                *StorageSpec            `json:"storage"`
 	Alerting               AlertingSpec            `json:"alerting"`
 	Resources              v1.ResourceRequirements `json:"resources"`
+	NodeSelector           map[string]string       `json:"nodeSelector,omitempty"`
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...
