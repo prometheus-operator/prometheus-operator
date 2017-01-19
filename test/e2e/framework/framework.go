@@ -147,6 +147,18 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 
 // Teardown tears down a previously initialized test environment.
 func (f *Framework) Teardown() error {
+	if err := f.KubeClient.Core().Services(f.Namespace.Name).Delete("prometheus-operated", nil); err != nil && !k8sutil.IsResourceNotFoundError(err) {
+		return err
+	}
+
+	if err := f.KubeClient.Core().Services(f.Namespace.Name).Delete("alertmanager-operated", nil); err != nil && !k8sutil.IsResourceNotFoundError(err) {
+		return err
+	}
+
+	if err := f.KubeClient.Extensions().Deployments(f.Namespace.Name).Delete("prometheus-operator", nil); err != nil {
+		return err
+	}
+
 	if err := f.KubeClient.Core().Namespaces().Delete(f.Namespace.Name, nil); err != nil {
 		return err
 	}
@@ -219,4 +231,18 @@ func (f *Framework) createDeployment(deploy *v1beta1.Deployment) error {
 	}
 
 	return nil
+}
+
+func (f *Framework) GetLogs(podName, containerName string) (string, error) {
+	logs, err := f.KubeClient.Core().RESTClient().Get().
+		Resource("pods").
+		Namespace(f.Namespace.Name).
+		Name(podName).SubResource("log").
+		Param("container", containerName).
+		Do().
+		Raw()
+	if err != nil {
+		return "", err
+	}
+	return string(logs), err
 }
