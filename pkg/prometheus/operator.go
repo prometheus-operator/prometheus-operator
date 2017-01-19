@@ -330,13 +330,14 @@ func (c *Operator) worker() {
 	}
 }
 
-func (c *Operator) prometheusForStatefulSet(ps interface{}) *v1alpha1.Prometheus {
-	key, ok := c.keyFunc(ps)
+func (c *Operator) prometheusForStatefulSet(sset interface{}) *v1alpha1.Prometheus {
+	key, ok := c.keyFunc(sset)
 	if !ok {
 		return nil
 	}
-	// Namespace/Name are one-to-one so the key will find the respective Prometheus resource.
-	p, exists, err := c.promInf.GetStore().GetByKey(key)
+
+	promKey := statefulSetKeyToPrometheusKey(key)
+	p, exists, err := c.promInf.GetStore().GetByKey(promKey)
 	if err != nil {
 		c.logger.Log("msg", "Prometheus lookup failed", "err", err)
 		return nil
@@ -345,6 +346,20 @@ func (c *Operator) prometheusForStatefulSet(ps interface{}) *v1alpha1.Prometheus
 		return nil
 	}
 	return p.(*v1alpha1.Prometheus)
+}
+
+func prometheusNameFromStatefulSetName(name string) string {
+	return strings.TrimPrefix(name, "prometheus-")
+}
+
+func statefulSetKeyToPrometheusKey(key string) string {
+	keyParts := strings.Split(key, "/")
+	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "prometheus-")
+}
+
+func prometheusKeyToStatefulSetKey(key string) string {
+	keyParts := strings.Split(key, "/")
+	return keyParts[0] + "/prometheus-" + keyParts[1]
 }
 
 func (c *Operator) handleDeleteStatefulSet(obj interface{}) {
@@ -426,7 +441,7 @@ func (c *Operator) sync(key string) error {
 
 	ssetClient := c.kclient.Apps().StatefulSets(p.Namespace)
 	// Ensure we have a StatefulSet running Prometheus deployed.
-	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(key)
+	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(prometheusKeyToStatefulSetKey(key))
 	if err != nil {
 		return err
 	}
@@ -523,7 +538,8 @@ func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v
 }
 
 func (c *Operator) destroyPrometheus(key string) error {
-	obj, exists, err := c.ssetInf.GetStore().GetByKey(key)
+	ssetKey := prometheusKeyToStatefulSetKey(key)
+	obj, exists, err := c.ssetInf.GetStore().GetByKey(ssetKey)
 	if err != nil {
 		return err
 	}
@@ -545,7 +561,7 @@ func (c *Operator) destroyPrometheus(key string) error {
 	// TODO(fabxc): temprorary solution until StatefulSet status provides necessary info to know
 	// whether scale-down completed.
 	for {
-		pods, err := podClient.List(ListOptions(sset.Name))
+		pods, err := podClient.List(ListOptions(prometheusNameFromStatefulSetName(sset.Name)))
 		if err != nil {
 			return err
 		}
@@ -587,7 +603,7 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus) error {
 
 	cm := &v1.ConfigMap{
 		ObjectMeta: v1.ObjectMeta{
-			Name: p.Name,
+			Name: configConfigMapName(p.Name),
 		},
 		Data: map[string]string{
 			"prometheus.yaml": string(b),
@@ -596,7 +612,7 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus) error {
 
 	cmClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
 
-	_, err = cmClient.Get(p.Name, metav1.GetOptions{})
+	_, err = cmClient.Get(cm.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		_, err = cmClient.Create(cm)
 	} else if err == nil {

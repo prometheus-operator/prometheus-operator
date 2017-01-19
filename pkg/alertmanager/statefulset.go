@@ -27,30 +27,39 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
 
+const (
+	governingServiceName = "alertmanager-operated"
+	defaultBaseImage     = "quay.io/prometheus/alertmanager"
+	defaultVersion       = "v0.5.1"
+	minReplicas          = 1
+)
+
 func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet) *v1beta1.StatefulSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
 
 	if am.Spec.BaseImage == "" {
-		am.Spec.BaseImage = "quay.io/prometheus/alertmanager"
+		am.Spec.BaseImage = defaultBaseImage
 	}
 	if am.Spec.Version == "" {
-		am.Spec.Version = "v0.5.1"
+		am.Spec.Version = defaultVersion
 	}
-	if am.Spec.Replicas < 1 {
-		am.Spec.Replicas = 1
+	if am.Spec.Replicas < minReplicas {
+		am.Spec.Replicas = minReplicas
 	}
 
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
-			Name: am.Name,
+			Name:        prefixedName(am.Name),
+			Labels:      am.ObjectMeta.Labels,
+			Annotations: am.ObjectMeta.Annotations,
 		},
 		Spec: makeStatefulSetSpec(am),
 	}
 	if vc := am.Spec.Storage; vc == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: fmt.Sprintf("%s-db", am.Name),
+			Name: volumeName(am.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
@@ -58,7 +67,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet) *v1bet
 	} else {
 		pvc := v1.PersistentVolumeClaim{
 			ObjectMeta: v1.ObjectMeta{
-				Name: fmt.Sprintf("%s-db", am.Name),
+				Name: volumeName(am.Name),
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
 				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
@@ -83,7 +92,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet) *v1bet
 func makeStatefulSetService(p *v1alpha1.Alertmanager) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
-			Name: "alertmanager",
+			Name: governingServiceName,
 		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",
@@ -136,12 +145,12 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager) v1beta1.StatefulSetSpec {
 	}
 
 	for i := int32(0); i < a.Spec.Replicas; i++ {
-		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", a.Name, i, "alertmanager", a.Namespace))
+		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, "alertmanager", a.Namespace))
 	}
 
 	terminationGracePeriod := int64(0)
 	return v1beta1.StatefulSetSpec{
-		ServiceName: "alertmanager",
+		ServiceName: governingServiceName,
 		Replicas:    &a.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: v1.ObjectMeta{
@@ -155,7 +164,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager) v1beta1.StatefulSetSpec {
 				Containers: []v1.Container{
 					{
 						Command: commands,
-						Name:    a.Name,
+						Name:    "alertmanager",
 						Image:   image,
 						Ports: []v1.ContainerPort{
 							{
@@ -175,7 +184,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager) v1beta1.StatefulSetSpec {
 								MountPath: "/etc/alertmanager/config",
 							},
 							{
-								Name:      fmt.Sprintf("%s-db", a.Name),
+								Name:      volumeName(a.Name),
 								MountPath: "/var/alertmanager/data",
 								SubPath:   subPathForStorage(a.Spec.Storage),
 							},
@@ -220,7 +229,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager) v1beta1.StatefulSetSpec {
 						VolumeSource: v1.VolumeSource{
 							ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: a.Name,
+									Name: configConfigMapName(a.Name),
 								},
 							},
 						},
@@ -229,6 +238,18 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager) v1beta1.StatefulSetSpec {
 			},
 		},
 	}
+}
+
+func configConfigMapName(name string) string {
+	return prefixedName(name)
+}
+
+func volumeName(name string) string {
+	return fmt.Sprintf("%s-db", prefixedName(name))
+}
+
+func prefixedName(name string) string {
+	return fmt.Sprintf("alertmanager-%s", name)
 }
 
 func subPathForStorage(s *v1alpha1.StorageSpec) string {

@@ -11,4 +11,4 @@ spec:
     protocol: TCP
     targetPort: web
   selector:
-    alertmanager: alertmanager-main
+    alertmanager: main

@@ -27,22 +27,30 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
 
+const (
+	governingServiceName = "prometheus-operated"
+	defaultBaseImage     = "quay.io/prometheus/prometheus"
+	defaultVersion       = "v1.4.0"
+	minReplicas          = 1
+	defaultRetention     = "24h"
+)
+
 func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.StatefulSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
 
 	if p.Spec.BaseImage == "" {
-		p.Spec.BaseImage = "quay.io/prometheus/prometheus"
+		p.Spec.BaseImage = defaultBaseImage
 	}
 	if p.Spec.Version == "" {
-		p.Spec.Version = "v1.4.0"
+		p.Spec.Version = defaultVersion
 	}
-	if p.Spec.Replicas < 1 {
-		p.Spec.Replicas = 1
+	if p.Spec.Replicas < minReplicas {
+		p.Spec.Replicas = minReplicas
 	}
 	if p.Spec.Retention == "" {
-		p.Spec.Retention = "24h"
+		p.Spec.Retention = defaultRetention
 	}
 
 	if p.Spec.Resources.Requests == nil {
@@ -54,13 +62,15 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.S
 
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
-			Name: p.Name,
+			Name:        prefixedName(p.Name),
+			Labels:      p.ObjectMeta.Labels,
+			Annotations: p.ObjectMeta.Annotations,
 		},
 		Spec: makeStatefulSetSpec(p),
 	}
 	if vc := p.Spec.Storage; vc == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: fmt.Sprintf("%s-db", p.Name),
+			Name: volumeName(p.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
@@ -68,7 +78,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.S
 	} else {
 		pvc := v1.PersistentVolumeClaim{
 			ObjectMeta: v1.ObjectMeta{
-				Name: fmt.Sprintf("%s-db", p.Name),
+				Name: volumeName(p.Name),
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
 				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
@@ -93,7 +103,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.S
 func makeEmptyConfig(name string) *v1.ConfigMap {
 	return &v1.ConfigMap{
 		ObjectMeta: v1.ObjectMeta{
-			Name: fmt.Sprintf("%s", name),
+			Name: configConfigMapName(name),
 		},
 		Data: map[string]string{
 			"prometheus.yaml": "",
@@ -104,7 +114,7 @@ func makeEmptyConfig(name string) *v1.ConfigMap {
 func makeEmptyRules(name string) *v1.ConfigMap {
 	return &v1.ConfigMap{
 		ObjectMeta: v1.ObjectMeta{
-			Name: fmt.Sprintf("%s-rules", name),
+			Name: rulesConfigMapName(name),
 		},
 	}
 }
@@ -112,7 +122,7 @@ func makeEmptyRules(name string) *v1.ConfigMap {
 func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
-			Name: "prometheus",
+			Name: governingServiceName,
 		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",
@@ -207,7 +217,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 								MountPath: "/etc/prometheus/rules",
 							},
 							{
-								Name:      fmt.Sprintf("%s-db", p.Name),
+								Name:      volumeName(p.Name),
 								MountPath: "/var/prometheus/data",
 								SubPath:   subPathForStorage(p.Spec.Storage),
 							},
@@ -233,6 +243,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 						Args: []string{
 							fmt.Sprintf("-webhook-url=%s", localReloadURL),
 							"-volume-dir=/etc/prometheus/config",
+							"-volume-dir=/etc/prometheus/rules/",
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
@@ -240,25 +251,16 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 								ReadOnly:  true,
 								MountPath: "/etc/prometheus/config",
 							},
+							{
+								Name:      "rules",
+								ReadOnly:  true,
+								MountPath: "/etc/prometheus/rules",
+							},
 						},
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{
 								v1.ResourceCPU:    resource.MustParse("5m"),
 								v1.ResourceMemory: resource.MustParse("10Mi"),
-							},
-						},
-					}, {
-						Name:  "rules-reloader",
-						Image: "jimmidyson/configmap-reload",
-						Args: []string{
-							fmt.Sprintf("-webhook-url=%s", localReloadURL),
-							"-volume-dir=/etc/prometheus/rules/",
-						},
-						VolumeMounts: []v1.VolumeMount{
-							{
-								Name:      "rules",
-								ReadOnly:  true,
-								MountPath: "/etc/prometheus/rules",
 							},
 						},
 					},
@@ -270,7 +272,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 						VolumeSource: v1.VolumeSource{
 							ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: p.Name,
+									Name: configConfigMapName(p.Name),
 								},
 							},
 						},
@@ -280,7 +282,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 						VolumeSource: v1.VolumeSource{
 							ConfigMap: &v1.ConfigMapVolumeSource{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: fmt.Sprintf("%s-rules", p.Name),
+									Name: rulesConfigMapName(p.Name),
 								},
 							},
 						},
@@ -289,6 +291,22 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 			},
 		},
 	}
+}
+
+func configConfigMapName(name string) string {
+	return prefixedName(name)
+}
+
+func rulesConfigMapName(name string) string {
+	return fmt.Sprintf("%s-rules", prefixedName(name))
+}
+
+func volumeName(name string) string {
+	return fmt.Sprintf("%s-db", prefixedName(name))
+}
+
+func prefixedName(name string) string {
+	return fmt.Sprintf("prometheus-%s", name)
 }
 
 func subPathForStorage(s *v1alpha1.StorageSpec) string {
