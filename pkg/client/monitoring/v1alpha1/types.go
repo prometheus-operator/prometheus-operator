@@ -38,16 +38,29 @@ type PrometheusList struct {
 
 // PrometheusSpec holds specification parameters of a Prometheus deployment.
 type PrometheusSpec struct {
-	ServiceMonitorSelector *metav1.LabelSelector   `json:"serviceMonitorSelector"`
-	Version                string                  `json:"version"`
-	Paused                 bool                    `json:"paused"`
-	BaseImage              string                  `json:"baseImage"`
-	Replicas               int32                   `json:"replicas"`
-	Retention              string                  `json:"retention"`
-	ExternalURL            string                  `json:"externalUrl"`
-	Storage                *StorageSpec            `json:"storage"`
-	Alerting               AlertingSpec            `json:"alerting"`
-	Resources              v1.ResourceRequirements `json:"resources"`
+	// ServiceMonitors to be selected for target discovery.
+	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
+	// Version of Prometheus to be deployed.
+	Version string `json:"version,omitempty"`
+	// When a Prometheus deployment is paused, no actions except for deletion
+	// will be performed on the underlying objects.
+	Paused bool `json:"paused,omitempty"`
+	// Base image to use for a Prometheus deployment.
+	BaseImage string `json:"baseImage,omitempty"`
+	// Number of instances to deploy for a Prometheus deployment.
+	Replicas int32 `json:"replicas,omitempty"`
+	// Time duration Prometheus shall retain data for.
+	Retention string `json:"retention,omitempty"`
+	// The external URL the Prometheus instances will be available under. This is
+	// necessary to generate correct URLs. This is necessary if Prometheus is not
+	// served from root of a DNS name.
+	ExternalURL string `json:"externalUrl,omitempty"`
+	// Storage spec to specify how storage shall be used.
+	Storage *StorageSpec `json:"storage,omitempty"`
+	// Define details regarding alerting.
+	Alerting AlertingSpec `json:"alerting,omitempty"`
+	// Define resources requests and limits for single Pods.
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...
@@ -57,42 +70,48 @@ type PrometheusStatus struct {
 	// Represents whether any actions on the underlaying managed objects are
 	// being performed. Only delete actions will be performed.
 	Paused bool `json:"paused"`
-
 	// Total number of non-terminated pods targeted by this Prometheus deployment
 	// (their labels match the selector).
 	Replicas int32 `json:"replicas"`
-
 	// Total number of non-terminated pods targeted by this Prometheus deployment
 	// that have the desired version spec.
 	UpdatedReplicas int32 `json:"updatedReplicas"`
-
 	// Total number of available pods (ready for at least minReadySeconds)
 	// targeted by this Prometheus deployment.
 	AvailableReplicas int32 `json:"availableReplicas"`
-
 	// Total number of unavailable pods targeted by this Prometheus deployment.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
 
 // AlertingSpec defines paramters for alerting configuration of Prometheus servers.
 type AlertingSpec struct {
+	// AlertmanagerEndpoints Prometheus should fire alerts against.
 	Alertmanagers []AlertmanagerEndpoints `json:"alertmanagers"`
 }
 
 // StorageSpec defines the configured storage for a group Prometheus servers.
 type StorageSpec struct {
-	Class     string                  `json:"class"`
-	Selector  *metav1.LabelSelector   `json:"selector"`
+	// Name of the StorageClass to use when requesting storage provisioning. More
+	// info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
+	Class string `json:"class"`
+	// A label query over volumes to consider for binding.
+	Selector *metav1.LabelSelector `json:"selector"`
+	// Resources represents the minimum resources the volume should have. More
+	// info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources
 	Resources v1.ResourceRequirements `json:"resources"`
 }
 
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
 // containing alertmanager IPs to fire alerts against.
 type AlertmanagerEndpoints struct {
-	Namespace string             `json:"namespace"`
-	Name      string             `json:"name"`
-	Port      intstr.IntOrString `json:"port"`
-	Scheme    string             `json:"scheme"`
+	// Namespace of Endpoints object.
+	Namespace string `json:"namespace"`
+	// Name of Endpoints object in Namespace.
+	Name string `json:"name"`
+	// Port the Alertmanager API is exposed on.
+	Port intstr.IntOrString `json:"port"`
+	// Scheme to use when firing alerts.
+	Scheme string `json:"scheme"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.
@@ -104,21 +123,32 @@ type ServiceMonitor struct {
 
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 type ServiceMonitorSpec struct {
-	JobLabel          string               `json:"jobLabel"`
-	Endpoints         []Endpoint           `json:"endpoints"`
-	Selector          metav1.LabelSelector `json:"selector"`
-	NamespaceSelector NamespaceSelector    `json:"namespaceSelector"`
+	// The label to use to retrieve the job name from.
+	JobLabel string `json:"jobLabel,omitempty"`
+	// A list of endpoints allowed as part of this ServiceMonitor.
+	Endpoints []Endpoint `json:"endpoints,omitempty"`
+	// Selector to select Endpoints objects.
+	Selector metav1.LabelSelector `json:"selector"`
+	// Selector to select which namespaces the Endpoints objects are discovered from.
+	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 }
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 type Endpoint struct {
-	Port            string             `json:"port"`
-	TargetPort      intstr.IntOrString `json:"targetPort"`
-	Path            string             `json:"path"`
-	Scheme          string             `json:"scheme"`
-	Interval        string             `json:"interval"`
-	TLSConfig       *TLSConfig         `json:"tlsConfig"`
-	BearerTokenFile string             `json:"bearerTokenFile"`
+	// Name of the service port this endpoint refers to. Mutually exclusive with targetPort.
+	Port string `json:"port,omitempty"`
+	// Name or number of the target port of the endpoint. Mutually exclusive with port.
+	TargetPort intstr.IntOrString `json:"targetPort,omitempty"`
+	// HTTP path to scrape for metrics.
+	Path string `json:"path,omitempty"`
+	// HTTP scheme to use for scraping.
+	Scheme string `json:"scheme,omitempty"`
+	// Interval at which metrics should be scraped
+	Interval string `json:"interval,omitempty"`
+	// TLS configuration to use when scraping the endpoint
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+	// File to read bearer token for scraping targets.
+	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 }
 
 // TLSConfig specifies TLS configuration parameters.
@@ -132,7 +162,7 @@ type TLSConfig struct {
 	// Used to verify the hostname for the targets.
 	ServerName string `yaml:"serverName,omitempty"`
 	// Disable target certificate validation.
-	InsecureSkipVerify bool `yaml:"insecureSkipVerify"`
+	InsecureSkipVerify bool `yaml:"insecureSkipVerify,omitempty"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.
@@ -147,21 +177,21 @@ type Alertmanager struct {
 	metav1.TypeMeta `json:",inline"`
 	v1.ObjectMeta   `json:"metadata,omitempty"`
 	Spec            AlertmanagerSpec    `json:"spec"`
-	Status          *AlertmanagerStatus `json:"status"`
+	Status          *AlertmanagerStatus `json:"status,omitempty"`
 }
 
 type AlertmanagerSpec struct {
 	// Version the cluster should be on.
-	Version string `json:"version"`
+	Version string `json:"version,omitempty"`
 	// Base image that is used to deploy pods.
-	BaseImage string `json:"baseImage"`
+	BaseImage string `json:"baseImage,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will
 	// eventually make the size of the running cluster equal to the expected
 	// size.
-	Replicas int32 `json:"replicas"`
+	Replicas int32 `json:"replicas,omitempty"`
 	// Storage is the definition of how storage will be used by the Alertmanager
 	// instances.
-	Storage *StorageSpec `json:"storage"`
+	Storage *StorageSpec `json:"storage,omitempty"`
 	// ExternalURL is the URL under which Alertmanager is externally reachable
 	// (for example, if Alertmanager is served via a reverse proxy). Used for
 	// generating relative and absolute links back to Alertmanager itself. If the
@@ -171,7 +201,7 @@ type AlertmanagerSpec struct {
 	ExternalURL string `json:"externalUrl,omitempty"`
 	// If set to true all actions on the underlaying managed objects are not
 	// goint to be performed, except for delete actions.
-	Paused bool `json:"paused"`
+	Paused bool `json:"paused,omitempty"`
 }
 
 type AlertmanagerList struct {
@@ -187,19 +217,15 @@ type AlertmanagerStatus struct {
 	// Represents whether any actions on the underlaying managed objects are
 	// being performed. Only delete actions will be performed.
 	Paused bool `json:"paused"`
-
 	// Total number of non-terminated pods targeted by this Alertmanager
 	// cluster (their labels match the selector).
 	Replicas int32 `json:"replicas"`
-
 	// Total number of non-terminated pods targeted by this Alertmanager
 	// cluster that have the desired version spec.
 	UpdatedReplicas int32 `json:"updatedReplicas"`
-
 	// Total number of available pods (ready for at least minReadySeconds)
 	// targeted by this Alertmanager cluster.
 	AvailableReplicas int32 `json:"availableReplicas"`
-
 	// Total number of unavailable pods targeted by this Alertmanager cluster.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
@@ -212,6 +238,3 @@ type NamespaceSelector struct {
 	// Currently the selector is only used for namespaces which require more complex
 	// implementation to support label selections.
 }
-
-type ListOptions v1.ListOptions
-type DeleteOptions v1.DeleteOptions

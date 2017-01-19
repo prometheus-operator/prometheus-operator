@@ -42,6 +42,7 @@ of the service endpoints. This is also made possible by the Prometheus Operator.
 | scheme | HTTP scheme to use for scraping | false | string | http |
 | interval | Interval at which metrics should be scraped | false | duration | 30s |
 | tlsConfig | TLS configuration to use when scraping the endpoint | false | TLSConfig | |
+| bearerTokenFile | File to read bearer token for scraping targets. | false | string | |
 
 ### `TLSConfig`
 
