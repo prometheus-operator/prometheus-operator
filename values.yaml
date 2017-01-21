@@ -1,0 +1,31 @@
+global:
+  ## hyperkube image to use when getting/deleting ThirdPartyResources
+  ## created by prometheus-operator.
+  ##
+  hyperkube:
+    repository: quay.io/coreos/hyperkube
+    tag: v1.5.2_coreos.1
+    pullPolicy: IfNotPresent
+
+## prometheus-operator image
+##
+image:
+  repository: quay.io/coreos/prometheus-operator
+  tag: v0.2.1
+  pullPolicy: IfNotPresent
+
+## if true, collect & send anonymous usage statistics
+## Ref: https://github.com/coreos/prometheus-operator#installation
+##
+sendAnalytics: true
+
+## prometheus-operator resource limits & requests
+## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
+##
+resources:
+  limits:
+    cpu: 200m
+    memory: 300Mi
+  requests:
+    cpu: 100m
+    memory: 50Mi
