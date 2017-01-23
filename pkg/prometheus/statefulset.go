@@ -115,7 +115,8 @@ func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
 			Name: "prometheus",
 		},
 		Spec: v1.ServiceSpec{
-			ClusterIP: "None",
+			ClusterIP:       "None",
+			SessionAffinity: "ClientIP",
 			Ports: []v1.ServicePort{
 				{
 					Name:       "web",
