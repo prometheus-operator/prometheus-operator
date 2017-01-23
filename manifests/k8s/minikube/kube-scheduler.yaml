@@ -21,7 +21,7 @@ metadata:
     k8s-app: kube-scheduler
 subsets:
 - addresses:
-  - ip: 192.168.99.100
+  - ip: MINIKUBE_IP
   ports:
   - name: http-metrics
     port: 10251

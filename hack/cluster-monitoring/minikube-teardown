@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+hack/cluster-monitoring/teardown
+
+kubectl --namespace=kube-system delete -f manifests/k8s/minikube
+

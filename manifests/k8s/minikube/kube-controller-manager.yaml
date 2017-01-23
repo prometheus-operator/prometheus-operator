@@ -21,7 +21,7 @@ metadata:
     k8s-app: kube-controller-manager
 subsets:
 - addresses:
-  - ip: 192.168.99.100
+  - ip: MINIKUBE_IP
   ports:
   - name: http-metrics
     port: 10252
