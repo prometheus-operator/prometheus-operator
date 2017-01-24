@@ -2,7 +2,7 @@
 
 There are a number of
 [applications](https://prometheus.io/docs/instrumenting/exporters/#directly-instrumented-software)
-that are natively instrumented with Prometheus metrics, those applications
+that are natively instrumented with Prometheus metrics. Those applications
 simply expose the metrics through an HTTP server.
 
 The Prometheus developers and the community are maintaining [client
