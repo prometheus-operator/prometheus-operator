@@ -111,6 +111,7 @@ it brought up as data sources in potential Grafana deployments.
 Prometheus instances are deployed with default values for requested and maximum
 resource usage of CPU and memory. This will be made configurable in the `Prometheus` 
 TPR eventually.
+
 Prometheus comes with a variety of configuration flags for its storage engine that
 have to be tuned for better performance in large Prometheus servers. It will be the
 operators job to tune those correctly to be aligned with the experiences load

@@ -51,12 +51,12 @@ A healthy node would be one that has joined the existing mesh network and has
 been communicated the state that it missed while that particular instance was
 down for the upgrade.
 
-Currently there is no way to tell whether an Alertmanger instance is healthy
+Currently there is no way to tell whether an Alertmanager instance is healthy
 under the above conditions. There are discussions of using vector clocks to
 resolve merges in the above mentioned situation, and ensure on a best effort
 basis that joining the network was successful.
 
-> Note that single instance Alertmanger setups will therefore not have zero
+> Note that single instance Alertmanager setups will therefore not have zero
 > downtime on deployments.
 
 The current implementation of rolling deployments simply decides based on the
