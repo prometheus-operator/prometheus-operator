@@ -3,7 +3,7 @@
 There are a number of
 [applications](https://prometheus.io/docs/instrumenting/exporters/#directly-instrumented-software)
 that are natively instrumented with Prometheus metrics, those applications
-simply expose the metrics through an http server.
+simply expose the metrics through an HTTP server.
 
 The Prometheus developers and the community are maintaining [client
 libraries](https://prometheus.io/docs/instrumenting/clientlibs/#client-libraries)
@@ -19,19 +19,19 @@ called
 Exporters can generally be divided into two categories:
 
 * Instance exporters: These expose metrics about a single instance of an
-  application. For example the http requests that a single http server has
+  application. For example the HTTP requests that a single HTTP server has
 exporters served. These exporters are deployed as a
 [side-car](http://blog.kubernetes.io/2015/06/the-distributed-system-toolkit-patterns.html)
 container in the same pod as the actual instance of the respective application.
 A real life example is the [`dnsmasq` metrics
 sidecar](https://github.com/kubernetes/dns/blob/master/docs/sidecar/README.md),
-which converts the propriatary metrics format communicated over the DNS
+which converts the proprietary metrics format communicated over the DNS
 protocol by dnsmasq to the Prometheus exposition format and exposes it on an
-http server.
+HTTP server.
 
 * Cluster-state exporters: These expose metrics about an entire system, they
   could be native to the environment the application constructs. For example
-these could be the number 3D objects in a game, or metrics about a kubernetes
+these could be the number 3D objects in a game, or metrics about a Kubernetes
 deployment. These exporters are typically deployed as a normal Kubernetes
 deployment, but can vary depending on the nature of the particular exporter. A
 real life example of this is the

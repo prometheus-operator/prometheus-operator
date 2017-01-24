@@ -25,7 +25,7 @@ discovers those `Endpoints` objects and configures Prometheus to monitor those
 
 The `endpoints` section of the `ServiceMonitorSpec`, is used to configure which
 ports of these `Endpoints` are going to be scraped for metrics, and with which
-paramters. For advanced use cases one may want to monitor ports of backing
+parameters. For advanced use cases one may want to monitor ports of backing
 `Pod`s, which are not directly part of the service endpoints. Therefore when
 specifying an endpoint in the `endpoints` section, they are strictly used.
 
