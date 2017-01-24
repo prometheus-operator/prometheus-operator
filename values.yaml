@@ -11,7 +11,7 @@ global:
 ##
 image:
   repository: quay.io/coreos/prometheus-operator
-  tag: v0.2.1
+  tag: v0.2.3
   pullPolicy: IfNotPresent
 
 ## if true, collect & send anonymous usage statistics

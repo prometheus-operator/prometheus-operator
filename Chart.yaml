@@ -6,4 +6,4 @@ maintainers:
   - name: Michael Goodness
     email: mgoodness@gmail.com
 name: prometheus-operator
-version: 0.1.1
+version: 0.1.2
