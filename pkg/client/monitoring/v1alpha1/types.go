@@ -61,6 +61,8 @@ type PrometheusSpec struct {
 	Alerting AlertingSpec `json:"alerting,omitempty"`
 	// Define resources requests and limits for single Pods.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+	// Define which Nodes the Pods are scheduled on.
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...
