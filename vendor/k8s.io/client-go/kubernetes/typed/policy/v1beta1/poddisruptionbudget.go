@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2017 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@ limitations under the License.
 package v1beta1
 
 import (
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
+	watch "k8s.io/apimachinery/pkg/watch"
 	api "k8s.io/client-go/pkg/api"
 	v1 "k8s.io/client-go/pkg/api/v1"
-	meta_v1 "k8s.io/client-go/pkg/apis/meta/v1"
 	v1beta1 "k8s.io/client-go/pkg/apis/policy/v1beta1"
-	watch "k8s.io/client-go/pkg/watch"
 	rest "k8s.io/client-go/rest"
 )
 
@@ -37,11 +38,11 @@ type PodDisruptionBudgetInterface interface {
 	Update(*v1beta1.PodDisruptionBudget) (*v1beta1.PodDisruptionBudget, error)
 	UpdateStatus(*v1beta1.PodDisruptionBudget) (*v1beta1.PodDisruptionBudget, error)
 	Delete(name string, options *v1.DeleteOptions) error
-	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
+	DeleteCollection(options *v1.DeleteOptions, listOptions meta_v1.ListOptions) error
 	Get(name string, options meta_v1.GetOptions) (*v1beta1.PodDisruptionBudget, error)
-	List(opts v1.ListOptions) (*v1beta1.PodDisruptionBudgetList, error)
-	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *v1beta1.PodDisruptionBudget, err error)
+	List(opts meta_v1.ListOptions) (*v1beta1.PodDisruptionBudgetList, error)
+	Watch(opts meta_v1.ListOptions) (watch.Interface, error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.PodDisruptionBudget, err error)
 	PodDisruptionBudgetExpansion
 }
 
@@ -112,7 +113,7 @@ func (c *podDisruptionBudgets) Delete(name string, options *v1.DeleteOptions) er
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *podDisruptionBudgets) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *podDisruptionBudgets) DeleteCollection(options *v1.DeleteOptions, listOptions meta_v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("poddisruptionbudgets").
@@ -136,7 +137,7 @@ func (c *podDisruptionBudgets) Get(name string, options meta_v1.GetOptions) (res
 }
 
 // List takes label and field selectors, and returns the list of PodDisruptionBudgets that match those selectors.
-func (c *podDisruptionBudgets) List(opts v1.ListOptions) (result *v1beta1.PodDisruptionBudgetList, err error) {
+func (c *podDisruptionBudgets) List(opts meta_v1.ListOptions) (result *v1beta1.PodDisruptionBudgetList, err error) {
 	result = &v1beta1.PodDisruptionBudgetList{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -148,7 +149,7 @@ func (c *podDisruptionBudgets) List(opts v1.ListOptions) (result *v1beta1.PodDis
 }
 
 // Watch returns a watch.Interface that watches the requested podDisruptionBudgets.
-func (c *podDisruptionBudgets) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *podDisruptionBudgets) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
 	return c.client.Get().
 		Prefix("watch").
 		Namespace(c.ns).
@@ -158,7 +159,7 @@ func (c *podDisruptionBudgets) Watch(opts v1.ListOptions) (watch.Interface, erro
 }
 
 // Patch applies the patch and returns the patched podDisruptionBudget.
-func (c *podDisruptionBudgets) Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *v1beta1.PodDisruptionBudget, err error) {
+func (c *podDisruptionBudgets) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.PodDisruptionBudget, err error) {
 	result = &v1beta1.PodDisruptionBudget{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).

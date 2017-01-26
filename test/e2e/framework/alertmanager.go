@@ -19,6 +19,7 @@ import (
 	"log"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/util/intstr"
 
@@ -42,7 +43,7 @@ receivers:
 
 func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *v1alpha1.Alertmanager {
 	return &v1alpha1.Alertmanager{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 		Spec: v1alpha1.AlertmanagerSpec{
@@ -54,7 +55,7 @@ func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *v1alpha1
 
 func (f *Framework) MakeAlertmanagerService(name, group string) *v1.Service {
 	return &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", name),
 			Labels: map[string]string{
 				"group": group,
@@ -81,7 +82,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 	log.Printf("Creating Alertmanager (%s/%s)", f.Namespace.Name, a.Name)
 	_, err := f.KubeClient.CoreV1().ConfigMaps(f.Namespace.Name).Create(
 		&v1.ConfigMap{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: fmt.Sprintf("alertmanager-%s", a.Name),
 			},
 			Data: map[string]string{

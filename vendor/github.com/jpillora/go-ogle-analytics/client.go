@@ -51,9 +51,9 @@ func (c *Client) Send(h hitType) error {
 
 	url := ""
 	if cpy.UseTLS {
-		url = "http://www.google-analytics.com/collect"
+		url = "https://www.google-analytics.com/collect"
 	} else {
-		url = "https://ssl.google-analytics.com/collect"
+		url = "http://ssl.google-analytics.com/collect"
 	}
 
 	str := v.Encode()

@@ -26,16 +26,18 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/queue"
 
 	"github.com/go-kit/kit/log"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	apimetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api"
-	apierrors "k8s.io/client-go/pkg/api/errors"
-	"k8s.io/client-go/pkg/api/meta"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	extensionsobj "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/pkg/fields"
-	"k8s.io/client-go/pkg/labels"
-	utilruntime "k8s.io/client-go/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -158,7 +160,7 @@ func (c *Operator) keyFunc(obj interface{}) (string, bool) {
 	return k, true
 }
 
-func (c *Operator) getObject(obj interface{}) (meta.Object, bool) {
+func (c *Operator) getObject(obj interface{}) (apimetav1.Object, bool) {
 	ts, ok := obj.(cache.DeletedFinalStateUnknown)
 	if ok {
 		obj = ts.Obj
@@ -369,8 +371,8 @@ func (c *Operator) sync(key string) error {
 	return c.syncVersion(am)
 }
 
-func ListOptions(name string) v1.ListOptions {
-	return v1.ListOptions{
+func ListOptions(name string) metav1.ListOptions {
+	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
 			"app":          "alertmanager",
 			"alertmanager": name,
@@ -492,7 +494,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 func (c *Operator) createTPRs() error {
 	tprs := []*extensionsobj.ThirdPartyResource{
 		{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: apimetav1.ObjectMeta{
 				Name: tprAlertmanager,
 			},
 			Versions: []extensionsobj.APIVersion{

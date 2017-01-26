@@ -19,9 +19,9 @@ import (
 	"log"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
-	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/util/intstr"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
@@ -30,7 +30,7 @@ import (
 
 func (f *Framework) MakeBasicPrometheus(name, group string, replicas int32) *v1alpha1.Prometheus {
 	return &v1alpha1.Prometheus{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 		Spec: v1alpha1.PrometheusSpec{
@@ -64,7 +64,7 @@ func (f *Framework) AddAlertingToPrometheus(p *v1alpha1.Prometheus, name string)
 
 func (f *Framework) MakeBasicServiceMonitor(name string) *v1alpha1.ServiceMonitor {
 	return &v1alpha1.ServiceMonitor{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			Labels: map[string]string{
 				"group": name,
@@ -88,7 +88,7 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *v1alpha1.ServiceMonito
 
 func (f *Framework) MakePrometheusService(name, group string) *v1.Service {
 	return &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 			Labels: map[string]string{
 				"group": group,

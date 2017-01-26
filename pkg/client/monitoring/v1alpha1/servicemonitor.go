@@ -17,12 +17,12 @@ package v1alpha1
 import (
 	"encoding/json"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/pkg/api/v1"
-	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/apis/meta/v1/unstructured"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/watch"
 	"k8s.io/client-go/rest"
 )
 
@@ -40,8 +40,8 @@ type ServiceMonitorInterface interface {
 	Get(name string) (*ServiceMonitor, error)
 	Update(*ServiceMonitor) (*ServiceMonitor, error)
 	Delete(name string, options *v1.DeleteOptions) error
-	List(opts v1.ListOptions) (runtime.Object, error)
-	Watch(opts v1.ListOptions) (watch.Interface, error)
+	List(opts metav1.ListOptions) (runtime.Object, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
 }
 
 type servicemonitors struct {
@@ -105,7 +105,7 @@ func (s *servicemonitors) Delete(name string, options *v1.DeleteOptions) error {
 	return s.client.Delete(name, options)
 }
 
-func (s *servicemonitors) List(opts v1.ListOptions) (runtime.Object, error) {
+func (s *servicemonitors) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := s.restClient.Get().
 		Namespace(s.ns).
 		Resource("servicemonitors").
@@ -120,7 +120,7 @@ func (s *servicemonitors) List(opts v1.ListOptions) (runtime.Object, error) {
 	return &sm, json.Unmarshal(b, &sm)
 }
 
-func (s *servicemonitors) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (s *servicemonitors) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	r, err := s.restClient.Get().
 		Prefix("watch").
 		Namespace(s.ns).

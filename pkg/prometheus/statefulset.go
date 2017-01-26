@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"path"
 
+	apimetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
@@ -61,7 +62,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.S
 	}
 
 	statefulset := &v1beta1.StatefulSet{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: apimetav1.ObjectMeta{
 			Name:        prefixedName(p.Name),
 			Labels:      p.ObjectMeta.Labels,
 			Annotations: p.ObjectMeta.Annotations,
@@ -77,7 +78,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.S
 		})
 	} else {
 		pvc := v1.PersistentVolumeClaim{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: apimetav1.ObjectMeta{
 				Name: volumeName(p.Name),
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
@@ -102,7 +103,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.S
 
 func makeEmptyConfig(name string) *v1.ConfigMap {
 	return &v1.ConfigMap{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: apimetav1.ObjectMeta{
 			Name: configConfigMapName(name),
 		},
 		Data: map[string]string{
@@ -113,7 +114,7 @@ func makeEmptyConfig(name string) *v1.ConfigMap {
 
 func makeEmptyRules(name string) *v1.ConfigMap {
 	return &v1.ConfigMap{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: apimetav1.ObjectMeta{
 			Name: rulesConfigMapName(name),
 		},
 	}
@@ -121,7 +122,7 @@ func makeEmptyRules(name string) *v1.ConfigMap {
 
 func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
 	svc := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: apimetav1.ObjectMeta{
 			Name: governingServiceName,
 		},
 		Spec: v1.ServiceSpec{
@@ -186,7 +187,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 		ServiceName: "prometheus",
 		Replicas:    &p.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: apimetav1.ObjectMeta{
 				Labels: map[string]string{
 					"app":        "prometheus",
 					"prometheus": p.Name,

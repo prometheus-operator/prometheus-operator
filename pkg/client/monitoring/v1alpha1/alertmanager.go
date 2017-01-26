@@ -18,12 +18,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/pkg/api/v1"
-	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/apis/meta/v1/unstructured"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/watch"
 	"k8s.io/client-go/rest"
 )
 
@@ -41,8 +41,8 @@ type AlertmanagerInterface interface {
 	Get(name string) (*Alertmanager, error)
 	Update(*Alertmanager) (*Alertmanager, error)
 	Delete(name string, options *v1.DeleteOptions) error
-	List(opts v1.ListOptions) (runtime.Object, error)
-	Watch(opts v1.ListOptions) (watch.Interface, error)
+	List(opts metav1.ListOptions) (runtime.Object, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
 }
 
 type alertmanagers struct {
@@ -106,7 +106,7 @@ func (a *alertmanagers) Delete(name string, options *v1.DeleteOptions) error {
 	return a.client.Delete(name, options)
 }
 
-func (a *alertmanagers) List(opts v1.ListOptions) (runtime.Object, error) {
+func (a *alertmanagers) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := a.restClient.Get().
 		Namespace(a.ns).
 		Resource("alertmanagers").
@@ -121,7 +121,7 @@ func (a *alertmanagers) List(opts v1.ListOptions) (runtime.Object, error) {
 	return &p, json.Unmarshal(b, &p)
 }
 
-func (a *alertmanagers) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (a *alertmanagers) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	r, err := a.restClient.Get().
 		Prefix("watch").
 		Namespace(a.ns).
