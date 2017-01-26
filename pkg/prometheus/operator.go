@@ -22,7 +22,6 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/queue"
 
 	"github.com/go-kit/kit/log"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,6 +36,7 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	extensionsobj "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/util/workqueue"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 )
@@ -60,7 +60,7 @@ type Operator struct {
 	cmapInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
 
-	queue *queue.Queue
+	queue workqueue.RateLimitingInterface
 
 	host string
 }
@@ -91,7 +91,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		kclient: client,
 		mclient: mclient,
 		logger:  logger,
-		queue:   queue.New(),
+		queue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus"),
 		host:    cfg.Host,
 	}
 
@@ -309,26 +309,27 @@ func (c *Operator) enqueueForNamespace(ns string) {
 // worker runs a worker thread that just dequeues items, processes them, and marks them done.
 // It enforces that the syncHandler is never invoked concurrently with the same key.
 func (c *Operator) worker() {
-	for {
-		key, quit := c.queue.Get()
-		if quit {
-			return
-		}
-		if err := c.sync(key.(string)); err != nil {
-			utilruntime.HandleError(fmt.Errorf("reconciliation failed, re-enqueueing: %s", err))
-			// We only mark the item as done after waiting. In the meantime
-			// other items can be processed but the same item won't be processed again.
-			// This is a trivial form of rate-limiting that is sufficient for our throughput
-			// and latency expectations.
-			go func() {
-				time.Sleep(3 * time.Second)
-				c.queue.Done(key)
-			}()
-			continue
-		}
-
-		c.queue.Done(key)
+	for c.processNextWorkItem() {
 	}
+}
+
+func (c *Operator) processNextWorkItem() bool {
+	key, quit := c.queue.Get()
+	if quit {
+		return false
+	}
+	defer c.queue.Done(key)
+
+	err := c.sync(key.(string))
+	if err == nil {
+		c.queue.Forget(key)
+		return true
+	}
+
+	utilruntime.HandleError(fmt.Errorf("Sync %q failed with %v", key, err))
+	c.queue.AddRateLimited(key)
+
+	return true
 }
 
 func (c *Operator) prometheusForStatefulSet(sset interface{}) *v1alpha1.Prometheus {
