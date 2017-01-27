@@ -15,17 +15,17 @@
 package v1alpha1
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
-	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/util/intstr"
 )
 
 // Prometheus defines a Prometheus deployment.
 type Prometheus struct {
-	metav1.TypeMeta `json:",inline"`
-	v1.ObjectMeta   `json:"metadata,omitempty"`
-	Spec            PrometheusSpec    `json:"spec"`
-	Status          *PrometheusStatus `json:"status,omitempty"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              PrometheusSpec    `json:"spec"`
+	Status            *PrometheusStatus `json:"status,omitempty"`
 }
 
 // PrometheusList is a list of Prometheuses.
@@ -118,9 +118,9 @@ type AlertmanagerEndpoints struct {
 
 // ServiceMonitor defines monitoring for a set of services.
 type ServiceMonitor struct {
-	metav1.TypeMeta `json:",inline"`
-	v1.ObjectMeta   `json:"metadata,omitempty"`
-	Spec            ServiceMonitorSpec `json:"spec"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              ServiceMonitorSpec `json:"spec"`
 }
 
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
@@ -176,10 +176,10 @@ type ServiceMonitorList struct {
 }
 
 type Alertmanager struct {
-	metav1.TypeMeta `json:",inline"`
-	v1.ObjectMeta   `json:"metadata,omitempty"`
-	Spec            AlertmanagerSpec    `json:"spec"`
-	Status          *AlertmanagerStatus `json:"status,omitempty"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              AlertmanagerSpec    `json:"spec"`
+	Status            *AlertmanagerStatus `json:"status,omitempty"`
 }
 
 type AlertmanagerSpec struct {

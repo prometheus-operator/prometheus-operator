@@ -23,19 +23,21 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
-	"github.com/coreos/prometheus-operator/pkg/queue"
 
 	"github.com/go-kit/kit/log"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	apimetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api"
-	apierrors "k8s.io/client-go/pkg/api/errors"
-	"k8s.io/client-go/pkg/api/meta"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	extensionsobj "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/pkg/fields"
-	"k8s.io/client-go/pkg/labels"
-	utilruntime "k8s.io/client-go/pkg/util/runtime"
+	"k8s.io/client-go/pkg/util/workqueue"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -55,7 +57,7 @@ type Operator struct {
 	alrtInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
 
-	queue *queue.Queue
+	queue workqueue.RateLimitingInterface
 
 	host string
 }
@@ -80,7 +82,7 @@ func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 		kclient: client,
 		mclient: mclient,
 		logger:  logger,
-		queue:   queue.New(),
+		queue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
 		host:    cfg.Host,
 	}
 
@@ -158,7 +160,7 @@ func (c *Operator) keyFunc(obj interface{}) (string, bool) {
 	return k, true
 }
 
-func (c *Operator) getObject(obj interface{}) (meta.Object, bool) {
+func (c *Operator) getObject(obj interface{}) (apimetav1.Object, bool) {
 	ts, ok := obj.(cache.DeletedFinalStateUnknown)
 	if ok {
 		obj = ts.Obj
@@ -203,26 +205,27 @@ func (c *Operator) enqueueForNamespace(ns string) {
 // worker runs a worker thread that just dequeues items, processes them, and marks them done.
 // It enforces that the syncHandler is never invoked concurrently with the same key.
 func (c *Operator) worker() {
-	for {
-		key, quit := c.queue.Get()
-		if quit {
-			return
-		}
-		if err := c.sync(key.(string)); err != nil {
-			utilruntime.HandleError(fmt.Errorf("reconciliation failed, re-enqueueing: %s", err))
-			// We only mark the item as done after waiting. In the meantime
-			// other items can be processed but the same item won't be processed again.
-			// This is a trivial form of rate-limiting that is sufficient for our throughput
-			// and latency expectations.
-			go func() {
-				time.Sleep(3 * time.Second)
-				c.queue.Done(key)
-			}()
-			continue
-		}
-
-		c.queue.Done(key)
+	for c.processNextWorkItem() {
 	}
+}
+
+func (c *Operator) processNextWorkItem() bool {
+	key, quit := c.queue.Get()
+	if quit {
+		return false
+	}
+	defer c.queue.Done(key)
+
+	err := c.sync(key.(string))
+	if err == nil {
+		c.queue.Forget(key)
+		return true
+	}
+
+	utilruntime.HandleError(fmt.Errorf("Sync %q failed with %v", key, err))
+	c.queue.AddRateLimited(key)
+
+	return true
 }
 
 func (c *Operator) alertmanagerForStatefulSet(sset interface{}) *v1alpha1.Alertmanager {
@@ -369,8 +372,8 @@ func (c *Operator) sync(key string) error {
 	return c.syncVersion(am)
 }
 
-func ListOptions(name string) v1.ListOptions {
-	return v1.ListOptions{
+func ListOptions(name string) metav1.ListOptions {
+	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
 			"app":          "alertmanager",
 			"alertmanager": name,
@@ -492,7 +495,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 func (c *Operator) createTPRs() error {
 	tprs := []*extensionsobj.ThirdPartyResource{
 		{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: apimetav1.ObjectMeta{
 				Name: tprAlertmanager,
 			},
 			Versions: []extensionsobj.APIVersion{

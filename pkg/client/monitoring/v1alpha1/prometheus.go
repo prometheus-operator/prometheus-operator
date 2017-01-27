@@ -17,12 +17,12 @@ package v1alpha1
 import (
 	"encoding/json"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/pkg/api/v1"
-	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/apis/meta/v1/unstructured"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/watch"
 	"k8s.io/client-go/rest"
 )
 
@@ -40,8 +40,8 @@ type PrometheusInterface interface {
 	Get(name string) (*Prometheus, error)
 	Update(*Prometheus) (*Prometheus, error)
 	Delete(name string, options *v1.DeleteOptions) error
-	List(opts v1.ListOptions) (runtime.Object, error)
-	Watch(opts v1.ListOptions) (watch.Interface, error)
+	List(opts metav1.ListOptions) (runtime.Object, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
 }
 
 type prometheuses struct {
@@ -105,7 +105,7 @@ func (p *prometheuses) Delete(name string, options *v1.DeleteOptions) error {
 	return p.client.Delete(name, options)
 }
 
-func (p *prometheuses) List(opts v1.ListOptions) (runtime.Object, error) {
+func (p *prometheuses) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := p.restClient.Get().
 		Namespace(p.ns).
 		Resource("prometheuses").
@@ -120,7 +120,7 @@ func (p *prometheuses) List(opts v1.ListOptions) (runtime.Object, error) {
 	return &prom, json.Unmarshal(b, &prom)
 }
 
-func (p *prometheuses) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (p *prometheuses) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	r, err := p.restClient.Get().
 		Prefix("watch").
 		Namespace(p.ns).

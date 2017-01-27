@@ -21,12 +21,13 @@ import (
 	"path/filepath"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	v1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/pkg/fields"
-	"k8s.io/client-go/pkg/util/yaml"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -67,7 +68,7 @@ func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 	}
 
 	namespace, err := cli.Core().Namespaces().Create(&v1.Namespace{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: ns,
 		},
 	})
@@ -125,7 +126,7 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 		return err
 	}
 
-	opts := v1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
+	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
 	pl, err := f.WaitForPodsReady(60*time.Second, 1, opImage, opts)
 	if err != nil {
 		return err
@@ -168,11 +169,11 @@ func (f *Framework) Teardown() error {
 
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
-func (f *Framework) WaitForPodsReady(timeout time.Duration, expectedReplicas int, image string, opts v1.ListOptions) (*v1.PodList, error) {
+func (f *Framework) WaitForPodsReady(timeout time.Duration, expectedReplicas int, image string, opts metav1.ListOptions) (*v1.PodList, error) {
 	return waitForPodsReady(f.KubeClient.Core(), timeout, expectedReplicas, image, f.Namespace.Name, opts)
 }
 
-func waitForPodsReady(client v1client.CoreV1Interface, timeout time.Duration, expectedRunning int, image, namespace string, opts v1.ListOptions) (*v1.PodList, error) {
+func waitForPodsReady(client v1client.CoreV1Interface, timeout time.Duration, expectedRunning int, image, namespace string, opts metav1.ListOptions) (*v1.PodList, error) {
 	t := time.After(timeout)
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()

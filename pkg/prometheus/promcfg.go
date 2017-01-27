@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
-	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )

@@ -25,8 +25,8 @@ import (
 	"testing"
 	"time"
 
+	apimetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
-	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
@@ -103,7 +103,7 @@ func TestPrometheusReloadConfig(t *testing.T) {
 	}()
 
 	cfg := &v1.ConfigMap{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: apimetav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 		},
 		Data: map[string]string{
@@ -156,7 +156,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 	}
 
 	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Update(&v1.ConfigMap{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: apimetav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s-rules", name),
 		},
 		Data: map[string]string{
@@ -220,7 +220,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 	}
 
 	log.Print("Validating Prometheus ConfigMap was created")
-	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), apimetav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Generated ConfigMap could not be retrieved: %s", err)
 	}
@@ -275,7 +275,7 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	}
 
 	log.Print("Validating Prometheus ConfigMap was created")
-	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), apimetav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Generated ConfigMap could not be retrieved: %s", err)
 	}

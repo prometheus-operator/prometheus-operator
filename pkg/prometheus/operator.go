@@ -22,20 +22,21 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/queue"
 
 	"github.com/go-kit/kit/log"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	apimetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api"
-	apierrors "k8s.io/client-go/pkg/api/errors"
-	"k8s.io/client-go/pkg/api/meta"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	extensionsobj "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/fields"
-	"k8s.io/client-go/pkg/labels"
-	utilruntime "k8s.io/client-go/pkg/util/runtime"
+	"k8s.io/client-go/pkg/util/workqueue"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 )
@@ -59,7 +60,7 @@ type Operator struct {
 	cmapInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
 
-	queue *queue.Queue
+	queue workqueue.RateLimitingInterface
 
 	host string
 }
@@ -90,7 +91,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		kclient: client,
 		mclient: mclient,
 		logger:  logger,
-		queue:   queue.New(),
+		queue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus"),
 		host:    cfg.Host,
 	}
 
@@ -263,7 +264,7 @@ func (c *Operator) handleConfigmapDelete(obj interface{}) {
 	}
 }
 
-func (c *Operator) getObject(obj interface{}) (meta.Object, bool) {
+func (c *Operator) getObject(obj interface{}) (apimetav1.Object, bool) {
 	ts, ok := obj.(cache.DeletedFinalStateUnknown)
 	if ok {
 		obj = ts.Obj
@@ -308,26 +309,27 @@ func (c *Operator) enqueueForNamespace(ns string) {
 // worker runs a worker thread that just dequeues items, processes them, and marks them done.
 // It enforces that the syncHandler is never invoked concurrently with the same key.
 func (c *Operator) worker() {
-	for {
-		key, quit := c.queue.Get()
-		if quit {
-			return
-		}
-		if err := c.sync(key.(string)); err != nil {
-			utilruntime.HandleError(fmt.Errorf("reconciliation failed, re-enqueueing: %s", err))
-			// We only mark the item as done after waiting. In the meantime
-			// other items can be processed but the same item won't be processed again.
-			// This is a trivial form of rate-limiting that is sufficient for our throughput
-			// and latency expectations.
-			go func() {
-				time.Sleep(3 * time.Second)
-				c.queue.Done(key)
-			}()
-			continue
-		}
-
-		c.queue.Done(key)
+	for c.processNextWorkItem() {
 	}
+}
+
+func (c *Operator) processNextWorkItem() bool {
+	key, quit := c.queue.Get()
+	if quit {
+		return false
+	}
+	defer c.queue.Done(key)
+
+	err := c.sync(key.(string))
+	if err == nil {
+		c.queue.Forget(key)
+		return true
+	}
+
+	utilruntime.HandleError(fmt.Errorf("Sync %q failed with %v", key, err))
+	c.queue.AddRateLimited(key)
+
+	return true
 }
 
 func (c *Operator) prometheusForStatefulSet(sset interface{}) *v1alpha1.Prometheus {
@@ -459,8 +461,8 @@ func (c *Operator) sync(key string) error {
 	return c.syncVersion(key, p)
 }
 
-func ListOptions(name string) v1.ListOptions {
-	return v1.ListOptions{
+func ListOptions(name string) metav1.ListOptions {
+	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
 			"app":        "prometheus",
 			"prometheus": name,
@@ -602,7 +604,7 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus) error {
 	}
 
 	cm := &v1.ConfigMap{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: apimetav1.ObjectMeta{
 			Name: configConfigMapName(p.Name),
 		},
 		Data: map[string]string{
@@ -645,7 +647,7 @@ func (c *Operator) selectServiceMonitors(p *v1alpha1.Prometheus) (map[string]*v1
 func (c *Operator) createTPRs() error {
 	tprs := []*extensionsobj.ThirdPartyResource{
 		{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: apimetav1.ObjectMeta{
 				Name: tprServiceMonitor,
 			},
 			Versions: []extensionsobj.APIVersion{
@@ -654,7 +656,7 @@ func (c *Operator) createTPRs() error {
 			Description: "Prometheus monitoring for a service",
 		},
 		{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: apimetav1.ObjectMeta{
 				Name: tprPrometheus,
 			},
 			Versions: []extensionsobj.APIVersion{
