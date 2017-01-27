@@ -55,6 +55,11 @@ type PrometheusSpec struct {
 	// necessary to generate correct URLs. This is necessary if Prometheus is not
 	// served from root of a DNS name.
 	ExternalURL string `json:"externalUrl,omitempty"`
+	// The route prefix Prometheus registers HTTP handlers for. This is useful,
+	// if using ExternalURL and a proxy is rewriting HTTP routes of a request,
+	// and the actual ExternalURL is still true, but the server serves requests
+	// under a different route prefix. For example for use with `kubectl proxy`.
+	RoutePrefix string `json:"routePrefix,omitempty"`
 	// Storage spec to specify how storage shall be used.
 	Storage *StorageSpec `json:"storage,omitempty"`
 	// Define details regarding alerting.
