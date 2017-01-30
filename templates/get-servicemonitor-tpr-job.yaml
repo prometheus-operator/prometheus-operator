@@ -18,15 +18,7 @@ spec:
       name: {{ template "fullname" . }}-get-tprs
     spec:
       containers:
-        - name: get-alertmanager-tpr
-          image: "{{ .Values.global.hyperkube.repository }}:{{ .Values.global.hyperkube.tag }}"
-          imagePullPolicy: "{{ .Values.global.hyperkube.pullPolicy }}"
-          command: ["./kubectl","-n","{{ .Release.Namespace }}","get","alertmanager"]
-        - name: get-prometheus-tpr
-          image: "{{ .Values.global.hyperkube.repository }}:{{ .Values.global.hyperkube.tag }}"
-          imagePullPolicy: "{{ .Values.global.hyperkube.pullPolicy }}"
-          command: ["./kubectl","-n","{{ .Release.Namespace }}","get","prometheus"]
-        - name: get-servicemonitor-tpr
+        - name: hyperkube
           image: "{{ .Values.global.hyperkube.repository }}:{{ .Values.global.hyperkube.tag }}"
           imagePullPolicy: "{{ .Values.global.hyperkube.pullPolicy }}"
           command: ["./kubectl","-n","{{ .Release.Namespace }}","get","servicemonitor"]
