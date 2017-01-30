@@ -42,7 +42,7 @@ still benefiting from the Operator's capabilities of managing Prometheus setups.
 | storage | Configuration of persistent storage volumes to attach to deployed Prometheus pods. | false | StorageSpec |  |
 | alerting | Configuration of alerting | false | AlertingSpec |  |
 | resources | Resource requirements of single Prometheus server | false | [v1.ResourceRequirements](http://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements) |  | 
-| node-selector | [Select nodes](https://kubernetes.io/docs/tasks/administer-cluster/assign-pods-nodes/) to be used to run the Prometheus pods on | false | [strings list](https://kubernetes.io/docs/user-guide/node-selection/) |  |
+| nodeSelector | [Select nodes](https://kubernetes.io/docs/tasks/administer-cluster/assign-pods-nodes/) to be used to run the Prometheus pods on | false | [object](https://kubernetes.io/docs/user-guide/node-selection/) |  |
 
 ### `StorageSpec`
 
