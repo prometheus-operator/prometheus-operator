@@ -1,3 +1,19 @@
+## 0.3.0 / 2017-01-31
+
+This release introduces breaking changes to the underlying naming schemes. It
+is recommended to destroy existing Prometheus and Alertmanager objects and
+recreate them with new namings.
+
+With this release support for `v1.4.x` clusters is dropped. Changes will not be
+backported to the `0.1.x` release series anymore.
+
+* [CHANGE] Prefixed StatefulSet namings based on managing resource
+* [FEATURE] Pass labels and annotations through to StatefulSets
+* [FEATURE] Add tls config to use for Prometheus target scraping
+* [FEATURE] Add configurable `routePrefix` for Prometheus
+* [FEATURE] Add node selector to Prometheus TPR
+* [ENHANCEMENT] Stability improvements
+
 ## 0.2.3 / 2017-01-05
 
 * [BUGFIX] Fix config reloading when using external url.
