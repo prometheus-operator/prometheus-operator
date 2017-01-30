@@ -2,14 +2,17 @@ REPO?=quay.io/coreos/prometheus-operator
 TAG?=$(shell git rev-parse --short HEAD)
 NAMESPACE?=prometheus-operator-e2e-tests-$(shell LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
 
+PROMU := $(GOPATH)/bin/promu
+PREFIX ?= $(shell pwd)
+
 CLUSTER_IP?=$(shell minikube ip)
 
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 
 all: check-license format build test
 
-build:
-	go build github.com/coreos/prometheus-operator/cmd/operator
+build: promu
+	@$(PROMU) build --prefix $(PREFIX)
 
 test:
 	@go test -short $(pkgs)
@@ -37,5 +40,10 @@ e2e:
 clean-e2e:
 	kubectl -n $(NAMESPACE) delete prometheus,alertmanager,servicemonitor,statefulsets,deploy,svc,endpoints,pods,cm --all
 	kubectl delete namespace $(NAMESPACE)
+
+promu:
+	@GOOS=$(shell uname -s | tr A-Z a-z) \
+	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
+	go get -u github.com/prometheus/promu
 
 .PHONY: all build test format check-license container e2e-test e2e-status e2e clean-e2e
