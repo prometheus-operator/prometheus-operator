@@ -14,6 +14,9 @@ all: check-license format build test
 build: promu
 	@$(PROMU) build --prefix $(PREFIX)
 
+crossbuild: promu
+	@$(PROMU) crossbuild
+
 test:
 	@go test -short $(pkgs)
 
@@ -24,7 +27,6 @@ check-license:
 	./scripts/check_license.sh
 
 container:
-	GOOS=linux $(MAKE) build
 	docker build -t $(REPO):$(TAG) .
 
 e2e-test:
@@ -46,4 +48,4 @@ promu:
 	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
 	go get -u github.com/prometheus/promu
 
-.PHONY: all build test format check-license container e2e-test e2e-status e2e clean-e2e
+.PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e
