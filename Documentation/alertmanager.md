@@ -27,6 +27,8 @@ instances in high availability mode.
 | baseImage | The base container image (without tag) to use. | false | string | quay.io/prometheus/alertmanager |
 | replicas | Number of Alertmanager instances to deploy. | false | integer (int32) | 1 |
 | storage | Configuration of persistent storage volumes to attach to deployed Alertmanager pods. | false | [StorageSpec](prometheus.md#storagespec) |  |
+| externalUrl | External URL Alertmanager will be reachable under. Used for registering routes. | false | string |  |
+| paused | If true, the operator won't process any changes affecting the Alertmanager setup | false | bool | false |
 
 ## Current state and roadmap
 
