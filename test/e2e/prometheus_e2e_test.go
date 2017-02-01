@@ -125,7 +125,7 @@ func TestPrometheusReloadConfig(t *testing.T) {
 	}
 
 	// remounting a ConfigMap can take some time
-	err := poll(time.Minute*5, time.Second*20, func() (bool, error) {
+	err := framework.Poll(time.Minute*5, time.Second, func() (bool, error) {
 		logs, err := framework.GetLogs(fmt.Sprintf("prometheus-%s-0", name), "config-reloader")
 		if err != nil {
 			return false, err
@@ -168,7 +168,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 	}
 
 	// remounting a ConfigMap can take some time
-	err = poll(time.Minute*5, time.Second*20, func() (bool, error) {
+	err = framework.Poll(time.Minute*5, time.Second, func() (bool, error) {
 		logs, err := framework.GetLogs(fmt.Sprintf("prometheus-%s-0", name), "config-reloader")
 		if err != nil {
 			return false, err
@@ -188,6 +188,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 func TestPrometheusDiscovery(t *testing.T) {
 	prometheusName := "test"
 	group := "servicediscovery-test"
+	svc := framework.MakeBasicPrometheusNodePortService(prometheusName, group, 30900)
 
 	defer func() {
 		if err := framework.DeletePrometheusAndWaitUntilGone(prometheusName); err != nil {
@@ -196,21 +197,15 @@ func TestPrometheusDiscovery(t *testing.T) {
 		if err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Delete(group, nil); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Delete(fmt.Sprintf("prometheus-%s", prometheusName), nil); err != nil {
+		if err := framework.DeleteService(svc.Name); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	log.Print("Creating Prometheus Service")
-	svc := framework.MakePrometheusService(prometheusName, group)
-	if _, err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Create(svc); err != nil {
-		t.Fatalf("Creating ServiceMonitor failed: %s", err)
-	}
-
 	log.Print("Creating Prometheus ServiceMonitor")
 	s := framework.MakeBasicServiceMonitor(group)
 	if _, err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Create(s); err != nil {
-		t.Fatalf("Creating ServiceMonitor failed: %s", err)
+		t.Fatalf("Creating ServiceMonitor failed: ", err)
 	}
 
 	p := framework.MakeBasicPrometheus(prometheusName, group, 1)
@@ -219,14 +214,19 @@ func TestPrometheusDiscovery(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	log.Print("Creating Prometheus Service")
+	if err := framework.CreateServiceAndWaitUntilReady(svc); err != nil {
+		t.Fatal(err)
+	}
+
 	log.Print("Validating Prometheus ConfigMap was created")
 	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), apimetav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Generated ConfigMap could not be retrieved: %s", err)
+		t.Fatalf("Generated ConfigMap could not be retrieved: ", err)
 	}
 
 	log.Print("Validating Prometheus Targets were properly discovered")
-	err = poll(18*time.Minute, 30*time.Second, isDiscoveryWorking(prometheusName))
+	err = framework.Poll(18*time.Minute, time.Second, isDiscoveryWorking(prometheusName))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -236,12 +236,14 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	prometheusName := "test"
 	alertmanagerName := "test"
 	group := "servicediscovery-test"
+	svc := framework.MakeBasicPrometheusNodePortService(prometheusName, group, 30900)
+	amsvc := framework.MakeAlertmanagerNodePortService(alertmanagerName, group, 30903)
 
 	defer func() {
 		if err := framework.DeleteAlertmanagerAndWaitUntilGone(alertmanagerName); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Delete(fmt.Sprintf("alertmanager-%s", alertmanagerName), nil); err != nil {
+		if err := framework.DeleteService(amsvc.Name); err != nil {
 			t.Fatal(err)
 		}
 		if err := framework.DeletePrometheusAndWaitUntilGone(prometheusName); err != nil {
@@ -250,22 +252,10 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 		if err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Delete(group, nil); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Delete(fmt.Sprintf("prometheus-%s", prometheusName), nil); err != nil {
+		if err := framework.DeleteService(svc.Name); err != nil {
 			t.Fatal(err)
 		}
 	}()
-
-	log.Print("Creating Prometheus Service")
-	svc := framework.MakePrometheusService(prometheusName, group)
-	if _, err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Create(svc); err != nil {
-		t.Fatalf("Creating ServiceMonitor failed: %s", err)
-	}
-
-	log.Print("Creating Prometheus ServiceMonitor")
-	s := framework.MakeBasicServiceMonitor(group)
-	if _, err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Create(s); err != nil {
-		t.Fatalf("Creating ServiceMonitor failed: %s", err)
-	}
 
 	p := framework.MakeBasicPrometheus(prometheusName, group, 1)
 	framework.AddAlertingToPrometheus(p, alertmanagerName)
@@ -274,26 +264,137 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	log.Print("Creating Prometheus Service")
+	if err := framework.CreateServiceAndWaitUntilReady(svc); err != nil {
+		t.Fatal(err)
+	}
+
+	log.Print("Creating Prometheus ServiceMonitor")
+	s := framework.MakeBasicServiceMonitor(group)
+	if _, err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Create(s); err != nil {
+		t.Fatalf("Creating ServiceMonitor failed: ", err)
+	}
+
 	log.Print("Validating Prometheus ConfigMap was created")
 	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), apimetav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Generated ConfigMap could not be retrieved: %s", err)
+		t.Fatalf("Generated ConfigMap could not be retrieved: ", err)
 	}
-
-	log.Print("Creating Alertmanager Service")
-	amsvc := framework.MakeAlertmanagerService(alertmanagerName, group)
-	if _, err := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).Create(amsvc); err != nil {
-		t.Fatalf("Creating ServiceMonitor failed: %s", err)
-	}
-
-	time.Sleep(time.Minute)
 
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(framework.MakeBasicAlertmanager(alertmanagerName, 3)); err != nil {
 		t.Fatal(err)
 	}
 
+	log.Print("Creating Alertmanager Service")
+	if err := framework.CreateServiceAndWaitUntilReady(amsvc); err != nil {
+		t.Fatal(err)
+	}
+
 	log.Print("Validating Prometheus properly discovered alertmanagers")
-	err = poll(18*time.Minute, 30*time.Second, isAlertmanagerDiscoveryWorking(alertmanagerName))
+	err = framework.Poll(18*time.Minute, time.Second, isAlertmanagerDiscoveryWorking(alertmanagerName))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExposingPrometheusWithNodePort(t *testing.T) {
+	basicPrometheus := framework.MakeBasicPrometheus("test", "test", 1)
+	service := framework.MakeBasicPrometheusNodePortService(basicPrometheus.Name, "nodeport-service", 30900)
+
+	defer func() {
+		if err := framework.DeletePrometheusAndWaitUntilGone(basicPrometheus.Name); err != nil {
+			t.Fatal(err)
+		}
+		if err := framework.DeleteService(service.Name); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	if err := framework.CreatePrometheusAndWaitUntilReady(basicPrometheus); err != nil {
+		t.Fatal("Creating prometheus failed: ", err)
+	}
+
+	if err := framework.CreateServiceAndWaitUntilReady(service); err != nil {
+		t.Fatal("Creating prometheus service failed: ", err)
+	}
+
+	resp, err := http.Get(fmt.Sprintf("http://%s:30900/metrics", framework.ClusterIP))
+	if err != nil {
+		t.Fatal("Retrieving prometheus metrics failed with error: ", err)
+	} else if resp.StatusCode != 200 {
+		t.Fatal("Retrieving prometheus metrics failed with http status code: ", resp.StatusCode)
+	}
+}
+
+func TestExposingPrometheusWithKubernetesAPI(t *testing.T) {
+	basicPrometheus := framework.MakeBasicPrometheus("basic-prometheus", "test-group", 1)
+	service := framework.MakePrometheusService(basicPrometheus.Name, "test-group", v1.ServiceTypeClusterIP)
+
+	defer func() {
+		if err := framework.DeletePrometheusAndWaitUntilGone(basicPrometheus.Name); err != nil {
+			t.Fatal(err)
+		}
+		if err := framework.DeleteService(service.Name); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	if err := framework.CreatePrometheusAndWaitUntilReady(basicPrometheus); err != nil {
+		t.Fatal("Creating prometheus failed: ", err)
+	}
+
+	if err := framework.CreateServiceAndWaitUntilReady(service); err != nil {
+		t.Fatal("Creating prometheus service failed: ", err)
+	}
+
+	ProxyGet := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).ProxyGet
+	request := ProxyGet("", service.Name, "web", "/metrics", make(map[string]string))
+	_, err := request.DoRaw()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExposingPrometheusWithIngress(t *testing.T) {
+	prometheus := framework.MakeBasicPrometheus("main", "test-group", 1)
+	prometheusService := framework.MakePrometheusService(prometheus.Name, "test-group", v1.ServiceTypeClusterIP)
+	ingress := framework.MakeBasicIngress(prometheusService.Name, 9090)
+
+	defer func() {
+		if err := framework.DeletePrometheusAndWaitUntilGone(prometheus.Name); err != nil {
+			t.Fatal(err)
+		}
+		if err := framework.DeleteService(prometheusService.Name); err != nil {
+			t.Fatal(err)
+		}
+		if err := framework.KubeClient.Extensions().Ingresses(framework.Namespace.Name).Delete(ingress.Name, nil); err != nil {
+			t.Fatal(err)
+		}
+		if err := framework.DeleteNginxIngressControllerIncDefaultBackend(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	err := framework.SetupNginxIngressControllerIncDefaultBackend()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = framework.CreatePrometheusAndWaitUntilReady(prometheus)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.CreateServiceAndWaitUntilReady(prometheusService); err != nil {
+		t.Fatal(err)
+	}
+
+	err = framework.CreateIngress(ingress)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = framework.WaitForHTTPSuccessStatusCode(time.Second*30, fmt.Sprintf("http://%s:/metrics", framework.ClusterIP))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -470,25 +571,4 @@ type alertmanagerDiscovery struct {
 type prometheusAlertmanagerAPIResponse struct {
 	Status string                 `json:"status"`
 	Data   *alertmanagerDiscovery `json:"data"`
-}
-
-func poll(timeout, pollInterval time.Duration, pollFunc func() (bool, error)) error {
-	t := time.After(timeout)
-	ticker := time.NewTicker(pollInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-t:
-			return fmt.Errorf("timed out")
-		case <-ticker.C:
-			b, err := pollFunc()
-			if err != nil {
-				return err
-			}
-			if b {
-				return nil
-			}
-		}
-	}
 }

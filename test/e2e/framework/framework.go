@@ -208,6 +208,19 @@ func waitForPodsReady(client v1client.CoreV1Interface, timeout time.Duration, ex
 	}
 }
 
+func (f *Framework) WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {
+	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+		resp, err := http.Get(url)
+		if err != nil {
+			return false, err
+		}
+		if err == nil && resp.StatusCode == 200 {
+			return true, nil
+		}
+		return false, nil
+	})
+}
+
 func podRunsImage(p v1.Pod, image string) bool {
 	for _, c := range p.Spec.Containers {
 		if image == c.Image {
@@ -246,4 +259,25 @@ func (f *Framework) GetLogs(podName, containerName string) (string, error) {
 		return "", err
 	}
 	return string(logs), err
+}
+
+func (f *Framework) Poll(timeout, pollInterval time.Duration, pollFunc func() (bool, error)) error {
+	t := time.After(timeout)
+	ticker := time.NewTicker(pollInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-t:
+			return fmt.Errorf("timed out")
+		case <-ticker.C:
+			b, err := pollFunc()
+			if err != nil {
+				return err
+			}
+			if b {
+				return nil
+			}
+		}
+	}
 }
