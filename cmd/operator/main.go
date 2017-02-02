@@ -15,14 +15,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/analytics"
@@ -75,53 +77,33 @@ func Main() int {
 		return 1
 	}
 
-	mux := http.DefaultServeMux
-	web.Register(mux)
+	web.Register(http.DefaultServeMux)
 	l, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return 1
 	}
 
-	stopc := make(chan struct{})
-	errc := make(chan error)
-	var wg sync.WaitGroup
+	ctx, cancel := context.WithCancel(context.Background())
+	wg, ctx := errgroup.WithContext(ctx)
 
-	wg.Add(1)
-	go func() {
-		if err := po.Run(stopc); err != nil {
-			errc <- err
-		}
-		wg.Done()
-	}()
+	wg.Go(func() error { return po.Run(ctx.Done()) })
+	wg.Go(func() error { return ao.Run(ctx.Done()) })
 
-	wg.Add(1)
-	go func() {
-		if err := ao.Run(stopc); err != nil {
-			errc <- err
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		if err := http.Serve(l, nil); err != nil {
-			errc <- err
-		}
-	}()
+	go http.Serve(l, nil)
 
 	term := make(chan os.Signal)
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
+
 	select {
 	case <-term:
 		logger.Log("msg", "Received SIGTERM, exiting gracefully...")
-		l.Close()
-		close(stopc)
-		wg.Wait()
-	case err := <-errc:
+	case <-ctx.Done():
+	}
+
+	cancel()
+	if err := wg.Wait(); err != nil {
 		logger.Log("msg", "Unhandled error received. Exiting...", "err", err)
-		l.Close()
-		close(stopc)
-		wg.Wait()
 		return 1
 	}
 
