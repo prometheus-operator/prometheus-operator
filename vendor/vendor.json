@@ -237,6 +237,12 @@
 			"revisionTime": "2017-01-25T15:19:43Z"
 		},
 		{
+			"checksumSHA1": "abKzFXAn0KDr5U+JON1ZgJ2lUtU=",
+			"path": "github.com/kr/logfmt",
+			"revision": "b84e30acd515aadc4b783ad4ff83aff3299bdfe0",
+			"revisionTime": "2014-02-26T03:06:59Z"
+		},
+		{
 			"checksumSHA1": "urY45++NYCue4nh4k8OjUFnIGfU=",
 			"path": "github.com/mailru/easyjson/buffer",
 			"revision": "e978125a7e335d8f4db746a9ac5b44643f27416b",
@@ -345,6 +351,12 @@
 			"path": "golang.org/x/oauth2/jwt",
 			"revision": "fcdf37233b57445e4a6a4038ec580e9aaac931de",
 			"revisionTime": "2017-01-25T15:19:43Z"
+		},
+		{
+			"checksumSHA1": "S0DP7Pn7sZUmXc55IzZnNvERu6s=",
+			"path": "golang.org/x/sync/errgroup",
+			"revision": "450f422ab23cf9881c94e2db30cac0eb1b7cf80c",
+			"revisionTime": "2016-12-05T22:39:15Z"
 		},
 		{
 			"checksumSHA1": "2F82nIAL4VPNucy7AHJDX8Mf9sk=",
