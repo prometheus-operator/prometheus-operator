@@ -1,3 +1,9 @@
+## 0.4.0 / 2017-02-02
+
+* [CHANGE] Split endpoint and job in separate labels instead of a single
+  concatenated one.
+* [BUGFIX] Properly exit on errors communicating with the apiserver.
+
 ## 0.3.0 / 2017-01-31
 
 This release introduces breaking changes to the underlying naming schemes. It
