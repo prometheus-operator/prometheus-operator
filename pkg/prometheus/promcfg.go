@@ -218,40 +218,36 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 		},
 	}...)
 
-	// By default, generate a safe job name from the service name and scraped port.
-	// We also keep this around if a jobLabel is set in case the targets don't actually
-	// have a value for it.
+	// By default, generate a safe job name from the service name.  We also keep
+	// this around if a jobLabel is set in case the targets don't actually have a
+	// value for it. A single service may potentially have multiple metrics
+	// endpoints, therefore the endpoints labels is filled with the ports name or
+	// as a fallback the port number.
+
+	relabelings = append(relabelings, map[string]interface{}{
+		"source_labels": []string{"__meta_kubernetes_service_name"},
+		"target_label":  "job",
+		"replacement":   "${1}",
+	})
+	if m.Spec.JobLabel != "" {
+		relabelings = append(relabelings, map[string]interface{}{
+			"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(m.Spec.JobLabel)},
+			"target_label":  "job",
+			"regex":         "(.+)",
+			"replacement":   "${1}",
+		})
+	}
+
 	if ep.Port != "" {
 		relabelings = append(relabelings, map[string]interface{}{
-			"source_labels": []string{"__meta_kubernetes_service_name"},
-			"target_label":  "job",
-			"replacement":   "${1}-" + ep.Port,
+			"target_label": "endpoint",
+			"replacement":  ep.Port,
 		})
 	} else if ep.TargetPort.String() != "" {
 		relabelings = append(relabelings, map[string]interface{}{
-			"source_labels": []string{"__meta_kubernetes_service_name"},
-			"target_label":  "job",
-			"replacement":   "${1}-" + ep.TargetPort.String(),
+			"target_label": "endpoint",
+			"replacement":  ep.TargetPort.String(),
 		})
-	}
-	// Generate a job name with a base label. Same as above, just that we
-	// get the base from the label, if present.
-	if m.Spec.JobLabel != "" {
-		if ep.Port != "" {
-			relabelings = append(relabelings, map[string]interface{}{
-				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(m.Spec.JobLabel)},
-				"target_label":  "job",
-				"regex":         "(.+)",
-				"replacement":   "${1}-" + ep.Port,
-			})
-		} else if ep.TargetPort.String() != "" {
-			relabelings = append(relabelings, map[string]interface{}{
-				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(m.Spec.JobLabel)},
-				"target_label":  "job",
-				"regex":         "(.+)",
-				"replacement":   "${1}-" + ep.TargetPort.String(),
-			})
-		}
 	}
 
 	cfg["relabel_configs"] = relabelings
