@@ -1,7 +1,7 @@
 # Prometheus Operator
 
 **Project status: *alpha*** Not all planned features are completed. The API, spec, status 
-and other user facing objects are subject to change. We do not support backward-compability 
+and other user facing objects are subject to change. We do not support backward-compatibility
 for the alpha releases.
 
 The Prometheus Operator for Kubernetes provides easy monitoring definitions for Kubernetes
@@ -58,7 +58,7 @@ kubectl get prometheuses --all-namespaces
 kubectl get alertmanagers --all-namespaces
 ```
 
-For each `Prometheus` and `Alertmanger` object, a respective `PetSet` with the
+For each `Prometheus` and `Alertmanager` object, a respective `PetSet` with the
 same name was created in the same namespace. Those `PetSet`s need to be
 migrated according to the [official migration documentation](http://kubernetes.io/docs/tasks/manage-stateful-set/upgrade-pet-set-to-stateful-set/).
 

@@ -3,7 +3,7 @@
 The `ServiceMonitor` third party resource (TPR) allows to declaratively define
 how a dynamic set of services should be monitored. Which services are selected
 to be monitored with the desired configuration is defined using label
-selections. This allows an organization to introduce convensions around how
+selections. This allows an organization to introduce conventions around how
 metrics are exposed, and then following these conventions new services are
 automatically discovered, without the need to reconfigure the system.
 
