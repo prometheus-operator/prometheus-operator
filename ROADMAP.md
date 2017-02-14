@@ -47,7 +47,7 @@ does not exist.
 
 ### Deployment
 
-The Alertmanager, in high availablility mode, is a distributed system. A
+The Alertmanager, in high availability mode, is a distributed system. A
 desired deployment ensures no data loss and zero downtime while performing a
 deployment. Zero downtime is simply done as the Alertmanager is running high
 availability mode. No data loss is achieved by using PVCs and attaching the

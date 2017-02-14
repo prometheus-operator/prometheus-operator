@@ -42,7 +42,7 @@ cluster.
 Lastly in some cases it is not a viable option to expose metrics via an HTTP
 server. For example a `CronJob` may only run for a few seconds - not long
 enough for Prometheus to be able to scrape the HTTP endpoint. The Pushgateway
-was developed to be able to collect metrics in a scenarion like that, however,
+was developed to be able to collect metrics in a scenario like that, however,
 it is highly recommended to not use the Pushgateway if possible. Read more
 about when to use the Pushgateway and alternative strategies here:
 https://prometheus.io/docs/practices/pushing/#should-i-be-using-the-pushgateway .
