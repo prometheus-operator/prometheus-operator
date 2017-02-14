@@ -53,8 +53,14 @@ func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *v1alpha1
 	}
 }
 
-func (f *Framework) MakeAlertmanagerService(name, group string) *v1.Service {
-	return &v1.Service{
+func (f *Framework) MakeAlertmanagerNodePortService(name, group string, nodePort int32) *v1.Service {
+	aMService := f.MakeAlertmanagerService(name, group, v1.ServiceTypeNodePort)
+	aMService.Spec.Ports[0].NodePort = nodePort
+	return aMService
+}
+
+func (f *Framework) MakeAlertmanagerService(name, group string, serviceType v1.ServiceType) *v1.Service {
+	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", name),
 			Labels: map[string]string{
@@ -62,13 +68,12 @@ func (f *Framework) MakeAlertmanagerService(name, group string) *v1.Service {
 			},
 		},
 		Spec: v1.ServiceSpec{
-			Type: "NodePort",
+			Type: serviceType,
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "web",
 					Port:       9093,
 					TargetPort: intstr.FromString("web"),
-					NodePort:   30903,
 				},
 			},
 			Selector: map[string]string{
@@ -76,6 +81,8 @@ func (f *Framework) MakeAlertmanagerService(name, group string) *v1.Service {
 			},
 		},
 	}
+
+	return service
 }
 
 func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager) error {

@@ -86,8 +86,14 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *v1alpha1.ServiceMonito
 	}
 }
 
-func (f *Framework) MakePrometheusService(name, group string) *v1.Service {
-	return &v1.Service{
+func (f *Framework) MakeBasicPrometheusNodePortService(name, group string, nodePort int32) *v1.Service {
+	pService := f.MakePrometheusService(name, group, v1.ServiceTypeNodePort)
+	pService.Spec.Ports[0].NodePort = nodePort
+	return pService
+}
+
+func (f *Framework) MakePrometheusService(name, group string, serviceType v1.ServiceType) *v1.Service {
+	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 			Labels: map[string]string{
@@ -95,13 +101,12 @@ func (f *Framework) MakePrometheusService(name, group string) *v1.Service {
 			},
 		},
 		Spec: v1.ServiceSpec{
-			Type: "NodePort",
+			Type: serviceType,
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
 					Name:       "web",
 					Port:       9090,
 					TargetPort: intstr.FromString("web"),
-					NodePort:   30900,
 				},
 			},
 			Selector: map[string]string{
@@ -109,6 +114,7 @@ func (f *Framework) MakePrometheusService(name, group string) *v1.Service {
 			},
 		},
 	}
+	return service
 }
 
 func (f *Framework) CreatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) error {
