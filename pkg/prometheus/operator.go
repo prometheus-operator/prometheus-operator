@@ -59,17 +59,22 @@ type Operator struct {
 	smonInf cache.SharedIndexInformer
 	cmapInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
+	nodeInf cache.SharedIndexInformer
 
 	queue workqueue.RateLimitingInterface
 
-	host string
+	host                   string
+	kubeletObjectName      string
+	kubeletObjectNamespace string
+	kubeletSyncEnabled     bool
 }
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
-	Host        string
-	TLSInsecure bool
-	TLSConfig   rest.TLSClientConfig
+	Host          string
+	KubeletObject string
+	TLSInsecure   bool
+	TLSConfig     rest.TLSClientConfig
 }
 
 // New creates a new controller.
@@ -87,12 +92,30 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	kubeletObjectName := ""
+	kubeletObjectNamespace := ""
+	kubeletSyncEnabled := false
+
+	if conf.KubeletObject != "" {
+		parts := strings.Split(conf.KubeletObject, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("malformatted kubelet object string, must be in format \"namespace/name\"")
+		}
+		kubeletObjectNamespace = parts[0]
+		kubeletObjectName = parts[1]
+		kubeletSyncEnabled = true
+	}
+
 	c := &Operator{
-		kclient: client,
-		mclient: mclient,
-		logger:  logger,
-		queue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus"),
-		host:    cfg.Host,
+		kclient:                client,
+		mclient:                mclient,
+		logger:                 logger,
+		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus"),
+		host:                   cfg.Host,
+		kubeletObjectName:      kubeletObjectName,
+		kubeletObjectNamespace: kubeletObjectNamespace,
+		kubeletSyncEnabled:     kubeletSyncEnabled,
 	}
 
 	c.promInf = cache.NewSharedIndexInformer(
@@ -102,6 +125,12 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		},
 		&v1alpha1.Prometheus{}, resyncPeriod, cache.Indexers{},
 	)
+	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleAddPrometheus,
+		DeleteFunc: c.handleDeletePrometheus,
+		UpdateFunc: c.handleUpdatePrometheus,
+	})
+
 	c.smonInf = cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc:  mclient.ServiceMonitors(api.NamespaceAll).List,
@@ -109,33 +138,41 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		},
 		&v1alpha1.ServiceMonitor{}, resyncPeriod, cache.Indexers{},
 	)
-	c.cmapInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", api.NamespaceAll, nil),
-		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{},
-	)
-	c.ssetInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Apps().RESTClient(), "statefulsets", api.NamespaceAll, nil),
-		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
-	)
-
-	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleAddPrometheus,
-		DeleteFunc: c.handleDeletePrometheus,
-		UpdateFunc: c.handleUpdatePrometheus,
-	})
 	c.smonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleSmonAdd,
 		DeleteFunc: c.handleSmonDelete,
 		UpdateFunc: c.handleSmonUpdate,
 	})
+
+	c.cmapInf = cache.NewSharedIndexInformer(
+		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", api.NamespaceAll, nil),
+		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{},
+	)
 	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: c.handleConfigmapDelete,
 	})
+
+	c.ssetInf = cache.NewSharedIndexInformer(
+		cache.NewListWatchFromClient(c.kclient.Apps().RESTClient(), "statefulsets", api.NamespaceAll, nil),
+		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
+	)
 	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleAddStatefulSet,
 		DeleteFunc: c.handleDeleteStatefulSet,
 		UpdateFunc: c.handleUpdateStatefulSet,
 	})
+
+	if kubeletSyncEnabled {
+		c.nodeInf = cache.NewSharedIndexInformer(
+			cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "nodes", api.NamespaceAll, nil),
+			&v1.Node{}, resyncPeriod, cache.Indexers{},
+		)
+		c.nodeInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleAddNode,
+			DeleteFunc: c.handleDeleteNode,
+			UpdateFunc: c.handleUpdateNode,
+		})
+	}
 
 	return c, nil
 }
@@ -176,6 +213,10 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.smonInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
+
+	if c.kubeletSyncEnabled {
+		go c.nodeInf.Run(stopc)
+	}
 
 	<-stopc
 	return nil
@@ -220,6 +261,91 @@ func (c *Operator) handleUpdatePrometheus(old, cur interface{}) {
 
 	c.logger.Log("msg", "Prometheus updated", "key", key)
 	c.enqueue(key)
+}
+
+func (c *Operator) handleAddNode(obj interface{})         { c.syncNodeEndpoints() }
+func (c *Operator) handleDeleteNode(obj interface{})      { c.syncNodeEndpoints() }
+func (c *Operator) handleUpdateNode(old, cur interface{}) { c.syncNodeEndpoints() }
+
+func (c *Operator) syncNodeEndpoints() {
+	endpoints := &v1.Endpoints{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: c.kubeletObjectName,
+			Labels: map[string]string{
+				"k8s-app": "kubelet",
+			},
+		},
+		Subsets: []v1.EndpointSubset{
+			v1.EndpointSubset{
+				Ports: []v1.EndpointPort{
+					v1.EndpointPort{
+						Name: "https-metrics",
+						Port: 10250,
+					},
+				},
+			},
+		},
+	}
+
+	cache.ListAll(c.nodeInf.GetStore(), labels.Everything(), func(obj interface{}) {
+		n := obj.(*v1.Node)
+		for _, a := range n.Status.Addresses {
+			if a.Type == v1.NodeInternalIP {
+				endpoints.Subsets[0].Addresses = append(endpoints.Subsets[0].Addresses, v1.EndpointAddress{
+					IP:       a.Address,
+					Hostname: n.Name,
+					NodeName: &n.Name,
+					TargetRef: &v1.ObjectReference{
+						Kind:       "Node",
+						Name:       n.Name,
+						UID:        n.UID,
+						APIVersion: n.APIVersion,
+					},
+				})
+			}
+		}
+	})
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: c.kubeletObjectName,
+			Labels: map[string]string{
+				"k8s-app": "kubelet",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Type:      v1.ServiceTypeClusterIP,
+			ClusterIP: "None",
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name: "https-metrics",
+					Port: 10250,
+				},
+			},
+		},
+	}
+
+	_, err := c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Update(svc)
+	if err != nil && !apierrors.IsNotFound(err) {
+		c.logger.Log("msg", "updating kubelet service object failed", "err", err)
+	}
+	if apierrors.IsNotFound(err) {
+		_, err = c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Create(svc)
+		if err != nil {
+			c.logger.Log("msg", "creating kubelet service object failed", "err", err)
+		}
+	}
+
+	_, err = c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Update(endpoints)
+	if err != nil && !apierrors.IsNotFound(err) {
+		c.logger.Log("msg", "updating kubelet enpoints object failed", "err", err)
+	}
+	if apierrors.IsNotFound(err) {
+		_, err = c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Create(endpoints)
+		if err != nil {
+			c.logger.Log("msg", "creating kubelet enpoints object failed", "err", err)
+		}
+	}
 }
 
 func (c *Operator) handleSmonAdd(obj interface{}) {
