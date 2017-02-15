@@ -31,7 +31,7 @@ import (
 const (
 	governingServiceName = "prometheus-operated"
 	defaultBaseImage     = "quay.io/prometheus/prometheus"
-	defaultVersion       = "v1.5.0"
+	defaultVersion       = "v1.5.2"
 	minReplicas          = 1
 	defaultRetention     = "24h"
 )
