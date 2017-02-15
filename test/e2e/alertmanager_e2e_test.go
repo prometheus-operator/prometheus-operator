@@ -178,7 +178,12 @@ func TestExposingAlertmanagerWithIngress(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err := framework.WaitForHTTPSuccessStatusCode(time.Second*30, fmt.Sprintf("http://%s/metrics", framework.ClusterIP))
+	ip, err := framework.GetIngressIP(ingress.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = framework.WaitForHTTPSuccessStatusCode(time.Second*30, fmt.Sprintf("http://%s/metrics", *ip))
 	if err != nil {
 		t.Fatal(err)
 	}
