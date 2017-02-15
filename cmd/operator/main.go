@@ -34,8 +34,9 @@ import (
 )
 
 var (
-	cfg              prometheus.Config
-	analyticsEnabled bool
+	cfg                 prometheus.Config
+	analyticsEnabled    bool
+	configReloaderImage string
 )
 
 func init() {
@@ -48,7 +49,7 @@ func init() {
 	flagset.StringVar(&cfg.KubeletObject, "kubelet-object", "", "Endpoints object to write kubelets into in format \"namespace/name\"")
 	flagset.BoolVar(&cfg.TLSInsecure, "tls-insecure", false, "- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.")
 	flagset.BoolVar(&analyticsEnabled, "analytics", true, "Send analytical event (Cluster Created/Deleted etc.) to Google Analytics")
-
+	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", "jimmidyson/configmap-reload:latest", "Reload Image ")
 	flagset.Parse(os.Args[1:])
 }
 

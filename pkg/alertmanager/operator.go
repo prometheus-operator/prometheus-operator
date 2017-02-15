@@ -59,7 +59,12 @@ type Operator struct {
 
 	queue workqueue.RateLimitingInterface
 
-	host string
+	config Config
+}
+
+type Config struct {
+	Host                string
+	ConfigReloaderImage string
 }
 
 // New creates a new controller.
@@ -83,7 +88,7 @@ func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 		mclient: mclient,
 		logger:  logger,
 		queue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
-		host:    cfg.Host,
+		config:  Config{Host: c.Host, ConfigReloaderImage: c.ConfigReloaderImage},
 	}
 
 	o.alrtInf = cache.NewSharedIndexInformer(
@@ -360,12 +365,12 @@ func (c *Operator) sync(key string) error {
 	}
 
 	if !exists {
-		if _, err := ssetClient.Create(makeStatefulSet(am, nil)); err != nil {
+		if _, err := ssetClient.Create(makeStatefulSet(am, nil, c.config)); err != nil {
 			return fmt.Errorf("create statefulset: %s", err)
 		}
 		return nil
 	}
-	if _, err := ssetClient.Update(makeStatefulSet(am, obj.(*v1beta1.StatefulSet))); err != nil {
+	if _, err := ssetClient.Update(makeStatefulSet(am, obj.(*v1beta1.StatefulSet), c.config)); err != nil {
 		return err
 	}
 

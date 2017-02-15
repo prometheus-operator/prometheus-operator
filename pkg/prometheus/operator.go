@@ -67,14 +67,16 @@ type Operator struct {
 	kubeletObjectName      string
 	kubeletObjectNamespace string
 	kubeletSyncEnabled     bool
+	config                 Config
 }
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
-	Host          string
-	KubeletObject string
-	TLSInsecure   bool
-	TLSConfig     rest.TLSClientConfig
+	Host                string
+	KubeletObject       string
+	TLSInsecure         bool
+	TLSConfig           rest.TLSClientConfig
+	ConfigReloaderImage string
 }
 
 // New creates a new controller.
@@ -116,6 +118,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		kubeletObjectName:      kubeletObjectName,
 		kubeletObjectNamespace: kubeletObjectNamespace,
 		kubeletSyncEnabled:     kubeletSyncEnabled,
+		config:                 conf,
 	}
 
 	c.promInf = cache.NewSharedIndexInformer(
@@ -575,12 +578,12 @@ func (c *Operator) sync(key string) error {
 	}
 
 	if !exists {
-		if _, err := ssetClient.Create(makeStatefulSet(*p, nil)); err != nil {
+		if _, err := ssetClient.Create(makeStatefulSet(*p, nil, &c.config)); err != nil {
 			return fmt.Errorf("create statefulset: %s", err)
 		}
 		return nil
 	}
-	if _, err := ssetClient.Update(makeStatefulSet(*p, obj.(*v1beta1.StatefulSet))); err != nil {
+	if _, err := ssetClient.Update(makeStatefulSet(*p, obj.(*v1beta1.StatefulSet), &c.config)); err != nil {
 		return err
 	}
 

@@ -36,7 +36,7 @@ const (
 	defaultRetention     = "24h"
 )
 
-func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.StatefulSet {
+func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Config) *v1beta1.StatefulSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -67,7 +67,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet) *v1beta1.S
 			Labels:      p.ObjectMeta.Labels,
 			Annotations: p.ObjectMeta.Annotations,
 		},
-		Spec: makeStatefulSetSpec(p),
+		Spec: makeStatefulSetSpec(p, config),
 	}
 	if vc := p.Spec.Storage; vc == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -142,7 +142,7 @@ func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
 	return svc
 }
 
-func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
+func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSpec {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -245,7 +245,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 						Resources: p.Spec.Resources,
 					}, {
 						Name:  "config-reloader",
-						Image: "jimmidyson/configmap-reload",
+						Image: c.ConfigReloaderImage,
 						Args: []string{
 							fmt.Sprintf("-webhook-url=%s", localReloadURL),
 							"-volume-dir=/etc/prometheus/config",
