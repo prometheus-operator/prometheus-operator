@@ -21,6 +21,7 @@ import (
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/pkg/util/intstr"
 	"os"
+	"time"
 )
 
 func (f *Framework) MakeBasicIngress(serviceName string, servicePort int) *v1beta1.Ingress {
@@ -117,4 +118,25 @@ func (f *Framework) DeleteNginxIngressControllerIncDefaultBackend() error {
 	}
 
 	return nil
+}
+
+func (f *Framework) GetIngressIP(ingressName string) (*string, error) {
+	var ingress *v1beta1.Ingress
+	err := f.Poll(time.Minute*5, time.Millisecond*500, func() (bool, error) {
+		var err error
+		ingress, err = f.KubeClient.Extensions().Ingresses(f.Namespace.Name).Get(ingressName, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+		ingresses := ingress.Status.LoadBalancer.Ingress
+		if len(ingresses) != 0 {
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &ingress.Status.LoadBalancer.Ingress[0].IP, nil
 }
