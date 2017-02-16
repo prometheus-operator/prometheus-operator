@@ -35,7 +35,7 @@ const (
 	minReplicas          = 1
 )
 
-func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet) *v1beta1.StatefulSet {
+func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config Config) *v1beta1.StatefulSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -56,7 +56,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet) *v1bet
 			Labels:      am.ObjectMeta.Labels,
 			Annotations: am.ObjectMeta.Annotations,
 		},
-		Spec: makeStatefulSetSpec(am),
+		Spec: makeStatefulSetSpec(am, config),
 	}
 	if vc := am.Spec.Storage; vc == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -119,7 +119,7 @@ func makeStatefulSetService(p *v1alpha1.Alertmanager) *v1.Service {
 	return svc
 }
 
-func makeStatefulSetSpec(a *v1alpha1.Alertmanager) v1beta1.StatefulSetSpec {
+func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.StatefulSetSpec {
 	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Version)
 
 	commands := []string{
@@ -204,7 +204,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager) v1beta1.StatefulSetSpec {
 						},
 					}, {
 						Name:  "config-reloader",
-						Image: "jimmidyson/configmap-reload",
+						Image: config.ConfigReloaderImage,
 						Args: []string{
 							fmt.Sprintf("-webhook-url=%s", localReloadURL),
 							"-volume-dir=/etc/alertmanager/config",
