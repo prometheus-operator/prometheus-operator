@@ -1,3 +1,8 @@
+## 0.5.0 / 2017-02-15
+
+* [FEATURE] Allow synchronizing kubelets into an `Endpoints` object.
+* [FEATURE] Allow specifying custom configmap-reload image
+
 ## 0.4.0 / 2017-02-02
 
 * [CHANGE] Split endpoint and job in separate labels instead of a single
