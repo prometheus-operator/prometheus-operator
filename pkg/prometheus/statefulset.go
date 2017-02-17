@@ -189,7 +189,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus) v1beta1.StatefulSetSpec {
 	}
 
 	return v1beta1.StatefulSetSpec{
-		ServiceName: "prometheus",
+		ServiceName: governingServiceName,
 		Replicas:    &p.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: apimetav1.ObjectMeta{
