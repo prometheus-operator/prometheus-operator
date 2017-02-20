@@ -34,9 +34,8 @@ import (
 )
 
 var (
-	cfg                 prometheus.Config
-	analyticsEnabled    bool
-	configReloaderImage string
+	cfg              prometheus.Config
+	analyticsEnabled bool
 )
 
 func init() {

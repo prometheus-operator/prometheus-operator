@@ -68,6 +68,9 @@ type PrometheusSpec struct {
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// Define which Nodes the Pods are scheduled on.
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// ServiceAccountName is the name of the ServiceAccount to use to run the
+	// Prometheus Pods.
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...
