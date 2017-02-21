@@ -2109,7 +2109,7 @@ data:
         ],
         "overwrite": true
     }
-  node-dashboard.json: |-
+  node-dashboard.json: |
     {
       "dashboard": {
       "__inputs": [
@@ -2419,9 +2419,18 @@ data:
                 {
                   "expr": "node_memory_MemTotal{instance=~\"$server\"} - node_memory_MemFree{instance=~\"$server\"}",
                   "intervalFactor": 2,
-                  "legendFormat": "free memory",
+                  "legendFormat": "memory usage",
                   "metric": "memo",
                   "refId": "A",
+                  "step": 4,
+                  "target": ""
+                },
+                {
+                  "expr": "node_memory_MemTotal{instance=~\"$server\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "memory total",
+                  "metric": "memo",
+                  "refId": "B",
                   "step": 4,
                   "target": ""
                 }
@@ -2429,7 +2438,7 @@ data:
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "Free memory",
+              "title": "Memory usage",
               "tooltip": {
                 "msResolution": false,
                 "shared": true,
@@ -2464,9 +2473,9 @@ data:
               "colorBackground": false,
               "colorValue": false,
               "colors": [
-                "rgba(245, 54, 54, 0.9)",
+                "rgba(50, 172, 45, 0.97)",
                 "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
+                "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
               "editable": true,
@@ -2517,15 +2526,15 @@ data:
               },
               "targets": [
                 {
-                  "expr": "(node_memory_MemFree{instance=~\"$server\"} / node_memory_MemTotal{instance=~\"$server\"}) * 100",
+                  "expr": "((node_memory_MemTotal{instance=~\"$server\"} - node_memory_MemFree{instance=~\"$server\"}) / node_memory_MemTotal{instance=~\"$server\"}) * 100",
                   "intervalFactor": 2,
                   "refId": "A",
                   "step": 60,
                   "target": ""
                 }
               ],
-              "thresholds": "10, 20",
-              "title": "Free memory",
+              "thresholds": "80, 90",
+              "title": "Memory usage",
               "type": "singlestat",
               "valueFontSize": "80%",
               "valueMaps": [
@@ -2631,7 +2640,7 @@ data:
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "Disk usage",
+              "title": "Disk I/O",
               "tooltip": {
                 "msResolution": false,
                 "shared": true,
@@ -2666,9 +2675,9 @@ data:
               "colorBackground": false,
               "colorValue": false,
               "colors": [
-                "rgba(245, 54, 54, 0.9)",
+                "rgba(50, 172, 45, 0.97)",
                 "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
+                "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
               "editable": true,
@@ -2719,15 +2728,15 @@ data:
               },
               "targets": [
                 {
-                  "expr": "sum(node_filesystem_free{device!=\"rootfs\",instance=~\"$server\"}) / sum(node_filesystem_size{device!=\"rootfs\",instance=~\"$server\"})",
+                  "expr": "(sum(node_filesystem_size{device!=\"rootfs\",instance=~\"$server\"}) - sum(node_filesystem_free{device!=\"rootfs\",instance=~\"$server\"})) / sum(node_filesystem_size{device!=\"rootfs\",instance=~\"$server\"})",
                   "intervalFactor": 2,
                   "refId": "A",
                   "step": 60,
                   "target": ""
                 }
               ],
-              "thresholds": "0.10, 0.25",
-              "title": "Free disk space",
+              "thresholds": "0.75, 0.9",
+              "title": "Disk space usage",
               "type": "singlestat",
               "valueFontSize": "80%",
               "valueMaps": [
