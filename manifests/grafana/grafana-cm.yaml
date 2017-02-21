@@ -2614,7 +2614,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum by (instance) (irate(node_disk_bytes_read{instance=~\"$server\"}[5m]))",
+                  "expr": "sum by (instance) (rate(node_disk_bytes_read{instance=~\"$server\"}[2m]))",
                   "hide": false,
                   "intervalFactor": 4,
                   "legendFormat": "read",
@@ -2623,14 +2623,14 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "sum by (instance) (irate(node_disk_bytes_written{instance=~\"$server\"}[5m]))",
+                  "expr": "sum by (instance) (rate(node_disk_bytes_written{instance=~\"$server\"}[2m]))",
                   "intervalFactor": 4,
                   "legendFormat": "written",
                   "refId": "B",
                   "step": 8
                 },
                 {
-                  "expr": "sum by (instance) (irate(node_disk_io_time_ms{instance=~\"$server\"}[5m]))",
+                  "expr": "sum by (instance) (rate(node_disk_io_time_ms{instance=~\"$server\"}[2m]))",
                   "intervalFactor": 4,
                   "legendFormat": "io time",
                   "refId": "C",
@@ -2808,7 +2808,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(node_network_receive_bytes{instance=~\"$server\",device!~\"lo\"}[5m])",
+                  "expr": "rate(node_network_receive_bytes{instance=~\"$server\",device!~\"lo\"}[5m])",
                   "hide": false,
                   "intervalFactor": 2,
                   "legendFormat": "{{device}}",
@@ -2902,7 +2902,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(node_network_transmit_bytes{instance=~\"$server\",device!~\"lo\"}[5m])",
+                  "expr": "rate(node_network_transmit_bytes{instance=~\"$server\",device!~\"lo\"}[5m])",
                   "hide": false,
                   "intervalFactor": 2,
                   "legendFormat": "{{device}}",
