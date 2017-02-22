@@ -124,6 +124,9 @@ func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: apimetav1.ObjectMeta{
 			Name: governingServiceName,
+			Labels: map[string]string{
+				"operated-prometheus": "true",
+			},
 		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",
