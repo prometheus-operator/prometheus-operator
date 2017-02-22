@@ -20,9 +20,11 @@ import (
 	"net/url"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 )
@@ -34,9 +36,9 @@ func WaitForTPRReady(restClient rest.Interface, tprGroup, tprVersion, tprName st
 		res := restClient.Get().AbsPath("apis", tprGroup, tprVersion, tprName).Do()
 		err := res.Error()
 		if err != nil {
-			// RESTClient returns *errors.StatusError for any status codes < 200 or > 206
+			// RESTClient returns *apierrors.StatusError for any status codes < 200 or > 206
 			// and http.Client.Do errors are returned directly.
-			if se, ok := err.(*errors.StatusError); ok {
+			if se, ok := err.(*apierrors.StatusError); ok {
 				if se.Status().Code == http.StatusNotFound {
 					return false, nil
 				}
@@ -100,7 +102,7 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 }
 
 func IsResourceNotFoundError(err error) bool {
-	se, ok := err.(*errors.StatusError)
+	se, ok := err.(*apierrors.StatusError)
 	if !ok {
 		return false
 	}
@@ -108,4 +110,48 @@ func IsResourceNotFoundError(err error) bool {
 		return true
 	}
 	return false
+}
+
+func CreateOrUpdateService(sclient clientv1.ServiceInterface, svc *v1.Service) error {
+	service, err := sclient.Get(svc.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return errors.Wrap(err, "retrieving service object failed")
+	}
+
+	if apierrors.IsNotFound(err) {
+		_, err = sclient.Create(svc)
+		if err != nil {
+			return errors.Wrap(err, "creating service object failed")
+		}
+	} else {
+		svc.ResourceVersion = service.ResourceVersion
+		_, err := sclient.Update(svc)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return errors.Wrap(err, "updating service object failed")
+		}
+	}
+
+	return nil
+}
+
+func CreateOrUpdateEndpoints(eclient clientv1.EndpointsInterface, eps *v1.Endpoints) error {
+	endpoints, err := eclient.Get(eps.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		errors.Wrap(err, "retrieving existing kubelet service object failed")
+	}
+
+	if apierrors.IsNotFound(err) {
+		_, err = eclient.Create(eps)
+		if err != nil {
+			errors.Wrap(err, "creating kubelet enpoints object failed")
+		}
+	} else {
+		eps.ResourceVersion = endpoints.ResourceVersion
+		_, err = eclient.Update(eps)
+		if err != nil {
+			errors.Wrap(err, "updating kubelet enpoints object failed")
+		}
+	}
+
+	return nil
 }

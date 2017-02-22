@@ -25,6 +25,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 
 	"github.com/go-kit/kit/log"
+	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	apimetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -353,8 +354,8 @@ func (c *Operator) sync(key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(am.Namespace)
-	if _, err := svcClient.Create(makeStatefulSetService(am)); err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("create statefulset service: %s", err)
+	if err = k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(am)); err != nil {
+		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
 	ssetClient := c.kclient.Apps().StatefulSets(am.Namespace)
