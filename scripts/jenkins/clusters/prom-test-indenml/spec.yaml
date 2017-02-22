@@ -1,0 +1,9 @@
+awsRegion: eu-west-1
+prometheus:
+  machineType: d2.medium
+  scrapeInterval: 4s
+  instances:
+workers:
+  count: 3
+  machineType: d2.medium
+  appInstances: 180
