@@ -24,6 +24,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 
 	"github.com/go-kit/kit/log"
+	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	apimetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -331,42 +332,15 @@ func (c *Operator) syncNodeEndpoints() {
 		},
 	}
 
-	service, err := c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Get(c.kubeletObjectName, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		c.logger.Log("msg", "retrieving existing kubelet service object failed", "err", err)
+	err := k8sutil.CreateOrUpdateService(c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
+	if err != nil {
+		c.logger.Log("msg", "synchronizing kubelet service object failed", "err", err)
 	}
 
-	if apierrors.IsNotFound(err) {
-		_, err = c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Create(svc)
-		if err != nil {
-			c.logger.Log("msg", "creating kubelet service object failed", "err", err)
-		}
-	} else {
-		svc.ResourceVersion = service.ResourceVersion
-		_, err := c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Update(svc)
-		if err != nil && !apierrors.IsNotFound(err) {
-			c.logger.Log("msg", "updating kubelet service object failed", "err", err)
-		}
+	err = k8sutil.CreateOrUpdateEndpoints(c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), endpoints)
+	if err != nil {
+		c.logger.Log("msg", "synchronizing kubelet endpoints object failed", "err", err)
 	}
-
-	eps, err := c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Get(c.kubeletObjectName, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		c.logger.Log("msg", "retrieving existing kubelet service object failed", "err", err)
-	}
-
-	if apierrors.IsNotFound(err) {
-		_, err = c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Create(endpoints)
-		if err != nil {
-			c.logger.Log("msg", "creating kubelet enpoints object failed", "err", err)
-		}
-	} else {
-		endpoints.ResourceVersion = eps.ResourceVersion
-		_, err = c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Update(endpoints)
-		if err != nil {
-			c.logger.Log("msg", "updating kubelet enpoints object failed", "err", err)
-		}
-	}
-
 }
 
 func (c *Operator) handleSmonAdd(obj interface{}) {
@@ -584,8 +558,8 @@ func (c *Operator) sync(key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(p.Namespace)
-	if _, err := svcClient.Create(makeStatefulSetService(p)); err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("create statefulset service: %s", err)
+	if err := k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(p)); err != nil {
+		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
 	ssetClient := c.kclient.Apps().StatefulSets(p.Namespace)
