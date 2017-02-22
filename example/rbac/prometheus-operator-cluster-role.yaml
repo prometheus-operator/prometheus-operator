@@ -34,7 +34,7 @@ rules:
   resources:
   - services
   - endpoints
-  verbs: ["create", "update"]
+  verbs: ["get", "create", "update"]
 - apiGroups: [""]
   resources:
   - nodes

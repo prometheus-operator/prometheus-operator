@@ -52,7 +52,7 @@ rules:
   resources:
   - services
   - endpoints
-  verbs: ["create", "update"]
+  verbs: ["get", "create", "update"]
 - apiGroups: [""]
   resources:
   - nodes
@@ -87,9 +87,9 @@ When the Prometheus Operator performs version migrations from one version of
 Prometheus or Alertmanager to the other it needs to `list` `pods` running an
 old version and `delete` those.
 
-The Prometheus Operator creates and updates `services` called
-`prometheus-operated` and `alertmanager-operated`, which are used as governing
-`Service`s for the `StatefulSet`s.
+The Prometheus Operator reconciles `services` called `prometheus-operated` and
+`alertmanager-operated`, which are used as governing `Service`s for the
+`StatefulSet`s. To perform this reconciliation
 
 As the kubelet is currently not self-hosted, the Prometheus Operator has a
 feature to synchronize the IPs of the kubelets into an `Endpoints` object,
