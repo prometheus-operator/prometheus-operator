@@ -1,0 +1,21 @@
+apiVersion: "monitoring.coreos.com/v1alpha1"
+kind: "Prometheus"
+metadata:
+  name: "main"
+  labels:
+    prometheus: "main"
+spec:
+  replicas: 2
+  version: v1.5.2
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    matchExpressions:
+    - {key: app, operator: In, values: [node-exporter, example-app]}
+  alerting:
+    alertmanagers:
+    - namespace: default
+      name: alertmanager
+      port: web
+  resources:
+    requests:
+      memory: 400Mi
