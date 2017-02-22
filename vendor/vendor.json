@@ -261,6 +261,12 @@
 			"revisionTime": "2016-09-01T14:26:57Z"
 		},
 		{
+			"checksumSHA1": "ynJSWoF6v+3zMnh9R0QmmG6iGV8=",
+			"path": "github.com/pkg/errors",
+			"revision": "248dadf4e9068a0b3e79f02ed0a610d935de5302",
+			"revisionTime": "2016-10-29T09:36:37Z"
+		},
+		{
 			"checksumSHA1": "vopCLXHzYm+3l5fPKOf4/fQwrCM=",
 			"origin": "github.com/prometheus/prometheus/vendor/github.com/prometheus/common/model",
 			"path": "github.com/prometheus/common/model",
