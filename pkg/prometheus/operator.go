@@ -315,6 +315,9 @@ func (c *Operator) syncNodeEndpoints() {
 			Labels: map[string]string{
 				"k8s-app": "kubelet",
 			},
+			Annotations: map[string]string{
+				"alpha.monitoring.coreos.com/non-namespaced": "true",
+			},
 		},
 		Spec: v1.ServiceSpec{
 			Type:      v1.ServiceTypeClusterIP,
@@ -328,27 +331,42 @@ func (c *Operator) syncNodeEndpoints() {
 		},
 	}
 
-	_, err := c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Update(svc)
+	service, err := c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Get(c.kubeletObjectName, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
-		c.logger.Log("msg", "updating kubelet service object failed", "err", err)
+		c.logger.Log("msg", "retrieving existing kubelet service object failed", "err", err)
 	}
+
 	if apierrors.IsNotFound(err) {
 		_, err = c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Create(svc)
 		if err != nil {
 			c.logger.Log("msg", "creating kubelet service object failed", "err", err)
 		}
+	} else {
+		svc.ResourceVersion = service.ResourceVersion
+		_, err := c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Update(svc)
+		if err != nil && !apierrors.IsNotFound(err) {
+			c.logger.Log("msg", "updating kubelet service object failed", "err", err)
+		}
 	}
 
-	_, err = c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Update(endpoints)
+	eps, err := c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Get(c.kubeletObjectName, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
-		c.logger.Log("msg", "updating kubelet enpoints object failed", "err", err)
+		c.logger.Log("msg", "retrieving existing kubelet service object failed", "err", err)
 	}
+
 	if apierrors.IsNotFound(err) {
 		_, err = c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Create(endpoints)
 		if err != nil {
 			c.logger.Log("msg", "creating kubelet enpoints object failed", "err", err)
 		}
+	} else {
+		endpoints.ResourceVersion = eps.ResourceVersion
+		_, err = c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Update(endpoints)
+		if err != nil {
+			c.logger.Log("msg", "updating kubelet enpoints object failed", "err", err)
+		}
 	}
+
 }
 
 func (c *Operator) handleSmonAdd(obj interface{}) {

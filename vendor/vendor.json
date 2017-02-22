@@ -261,6 +261,19 @@
 			"revisionTime": "2016-09-01T14:26:57Z"
 		},
 		{
+			"checksumSHA1": "vopCLXHzYm+3l5fPKOf4/fQwrCM=",
+			"origin": "github.com/prometheus/prometheus/vendor/github.com/prometheus/common/model",
+			"path": "github.com/prometheus/common/model",
+			"revision": "bd1182d29f462c39544f94cc822830e1c64cf55b",
+			"revisionTime": "2017-02-10T14:34:18Z"
+		},
+		{
+			"checksumSHA1": "5P9QT7oCzCWwn2BuY2yjlmgyBJQ=",
+			"path": "github.com/prometheus/prometheus/config",
+			"revision": "bd1182d29f462c39544f94cc822830e1c64cf55b",
+			"revisionTime": "2017-02-10T14:34:18Z"
+		},
+		{
 			"checksumSHA1": "GxPD7A0NjMDom1xte0mghkpzr0E=",
 			"origin": "k8s.io/client-go/vendor/github.com/spf13/pflag",
 			"path": "github.com/spf13/pflag",

@@ -18,9 +18,15 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/client-go/pkg/api/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+)
+
+var (
+	defaultTestConfig = &Config{
+		ConfigReloaderImage: "quay.io/coreos/configmap-reload:latest",
+	}
 )
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
@@ -32,11 +38,11 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	}
 
 	sset := makeStatefulSet(v1alpha1.Prometheus{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, nil)
+	}, nil, defaultTestConfig)
 
 	if !reflect.DeepEqual(labels, sset.Labels) || !reflect.DeepEqual(annotations, sset.Annotations) {
 		t.Fatal("Labels or Annotations are not properly being propagated to the StatefulSet")
