@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  all-nodes-dashboard.json: |-
+  all-nodes-dashboard.json: |
     {
       "dashboard": {
       "__inputs": [
@@ -310,9 +310,18 @@ data:
                 {
                   "expr": "sum(node_memory_MemTotal) - sum(node_memory_MemFree)",
                   "intervalFactor": 2,
-                  "legendFormat": "free memory",
+                  "legendFormat": "memory usage",
                   "metric": "memo",
                   "refId": "A",
+                  "step": 4,
+                  "target": ""
+                },
+                {
+                  "expr": "sum(node_memory_MemTotal)",
+                  "intervalFactor": 2,
+                  "legendFormat": "memory total",
+                  "metric": "memo",
+                  "refId": "B",
                   "step": 4,
                   "target": ""
                 }
@@ -320,7 +329,7 @@ data:
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "Free memory",
+              "title": "Memory usage",
               "tooltip": {
                 "msResolution": false,
                 "shared": true,
@@ -355,9 +364,9 @@ data:
               "colorBackground": false,
               "colorValue": false,
               "colors": [
-                "rgba(245, 54, 54, 0.9)",
+                "rgba(50, 172, 45, 0.97)",
                 "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
+                "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
               "editable": true,
@@ -408,15 +417,15 @@ data:
               },
               "targets": [
                 {
-                  "expr": "(sum(node_memory_MemFree) / sum(node_memory_MemTotal)) * 100",
+                  "expr": "((sum(node_memory_MemTotal) - sum(node_memory_MemFree)) / sum(node_memory_MemTotal)) * 100",
                   "intervalFactor": 2,
                   "refId": "A",
                   "step": 60,
                   "target": ""
                 }
               ],
-              "thresholds": "10, 20",
-              "title": "Free memory",
+              "thresholds": "80, 90",
+              "title": "Memory usage",
               "type": "singlestat",
               "valueFontSize": "80%",
               "valueMaps": [
@@ -496,7 +505,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum(irate(node_disk_bytes_read[5m]))",
+                  "expr": "sum(rate(node_disk_bytes_read[5m]))",
                   "hide": false,
                   "intervalFactor": 4,
                   "legendFormat": "read",
@@ -505,14 +514,14 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "sum(irate(node_disk_bytes_written[5m]))",
+                  "expr": "sum(rate(node_disk_bytes_written[5m]))",
                   "intervalFactor": 4,
                   "legendFormat": "written",
                   "refId": "B",
                   "step": 8
                 },
                 {
-                  "expr": "sum(irate(node_disk_io_time_ms[5m]))",
+                  "expr": "sum(rate(node_disk_io_time_ms[5m]))",
                   "intervalFactor": 4,
                   "legendFormat": "io time",
                   "refId": "C",
@@ -522,7 +531,7 @@ data:
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "Disk usage",
+              "title": "Disk I/O",
               "tooltip": {
                 "msResolution": false,
                 "shared": true,
@@ -557,9 +566,9 @@ data:
               "colorBackground": false,
               "colorValue": false,
               "colors": [
-                "rgba(245, 54, 54, 0.9)",
+                "rgba(50, 172, 45, 0.97)",
                 "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
+                "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
               "editable": true,
@@ -610,15 +619,15 @@ data:
               },
               "targets": [
                 {
-                  "expr": "sum(node_filesystem_free{device!=\"rootfs\"}) / sum(node_filesystem_size{device!=\"rootfs\"})",
+                  "expr": "(sum(node_filesystem_size{device!=\"rootfs\"}) - sum(node_filesystem_free{device!=\"rootfs\"})) / sum(node_filesystem_size{device!=\"rootfs\"})",
                   "intervalFactor": 2,
                   "refId": "A",
                   "step": 60,
                   "target": ""
                 }
               ],
-              "thresholds": "0.10, 0.25",
-              "title": "Free disk space",
+              "thresholds": "0.75, 0.9",
+              "title": "Disk space usage",
               "type": "singlestat",
               "valueFontSize": "80%",
               "valueMaps": [
@@ -690,7 +699,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum(irate(node_network_receive_bytes{device!~\"lo\"}[5m]))",
+                  "expr": "sum(rate(node_network_receive_bytes{device!~\"lo\"}[5m]))",
                   "hide": false,
                   "intervalFactor": 2,
                   "legendFormat": "",
@@ -784,7 +793,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum(irate(node_network_transmit_bytes{device!~\"lo\"}[5m]))",
+                  "expr": "sum(rate(node_network_transmit_bytes{device!~\"lo\"}[5m]))",
                   "hide": false,
                   "intervalFactor": 2,
                   "legendFormat": "",
@@ -2109,7 +2118,7 @@ data:
         ],
         "overwrite": true
     }
-  node-dashboard.json: |-
+  node-dashboard.json: |
     {
       "dashboard": {
       "__inputs": [
@@ -2212,7 +2221,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "100 - (avg by (cpu) (irate(node_cpu{mode=\"idle\", instance=~\"$server\"}[5m])) * 100)",
+                  "expr": "100 - (avg by (cpu) (irate(node_cpu{mode=\"idle\", instance=\"$server\"}[5m])) * 100)",
                   "hide": false,
                   "intervalFactor": 10,
                   "legendFormat": "{{cpu}}",
@@ -2300,7 +2309,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "node_load1{instance=~\"$server\"}",
+                  "expr": "node_load1{instance=\"$server\"}",
                   "intervalFactor": 4,
                   "legendFormat": "load 1m",
                   "refId": "A",
@@ -2308,7 +2317,7 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "node_load5{instance=~\"$server\"}",
+                  "expr": "node_load5{instance=\"$server\"}",
                   "intervalFactor": 4,
                   "legendFormat": "load 5m",
                   "refId": "B",
@@ -2316,7 +2325,7 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "node_load15{instance=~\"$server\"}",
+                  "expr": "node_load15{instance=\"$server\"}",
                   "intervalFactor": 4,
                   "legendFormat": "load 15m",
                   "refId": "C",
@@ -2417,11 +2426,20 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "node_memory_MemTotal{instance=~\"$server\"} - node_memory_MemFree{instance=~\"$server\"}",
+                  "expr": "node_memory_MemTotal{instance=\"$server\"} - node_memory_MemFree{instance=\"$server\"}",
                   "intervalFactor": 2,
-                  "legendFormat": "free memory",
+                  "legendFormat": "memory usage",
                   "metric": "memo",
                   "refId": "A",
+                  "step": 4,
+                  "target": ""
+                },
+                {
+                  "expr": "node_memory_MemTotal{instance=\"$server\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "memory total",
+                  "metric": "memo",
+                  "refId": "B",
                   "step": 4,
                   "target": ""
                 }
@@ -2429,7 +2447,7 @@ data:
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "Free memory",
+              "title": "Memory usage",
               "tooltip": {
                 "msResolution": false,
                 "shared": true,
@@ -2464,9 +2482,9 @@ data:
               "colorBackground": false,
               "colorValue": false,
               "colors": [
-                "rgba(245, 54, 54, 0.9)",
+                "rgba(50, 172, 45, 0.97)",
                 "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
+                "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
               "editable": true,
@@ -2517,15 +2535,15 @@ data:
               },
               "targets": [
                 {
-                  "expr": "(node_memory_MemFree{instance=~\"$server\"} / node_memory_MemTotal{instance=~\"$server\"}) * 100",
+                  "expr": "((node_memory_MemTotal{instance=\"$server\"} - node_memory_MemFree{instance=\"$server\"}) / node_memory_MemTotal{instance=\"$server\"}) * 100",
                   "intervalFactor": 2,
                   "refId": "A",
                   "step": 60,
                   "target": ""
                 }
               ],
-              "thresholds": "10, 20",
-              "title": "Free memory",
+              "thresholds": "80, 90",
+              "title": "Memory usage",
               "type": "singlestat",
               "valueFontSize": "80%",
               "valueMaps": [
@@ -2605,7 +2623,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum by (instance) (irate(node_disk_bytes_read{instance=~\"$server\"}[5m]))",
+                  "expr": "sum by (instance) (rate(node_disk_bytes_read{instance=\"$server\"}[2m]))",
                   "hide": false,
                   "intervalFactor": 4,
                   "legendFormat": "read",
@@ -2614,14 +2632,14 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "sum by (instance) (irate(node_disk_bytes_written{instance=~\"$server\"}[5m]))",
+                  "expr": "sum by (instance) (rate(node_disk_bytes_written{instance=\"$server\"}[2m]))",
                   "intervalFactor": 4,
                   "legendFormat": "written",
                   "refId": "B",
                   "step": 8
                 },
                 {
-                  "expr": "sum by (instance) (irate(node_disk_io_time_ms{instance=~\"$server\"}[5m]))",
+                  "expr": "sum by (instance) (rate(node_disk_io_time_ms{instance=\"$server\"}[2m]))",
                   "intervalFactor": 4,
                   "legendFormat": "io time",
                   "refId": "C",
@@ -2631,7 +2649,7 @@ data:
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "Disk usage",
+              "title": "Disk I/O",
               "tooltip": {
                 "msResolution": false,
                 "shared": true,
@@ -2666,9 +2684,9 @@ data:
               "colorBackground": false,
               "colorValue": false,
               "colors": [
-                "rgba(245, 54, 54, 0.9)",
+                "rgba(50, 172, 45, 0.97)",
                 "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
+                "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
               "editable": true,
@@ -2719,15 +2737,15 @@ data:
               },
               "targets": [
                 {
-                  "expr": "sum(node_filesystem_free{device!=\"rootfs\",instance=~\"$server\"}) / sum(node_filesystem_size{device!=\"rootfs\",instance=~\"$server\"})",
+                  "expr": "(sum(node_filesystem_size{device!=\"rootfs\",instance=\"$server\"}) - sum(node_filesystem_free{device!=\"rootfs\",instance=\"$server\"})) / sum(node_filesystem_size{device!=\"rootfs\",instance=\"$server\"})",
                   "intervalFactor": 2,
                   "refId": "A",
                   "step": 60,
                   "target": ""
                 }
               ],
-              "thresholds": "0.10, 0.25",
-              "title": "Free disk space",
+              "thresholds": "0.75, 0.9",
+              "title": "Disk space usage",
               "type": "singlestat",
               "valueFontSize": "80%",
               "valueMaps": [
@@ -2799,7 +2817,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(node_network_receive_bytes{instance=~\"$server\",device!~\"lo\"}[5m])",
+                  "expr": "rate(node_network_receive_bytes{instance=\"$server\",device!~\"lo\"}[5m])",
                   "hide": false,
                   "intervalFactor": 2,
                   "legendFormat": "{{device}}",
@@ -2893,7 +2911,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(node_network_transmit_bytes{instance=~\"$server\",device!~\"lo\"}[5m])",
+                  "expr": "rate(node_network_transmit_bytes{instance=\"$server\",device!~\"lo\"}[5m])",
                   "hide": false,
                   "intervalFactor": 2,
                   "legendFormat": "{{device}}",
