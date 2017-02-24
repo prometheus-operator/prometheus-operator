@@ -47,7 +47,7 @@ func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *v1alpha1
 			Name: name,
 		},
 		Spec: v1alpha1.AlertmanagerSpec{
-			Replicas: replicas,
+			Replicas: &replicas,
 			Version:  "v0.5.0",
 		},
 	}
@@ -106,7 +106,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*6, int(a.Spec.Replicas), amImage(a.Spec.Version), alertmanager.ListOptions(a.Name))
+	_, err = f.WaitForPodsReady(time.Minute*6, int(*a.Spec.Replicas), amImage(a.Spec.Version), alertmanager.ListOptions(a.Name))
 	if err != nil {
 		return fmt.Errorf("failed to create an Alertmanager cluster (%s) with %d instances: %v", a.Name, a.Spec.Replicas, err)
 	}
@@ -120,7 +120,7 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*6, int(a.Spec.Replicas), amImage(a.Spec.Version), alertmanager.ListOptions(a.Name))
+	_, err = f.WaitForPodsReady(time.Minute*6, int(*a.Spec.Replicas), amImage(a.Spec.Version), alertmanager.ListOptions(a.Name))
 	if err != nil {
 		return fmt.Errorf("failed to update %d Alertmanager instances (%s): %v", a.Spec.Replicas, a.Name, err)
 	}

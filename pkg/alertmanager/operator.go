@@ -400,7 +400,11 @@ func (c *Operator) syncVersion(a *v1alpha1.Alertmanager) error {
 
 	// If the StatefulSet is still busy scaling, don't interfere by killing pods.
 	// We enqueue ourselves again to until the StatefulSet is ready.
-	if status.Replicas != a.Spec.Replicas {
+	expectedReplicas := int32(1)
+	if a.Spec.Replicas != nil {
+		expectedReplicas = *a.Spec.Replicas
+	}
+	if status.Replicas != expectedReplicas {
 		return fmt.Errorf("scaling in progress")
 	}
 	if status.Replicas == 0 {
