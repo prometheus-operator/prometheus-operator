@@ -1,0 +1,10 @@
+apiVersion: "monitoring.coreos.com/v1alpha1"
+kind: "Prometheus"
+metadata:
+  name: "persisted"
+spec:
+  storage:
+    class: ssd
+    resources:
+      requests:
+        storage: 40Gi
