@@ -26,10 +26,14 @@ import (
 	"time"
 
 	apimetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	operatorFramework "github.com/coreos/prometheus-operator/test/e2e/framework"
 )
 
 func TestPrometheusCreateDeleteCluster(t *testing.T) {
@@ -95,49 +99,82 @@ func TestPrometheusVersionMigration(t *testing.T) {
 
 func TestPrometheusReloadConfig(t *testing.T) {
 	name := "test"
-
-	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
-			t.Fatal(err)
-		}
-	}()
+	p := &v1alpha1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: v1alpha1.PrometheusSpec{
+			Replicas: 1,
+			Version:  "v1.5.0",
+			Resources: v1.ResourceRequirements{
+				Requests: v1.ResourceList{
+					v1.ResourceMemory: resource.MustParse("400Mi"),
+				},
+			},
+		},
+	}
 
 	cfg := &v1.ConfigMap{
 		ObjectMeta: apimetav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 		},
 		Data: map[string]string{
-			"prometheus.yaml": "",
+			"prometheus.yaml": `
+global:
+  scrape_interval: 1m
+scrape_configs:
+  - job_name: testReloadConfig
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+        - 111.111.111.111:9090
+`,
 		},
 	}
+
+	svc := framework.MakeBasicPrometheusNodePortService(name, "reloadconfig-group", 30900)
+
+	defer func() {
+		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
+			t.Fatal(err)
+		}
+		if err := framework.DeleteService(svc.Name); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	if _, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Create(cfg); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(framework.MakeBasicPrometheus(name, name, 1)); err != nil {
+	if err := framework.CreatePrometheusAndWaitUntilReady(p); err != nil {
 		t.Fatal(err)
 	}
 
-	cfg.Data["prometheus.yaml"] = "global:\n  scrape_interval: 1m"
+	if err := framework.CreateServiceAndWaitUntilReady(svc); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.WaitForTargets(1); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg.Data["prometheus.yaml"] = `
+global:
+  scrape_interval: 1m
+scrape_configs:
+  - job_name: testReloadConfig
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+        - 111.111.111.111:9090
+        - 111.111.111.112:9090
+`
 	if _, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Update(cfg); err != nil {
 		t.Fatal(err)
 	}
 
-	// remounting a ConfigMap can take some time
-	err := framework.Poll(time.Minute*5, time.Second, func() (bool, error) {
-		logs, err := framework.GetLogs(fmt.Sprintf("prometheus-%s-0", name), "config-reloader")
-		if err != nil {
-			return false, err
-		}
-
-		if strings.Contains(logs, "config map updated") && strings.Contains(logs, "successfully triggered reload") {
-			return true, nil
-		}
-
-		return false, nil
-	})
-	if err != nil {
+	if err := framework.WaitForTargets(2); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -399,7 +436,6 @@ func TestExposingPrometheusWithIngress(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-
 func isDiscoveryWorking(prometheusName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(framework.Namespace.Name).List(prometheus.ListOptions(prometheusName))
@@ -412,18 +448,12 @@ func isDiscoveryWorking(prometheusName string) func() (bool, error) {
 		podIP := pods.Items[0].Status.PodIP
 		expectedTargets := []string{fmt.Sprintf("http://%s:9090/metrics", podIP)}
 
-		resp, err := http.Get(fmt.Sprintf("http://%s:30900/api/v1/targets", framework.ClusterIP))
+		activeTargets, err := framework.GetActiveTargets()
 		if err != nil {
 			return false, err
 		}
-		defer resp.Body.Close()
 
-		rt := prometheusTargetAPIResponse{}
-		if err := json.NewDecoder(resp.Body).Decode(&rt); err != nil {
-			return false, err
-		}
-
-		if !assertExpectedTargets(rt.Data.ActiveTargets, expectedTargets) {
+		if !assertExpectedTargets(activeTargets, expectedTargets) {
 			return false, nil
 		}
 
@@ -507,7 +537,7 @@ func isAlertmanagerDiscoveryWorking(alertmanagerName string) func() (bool, error
 	}
 }
 
-func assertExpectedTargets(targets []*target, expectedTargets []string) bool {
+func assertExpectedTargets(targets []*operatorFramework.Target, expectedTargets []string) bool {
 	log.Printf("Expected Targets: %#+v\n", expectedTargets)
 
 	existingTargets := []string{}
@@ -545,19 +575,6 @@ func assertExpectedAlertmanagerTargets(ams []*alertmanagerTarget, expectedTarget
 	}
 
 	return true
-}
-
-type target struct {
-	ScrapeURL string `json:"scrapeUrl"`
-}
-
-type targetDiscovery struct {
-	ActiveTargets []*target `json:"activeTargets"`
-}
-
-type prometheusTargetAPIResponse struct {
-	Status string           `json:"status"`
-	Data   *targetDiscovery `json:"data"`
 }
 
 type alertmanagerTarget struct {

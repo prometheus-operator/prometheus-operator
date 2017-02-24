@@ -15,8 +15,10 @@
 package framework
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -167,4 +169,54 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
 
 func promImage(version string) string {
 	return fmt.Sprintf("quay.io/prometheus/prometheus:%s", version)
+}
+
+func (f *Framework) WaitForTargets(amount int) error {
+	var targets []*Target
+
+	if err := f.Poll(time.Minute*10, time.Second, func() (bool, error) {
+		var err error
+		targets, err = f.GetActiveTargets()
+		if err != nil {
+			return false, err
+		}
+
+		if len(targets) == amount {
+			return true, nil
+		}
+
+		return false, nil
+	}); err != nil {
+		return fmt.Errorf("waiting for targets timed out. %v of %v targets found. %v", len(targets), amount, err)
+	}
+
+	return nil
+}
+
+func (f *Framework) GetActiveTargets() ([]*Target, error) {
+	resp, err := http.Get(fmt.Sprintf("http://%s:30900/api/v1/targets", f.ClusterIP))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	rt := prometheusTargetAPIResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(&rt); err != nil {
+		return nil, err
+	}
+
+	return rt.Data.ActiveTargets, nil
+}
+
+type Target struct {
+	ScrapeURL string `json:"scrapeUrl"`
+}
+
+type targetDiscovery struct {
+	ActiveTargets []*Target `json:"activeTargets"`
+}
+
+type prometheusTargetAPIResponse struct {
+	Status string           `json:"status"`
+	Data   *targetDiscovery `json:"data"`
 }
