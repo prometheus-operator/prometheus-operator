@@ -1,4 +1,28 @@
-job('e2e-tests') {
+job('prometheus-operator-unit-tests') {
+    concurrentBuild()
+
+    scm {
+        git {
+            remote {
+                github('coreos/prometheus-operator')
+                refspec('+refs/pull/*:refs/remotes/origin/pr/*')
+            }
+            branch('${sha1}')
+        }
+    }
+
+    triggers {
+        githubPullRequest {
+            useGitHubHooks()
+            orgWhitelist(['coreos-inc'])
+        }
+    }
+
+    steps {
+        shell('docker run --rm -v $PWD:/go/src/github.com/coreos/prometheus-operator -w /go/src/github.com/coreos/prometheus-operator golang make test')
+    }
+}
+job('prometheus-operator-e2e-tests') {
     concurrentBuild()
 
     scm {
