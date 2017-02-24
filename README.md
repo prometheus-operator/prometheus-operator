@@ -133,3 +133,6 @@ kube-system   kube-controller-manager-prometheus-discovery   10.2.30.2:10252    
 kube-system   kube-scheduler-prometheus-discovery            10.2.30.4:10251    1h
 monitoring    etcd-k8s                                       172.17.4.51:2379   1h
 ```
+
+## Other Documentation
+[Install Docs for a cluster created with KOPS on AWS](docs/KOPSonAWS.md)
