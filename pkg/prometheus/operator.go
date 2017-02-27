@@ -604,7 +604,11 @@ func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
 
 	// If the StatefulSet is still busy scaling, don't interfere by killing pods.
 	// We enqueue ourselves again to until the StatefulSet is ready.
-	if status.Replicas != p.Spec.Replicas {
+	expectedReplicas := int32(1)
+	if p.Spec.Replicas != nil {
+		expectedReplicas = *p.Spec.Replicas
+	}
+	if status.Replicas != expectedReplicas {
 		return fmt.Errorf("scaling in progress")
 	}
 	if status.Replicas == 0 {

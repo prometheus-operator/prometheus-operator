@@ -32,8 +32,11 @@ const (
 	governingServiceName = "prometheus-operated"
 	defaultBaseImage     = "quay.io/prometheus/prometheus"
 	defaultVersion       = "v1.5.2"
-	minReplicas          = 1
 	defaultRetention     = "24h"
+)
+
+var (
+	minReplicas int32 = 1
 )
 
 func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Config) *v1beta1.StatefulSet {
@@ -47,8 +50,8 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 	if p.Spec.Version == "" {
 		p.Spec.Version = defaultVersion
 	}
-	if p.Spec.Replicas < minReplicas {
-		p.Spec.Replicas = minReplicas
+	if p.Spec.Replicas != nil && *p.Spec.Replicas < minReplicas {
+		p.Spec.Replicas = &minReplicas
 	}
 	if p.Spec.Retention == "" {
 		p.Spec.Retention = defaultRetention
@@ -193,7 +196,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSp
 
 	return v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
-		Replicas:    &p.Spec.Replicas,
+		Replicas:    p.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: apimetav1.ObjectMeta{
 				Labels: map[string]string{

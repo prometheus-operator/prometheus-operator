@@ -32,7 +32,10 @@ const (
 	governingServiceName = "alertmanager-operated"
 	defaultBaseImage     = "quay.io/prometheus/alertmanager"
 	defaultVersion       = "v0.5.1"
-	minReplicas          = 1
+)
+
+var (
+	minReplicas int32 = 1
 )
 
 func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config Config) *v1beta1.StatefulSet {
@@ -46,8 +49,8 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 	if am.Spec.Version == "" {
 		am.Spec.Version = defaultVersion
 	}
-	if am.Spec.Replicas < minReplicas {
-		am.Spec.Replicas = minReplicas
+	if am.Spec.Replicas != nil && *am.Spec.Replicas < minReplicas {
+		am.Spec.Replicas = &minReplicas
 	}
 
 	statefulset := &v1beta1.StatefulSet{
@@ -148,14 +151,14 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
-	for i := int32(0); i < a.Spec.Replicas; i++ {
+	for i := int32(0); i < *a.Spec.Replicas; i++ {
 		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, "alertmanager", a.Namespace))
 	}
 
 	terminationGracePeriod := int64(0)
 	return v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
-		Replicas:    &a.Spec.Replicas,
+		Replicas:    a.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: apimetav1.ObjectMeta{
 				Labels: map[string]string{

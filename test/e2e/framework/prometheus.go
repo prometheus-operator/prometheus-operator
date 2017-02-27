@@ -36,7 +36,7 @@ func (f *Framework) MakeBasicPrometheus(name, group string, replicas int32) *v1a
 			Name: name,
 		},
 		Spec: v1alpha1.PrometheusSpec{
-			Replicas: replicas,
+			Replicas: &replicas,
 			Version:  "v1.4.0",
 			ServiceMonitorSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -126,7 +126,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*6, int(p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
+	_, err = f.WaitForPodsReady(time.Minute*6, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
 	if err != nil {
 		return fmt.Errorf("failed to create %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -141,7 +141,7 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*6, int(p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
+	_, err = f.WaitForPodsReady(time.Minute*6, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
 	if err != nil {
 		return fmt.Errorf("failed to update %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
