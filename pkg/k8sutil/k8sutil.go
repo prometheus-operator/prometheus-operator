@@ -137,19 +137,19 @@ func CreateOrUpdateService(sclient clientv1.ServiceInterface, svc *v1.Service) e
 func CreateOrUpdateEndpoints(eclient clientv1.EndpointsInterface, eps *v1.Endpoints) error {
 	endpoints, err := eclient.Get(eps.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
-		errors.Wrap(err, "retrieving existing kubelet service object failed")
+		return errors.Wrap(err, "retrieving existing kubelet endpoints object failed")
 	}
 
 	if apierrors.IsNotFound(err) {
 		_, err = eclient.Create(eps)
 		if err != nil {
-			errors.Wrap(err, "creating kubelet enpoints object failed")
+			return errors.Wrap(err, "creating kubelet endpoints object failed")
 		}
 	} else {
 		eps.ResourceVersion = endpoints.ResourceVersion
 		_, err = eclient.Update(eps)
 		if err != nil {
-			errors.Wrap(err, "updating kubelet enpoints object failed")
+			return errors.Wrap(err, "updating kubelet endpoints object failed")
 		}
 	}
 

@@ -189,13 +189,13 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go func() {
 		v, err := c.kclient.Discovery().ServerVersion()
 		if err != nil {
-			errChan <- fmt.Errorf("communicating with server failed: %s", err)
+			errChan <- errors.Wrap(err, "communicating with server failed")
 			return
 		}
 		c.logger.Log("msg", "connection established", "cluster-version", v)
 
 		if err := c.createTPRs(); err != nil {
-			errChan <- err
+			errChan <- errors.Wrap(err, "creating TPRs failed")
 			return
 		}
 		errChan <- nil
@@ -272,7 +272,7 @@ func (c *Operator) handleDeleteNode(obj interface{})      { c.syncNodeEndpoints(
 func (c *Operator) handleUpdateNode(old, cur interface{}) { c.syncNodeEndpoints() }
 
 func (c *Operator) syncNodeEndpoints() {
-	endpoints := &v1.Endpoints{
+	eps := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
 			Labels: map[string]string{
@@ -295,9 +295,8 @@ func (c *Operator) syncNodeEndpoints() {
 		n := obj.(*v1.Node)
 		for _, a := range n.Status.Addresses {
 			if a.Type == v1.NodeInternalIP {
-				endpoints.Subsets[0].Addresses = append(endpoints.Subsets[0].Addresses, v1.EndpointAddress{
+				eps.Subsets[0].Addresses = append(eps.Subsets[0].Addresses, v1.EndpointAddress{
 					IP:       a.Address,
-					Hostname: n.Name,
 					NodeName: &n.Name,
 					TargetRef: &v1.ObjectReference{
 						Kind:       "Node",
@@ -334,12 +333,12 @@ func (c *Operator) syncNodeEndpoints() {
 
 	err := k8sutil.CreateOrUpdateService(c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
 	if err != nil {
-		c.logger.Log("msg", "synchronizing kubelet service object failed", "err", err)
+		c.logger.Log("msg", "synchronizing kubelet service object failed", "err", err, "namespace", c.kubeletObjectNamespace, "name", svc.Name)
 	}
 
-	err = k8sutil.CreateOrUpdateEndpoints(c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), endpoints)
+	err = k8sutil.CreateOrUpdateEndpoints(c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
 	if err != nil {
-		c.logger.Log("msg", "synchronizing kubelet endpoints object failed", "err", err)
+		c.logger.Log("msg", "synchronizing kubelet endpoints object failed", "err", err, "namespace", c.kubeletObjectNamespace, "name", eps.Name)
 	}
 }
 
@@ -447,7 +446,7 @@ func (c *Operator) processNextWorkItem() bool {
 		return true
 	}
 
-	utilruntime.HandleError(fmt.Errorf("Sync %q failed with %v", key, err))
+	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("Sync %q failed", key)))
 	c.queue.AddRateLimited(key)
 
 	return true
@@ -543,17 +542,17 @@ func (c *Operator) sync(key string) error {
 	if p.Spec.ServiceMonitorSelector != nil {
 		// We just always regenerate the configuration to be safe.
 		if err := c.createConfig(p); err != nil {
-			return err
+			return errors.Wrap(err, "creating config failed")
 		}
 	}
 
 	// Create ConfigMaps if they don't exist.
 	cmClient := c.kclient.Core().ConfigMaps(p.Namespace)
 	if _, err := cmClient.Create(makeEmptyConfig(p.Name)); err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
+		return errors.Wrap(err, "creating empty config file failed")
 	}
 	if _, err := cmClient.Create(makeEmptyRules(p.Name)); err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
+		return errors.Wrap(err, "creating empty rules file failed")
 	}
 
 	// Create governing service if it doesn't exist.
@@ -566,20 +565,25 @@ func (c *Operator) sync(key string) error {
 	// Ensure we have a StatefulSet running Prometheus deployed.
 	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(prometheusKeyToStatefulSetKey(key))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "retrieving statefulset failed")
 	}
 
 	if !exists {
 		if _, err := ssetClient.Create(makeStatefulSet(*p, nil, &c.config)); err != nil {
-			return fmt.Errorf("create statefulset: %s", err)
+			return errors.Wrap(err, "creating statefulset failed")
 		}
 		return nil
 	}
 	if _, err := ssetClient.Update(makeStatefulSet(*p, obj.(*v1beta1.StatefulSet), &c.config)); err != nil {
-		return err
+		return errors.Wrap(err, "updating statefulset failed")
 	}
 
-	return c.syncVersion(key, p)
+	err = c.syncVersion(key, p)
+	if err != nil {
+		return errors.Wrap(err, "syncing version failed")
+	}
+
+	return nil
 }
 
 func ListOptions(name string) metav1.ListOptions {
@@ -599,7 +603,7 @@ func ListOptions(name string) metav1.ListOptions {
 func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
 	status, oldPods, err := PrometheusStatus(c.kclient, p)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "retrieving Prometheus status failed")
 	}
 
 	// If the StatefulSet is still busy scaling, don't interfere by killing pods.
@@ -609,7 +613,7 @@ func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
 		expectedReplicas = *p.Spec.Replicas
 	}
 	if status.Replicas != expectedReplicas {
-		return fmt.Errorf("scaling in progress")
+		return fmt.Errorf("scaling in progress, %d expected replicas, %d found replicas", expectedReplicas, status.Replicas)
 	}
 	if status.Replicas == 0 {
 		return nil
@@ -618,7 +622,7 @@ func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
 		return nil
 	}
 	if status.UnavailableReplicas > 0 {
-		return fmt.Errorf("waiting for pods to become ready")
+		return fmt.Errorf("waiting for %d unavailable pods to become ready", status.UnavailableReplicas)
 	}
 
 	// TODO(fabxc): delete oldest pod first.
@@ -637,7 +641,7 @@ func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v
 
 	pods, err := kclient.Core().Pods(p.Namespace).List(ListOptions(p.Name))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
 
 	res.Replicas = int32(len(pods.Items))
@@ -646,7 +650,7 @@ func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v
 	for _, pod := range pods.Items {
 		ready, err := k8sutil.PodRunningAndReady(pod)
 		if err != nil {
-			return nil, nil, fmt.Errorf("cannot determine pod ready state: %s", err)
+			return nil, nil, errors.Wrap(err, "cannot determine pod ready state")
 		}
 		if ready {
 			res.AvailableReplicas++
@@ -668,7 +672,7 @@ func (c *Operator) destroyPrometheus(key string) error {
 	ssetKey := prometheusKeyToStatefulSetKey(key)
 	obj, exists, err := c.ssetInf.GetStore().GetByKey(ssetKey)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "retrieving statefulset from cache failed")
 	}
 	if !exists {
 		return nil
@@ -680,7 +684,7 @@ func (c *Operator) destroyPrometheus(key string) error {
 	ssetClient := c.kclient.Apps().StatefulSets(sset.Namespace)
 
 	if _, err := ssetClient.Update(sset); err != nil {
-		return err
+		return errors.Wrap(err, "updating statefulset for scale-down failed")
 	}
 
 	podClient := c.kclient.Core().Pods(sset.Namespace)
@@ -690,7 +694,7 @@ func (c *Operator) destroyPrometheus(key string) error {
 	for {
 		pods, err := podClient.List(ListOptions(prometheusNameFromStatefulSetName(sset.Name)))
 		if err != nil {
-			return err
+			return errors.Wrap(err, "retrieving pods of statefulset failed")
 		}
 		if len(pods.Items) == 0 {
 			break
@@ -700,7 +704,7 @@ func (c *Operator) destroyPrometheus(key string) error {
 
 	// StatefulSet scaled down, we can delete it.
 	if err := ssetClient.Delete(sset.Name, nil); err != nil {
-		return err
+		return errors.Wrap(err, "deleting statefulset failed")
 	}
 
 	// Delete the auto-generate configuration.
@@ -709,10 +713,10 @@ func (c *Operator) destroyPrometheus(key string) error {
 	cm := c.kclient.Core().ConfigMaps(sset.Namespace)
 
 	if err := cm.Delete(sset.Name, nil); err != nil {
-		return err
+		return errors.Wrap(err, "deleting config file failed")
 	}
 	if err := cm.Delete(fmt.Sprintf("%s-rules", sset.Name), nil); err != nil {
-		return err
+		return errors.Wrap(err, "deleting rules file failed")
 	}
 	return nil
 }
@@ -720,12 +724,12 @@ func (c *Operator) destroyPrometheus(key string) error {
 func (c *Operator) createConfig(p *v1alpha1.Prometheus) error {
 	smons, err := c.selectServiceMonitors(p)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
 	// Update config map based on the most recent configuration.
 	b, err := generateConfig(p, smons)
 	if err != nil {
-		return fmt.Errorf("generating config failed: %s", err)
+		return errors.Wrap(err, "generating config failed")
 	}
 
 	cm := &v1.ConfigMap{
