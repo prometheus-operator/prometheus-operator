@@ -99,12 +99,13 @@ func TestPrometheusVersionMigration(t *testing.T) {
 
 func TestPrometheusReloadConfig(t *testing.T) {
 	name := "test"
+	replicas := int32(1)
 	p := &v1alpha1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 		Spec: v1alpha1.PrometheusSpec{
-			Replicas: 1,
+			Replicas: &replicas,
 			Version:  "v1.5.0",
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
