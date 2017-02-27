@@ -96,4 +96,35 @@ make
 hack/run-external.sh <kubectl cluster name>
 ```
 
+## Removal
+
+To remove the operator and Prometheus, first delete any third party resources you created in each namespace. The
+operator will automatically shut down and remove Prometheus and Alertmanager pods, and associated configmaps.
+
+```
+for n in $(kubectl get namespaces -o jsonpath={..metadata.name}); do
+  kubectl delete --all --namespace=$n prometheus,servicemonitor,alertmanager
+done
+```
+
+After a couple of minutes you can go ahead and remove the operator itself.
+
+```
+kubectl delete -f deployment.yaml
+```
+
+The operator automatically creates services in each namespace where you created a Prometheus or Alertmanager resources,
+and defines three third party resources. You can clean these up now.
+
+```
+for n in $(kubectl get namespaces -o jsonpath={..metadata.name}); do
+  kubectl delete --ignore-not-found --namespace=$n service prometheus-operated alertmanager-operated
+done
+
+kubectl delete --ignore-not-found thirdpartyresource \
+  prometheus.monitoring.coreos.com \
+  service-monitor.monitoring.coreos.com \
+  alertmanager.monitoring.coreos.com
+```
+
 **The Prometheus Operator collects anonymous usage statistics to help us learning how the software is being used and how we can improve it. To disable collection, run the Operator with the flag `-analytics=false`**
