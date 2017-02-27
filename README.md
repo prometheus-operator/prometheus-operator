@@ -29,9 +29,9 @@ The Prometheus Operator makes the Prometheus configuration Kubernetes native
 and manages and operates Prometheus and Alertmanager clusters. It is a piece of
 the puzzle regarding full end-to-end monitoring.
 
-[kube-prometheus](https://github.com/coreos/kube-prometheus) is a collection of
-manifests to help getting started with monitoring Kubernetes itself and 
-applications running on top of it.
+[kube-prometheus](https://github.com/coreos/kube-prometheus) combines the
+Prometheus Operator with a collection of manifests to help getting started with
+monitoring Kubernetes itself and applications running on top of it.
 
 ## Prerequisites
 
