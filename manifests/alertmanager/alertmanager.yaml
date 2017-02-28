@@ -1,7 +1,7 @@
 apiVersion: "monitoring.coreos.com/v1alpha1"
 kind: "Alertmanager"
 metadata:
-  name: "alertmanager-main"
+  name: "main"
   labels:
     alertmanager: "main"
 spec:

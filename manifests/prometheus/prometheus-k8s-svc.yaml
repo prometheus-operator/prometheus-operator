@@ -11,4 +11,4 @@ spec:
     protocol: TCP
     targetPort: web
   selector:
-    prometheus: prometheus-k8s
+    prometheus: k8s
