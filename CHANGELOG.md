@@ -1,3 +1,12 @@
+## 0.6.0 / 2017-02-28
+
+* [FEATURE] Allow not tagging targets with the `namespace` label.
+* [FEATURE] Allow specifying `ServiceAccountName` to be used by Prometheus pods.
+* [ENHANCEMENT] Label governing services to uniquely identify them.
+* [ENHANCEMENT] Reconcile Serive and Endpoints objects.
+* [ENHANCEMENT] General stability improvements.
+* [BUGFIX] Hostname cannot be fqdn when syncing kubelets into Endpoints object.
+
 ## 0.5.1 / 2017-02-17
 
 * [BUGFIX] Use correct governing `Service` for Prometheus `StatefulSet`.
