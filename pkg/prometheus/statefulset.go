@@ -171,6 +171,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSp
 		"-storage.local.max-chunks-to-persist=" + fmt.Sprintf("%d", memChunks/2),
 		"-storage.local.num-fingerprint-mutexes=4096",
 		"-storage.local.path=/var/prometheus/data",
+		"-storage.local.chunk-encoding-version=2",
 		"-config.file=/etc/prometheus/config/prometheus.yaml",
 	}
 
