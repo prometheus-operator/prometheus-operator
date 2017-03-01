@@ -15,6 +15,13 @@ job('prometheus-operator-unit-tests') {
         githubPullRequest {
             useGitHubHooks()
             orgWhitelist(['coreos-inc'])
+            extensions {
+                commitStatus {
+                    context('prometheus-operator-unit-tests')
+                    triggeredStatus('Tests triggered')
+                    startedStatus('Tests started')
+                }
+            }
         }
     }
 
@@ -54,6 +61,13 @@ job('prometheus-operator-e2e-tests') {
         githubPullRequest {
             useGitHubHooks()
             orgWhitelist(['coreos-inc'])
+            extensions {
+                commitStatus {
+                    context('prometheus-operator-e2e-tests')
+                    triggeredStatus('Tests triggered')
+                    startedStatus('Tests started')
+                }
+            }
         }
     }
 
