@@ -19,7 +19,7 @@ spec:
     scheme: https
     tlsConfig:
       caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-      insecureSkipVerify: true
+      serverName: kubernetes
     bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
