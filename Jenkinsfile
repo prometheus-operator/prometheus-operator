@@ -25,6 +25,10 @@ job('prometheus-operator-unit-tests') {
 job('prometheus-operator-e2e-tests') {
     concurrentBuild()
 
+    parameters {
+        stringParam('sha1')
+    }
+
     scm {
         git {
             remote {
@@ -58,7 +62,7 @@ job('prometheus-operator-e2e-tests') {
     }
 
     steps {
-        shell('docker run --rm -v /var/jenkins/workspace/e2e-playground:/var/jenkins/workspace/e2e-playground -v /var/run/docker.sock:/var/run/docker.sock cluster-setup-env /bin/bash -c "cd /var/jenkins/workspace/e2e-playground && make crossbuild"')
+        shell('docker run --rm -v $PWD:$PWD -v /var/run/docker.sock:/var/run/docker.sock cluster-setup-env /bin/bash -c "cd $PWD && make crossbuild"')
     }
 
     steps {
