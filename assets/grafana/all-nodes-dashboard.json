@@ -1,5 +1,6 @@
 {
-  "dashboard": {
+  "dashboard":
+{
   "__inputs": [
     {
       "name": "DS_PROMETHEUS",
@@ -268,11 +269,11 @@
             }
           ],
           "span": 9,
-          "stack": false,
+          "stack": true,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(node_memory_MemTotal) - sum(node_memory_MemFree)",
+              "expr": "sum(node_memory_MemTotal) - sum(node_memory_MemFree) - sum(node_memory_Buffers) - sum(node_memory_Cached)",
               "intervalFactor": 2,
               "legendFormat": "memory usage",
               "metric": "memo",
@@ -281,11 +282,32 @@
               "target": ""
             },
             {
-              "expr": "sum(node_memory_MemTotal)",
+              "expr": "sum(node_memory_Buffers)",
+              "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "memory total",
+              "legendFormat": "memory buffers",
               "metric": "memo",
               "refId": "B",
+              "step": 4,
+              "target": ""
+            },
+            {
+              "expr": "sum(node_memory_Cached)",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "memory cached",
+              "metric": "memo",
+              "refId": "C",
+              "step": 4,
+              "target": ""
+            },
+            {
+              "expr": "sum(node_memory_MemFree)",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "memory cached",
+              "metric": "memo",
+              "refId": "D",
               "step": 4,
               "target": ""
             }
@@ -313,7 +335,7 @@
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             },
             {
@@ -835,4 +857,3 @@
   ],
   "overwrite": true
 }
-
