@@ -1,5 +1,6 @@
 {
-  "dashboard": {
+  "dashboard":
+{
   "__inputs": [
     {
       "name": "DS_PROMETHEUS",
@@ -12,56 +13,47 @@
   ],
   "__requires": [
     {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "4.1.1"
+    },
+    {
       "type": "panel",
       "id": "graph",
       "name": "Graph",
       "version": ""
     },
     {
-      "type": "panel",
-      "id": "singlestat",
-      "name": "Singlestat",
-      "version": ""
-    },
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "3.1.1"
-    },
-    {
       "type": "datasource",
       "id": "prometheus",
       "name": "Prometheus",
       "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "singlestat",
+      "name": "Singlestat",
+      "version": ""
     }
   ],
-  "id": null,
-  "title": "All Nodes",
+  "annotations": {
+    "list": []
+  },
   "description": "Dashboard to get an overview of one server",
-  "tags": [
-    "prometheus"
-  ],
-  "style": "dark",
-  "timezone": "browser",
   "editable": true,
+  "gnetId": 22,
+  "graphTooltip": 0,
   "hideControls": false,
-  "sharedCrosshair": false,
+  "id": null,
+  "links": [],
+  "refresh": false,
   "rows": [
     {
       "collapse": false,
-      "editable": true,
       "height": "250px",
       "panels": [
         {
-          "alert": {
-            "crit": {
-              "op": ">"
-            },
-            "warn": {
-              "op": ">"
-            }
-          },
           "alerting": {},
           "aliasColors": {},
           "bars": false,
@@ -69,14 +61,8 @@
           "editable": true,
           "error": false,
           "fill": 1,
-          "grid": {
-            "threshold1": null,
-            "threshold1Color": "rgba(216, 200, 27, 0.27)",
-            "threshold2": null,
-            "threshold2Color": "rgba(234, 112, 112, 0.22)"
-          },
+          "grid": {},
           "id": 3,
-          "isNew": true,
           "legend": {
             "avg": false,
             "current": false,
@@ -120,7 +106,10 @@
           },
           "type": "graph",
           "xaxis": {
-            "show": true
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
           },
           "yaxes": [
             {
@@ -142,14 +131,6 @@
           ]
         },
         {
-          "alert": {
-            "crit": {
-              "op": ">"
-            },
-            "warn": {
-              "op": ">"
-            }
-          },
           "alerting": {},
           "aliasColors": {},
           "bars": false,
@@ -157,14 +138,8 @@
           "editable": true,
           "error": false,
           "fill": 1,
-          "grid": {
-            "threshold1": null,
-            "threshold1Color": "rgba(216, 200, 27, 0.27)",
-            "threshold2": null,
-            "threshold2Color": "rgba(234, 112, 112, 0.22)"
-          },
+          "grid": {},
           "id": 9,
-          "isNew": true,
           "legend": {
             "avg": false,
             "current": false,
@@ -224,7 +199,10 @@
           },
           "type": "graph",
           "xaxis": {
-            "show": true
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
           },
           "yaxes": [
             {
@@ -246,22 +224,18 @@
           ]
         }
       ],
-      "title": "New row"
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "New row",
+      "titleSize": "h6"
     },
     {
       "collapse": false,
-      "editable": true,
       "height": "250px",
       "panels": [
         {
-          "alert": {
-            "crit": {
-              "op": ">"
-            },
-            "warn": {
-              "op": ">"
-            }
-          },
           "alerting": {},
           "aliasColors": {},
           "bars": false,
@@ -269,14 +243,8 @@
           "editable": true,
           "error": false,
           "fill": 1,
-          "grid": {
-            "threshold1": null,
-            "threshold1Color": "rgba(216, 200, 27, 0.27)",
-            "threshold2": null,
-            "threshold2Color": "rgba(234, 112, 112, 0.22)"
-          },
+          "grid": {},
           "id": 4,
-          "isNew": true,
           "legend": {
             "avg": false,
             "current": false,
@@ -301,11 +269,11 @@
             }
           ],
           "span": 9,
-          "stack": false,
+          "stack": true,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(node_memory_MemTotal) - sum(node_memory_MemFree)",
+              "expr": "sum(node_memory_MemTotal) - sum(node_memory_MemFree) - sum(node_memory_Buffers) - sum(node_memory_Cached)",
               "intervalFactor": 2,
               "legendFormat": "memory usage",
               "metric": "memo",
@@ -314,11 +282,32 @@
               "target": ""
             },
             {
-              "expr": "sum(node_memory_MemTotal)",
+              "expr": "sum(node_memory_Buffers)",
+              "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "memory total",
+              "legendFormat": "memory buffers",
               "metric": "memo",
               "refId": "B",
+              "step": 4,
+              "target": ""
+            },
+            {
+              "expr": "sum(node_memory_Cached)",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "memory cached",
+              "metric": "memo",
+              "refId": "C",
+              "step": 4,
+              "target": ""
+            },
+            {
+              "expr": "sum(node_memory_MemFree)",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "memory free",
+              "metric": "memo",
+              "refId": "D",
               "step": 4,
               "target": ""
             }
@@ -331,11 +320,14 @@
             "msResolution": false,
             "shared": true,
             "sort": 0,
-            "value_type": "cumulative"
+            "value_type": "individual"
           },
           "type": "graph",
           "xaxis": {
-            "show": true
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
           },
           "yaxes": [
             {
@@ -343,7 +335,7 @@
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             },
             {
@@ -378,7 +370,6 @@
           },
           "id": 5,
           "interval": null,
-          "isNew": true,
           "links": [],
           "mappingType": 1,
           "mappingTypes": [
@@ -414,8 +405,9 @@
           },
           "targets": [
             {
-              "expr": "((sum(node_memory_MemTotal) - sum(node_memory_MemFree)) / sum(node_memory_MemTotal)) * 100",
+              "expr": "((sum(node_memory_MemTotal) - sum(node_memory_MemFree) - sum(node_memory_Buffers) - sum(node_memory_Cached)) / sum(node_memory_MemTotal)) * 100",
               "intervalFactor": 2,
+              "metric": "",
               "refId": "A",
               "step": 60,
               "target": ""
@@ -435,22 +427,18 @@
           "valueName": "avg"
         }
       ],
-      "title": "New row"
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "New row",
+      "titleSize": "h6"
     },
     {
       "collapse": false,
-      "editable": true,
       "height": "250px",
       "panels": [
         {
-          "alert": {
-            "crit": {
-              "op": ">"
-            },
-            "warn": {
-              "op": ">"
-            }
-          },
           "alerting": {},
           "aliasColors": {},
           "bars": false,
@@ -458,14 +446,8 @@
           "editable": true,
           "error": false,
           "fill": 1,
-          "grid": {
-            "threshold1": null,
-            "threshold1Color": "rgba(216, 200, 27, 0.27)",
-            "threshold2": null,
-            "threshold2Color": "rgba(234, 112, 112, 0.22)"
-          },
+          "grid": {},
           "id": 6,
-          "isNew": true,
           "legend": {
             "avg": false,
             "current": false,
@@ -537,7 +519,10 @@
           },
           "type": "graph",
           "xaxis": {
-            "show": true
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
           },
           "yaxes": [
             {
@@ -580,7 +565,6 @@
           },
           "id": 7,
           "interval": null,
-          "isNew": true,
           "links": [],
           "mappingType": 1,
           "mappingTypes": [
@@ -637,22 +621,18 @@
           "valueName": "current"
         }
       ],
-      "title": "New row"
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "New row",
+      "titleSize": "h6"
     },
     {
       "collapse": false,
-      "editable": true,
       "height": "250px",
       "panels": [
         {
-          "alert": {
-            "crit": {
-              "op": ">"
-            },
-            "warn": {
-              "op": ">"
-            }
-          },
           "alerting": {},
           "aliasColors": {},
           "bars": false,
@@ -660,14 +640,8 @@
           "editable": true,
           "error": false,
           "fill": 1,
-          "grid": {
-            "threshold1": null,
-            "threshold1Color": "rgba(216, 200, 27, 0.27)",
-            "threshold2": null,
-            "threshold2Color": "rgba(234, 112, 112, 0.22)"
-          },
+          "grid": {},
           "id": 8,
-          "isNew": true,
           "legend": {
             "avg": false,
             "current": false,
@@ -717,7 +691,10 @@
           },
           "type": "graph",
           "xaxis": {
-            "show": true
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
           },
           "yaxes": [
             {
@@ -739,14 +716,6 @@
           ]
         },
         {
-          "alert": {
-            "crit": {
-              "op": ">"
-            },
-            "warn": {
-              "op": ">"
-            }
-          },
           "alerting": {},
           "aliasColors": {},
           "bars": false,
@@ -754,14 +723,8 @@
           "editable": true,
           "error": false,
           "fill": 1,
-          "grid": {
-            "threshold1": null,
-            "threshold1Color": "rgba(216, 200, 27, 0.27)",
-            "threshold2": null,
-            "threshold2Color": "rgba(234, 112, 112, 0.22)"
-          },
+          "grid": {},
           "id": 10,
-          "isNew": true,
           "legend": {
             "avg": false,
             "current": false,
@@ -811,7 +774,10 @@
           },
           "type": "graph",
           "xaxis": {
-            "show": true
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
           },
           "yaxes": [
             {
@@ -833,9 +799,22 @@
           ]
         }
       ],
-      "title": "New row"
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "New row",
+      "titleSize": "h6"
     }
   ],
+  "schemaVersion": 14,
+  "style": "dark",
+  "tags": [
+    "prometheus"
+  ],
+  "templating": {
+    "list": []
+  },
   "time": {
     "from": "now-1h",
     "to": "now"
@@ -865,25 +844,17 @@
       "30d"
     ]
   },
-  "templating": {
-    "list": []
-  },
-  "annotations": {
-    "list": []
-  },
-  "refresh": false,
-  "schemaVersion": 12,
-  "version": 10,
-  "links": [],
-  "gnetId": 22
+  "timezone": "browser",
+  "title": "All Nodes",
+  "version": 1
 },
-    "inputs": [
-        {
-            "name": "DS_PROMETHEUS",
-            "pluginId": "prometheus",
-            "type": "datasource",
-            "value": "prometheus"
-        }
-    ],
-    "overwrite": true
+  "inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "pluginId": "prometheus",
+      "type": "datasource",
+      "value": "prometheus"
+    }
+  ],
+  "overwrite": true
 }
