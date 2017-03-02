@@ -2,7 +2,8 @@ apiVersion: v1
 data:
   all-nodes-dashboard.json: |
     {
-      "dashboard": {
+      "dashboard":
+    {
       "__inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -15,56 +16,47 @@ data:
       ],
       "__requires": [
         {
+          "type": "grafana",
+          "id": "grafana",
+          "name": "Grafana",
+          "version": "4.1.1"
+        },
+        {
           "type": "panel",
           "id": "graph",
           "name": "Graph",
           "version": ""
         },
         {
-          "type": "panel",
-          "id": "singlestat",
-          "name": "Singlestat",
-          "version": ""
-        },
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "3.1.1"
-        },
-        {
           "type": "datasource",
           "id": "prometheus",
           "name": "Prometheus",
           "version": "1.0.0"
+        },
+        {
+          "type": "panel",
+          "id": "singlestat",
+          "name": "Singlestat",
+          "version": ""
         }
       ],
-      "id": null,
-      "title": "All Nodes",
+      "annotations": {
+        "list": []
+      },
       "description": "Dashboard to get an overview of one server",
-      "tags": [
-        "prometheus"
-      ],
-      "style": "dark",
-      "timezone": "browser",
       "editable": true,
+      "gnetId": 22,
+      "graphTooltip": 0,
       "hideControls": false,
-      "sharedCrosshair": false,
+      "id": null,
+      "links": [],
+      "refresh": false,
       "rows": [
         {
           "collapse": false,
-          "editable": true,
           "height": "250px",
           "panels": [
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -72,14 +64,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2": null,
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 3,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -123,7 +109,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -145,14 +134,6 @@ data:
               ]
             },
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -160,14 +141,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2": null,
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 9,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -227,7 +202,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -249,22 +227,18 @@ data:
               ]
             }
           ],
-          "title": "New row"
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "New row",
+          "titleSize": "h6"
         },
         {
           "collapse": false,
-          "editable": true,
           "height": "250px",
           "panels": [
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -272,14 +246,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2": null,
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 4,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -304,11 +272,11 @@ data:
                 }
               ],
               "span": 9,
-              "stack": false,
+              "stack": true,
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum(node_memory_MemTotal) - sum(node_memory_MemFree)",
+                  "expr": "sum(node_memory_MemTotal) - sum(node_memory_MemFree) - sum(node_memory_Buffers) - sum(node_memory_Cached)",
                   "intervalFactor": 2,
                   "legendFormat": "memory usage",
                   "metric": "memo",
@@ -317,11 +285,32 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "sum(node_memory_MemTotal)",
+                  "expr": "sum(node_memory_Buffers)",
+                  "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "memory total",
+                  "legendFormat": "memory buffers",
                   "metric": "memo",
                   "refId": "B",
+                  "step": 4,
+                  "target": ""
+                },
+                {
+                  "expr": "sum(node_memory_Cached)",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "memory cached",
+                  "metric": "memo",
+                  "refId": "C",
+                  "step": 4,
+                  "target": ""
+                },
+                {
+                  "expr": "sum(node_memory_MemFree)",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "memory cached",
+                  "metric": "memo",
+                  "refId": "D",
                   "step": 4,
                   "target": ""
                 }
@@ -338,7 +327,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -346,7 +338,7 @@ data:
                   "label": null,
                   "logBase": 1,
                   "max": null,
-                  "min": null,
+                  "min": "0",
                   "show": true
                 },
                 {
@@ -381,7 +373,6 @@ data:
               },
               "id": 5,
               "interval": null,
-              "isNew": true,
               "links": [],
               "mappingType": 1,
               "mappingTypes": [
@@ -438,22 +429,18 @@ data:
               "valueName": "avg"
             }
           ],
-          "title": "New row"
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "New row",
+          "titleSize": "h6"
         },
         {
           "collapse": false,
-          "editable": true,
           "height": "250px",
           "panels": [
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -461,14 +448,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2": null,
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 6,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -540,7 +521,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -583,7 +567,6 @@ data:
               },
               "id": 7,
               "interval": null,
-              "isNew": true,
               "links": [],
               "mappingType": 1,
               "mappingTypes": [
@@ -640,22 +623,18 @@ data:
               "valueName": "current"
             }
           ],
-          "title": "New row"
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "New row",
+          "titleSize": "h6"
         },
         {
           "collapse": false,
-          "editable": true,
           "height": "250px",
           "panels": [
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -663,14 +642,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2": null,
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 8,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -720,7 +693,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -742,14 +718,6 @@ data:
               ]
             },
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -757,14 +725,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2": null,
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 10,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -814,7 +776,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -836,9 +801,22 @@ data:
               ]
             }
           ],
-          "title": "New row"
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "New row",
+          "titleSize": "h6"
         }
       ],
+      "schemaVersion": 14,
+      "style": "dark",
+      "tags": [
+        "prometheus"
+      ],
+      "templating": {
+        "list": []
+      },
       "time": {
         "from": "now-1h",
         "to": "now"
@@ -868,27 +846,19 @@ data:
           "30d"
         ]
       },
-      "templating": {
-        "list": []
-      },
-      "annotations": {
-        "list": []
-      },
-      "refresh": false,
-      "schemaVersion": 12,
-      "version": 10,
-      "links": [],
-      "gnetId": 22
+      "timezone": "browser",
+      "title": "All Nodes",
+      "version": 1
     },
-        "inputs": [
-            {
-                "name": "DS_PROMETHEUS",
-                "pluginId": "prometheus",
-                "type": "datasource",
-                "value": "prometheus"
-            }
-        ],
-        "overwrite": true
+      "inputs": [
+        {
+          "name": "DS_PROMETHEUS",
+          "pluginId": "prometheus",
+          "type": "datasource",
+          "value": "prometheus"
+        }
+      ],
+      "overwrite": true
     }
   deployment-dashboard.json: |-
     {
@@ -2118,7 +2088,7 @@ data:
         ],
         "overwrite": true
     }
-  node-dashboard.json: |
+  node-dashboard.json: |+
     {
       "dashboard": {
       "__inputs": [
@@ -2133,56 +2103,47 @@ data:
       ],
       "__requires": [
         {
+          "type": "grafana",
+          "id": "grafana",
+          "name": "Grafana",
+          "version": "4.1.1"
+        },
+        {
           "type": "panel",
           "id": "graph",
           "name": "Graph",
           "version": ""
         },
         {
-          "type": "panel",
-          "id": "singlestat",
-          "name": "Singlestat",
-          "version": ""
-        },
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "3.1.1"
-        },
-        {
           "type": "datasource",
           "id": "prometheus",
           "name": "Prometheus",
           "version": "1.0.0"
+        },
+        {
+          "type": "panel",
+          "id": "singlestat",
+          "name": "Singlestat",
+          "version": ""
         }
       ],
-      "id": null,
-      "title": "Nodes",
+      "annotations": {
+        "list": []
+      },
       "description": "Dashboard to get an overview of one server",
-      "tags": [
-        "prometheus"
-      ],
-      "style": "dark",
-      "timezone": "browser",
       "editable": true,
+      "gnetId": 22,
+      "graphTooltip": 0,
       "hideControls": false,
-      "sharedCrosshair": false,
+      "id": null,
+      "links": [],
+      "refresh": false,
       "rows": [
         {
           "collapse": false,
-          "editable": true,
           "height": "250px",
           "panels": [
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -2190,14 +2151,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold2": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 3,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -2241,7 +2196,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -2263,14 +2221,6 @@ data:
               ]
             },
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -2278,14 +2228,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold2": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 9,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -2345,7 +2289,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -2367,22 +2314,18 @@ data:
               ]
             }
           ],
-          "title": "New row"
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "New row",
+          "titleSize": "h6"
         },
         {
           "collapse": false,
-          "editable": true,
           "height": "250px",
           "panels": [
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -2390,19 +2333,17 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold2": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 4,
-              "isNew": true,
               "legend": {
+                "alignAsTable": false,
                 "avg": false,
                 "current": false,
+                "hideEmpty": false,
+                "hideZero": false,
                 "max": false,
                 "min": false,
+                "rightSide": false,
                 "show": true,
                 "total": false,
                 "values": false
@@ -2422,26 +2363,43 @@ data:
                 }
               ],
               "span": 9,
-              "stack": false,
+              "stack": true,
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "node_memory_MemTotal{instance=\"$server\"} - node_memory_MemFree{instance=\"$server\"}",
+                  "expr": "node_memory_MemTotal{instance=\"$server\"} - node_memory_MemFree{instance=\"$server\"} - node_memory_Buffers{instance=\"$server\"} - node_memory_Cached{instance=\"$server\"}",
+                  "hide": false,
+                  "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "memory usage",
-                  "metric": "memo",
-                  "refId": "A",
-                  "step": 4,
-                  "target": ""
+                  "legendFormat": "memory used",
+                  "metric": "",
+                  "refId": "C",
+                  "step": 4
                 },
                 {
-                  "expr": "node_memory_MemTotal{instance=\"$server\"}",
+                  "expr": "node_memory_Buffers{instance=\"$server\"}",
+                  "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "memory total",
-                  "metric": "memo",
-                  "refId": "B",
-                  "step": 4,
-                  "target": ""
+                  "legendFormat": "memory buffers",
+                  "metric": "",
+                  "refId": "E",
+                  "step": 4
+                },
+                {
+                  "expr": "node_memory_Cached{instance=\"$server\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "",
+                  "metric": "",
+                  "refId": "F",
+                  "step": 4
+                },
+                {
+                  "expr": "node_memory_MemFree{instance=\"$server\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "memory free",
+                  "metric": "",
+                  "refId": "D",
+                  "step": 4
                 }
               ],
               "thresholds": [],
@@ -2452,11 +2410,14 @@ data:
                 "msResolution": false,
                 "shared": true,
                 "sort": 0,
-                "value_type": "cumulative"
+                "value_type": "individual"
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -2464,7 +2425,7 @@ data:
                   "label": null,
                   "logBase": 1,
                   "max": null,
-                  "min": null,
+                  "min": "0",
                   "show": true
                 },
                 {
@@ -2499,7 +2460,6 @@ data:
               },
               "id": 5,
               "interval": null,
-              "isNew": true,
               "links": [],
               "mappingType": 1,
               "mappingTypes": [
@@ -2535,7 +2495,7 @@ data:
               },
               "targets": [
                 {
-                  "expr": "((node_memory_MemTotal{instance=\"$server\"} - node_memory_MemFree{instance=\"$server\"}) / node_memory_MemTotal{instance=\"$server\"}) * 100",
+                  "expr": "((node_memory_MemTotal{instance=\"$server\"} - node_memory_MemFree{instance=\"$server\"}  - node_memory_Buffers{instance=\"$server\"} - node_memory_Cached{instance=\"$server\"}) / node_memory_MemTotal{instance=\"$server\"}) * 100",
                   "intervalFactor": 2,
                   "refId": "A",
                   "step": 60,
@@ -2556,22 +2516,18 @@ data:
               "valueName": "avg"
             }
           ],
-          "title": "New row"
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "New row",
+          "titleSize": "h6"
         },
         {
           "collapse": false,
-          "editable": true,
           "height": "250px",
           "panels": [
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -2579,14 +2535,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold2": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 6,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -2658,7 +2608,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -2701,7 +2654,6 @@ data:
               },
               "id": 7,
               "interval": null,
-              "isNew": true,
               "links": [],
               "mappingType": 1,
               "mappingTypes": [
@@ -2758,22 +2710,18 @@ data:
               "valueName": "current"
             }
           ],
-          "title": "New row"
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "New row",
+          "titleSize": "h6"
         },
         {
           "collapse": false,
-          "editable": true,
           "height": "250px",
           "panels": [
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -2781,14 +2729,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold2": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 8,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -2838,7 +2780,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -2860,14 +2805,6 @@ data:
               ]
             },
             {
-              "alert": {
-                "crit": {
-                  "op": ">"
-                },
-                "warn": {
-                  "op": ">"
-                }
-              },
               "alerting": {},
               "aliasColors": {},
               "bars": false,
@@ -2875,14 +2812,8 @@ data:
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold2": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
+              "grid": {},
               "id": 10,
-              "isNew": true,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -2932,7 +2863,10 @@ data:
               },
               "type": "graph",
               "xaxis": {
-                "show": true
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
               },
               "yaxes": [
                 {
@@ -2954,9 +2888,43 @@ data:
               ]
             }
           ],
-          "title": "New row"
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "New row",
+          "titleSize": "h6"
         }
       ],
+      "schemaVersion": 14,
+      "style": "dark",
+      "tags": [
+        "prometheus"
+      ],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {},
+            "datasource": "${DS_PROMETHEUS}",
+            "hide": 0,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "server",
+            "options": [],
+            "query": "label_values(node_boot_time, instance)",
+            "refresh": 1,
+            "regex": "",
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
       "time": {
         "from": "now-1h",
         "to": "now"
@@ -2986,41 +2954,21 @@ data:
           "30d"
         ]
       },
-      "templating": {
-        "list": [
-          {
-            "current": {},
-            "datasource": "${DS_PROMETHEUS}",
-            "hide": 0,
-            "includeAll": false,
-            "multi": false,
-            "name": "server",
-            "options": [],
-            "query": "label_values(node_boot_time, instance)",
-            "refresh": 1,
-            "type": "query"
-          }
-        ]
-      },
-      "annotations": {
-        "list": []
-      },
-      "refresh": false,
-      "schemaVersion": 12,
-      "version": 1,
-      "links": [],
-      "gnetId": 22
+      "timezone": "browser",
+      "title": "Nodes",
+      "version": 1
     },
-        "inputs": [
-            {
-                "name": "DS_PROMETHEUS",
-                "pluginId": "prometheus",
-                "type": "datasource",
-                "value": "prometheus"
-            }
-        ],
-        "overwrite": true
+      "inputs": [
+        {
+          "name": "DS_PROMETHEUS",
+          "pluginId": "prometheus",
+          "type": "datasource",
+          "value": "prometheus"
+        }
+      ],
+      "overwrite": true
     }
+
   prometheus-datasource.json: |
     {
         "access": "proxy",
