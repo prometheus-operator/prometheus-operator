@@ -308,7 +308,7 @@ data:
                   "expr": "sum(node_memory_MemFree)",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "memory cached",
+                  "legendFormat": "memory free",
                   "metric": "memo",
                   "refId": "D",
                   "step": 4,
@@ -323,7 +323,7 @@ data:
                 "msResolution": false,
                 "shared": true,
                 "sort": 0,
-                "value_type": "cumulative"
+                "value_type": "individual"
               },
               "type": "graph",
               "xaxis": {
@@ -408,8 +408,9 @@ data:
               },
               "targets": [
                 {
-                  "expr": "((sum(node_memory_MemTotal) - sum(node_memory_MemFree)) / sum(node_memory_MemTotal)) * 100",
+                  "expr": "((sum(node_memory_MemTotal) - sum(node_memory_MemFree) - sum(node_memory_Buffers) - sum(node_memory_Cached)) / sum(node_memory_MemTotal)) * 100",
                   "intervalFactor": 2,
+                  "metric": "",
                   "refId": "A",
                   "step": 60,
                   "target": ""
