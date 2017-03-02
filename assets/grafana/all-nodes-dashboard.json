@@ -405,8 +405,9 @@
           },
           "targets": [
             {
-              "expr": "((sum(node_memory_MemTotal) - sum(node_memory_MemFree)) / sum(node_memory_MemTotal)) * 100",
+              "expr": "((sum(node_memory_MemTotal) - sum(node_memory_MemFree) - sum(node_memory_Buffers) - sum(node_memory_Cached)) / sum(node_memory_MemTotal)) * 100",
               "intervalFactor": 2,
+              "metric": "",
               "refId": "A",
               "step": 60,
               "target": ""
