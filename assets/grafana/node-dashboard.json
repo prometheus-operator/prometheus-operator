@@ -1,5 +1,6 @@
 {
-  "dashboard": {
+  "dashboard":
+{
   "__inputs": [
     {
       "name": "DS_PROMETHEUS",
@@ -297,7 +298,7 @@
             {
               "expr": "node_memory_Cached{instance=\"$server\"}",
               "intervalFactor": 2,
-              "legendFormat": "",
+              "legendFormat": "memory cached",
               "metric": "",
               "refId": "F",
               "step": 4
@@ -877,4 +878,3 @@
   ],
   "overwrite": true
 }
-
