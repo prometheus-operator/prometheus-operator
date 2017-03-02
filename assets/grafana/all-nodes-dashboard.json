@@ -305,7 +305,7 @@
               "expr": "sum(node_memory_MemFree)",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "memory cached",
+              "legendFormat": "memory free",
               "metric": "memo",
               "refId": "D",
               "step": 4,
