@@ -2089,9 +2089,10 @@ data:
         ],
         "overwrite": true
     }
-  node-dashboard.json: |+
+  node-dashboard.json: |
     {
-      "dashboard": {
+      "dashboard":
+    {
       "__inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -2389,7 +2390,7 @@ data:
                 {
                   "expr": "node_memory_Cached{instance=\"$server\"}",
                   "intervalFactor": 2,
-                  "legendFormat": "",
+                  "legendFormat": "memory cached",
                   "metric": "",
                   "refId": "F",
                   "step": 4
@@ -2969,7 +2970,6 @@ data:
       ],
       "overwrite": true
     }
-
   prometheus-datasource.json: |
     {
         "access": "proxy",
