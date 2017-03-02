@@ -1,10 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: alertmanager-main
-  labels:
-    app: alertmanager
-    alertmanager: main
+  name: alertmanager-example
 spec:
   type: NodePort
   ports:
@@ -14,4 +11,4 @@ spec:
     protocol: TCP
     targetPort: web
   selector:
-    alertmanager: main
+    alertmanager: example

@@ -54,6 +54,6 @@ embedmd:
 	go get github.com/campoy/embedmd
 
 docs: embedmd
-	echo "test"
+	embedmd -w `find Documentation -name "*.md"`
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd docs

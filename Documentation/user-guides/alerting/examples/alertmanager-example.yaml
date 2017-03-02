@@ -1,0 +1,6 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: Alertmanager
+metadata:
+  name: example
+spec:
+  replicas: 3

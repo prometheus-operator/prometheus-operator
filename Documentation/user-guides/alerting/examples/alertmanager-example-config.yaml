@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: alertmanager-main
+  name: alertmanager-example
 data:
   alertmanager.yaml: |-
     global:
