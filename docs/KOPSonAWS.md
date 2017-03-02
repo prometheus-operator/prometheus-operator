@@ -33,12 +33,3 @@ kubectl -n kube-system create -f manifests/k8s/self-hosted/
 cd -
 rm -rf kube-prometheus-temp
 ```
-This currently leads to a [certificate error on the kube-apiserver scrape](https://github.com/coreos/kube-prometheus/issues/35). Looks to be fixed by [PR33](https://github.com/coreos/kube-prometheus/pull/33)
-
-To create a config without this alert and error, you can deploy without the kube-apiserver spec:
-
-```bash
-kubectl -n kube-system create -f manifests/k8s/self-hosted/kube-controller-manager.yaml
-kubectl -n kube-system create -f manifests/k8s/self-hosted/kube-dns.yaml
-kubectl -n kube-system create -f manifests/k8s/self-hosted/kube-scheduler.yaml
-```
