@@ -1,11 +1,8 @@
 # Prometheus Operator
 
-The mission of the Prometheus Operator is to make running Prometheus on top of
-Kubernetes as easy as possible, while preserving configurability as well as
-making the configuration Kubernetes native.
+The mission of the Prometheus Operator is to make running Prometheus on top of Kubernetes as easy as possible, while preserving configurability as well as making the configuration Kubernetes native.
 
-To follow this getting started you will need a Kubernetes cluster you have
-access to. Let's give the Prometheus Operator a spin:
+To follow this getting started you will need a Kubernetes cluster you have access to. Let's give the Prometheus Operator a spin:
 
 [embedmd]:# (../../deployment.yaml)
 ```yaml
@@ -34,24 +31,15 @@ spec:
              memory: 100Mi
 ```
 
-The Prometheus Operator introduces third party resources in Kubernetes to
-declare the desired state of a Prometheus and Alertmanager cluster as well as
-the Prometheus configuration. The resources it introduces are:
+The Prometheus Operator introduces third party resources in Kubernetes to declare the desired state of a Prometheus and Alertmanager cluster as well as the Prometheus configuration. The resources it introduces are:
 
 * [`Prometheus`](../prometheus.md)
 * [`Alertmanager`](../alertmanager.md)
 * [`ServiceMonitor`](../service-monitor.md)
 
-> Important for this guide are the `Prometheus` and `ServiceMonitor` resources.
-> Have a look at the [Alerting guide](alerting.md) for more
-> information about the `Alertmanager` resource.
+> Important for this guide are the `Prometheus` and `ServiceMonitor` resources.  Have a look at the [Alerting guide](alerting.md) for more information about the `Alertmanager` resource.
 
-The Prometheus resource includes fields such as the desired version of
-Prometheus to run, the number of replicas, as well as a number of parameters to
-configure Prometheus itself. The connection of the Prometheus resource to the
-`ServiceMonitor` is established through the `serviceMonitorSelector`, which
-selects which `ServiceMonitor`s are to be used to generate the configuration
-file for Prometheus.
+The Prometheus resource includes fields such as the desired version of Prometheus to run, the number of replicas, as well as a number of parameters to configure Prometheus itself. The connection of the Prometheus resource to the `ServiceMonitor` is established through the `serviceMonitorSelector`, which selects which `ServiceMonitor`s are to be used to generate the configuration file for Prometheus.
 
 We will walk through an example application that could look like this:
 
@@ -76,9 +64,7 @@ spec:
           containerPort: 8080
 ```
 
-Essentially the `ServiceMonitor` has a label selector to select `Service`s and
-the underlying `Endpoints` objects. For example one might have a `Service` that
-looks like the following:
+Essentially the `ServiceMonitor` has a label selector to select `Service`s and the underlying `Endpoints` objects. For example one might have a `Service` that looks like the following:
 
 [embedmd]:# (../../example/user-guides/getting-started/example-app-service.yaml)
 ```yaml
@@ -114,9 +100,7 @@ spec:
   - port: web
 ```
 
-Finally a `Prometheus` object defines the `serviceMonitorSelector` to specify
-which `ServiceMonitor`s should be included when generating the Prometheus
-configuration.
+Finally a `Prometheus` object defines the `serviceMonitorSelector` to specify which `ServiceMonitor`s should be included when generating the Prometheus configuration.
 
 [embedmd]:# (../../example/user-guides/getting-started/prometheus-example.yaml)
 ```yaml
@@ -133,9 +117,7 @@ spec:
       memory: 400Mi
 ```
 
-To be able to access the Prometheus instance it will have to be exposed to the
-outside somehow. Purely for demonstration purpose we will expose it via a
-`Service` of type `NodePort`.
+To be able to access the Prometheus instance it will have to be exposed to the outside somehow. Purely for demonstration purpose we will expose it via a `Service` of type `NodePort`.
 
 [embedmd]:# (../../example/user-guides/getting-started/prometheus-example-service.yaml)
 ```yaml
@@ -155,20 +137,12 @@ spec:
     prometheus: example
 ```
 
-Once this `Service` is created the Prometheus web UI is available under the
-node's IP address on port `30900`. The targets page in the web UI now shows
-that the instances of the example application have successfully been
-discovered.
+Once this `Service` is created the Prometheus web UI is available under the node's IP address on port `30900`. The targets page in the web UI now shows that the instances of the example application have successfully been discovered.
 
-> Exposing the Prometheus web UI may not be an applicable solution. Read more
-> about the possibilities of exposing it in the [exposing Prometheus and
-> Alertmanager guide](exposing-prometheus-and-alertmanager.md).
+> Exposing the Prometheus web UI may not be an applicable solution. Read more about the possibilities of exposing it in the [exposing Prometheus and Alertmanager guide](exposing-prometheus-and-alertmanager.md).
 
 Further reading:
 
-* In addition to managing Prometheus clusters the Prometheus Operator can also
-  manage Alertmanager clusters. Learn more in the [Alerting
-  guide](alerting.md).
+* In addition to managing Prometheus clusters the Prometheus Operator can also manage Alertmanager clusters. Learn more in the [Alerting guide](alerting.md).
 
-* Monitoring the Kubernetes cluster itself. Learn more in the [Cluster
-  Monitoring guide](cluster-monitoring.md)
+* Monitoring the Kubernetes cluster itself. Learn more in the [Cluster Monitoring guide](cluster-monitoring.md)
