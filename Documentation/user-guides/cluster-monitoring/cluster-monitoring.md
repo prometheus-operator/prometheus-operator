@@ -1,0 +1,354 @@
+# Cluster Monitoring
+
+This guide is intended to give an introduction to all the parts required to
+start monitoring a Kubernetes cluster with Prometheus using the Prometheus
+Operator.
+
+This guide assumes you have a basic understanding of how to use the
+functionality the Prometheus Operator implements. If you haven't yet we
+recommend reading through the [getting started guide](#getting-started.md) as
+well as the [alerting guide](#alerting.md).
+
+## Metric Sources
+
+Monitoring a Kubernetes cluster with Prometheus is a natural as Kubernetes
+components themselves are instrumented with Prometheus metrics, therefore those
+components simply have to be discovered by Prometheus and most of the cluster
+is monitored.
+
+Metrics that are rather about cluster state than a single components metric is
+exposed by the add-on component [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics).
+
+Additionally to have an overview of cluster nodes resources the Prometheus
+[node_exporter](https://github.com/prometheus/node_exporter) is used. The
+node_exporter allows monitoring a node's resources from CPU, memory and disk
+utilization and more.
+
+Once you complete this guide you will monitor the following:
+
+* cluster state via kube-state-metrics
+* nodes via the node_exporter
+* kubelets
+* apiserver
+* kube-scheduler
+* kube-controller-manager
+* kube-dns
+
+## Preparing Kubernetes Components
+
+The manifests used here use the [Prometheus
+Operator](https://github.com/coreos/prometheus-operator), which manages
+Prometheus servers and their configuration in a cluster. Prometheus discovers
+targets through `Endpoints` objects, which means all targets that are running
+as `Pod`s in the Kubernetes cluster are easily monitored. Many Kubernetes
+components can be
+[self-hosted](https://coreos.com/blog/self-hosted-kubernetes.html) today. The
+kubelet, however, is not. Therefore the Prometheus Operator implements a
+functionality to synchronize the kubelets into an `Endpoints` object. To make
+use of that functionality the `--kubelet-object` argument must be passed to the
+Prometheus Operator when running it. The `Deployment` for the Prometheus
+Operator then looks like this:
+
+[embedmd]:# (kube-prometheus/manifests/prometheus-operator.yaml)
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus-operator
+  labels:
+    operator: prometheus
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        operator: prometheus
+    spec:
+      containers:
+       - name: prometheus-operator
+         image: quay.io/coreos/prometheus-operator:v0.6.0
+         args:
+           - "--kubelet-object=kube-system/kubelet"
+           - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
+         resources:
+           requests:
+             cpu: 100m
+             memory: 50Mi
+           limits:
+             cpu: 200m
+             memory: 300Mi
+```
+
+Once started it ensures that all internal IPs of the nodes in the cluster are
+synchronized into the specified `Endpoints` object. In this case the object is
+called `kubelet` and is located in the `kube-system` namespace.
+
+By default every Kubernetes cluster has a `Service` for easy access to the
+`apiserver`. This is the `Service` called `kubernetes` in the `default`
+namespace. A `Service` object automatically synchronizes an `Endpoints` object
+with the targets it selects. Therefore there is nothing, extra to do for
+Prometheus to be able to discover the `apiserver`.
+
+Aside from the kubelet and the apiserver the other Kubernetes components all
+run on top of Kubernetes itself. Therefore all that is necessary is to create
+`Service`s for them for `Endpoints` objects to exist to be able to discover
+them.
+
+kube-scheduler:
+
+[embedmd]:# (kube-prometheus/manifests/k8s/self-hosted/kube-scheduler.yaml)
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-scheduler-prometheus-discovery
+  labels:
+    k8s-app: kube-scheduler
+spec:
+  selector:
+    k8s-app: kube-scheduler
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http-metrics
+    port: 10251
+    targetPort: 10251
+    protocol: TCP
+```
+
+kube-controller-manager:
+
+[embedmd]:# (kube-prometheus/manifests/k8s/self-hosted/kube-controller-manager.yaml)
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-controller-manager-prometheus-discovery
+  labels:
+    k8s-app: kube-controller-manager
+spec:
+  selector:
+    k8s-app: kube-controller-manager
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http-metrics
+    port: 10252
+    targetPort: 10252
+    protocol: TCP
+```
+
+kube-dns:
+
+[embedmd]:# (kube-prometheus/manifests/k8s/self-hosted/kube-dns.yaml)
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-dns-prometheus-discovery
+  labels:
+    k8s-app: kube-dns
+spec:
+  selector:
+    k8s-app: kube-dns
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http-metrics-skydns
+    port: 10055
+    targetPort: 10055
+    protocol: TCP
+  - name: http-metrics-dnsmasq
+    port: 10054
+    targetPort: 10054
+    protocol: TCP
+```
+
+## Exporters
+
+Unrelated to Kubernetes itself, but still important is to gather various
+metrics about the actual nodes. Typical metrics are CPU, memory, disk and
+network utilization, all of these metrics can be gathered using the
+node_exporter.
+
+[embedmd]:# (kube-prometheus/manifests/exporters/node-exporter-daemonset.yaml)
+```yaml
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+spec:
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+      name: node-exporter
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+      - image:  quay.io/prometheus/node-exporter:v0.13.0
+        args:
+        - "-collector.procfs=/host/proc"
+        - "-collector.sysfs=/host/sys"
+        name: node-exporter
+        ports:
+        - containerPort: 9100
+          hostPort: 9100
+          name: scrape
+        resources:
+          requests:
+            memory: 30Mi
+            cpu: 100m
+          limits:
+            memory: 50Mi
+            cpu: 200m
+        volumeMounts:
+        - name: proc
+          readOnly:  true
+          mountPath: /host/proc
+        - name: sys
+          readOnly: true
+          mountPath: /host/sys
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+
+```
+
+And the respective `Service` manifest:
+
+[embedmd]:# (kube-prometheus/manifests/exporters/node-exporter-service.yaml)
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: node-exporter
+    k8s-app: node-exporter
+  name: node-exporter
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http-metrics
+    port: 9100
+    protocol: TCP
+  selector:
+    app: node-exporter
+
+```
+
+And last but not least, kube-state-metrics which collects information about
+Kubernetes objects themselves as they are accessible from the API. Read
+[here](https://github.com/kubernetes/kube-state-metrics) for more information
+on what kind of metrics kube-state-metrics exposes.
+
+[embedmd]:# (kube-prometheus/manifests/exporters/kube-state-metrics-deployment.yaml)
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-state-metrics
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kube-state-metrics
+    spec:
+      containers:
+      - name: kube-state-metrics
+        image: gcr.io/google_containers/kube-state-metrics:v0.4.1
+        ports:
+        - name: metrics
+          containerPort: 8080
+        resources:
+          requests:
+            memory: 30Mi
+            cpu: 100m
+          limits:
+            memory: 50Mi
+            cpu: 200m
+
+```
+
+And the respective `Service` manifest:
+
+[embedmd]:# (kube-prometheus/manifests/exporters/kube-state-metrics-service.yaml)
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kube-state-metrics
+    k8s-app: kube-state-metrics
+  annotations:
+    alpha.monitoring.coreos.com/non-namespaced: "true"
+  name: kube-state-metrics
+spec:
+  ports:
+  - name: http-metrics
+    port: 8080
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app: kube-state-metrics
+
+```
+
+## Setup Monitoring
+
+Once all the steps in the previous section have been taken there should be
+`Endpoints` objects containing the IPs of all of the above mentioned Kubernetes
+components. Now to setup the actual Prometheus and Alertmanager clusters. This
+manifest assumes that the Alertmanager cluster will be deployed in the
+`monitoring` namespace.
+
+[embedmd]:# (kube-prometheus/manifests/prometheus/prometheus-k8s.yaml)
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: Prometheus
+metadata:
+  name: k8s
+  labels:
+    prometheus: k8s
+spec:
+  replicas: 2
+  version: v1.5.2
+  serviceMonitorSelector:
+    matchExpression:
+    - {key: k8s-apps, operator: Exists}
+  resources:
+    requests:
+      # 2Gi is default, but won't schedule if you don't have a node with >2Gi
+      # memory. Modify based on your target and time-series count for
+      # production use. This value is mainly meant for demonstration/testing
+      # purposes.
+      memory: 400Mi
+  alerting:
+    alertmanagers:
+    - namespace: monitoring
+      name: alertmanager-main
+      port: web
+```
+
+And the Alertmanager:
+
+[embedmd]:# (kube-prometheus/manifests/alertmanager/alertmanager.yaml)
+```yaml
+apiVersion: "monitoring.coreos.com/v1alpha1"
+kind: "Alertmanager"
+metadata:
+  name: "main"
+  labels:
+    alertmanager: "main"
+spec:
+  replicas: 3
+  version: v0.5.1
+```
+
