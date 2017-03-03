@@ -152,7 +152,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 	}
 
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
-		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, "alertmanager", a.Namespace))
+		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
 	}
 
 	terminationGracePeriod := int64(0)
