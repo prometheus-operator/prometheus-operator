@@ -13,6 +13,10 @@ image:
   tag: v0.6.0
   pullPolicy: IfNotPresent
 
+## Node labels for prometheus-operator pod assignment
+##
+nodeSelector: {}
+
 ## If true, collect & send anonymous usage statistics
 ## Ref: https://github.com/coreos/prometheus-operator#installation
 ##
