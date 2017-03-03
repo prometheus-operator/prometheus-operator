@@ -26,7 +26,7 @@ Once you complete this guide you will monitor the following:
 
 The manifests used here use the [Prometheus Operator](https://github.com/coreos/prometheus-operator), which manages Prometheus servers and their configuration in a cluster. Prometheus discovers targets through `Endpoints` objects, which means all targets that are running as `Pod`s in the Kubernetes cluster are easily monitored. Many Kubernetes components can be [self-hosted](https://coreos.com/blog/self-hosted-kubernetes.html) today. The kubelet, however, is not. Therefore the Prometheus Operator implements a functionality to synchronize the kubelets into an `Endpoints` object. To make use of that functionality the `--kubelet-object` argument must be passed to the Prometheus Operator when running it. The `Deployment` for the Prometheus Operator then looks like this:
 
-[embedmd]:# (kube-prometheus/manifests/prometheus-operator.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-operator.yaml)
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -64,7 +64,7 @@ Aside from the kubelet and the apiserver the other Kubernetes components all run
 
 kube-scheduler:
 
-[embedmd]:# (kube-prometheus/manifests/k8s/self-hosted/kube-scheduler.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/k8s/self-hosted/kube-scheduler.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
@@ -86,7 +86,7 @@ spec:
 
 kube-controller-manager:
 
-[embedmd]:# (kube-prometheus/manifests/k8s/self-hosted/kube-controller-manager.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/k8s/self-hosted/kube-controller-manager.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
@@ -108,7 +108,7 @@ spec:
 
 kube-dns:
 
-[embedmd]:# (kube-prometheus/manifests/k8s/self-hosted/kube-dns.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/k8s/self-hosted/kube-dns.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
@@ -136,7 +136,7 @@ spec:
 
 Unrelated to Kubernetes itself, but still important is to gather various metrics about the actual nodes. Typical metrics are CPU, memory, disk and network utilization, all of these metrics can be gathered using the node_exporter.
 
-[embedmd]:# (kube-prometheus/manifests/exporters/node-exporter-daemonset.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/exporters/node-exporter-daemonset.yaml)
 ```yaml
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -187,7 +187,7 @@ spec:
 
 And the respective `Service` manifest:
 
-[embedmd]:# (kube-prometheus/manifests/exporters/node-exporter-service.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/exporters/node-exporter-service.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
@@ -210,7 +210,7 @@ spec:
 
 And last but not least, kube-state-metrics which collects information about Kubernetes objects themselves as they are accessible from the API. Find more information on what kind of metrics kube-state-metrics exposes in [its repository](https://github.com/kubernetes/kube-state-metrics).
 
-[embedmd]:# (kube-prometheus/manifests/exporters/kube-state-metrics-deployment.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/exporters/kube-state-metrics-deployment.yaml)
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -241,7 +241,7 @@ spec:
 
 And the respective `Service` manifest:
 
-[embedmd]:# (kube-prometheus/manifests/exporters/kube-state-metrics-service.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/exporters/kube-state-metrics-service.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
@@ -267,7 +267,7 @@ spec:
 
 Once all the steps in the previous section have been taken there should be `Endpoints` objects containing the IPs of all of the above mentioned Kubernetes components. Now to setup the actual Prometheus and Alertmanager clusters. This manifest assumes that the Alertmanager cluster will be deployed in the `monitoring` namespace.
 
-[embedmd]:# (kube-prometheus/manifests/prometheus/prometheus-k8s.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: Prometheus
@@ -291,17 +291,88 @@ spec:
   alerting:
     alertmanagers:
     - namespace: monitoring
-      name: alertmanager-operated
+      name: alertmanager-main
       port: web
 ```
 
 The expression to match for selecting `ServiceMonitor`s here is that they must have a label which has a key called `k8s-apps`. If you look closely at all the `Service` objects described above they all have a label called `k8s-app` and their component name this allows to conveniently select them with `ServiceMonitor`s like so:
 
-[embedmd]:# (kube-prometheus/manifests/prometheus/prometheus-k8s-servicemonitor.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-servicemonitor.yaml)
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: kube-apiserver
+  labels:
+    k8s-apps: https
+spec:
+  jobLabel: provider
+  selector:
+    matchLabels:
+      component: apiserver
+      provider: kubernetes
+  namespaceSelector:
+    matchNames:
+    - default
+  endpoints:
+  - port: https
+    interval: 15s
+    scheme: https
+    tlsConfig:
+      caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      serverName: kubernetes
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: k8s-apps-https
+  labels:
+    k8s-apps: https
+spec:
+  jobLabel: k8s-app
+  selector:
+    matchExpressions:
+    - {key: k8s-app, operator: Exists}
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  endpoints:
+  - port: https-metrics
+    interval: 15s
+    scheme: https
+    tlsConfig:
+      caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: k8s-apps-http
+  labels:
+    k8s-apps: http
+spec:
+  jobLabel: k8s-app
+  selector:
+    matchExpressions:
+    - {key: k8s-app, operator: Exists}
+  namespaceSelector:
+    matchNames:
+    - kube-system
+    - monitoring
+  endpoints:
+  - port: http-metrics
+    interval: 15s
+  - port: http-metrics-dnsmasq
+    interval: 15s
+  - port: http-metrics-skydns
+    interval: 15s
+```
 
 And the Alertmanager:
 
-[embedmd]:# (kube-prometheus/manifests/alertmanager/alertmanager.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/alertmanager/alertmanager.yaml)
 ```yaml
 apiVersion: "monitoring.coreos.com/v1alpha1"
 kind: "Alertmanager"

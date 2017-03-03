@@ -7,7 +7,7 @@ making the configuration Kubernetes native.
 To follow this getting started you will need a Kubernetes cluster you have
 access to. Let's give the Prometheus Operator a spin:
 
-[embedmd]:# (../../../deployment.yaml)
+[embedmd]:# (../../deployment.yaml)
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -55,7 +55,7 @@ file for Prometheus.
 
 We will walk through an example application that could look like this:
 
-[embedmd]:# (examples/example-app-deployment.yaml)
+[embedmd]:# (../../example/user-guides/getting-started/example-app-deployment.yaml)
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -80,7 +80,7 @@ Essentially the `ServiceMonitor` has a label selector to select `Service`s and
 the underlying `Endpoints` objects. For example one might have a `Service` that
 looks like the following:
 
-[embedmd]:# (examples/example-app-service.yaml)
+[embedmd]:# (../../example/user-guides/getting-started/example-app-service.yaml)
 ```yaml
 kind: Service
 apiVersion: v1
@@ -98,7 +98,7 @@ spec:
 
 This `Service` object could be discovered by a `ServiceMonitor`.
 
-[embedmd]:# (examples/example-app-service-monitor.yaml)
+[embedmd]:# (../../example/user-guides/getting-started/example-app-service-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
@@ -118,7 +118,7 @@ Finally a `Prometheus` object defines the `serviceMonitorSelector` to specify
 which `ServiceMonitor`s should be included when generating the Prometheus
 configuration.
 
-[embedmd]:# (examples/prometheus-example.yaml)
+[embedmd]:# (../../example/user-guides/getting-started/prometheus-example.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: Prometheus
@@ -137,7 +137,7 @@ To be able to access the Prometheus instance it will have to be exposed to the
 outside somehow. Purely for demonstration purpose we will expose it via a
 `Service` of type `NodePort`.
 
-[embedmd]:# (examples/prometheus-example-service.yaml)
+[embedmd]:# (../../example/user-guides/getting-started/prometheus-example-service.yaml)
 ```yaml
 apiVersion: v1
 kind: Service

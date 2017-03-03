@@ -24,7 +24,7 @@ scheme description](../high-availability.md).
 
 An example Alertmanager cluster could look like this:
 
-[embedmd]:# (examples/alertmanager-example.yaml)
+[embedmd]:# (../../example/user-guides/alerting/alertmanager-example.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: Alertmanager
@@ -41,7 +41,7 @@ actually do anything as it sends notifications against a non existent
 configure the Alertmanager on the [upstream
 documentation](https://prometheus.io/docs/alerting/configuration/).
 
-[embedmd]:# (examples/alertmanager-example-config.yaml)
+[embedmd]:# (../../example/user-guides/alerting/alertmanager-example-config.yaml)
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -66,7 +66,7 @@ data:
 To be able to view the web UI, expose it via a `Service`. A simple way to do
 this is to use a `Service` of type `NodePort`.
 
-[embedmd]:# (examples/alertmanager-example-service.yaml)
+[embedmd]:# (../../example/user-guides/alerting/alertmanager-example-service.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
@@ -91,7 +91,7 @@ Now this is a fully functional highly available Alertmanager cluster, but it
 does not get any alerts fired against it. Let's setup Prometheus instances that
 will actually fire alerts against it.
 
-[embedmd]:# (examples/prometheus-example.yaml)
+[embedmd]:# (../../example/user-guides/alerting/prometheus-example.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: Prometheus
@@ -116,7 +116,7 @@ Prometheus rule files are held in a `ConfigMap` called
 `prometheus-<prometheus-object-name>-rules`. All top level files that end with
 the `.rules` extension will be loaded by a Prometheus instance.
 
-[embedmd]:# (examples/prometheus-example-rules.yaml)
+[embedmd]:# (../../example/user-guides/alerting/prometheus-example-rules.yaml)
 ```yaml
 kind: ConfigMap
 apiVersion: v1
