@@ -38,12 +38,12 @@ The Prometheus Operator introduces third party resources in Kubernetes to
 declare the desired state of a Prometheus and Alertmanager cluster as well as
 the Prometheus configuration. The resources it introduces are:
 
-* [`Prometheus`](../../prometheus.md)
-* [`Alertmanager`](../../alertmanager.md)
-* [`ServiceMonitor`](../../service-monitor.md)
+* [`Prometheus`](../prometheus.md)
+* [`Alertmanager`](../alertmanager.md)
+* [`ServiceMonitor`](../service-monitor.md)
 
 > Important for this guide are the `Prometheus` and `ServiceMonitor` resources.
-> Have a look at the [Alerting guide](../alerting/alerting.md) for more
+> Have a look at the [Alerting guide](alerting.md) for more
 > information about the `Alertmanager` resource.
 
 The Prometheus resource includes fields such as the desired version of
@@ -162,13 +162,13 @@ discovered.
 
 > Exposing the Prometheus web UI may not be an applicable solution. Read more
 > about the possibilities of exposing it in the [exposing Prometheus and
-> Alertmanager guide](../exposing-prometheus-and-alertmanager/exposing-prometheus-and-alertmanager.md).
+> Alertmanager guide](exposing-prometheus-and-alertmanager.md).
 
 Further reading:
 
 * In addition to managing Prometheus clusters the Prometheus Operator can also
   manage Alertmanager clusters. Learn more in the [Alerting
-  guide](../alerting/alerting.md).
+  guide](alerting.md).
 
 * Monitoring the Kubernetes cluster itself. Learn more in the [Cluster
-  Monitoring guide](../cluster-monitoring/cluster-monitoring.md)
+  Monitoring guide](cluster-monitoring.md)

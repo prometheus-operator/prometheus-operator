@@ -1,7 +1,7 @@
 # Alerting
 
 This guide assumes you have a basic understanding of the `Prometheus` resource
-and have read the [getting started](../getting-started/getting-started.md).
+and have read the [getting started](getting-started.md).
 
 Besides the `Prometheus` and `ServiceMonitor` resource the Prometheus Operator
 also introduces the `Alertmanager`. It allows declaratively describing an
@@ -20,7 +20,7 @@ rule triggers it fires that alert against *all* Alertmanager instances, on
 *every* rule evaluation interval. The Alertmanager instances communicate to
 each other which notifications have already been sent out. You can read more
 about why these systems have been designed this way in the [High Availability
-scheme description](../../docs/high-availability.md).
+scheme description](../high-availability.md).
 
 An example Alertmanager cluster could look like this:
 

@@ -1,28 +1,16 @@
 # Cluster Monitoring
 
-This guide is intended to give an introduction to all the parts required to
-start monitoring a Kubernetes cluster with Prometheus using the Prometheus
-Operator.
+This guide is intended to give an introduction to all the parts required to start monitoring a Kubernetes cluster with Prometheus using the Prometheus Operator.
 
-This guide assumes you have a basic understanding of how to use the
-functionality the Prometheus Operator implements. If you haven't yet we
-recommend reading through the [getting started guide](#getting-started.md) as
-well as the [alerting guide](#alerting.md).
+This guide assumes you have a basic understanding of how to use the functionality the Prometheus Operator implements. If you haven't yet we recommend reading through the [getting started guide](getting-started.md) as well as the [alerting guide](alerting.md).
 
 ## Metric Sources
 
-Monitoring a Kubernetes cluster with Prometheus is a natural as Kubernetes
-components themselves are instrumented with Prometheus metrics, therefore those
-components simply have to be discovered by Prometheus and most of the cluster
-is monitored.
+Monitoring a Kubernetes cluster with Prometheus is a natural as Kubernetes components themselves are instrumented with Prometheus metrics, therefore those components simply have to be discovered by Prometheus and most of the cluster is monitored.
 
-Metrics that are rather about cluster state than a single components metric is
-exposed by the add-on component [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics).
+Metrics that are rather about cluster state than a single components metric is exposed by the add-on component [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics).
 
-Additionally to have an overview of cluster nodes resources the Prometheus
-[node_exporter](https://github.com/prometheus/node_exporter) is used. The
-node_exporter allows monitoring a node's resources from CPU, memory and disk
-utilization and more.
+Additionally to have an overview of cluster nodes resources the Prometheus [node_exporter](https://github.com/prometheus/node_exporter) is used. The node_exporter allows monitoring a node's resources from CPU, memory and disk utilization and more.
 
 Once you complete this guide you will monitor the following:
 
@@ -36,18 +24,7 @@ Once you complete this guide you will monitor the following:
 
 ## Preparing Kubernetes Components
 
-The manifests used here use the [Prometheus
-Operator](https://github.com/coreos/prometheus-operator), which manages
-Prometheus servers and their configuration in a cluster. Prometheus discovers
-targets through `Endpoints` objects, which means all targets that are running
-as `Pod`s in the Kubernetes cluster are easily monitored. Many Kubernetes
-components can be
-[self-hosted](https://coreos.com/blog/self-hosted-kubernetes.html) today. The
-kubelet, however, is not. Therefore the Prometheus Operator implements a
-functionality to synchronize the kubelets into an `Endpoints` object. To make
-use of that functionality the `--kubelet-object` argument must be passed to the
-Prometheus Operator when running it. The `Deployment` for the Prometheus
-Operator then looks like this:
+The manifests used here use the [Prometheus Operator](https://github.com/coreos/prometheus-operator), which manages Prometheus servers and their configuration in a cluster. Prometheus discovers targets through `Endpoints` objects, which means all targets that are running as `Pod`s in the Kubernetes cluster are easily monitored. Many Kubernetes components can be [self-hosted](https://coreos.com/blog/self-hosted-kubernetes.html) today. The kubelet, however, is not. Therefore the Prometheus Operator implements a functionality to synchronize the kubelets into an `Endpoints` object. To make use of that functionality the `--kubelet-object` argument must be passed to the Prometheus Operator when running it. The `Deployment` for the Prometheus Operator then looks like this:
 
 [embedmd]:# (kube-prometheus/manifests/prometheus-operator.yaml)
 ```yaml
@@ -79,20 +56,11 @@ spec:
              memory: 300Mi
 ```
 
-Once started it ensures that all internal IPs of the nodes in the cluster are
-synchronized into the specified `Endpoints` object. In this case the object is
-called `kubelet` and is located in the `kube-system` namespace.
+Once started it ensures that all internal IPs of the nodes in the cluster are synchronized into the specified `Endpoints` object. In this case the object is called `kubelet` and is located in the `kube-system` namespace.
 
-By default every Kubernetes cluster has a `Service` for easy access to the
-`apiserver`. This is the `Service` called `kubernetes` in the `default`
-namespace. A `Service` object automatically synchronizes an `Endpoints` object
-with the targets it selects. Therefore there is nothing, extra to do for
-Prometheus to be able to discover the `apiserver`.
+By default every Kubernetes cluster has a `Service` for easy access to the `apiserver`. This is the `Service` called `kubernetes` in the `default` namespace. A `Service` object automatically synchronizes an `Endpoints` object with the targets it selects. Therefore there is nothing, extra to do for Prometheus to be able to discover the `apiserver`.
 
-Aside from the kubelet and the apiserver the other Kubernetes components all
-run on top of Kubernetes itself. Therefore all that is necessary is to create
-`Service`s for them for `Endpoints` objects to exist to be able to discover
-them.
+Aside from the kubelet and the apiserver the other Kubernetes components all run on top of Kubernetes itself. Therefore all that is necessary is to create `Service`s for them for `Endpoints` objects to exist to be able to discover them.
 
 kube-scheduler:
 
@@ -166,10 +134,7 @@ spec:
 
 ## Exporters
 
-Unrelated to Kubernetes itself, but still important is to gather various
-metrics about the actual nodes. Typical metrics are CPU, memory, disk and
-network utilization, all of these metrics can be gathered using the
-node_exporter.
+Unrelated to Kubernetes itself, but still important is to gather various metrics about the actual nodes. Typical metrics are CPU, memory, disk and network utilization, all of these metrics can be gathered using the node_exporter.
 
 [embedmd]:# (kube-prometheus/manifests/exporters/node-exporter-daemonset.yaml)
 ```yaml
@@ -243,10 +208,7 @@ spec:
 
 ```
 
-And last but not least, kube-state-metrics which collects information about
-Kubernetes objects themselves as they are accessible from the API. Read
-[here](https://github.com/kubernetes/kube-state-metrics) for more information
-on what kind of metrics kube-state-metrics exposes.
+And last but not least, kube-state-metrics which collects information about Kubernetes objects themselves as they are accessible from the API. Find more information on what kind of metrics kube-state-metrics exposes in [its repository](https://github.com/kubernetes/kube-state-metrics).
 
 [embedmd]:# (kube-prometheus/manifests/exporters/kube-state-metrics-deployment.yaml)
 ```yaml
@@ -303,11 +265,7 @@ spec:
 
 ## Setup Monitoring
 
-Once all the steps in the previous section have been taken there should be
-`Endpoints` objects containing the IPs of all of the above mentioned Kubernetes
-components. Now to setup the actual Prometheus and Alertmanager clusters. This
-manifest assumes that the Alertmanager cluster will be deployed in the
-`monitoring` namespace.
+Once all the steps in the previous section have been taken there should be `Endpoints` objects containing the IPs of all of the above mentioned Kubernetes components. Now to setup the actual Prometheus and Alertmanager clusters. This manifest assumes that the Alertmanager cluster will be deployed in the `monitoring` namespace.
 
 [embedmd]:# (kube-prometheus/manifests/prometheus/prometheus-k8s.yaml)
 ```yaml
@@ -333,9 +291,13 @@ spec:
   alerting:
     alertmanagers:
     - namespace: monitoring
-      name: alertmanager-main
+      name: alertmanager-operated
       port: web
 ```
+
+The expression to match for selecting `ServiceMonitor`s here is that they must have a label which has a key called `k8s-apps`. If you look closely at all the `Service` objects described above they all have a label called `k8s-app` and their component name this allows to conveniently select them with `ServiceMonitor`s like so:
+
+[embedmd]:# (kube-prometheus/manifests/prometheus/prometheus-k8s-servicemonitor.yaml)
 
 And the Alertmanager:
 
@@ -352,3 +314,10 @@ spec:
   version: v0.5.1
 ```
 
+Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid config mounted through a `ConfigMap`.
+
+## Outlook
+
+Once finished with this guide you have an entire monitoring pipeline for Kubernetes. To now access the web UIs they need to be exposed by the Kubernetes cluster, read through the [exposing Prometheus and Alertmanager guide](exposing-prometheus-and-alertmanager.md) to find out how.
+
+Additionally all the manifests here have been collected and together with an initial set of alerting rules and Grafana dashboards all deployable with a single button push in [kube-prometheus](https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus).

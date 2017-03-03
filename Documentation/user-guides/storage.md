@@ -53,7 +53,7 @@ spec:
 ```
 
 > The full documentation of the `storage` field can be found in the [spec
-> documentation](prometheus.md#storagespec).
+> documentation](../prometheus.md#storagespec).
 
 When now creating the `Prometheus` object a `PersistentVolumeClaim` is used for
 each `Pod` in the `StatefulSet` and the storage should automatically be
