@@ -24,7 +24,7 @@ parameters:
 
 It is recommended to use volumes that have high I/O throughput therefore we're using SSD EBS volumes here. Make sure to read the [documentation](https://kubernetes.io/docs/user-guide/persistent-volumes/#aws) to adapt this `StorageClass` to your needs.
 
-Having created the `StorageClass` it actually needs to be used. The `StorageClass` to use can be specified in the `storage` section in the `Prometheus` resource.
+The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource.
 
 ```yaml
 apiVersion: "monitoring.coreos.com/v1alpha1"

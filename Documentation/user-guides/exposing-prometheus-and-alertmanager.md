@@ -21,7 +21,7 @@ spec:
       memory: 400Mi
 ```
 
-All Prometheus `Pod`s are labelled with `prometheus: <prometheus-name>`, as the Prometheus object's name is `main`, the selector ends up being `prometheus: main`. Meaning, the respective manifest for the `Service` would look like this:
+All Prometheus `Pod`s are labeled with `prometheus: <prometheus-name>`, as the Prometheus object's name is `main`, the selector ends up being `prometheus: main`. Meaning, the respective manifest for the `Service` would look like this:
 
 ```yaml
 apiVersion: v1
@@ -168,7 +168,7 @@ Then it will be available under http://127.0.0.1:8001/api/v1/proxy/namespaces/de
 
 Exposing the Prometheus or Alertmanager web UI via an `Ingress` object is requires a running ingress controller. If you are unfamiliar with Ingress, have a look at the [documentation](https://kubernetes.io/docs/user-guide/ingress/).
 
-This example was tested with the [nginx ingress controller](https://github.com/kubernetes/contrib/tree/master/ingress/controllers/nginx).  For a quickstart for running the nginx ingress controller run:
+This example was tested with the [nginx ingress controller](https://github.com/kubernetes/contrib/tree/master/ingress/controllers/nginx).  For a quick-start for running the nginx ingress controller run:
 
 ```
 kubectl create -f https://raw.githubusercontent.com/kubernetes/contrib/master/ingress/controllers/nginx/rc.yaml
@@ -257,4 +257,4 @@ spec:
       memory: 400Mi
 ```
 
-> Note that there is the path `/prometheus` a the end of the `externalUrl`, as that is what was specified in the `Ingress` object.
+> Note that there is the path `/prometheus` at the end of the `externalUrl`, as that is what was specified in the `Ingress` object.

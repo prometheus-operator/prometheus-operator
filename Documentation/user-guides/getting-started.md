@@ -37,7 +37,7 @@ The Prometheus Operator introduces third party resources in Kubernetes to declar
 * [`Alertmanager`](../alertmanager.md)
 * [`ServiceMonitor`](../service-monitor.md)
 
-> Important for this guide are the `Prometheus` and `ServiceMonitor` resources.  Have a look at the [Alerting guide](alerting.md) for more information about the `Alertmanager` resource.
+> Important for this guide are the `Prometheus` and `ServiceMonitor` resources. Have a look at the [alerting guide](alerting.md) for more information about the `Alertmanager` resource.
 
 The Prometheus resource includes fields such as the desired version of Prometheus to run, the number of replicas, as well as a number of parameters to configure Prometheus itself. The connection of the Prometheus resource to the `ServiceMonitor` is established through the `serviceMonitorSelector`, which selects which `ServiceMonitor`s are to be used to generate the configuration file for Prometheus.
 
@@ -143,6 +143,6 @@ Once this `Service` is created the Prometheus web UI is available under the node
 
 Further reading:
 
-* In addition to managing Prometheus clusters the Prometheus Operator can also manage Alertmanager clusters. Learn more in the [Alerting guide](alerting.md).
+* In addition to managing Prometheus clusters the Prometheus Operator can also manage Alertmanager clusters. Learn more in the [alerting guide](alerting.md).
 
-* Monitoring the Kubernetes cluster itself. Learn more in the [Cluster Monitoring guide](cluster-monitoring.md)
+* Monitoring the Kubernetes cluster itself. Learn more in the [Cluster Monitoring guide](cluster-monitoring.md).

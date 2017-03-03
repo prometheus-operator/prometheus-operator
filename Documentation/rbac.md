@@ -6,7 +6,7 @@ RBAC for the Prometheus Operator involves two parts, RBAC rules for the Operator
 
 In order for the Prometheus Operator to work in an RBAC based authorization environment, a `ClusterRole` with access to all the resources the Operator requires for the Kubernetes API needs to be created. This section is intended to describe, why the specified rules are required.
 
-Here is a ready to use yaml definition of a `ClusterRole` that can be used to start the Prometheus Operator:
+Here is a ready to use manifest of a `ClusterRole` that can be used to start the Prometheus Operator:
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1alpha1
@@ -52,8 +52,7 @@ rules:
   verbs: ["list", "watch"]
 ```
 
-> Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus Operator `Pod`.  The `ServiceAccount` used by the Prometheus Operator `Pod` can be specified in the `Deployment` object used to deploy it.
-
+> Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus Operator `Pod`. The `ServiceAccount` used by the Prometheus Operator `Pod` can be specified in the `Deployment` object used to deploy it.
 
 When the Prometheus Operator boots up for the first time it registers the `thirdpartyresources` it uses, therefore the `create` action on those is required.
 
@@ -100,7 +99,7 @@ rules:
 
 To demonstrate how to use a `ClusterRole` with a `RoleBinding` and a `ServiceAccount` here an example. It is assumed, that both of the `ClusterRole`s described above are already created.
 
-Say the Prometheus Operator shall be deployed in the `default` namespace.  First a `ServiceAccount` needs to be setup, which could look like this:
+Say the Prometheus Operator shall be deployed in the `default` namespace. First a `ServiceAccount` needs to be setup, which could look like this:
 
 ```yaml
 apiVersion: v1

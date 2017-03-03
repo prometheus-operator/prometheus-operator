@@ -4,7 +4,7 @@ The `ServiceMonitor` third party resource (TPR) allows to declaratively define h
 
 ## Design
 
-For Prometheus to monitor any application within Kubernetes an `Endpoints` object needs to exist. `Endpoints` objects are essentially lists of IP addresses. Typically an `Endpoints` object is populated by a `Service` object.  A `Service` object discovers `Pod`s by a label selector and adds those to the `Endpoints` object.
+For Prometheus to monitor any application within Kubernetes an `Endpoints` object needs to exist. `Endpoints` objects are essentially lists of IP addresses. Typically an `Endpoints` object is populated by a `Service` object. A `Service` object discovers `Pod`s by a label selector and adds those to the `Endpoints` object.
 
 A `Service` may expose one or more service ports, which are backed by a list of multiple endpoints that point to a `Pod` in the common case. This is reflected in the respective `Endpoints` object as well.
 

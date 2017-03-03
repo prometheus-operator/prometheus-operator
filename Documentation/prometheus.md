@@ -2,9 +2,9 @@
 
 The `Prometheus` third party resource (TPR) declaratively defines a desired Prometheus setup to run in a Kubernetes cluster. It provides options to configure replication, persistent storage, and Alertmanagers to which the deployed Prometheus instances send alerts to.
 
-For each `Prometheus` TPR, the Operator deploys a properly configured PetSet in the same namespace. The Prometheus pods are configured to include two ConfigMaps, `<prometheus-name>` and `<prometheus-name>-rules`, which respectively hold the used configuration file and multiple Prometheus rule files that may contain alerting and recording rules. 
+For each `Prometheus` TPR, the Operator deploys a properly configured `StatefulSet` in the same namespace. The Prometheus `Pod`s are configured to include two ConfigMaps, `<prometheus-name>` and `<prometheus-name>-rules`, which respectively hold the used configuration file and multiple Prometheus rule files that may contain alerting and recording rules. 
 
-The TPR allows to specify which [`ServiceMonitor`s](./service-monitor.md) should be covered by the deployed Prometheus instances based on label selection.  The Operator then generates a configuration based on the included `ServiceMonitor`s and updates it in the ConfigMap. It continuously does so for all changes that are made to `ServiceMonitor`s or the `Prometheus` TPR itself.
+The TPR allows to specify which [`ServiceMonitor`s](./service-monitor.md) should be covered by the deployed Prometheus instances based on label selection. The Operator then generates a configuration based on the included `ServiceMonitor`s and updates it in the ConfigMap. It continuously does so for all changes that are made to `ServiceMonitor`s or the `Prometheus` TPR itself.
 
 If no selection of `ServiceMonitor`s is provided, the Operator leaves management of the ConfigMap to the user, which allows to provide custom configurations while still benefiting from the Operator's capabilities of managing Prometheus setups.
 

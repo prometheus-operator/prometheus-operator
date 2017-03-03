@@ -385,7 +385,7 @@ spec:
   version: v0.5.1
 ```
 
-Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid config mounted through a `ConfigMap`.
+Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid configuration mounted through a `ConfigMap`.
 
 ## Outlook
 
