@@ -16,7 +16,7 @@ spec:
          image: quay.io/coreos/prometheus-operator:v0.6.0
          args:
            - "--kubelet-object=kube-system/kubelet"
-           - "--config-reloader-image=quay.io/coreos/configmap-reload:latest"
+           - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
          resources:
            requests:
              cpu: 100m

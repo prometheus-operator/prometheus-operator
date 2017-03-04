@@ -5,6 +5,7 @@ metadata:
   labels:
     prometheus: k8s
 spec:
+  replicas: 2
   version: v1.5.2
   serviceMonitorSelector:
     matchExpression:
