@@ -297,7 +297,7 @@ spec:
 
 The expression to match for selecting `ServiceMonitor`s here is that they must have a label which has a key called `k8s-apps`. If you look closely at all the `Service` objects described above they all have a label called `k8s-app` and their component name this allows to conveniently select them with `ServiceMonitor`s like so:
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-servicemonitor.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-servicemonitors.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
