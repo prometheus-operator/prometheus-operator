@@ -22,21 +22,32 @@ import (
 
 // Prometheus defines a Prometheus deployment.
 type Prometheus struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// Standard object’s metadata. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              PrometheusSpec    `json:"spec"`
-	Status            *PrometheusStatus `json:"status,omitempty"`
+	// Specification of the desired behavior of the Prometheus cluster. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
+	Spec PrometheusSpec `json:"spec"`
+	// Most recent observed status of the Prometheus cluster. Read-only. Not
+	// included when requesting from the apiserver, only from the Prometheus
+	// Operator API itself. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
+	Status *PrometheusStatus `json:"status,omitempty"`
 }
 
 // PrometheusList is a list of Prometheuses.
 type PrometheusList struct {
 	metav1.TypeMeta `json:",inline"`
+	// Standard list metadata
+	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
-
+	// List of Prometheuses
 	Items []*Prometheus `json:"items"`
 }
 
-// PrometheusSpec holds specification parameters of a Prometheus deployment.
+// Specification of the desired behavior of the Prometheus cluster. More info:
+// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 type PrometheusSpec struct {
 	// ServiceMonitors to be selected for target discovery.
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
@@ -76,6 +87,10 @@ type PrometheusSpec struct {
 	// Sharding...
 }
 
+// Most recent observed status of the Prometheus cluster. Read-only. Not
+// included when requesting from the apiserver, only from the Prometheus
+// Operator API itself. More info:
+// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 type PrometheusStatus struct {
 	// Represents whether any actions on the underlaying managed objects are
 	// being performed. Only delete actions will be performed.
@@ -126,9 +141,13 @@ type AlertmanagerEndpoints struct {
 
 // ServiceMonitor defines monitoring for a set of services.
 type ServiceMonitor struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// Standard object’s metadata. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              ServiceMonitorSpec `json:"spec"`
+	// Specification of desired Service selection for target discrovery by
+	// Prometheus.
+	Spec ServiceMonitorSpec `json:"spec"`
 }
 
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
@@ -164,32 +183,45 @@ type Endpoint struct {
 // TLSConfig specifies TLS configuration parameters.
 type TLSConfig struct {
 	// The CA cert to use for the targets.
-	CAFile string `yaml:"caFile,omitempty"`
+	CAFile string `json:"caFile,omitempty"`
 	// The client cert file for the targets.
-	CertFile string `yaml:"certFile,omitempty"`
+	CertFile string `json:"certFile,omitempty"`
 	// The client key file for the targets.
-	KeyFile string `yaml:"keyFile,omitempty"`
+	KeyFile string `json:"keyFile,omitempty"`
 	// Used to verify the hostname for the targets.
-	ServerName string `yaml:"serverName,omitempty"`
+	ServerName string `json:"serverName,omitempty"`
 	// Disable target certificate validation.
-	InsecureSkipVerify bool `yaml:"insecureSkipVerify,omitempty"`
+	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
 }
 
-// ServiceMonitorList is a list of ServiceMonitors.
+// A list of ServiceMonitors.
 type ServiceMonitorList struct {
 	metav1.TypeMeta `json:",inline"`
+	// Standard list metadata
+	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
-
+	// List of ServiceMonitors
 	Items []*ServiceMonitor `json:"items"`
 }
 
+// Describes an Alertmanager cluster.
 type Alertmanager struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// Standard object’s metadata. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              AlertmanagerSpec    `json:"spec"`
-	Status            *AlertmanagerStatus `json:"status,omitempty"`
+	// Specification of the desired behavior of the Alertmanager cluster. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
+	Spec AlertmanagerSpec `json:"spec"`
+	// Most recent observed status of the Alertmanager cluster. Read-only. Not
+	// included when requesting from the apiserver, only from the Prometheus
+	// Operator API itself. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
+	Status *AlertmanagerStatus `json:"status,omitempty"`
 }
 
+// Specification of the desired behavior of the Alertmanager cluster. More info:
+// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 type AlertmanagerSpec struct {
 	// Version the cluster should be on.
 	Version string `json:"version,omitempty"`
@@ -214,15 +246,20 @@ type AlertmanagerSpec struct {
 	Paused bool `json:"paused,omitempty"`
 }
 
+// A list of Alertmanagers.
 type AlertmanagerList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
-	// Items is a list of third party objects
+	// List of Alertmanagers
 	Items []Alertmanager `json:"items"`
 }
 
+// Most recent observed status of the Alertmanager cluster. Read-only. Not
+// included when requesting from the apiserver, only from the Prometheus
+// Operator API itself. More info:
+// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 type AlertmanagerStatus struct {
 	// Represents whether any actions on the underlaying managed objects are
 	// being performed. Only delete actions will be performed.
@@ -240,8 +277,13 @@ type AlertmanagerStatus struct {
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
 
+// A selector for selecting namespaces either selecting all namespaces or a
+// list of namespaces.
 type NamespaceSelector struct {
-	Any        bool     `json:"any,omitempty"`
+	// Boolean describing whether all namespaces are selected in contrast to a
+	// list restricting them.
+	Any bool `json:"any,omitempty"`
+	// List of namespace names.
 	MatchNames []string `json:"matchNames,omitempty"`
 
 	// TODO(fabxc): this should embed metav1.LabelSelector eventually.

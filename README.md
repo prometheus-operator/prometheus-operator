@@ -70,16 +70,18 @@ in the migration will from now on be managed by the Prometheus Operator.
 
 The Operator acts on the following [third party resources (TPRs)](http://kubernetes.io/docs/user-guide/thirdpartyresources/):
 
-* **[`Prometheus`](./Documentation/prometheus.md)**, which defines a desired Prometheus deployment.
+* **`Prometheus`**, which defines a desired Prometheus deployment.
   The Operator ensures at all times that a deployment matching the resource definition is running.
 
-* **[`ServiceMonitor`](./Documentation/service-monitor.md)**, which declaratively specifies how groups
+* **`ServiceMonitor`**, which declaratively specifies how groups
   of services should be monitored. The Operator automatically generates Prometheus scrape configuration
   based on the definition.
 
-* **[`Alertmanager`](./Documentation/alertmanager.md)**, which defines a desired Alertmanager deployment.
+* **`Alertmanager`**, which defines a desired Alertmanager deployment.
   The Operator ensures at all times that a deployment matching the resource definition is running.
 
+To learn more about the TPRs introduced by the Prometheus Operator have a look
+at the [design doc](Documentation/design.md).
 
 ## Installation
 
