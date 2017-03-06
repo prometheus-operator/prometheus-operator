@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+hack/cluster-monitoring/deploy
+
+awk 'FNR==1{print "---"}1' manifests/k8s/minikube/*.yaml | sed s/MINIKUBE_IP/`minikube ip`/g | kubectl --namespace=kube-system apply -f - 
+

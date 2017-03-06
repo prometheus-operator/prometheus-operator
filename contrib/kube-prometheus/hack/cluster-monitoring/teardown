@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+if [ -z "${KUBECONFIG}" ]; then
+    export KUBECONFIG=~/.kube/config
+fi
+
+if [ -z "${NAMESPACE}" ]; then
+    NAMESPACE=monitoring
+fi
+
+kctl() {
+    kubectl --namespace "$NAMESPACE" "$@"
+}
+
+kctl delete -f manifests/exporters
+kctl delete -f manifests/grafana
+kctl delete -f manifests/prometheus
+kctl delete -f manifests/alertmanager
+
+# Hack: wait a bit to let the controller delete the deployed Prometheus server.
+sleep 5
+
+kctl delete -f manifests/prometheus-operator.yaml
+
