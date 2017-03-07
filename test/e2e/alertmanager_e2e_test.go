@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"encoding/json"
 	"fmt"
 	"k8s.io/client-go/pkg/api/v1"
 	"net/http"
@@ -187,4 +188,63 @@ func TestExposingAlertmanagerWithIngress(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestMeshInitialization(t *testing.T) {
+	var amountAlertmanagers int32 = 3
+	alertmanager := framework.MakeBasicAlertmanager("test-alertmanager", amountAlertmanagers)
+	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
+
+	defer func() {
+		if err := framework.DeleteAlertmanagerAndWaitUntilGone(alertmanager.Name); err != nil {
+			t.Fatal(err)
+		}
+		if err := framework.DeleteService(alertmanagerService.Name); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	if err := framework.CreateAlertmanagerAndWaitUntilReady(alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.CreateServiceAndWaitUntilReady(alertmanagerService); err != nil {
+		t.Fatal(err)
+	}
+
+	proxyGet := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).ProxyGet
+	err := framework.Poll(time.Second*20, time.Second, func() (bool, error) {
+		request := proxyGet("", alertmanagerService.Name, "web", "/api/v1/status", make(map[string]string))
+		resp, err := request.DoRaw()
+		if err != nil {
+			return false, err
+		}
+
+		var amStatus alertmanagerStatus
+		if err := json.Unmarshal(resp, &amStatus); err != nil {
+			return false, err
+		}
+
+		if len(amStatus.Data.MeshStatus.Peers) == int(amountAlertmanagers) {
+			return true, nil
+		}
+
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+type alertmanagerStatus struct {
+	Data alertmanagerStatusData `json:"data"`
+}
+
+type alertmanagerStatusData struct {
+	MeshStatus meshStatus `json:"meshStatus"`
+}
+
+type meshStatus struct {
+	Peers []interface{} `json:"peers"`
 }
