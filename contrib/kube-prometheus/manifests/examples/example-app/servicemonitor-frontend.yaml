@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: frontend
+  labels:
+    tier: frontend
+spec:
+  selector:
+    matchLabels:
+      tier: frontend
+  endpoints:
+  - port: web
+    interval: 10s

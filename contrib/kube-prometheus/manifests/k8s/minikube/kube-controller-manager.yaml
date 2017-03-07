@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-controller-manager-prometheus-discovery
+  labels:
+    k8s-app: kube-controller-manager
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http-metrics
+    port: 10252
+    targetPort: 10252
+    protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: kube-controller-manager-prometheus-discovery
+  labels:
+    k8s-app: kube-controller-manager
+subsets:
+- addresses:
+  - ip: MINIKUBE_IP
+  ports:
+  - name: http-metrics
+    port: 10252
+    protocol: TCP

@@ -1,0 +1,26 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus-operator
+  labels:
+    operator: prometheus
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        operator: prometheus
+    spec:
+      containers:
+       - name: prometheus-operator
+         image: quay.io/coreos/prometheus-operator:v0.6.0
+         args:
+           - "--kubelet-object=kube-system/kubelet"
+           - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
+         resources:
+           requests:
+             cpu: 100m
+             memory: 50Mi
+           limits:
+             cpu: 200m
+             memory: 300Mi
