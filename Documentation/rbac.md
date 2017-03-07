@@ -99,7 +99,7 @@ rules:
 
 To demonstrate how to use a `ClusterRole` with a `RoleBinding` and a `ServiceAccount` here an example. It is assumed, that both of the `ClusterRole`s described above are already created.
 
-Say the Prometheus Operator shall be deployed in the `default` namespace. First a `ServiceAccount` needs to be setup, which could look like this:
+Say the Prometheus Operator shall be deployed in the `default` namespace. First a `ServiceAccount` needs to be setup.
 
 ```yaml
 apiVersion: v1
@@ -128,7 +128,7 @@ subjects:
 
 Because the `Pod` that the Prometheus Operator is running in uses the `ServiceAccount` named `prometheus-operator` and the `RoleBinding` associates it with the `ClusterRole` named `prometheus-operator` it now has permission to access all the resources as described above.
 
-When creating `Prometheus` objects the procedure looks similar. It starts with a `ServiceAccount`.
+When creating `Prometheus` objects the procedure is similar. It starts with a `ServiceAccount`.
 
 ```yaml
 apiVersion: v1
@@ -137,7 +137,7 @@ metadata:
   name: prometheus
 ```
 
-And then because the `ClusterRole` named `prometheus`, as described above, is likely to be used multiple times, a `ClusterRoleBinding` instead of a `RoleBinding` is used. It would look like this:
+And then because the `ClusterRole` named `prometheus`, as described above, is likely to be used multiple times, a `ClusterRoleBinding` instead of a `RoleBinding` is used.
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1alpha1

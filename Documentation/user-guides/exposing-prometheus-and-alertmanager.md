@@ -6,7 +6,7 @@ The Prometheus Operator takes care of operating Prometheus and Alertmanagers clu
 
 The easiest way to expose Prometheus or Alertmanager is to use a `Service` of type `NodePort`.
 
-A simple Prometheus object's manifest could look like this:
+Let's create a simple `Prometheus` object with one replica.
 
 ```yaml
 apiVersion: "monitoring.coreos.com/v1alpha1"
@@ -21,7 +21,7 @@ spec:
       memory: 400Mi
 ```
 
-All Prometheus `Pod`s are labeled with `prometheus: <prometheus-name>`, as the Prometheus object's name is `main`, the selector ends up being `prometheus: main`. Meaning, the respective manifest for the `Service` would look like this:
+All Prometheus `Pod`s are labeled with `prometheus: <prometheus-name>`, as the Prometheus object's name is `main`, the selector ends up being `prometheus: main`. Meaning, the respective manifest for the `Service` needs the selector to be `prometheus: main`.
 
 ```yaml
 apiVersion: v1
@@ -42,7 +42,7 @@ spec:
 
 After creating a `Service` with the above manifest, the web UI of Prometheus will be accessible by browsing to any of the worker nodes using `http://<node-ip>:30900/`.
 
-Exposing the Alertmanager works in the same fashion, the only difference being, that the selector is `alertmanager: <alertmanager-name>`. So the `Alertmanager` manifest would look like this:
+Exposing the Alertmanager works in the same fashion, the only difference being, that the selector is `alertmanager: <alertmanager-name>`.
 
 ```yaml
 apiVersion: "monitoring.coreos.com/v1alpha1"
@@ -57,7 +57,7 @@ spec:
       memory: 400Mi
 ```
 
-And the `Service` manifest like this:
+And the `Service`.
 
 ```yaml
 apiVersion: v1

@@ -12,7 +12,7 @@ The Alertmanager's features include:
 
 Prometheus' configuration includes so called rule files, which contain the [alerting rules](https://prometheus.io/docs/alerting/rules/). When an alerting rule triggers it fires that alert against *all* Alertmanager instances, on *every* rule evaluation interval. The Alertmanager instances communicate to each other which notifications have already been sent out. You can read more about why these systems have been designed this way in the [High Availability scheme description](../high-availability.md).
 
-An example Alertmanager cluster could look like this:
+Let's create an example Alertmanager cluster, with three instances.
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager-example.yaml)
 ```yaml
@@ -24,7 +24,7 @@ spec:
   replicas: 3
 ```
 
-However, the Alertmanager instances will not be able to start up, unless a valid configuration is given. This is an example configuration, that does not actually do anything as it sends notifications against a non existent `webhook`, but will allow the Alertmanager to start up. Read more about how to configure the Alertmanager on the [upstream documentation](https://prometheus.io/docs/alerting/configuration/).
+The Alertmanager instances will not be able to start up, unless a valid configuration is given. This is an example configuration, that does not actually do anything as it sends notifications against a non existent `webhook`, but will allow the Alertmanager to start up. Read more about how to configure the Alertmanager on the [upstream documentation](https://prometheus.io/docs/alerting/configuration/).
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager-example-config.yaml)
 ```yaml
