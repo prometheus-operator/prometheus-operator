@@ -212,6 +212,8 @@ type AlertmanagerSpec struct {
 	// If set to true all actions on the underlaying managed objects are not
 	// goint to be performed, except for delete actions.
 	Paused bool `json:"paused,omitempty"`
+	// Define which Nodes the Pods are scheduled on.
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 }
 
 type AlertmanagerList struct {
