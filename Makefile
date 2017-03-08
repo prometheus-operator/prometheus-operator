@@ -44,19 +44,13 @@ clean-e2e:
 	kubectl delete namespace $(NAMESPACE)
 
 promu:
-	@GOOS=$(shell uname -s | tr A-Z a-z) \
-	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
-	go get -u github.com/prometheus/promu
+	@go get -u github.com/prometheus/promu
 
 embedmd:
-	@GOOS=$(shell uname -s | tr A-Z a-z) \
-	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
-	go get github.com/campoy/embedmd
+	@go get github.com/campoy/embedmd
 
 apidocgen:
-	@GOOS=$(shell uname -s | tr A-Z a-z) \
-	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
-	go install github.com/coreos/prometheus-operator/cmd/apidocgen
+	@go install github.com/coreos/prometheus-operator/cmd/apidocgen
 
 docs: embedmd apidocgen
 	embedmd -w `find Documentation -name "*.md"`

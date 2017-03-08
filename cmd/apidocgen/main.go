@@ -20,10 +20,29 @@ This Document documents the types introduced by the Prometheus Operator to be co
 > Note this document is generated from code comments. When contributing a change to this document please do so by changing the code comments.`
 )
 
+var (
+	links = map[string]string{
+		"metav1.ObjectMeta":       "https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_objectmeta",
+		"metav1.ListMeta":         "https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_listmeta",
+		"metav1.LabelSelector":    "https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector",
+		"v1.ResourceRequirements": "https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements",
+	}
+
+	selfLinks = map[string]string{}
+)
+
 func main() {
 	fmt.Println(firstParagraph)
 
 	types := ParseDocumentationFrom(os.Args[1])
+	for _, t := range types {
+		strukt := t[0]
+		selfLinks[strukt.Name] = "#" + strings.ToLower(strukt.Name)
+	}
+
+	// we need to parse once more to now add the self links
+	types = ParseDocumentationFrom(os.Args[1])
+
 	for _, t := range types {
 		strukt := t[0]
 		fmt.Printf("\n## %s\n\n%s\n\n", strukt.Name, strukt.Doc)
@@ -32,7 +51,7 @@ func main() {
 		fmt.Println("| ----- | ----------- | ------ | -------- |")
 		fields := t[1:(len(t))]
 		for _, f := range fields {
-			fmt.Println("|", f.Name, "|", f.Doc, "| `"+f.Type+"` |", f.Mandatory, "|")
+			fmt.Println("|", f.Name, "|", f.Doc, "|", f.Type, "|", f.Mandatory, "|")
 		}
 	}
 }
@@ -131,6 +150,24 @@ func fmtRawDoc(rawDoc string) string {
 	return postDoc
 }
 
+func toLink(typeName string) string {
+	selfLink, hasSelfLink := selfLinks[typeName]
+	if hasSelfLink {
+		return wrapInLink(typeName, selfLink)
+	}
+
+	link, hasLink := links[typeName]
+	if hasLink {
+		return wrapInLink(typeName, link)
+	}
+
+	return typeName
+}
+
+func wrapInLink(text, link string) string {
+	return fmt.Sprintf("[%s](%s)", text, link)
+}
+
 // fieldName returns the name of the field as it should appear in JSON format
 // "-" indicates that this field is not part of the JSON representation
 func fieldName(field *ast.Field) string {
@@ -166,19 +203,19 @@ func fieldRequired(field *ast.Field) bool {
 func fieldType(typ ast.Expr) string {
 	switch typ.(type) {
 	case *ast.Ident:
-		return typ.(*ast.Ident).Name
+		return toLink(typ.(*ast.Ident).Name)
 	case *ast.StarExpr:
-		return "*" + fieldType(typ.(*ast.StarExpr).X)
+		return "*" + toLink(fieldType(typ.(*ast.StarExpr).X))
 	case *ast.SelectorExpr:
 		e := typ.(*ast.SelectorExpr)
 		pkg := e.X.(*ast.Ident)
 		t := e.Sel
-		return pkg.Name + "." + t.Name
+		return toLink(pkg.Name + "." + t.Name)
 	case *ast.ArrayType:
-		return "[]" + fieldType(typ.(*ast.ArrayType).Elt)
+		return "[]" + toLink(fieldType(typ.(*ast.ArrayType).Elt))
 	case *ast.MapType:
 		mapType := typ.(*ast.MapType)
-		return "map[" + fieldType(mapType.Key) + "]" + fieldType(mapType.Value)
+		return "map[" + toLink(fieldType(mapType.Key)) + "]" + toLink(fieldType(mapType.Value))
 	default:
 		return ""
 	}
