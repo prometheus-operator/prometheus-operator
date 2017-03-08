@@ -102,7 +102,7 @@ For the `kube-scheduler` and `kube-controller-manager` there are headless
 services prepared, simply add them to your running cluster:
 
 ```bash
-kubectl -n kube-system create manifests/k8s/
+kubectl -n kube-system create -f manifests/k8s/
 ```
 
 > Hint: if you use this for a cluster not created with bootkube, make sure you
