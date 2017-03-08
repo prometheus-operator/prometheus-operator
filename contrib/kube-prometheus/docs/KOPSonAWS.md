@@ -21,15 +21,15 @@ aws --profile ${AWS_DEFAULT_PROFILE} ec2 authorize-security-group-ingress --grou
 ```
 
 ## Adding kube-prometheus
-Following the instructions in the [README](https://github.com/coreos/kube-prometheus/blob/master/README.md):
+Following the instructions in the [README](https://github.com/coreos/prometheus-operator/blob/master/contrib/kube-prometheus/README.md):
 
 Example:
 
 ```bash
-git clone -b master https://github.com/coreos/kube-prometheus.git kube-prometheus-temp;
-cd kube-prometheus-temp
+git clone -b master https://github.com/coreos/prometheus-operator.git prometheus-operator-temp;
+cd prometheus-operator-temp/contrib/kube-prometheus
 ./hack/cluster-monitoring/deploy
 kubectl -n kube-system create -f manifests/k8s/self-hosted/
 cd -
-rm -rf kube-prometheus-temp
+rm -rf prometheus-operator-temp
 ```
