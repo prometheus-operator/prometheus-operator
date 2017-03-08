@@ -281,3 +281,7 @@ func (f *Framework) Poll(timeout, pollInterval time.Duration, pollFunc func() (b
 		}
 	}
 }
+
+func (f *Framework) ProxyGetPod(podName string, port string, path string) *rest.Request {
+	return f.KubeClient.CoreV1().RESTClient().Get().Prefix("proxy").Namespace(f.Namespace.Name).Resource("pods").Name(podName + ":" + port).Suffix(path)
+}

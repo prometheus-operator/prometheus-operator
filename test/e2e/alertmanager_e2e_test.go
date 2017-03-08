@@ -15,12 +15,12 @@
 package e2e
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -196,7 +196,7 @@ func TestMeshInitialization(t *testing.T) {
 	var amountAlertmanagers int32 = 3
 	alertmanager := &v1alpha1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test-alertmanager",
+			Name: "test",
 		},
 		Spec: v1alpha1.AlertmanagerSpec{
 			Replicas: &amountAlertmanagers,
@@ -223,39 +223,10 @@ func TestMeshInitialization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	proxyGet := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).ProxyGet
-	err := framework.Poll(time.Second*20, time.Second, func() (bool, error) {
-		request := proxyGet("", alertmanagerService.Name, "web", "/api/v1/status", make(map[string]string))
-		resp, err := request.DoRaw()
-		if err != nil {
-			return false, err
+	for i := 0; i < int(amountAlertmanagers); i++ {
+		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
+		if err := framework.WaitForAlertmanagerInitializedMesh(name, int(amountAlertmanagers)); err != nil {
+			t.Fatal(err)
 		}
-
-		var amStatus alertmanagerStatus
-		if err := json.Unmarshal(resp, &amStatus); err != nil {
-			return false, err
-		}
-
-		if len(amStatus.Data.MeshStatus.Peers) == int(amountAlertmanagers) {
-			return true, nil
-		}
-
-		return false, nil
-	})
-
-	if err != nil {
-		t.Fatal(err)
 	}
-}
-
-type alertmanagerStatus struct {
-	Data alertmanagerStatusData `json:"data"`
-}
-
-type alertmanagerStatusData struct {
-	MeshStatus meshStatus `json:"meshStatus"`
-}
-
-type meshStatus struct {
-	Peers []interface{} `json:"peers"`
 }
