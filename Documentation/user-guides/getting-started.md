@@ -35,11 +35,11 @@ spec:
 
 The Prometheus Operator introduces third party resources in Kubernetes to declare the desired state of a Prometheus and Alertmanager cluster as well as the Prometheus configuration. The resources it introduces are:
 
-* [`Prometheus`](../prometheus.md)
-* [`Alertmanager`](../alertmanager.md)
-* [`ServiceMonitor`](../service-monitor.md)
+* `Prometheus`
+* `Alertmanager`
+* `ServiceMonitor`
 
-> Important for this guide are the `Prometheus` and `ServiceMonitor` resources. Have a look at the [alerting guide](alerting.md) for more information about the `Alertmanager` resource.
+> Important for this guide are the `Prometheus` and `ServiceMonitor` resources. Have a look at the [alerting guide](alerting.md) for more information about the `Alertmanager` resource or the [design doc](../design.md) for an overview of all resources introduced by the Prometheus Operator.
 
 The `Prometheus` resource declaratively describes the desired state of a Prometheus deployment, while a `ServiceMonitor` describes the set of targets to be monitored by Prometheus.
 
