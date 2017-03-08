@@ -48,4 +48,12 @@ promu:
 	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
 	go get -u github.com/prometheus/promu
 
-.PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e
+embedmd:
+	@GOOS=$(shell uname -s | tr A-Z a-z) \
+	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
+	go get github.com/campoy/embedmd
+
+docs: embedmd
+	embedmd -w `find Documentation -name "*.md"`
+
+.PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd docs
