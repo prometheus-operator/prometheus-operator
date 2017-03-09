@@ -129,7 +129,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*6, int(*a.Spec.Replicas), amImage(a.Spec.Version), alertmanager.ListOptions(a.Name))
+	err = f.WaitForPodsReady(int(*a.Spec.Replicas), amImage(a.Spec.Version), alertmanager.ListOptions(a.Name))
 	if err != nil {
 		return fmt.Errorf("failed to create an Alertmanager cluster (%s) with %d instances: %v", a.Name, a.Spec.Replicas, err)
 	}
@@ -143,7 +143,7 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*6, int(*a.Spec.Replicas), amImage(a.Spec.Version), alertmanager.ListOptions(a.Name))
+	err = f.WaitForPodsReady(int(*a.Spec.Replicas), amImage(a.Spec.Version), alertmanager.ListOptions(a.Name))
 	if err != nil {
 		return fmt.Errorf("failed to update %d Alertmanager instances (%s): %v", a.Spec.Replicas, a.Name, err)
 	}
@@ -162,7 +162,7 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(name string) error {
 		return err
 	}
 
-	if _, err := f.WaitForPodsReady(time.Minute*6, 0, amImage(a.Spec.Version), alertmanager.ListOptions(name)); err != nil {
+	if err := f.WaitForPodsReady(0, amImage(a.Spec.Version), alertmanager.ListOptions(name)); err != nil {
 		return fmt.Errorf("failed to teardown Alertmanager (%s) instances: %v", name, err)
 	}
 
