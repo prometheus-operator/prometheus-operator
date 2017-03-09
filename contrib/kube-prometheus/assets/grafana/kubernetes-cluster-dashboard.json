@@ -1,4 +1,6 @@
 {
+  "dashboard":
+{
   "annotations": {
     "list": []
   },
@@ -7,7 +9,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "hideControls": false,
-  "id": null,
+  "id": 1,
   "links": [
     {
       "asDropdown": true,
@@ -2180,4 +2182,15 @@
   "timezone": "browser",
   "title": "Kubernetes Cluster",
   "version": 6
+}
+,
+  "inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "pluginId": "prometheus",
+      "type": "datasource",
+      "value": "prometheus"
+    }
+  ],
+  "overwrite": true
 }
