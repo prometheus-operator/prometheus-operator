@@ -59,6 +59,7 @@ type Operator struct {
 	promInf cache.SharedIndexInformer
 	smonInf cache.SharedIndexInformer
 	cmapInf cache.SharedIndexInformer
+	secrInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
 	nodeInf cache.SharedIndexInformer
 
@@ -155,6 +156,13 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: c.handleConfigmapDelete,
 	})
+	c.secrInf = cache.NewSharedIndexInformer(
+		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "secrets", api.NamespaceAll, nil),
+		&v1.Secret{}, resyncPeriod, cache.Indexers{},
+	)
+	c.secrInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		DeleteFunc: c.handleSecretDelete,
+	})
 
 	c.ssetInf = cache.NewSharedIndexInformer(
 		cache.NewListWatchFromClient(c.kclient.Apps().RESTClient(), "statefulsets", api.NamespaceAll, nil),
@@ -216,6 +224,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.promInf.Run(stopc)
 	go c.smonInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
+	go c.secrInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
 
 	if c.kubeletSyncEnabled {
@@ -360,6 +369,26 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		c.enqueueForNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleSecretDelete(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if !ok {
+		return
+	}
+
+	key, ok := c.keyFunc(o)
+	if !ok {
+		return
+	}
+
+	_, exists, err := c.promInf.GetIndexer().GetByKey(key)
+	if err != nil {
+		c.logger.Log("msg", "index lookup failed", "err", err)
+	}
+	if exists {
+		c.enqueue(key)
 	}
 }
 
@@ -546,11 +575,12 @@ func (c *Operator) sync(key string) error {
 		}
 	}
 
-	// Create ConfigMaps if they don't exist.
-	cmClient := c.kclient.Core().ConfigMaps(p.Namespace)
-	if _, err := cmClient.Create(makeEmptyConfig(p.Name)); err != nil && !apierrors.IsAlreadyExists(err) {
+	// Create Secret and ConfigMap if they don't exist.
+	sClient := c.kclient.Core().Secrets(p.Namespace)
+	if _, err := sClient.Create(makeEmptyConfig(p.Name)); err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "creating empty config file failed")
 	}
+	cmClient := c.kclient.Core().ConfigMaps(p.Namespace)
 	if _, err := cmClient.Create(makeEmptyRules(p.Name)); err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "creating empty rules file failed")
 	}
@@ -710,11 +740,11 @@ func (c *Operator) destroyPrometheus(key string) error {
 	// Delete the auto-generate configuration.
 	// TODO(fabxc): add an ownerRef at creation so we don't delete config maps
 	// manually created for Prometheus servers with no ServiceMonitor selectors.
-	cm := c.kclient.Core().ConfigMaps(sset.Namespace)
-
-	if err := cm.Delete(sset.Name, nil); err != nil {
+	s := c.kclient.Core().Secrets(sset.Namespace)
+	if err := s.Delete(sset.Name, nil); err != nil {
 		return errors.Wrap(err, "deleting config file failed")
 	}
+	cm := c.kclient.Core().ConfigMaps(sset.Namespace)
 	if err := cm.Delete(fmt.Sprintf("%s-rules", sset.Name), nil); err != nil {
 		return errors.Wrap(err, "deleting rules file failed")
 	}
@@ -726,28 +756,28 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus) error {
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
-	// Update config map based on the most recent configuration.
-	b, err := generateConfig(p, smons)
+	// Update secret based on the most recent configuration.
+	conf, err := generateConfig(p, smons)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
 	}
 
-	cm := &v1.ConfigMap{
+	s := &v1.Secret{
 		ObjectMeta: apimetav1.ObjectMeta{
-			Name: configConfigMapName(p.Name),
+			Name: configSecretName(p.Name),
 		},
-		Data: map[string]string{
-			"prometheus.yaml": string(b),
+		Data: map[string][]byte{
+			"prometheus.yaml": []byte(conf),
 		},
 	}
 
-	cmClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 
-	_, err = cmClient.Get(cm.Name, metav1.GetOptions{})
+	_, err = sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		_, err = cmClient.Create(cm)
+		_, err = sClient.Create(s)
 	} else if err == nil {
-		_, err = cmClient.Update(cm)
+		_, err = sClient.Update(s)
 	}
 	return err
 }

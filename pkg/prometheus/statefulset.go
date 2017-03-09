@@ -104,13 +104,13 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 	return statefulset
 }
 
-func makeEmptyConfig(name string) *v1.ConfigMap {
-	return &v1.ConfigMap{
+func makeEmptyConfig(name string) *v1.Secret {
+	return &v1.Secret{
 		ObjectMeta: apimetav1.ObjectMeta{
-			Name: configConfigMapName(name),
+			Name: configSecretName(name),
 		},
-		Data: map[string]string{
-			"prometheus.yaml": "",
+		Data: map[string][]byte{
+			"prometheus.yaml": []byte{},
 		},
 	}
 }
@@ -285,10 +285,8 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSp
 					{
 						Name: "config",
 						VolumeSource: v1.VolumeSource{
-							ConfigMap: &v1.ConfigMapVolumeSource{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: configConfigMapName(p.Name),
-								},
+							Secret: &v1.SecretVolumeSource{
+								SecretName: configSecretName(p.Name),
 							},
 						},
 					},
@@ -308,7 +306,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSp
 	}
 }
 
-func configConfigMapName(name string) string {
+func configSecretName(name string) string {
 	return prefixedName(name)
 }
 

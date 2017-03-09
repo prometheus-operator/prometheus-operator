@@ -115,12 +115,7 @@ func TestPrometheusReloadConfig(t *testing.T) {
 		},
 	}
 
-	cfg := &v1.ConfigMap{
-		ObjectMeta: apimetav1.ObjectMeta{
-			Name: fmt.Sprintf("prometheus-%s", name),
-		},
-		Data: map[string]string{
-			"prometheus.yaml": `
+	firstConfig := `
 global:
   scrape_interval: 1m
 scrape_configs:
@@ -129,7 +124,14 @@ scrape_configs:
     static_configs:
       - targets:
         - 111.111.111.111:9090
-`,
+`
+
+	cfg := &v1.Secret{
+		ObjectMeta: apimetav1.ObjectMeta{
+			Name: fmt.Sprintf("prometheus-%s", name),
+		},
+		Data: map[string][]byte{
+			"prometheus.yaml": []byte(firstConfig),
 		},
 	}
 
@@ -144,7 +146,7 @@ scrape_configs:
 		}
 	}()
 
-	if _, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Create(cfg); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Create(cfg); err != nil {
 		t.Fatal(err)
 	}
 
@@ -160,7 +162,7 @@ scrape_configs:
 		t.Fatal(err)
 	}
 
-	cfg.Data["prometheus.yaml"] = `
+	secondConfig := `
 global:
   scrape_interval: 1m
 scrape_configs:
@@ -169,9 +171,11 @@ scrape_configs:
     static_configs:
       - targets:
         - 111.111.111.111:9090
-        - 111.111.111.112:9090
+        - 111.111.111.112:9090 
 `
-	if _, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Update(cfg); err != nil {
+
+	cfg.Data["prometheus.yaml"] = []byte(secondConfig)
+	if _, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Update(cfg); err != nil {
 		t.Fatal(err)
 	}
 
@@ -257,10 +261,10 @@ func TestPrometheusDiscovery(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	log.Print("Validating Prometheus ConfigMap was created")
-	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), apimetav1.GetOptions{})
+	log.Print("Validating Prometheus config Secret was created")
+	_, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), apimetav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Generated ConfigMap could not be retrieved: ", err)
+		t.Fatalf("Generated Secret could not be retrieved: ", err)
 	}
 
 	log.Print("Validating Prometheus Targets were properly discovered")
@@ -313,10 +317,10 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 		t.Fatalf("Creating ServiceMonitor failed: ", err)
 	}
 
-	log.Print("Validating Prometheus ConfigMap was created")
-	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), apimetav1.GetOptions{})
+	log.Print("Validating Prometheus config Secret was created")
+	_, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), apimetav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Generated ConfigMap could not be retrieved: ", err)
+		t.Fatalf("Generated Secret could not be retrieved: ", err)
 	}
 
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(framework.MakeBasicAlertmanager(alertmanagerName, 3)); err != nil {
