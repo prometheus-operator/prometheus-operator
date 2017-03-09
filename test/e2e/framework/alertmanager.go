@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -144,6 +145,39 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(name string) error {
 	}
 
 	return f.KubeClient.CoreV1().ConfigMaps(f.Namespace.Name).Delete(fmt.Sprintf("alertmanager-%s", name), nil)
+}
+
+func (f *Framework) WaitForAlertmanagerInitializedMesh(name string, amountPeers int) error {
+	return f.Poll(time.Second*20, time.Second, func() (bool, error) {
+		request := f.ProxyGetPod(name, "9093", "/api/v1/status")
+		resp, err := request.DoRaw()
+		if err != nil {
+			return false, err
+		}
+
+		var amStatus alertmanagerStatus
+		if err := json.Unmarshal(resp, &amStatus); err != nil {
+			return false, err
+		}
+
+		if len(amStatus.Data.MeshStatus.Peers) == amountPeers {
+			return true, nil
+		}
+
+		return false, nil
+	})
+}
+
+type alertmanagerStatus struct {
+	Data alertmanagerStatusData `json:"data"`
+}
+
+type alertmanagerStatusData struct {
+	MeshStatus meshStatus `json:"meshStatus"`
+}
+
+type meshStatus struct {
+	Peers []interface{} `json:"peers"`
 }
 
 func amImage(version string) string {

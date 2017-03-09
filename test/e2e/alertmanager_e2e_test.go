@@ -16,8 +16,11 @@ package e2e
 
 import (
 	"fmt"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -186,5 +189,44 @@ func TestExposingAlertmanagerWithIngress(t *testing.T) {
 	err = framework.WaitForHTTPSuccessStatusCode(time.Second*30, fmt.Sprintf("http://%s/metrics", *ip))
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestMeshInitialization(t *testing.T) {
+	var amountAlertmanagers int32 = 3
+	alertmanager := &v1alpha1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
+		Spec: v1alpha1.AlertmanagerSpec{
+			Replicas: &amountAlertmanagers,
+			Version:  "master",
+		},
+	}
+
+	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
+
+	defer func() {
+		if err := framework.DeleteAlertmanagerAndWaitUntilGone(alertmanager.Name); err != nil {
+			t.Fatal(err)
+		}
+		if err := framework.DeleteService(alertmanagerService.Name); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	if err := framework.CreateAlertmanagerAndWaitUntilReady(alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.CreateServiceAndWaitUntilReady(alertmanagerService); err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < int(amountAlertmanagers); i++ {
+		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
+		if err := framework.WaitForAlertmanagerInitializedMesh(name, int(amountAlertmanagers)); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
