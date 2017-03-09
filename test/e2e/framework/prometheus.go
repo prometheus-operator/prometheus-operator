@@ -42,6 +42,11 @@ func (f *Framework) MakeBasicPrometheus(name, group string, replicas int32) *v1a
 					"group": group,
 				},
 			},
+			RuleSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"role": "rulefile",
+				},
+			},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
 					v1.ResourceMemory: resource.MustParse("400Mi"),

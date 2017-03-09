@@ -193,8 +193,30 @@ scrape_configs:
 func TestPrometheusReloadRules(t *testing.T) {
 	name := "test"
 
+	ruleFileConfigMap := &v1.ConfigMap{
+		ObjectMeta: apimetav1.ObjectMeta{
+			Name: fmt.Sprintf("prometheus-%s-rules", name),
+			Labels: map[string]string{
+				"role": "rulefile",
+			},
+		},
+		Data: map[string]string{
+			"test.rules": "",
+		},
+	}
+
+	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Create(ruleFileConfigMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	defer func() {
 		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
+			t.Fatal(err)
+		}
+
+		err = framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Delete(ruleFileConfigMap.Name, nil)
+		if err != nil {
 			t.Fatal(err)
 		}
 	}()
@@ -203,14 +225,8 @@ func TestPrometheusReloadRules(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Update(&v1.ConfigMap{
-		ObjectMeta: apimetav1.ObjectMeta{
-			Name: fmt.Sprintf("prometheus-%s-rules", name),
-		},
-		Data: map[string]string{
-			"test.rules": "",
-		},
-	})
+	ruleFileConfigMap.Data["test.rules"] = "# comment to trigger a configmap reload"
+	_, err = framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Update(ruleFileConfigMap)
 	if err != nil {
 		t.Fatal(err)
 	}
