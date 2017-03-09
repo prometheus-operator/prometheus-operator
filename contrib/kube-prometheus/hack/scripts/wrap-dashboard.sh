@@ -46,5 +46,4 @@ cat >> $temp <<EOF
 }
 EOF
 
-mv $temp $json
-
+jq '.dashboard | if .id != null then .id = null else . end' $temp > $json
