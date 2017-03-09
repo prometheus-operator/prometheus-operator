@@ -38,6 +38,6 @@ While `ServiceMonitor`s must live in the same namespace as the `Prometheus` TPR,
 
 The `Alertmanager` third party resource (TPR) declaratively defines a desired Alertmanager setup to run in a Kubernetes cluster. It provides options to configure replication and persistent storage.
 
-For each `Alertmanager` TPR, the Operator deploys a properly configured `StatefulSet` in the same namespace. The Alertmanager pods are configured to include a ConfigMap called `<alertmanager-name>` which holds the used configuration file.
+For each `Alertmanager` TPR, the Operator deploys a properly configured `StatefulSet` in the same namespace. The Alertmanager pods are configured to include a `Secret` called `<alertmanager-name>` which holds the used configuration file in the key `alertmanager.yaml`.
 
 When there are two or more configured replicas the operator runs the Alertmanager instances in high availability mode.

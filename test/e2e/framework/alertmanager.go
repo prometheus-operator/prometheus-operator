@@ -18,9 +18,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/util/intstr"
 
@@ -86,18 +88,38 @@ func (f *Framework) MakeAlertmanagerService(name, group string, serviceType v1.S
 	return service
 }
 
+func (f *Framework) SecretFromYaml(filepath string) (*v1.Secret, error) {
+	manifest, err := os.Open(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	s := v1.Secret{}
+	err = yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&s)
+	if err != nil {
+		return nil, err
+	}
+
+	return &s, nil
+}
+
+func (f *Framework) AlertmanagerConfigSecret(name string) (*v1.Secret, error) {
+	s, err := f.SecretFromYaml("../../contrib/kube-prometheus/manifests/alertmanager/alertmanager-config.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	s.Name = name
+	return s, nil
+}
+
 func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager) error {
 	log.Printf("Creating Alertmanager (%s/%s)", f.Namespace.Name, a.Name)
-	_, err := f.KubeClient.CoreV1().ConfigMaps(f.Namespace.Name).Create(
-		&v1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: fmt.Sprintf("alertmanager-%s", a.Name),
-			},
-			Data: map[string]string{
-				"alertmanager.yaml": ValidAlertmanagerConfig,
-			},
-		},
-	)
+	s, err := f.AlertmanagerConfigSecret(fmt.Sprintf("alertmanager-%s", a.Name))
+	if err != nil {
+		return err
+	}
+	_, err = f.KubeClient.CoreV1().Secrets(f.Namespace.Name).Create(s)
 	if err != nil {
 		return err
 	}
@@ -144,7 +166,7 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(name string) error {
 		return fmt.Errorf("failed to teardown Alertmanager (%s) instances: %v", name, err)
 	}
 
-	return f.KubeClient.CoreV1().ConfigMaps(f.Namespace.Name).Delete(fmt.Sprintf("alertmanager-%s", name), nil)
+	return f.KubeClient.CoreV1().Secrets(f.Namespace.Name).Delete(fmt.Sprintf("alertmanager-%s", name), nil)
 }
 
 func (f *Framework) WaitForAlertmanagerInitializedMesh(name string, amountPeers int) error {
