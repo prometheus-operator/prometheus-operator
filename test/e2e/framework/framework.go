@@ -126,7 +126,7 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
-	err = f.WaitForPodsReady(1, opImage, opts)
+	err = f.WaitForPodsReady(1, opts)
 	if err != nil {
 		return err
 	}
@@ -173,28 +173,47 @@ func (f *Framework) Teardown() error {
 
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
-func (f *Framework) WaitForPodsReady(expectedReplicas int, image string, opts metav1.ListOptions) error {
-	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+func (f *Framework) WaitForPodsReady(expectedReplicas int, opts metav1.ListOptions) error {
+	return f.Poll(time.Minute*2, time.Second, func() (bool, error) {
 		pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
 		if err != nil {
 			return false, err
 		}
 
 		runningAndReady := 0
-		if len(pl.Items) >= 0 {
-			for _, p := range pl.Items {
-				isRunningAndReady, err := k8sutil.PodRunningAndReady(p)
-				if err != nil {
-					return false, err
-				}
+		for _, p := range pl.Items {
+			isRunningAndReady, err := k8sutil.PodRunningAndReady(p)
+			if err != nil {
+				return false, err
+			}
 
-				if isRunningAndReady && podRunsImage(p, image) {
-					runningAndReady++
-				}
+			if isRunningAndReady {
+				runningAndReady++
 			}
 		}
 
 		if runningAndReady == expectedReplicas {
+			return true, nil
+		}
+		return false, nil
+	})
+}
+
+func (f *Framework) WaitForPodsRunImage(expectedReplicas int, image string, opts metav1.ListOptions) error {
+	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+		pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
+		if err != nil {
+			return false, err
+		}
+
+		runningImage := 0
+		for _, p := range pl.Items {
+			if podRunsImage(p, image) {
+				runningImage++
+			}
+		}
+
+		if runningImage == expectedReplicas {
 			return true, nil
 		}
 		return false, nil
