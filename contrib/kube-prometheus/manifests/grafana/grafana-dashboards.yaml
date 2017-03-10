@@ -1,6 +1,9 @@
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
 data:
-  all-nodes-dashboard.json: |
+  all-nodes-dashboard.json: |+
     {
       "dashboard":
     {
@@ -861,7 +864,7 @@ data:
       ],
       "overwrite": true
     }
-  deployment-dashboard.json: |-
+  deployment-dashboard.json: |+
     {
       "dashboard": {
       "__inputs": [
@@ -1678,8 +1681,7 @@ data:
             }
         ],
         "overwrite": true
-    }
-  kubernetes-pods-dashboard.json: |
+    }  kubernetes-pods-dashboard.json: |+
     {
         "dashboard": {
             "__inputs": [
@@ -2089,7 +2091,7 @@ data:
         ],
         "overwrite": true
     }
-  node-dashboard.json: |
+  node-dashboard.json: |+
     {
       "dashboard":
     {
@@ -2970,7 +2972,7 @@ data:
       ],
       "overwrite": true
     }
-  prometheus-datasource.json: |
+  prometheus-datasource.json: |+
     {
         "access": "proxy",
         "basicAuth": false,
@@ -2978,7 +2980,7 @@ data:
         "type": "prometheus",
         "url": "http://prometheus-k8s.monitoring.svc:9090"
     }
-  resource-requests-dashboard.json: |-
+  resource-requests-dashboard.json: |+
     {
       "__inputs": [
         {
@@ -3403,7 +3405,3 @@ data:
       "title": "Resource Requests",
       "version": 1
     }
-kind: ConfigMap
-metadata:
-  creationTimestamp: null
-  name: grafana-dashboards
