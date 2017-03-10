@@ -21,13 +21,13 @@ cluster_namespace_controller_pod_container:spec_cpu_shares =
   )
 
 cluster_namespace_controller_pod_container:cpu_usage:rate =
-  sum by (cluster,namespace,controller,pod_name,container_name) (
+  sum by (cluster,namespace,pod,pod_name,container_name) (
     label_replace(
       irate(
         container_cpu_usage_seconds_total{container_name!=""}[5m]
       ),
-      "controller", "$1",
-      "pod_name", "^(.*)-[a-z0-9]+"
+      "pod", "$1",
+      "pod_name", "^(.*)"
     )
   )
 
