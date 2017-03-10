@@ -38,7 +38,7 @@
     "gnetId": 482,
     "graphTooltip": 1,
     "hideControls": false,
-    "id": null,
+    "id": 7,
     "links": [
       {
         "asDropdown": true,
@@ -423,7 +423,7 @@
             ],
             "targets": [
               {
-                "expr": "sum(100 - ((sum(cluster_namespace_controller_pod_container:spec_memory_limit_bytes{container_name!=\"POD\",pod_name=~\"$pod\"}) - sum(cluster_namespace_controller_pod_container:memory_usage:bytes{container_name!=\"POD\",pod_name=~\"$pod\"}))  * 100 / sum(cluster_namespace_controller_pod_container:spec_memory_limit_bytes{container_name!=\"POD\",pod_name=~\"$pod\"})) ) by (pod_name) ",
+                "expr": "sum(100 - (((sum(cluster_namespace_controller_pod_container:spec_memory_limit_bytes{container_name!=\"POD\",pod_name=~\"$pod\"}) by (pod_name)) - (sum(cluster_namespace_controller_pod_container:memory_usage:bytes{container_name!=\"POD\",pod_name=~\"$pod\"}) by (pod_name)))  * 100 / (sum(cluster_namespace_controller_pod_container:spec_memory_limit_bytes{container_name!=\"POD\",pod_name=~\"$pod\"}) by (pod_name)))) by (pod_name)",
                 "hide": false,
                 "intervalFactor": 2,
                 "legendFormat": "{{pod_name}}",
@@ -681,6 +681,7 @@
           "allValue": null,
           "current": {
             "selected": false,
+            "tags": [],
             "text": "kube-system",
             "value": "kube-system"
           },
@@ -706,8 +707,8 @@
           "current": {
             "selected": true,
             "tags": [],
-            "text": "kube-dns-1248124938-j46tg",
-            "value": "kube-dns-1248124938-j46tg"
+            "text": "All",
+            "value": "$__all"
           },
           "datasource": "$datasource",
           "hide": 0,
@@ -759,7 +760,7 @@
     },
     "timezone": "browser",
     "title": "Kubernetes Pod",
-    "version": 9
+    "version": 11
   },
   "inputs": [
     {
