@@ -3178,7 +3178,7 @@ data:
                 ],
                 "targets": [
                   {
-                    "expr": "sum(100 - ((cluster_namespace_controller_pod_container:spec_memory_limit_bytes{container_name!=\"POD\",pod_name=~\"$pod\"} - cluster_namespace_controller_pod_container:memory_usage:bytes{container_name!=\"POD\",pod_name=~\"$pod\"})  * 100 / cluster_namespace_controller_pod_container:spec_memory_limit_bytes{container_name!=\"POD\",pod_name=~\"$pod\"}) ) by (pod_name) ",
+                    "expr": "sum(100 - ((sum(cluster_namespace_controller_pod_container:spec_memory_limit_bytes{container_name!=\"POD\",pod_name=~\"$pod\"}) - sum(cluster_namespace_controller_pod_container:memory_usage:bytes{container_name!=\"POD\",pod_name=~\"$pod\"}))  * 100 / sum(cluster_namespace_controller_pod_container:spec_memory_limit_bytes{container_name!=\"POD\",pod_name=~\"$pod\"})) ) by (pod_name) ",
                     "hide": false,
                     "intervalFactor": 2,
                     "legendFormat": "{{pod_name}}",
@@ -3293,7 +3293,7 @@ data:
                 ],
                 "targets": [
                   {
-                    "expr": "sum(cluster_namespace_controller_pod_container:cpu_usage:rate{container_name!=\"POD\",pod=~\"$pod\"}) by (pod) / (sum(kube_pod_container_resource_limits_cpu_cores{namespace=\"monitoring\",pod=~\"$pod\"}) by (pod) / 100) /10",
+                    "expr": "sum(cluster_namespace_controller_pod_container:cpu_usage:rate{container_name!=\"POD\",pod=~\"$pod\"}) by (pod) / (sum(kube_pod_container_resource_limits_cpu_cores{pod=~\"$pod\"}) by (pod) / 100) /10",
                     "intervalFactor": 2,
                     "legendFormat": " {{ pod }}",
                     "refId": "A",
@@ -3322,6 +3322,7 @@ data:
           "list": [
             {
               "current": {
+                "selected": true,
                 "text": "prometheus",
                 "value": "prometheus"
               },
@@ -3339,15 +3340,15 @@ data:
               "auto_count": 30,
               "auto_min": "30s",
               "current": {
-                "text": "3m",
-                "value": "3m"
+                "text": "auto",
+                "value": "$__auto_interval"
               },
               "hide": 0,
               "label": "Interval",
               "name": "interval",
               "options": [
                 {
-                  "selected": false,
+                  "selected": true,
                   "text": "auto",
                   "value": "$__auto_interval"
                 },
@@ -3367,7 +3368,7 @@ data:
                   "value": "2m"
                 },
                 {
-                  "selected": true,
+                  "selected": false,
                   "text": "3m",
                   "value": "3m"
                 },
@@ -3434,8 +3435,9 @@ data:
             {
               "allValue": null,
               "current": {
-                "text": "monitoring",
-                "value": "monitoring"
+                "selected": false,
+                "text": "kube-system",
+                "value": "kube-system"
               },
               "datasource": "$datasource",
               "hide": 0,
@@ -3457,9 +3459,10 @@ data:
             {
               "allValue": null,
               "current": {
+                "selected": true,
                 "tags": [],
-                "text": "prometheus-k8s-0",
-                "value": "prometheus-k8s-0"
+                "text": "kube-dns-1248124938-j46tg",
+                "value": "kube-dns-1248124938-j46tg"
               },
               "datasource": "$datasource",
               "hide": 0,
@@ -3511,7 +3514,7 @@ data:
         },
         "timezone": "browser",
         "title": "Kubernetes Pod",
-        "version": 7
+        "version": 9
       },
       "inputs": [
         {
