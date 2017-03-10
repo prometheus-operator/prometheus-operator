@@ -302,7 +302,7 @@
           "targets": [
             {
               "refId": "A",
-              "expr": "kube_deployment_spec_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+              "expr": "max(kube_deployment_spec_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance)",
               "intervalFactor": 2,
               "step": 600,
               "metric": "kube_deployment_spec_replicas"
@@ -381,7 +381,7 @@
           "targets": [
             {
               "refId": "A",
-              "expr": "kube_deployment_status_replicas_available{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+              "expr": "min(kube_deployment_status_replicas_available{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance)",
               "intervalFactor": 2,
               "step": 600
             }
@@ -505,7 +505,7 @@
           },
           "targets": [
             {
-              "expr": "kube_deployment_status_observed_generation{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+              "expr": "max(kube_deployment_status_observed_generation{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance)",
               "intervalFactor": 2,
               "legendFormat": "",
               "refId": "A",
@@ -583,7 +583,7 @@
           },
           "targets": [
             {
-              "expr": "kube_deployment_metadata_generation{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+              "expr": "max(kube_deployment_metadata_generation{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance)",
               "intervalFactor": 2,
               "legendFormat": "",
               "refId": "A",
@@ -649,35 +649,35 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "kube_deployment_status_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+              "expr": "max(kube_deployment_status_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance)",
               "intervalFactor": 2,
               "legendFormat": "current replicas",
               "refId": "A",
               "step": 30
             },
             {
-              "expr": "kube_deployment_status_replicas_available{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+              "expr": "min(kube_deployment_status_replicas_available{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance)",
               "intervalFactor": 2,
               "legendFormat": "available",
               "refId": "B",
               "step": 30
             },
             {
-              "expr": "kube_deployment_status_replicas_unavailable{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+              "expr": "max(kube_deployment_status_replicas_unavailable{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance)",
               "intervalFactor": 2,
               "legendFormat": "unavailable",
               "refId": "C",
               "step": 30
             },
             {
-              "expr": "kube_deployment_status_replicas_updated{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+              "expr": "min(kube_deployment_status_replicas_updated{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance)",
               "intervalFactor": 2,
               "legendFormat": "updated",
               "refId": "D",
               "step": 30
             },
             {
-              "expr": "kube_deployment_spec_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+              "expr": "max(kube_deployment_spec_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance)",
               "intervalFactor": 2,
               "legendFormat": "desired",
               "refId": "E",
