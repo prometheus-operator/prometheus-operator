@@ -12,7 +12,15 @@ data:
       "gnetId": null,
       "graphTooltip": 1,
       "hideControls": false,
+<<<<<<< Updated upstream
       "id": null,
+<<<<<<< HEAD
+=======
+      "links": [],
+      "refresh": false,
+=======
+      "id": 1,
+>>>>>>> Add CPU limit percent
       "links": [
         {
           "asDropdown": true,
@@ -27,6 +35,10 @@ data:
         }
       ],
       "refresh": "30s",
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
       "rows": [
         {
           "collapse": false,
@@ -96,9 +108,18 @@ data:
                   "legendFormat": "",
                   "metric": "",
                   "refId": "A",
+<<<<<<< HEAD
                   "step": 40,
                   "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.capacity.pods)",
                   "textEditor": false
+=======
+<<<<<<< Updated upstream
+                  "step": 50
+=======
+                  "step": 40,
+                  "textEditor": false
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 }
               ],
               "thresholds": "80,90",
@@ -140,9 +161,30 @@ data:
               "mappingType": 1,
               "mappingTypes": [
                 {
+<<<<<<< HEAD
                   "name": "value to text",
                   "value": 1
+=======
+                  "expr": "sum(node_load1)",
+                  "intervalFactor": 4,
+                  "legendFormat": "load 1m",
+                  "refId": "A",
+<<<<<<< Updated upstream
+                  "step": 20,
+                  "target": ""
+>>>>>>> Add CPU limit percent
                 },
+=======
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "80,90",
+              "title": "Cluster CPU Usage",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+>>>>>>> Stashed changes
                 {
                   "name": "range to text",
                   "value": 2
@@ -255,9 +297,49 @@ data:
                   "hide": false,
                   "intervalFactor": 2,
                   "refId": "A",
+<<<<<<< HEAD
                   "step": 40,
                   "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.capacity.memory.bytes)",
                   "textEditor": false
+=======
+<<<<<<< Updated upstream
+                  "step": 4,
+                  "target": ""
+                },
+                {
+                  "expr": "sum(node_memory_Buffers)",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "memory buffers",
+                  "metric": "memo",
+                  "refId": "B",
+                  "step": 4,
+                  "target": ""
+                },
+                {
+                  "expr": "sum(node_memory_Cached)",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "memory cached",
+                  "metric": "memo",
+                  "refId": "C",
+                  "step": 4,
+                  "target": ""
+                },
+                {
+                  "expr": "sum(node_memory_MemFree)",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "memory free",
+                  "metric": "memo",
+                  "refId": "D",
+                  "step": 4,
+                  "target": ""
+=======
+                  "step": 40,
+                  "textEditor": false
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 }
               ],
               "thresholds": "80,90",
@@ -335,9 +417,19 @@ data:
                   "intervalFactor": 2,
                   "legendFormat": "",
                   "refId": "A",
+<<<<<<< HEAD
                   "step": 40,
                   "target": "sumSeries(snap.$cluster.$node.intel.docker.kube-system.*.snap.stats.filesystem.*.capacity)",
                   "textEditor": false
+=======
+<<<<<<< Updated upstream
+                  "step": 60,
+                  "target": ""
+=======
+                  "step": 40,
+                  "textEditor": false
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 }
               ],
               "thresholds": "80,90",
@@ -391,17 +483,35 @@ data:
                   "intervalFactor": 2,
                   "legendFormat": "Allocatable",
                   "refId": "A",
+<<<<<<< HEAD
                   "step": 10,
                   "target": "alias(sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.capacity.pods), 'Capacity')",
                   "textEditor": false
+=======
+<<<<<<< Updated upstream
+                  "step": 8,
+                  "target": ""
+=======
+                  "step": 10,
+                  "textEditor": false
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 },
                 {
                   "expr": "sum(kube_node_status_capacity_pods)",
                   "intervalFactor": 2,
                   "legendFormat": "Capacity",
                   "refId": "B",
+<<<<<<< HEAD
                   "step": 10,
                   "target": "alias(sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.allocatable.pods), 'Allocatable')"
+=======
+<<<<<<< Updated upstream
+                  "step": 8
+=======
+                  "step": 10
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 },
                 {
                   "expr": "sum(kube_pod_status_scheduled)",
@@ -485,9 +595,26 @@ data:
                   "intervalFactor": 2,
                   "legendFormat": "Used",
                   "refId": "A",
+<<<<<<< HEAD
                   "step": 10,
                   "target": "alias(sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.capacity.cpu.cores), 'Capacity')"
                 },
+=======
+<<<<<<< Updated upstream
+                  "step": 60,
+                  "target": ""
+                }
+              ],
+              "thresholds": "0.75, 0.9",
+              "title": "Disk space usage",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+=======
+                  "step": 10
+                },
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 {
                   "expr": "sum(machine_cpu_cores)",
                   "intervalFactor": 2,
@@ -567,7 +694,25 @@ data:
               "steppedLine": false,
               "targets": [
                 {
+<<<<<<< HEAD
                   "expr": "sum(cluster_namespace_controller_pod_container:memory_usage:bytes)",
+=======
+<<<<<<< Updated upstream
+                  "expr": "sum(rate(node_network_receive_bytes{device!~\"lo\"}[5m]))",
+=======
+                  "expr": "sum(cluster_namespace_controller_pod_container:memory_usage:bytes)",
+                  "hide": false,
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Used",
+                  "refId": "C",
+                  "step": 10,
+                  "textEditor": false
+                },
+                {
+                  "expr": "sum(machine_memory_bytes)",
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                   "hide": false,
                   "interval": "",
                   "intervalFactor": 2,
@@ -657,7 +802,23 @@ data:
               "steppedLine": false,
               "targets": [
                 {
+<<<<<<< HEAD
                   "expr": "sum(node_filesystem_size{device!=\"rootfs\",job=\"node-exporter\"}) - sum(node_filesystem_free{device!=\"rootfs\",job=\"node-exporter\"})",
+=======
+<<<<<<< Updated upstream
+                  "expr": "sum(rate(node_network_transmit_bytes{device!~\"lo\"}[5m]))",
+=======
+                  "expr": "sum(node_filesystem_size{device!=\"rootfs\",job=\"node-exporter\"}) - sum(node_filesystem_free{device!=\"rootfs\",job=\"node-exporter\"})",
+                  "hide": false,
+                  "intervalFactor": 2,
+                  "legendFormat": "Usage",
+                  "refId": "A",
+                  "step": 10
+                },
+                {
+                  "expr": "sum(node_filesystem_size{device!=\"rootfs\",job=\"node-exporter\"})",
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                   "hide": false,
                   "intervalFactor": 2,
                   "legendFormat": "Usage",
@@ -729,11 +890,15 @@ data:
                   "value": "current"
                 }
               ],
+<<<<<<< HEAD
               "datasource": "$datasource",
               "editable": true,
               "error": false,
               "fontSize": "100%",
               "id": 30,
+=======
+<<<<<<< Updated upstream
+>>>>>>> Add CPU limit percent
               "links": [],
               "pageSize": 6,
               "scroll": true,
@@ -751,6 +916,28 @@ data:
                   "type": "date"
                 },
                 {
+<<<<<<< HEAD
+=======
+                  "name": "range to text",
+                  "value": 2
+=======
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "fontSize": "80%",
+              "id": 30,
+              "links": [],
+              "pageSize": 8,
+              "scroll": true,
+              "showHeader": true,
+              "sort": {
+                "col": 1,
+                "desc": false
+              },
+              "span": 3,
+              "styles": [
+                {
+>>>>>>> Add CPU limit percent
                   "colorMode": "row",
                   "colors": [
                     "rgba(245, 54, 54, 0.9)",
@@ -765,18 +952,35 @@ data:
                   ],
                   "type": "number",
                   "unit": "short"
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 }
               ],
               "targets": [
                 {
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+                  "from": "null",
+                  "to": "null",
+                  "text": "N/A"
+=======
+>>>>>>> Add CPU limit percent
                   "expr": "sum(kube_deployment_status_replicas_unavailable{job=\"kube-state-metrics\"}) by (deployment) < BOOL sum(kube_deployment_status_replicas_updated{job=\"kube-state-metrics\"}) by (deployment)",
                   "hide": false,
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "{{ deployment }}",
                   "refId": "B",
+<<<<<<< HEAD
                   "step": 10,
                   "target": "aliasByNode(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.*.status.updatedreplicas, 6)"
+=======
+                  "step": 10
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 }
               ],
               "title": "Deployment Replicas - up-to-date",
@@ -841,11 +1045,22 @@ data:
               },
               "targets": [
                 {
+<<<<<<< HEAD
                   "expr": "sum(kube_deployment_status_replicas_available{job=\"kube-state-metrics\"}) + sum(kube_deployment_status_replicas_unavailable{job=\"kube-state-metrics\"})",
                   "intervalFactor": 2,
                   "refId": "A",
                   "step": 40,
                   "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.*.spec.desiredreplicas)"
+=======
+                  "refId": "A",
+<<<<<<< Updated upstream
+                  "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"$deployment_namespace\",pod_name=~\"$deployment_name.*\"}[3m])) + sum(rate(container_network_receive_bytes_total{namespace=\"$deployment_namespace\",pod_name=~\"$deployment_name.*\"}[3m])) ",
+                  "intervalFactor": 2,
+                  "step": 600
+=======
+                  "step": 40
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 }
               ],
               "thresholds": "",
@@ -918,11 +1133,22 @@ data:
               },
               "targets": [
                 {
+<<<<<<< HEAD
                   "expr": "sum(kube_deployment_status_replicas_updated{job=\"kube-state-metrics\"})",
                   "intervalFactor": 2,
                   "refId": "A",
                   "step": 40,
                   "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.*.status.updatedreplicas)"
+=======
+                  "refId": "A",
+<<<<<<< Updated upstream
+                  "expr": "kube_deployment_status_replicas_available{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+                  "intervalFactor": 2,
+                  "step": 600
+=======
+                  "step": 40
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 }
               ],
               "thresholds": "",
@@ -998,8 +1224,16 @@ data:
                   "expr": "sum(kube_deployment_status_replicas_unavailable{job=\"kube-state-metrics\"})",
                   "intervalFactor": 2,
                   "refId": "A",
+<<<<<<< HEAD
                   "step": 40,
                   "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.*.status.unavailablereplicas)"
+=======
+<<<<<<< Updated upstream
+                  "step": 600
+=======
+                  "step": 40
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 }
               ],
               "thresholds": "",
@@ -1088,9 +1322,18 @@ data:
                   "expr": "sum(kube_node_status_ready{job=\"kube-state-metrics\",condition=\"true\"}) - sum(kube_pod_status_ready{job=\"kube-state-metrics\",pod=~\"kube-apiserver-.*\"})",
                   "intervalFactor": 2,
                   "refId": "A",
+<<<<<<< HEAD
                   "step": 40,
                   "target": "countSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.outofdisk)",
                   "textEditor": false
+=======
+<<<<<<< Updated upstream
+                  "step": 600
+=======
+                  "step": 40,
+                  "textEditor": false
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
                 }
               ],
               "thresholds": "",
@@ -1126,6 +1369,7 @@ data:
                 "thresholdLabels": false,
                 "thresholdMarkers": true
               },
+<<<<<<< HEAD
               "id": 8,
               "interval": null,
               "links": [],
@@ -1860,6 +2104,23 @@ data:
               },
               "id": 23,
               "interval": null,
+=======
+<<<<<<< Updated upstream
+              "id": 1,
+              "isNew": true,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false,
+                "hideZero": false
+=======
+              "id": 8,
+              "interval": null,
+>>>>>>> Add CPU limit percent
               "links": [],
               "mappingType": 1,
               "mappingTypes": [
@@ -1886,11 +2147,16 @@ data:
                   "to": "null"
                 }
               ],
+<<<<<<< HEAD
               "span": 3,
+=======
+              "span": 4,
+>>>>>>> Add CPU limit percent
               "sparkline": {
                 "fillColor": "rgba(31, 118, 189, 0.18)",
                 "full": false,
                 "lineColor": "rgb(31, 120, 193)",
+<<<<<<< HEAD
                 "show": true
               },
               "targets": [
@@ -1989,6 +2255,25 @@ data:
               "valueFontSize": "80%",
               "valueMaps": [
                 {
+=======
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_node_status_out_of_disk{condition=\"true\", job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "1,1",
+              "title": "Nodes Out of Disk",
+              "type": "singlestat",
+              "valueFontSize": "100%",
+              "valueMaps": [
+                {
+>>>>>>> Add CPU limit percent
                   "op": "=",
                   "text": "N/A",
                   "value": "null"
@@ -1998,6 +2283,7 @@ data:
             },
             {
               "cacheTimeout": null,
+<<<<<<< HEAD
               "colorBackground": false,
               "colorValue": false,
               "colors": [
@@ -2007,6 +2293,16 @@ data:
               ],
               "datasource": "$datasource",
               "decimals": null,
+=======
+              "colorBackground": true,
+              "colorValue": false,
+              "colors": [
+                "rgba(50, 172, 45, 0.97)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(245, 54, 54, 0.9)"
+              ],
+              "datasource": "$datasource",
+>>>>>>> Add CPU limit percent
               "editable": true,
               "error": false,
               "format": "none",
@@ -2017,11 +2313,16 @@ data:
                 "thresholdLabels": false,
                 "thresholdMarkers": true
               },
+<<<<<<< HEAD
               "id": 19,
+=======
+              "id": 13,
+>>>>>>> Add CPU limit percent
               "interval": null,
               "links": [],
               "mappingType": 1,
               "mappingTypes": [
+<<<<<<< HEAD
                 {
                   "name": "value to text",
                   "value": 1
@@ -2102,6 +2403,9 @@ data:
               "mappingType": 1,
               "mappingTypes": [
                 {
+=======
+                {
+>>>>>>> Add CPU limit percent
                   "name": "value to text",
                   "value": 1
                 },
@@ -2124,11 +2428,16 @@ data:
                   "to": "null"
                 }
               ],
+<<<<<<< HEAD
               "span": 6,
+=======
+              "span": 4,
+>>>>>>> Add CPU limit percent
               "sparkline": {
                 "fillColor": "rgba(31, 118, 189, 0.18)",
                 "full": false,
                 "lineColor": "rgb(31, 120, 193)",
+<<<<<<< HEAD
                 "show": true
               },
               "targets": [
@@ -2145,6 +2454,23 @@ data:
               "title": "Memory Requested By Containers",
               "type": "singlestat",
               "valueFontSize": "80%",
+=======
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_node_spec_unschedulable) - sum(kube_pod_status_ready{job=\"kube-state-metrics\",pod=~\"kube-apiserver-.*\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "1",
+              "title": "Unschedulable Nodes",
+              "type": "singlestat",
+              "valueFontSize": "100%",
+>>>>>>> Add CPU limit percent
               "valueMaps": [
                 {
                   "op": "=",
@@ -2159,6 +2485,7 @@ data:
           "repeatIteration": null,
           "repeatRowId": null,
           "showTitle": true,
+<<<<<<< HEAD
           "title": "Containers",
           "titleSize": "h3"
         }
@@ -2188,6 +2515,874 @@ data:
       },
       "time": {
         "from": "now-30m",
+=======
+          "title": "Nodes",
+          "titleSize": "h3"
+        },
+        {
+          "collapse": false,
+          "height": "120",
+          "panels": [
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(187, 194, 208, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 9,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 6,
+              "sparkline": {
+                "fillColor": "rgba(31, 189, 41, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 200, 32)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_status_ready{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Pods Running",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(187, 194, 208, 0.97)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(245, 54, 54, 0.9)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 31,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 6,
+              "sparkline": {
+                "fillColor": "rgba(31, 189, 41, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 200, 32)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_status_scheduled{condition=\"true\",job=\"kube-state-metrics\"}) - sum(kube_pod_status_ready{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "0,5,20",
+              "title": "Pods Pending",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": true,
+              "colors": [
+                "rgba(187, 194, 208, 0.97)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(245, 54, 54, 0.9)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 33,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 4,
+              "sparkline": {
+                "fillColor": "rgba(31, 189, 41, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 200, 32)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_status_phase{job=\"kube-state-metrics\",phase=\"Failed\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "0,5,20",
+              "title": "Pods Failed",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "0",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(187, 194, 208, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 34,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 4,
+              "sparkline": {
+                "fillColor": "rgba(31, 189, 41, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 200, 32)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_status_phase{job=\"kube-state-metrics\",phase=\"Succeeded\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Pods Succeeded",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "0",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(187, 194, 208, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 35,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 4,
+              "sparkline": {
+                "fillColor": "rgba(31, 189, 41, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 200, 32)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_status_phase{job=\"kube-state-metrics\",phase=\"Unknown\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Pods - Status Unknown",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "0",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            }
+          ],
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": true,
+          "title": "Pods",
+          "titleSize": "h3"
+        },
+        {
+          "collapse": false,
+          "height": "125",
+          "panels": [
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 12,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(89, 77, 192, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_container_status_running{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Containers Running",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 11,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 41, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_container_status_waiting{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40
+                }
+              ],
+              "thresholds": "",
+              "title": "Containers Waiting",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 23,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_container_status_terminated{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40
+                }
+              ],
+              "thresholds": "",
+              "title": "Containers Terminated",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+>>>>>>> Stashed changes
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "kube_deployment_status_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "current replicas",
+                  "refId": "A",
+<<<<<<< Updated upstream
+                  "step": 30
+=======
+                  "step": 40
+                }
+              ],
+              "thresholds": "",
+              "timeFrom": null,
+              "title": "Container Restarts",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": null,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 19,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+>>>>>>> Stashed changes
+                },
+                {
+                  "expr": "kube_deployment_status_replicas_available{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+                  "intervalFactor": 2,
+<<<<<<< Updated upstream
+                  "legendFormat": "available",
+                  "refId": "B",
+                  "step": 30
+                },
+=======
+                  "refId": "A",
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "CPU Cores Requested by Containers",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": null,
+              "editable": true,
+              "error": false,
+              "format": "decbytes",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 20,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+>>>>>>> Stashed changes
+                {
+                  "expr": "kube_deployment_status_replicas_unavailable{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "unavailable",
+                  "refId": "C",
+                  "step": 30
+                },
+                {
+                  "expr": "kube_deployment_status_replicas_updated{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "updated",
+                  "refId": "D",
+                  "step": 30
+                },
+                {
+                  "expr": "kube_deployment_spec_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "desired",
+                  "refId": "E",
+                  "step": 30
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Replicas",
+              "tooltip": {
+                "msResolution": true,
+                "shared": true,
+                "sort": 0,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+<<<<<<< Updated upstream
+                  "format": "none",
+                  "label": "",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+=======
+                  "expr": "sum(kube_pod_container_resource_requests_memory_bytes)",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Memory Requested By Containers",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+>>>>>>> Stashed changes
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": false
+                }
+              ],
+              "transparent": false
+            }
+          ],
+          "title": "New row",
+          "showTitle": false
+        }
+      ],
+      "time": {
+        "from": "now-6h",
+>>>>>>> Add CPU limit percent
         "to": "now"
       },
       "timepicker": {
@@ -2215,9 +3410,59 @@ data:
           "30d"
         ]
       },
+<<<<<<< HEAD
       "timezone": "browser",
       "title": "Kubernetes Cluster",
       "version": 84
+=======
+<<<<<<< Updated upstream
+      "templating": {
+        "list": [
+          {
+            "allValue": ".*",
+            "current": {},
+            "datasource": "${DS_PROMETHEUS}",
+            "hide": 0,
+            "includeAll": false,
+            "label": "Namespace",
+            "multi": false,
+            "name": "deployment_namespace",
+            "options": [],
+            "query": "label_values(kube_deployment_metadata_generation, namespace)",
+            "refresh": 1,
+            "regex": "",
+            "sort": 0,
+            "tagValuesQuery": null,
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {},
+            "datasource": "${DS_PROMETHEUS}",
+            "hide": 0,
+            "includeAll": false,
+            "label": "Deployment",
+            "multi": false,
+            "name": "deployment_name",
+            "options": [],
+            "query": "label_values(kube_deployment_metadata_generation{namespace=\"$deployment_namespace\"}, deployment)",
+            "refresh": 1,
+            "regex": "",
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "deployment",
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+=======
+      "timezone": "browser",
+      "title": "Kubernetes Cluster",
+      "version": 6
+>>>>>>> Add CPU limit percent
     }
     ,
       "inputs": [
@@ -2234,6 +3479,10 @@ data:
     {
       "dashboard":
     {
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> Add CPU limit percent
       "annotations": {
         "list": []
       },
