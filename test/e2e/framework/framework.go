@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
-	v1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/rest"
@@ -127,7 +126,12 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
-	pl, err := f.WaitForPodsReady(60*time.Second, 1, opImage, opts)
+	err = f.WaitForPodsReady(1, opts)
+	if err != nil {
+		return err
+	}
+
+	pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
 	if err != nil {
 		return err
 	}
@@ -169,43 +173,51 @@ func (f *Framework) Teardown() error {
 
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
-func (f *Framework) WaitForPodsReady(timeout time.Duration, expectedReplicas int, image string, opts metav1.ListOptions) (*v1.PodList, error) {
-	return waitForPodsReady(f.KubeClient.Core(), timeout, expectedReplicas, image, f.Namespace.Name, opts)
-}
+func (f *Framework) WaitForPodsReady(expectedReplicas int, opts metav1.ListOptions) error {
+	return f.Poll(time.Minute*2, time.Second, func() (bool, error) {
+		pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
+		if err != nil {
+			return false, err
+		}
 
-func waitForPodsReady(client v1client.CoreV1Interface, timeout time.Duration, expectedRunning int, image, namespace string, opts metav1.ListOptions) (*v1.PodList, error) {
-	t := time.After(timeout)
-	ticker := time.NewTicker(500 * time.Millisecond)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-t:
-			return nil, fmt.Errorf("timed out while waiting for %d pod to be running", expectedRunning)
-		case <-ticker.C:
-			pl, err := client.Pods(namespace).List(opts)
+		runningAndReady := 0
+		for _, p := range pl.Items {
+			isRunningAndReady, err := k8sutil.PodRunningAndReady(p)
 			if err != nil {
-				return nil, err
+				return false, err
 			}
 
-			runningAndReady := 0
-			if len(pl.Items) >= 0 {
-				for _, p := range pl.Items {
-					isRunningAndReady, err := k8sutil.PodRunningAndReady(p)
-					if err != nil {
-						return nil, err
-					}
-
-					if isRunningAndReady && podRunsImage(p, image) {
-						runningAndReady++
-					}
-				}
-				if runningAndReady == expectedRunning {
-					return pl, nil
-				}
+			if isRunningAndReady {
+				runningAndReady++
 			}
 		}
-	}
+
+		if runningAndReady == expectedReplicas {
+			return true, nil
+		}
+		return false, nil
+	})
+}
+
+func (f *Framework) WaitForPodsRunImage(expectedReplicas int, image string, opts metav1.ListOptions) error {
+	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+		pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
+		if err != nil {
+			return false, err
+		}
+
+		runningImage := 0
+		for _, p := range pl.Items {
+			if podRunsImage(p, image) {
+				runningImage++
+			}
+		}
+
+		if runningImage == expectedReplicas {
+			return true, nil
+		}
+		return false, nil
+	})
 }
 
 func (f *Framework) WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {

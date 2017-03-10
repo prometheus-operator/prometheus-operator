@@ -81,18 +81,24 @@ func TestPrometheusVersionMigration(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(name, name, 1)
 
-	p.Spec.Version = "v1.4.0"
+	p.Spec.Version = "v1.5.1"
 	if err := framework.CreatePrometheusAndWaitUntilReady(p); err != nil {
 		t.Fatal(err)
 	}
 
-	p.Spec.Version = "v1.4.1"
+	p.Spec.Version = "v1.5.2"
 	if err := framework.UpdatePrometheusAndWaitUntilReady(p); err != nil {
 		t.Fatal(err)
 	}
+	if err := framework.WaitForPrometheusRunImageAndReady(p); err != nil {
+		t.Fatal(err)
+	}
 
-	p.Spec.Version = "v1.4.0"
+	p.Spec.Version = "v1.5.1"
 	if err := framework.UpdatePrometheusAndWaitUntilReady(p); err != nil {
+		t.Fatal(err)
+	}
+	if err := framework.WaitForPrometheusRunImageAndReady(p); err != nil {
 		t.Fatal(err)
 	}
 }

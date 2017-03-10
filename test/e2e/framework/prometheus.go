@@ -37,7 +37,6 @@ func (f *Framework) MakeBasicPrometheus(name, group string, replicas int32) *v1a
 		},
 		Spec: v1alpha1.PrometheusSpec{
 			Replicas: &replicas,
-			Version:  "v1.4.0",
 			ServiceMonitorSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": group,
@@ -126,7 +125,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*6, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
+	err = f.WaitForPodsReady(int(*p.Spec.Replicas), prometheus.ListOptions(p.Name))
 	if err != nil {
 		return fmt.Errorf("failed to create %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -141,7 +140,7 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*6, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name))
+	err = f.WaitForPodsReady(int(*p.Spec.Replicas), prometheus.ListOptions(p.Name))
 	if err != nil {
 		return fmt.Errorf("failed to update %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -151,7 +150,7 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
 	log.Printf("Deleting Prometheus (%s/%s)", f.Namespace.Name, name)
-	p, err := f.MonClient.Prometheuses(f.Namespace.Name).Get(name)
+	_, err := f.MonClient.Prometheuses(f.Namespace.Name).Get(name)
 	if err != nil {
 		return err
 	}
@@ -160,11 +159,18 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
 		return err
 	}
 
-	if _, err := f.WaitForPodsReady(time.Minute*6, 0, promImage(p.Spec.Version), prometheus.ListOptions(name)); err != nil {
+	if err := f.WaitForPodsReady(0, prometheus.ListOptions(name)); err != nil {
 		return fmt.Errorf("failed to teardown Prometheus instances (%s): %v", name, err)
 	}
 
 	return nil
+}
+
+func (f *Framework) WaitForPrometheusRunImageAndReady(p *v1alpha1.Prometheus) error {
+	if err := f.WaitForPodsRunImage(int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
+		return err
+	}
+	return f.WaitForPodsReady(int(*p.Spec.Replicas), prometheus.ListOptions(p.Name))
 }
 
 func promImage(version string) string {

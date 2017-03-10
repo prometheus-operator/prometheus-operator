@@ -51,7 +51,6 @@ func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *v1alpha1
 		},
 		Spec: v1alpha1.AlertmanagerSpec{
 			Replicas: &replicas,
-			Version:  "v0.5.0",
 		},
 	}
 }
@@ -129,7 +128,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*6, int(*a.Spec.Replicas), amImage(a.Spec.Version), alertmanager.ListOptions(a.Name))
+	err = f.WaitForPodsReady(int(*a.Spec.Replicas), alertmanager.ListOptions(a.Name))
 	if err != nil {
 		return fmt.Errorf("failed to create an Alertmanager cluster (%s) with %d instances: %v", a.Name, a.Spec.Replicas, err)
 	}
@@ -143,7 +142,7 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 		return err
 	}
 
-	_, err = f.WaitForPodsReady(time.Minute*6, int(*a.Spec.Replicas), amImage(a.Spec.Version), alertmanager.ListOptions(a.Name))
+	err = f.WaitForPodsReady(int(*a.Spec.Replicas), alertmanager.ListOptions(a.Name))
 	if err != nil {
 		return fmt.Errorf("failed to update %d Alertmanager instances (%s): %v", a.Spec.Replicas, a.Name, err)
 	}
@@ -153,7 +152,7 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 
 func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(name string) error {
 	log.Printf("Deleting Alertmanager (%s/%s)", f.Namespace.Name, name)
-	a, err := f.MonClient.Alertmanagers(f.Namespace.Name).Get(name)
+	_, err := f.MonClient.Alertmanagers(f.Namespace.Name).Get(name)
 	if err != nil {
 		return err
 	}
@@ -162,11 +161,15 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(name string) error {
 		return err
 	}
 
-	if _, err := f.WaitForPodsReady(time.Minute*6, 0, amImage(a.Spec.Version), alertmanager.ListOptions(name)); err != nil {
+	if err := f.WaitForPodsReady(0, alertmanager.ListOptions(name)); err != nil {
 		return fmt.Errorf("failed to teardown Alertmanager (%s) instances: %v", name, err)
 	}
 
 	return f.KubeClient.CoreV1().Secrets(f.Namespace.Name).Delete(fmt.Sprintf("alertmanager-%s", name), nil)
+}
+
+func amImage(version string) string {
+	return fmt.Sprintf("quay.io/prometheus/alertmanager:%s", version)
 }
 
 func (f *Framework) WaitForAlertmanagerInitializedMesh(name string, amountPeers int) error {
@@ -200,8 +203,4 @@ type alertmanagerStatusData struct {
 
 type meshStatus struct {
 	Peers []interface{} `json:"peers"`
-}
-
-func amImage(version string) string {
-	return fmt.Sprintf("quay.io/prometheus/alertmanager:%s", version)
 }
