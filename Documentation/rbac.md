@@ -8,6 +8,7 @@ In order for the Prometheus Operator to work in an RBAC based authorization envi
 
 Here is a ready to use manifest of a `ClusterRole` that can be used to start the Prometheus Operator:
 
+[embedmd]:# (../example/rbac/prometheus-operator-cluster-role.yaml)
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1alpha1
 kind: ClusterRole
@@ -36,6 +37,7 @@ rules:
 - apiGroups: [""]
   resources:
   - configmaps
+  - secrets
   verbs: ["*"]
 - apiGroups: [""]
   resources:
@@ -78,6 +80,7 @@ The Prometheus server itself accesses the Kubernetes API to discover targets and
 
 As Prometheus does not modify any Objects in the Kubernetes API, but just reads them it simply requires the `get`, `list`, and `watch` actions.
 
+[embedmd]:# (../example/rbac/prometheus-cluster-role.yaml)
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1alpha1
 kind: ClusterRole
@@ -97,10 +100,11 @@ rules:
 
 ## Example
 
-To demonstrate how to use a `ClusterRole` with a `RoleBinding` and a `ServiceAccount` here an example. It is assumed, that both of the `ClusterRole`s described above are already created.
+To demonstrate how to use a `ClusterRole` with a `ClusterRoleBinding` and a `ServiceAccount` here an example. It is assumed, that both of the `ClusterRole`s described above are already created.
 
 Say the Prometheus Operator shall be deployed in the `default` namespace. First a `ServiceAccount` needs to be setup.
 
+[embedmd]:# (../example/rbac/prometheus-operator-service-account.yaml)
 ```yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -110,11 +114,12 @@ metadata:
 
 Note that the `ServiceAccountName` also has to actually be used in the `PodTemplate` of the `Deployment` of the Prometheus Operator.
 
-And then a `RoleBinding`:
+And then a `ClusterRoleBinding`:
 
+[embedmd]:# (../example/rbac/prometheus-operator-cluster-role-binding.yaml)
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1alpha1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: prometheus-operator
 roleRef:
@@ -124,12 +129,14 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-operator
+  namespace: default
 ```
 
 Because the `Pod` that the Prometheus Operator is running in uses the `ServiceAccount` named `prometheus-operator` and the `RoleBinding` associates it with the `ClusterRole` named `prometheus-operator` it now has permission to access all the resources as described above.
 
 When creating `Prometheus` objects the procedure is similar. It starts with a `ServiceAccount`.
 
+[embedmd]:# (../example/rbac/prometheus-service-account.yaml)
 ```yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -139,6 +146,7 @@ metadata:
 
 And then because the `ClusterRole` named `prometheus`, as described above, is likely to be used multiple times, a `ClusterRoleBinding` instead of a `RoleBinding` is used.
 
+[embedmd]:# (../example/rbac/prometheus-cluster-role-binding.yaml)
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1alpha1
 kind: ClusterRoleBinding

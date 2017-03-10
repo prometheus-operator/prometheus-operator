@@ -234,10 +234,8 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 					{
 						Name: "config-volume",
 						VolumeSource: v1.VolumeSource{
-							ConfigMap: &v1.ConfigMapVolumeSource{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: configConfigMapName(a.Name),
-								},
+							Secret: &v1.SecretVolumeSource{
+								SecretName: configSecretName(a.Name),
 							},
 						},
 					},
@@ -247,7 +245,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 	}
 }
 
-func configConfigMapName(name string) string {
+func configSecretName(name string) string {
 	return prefixedName(name)
 }
 
