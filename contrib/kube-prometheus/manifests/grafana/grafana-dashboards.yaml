@@ -1,148 +1,369 @@
 apiVersion: v1
 data:
-  all-nodes-dashboard.json: |
+  kubernetes-cluster-dashboard.json: |
     {
       "dashboard":
     {
-      "__inputs": [
-        {
-          "name": "DS_PROMETHEUS",
-          "label": "prometheus",
-          "description": "",
-          "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
-        }
-      ],
-      "__requires": [
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "4.1.1"
-        },
-        {
-          "type": "panel",
-          "id": "graph",
-          "name": "Graph",
-          "version": ""
-        },
-        {
-          "type": "datasource",
-          "id": "prometheus",
-          "name": "Prometheus",
-          "version": "1.0.0"
-        },
-        {
-          "type": "panel",
-          "id": "singlestat",
-          "name": "Singlestat",
-          "version": ""
-        }
-      ],
       "annotations": {
         "list": []
       },
-      "description": "Dashboard to get an overview of one server",
+      "description": "Summary metrics about containers running on Kubernetes nodes.",
       "editable": true,
-      "gnetId": 22,
-      "graphTooltip": 0,
+      "gnetId": null,
+      "graphTooltip": 1,
       "hideControls": false,
       "id": null,
-      "links": [],
-      "refresh": false,
+      "links": [
+        {
+          "asDropdown": true,
+          "icon": "external link",
+          "includeVars": true,
+          "keepTime": false,
+          "tags": [
+            "kubernetes-app"
+          ],
+          "title": "Dashboards",
+          "type": "dashboards"
+        }
+      ],
+      "refresh": "30s",
       "rows": [
         {
           "collapse": false,
-          "height": "250px",
+          "height": 236,
           "panels": [
             {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(50, 172, 45, 0.97)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(245, 54, 54, 0.9)"
+              ],
+              "datasource": "$datasource",
+              "decimals": null,
               "editable": true,
               "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 3,
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
+              "format": "percent",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
                 "show": true,
-                "total": false,
-                "values": false
+                "thresholdLabels": false,
+                "thresholdMarkers": true
               },
-              "lines": true,
-              "linewidth": 2,
+              "id": 26,
+              "interval": null,
               "links": [],
-              "nullPointMode": "connected",
-              "percentage": false,
-              "pointradius": 5,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [],
-              "span": 6,
-              "stack": false,
-              "steppedLine": false,
-              "targets": [
+              "mappingType": 1,
+              "mappingTypes": [
                 {
-                  "expr": "sum(rate(node_cpu{mode=\"idle\"}[2m])) * 100",
-                  "hide": false,
-                  "intervalFactor": 10,
-                  "legendFormat": "",
-                  "refId": "A",
-                  "step": 50
-                }
-              ],
-              "thresholds": [],
-              "timeFrom": null,
-              "timeShift": null,
-              "title": "Idle cpu",
-              "tooltip": {
-                "msResolution": false,
-                "shared": true,
-                "sort": 0,
-                "value_type": "cumulative"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "name": null,
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "percent",
-                  "label": "cpu usage",
-                  "logBase": 1,
-                  "max": null,
-                  "min": 0,
-                  "show": true
+                  "name": "value to text",
+                  "value": 1
                 },
                 {
-                  "format": "short",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
+                  "name": "range to text",
+                  "value": 2
                 }
-              ]
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "(sum(kube_pod_status_scheduled{svc_app=\"kube-state-metrics\"}) / (sum(kube_node_status_capacity_pods{svc_app=\"kube-state-metrics\"}) / 100))",
+                  "hide": false,
+                  "intervalFactor": 2,
+                  "legendFormat": "",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.capacity.pods)",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "80,90",
+              "title": "Cluster Pod Usage",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
             },
             {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(50, 172, 45, 0.97)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(245, 54, 54, 0.9)"
+              ],
+              "datasource": "$datasource",
               "editable": true,
               "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 9,
+              "format": "percent",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": true,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 27,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "cluster:node_cpu_use:percent",
+                  "hide": false,
+                  "intervalFactor": 2,
+                  "legendFormat": "",
+                  "refId": "A",
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.capacity.cpu.cores)",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "80,90",
+              "title": "Cluster CPU Usage",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": true,
+              "colors": [
+                "rgba(50, 172, 45, 0.97)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(245, 54, 54, 0.9)"
+              ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "percent",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": true,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 28,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "cluster:memory_used:percent",
+                  "hide": false,
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.capacity.memory.bytes)",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "80,90",
+              "title": "Cluster Memory Usage",
+              "type": "singlestat",
+              "valueFontSize": "100%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "percentunit",
+              "gauge": {
+                "maxValue": 1,
+                "minValue": 0,
+                "show": true,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 36,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "(sum(node_filesystem_size{device!=\"rootfs\",job=\"node-exporter\"}) - sum(node_filesystem_free{device!=\"rootfs\",job=\"node-exporter\"})) / sum(node_filesystem_size{device!=\"rootfs\",job=\"node-exporter\"})",
+                  "hide": false,
+                  "intervalFactor": 2,
+                  "legendFormat": "",
+                  "refId": "A",
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.$node.intel.docker.kube-system.*.snap.stats.filesystem.*.capacity)",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "80,90",
+              "title": "Cluster Disk Usage - /var/lib/docker",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "aliasColors": {
+                "Allocatable": "#0A437C",
+                "Requested": "#E5AC0E"
+              },
+              "bars": false,
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "fill": 4,
+              "id": 14,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -155,170 +376,45 @@ data:
               "lines": true,
               "linewidth": 2,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null as zero",
               "percentage": false,
               "pointradius": 5,
               "points": false,
               "renderer": "flot",
               "seriesOverrides": [],
-              "span": 6,
+              "span": 3,
               "stack": false,
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum(node_load1)",
-                  "intervalFactor": 4,
-                  "legendFormat": "load 1m",
+                  "expr": "sum(kube_node_status_allocatable_pods)",
+                  "intervalFactor": 2,
+                  "legendFormat": "Allocatable",
                   "refId": "A",
-                  "step": 20,
-                  "target": ""
+                  "step": 10,
+                  "target": "alias(sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.capacity.pods), 'Capacity')",
+                  "textEditor": false
                 },
                 {
-                  "expr": "sum(node_load5)",
-                  "intervalFactor": 4,
-                  "legendFormat": "load 5m",
+                  "expr": "sum(kube_node_status_capacity_pods)",
+                  "intervalFactor": 2,
+                  "legendFormat": "Capacity",
                   "refId": "B",
-                  "step": 20,
-                  "target": ""
+                  "step": 10,
+                  "target": "alias(sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.allocatable.pods), 'Allocatable')"
                 },
                 {
-                  "expr": "sum(node_load15)",
-                  "intervalFactor": 4,
-                  "legendFormat": "load 15m",
+                  "expr": "sum(kube_pod_status_scheduled)",
+                  "intervalFactor": 2,
+                  "legendFormat": "Scheduled",
                   "refId": "C",
-                  "step": 20,
-                  "target": ""
+                  "step": 10
                 }
               ],
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "System load",
-              "tooltip": {
-                "msResolution": false,
-                "shared": true,
-                "sort": 0,
-                "value_type": "cumulative"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "name": null,
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "percentunit",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                },
-                {
-                  "format": "short",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                }
-              ]
-            }
-          ],
-          "repeat": null,
-          "repeatIteration": null,
-          "repeatRowId": null,
-          "showTitle": false,
-          "title": "New row",
-          "titleSize": "h6"
-        },
-        {
-          "collapse": false,
-          "height": "250px",
-          "panels": [
-            {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 4,
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
-              },
-              "lines": true,
-              "linewidth": 2,
-              "links": [],
-              "nullPointMode": "connected",
-              "percentage": false,
-              "pointradius": 5,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [
-                {
-                  "alias": "node_memory_SwapFree{instance=\"172.17.0.1:9100\",job=\"prometheus\"}",
-                  "yaxis": 2
-                }
-              ],
-              "span": 9,
-              "stack": true,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "expr": "sum(node_memory_MemTotal) - sum(node_memory_MemFree) - sum(node_memory_Buffers) - sum(node_memory_Cached)",
-                  "intervalFactor": 2,
-                  "legendFormat": "memory usage",
-                  "metric": "memo",
-                  "refId": "A",
-                  "step": 4,
-                  "target": ""
-                },
-                {
-                  "expr": "sum(node_memory_Buffers)",
-                  "interval": "",
-                  "intervalFactor": 2,
-                  "legendFormat": "memory buffers",
-                  "metric": "memo",
-                  "refId": "B",
-                  "step": 4,
-                  "target": ""
-                },
-                {
-                  "expr": "sum(node_memory_Cached)",
-                  "interval": "",
-                  "intervalFactor": 2,
-                  "legendFormat": "memory cached",
-                  "metric": "memo",
-                  "refId": "C",
-                  "step": 4,
-                  "target": ""
-                },
-                {
-                  "expr": "sum(node_memory_MemFree)",
-                  "interval": "",
-                  "intervalFactor": 2,
-                  "legendFormat": "memory free",
-                  "metric": "memo",
-                  "refId": "D",
-                  "step": 4,
-                  "target": ""
-                }
-              ],
-              "thresholds": [],
-              "timeFrom": null,
-              "timeShift": null,
-              "title": "Memory usage",
+              "title": "Cluster Pod Capacity",
               "tooltip": {
                 "msResolution": false,
                 "shared": true,
@@ -334,7 +430,7 @@ data:
               },
               "yaxes": [
                 {
-                  "format": "bytes",
+                  "format": "short",
                   "label": null,
                   "logBase": 1,
                   "max": null,
@@ -352,105 +448,16 @@ data:
               ]
             },
             {
-              "cacheTimeout": null,
-              "colorBackground": false,
-              "colorValue": false,
-              "colors": [
-                "rgba(50, 172, 45, 0.97)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(245, 54, 54, 0.9)"
-              ],
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "format": "percent",
-              "gauge": {
-                "maxValue": 100,
-                "minValue": 0,
-                "show": true,
-                "thresholdLabels": false,
-                "thresholdMarkers": true
+              "aliasColors": {
+                "Allocatable": "#0A437C",
+                "Requested": "#E5AC0E"
               },
-              "id": 5,
-              "interval": null,
-              "links": [],
-              "mappingType": 1,
-              "mappingTypes": [
-                {
-                  "name": "value to text",
-                  "value": 1
-                },
-                {
-                  "name": "range to text",
-                  "value": 2
-                }
-              ],
-              "maxDataPoints": 100,
-              "nullPointMode": "connected",
-              "nullText": null,
-              "postfix": "",
-              "postfixFontSize": "50%",
-              "prefix": "",
-              "prefixFontSize": "50%",
-              "rangeMaps": [
-                {
-                  "from": "null",
-                  "text": "N/A",
-                  "to": "null"
-                }
-              ],
-              "span": 3,
-              "sparkline": {
-                "fillColor": "rgba(31, 118, 189, 0.18)",
-                "full": false,
-                "lineColor": "rgb(31, 120, 193)",
-                "show": false
-              },
-              "targets": [
-                {
-                  "expr": "((sum(node_memory_MemTotal) - sum(node_memory_MemFree) - sum(node_memory_Buffers) - sum(node_memory_Cached)) / sum(node_memory_MemTotal)) * 100",
-                  "intervalFactor": 2,
-                  "metric": "",
-                  "refId": "A",
-                  "step": 60,
-                  "target": ""
-                }
-              ],
-              "thresholds": "80, 90",
-              "title": "Memory usage",
-              "type": "singlestat",
-              "valueFontSize": "80%",
-              "valueMaps": [
-                {
-                  "op": "=",
-                  "text": "N/A",
-                  "value": "null"
-                }
-              ],
-              "valueName": "avg"
-            }
-          ],
-          "repeat": null,
-          "repeatIteration": null,
-          "repeatRowId": null,
-          "showTitle": false,
-          "title": "New row",
-          "titleSize": "h6"
-        },
-        {
-          "collapse": false,
-          "height": "250px",
-          "panels": [
-            {
-              "alerting": {},
-              "aliasColors": {},
               "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
+              "datasource": "$datasource",
               "editable": true,
               "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 6,
+              "fill": 4,
+              "id": 16,
               "legend": {
                 "avg": false,
                 "current": false,
@@ -463,62 +470,131 @@ data:
               "lines": true,
               "linewidth": 2,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null as zero",
               "percentage": false,
               "pointradius": 5,
               "points": false,
               "renderer": "flot",
-              "seriesOverrides": [
-                {
-                  "alias": "read",
-                  "yaxis": 1
-                },
-                {
-                  "alias": "{instance=\"172.17.0.1:9100\"}",
-                  "yaxis": 2
-                },
-                {
-                  "alias": "io time",
-                  "yaxis": 2
-                }
-              ],
-              "span": 9,
+              "seriesOverrides": [],
+              "span": 3,
               "stack": false,
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum(rate(node_disk_bytes_read[5m]))",
-                  "hide": false,
-                  "intervalFactor": 4,
-                  "legendFormat": "read",
+                  "expr": "sum(sum(rate(node_cpu{mode!=\"idle\"}[5m])) without (mode))",
+                  "intervalFactor": 2,
+                  "legendFormat": "Used",
                   "refId": "A",
-                  "step": 8,
-                  "target": ""
+                  "step": 10,
+                  "target": "alias(sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.capacity.cpu.cores), 'Capacity')"
                 },
                 {
-                  "expr": "sum(rate(node_disk_bytes_written[5m]))",
-                  "intervalFactor": 4,
-                  "legendFormat": "written",
+                  "expr": "sum(machine_cpu_cores)",
+                  "intervalFactor": 2,
+                  "legendFormat": "Capacity",
                   "refId": "B",
-                  "step": 8
-                },
-                {
-                  "expr": "sum(rate(node_disk_io_time_ms[5m]))",
-                  "intervalFactor": 4,
-                  "legendFormat": "io time",
-                  "refId": "C",
-                  "step": 8
+                  "step": 10
                 }
               ],
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "Disk I/O",
+              "title": "Cluster CPU Capacity",
               "tooltip": {
                 "msResolution": false,
                 "shared": true,
                 "sort": 0,
-                "value_type": "cumulative"
+                "value_type": "individual"
+              },
+              "transparent": false,
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "label": "%",
+                  "logBase": 1,
+                  "max": null,
+                  "min": "0",
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            },
+            {
+              "aliasColors": {
+                "Allocatable": "#0A437C",
+                "Requested": "#E5AC0E"
+              },
+              "bars": false,
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "fill": 4,
+              "id": 17,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "nullPointMode": "null as zero",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "span": 3,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "sum(cluster_namespace_controller_pod_container:memory_usage:bytes)",
+                  "hide": false,
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Used",
+                  "refId": "C",
+                  "step": 10,
+                  "target": "alias(transformNull(consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.container.$namespace.$node.*.*.requested.memory.bytes), 'max'), 0), 'Requested')",
+                  "textEditor": false
+                },
+                {
+                  "expr": "sum(machine_memory_bytes)",
+                  "hide": false,
+                  "intervalFactor": 2,
+                  "legendFormat": "Available",
+                  "refId": "A",
+                  "step": 10
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Cluster Memory Capacity",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
               },
               "type": "graph",
               "xaxis": {
@@ -529,15 +605,15 @@ data:
               },
               "yaxes": [
                 {
-                  "format": "bytes",
+                  "format": "decbytes",
                   "label": null,
                   "logBase": 1,
                   "max": null,
-                  "min": null,
+                  "min": "0",
                   "show": true
                 },
                 {
-                  "format": "ms",
+                  "format": "short",
                   "label": null,
                   "logBase": 1,
                   "max": null,
@@ -547,26 +623,188 @@ data:
               ]
             },
             {
+              "aliasColors": {
+                "Allocatable": "#0A437C",
+                "Requested": "#E5AC0E"
+              },
+              "bars": false,
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "fill": 4,
+              "id": 37,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "rightSide": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "nullPointMode": "null",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "span": 3,
+              "stack": true,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "sum(node_filesystem_size{device!=\"rootfs\",job=\"node-exporter\"}) - sum(node_filesystem_free{device!=\"rootfs\",job=\"node-exporter\"})",
+                  "hide": false,
+                  "intervalFactor": 2,
+                  "legendFormat": "Usage",
+                  "refId": "A",
+                  "step": 10,
+                  "target": "alias(sumSeries(groupByNode(snap.$cluster.$node.intel.docker.kube-system.*.snap.stats.filesystem.*.capacity, 10, 'maxSeries')), 'Capacity')"
+                },
+                {
+                  "expr": "sum(node_filesystem_size{device!=\"rootfs\",job=\"node-exporter\"})",
+                  "hide": false,
+                  "intervalFactor": 2,
+                  "legendFormat": "Available",
+                  "refId": "B",
+                  "step": 10
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Cluster Disk Capacity - /var/lib/docker",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "decbytes",
+                  "label": "",
+                  "logBase": 1,
+                  "max": null,
+                  "min": "0",
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": true,
+          "title": "Cluster Capacity",
+          "titleSize": "h3"
+        },
+        {
+          "collapse": false,
+          "height": "175",
+          "panels": [
+            {
+              "columns": [
+                {
+                  "text": "Current",
+                  "value": "current"
+                }
+              ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "fontSize": "100%",
+              "id": 30,
+              "links": [],
+              "pageSize": 6,
+              "scroll": true,
+              "showHeader": true,
+              "sort": {
+                "col": null,
+                "desc": false
+              },
+              "span": 3,
+              "styles": [
+                {
+                  "dateFormat": "YYYY-MM-DD HH:mm:ss",
+                  "pattern": "Time",
+                  "sanitize": false,
+                  "type": "date"
+                },
+                {
+                  "colorMode": "row",
+                  "colors": [
+                    "rgba(245, 54, 54, 0.9)",
+                    "rgba(255, 55, 55, 0.89)",
+                    "rgba(50, 172, 45, 0.97)"
+                  ],
+                  "decimals": 0,
+                  "pattern": "/.*/",
+                  "thresholds": [
+                    "0",
+                    "1"
+                  ],
+                  "type": "number",
+                  "unit": "short"
+                }
+              ],
+              "targets": [
+                {
+                  "expr": "sum(kube_deployment_status_replicas_unavailable{job=\"kube-state-metrics\"}) by (deployment) < BOOL sum(kube_deployment_status_replicas_updated{job=\"kube-state-metrics\"}) by (deployment)",
+                  "hide": false,
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{ deployment }}",
+                  "refId": "B",
+                  "step": 10,
+                  "target": "aliasByNode(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.*.status.updatedreplicas, 6)"
+                }
+              ],
+              "title": "Deployment Replicas - up-to-date",
+              "transform": "timeseries_aggregations",
+              "transparent": false,
+              "type": "table"
+            },
+            {
               "cacheTimeout": null,
               "colorBackground": false,
               "colorValue": false,
               "colors": [
-                "rgba(50, 172, 45, 0.97)",
+                "rgba(245, 54, 54, 0.9)",
                 "rgba(237, 129, 40, 0.89)",
-                "rgba(245, 54, 54, 0.9)"
+                "rgb(72, 223, 30)"
               ],
-              "datasource": "${DS_PROMETHEUS}",
+              "datasource": "$datasource",
               "editable": true,
               "error": false,
-              "format": "percentunit",
+              "format": "none",
               "gauge": {
-                "maxValue": 1,
+                "maxValue": 100,
                 "minValue": 0,
-                "show": true,
+                "show": false,
                 "thresholdLabels": false,
                 "thresholdMarkers": true
               },
-              "id": 7,
+              "id": 24,
               "interval": null,
               "links": [],
               "mappingType": 1,
@@ -603,15 +841,169 @@ data:
               },
               "targets": [
                 {
-                  "expr": "(sum(node_filesystem_size{device!=\"rootfs\"}) - sum(node_filesystem_free{device!=\"rootfs\"})) / sum(node_filesystem_size{device!=\"rootfs\"})",
+                  "expr": "sum(kube_deployment_status_replicas_available{job=\"kube-state-metrics\"}) + sum(kube_deployment_status_replicas_unavailable{job=\"kube-state-metrics\"})",
                   "intervalFactor": 2,
                   "refId": "A",
-                  "step": 60,
-                  "target": ""
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.*.spec.desiredreplicas)"
                 }
               ],
-              "thresholds": "0.75, 0.9",
-              "title": "Disk space usage",
+              "thresholds": "",
+              "title": "Deployment Replicas - Desired",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 25,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_deployment_status_replicas_updated{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.*.status.updatedreplicas)"
+                }
+              ],
+              "thresholds": "",
+              "title": "Deployments Replicas - Up-to-date",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 32,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_deployment_status_replicas_unavailable{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.*.status.unavailablereplicas)"
+                }
+              ],
+              "thresholds": "",
+              "title": "Deployments Replicas -Unavailable",
               "type": "singlestat",
               "valueFontSize": "80%",
               "valueMaps": [
@@ -627,199 +1019,1175 @@ data:
           "repeat": null,
           "repeatIteration": null,
           "repeatRowId": null,
-          "showTitle": false,
-          "title": "New row",
-          "titleSize": "h6"
+          "showTitle": true,
+          "title": "Deployments",
+          "titleSize": "h3"
         },
         {
           "collapse": false,
-          "height": "250px",
+          "height": "120",
           "panels": [
             {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": null,
               "editable": true,
               "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 8,
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
               },
-              "lines": true,
-              "linewidth": 2,
+              "id": 21,
+              "interval": null,
               "links": [],
-              "nullPointMode": "connected",
-              "percentage": false,
-              "pointradius": 5,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [
+              "mappingType": 1,
+              "mappingTypes": [
                 {
-                  "alias": "transmitted ",
-                  "yaxis": 2
-                }
-              ],
-              "span": 6,
-              "stack": false,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "expr": "sum(rate(node_network_receive_bytes{device!~\"lo\"}[5m]))",
-                  "hide": false,
-                  "intervalFactor": 2,
-                  "legendFormat": "",
-                  "refId": "A",
-                  "step": 10,
-                  "target": ""
-                }
-              ],
-              "thresholds": [],
-              "timeFrom": null,
-              "timeShift": null,
-              "title": "Network received",
-              "tooltip": {
-                "msResolution": false,
-                "shared": true,
-                "sort": 0,
-                "value_type": "cumulative"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "name": null,
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "bytes",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
+                  "name": "value to text",
+                  "value": 1
                 },
                 {
-                  "format": "bytes",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
+                  "name": "range to text",
+                  "value": 2
                 }
-              ]
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 4,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_node_status_ready{job=\"kube-state-metrics\",condition=\"true\"}) - sum(kube_pod_status_ready{job=\"kube-state-metrics\",pod=~\"kube-apiserver-.*\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "countSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.outofdisk)",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Number of Nodes",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
             },
             {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
+              "cacheTimeout": null,
+              "colorBackground": true,
+              "colorValue": false,
+              "colors": [
+                "rgba(50, 172, 45, 0.97)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(245, 54, 54, 0.9)"
+              ],
+              "datasource": "$datasource",
               "editable": true,
               "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 10,
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
               },
-              "lines": true,
-              "linewidth": 2,
+              "id": 8,
+              "interval": null,
               "links": [],
-              "nullPointMode": "connected",
-              "percentage": false,
-              "pointradius": 5,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [
+              "mappingType": 1,
+              "mappingTypes": [
                 {
-                  "alias": "transmitted ",
-                  "yaxis": 2
-                }
-              ],
-              "span": 6,
-              "stack": false,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "expr": "sum(rate(node_network_transmit_bytes{device!~\"lo\"}[5m]))",
-                  "hide": false,
-                  "intervalFactor": 2,
-                  "legendFormat": "",
-                  "refId": "B",
-                  "step": 10,
-                  "target": ""
-                }
-              ],
-              "thresholds": [],
-              "timeFrom": null,
-              "timeShift": null,
-              "title": "Network transmitted",
-              "tooltip": {
-                "msResolution": false,
-                "shared": true,
-                "sort": 0,
-                "value_type": "cumulative"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "name": null,
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "bytes",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
+                  "name": "value to text",
+                  "value": 1
                 },
                 {
-                  "format": "bytes",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
+                  "name": "range to text",
+                  "value": 2
                 }
-              ]
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 4,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_node_status_out_of_disk{condition=\"true\", job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.status.outofdisk), 'max')",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "1,1",
+              "title": "Nodes Out of Disk",
+              "type": "singlestat",
+              "valueFontSize": "100%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": true,
+              "colorValue": false,
+              "colors": [
+                "rgba(50, 172, 45, 0.97)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(245, 54, 54, 0.9)"
+              ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 13,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 4,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_node_spec_unschedulable) - sum(kube_pod_status_ready{job=\"kube-state-metrics\",pod=~\"kube-apiserver-.*\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.node.$node.spec.unschedulable), 'max')",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "1",
+              "title": "Unschedulable Nodes",
+              "type": "singlestat",
+              "valueFontSize": "100%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
             }
           ],
           "repeat": null,
           "repeatIteration": null,
           "repeatRowId": null,
-          "showTitle": false,
-          "title": "New row",
-          "titleSize": "h6"
+          "showTitle": true,
+          "title": "Nodes",
+          "titleSize": "h3"
+        },
+        {
+          "collapse": false,
+          "height": "120",
+          "panels": [
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(187, 194, 208, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 9,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 6,
+              "sparkline": {
+                "fillColor": "rgba(31, 189, 41, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 200, 32)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_status_ready{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.pod.$namespace.$node.*.status.phase.Running), 'max')",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Pods Running",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(187, 194, 208, 0.97)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(245, 54, 54, 0.9)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 31,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 6,
+              "sparkline": {
+                "fillColor": "rgba(31, 189, 41, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 200, 32)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_status_scheduled{condition=\"true\",job=\"kube-state-metrics\"}) - sum(kube_pod_status_ready{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "transformNull(consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.pod.$namespace.$node.*.status.phase.Pending), 'max'), 0)",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "0,5,20",
+              "title": "Pods Pending",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": true,
+              "colors": [
+                "rgba(187, 194, 208, 0.97)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(245, 54, 54, 0.9)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 33,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 4,
+              "sparkline": {
+                "fillColor": "rgba(31, 189, 41, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 200, 32)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_status_phase{job=\"kube-state-metrics\",phase=\"Failed\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "transformNull(consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.pod.$namespace.$node.*.status.phase.Failed), 'max'), 0)",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "0,5,20",
+              "title": "Pods Failed",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "0",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(187, 194, 208, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 34,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 4,
+              "sparkline": {
+                "fillColor": "rgba(31, 189, 41, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 200, 32)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_status_phase{job=\"kube-state-metrics\",phase=\"Succeeded\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "transformNull(consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.pod.$namespace.$node.*.status.phase.Succeeded), 'max'), 0)",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Pods Succeeded",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "0",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(187, 194, 208, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 35,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 4,
+              "sparkline": {
+                "fillColor": "rgba(31, 189, 41, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 200, 32)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_status_phase{job=\"kube-state-metrics\",phase=\"Unknown\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "transformNull(consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.pod.$namespace.$node.*.status.phase.Unknown), 'max'), 0)",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Pods - Status Unknown",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "0",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            }
+          ],
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": true,
+          "title": "Pods",
+          "titleSize": "h3"
+        },
+        {
+          "collapse": false,
+          "height": "125",
+          "panels": [
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 12,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(89, 77, 192, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_container_status_running{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.container.$namespace.$node.*.*.status.running), 'max')",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Containers Running",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 11,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 41, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_container_status_waiting{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.container.$namespace.$node.*.*.status.waiting), 'max')"
+                }
+              ],
+              "thresholds": "",
+              "title": "Containers Waiting",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 23,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_container_status_terminated{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.container.$namespace.$node.*.*.status.terminated), 'max')"
+                }
+              ],
+              "thresholds": "",
+              "title": "Containers Terminated",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": 0,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "hideTimeOverride": false,
+              "id": 22,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_container_status_restarts{job=\"kube-state-metrics\"})",
+                  "intervalFactor": 2,
+                  "legendFormat": "",
+                  "refId": "A",
+                  "step": 40,
+                  "target": "derivative(sumSeries(snap.$cluster.grafanalabs.kubestate.container.$namespace.$node.*.*.status.restarts))"
+                }
+              ],
+              "thresholds": "",
+              "timeFrom": null,
+              "title": "Container Restarts",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": null,
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 19,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 6,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_container_resource_requests_cpu_cores)",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.container.$namespace.$node.*.*.requested.cpu.cores), 'max')",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "CPU Cores Requested by Containers",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "decimals": null,
+              "editable": true,
+              "error": false,
+              "format": "decbytes",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 20,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 6,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": true
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_pod_container_resource_requests_memory_bytes)",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "consolidateBy(sumSeries(snap.$cluster.grafanalabs.kubestate.container.$namespace.$node.*.*.requested.memory.bytes), 'max')",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Memory Requested By Containers",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            }
+          ],
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": true,
+          "title": "Containers",
+          "titleSize": "h3"
         }
       ],
       "schemaVersion": 14,
       "style": "dark",
       "tags": [
-        "prometheus"
+        "kubernetes"
       ],
       "templating": {
-        "list": []
+        "list": [
+          {
+            "current": {
+              "text": "prometheus",
+              "value": "prometheus"
+            },
+            "hide": 2,
+            "label": "",
+            "name": "datasource",
+            "options": [],
+            "query": "prometheus",
+            "refresh": 1,
+            "regex": "",
+            "type": "datasource"
+          }
+        ]
       },
       "time": {
-        "from": "now-1h",
+        "from": "now-30m",
         "to": "now"
       },
       "timepicker": {
@@ -848,9 +2216,10 @@ data:
         ]
       },
       "timezone": "browser",
-      "title": "All Nodes",
-      "version": 1
-    },
+      "title": "Kubernetes Cluster",
+      "version": 84
+    }
+    ,
       "inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -861,91 +2230,62 @@ data:
       ],
       "overwrite": true
     }
-  deployment-dashboard.json: |-
+  kubernetes-deployment-dashboard.json: |
     {
-      "dashboard": {
-      "__inputs": [
-        {
-          "name": "DS_PROMETHEUS",
-          "label": "prometheus",
-          "description": "",
-          "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
-        }
-      ],
-      "__requires": [
-        {
-          "type": "panel",
-          "id": "singlestat",
-          "name": "Singlestat",
-          "version": ""
-        },
-        {
-          "type": "panel",
-          "id": "graph",
-          "name": "Graph",
-          "version": ""
-        },
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "3.1.1"
-        },
-        {
-          "type": "datasource",
-          "id": "prometheus",
-          "name": "Prometheus",
-          "version": "1.0.0"
-        }
-      ],
-      "id": null,
-      "title": "Deployment",
-      "tags": [],
-      "style": "dark",
-      "timezone": "browser",
+      "dashboard":
+    {
+      "annotations": {
+        "list": []
+      },
+      "description": "Deployment overview for Kubernetes deploys.",
       "editable": true,
+      "gnetId": null,
+      "graphTooltip": 1,
       "hideControls": false,
-      "sharedCrosshair": true,
+      "id": null,
+      "links": [
+        {
+          "asDropdown": true,
+          "icon": "external link",
+          "includeVars": true,
+          "keepTime": false,
+          "tags": [
+            "kubernetes-app"
+          ],
+          "title": "Dashboards",
+          "type": "dashboards"
+        }
+      ],
+      "refresh": "5s",
       "rows": [
         {
           "collapse": false,
-          "editable": true,
-          "height": "200px",
+          "height": "175",
           "panels": [
             {
-              "title": "CPU",
-              "error": false,
-              "span": 4,
-              "editable": true,
-              "type": "singlestat",
-              "isNew": true,
-              "id": 8,
-              "targets": [
-                {
-                  "refId": "A",
-                  "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$deployment_namespace\",pod_name=~\"$deployment_name.*\"}[3m])) ",
-                  "intervalFactor": 2,
-                  "step": 600
-                }
-              ],
-              "links": [],
-              "datasource": "${DS_PROMETHEUS}",
-              "maxDataPoints": 100,
-              "interval": null,
               "cacheTimeout": null,
-              "format": "none",
-              "prefix": "",
-              "postfix": "cores",
-              "nullText": null,
-              "valueMaps": [
-                {
-                  "value": "null",
-                  "op": "=",
-                  "text": "N/A"
-                }
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgb(72, 223, 30)"
               ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 24,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
               "mappingTypes": [
                 {
                   "name": "value to text",
@@ -956,150 +2296,74 @@ data:
                   "value": 2
                 }
               ],
-              "rangeMaps": [
-                {
-                  "from": "null",
-                  "to": "null",
-                  "text": "N/A"
-                }
-              ],
-              "mappingType": 1,
-              "nullPointMode": "connected",
-              "valueName": "avg",
-              "prefixFontSize": "50%",
-              "valueFontSize": "110%",
-              "postfixFontSize": "50%",
-              "thresholds": "",
-              "colorBackground": false,
-              "colorValue": false,
-              "colors": [
-                "rgba(245, 54, 54, 0.9)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
-              ],
-              "sparkline": {
-                "show": true,
-                "full": false,
-                "lineColor": "rgb(31, 120, 193)",
-                "fillColor": "rgba(31, 118, 189, 0.18)"
-              },
-              "gauge": {
-                "show": false,
-                "minValue": 0,
-                "maxValue": 100,
-                "thresholdMarkers": true,
-                "thresholdLabels": false
-              }
-            },
-            {
-              "title": "Memory",
-              "error": false,
-              "span": 4,
-              "editable": true,
-              "type": "singlestat",
-              "isNew": true,
-              "id": 9,
-              "targets": [
-                {
-                  "refId": "A",
-                  "expr": "sum(container_memory_usage_bytes{namespace=\"$deployment_namespace\",pod_name=~\"$deployment_name.*\"}) / 1024^3",
-                  "intervalFactor": 2,
-                  "step": 600
-                }
-              ],
-              "links": [],
-              "datasource": "${DS_PROMETHEUS}",
               "maxDataPoints": 100,
-              "interval": null,
-              "cacheTimeout": null,
-              "format": "none",
-              "prefix": "",
-              "postfix": "GB",
+              "nullPointMode": "connected",
               "nullText": null,
-              "valueMaps": [
-                {
-                  "value": "null",
-                  "op": "=",
-                  "text": "N/A"
-                }
-              ],
-              "mappingTypes": [
-                {
-                  "name": "value to text",
-                  "value": 1
-                },
-                {
-                  "name": "range to text",
-                  "value": 2
-                }
-              ],
-              "rangeMaps": [
-                {
-                  "from": "null",
-                  "to": "null",
-                  "text": "N/A"
-                }
-              ],
-              "mappingType": 1,
-              "nullPointMode": "connected",
-              "valueName": "avg",
-              "prefixFontSize": "80%",
-              "valueFontSize": "110%",
-              "postfixFontSize": "50%",
-              "thresholds": "",
-              "colorBackground": false,
-              "colorValue": false,
-              "colors": [
-                "rgba(245, 54, 54, 0.9)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
-              ],
-              "sparkline": {
-                "show": true,
-                "full": false,
-                "lineColor": "rgb(31, 120, 193)",
-                "fillColor": "rgba(31, 118, 189, 0.18)"
-              },
-              "gauge": {
-                "show": false,
-                "minValue": 0,
-                "maxValue": 100,
-                "thresholdMarkers": true,
-                "thresholdLabels": false
-              }
-            },
-            {
-              "title": "Network",
-              "error": false,
-              "span": 4,
-              "editable": true,
-              "type": "singlestat",
-              "isNew": true,
-              "id": 7,
-              "targets": [
-                {
-                  "refId": "A",
-                  "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"$deployment_namespace\",pod_name=~\"$deployment_name.*\"}[3m])) + sum(rate(container_network_receive_bytes_total{namespace=\"$deployment_namespace\",pod_name=~\"$deployment_name.*\"}[3m])) ",
-                  "intervalFactor": 2,
-                  "step": 600
-                }
-              ],
-              "links": [],
-              "datasource": "${DS_PROMETHEUS}",
-              "maxDataPoints": 100,
-              "interval": null,
-              "cacheTimeout": null,
-              "format": "Bps",
-              "prefix": "",
               "postfix": "",
-              "nullText": null,
-              "valueMaps": [
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
                 {
-                  "value": "null",
-                  "op": "=",
-                  "text": "N/A"
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
                 }
               ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "kube_deployment_spec_replicas{deployment=\"$deployment\"}",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.$deployment.spec.desiredreplicas)",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": "",
+              "title": "Deployment Replicas - Desired",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 33,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
               "mappingTypes": [
                 {
                   "name": "value to text",
@@ -1110,20 +2374,51 @@ data:
                   "value": 2
                 }
               ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
               "rangeMaps": [
                 {
                   "from": "null",
-                  "to": "null",
-                  "text": "N/A"
+                  "text": "N/A",
+                  "to": "null"
                 }
               ],
-              "mappingType": 1,
-              "nullPointMode": "connected",
-              "valueName": "avg",
-              "prefixFontSize": "50%",
-              "valueFontSize": "80%",
-              "postfixFontSize": "50%",
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "sum(kube_deployment_status_replicas_available{deployment=\"$deployment\"}) + sum(kube_deployment_status_replicas_unavailable{deployment=\"$deployment\"})",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.$deployment.status.targetedreplicas)"
+                }
+              ],
               "thresholds": "",
+              "title": "Deployments Replicas - Targeted",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
               "colorBackground": false,
               "colorValue": false,
               "colors": [
@@ -1131,376 +2426,185 @@ data:
                 "rgba(237, 129, 40, 0.89)",
                 "rgba(50, 172, 45, 0.97)"
               ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 25,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
               "sparkline": {
-                "show": true,
+                "fillColor": "rgba(31, 118, 189, 0.18)",
                 "full": false,
                 "lineColor": "rgb(31, 120, 193)",
-                "fillColor": "rgba(31, 118, 189, 0.18)"
+                "show": false
               },
+              "targets": [
+                {
+                  "expr": "kube_deployment_status_replicas_updated{deployment=\"$deployment\"}",
+                  "intervalFactor": 2,
+                  "refId": "A",
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.$deployment.status.updatedreplicas)"
+                }
+              ],
+              "thresholds": "",
+              "title": "Deployments Replicas - Up-to-date",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
+            },
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "format": "none",
               "gauge": {
-                "show": false,
-                "minValue": 0,
                 "maxValue": 100,
-                "thresholdMarkers": false,
-                "thresholdLabels": false
-              }
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 32,
+              "interval": null,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 100,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              "span": 3,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "kube_deployment_status_replicas_unavailable{deployment=\"$deployment\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "",
+                  "refId": "A",
+                  "step": 40,
+                  "target": "sumSeries(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.$deployment.status.unavailablereplicas)"
+                }
+              ],
+              "thresholds": "",
+              "title": "Deployments Replicas - Unavailable",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "current"
             }
           ],
-          "title": "Row",
-          "showTitle": false
-        },
-        {
-          "title": "New row",
-          "height": "100px",
-          "editable": true,
-          "collapse": false,
-          "panels": [
-            {
-              "title": "Desired Replicas",
-              "error": false,
-              "span": 3,
-              "editable": true,
-              "type": "singlestat",
-              "isNew": true,
-              "id": 5,
-              "targets": [
-                {
-                  "refId": "A",
-                  "expr": "kube_deployment_spec_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
-                  "intervalFactor": 2,
-                  "step": 600,
-                  "metric": "kube_deployment_spec_replicas"
-                }
-              ],
-              "links": [],
-              "datasource": "${DS_PROMETHEUS}",
-              "maxDataPoints": 100,
-              "interval": null,
-              "cacheTimeout": null,
-              "format": "none",
-              "prefix": "",
-              "postfix": "",
-              "nullText": null,
-              "valueMaps": [
-                {
-                  "value": "null",
-                  "op": "=",
-                  "text": "N/A"
-                }
-              ],
-              "mappingTypes": [
-                {
-                  "name": "value to text",
-                  "value": 1
-                },
-                {
-                  "name": "range to text",
-                  "value": 2
-                }
-              ],
-              "rangeMaps": [
-                {
-                  "from": "null",
-                  "to": "null",
-                  "text": "N/A"
-                }
-              ],
-              "mappingType": 1,
-              "nullPointMode": "connected",
-              "valueName": "avg",
-              "prefixFontSize": "50%",
-              "valueFontSize": "80%",
-              "postfixFontSize": "50%",
-              "thresholds": "",
-              "colorBackground": false,
-              "colorValue": false,
-              "colors": [
-                "rgba(245, 54, 54, 0.9)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
-              ],
-              "sparkline": {
-                "show": false,
-                "full": false,
-                "lineColor": "rgb(31, 120, 193)",
-                "fillColor": "rgba(31, 118, 189, 0.18)"
-              },
-              "gauge": {
-                "show": false,
-                "minValue": 0,
-                "maxValue": 100,
-                "thresholdMarkers": false,
-                "thresholdLabels": false
-              },
-              "decimals": null
-            },
-            {
-              "title": "Available Replicas",
-              "error": false,
-              "span": 3,
-              "editable": true,
-              "type": "singlestat",
-              "isNew": true,
-              "id": 6,
-              "targets": [
-                {
-                  "refId": "A",
-                  "expr": "kube_deployment_status_replicas_available{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
-                  "intervalFactor": 2,
-                  "step": 600
-                }
-              ],
-              "links": [],
-              "datasource": "${DS_PROMETHEUS}",
-              "maxDataPoints": 100,
-              "interval": null,
-              "cacheTimeout": null,
-              "format": "none",
-              "prefix": "",
-              "postfix": "",
-              "nullText": null,
-              "valueMaps": [
-                {
-                  "value": "null",
-                  "op": "=",
-                  "text": "N/A"
-                }
-              ],
-              "mappingTypes": [
-                {
-                  "name": "value to text",
-                  "value": 1
-                },
-                {
-                  "name": "range to text",
-                  "value": 2
-                }
-              ],
-              "rangeMaps": [
-                {
-                  "from": "null",
-                  "to": "null",
-                  "text": "N/A"
-                }
-              ],
-              "mappingType": 1,
-              "nullPointMode": "connected",
-              "valueName": "avg",
-              "prefixFontSize": "50%",
-              "valueFontSize": "80%",
-              "postfixFontSize": "50%",
-              "thresholds": "",
-              "colorBackground": false,
-              "colorValue": false,
-              "colors": [
-                "rgba(245, 54, 54, 0.9)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
-              ],
-              "sparkline": {
-                "show": false,
-                "full": false,
-                "lineColor": "rgb(31, 120, 193)",
-                "fillColor": "rgba(31, 118, 189, 0.18)"
-              },
-              "gauge": {
-                "show": false,
-                "minValue": 0,
-                "maxValue": 100,
-                "thresholdMarkers": true,
-                "thresholdLabels": false
-              }
-            },
-            {
-              "cacheTimeout": null,
-              "colorBackground": false,
-              "colorValue": false,
-              "colors": [
-                "rgba(245, 54, 54, 0.9)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
-              ],
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "format": "none",
-              "gauge": {
-                "maxValue": 100,
-                "minValue": 0,
-                "show": false,
-                "thresholdLabels": false,
-                "thresholdMarkers": true
-              },
-              "id": 3,
-              "interval": null,
-              "isNew": true,
-              "links": [],
-              "mappingType": 1,
-              "mappingTypes": [
-                {
-                  "name": "value to text",
-                  "value": 1
-                },
-                {
-                  "name": "range to text",
-                  "value": 2
-                }
-              ],
-              "maxDataPoints": 100,
-              "nullPointMode": "connected",
-              "nullText": null,
-              "postfix": "",
-              "postfixFontSize": "50%",
-              "prefix": "",
-              "prefixFontSize": "50%",
-              "rangeMaps": [
-                {
-                  "from": "null",
-                  "text": "N/A",
-                  "to": "null"
-                }
-              ],
-              "span": 3,
-              "sparkline": {
-                "fillColor": "rgba(31, 118, 189, 0.18)",
-                "full": false,
-                "lineColor": "rgb(31, 120, 193)",
-                "show": false
-              },
-              "targets": [
-                {
-                  "expr": "kube_deployment_status_observed_generation{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
-                  "intervalFactor": 2,
-                  "legendFormat": "",
-                  "refId": "A",
-                  "step": 600
-                }
-              ],
-              "thresholds": "",
-              "title": "Observed Generation",
-              "type": "singlestat",
-              "valueFontSize": "80%",
-              "valueMaps": [
-                {
-                  "op": "=",
-                  "text": "N/A",
-                  "value": "null"
-                }
-              ],
-              "valueName": "avg"
-            },
-            {
-              "cacheTimeout": null,
-              "colorBackground": false,
-              "colorValue": false,
-              "colors": [
-                "rgba(245, 54, 54, 0.9)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
-              ],
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "format": "none",
-              "gauge": {
-                "maxValue": 100,
-                "minValue": 0,
-                "show": false,
-                "thresholdLabels": false,
-                "thresholdMarkers": true
-              },
-              "id": 2,
-              "interval": null,
-              "isNew": true,
-              "links": [],
-              "mappingType": 1,
-              "mappingTypes": [
-                {
-                  "name": "value to text",
-                  "value": 1
-                },
-                {
-                  "name": "range to text",
-                  "value": 2
-                }
-              ],
-              "maxDataPoints": 100,
-              "nullPointMode": "connected",
-              "nullText": null,
-              "postfix": "",
-              "postfixFontSize": "50%",
-              "prefix": "",
-              "prefixFontSize": "50%",
-              "rangeMaps": [
-                {
-                  "from": "null",
-                  "text": "N/A",
-                  "to": "null"
-                }
-              ],
-              "span": 3,
-              "sparkline": {
-                "fillColor": "rgba(31, 118, 189, 0.18)",
-                "full": false,
-                "lineColor": "rgb(31, 120, 193)",
-                "show": false
-              },
-              "targets": [
-                {
-                  "expr": "kube_deployment_metadata_generation{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
-                  "intervalFactor": 2,
-                  "legendFormat": "",
-                  "refId": "A",
-                  "step": 600
-                }
-              ],
-              "thresholds": "",
-              "title": "Metadata Generation",
-              "type": "singlestat",
-              "valueFontSize": "80%",
-              "valueMaps": [
-                {
-                  "op": "=",
-                  "text": "N/A",
-                  "value": "null"
-                }
-              ],
-              "valueName": "avg"
-            }
-          ]
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "Deployments",
+          "titleSize": "h3"
         },
         {
           "collapse": false,
-          "editable": true,
-          "height": "350px",
+          "height": 250,
           "panels": [
             {
               "aliasColors": {},
               "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
+              "datasource": "$datasource",
               "editable": true,
               "error": false,
               "fill": 1,
-              "grid": {
-                "threshold1": null,
-                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                "threshold2": null,
-                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-              },
-              "id": 1,
-              "isNew": true,
+              "id": 34,
               "legend": {
+                "alignAsTable": true,
                 "avg": false,
                 "current": false,
                 "max": false,
                 "min": false,
+                "rightSide": false,
                 "show": true,
                 "total": false,
-                "values": false,
-                "hideZero": false
+                "values": false
               },
               "lines": true,
-              "linewidth": 2,
+              "linewidth": 1,
               "links": [],
               "nullPointMode": "connected",
               "percentage": false,
@@ -1513,50 +2617,23 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "kube_deployment_status_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
+                  "expr": "kube_deployment_metadata_generation{deployment=\"$deployment\"}",
                   "intervalFactor": 2,
-                  "legendFormat": "current replicas",
+                  "legendFormat": "{{ deployment }}",
                   "refId": "A",
-                  "step": 30
-                },
-                {
-                  "expr": "kube_deployment_status_replicas_available{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
-                  "intervalFactor": 2,
-                  "legendFormat": "available",
-                  "refId": "B",
-                  "step": 30
-                },
-                {
-                  "expr": "kube_deployment_status_replicas_unavailable{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
-                  "intervalFactor": 2,
-                  "legendFormat": "unavailable",
-                  "refId": "C",
-                  "step": 30
-                },
-                {
-                  "expr": "kube_deployment_status_replicas_updated{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
-                  "intervalFactor": 2,
-                  "legendFormat": "updated",
-                  "refId": "D",
-                  "step": 30
-                },
-                {
-                  "expr": "kube_deployment_spec_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}",
-                  "intervalFactor": 2,
-                  "legendFormat": "desired",
-                  "refId": "E",
-                  "step": 30
+                  "step": 2,
+                  "target": "aliasByNode(snap.$cluster.grafanalabs.kubestate.deployment.$namespace.$deployment.metadata.generation, 6, 8)"
                 }
               ],
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "Replicas",
+              "title": "Generations",
               "tooltip": {
-                "msResolution": true,
+                "msResolution": false,
                 "shared": true,
                 "sort": 0,
-                "value_type": "cumulative"
+                "value_type": "individual"
               },
               "type": "graph",
               "xaxis": {
@@ -1567,8 +2644,426 @@ data:
               },
               "yaxes": [
                 {
-                  "format": "none",
-                  "label": "",
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "repeat": null,
+          "repeatIteration": null,
+          "repeatRowId": null,
+          "showTitle": false,
+          "title": "Dashboard Row",
+          "titleSize": "h6"
+        }
+      ],
+      "schemaVersion": 14,
+      "style": "dark",
+      "tags": [
+        "kubernetes"
+      ],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "text": "prometheus",
+              "value": "prometheus"
+            },
+            "hide": 2,
+            "label": "",
+            "name": "datasource",
+            "options": [],
+            "query": "prometheus",
+            "refresh": 1,
+            "regex": "",
+            "type": "datasource"
+          },
+          {
+            "allValue": null,
+            "current": {
+              "tags": [],
+              "text": "monitoring",
+              "value": "monitoring"
+            },
+            "datasource": "prometheus",
+            "hide": 0,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "namespace",
+            "options": [],
+            "query": "label_values(kube_deployment_metadata_generation, namespace)",
+            "refresh": 1,
+            "regex": "",
+            "sort": 0,
+            "tagValuesQuery": null,
+            "tags": [],
+            "tagsQuery": null,
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "tags": [],
+              "text": "prometheus-operator",
+              "value": "prometheus-operator"
+            },
+            "datasource": "$datasource",
+            "hide": 0,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "deployment",
+            "options": [],
+            "query": "label_values(kube_deployment_metadata_generation{namespace=\"$namespace\"}, deployment)",
+            "refresh": 1,
+            "regex": "",
+            "sort": 1,
+            "tagValuesQuery": null,
+            "tags": [],
+            "tagsQuery": null,
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": [
+          "5s",
+          "10s",
+          "30s",
+          "1m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "2h",
+          "1d"
+        ],
+        "time_options": [
+          "5m",
+          "15m",
+          "1h",
+          "6h",
+          "12h",
+          "24h",
+          "2d",
+          "7d",
+          "30d"
+        ]
+      },
+      "timezone": "browser",
+      "title": "Kubernetes Deployments",
+      "version": 20
+    }
+    ,
+      "inputs": [
+        {
+          "name": "DS_PROMETHEUS",
+          "pluginId": "prometheus",
+          "type": "datasource",
+          "value": "prometheus"
+        }
+      ],
+      "overwrite": true
+    }
+  kubernetes-pod-dashboard.json: |
+    {
+      "dashboard":
+    {
+      "annotations": {
+        "list": []
+      },
+      "description": "Summary metrics about Pods running on Kubernetes nodes.",
+      "editable": true,
+      "gnetId": 482,
+      "graphTooltip": 1,
+      "hideControls": false,
+      "id": null,
+      "links": [
+        {
+          "asDropdown": true,
+          "icon": "external link",
+          "includeVars": true,
+          "tags": [
+            "kubernetes-app"
+          ],
+          "title": "Dashboards",
+          "type": "dashboards"
+        }
+      ],
+      "refresh": "10s",
+      "rows": [
+        {
+          "collapse": false,
+          "height": 355,
+          "panels": [
+            {
+              "alerting": {},
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {},
+              "id": 6,
+              "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "hideEmpty": true,
+                "hideZero": false,
+                "max": true,
+                "min": false,
+                "rightSide": true,
+                "show": true,
+                "sideWidth": null,
+                "sort": "current",
+                "sortDesc": true,
+                "total": false,
+                "values": true
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 6,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "span": 6,
+              "stack": true,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "sum by (container_name)(rate(cluster_namespace_controller_pod_container:cpu_usage:rate{container_name!=\"POD\",pod_name=~\"$pod\"}[$interval] ) )",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{ container_name }}",
+                  "refId": "A",
+                  "step": 4,
+                  "target": "groupByNode(exclude(perSecond(snap.$cluster.$node.intel.docker.$namespace.$pod.$container.stats.cgroups.cpu_stats.cpu_usage.total_usage), 'POD'), 7, 'sum')",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "CPU Usage (per container)",
+              "tooltip": {
+                "msResolution": false,
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "transparent": false,
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            },
+            {
+              "alerting": {},
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {},
+              "id": 1,
+              "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "hideEmpty": false,
+                "max": true,
+                "min": false,
+                "rightSide": true,
+                "show": true,
+                "sideWidth": null,
+                "sortDesc": true,
+                "total": false,
+                "values": true
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 6,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "span": 6,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "sum by(container_name) (cluster_namespace_controller_pod_container:memory_usage:bytes{container_name!=\"POD\",pod_name=~\"$pod\"})",
+                  "hide": false,
+                  "intervalFactor": 1,
+                  "legendFormat": " {{ container_name }}",
+                  "refId": "A",
+                  "step": 2,
+                  "target": "groupByNode(exclude(averageAbove(snap.$cluster.$node.intel.docker.$namespace.$pod.$container.stats.cgroups.memory_stats.usage.usage, 0), 'POD'), 7, 'sum')",
+                  "textEditor": false
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Total Memory Usage (per container)",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "decbytes",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            },
+            {
+              "alerting": {},
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "$datasource",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {},
+              "id": 2,
+              "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "hideEmpty": true,
+                "max": false,
+                "min": false,
+                "rightSide": true,
+                "show": true,
+                "sortDesc": true,
+                "total": false,
+                "values": true
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 6,
+              "nullPointMode": "null as zero",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "sum by(pod_name) (rate(container_network_receive_bytes_total{pod_name=~\"$pod.*\"}[$interval]))",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{ pod_name }} Received",
+                  "refId": "A",
+                  "step": 2,
+                  "target": "groupByNode(exclude(perSecond(snap.$cluster.$node.intel.docker.$namespace.$pod.$container.stats.network.*.rx_bytes), 'POD'), 7, 'sum')",
+                  "textEditor": false
+                },
+                {
+                  "expr": "-sum by(pod_name)  (rate(container_network_transmit_bytes_total{pod_name=~\"$pod.*\"}[$interval]))",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{ pod_name }} Sent",
+                  "refId": "B",
+                  "step": 2
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Network Traffic (per pod)",
+              "tooltip": {
+                "msResolution": false,
+                "shared": false,
+                "sort": 0,
+                "value_type": "cumulative"
+              },
+              "transparent": false,
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "decbytes",
+                  "label": null,
                   "logBase": 1,
                   "max": null,
                   "min": null,
@@ -1582,1343 +3077,342 @@ data:
                   "min": null,
                   "show": false
                 }
-              ],
-              "transparent": false
-            }
-          ],
-          "title": "New row",
-          "showTitle": false
-        }
-      ],
-      "time": {
-        "from": "now-6h",
-        "to": "now"
-      },
-      "timepicker": {
-        "refresh_intervals": [
-          "5s",
-          "10s",
-          "30s",
-          "1m",
-          "5m",
-          "15m",
-          "30m",
-          "1h",
-          "2h",
-          "1d"
-        ],
-        "time_options": [
-          "5m",
-          "15m",
-          "1h",
-          "6h",
-          "12h",
-          "24h",
-          "2d",
-          "7d",
-          "30d"
-        ]
-      },
-      "templating": {
-        "list": [
-          {
-            "allValue": ".*",
-            "current": {},
-            "datasource": "${DS_PROMETHEUS}",
-            "hide": 0,
-            "includeAll": false,
-            "label": "Namespace",
-            "multi": false,
-            "name": "deployment_namespace",
-            "options": [],
-            "query": "label_values(kube_deployment_metadata_generation, namespace)",
-            "refresh": 1,
-            "regex": "",
-            "sort": 0,
-            "tagValuesQuery": null,
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          },
-          {
-            "allValue": null,
-            "current": {},
-            "datasource": "${DS_PROMETHEUS}",
-            "hide": 0,
-            "includeAll": false,
-            "label": "Deployment",
-            "multi": false,
-            "name": "deployment_name",
-            "options": [],
-            "query": "label_values(kube_deployment_metadata_generation{namespace=\"$deployment_namespace\"}, deployment)",
-            "refresh": 1,
-            "regex": "",
-            "sort": 0,
-            "tagValuesQuery": "",
-            "tagsQuery": "deployment",
-            "type": "query",
-            "useTags": false
-          }
-        ]
-      },
-      "annotations": {
-        "list": []
-      },
-      "schemaVersion": 12,
-      "version": 2,
-      "links": [],
-      "gnetId": null
-    },
-        "inputs": [
-            {
-                "name": "DS_PROMETHEUS",
-                "pluginId": "prometheus",
-                "type": "datasource",
-                "value": "prometheus"
-            }
-        ],
-        "overwrite": true
-    }
-  kubernetes-pods-dashboard.json: |
-    {
-        "dashboard": {
-            "__inputs": [
-                {
-                    "description": "",
-                    "label": "prometheus",
-                    "name": "DS_PROMETHEUS",
-                    "pluginId": "prometheus",
-                    "pluginName": "Prometheus",
-                    "type": "datasource"
-                }
-            ],
-            "__requires": [
-                {
-                    "id": "graph",
-                    "name": "Graph",
-                    "type": "panel",
-                    "version": ""
-                },
-                {
-                    "id": "grafana",
-                    "name": "Grafana",
-                    "type": "grafana",
-                    "version": "3.1.1"
-                },
-                {
-                    "id": "prometheus",
-                    "name": "Prometheus",
-                    "type": "datasource",
-                    "version": "1.0.0"
-                }
-            ],
-            "annotations": {
-                "list": []
-            },
-            "editable": true,
-            "gnetId": null,
-            "hideControls": false,
-            "id": null,
-            "links": [],
-            "rows": [
-                {
-                    "collapse": false,
-                    "editable": true,
-                    "height": "250px",
-                    "panels": [
-                        {
-                            "aliasColors": {},
-                            "bars": false,
-                            "datasource": "${DS_PROMETHEUS}",
-                            "editable": true,
-                            "error": false,
-                            "fill": 1,
-                            "grid": {
-                                "threshold1": null,
-                                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                                "threshold2": null,
-                                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-                            },
-                            "id": 1,
-                            "isNew": true,
-                            "legend": {
-                                "alignAsTable": true,
-                                "avg": true,
-                                "current": true,
-                                "max": false,
-                                "min": false,
-                                "rightSide": true,
-                                "show": true,
-                                "total": false,
-                                "values": true
-                            },
-                            "lines": true,
-                            "linewidth": 2,
-                            "links": [],
-                            "nullPointMode": "connected",
-                            "percentage": false,
-                            "pointradius": 5,
-                            "points": false,
-                            "renderer": "flot",
-                            "seriesOverrides": [],
-                            "span": 12,
-                            "stack": false,
-                            "steppedLine": false,
-                            "targets": [
-                                {
-                                    "expr": "sum by(container_name) (container_memory_usage_bytes{pod_name=\"$pod\", container_name=~\"$container\", container_name!=\"POD\"})",
-                                    "interval": "10s",
-                                    "intervalFactor": 1,
-                                    "legendFormat": "Current: {{ container_name }}",
-                                    "metric": "container_memory_usage_bytes",
-                                    "refId": "A",
-                                    "step": 10
-                                },
-                                {
-                                    "expr": "kube_pod_container_requested_memory_bytes{pod=\"$pod\", container=~\"$container\"}",
-                                    "interval": "10s",
-                                    "intervalFactor": 2,
-                                    "legendFormat": "Requested: {{ container }}",
-                                    "metric": "kube_pod_container_requested_memory_bytes",
-                                    "refId": "B",
-                                    "step": 20
-                                }
-                            ],
-                            "timeFrom": null,
-                            "timeShift": null,
-                            "title": "Memory Usage",
-                            "tooltip": {
-                                "msResolution": true,
-                                "shared": true,
-                                "sort": 0,
-                                "value_type": "cumulative"
-                            },
-                            "type": "graph",
-                            "xaxis": {
-                                "show": true
-                            },
-                            "yaxes": [
-                                {
-                                    "format": "bytes",
-                                    "label": null,
-                                    "logBase": 1,
-                                    "max": null,
-                                    "min": null,
-                                    "show": true
-                                },
-                                {
-                                    "format": "short",
-                                    "label": null,
-                                    "logBase": 1,
-                                    "max": null,
-                                    "min": null,
-                                    "show": true
-                                }
-                            ]
-                        }
-                    ],
-                    "title": "Row"
-                },
-                {
-                    "collapse": false,
-                    "editable": true,
-                    "height": "250px",
-                    "panels": [
-                        {
-                            "aliasColors": {},
-                            "bars": false,
-                            "datasource": "${DS_PROMETHEUS}",
-                            "editable": true,
-                            "error": false,
-                            "fill": 1,
-                            "grid": {
-                                "threshold1": null,
-                                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                                "threshold2": null,
-                                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-                            },
-                            "id": 2,
-                            "isNew": true,
-                            "legend": {
-                                "alignAsTable": true,
-                                "avg": true,
-                                "current": true,
-                                "max": false,
-                                "min": false,
-                                "rightSide": true,
-                                "show": true,
-                                "total": false,
-                                "values": true
-                            },
-                            "lines": true,
-                            "linewidth": 2,
-                            "links": [],
-                            "nullPointMode": "connected",
-                            "percentage": false,
-                            "pointradius": 5,
-                            "points": false,
-                            "renderer": "flot",
-                            "seriesOverrides": [],
-                            "span": 12,
-                            "stack": false,
-                            "steppedLine": false,
-                            "targets": [
-                                {
-                                    "expr": "sum by (container_name)( rate(container_cpu_usage_seconds_total{image!=\"\",container_name!=\"POD\",pod_name=\"$pod\"}[1m] ) )",
-                                    "intervalFactor": 2,
-                                    "legendFormat": "{{ container_name }}",
-                                    "refId": "A",
-                                    "step": 30
-                                }
-                            ],
-                            "timeFrom": null,
-                            "timeShift": null,
-                            "title": "CPU Usage",
-                            "tooltip": {
-                                "msResolution": true,
-                                "shared": true,
-                                "sort": 0,
-                                "value_type": "cumulative"
-                            },
-                            "type": "graph",
-                            "xaxis": {
-                                "show": true
-                            },
-                            "yaxes": [
-                                {
-                                    "format": "short",
-                                    "label": null,
-                                    "logBase": 1,
-                                    "max": null,
-                                    "min": null,
-                                    "show": true
-                                },
-                                {
-                                    "format": "short",
-                                    "label": null,
-                                    "logBase": 1,
-                                    "max": null,
-                                    "min": null,
-                                    "show": true
-                                }
-                            ]
-                        }
-                    ],
-                    "title": "New row"
-                },
-                {
-                    "collapse": false,
-                    "editable": true,
-                    "height": "250px",
-                    "panels": [
-                        {
-                            "aliasColors": {},
-                            "bars": false,
-                            "datasource": "${DS_PROMETHEUS}",
-                            "editable": true,
-                            "error": false,
-                            "fill": 1,
-                            "grid": {
-                                "threshold1": null,
-                                "threshold1Color": "rgba(216, 200, 27, 0.27)",
-                                "threshold2": null,
-                                "threshold2Color": "rgba(234, 112, 112, 0.22)"
-                            },
-                            "id": 3,
-                            "isNew": true,
-                            "legend": {
-                                "alignAsTable": true,
-                                "avg": true,
-                                "current": true,
-                                "max": false,
-                                "min": false,
-                                "rightSide": true,
-                                "show": true,
-                                "total": false,
-                                "values": true
-                            },
-                            "lines": true,
-                            "linewidth": 2,
-                            "links": [],
-                            "nullPointMode": "connected",
-                            "percentage": false,
-                            "pointradius": 5,
-                            "points": false,
-                            "renderer": "flot",
-                            "seriesOverrides": [],
-                            "span": 12,
-                            "stack": false,
-                            "steppedLine": false,
-                            "targets": [
-                                {
-                                    "expr": "sort_desc(sum by (pod_name) (rate (container_network_receive_bytes_total{pod_name=\"$pod\"}[1m]) ))",
-                                    "intervalFactor": 2,
-                                    "legendFormat": "{{ pod_name }}",
-                                    "refId": "A",
-                                    "step": 30
-                                }
-                            ],
-                            "timeFrom": null,
-                            "timeShift": null,
-                            "title": "Network I/O",
-                            "tooltip": {
-                                "msResolution": true,
-                                "shared": true,
-                                "sort": 0,
-                                "value_type": "cumulative"
-                            },
-                            "type": "graph",
-                            "xaxis": {
-                                "show": true
-                            },
-                            "yaxes": [
-                                {
-                                    "format": "bytes",
-                                    "label": null,
-                                    "logBase": 1,
-                                    "max": null,
-                                    "min": null,
-                                    "show": true
-                                },
-                                {
-                                    "format": "short",
-                                    "label": null,
-                                    "logBase": 1,
-                                    "max": null,
-                                    "min": null,
-                                    "show": true
-                                }
-                            ]
-                        }
-                    ],
-                    "title": "New row"
-                }
-            ],
-            "schemaVersion": 12,
-            "sharedCrosshair": true,
-            "style": "dark",
-            "tags": [],
-            "templating": {
-                "list": [
-                    {
-                        "allValue": ".*",
-                        "current": {},
-                        "datasource": "${DS_PROMETHEUS}",
-                        "hide": 0,
-                        "includeAll": true,
-                        "label": "Namespace",
-                        "multi": false,
-                        "name": "namespace",
-                        "options": [],
-                        "query": "label_values(kube_pod_info, namespace)",
-                        "refresh": 1,
-                        "regex": "",
-                        "type": "query"
-                    },
-                    {
-                        "current": {},
-                        "datasource": "${DS_PROMETHEUS}",
-                        "hide": 0,
-                        "includeAll": false,
-                        "label": "Pod",
-                        "multi": false,
-                        "name": "pod",
-                        "options": [],
-                        "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
-                        "refresh": 1,
-                        "regex": "",
-                        "type": "query"
-                    },
-                    {
-                        "allValue": ".*",
-                        "current": {},
-                        "datasource": "${DS_PROMETHEUS}",
-                        "hide": 0,
-                        "includeAll": true,
-                        "label": "Container",
-                        "multi": false,
-                        "name": "container",
-                        "options": [],
-                        "query": "label_values(kube_pod_container_info{namespace=\"$namespace\", pod=\"$pod\"}, container)",
-                        "refresh": 1,
-                        "regex": "",
-                        "type": "query"
-                    }
-                ]
-            },
-            "time": {
-                "from": "now-6h",
-                "to": "now"
-            },
-            "timepicker": {
-                "refresh_intervals": [
-                    "5s",
-                    "10s",
-                    "30s",
-                    "1m",
-                    "5m",
-                    "15m",
-                    "30m",
-                    "1h",
-                    "2h",
-                    "1d"
-                ],
-                "time_options": [
-                    "5m",
-                    "15m",
-                    "1h",
-                    "6h",
-                    "12h",
-                    "24h",
-                    "2d",
-                    "7d",
-                    "30d"
-                ]
-            },
-            "timezone": "browser",
-            "title": "Pods",
-            "version": 26
-        },
-        "inputs": [
-            {
-                "name": "DS_PROMETHEUS",
-                "pluginId": "prometheus",
-                "type": "datasource",
-                "value": "prometheus"
-            }
-        ],
-        "overwrite": true
-    }
-  node-dashboard.json: |
-    {
-      "dashboard":
-    {
-      "__inputs": [
-        {
-          "name": "DS_PROMETHEUS",
-          "label": "prometheus",
-          "description": "",
-          "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
-        }
-      ],
-      "__requires": [
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "4.1.1"
-        },
-        {
-          "type": "panel",
-          "id": "graph",
-          "name": "Graph",
-          "version": ""
-        },
-        {
-          "type": "datasource",
-          "id": "prometheus",
-          "name": "Prometheus",
-          "version": "1.0.0"
-        },
-        {
-          "type": "panel",
-          "id": "singlestat",
-          "name": "Singlestat",
-          "version": ""
-        }
-      ],
-      "annotations": {
-        "list": []
-      },
-      "description": "Dashboard to get an overview of one server",
-      "editable": true,
-      "gnetId": 22,
-      "graphTooltip": 0,
-      "hideControls": false,
-      "id": null,
-      "links": [],
-      "refresh": false,
-      "rows": [
-        {
-          "collapse": false,
-          "height": "250px",
-          "panels": [
-            {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 3,
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
-              },
-              "lines": true,
-              "linewidth": 2,
-              "links": [],
-              "nullPointMode": "connected",
-              "percentage": false,
-              "pointradius": 5,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [],
-              "span": 6,
-              "stack": false,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "expr": "100 - (avg by (cpu) (irate(node_cpu{mode=\"idle\", instance=\"$server\"}[5m])) * 100)",
-                  "hide": false,
-                  "intervalFactor": 10,
-                  "legendFormat": "{{cpu}}",
-                  "refId": "A",
-                  "step": 50
-                }
-              ],
-              "thresholds": [],
-              "timeFrom": null,
-              "timeShift": null,
-              "title": "Idle cpu",
-              "tooltip": {
-                "msResolution": false,
-                "shared": true,
-                "sort": 0,
-                "value_type": "cumulative"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "name": null,
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "percent",
-                  "label": "cpu usage",
-                  "logBase": 1,
-                  "max": 100,
-                  "min": 0,
-                  "show": true
-                },
-                {
-                  "format": "short",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                }
-              ]
-            },
-            {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 9,
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
-              },
-              "lines": true,
-              "linewidth": 2,
-              "links": [],
-              "nullPointMode": "connected",
-              "percentage": false,
-              "pointradius": 5,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [],
-              "span": 6,
-              "stack": false,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "expr": "node_load1{instance=\"$server\"}",
-                  "intervalFactor": 4,
-                  "legendFormat": "load 1m",
-                  "refId": "A",
-                  "step": 20,
-                  "target": ""
-                },
-                {
-                  "expr": "node_load5{instance=\"$server\"}",
-                  "intervalFactor": 4,
-                  "legendFormat": "load 5m",
-                  "refId": "B",
-                  "step": 20,
-                  "target": ""
-                },
-                {
-                  "expr": "node_load15{instance=\"$server\"}",
-                  "intervalFactor": 4,
-                  "legendFormat": "load 15m",
-                  "refId": "C",
-                  "step": 20,
-                  "target": ""
-                }
-              ],
-              "thresholds": [],
-              "timeFrom": null,
-              "timeShift": null,
-              "title": "System load",
-              "tooltip": {
-                "msResolution": false,
-                "shared": true,
-                "sort": 0,
-                "value_type": "cumulative"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "name": null,
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "percentunit",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                },
-                {
-                  "format": "short",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                }
               ]
             }
           ],
           "repeat": null,
           "repeatIteration": null,
           "repeatRowId": null,
-          "showTitle": false,
-          "title": "New row",
+          "showTitle": true,
+          "title": "General",
           "titleSize": "h6"
         },
         {
           "collapse": false,
-          "height": "250px",
+          "height": 439,
           "panels": [
             {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 4,
-              "legend": {
-                "alignAsTable": false,
-                "avg": false,
-                "current": false,
-                "hideEmpty": false,
-                "hideZero": false,
-                "max": false,
-                "min": false,
-                "rightSide": false,
-                "show": true,
-                "total": false,
-                "values": false
-              },
-              "lines": true,
-              "linewidth": 2,
-              "links": [],
-              "nullPointMode": "connected",
-              "percentage": false,
-              "pointradius": 5,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [
+              "columns": [
                 {
-                  "alias": "node_memory_SwapFree{instance=\"172.17.0.1:9100\",job=\"prometheus\"}",
-                  "yaxis": 2
+                  "text": "Current",
+                  "value": "current"
                 }
               ],
-              "span": 9,
-              "stack": true,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "expr": "node_memory_MemTotal{instance=\"$server\"} - node_memory_MemFree{instance=\"$server\"} - node_memory_Buffers{instance=\"$server\"} - node_memory_Cached{instance=\"$server\"}",
-                  "hide": false,
-                  "interval": "",
-                  "intervalFactor": 2,
-                  "legendFormat": "memory used",
-                  "metric": "",
-                  "refId": "C",
-                  "step": 4
-                },
-                {
-                  "expr": "node_memory_Buffers{instance=\"$server\"}",
-                  "interval": "",
-                  "intervalFactor": 2,
-                  "legendFormat": "memory buffers",
-                  "metric": "",
-                  "refId": "E",
-                  "step": 4
-                },
-                {
-                  "expr": "node_memory_Cached{instance=\"$server\"}",
-                  "intervalFactor": 2,
-                  "legendFormat": "memory cached",
-                  "metric": "",
-                  "refId": "F",
-                  "step": 4
-                },
-                {
-                  "expr": "node_memory_MemFree{instance=\"$server\"}",
-                  "intervalFactor": 2,
-                  "legendFormat": "memory free",
-                  "metric": "",
-                  "refId": "D",
-                  "step": 4
-                }
-              ],
-              "thresholds": [],
-              "timeFrom": null,
-              "timeShift": null,
-              "title": "Memory usage",
-              "tooltip": {
-                "msResolution": false,
-                "shared": true,
-                "sort": 0,
-                "value_type": "individual"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "name": null,
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "bytes",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": "0",
-                  "show": true
-                },
-                {
-                  "format": "short",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                }
-              ]
-            },
-            {
-              "cacheTimeout": null,
-              "colorBackground": false,
-              "colorValue": false,
-              "colors": [
-                "rgba(50, 172, 45, 0.97)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(245, 54, 54, 0.9)"
-              ],
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "format": "percent",
-              "gauge": {
-                "maxValue": 100,
-                "minValue": 0,
-                "show": true,
-                "thresholdLabels": false,
-                "thresholdMarkers": true
-              },
-              "id": 5,
-              "interval": null,
-              "links": [],
-              "mappingType": 1,
-              "mappingTypes": [
-                {
-                  "name": "value to text",
-                  "value": 1
-                },
-                {
-                  "name": "range to text",
-                  "value": 2
-                }
-              ],
-              "maxDataPoints": 100,
-              "nullPointMode": "connected",
-              "nullText": null,
-              "postfix": "",
-              "postfixFontSize": "50%",
-              "prefix": "",
-              "prefixFontSize": "50%",
-              "rangeMaps": [
-                {
-                  "from": "null",
-                  "text": "N/A",
-                  "to": "null"
-                }
-              ],
-              "span": 3,
-              "sparkline": {
-                "fillColor": "rgba(31, 118, 189, 0.18)",
-                "full": false,
-                "lineColor": "rgb(31, 120, 193)",
-                "show": false
-              },
-              "targets": [
-                {
-                  "expr": "((node_memory_MemTotal{instance=\"$server\"} - node_memory_MemFree{instance=\"$server\"}  - node_memory_Buffers{instance=\"$server\"} - node_memory_Cached{instance=\"$server\"}) / node_memory_MemTotal{instance=\"$server\"}) * 100",
-                  "intervalFactor": 2,
-                  "refId": "A",
-                  "step": 60,
-                  "target": ""
-                }
-              ],
-              "thresholds": "80, 90",
-              "title": "Memory usage",
-              "type": "singlestat",
-              "valueFontSize": "80%",
-              "valueMaps": [
-                {
-                  "op": "=",
-                  "text": "N/A",
-                  "value": "null"
-                }
-              ],
-              "valueName": "avg"
-            }
-          ],
-          "repeat": null,
-          "repeatIteration": null,
-          "repeatRowId": null,
-          "showTitle": false,
-          "title": "New row",
-          "titleSize": "h6"
-        },
-        {
-          "collapse": false,
-          "height": "250px",
-          "panels": [
-            {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 6,
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
-              },
-              "lines": true,
-              "linewidth": 2,
-              "links": [],
-              "nullPointMode": "connected",
-              "percentage": false,
-              "pointradius": 5,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [
-                {
-                  "alias": "read",
-                  "yaxis": 1
-                },
-                {
-                  "alias": "{instance=\"172.17.0.1:9100\"}",
-                  "yaxis": 2
-                },
-                {
-                  "alias": "io time",
-                  "yaxis": 2
-                }
-              ],
-              "span": 9,
-              "stack": false,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "expr": "sum by (instance) (rate(node_disk_bytes_read{instance=\"$server\"}[2m]))",
-                  "hide": false,
-                  "intervalFactor": 4,
-                  "legendFormat": "read",
-                  "refId": "A",
-                  "step": 8,
-                  "target": ""
-                },
-                {
-                  "expr": "sum by (instance) (rate(node_disk_bytes_written{instance=\"$server\"}[2m]))",
-                  "intervalFactor": 4,
-                  "legendFormat": "written",
-                  "refId": "B",
-                  "step": 8
-                },
-                {
-                  "expr": "sum by (instance) (rate(node_disk_io_time_ms{instance=\"$server\"}[2m]))",
-                  "intervalFactor": 4,
-                  "legendFormat": "io time",
-                  "refId": "C",
-                  "step": 8
-                }
-              ],
-              "thresholds": [],
-              "timeFrom": null,
-              "timeShift": null,
-              "title": "Disk I/O",
-              "tooltip": {
-                "msResolution": false,
-                "shared": true,
-                "sort": 0,
-                "value_type": "cumulative"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "name": null,
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "bytes",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                },
-                {
-                  "format": "ms",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                }
-              ]
-            },
-            {
-              "cacheTimeout": null,
-              "colorBackground": false,
-              "colorValue": false,
-              "colors": [
-                "rgba(50, 172, 45, 0.97)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(245, 54, 54, 0.9)"
-              ],
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "format": "percentunit",
-              "gauge": {
-                "maxValue": 1,
-                "minValue": 0,
-                "show": true,
-                "thresholdLabels": false,
-                "thresholdMarkers": true
-              },
+              "datasource": "prometheus",
+              "fontSize": "100%",
               "id": 7,
-              "interval": null,
               "links": [],
-              "mappingType": 1,
-              "mappingTypes": [
-                {
-                  "name": "value to text",
-                  "value": 1
-                },
-                {
-                  "name": "range to text",
-                  "value": 2
-                }
-              ],
-              "maxDataPoints": 100,
-              "nullPointMode": "connected",
-              "nullText": null,
-              "postfix": "",
-              "postfixFontSize": "50%",
-              "prefix": "",
-              "prefixFontSize": "50%",
-              "rangeMaps": [
-                {
-                  "from": "null",
-                  "text": "N/A",
-                  "to": "null"
-                }
-              ],
-              "span": 3,
-              "sparkline": {
-                "fillColor": "rgba(31, 118, 189, 0.18)",
-                "full": false,
-                "lineColor": "rgb(31, 120, 193)",
-                "show": false
+              "minSpan": 4,
+              "pageSize": null,
+              "scroll": true,
+              "showHeader": true,
+              "sort": {
+                "col": 0,
+                "desc": true
               },
+              "span": 4,
+              "styles": [
+                {
+                  "colorMode": null,
+                  "colors": [
+                    "rgba(245, 54, 54, 0.9)",
+                    "rgba(237, 129, 40, 0.89)",
+                    "rgba(50, 172, 45, 0.97)"
+                  ],
+                  "decimals": 2,
+                  "pattern": "/.*/",
+                  "thresholds": [
+                    "10000000",
+                    " 25000000"
+                  ],
+                  "type": "number",
+                  "unit": "decbytes"
+                }
+              ],
               "targets": [
                 {
-                  "expr": "(sum(node_filesystem_size{device!=\"rootfs\",instance=\"$server\"}) - sum(node_filesystem_free{device!=\"rootfs\",instance=\"$server\"})) / sum(node_filesystem_size{device!=\"rootfs\",instance=\"$server\"})",
+                  "expr": "cluster_namespace_controller_pod_container:memory_usage:bytes{container_name!=\"POD\",pod_name=~\"$pod\"}",
                   "intervalFactor": 2,
+                  "legendFormat": "{{ container_name }}",
                   "refId": "A",
-                  "step": 60,
-                  "target": ""
+                  "step": 4
                 }
               ],
-              "thresholds": "0.75, 0.9",
-              "title": "Disk space usage",
-              "type": "singlestat",
-              "valueFontSize": "80%",
-              "valueMaps": [
-                {
-                  "op": "=",
-                  "text": "N/A",
-                  "value": "null"
-                }
-              ],
-              "valueName": "current"
-            }
-          ],
-          "repeat": null,
-          "repeatIteration": null,
-          "repeatRowId": null,
-          "showTitle": false,
-          "title": "New row",
-          "titleSize": "h6"
-        },
-        {
-          "collapse": false,
-          "height": "250px",
-          "panels": [
-            {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 8,
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
-              },
-              "lines": true,
-              "linewidth": 2,
-              "links": [],
-              "nullPointMode": "connected",
-              "percentage": false,
-              "pointradius": 5,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [
-                {
-                  "alias": "transmitted ",
-                  "yaxis": 2
-                }
-              ],
-              "span": 6,
-              "stack": false,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "expr": "rate(node_network_receive_bytes{instance=\"$server\",device!~\"lo\"}[5m])",
-                  "hide": false,
-                  "intervalFactor": 2,
-                  "legendFormat": "{{device}}",
-                  "refId": "A",
-                  "step": 10,
-                  "target": ""
-                }
-              ],
-              "thresholds": [],
-              "timeFrom": null,
-              "timeShift": null,
-              "title": "Network received",
-              "tooltip": {
-                "msResolution": false,
-                "shared": true,
-                "sort": 0,
-                "value_type": "cumulative"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "name": null,
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "bytes",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                },
-                {
-                  "format": "bytes",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                }
-              ]
+              "title": "Memory Usage",
+              "transform": "timeseries_aggregations",
+              "type": "table"
             },
             {
-              "alerting": {},
-              "aliasColors": {},
-              "bars": false,
-              "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
-              "error": false,
-              "fill": 1,
-              "grid": {},
-              "id": 10,
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
-              },
-              "lines": true,
-              "linewidth": 2,
-              "links": [],
-              "nullPointMode": "connected",
-              "percentage": false,
-              "pointradius": 5,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [
+              "columns": [
                 {
-                  "alias": "transmitted ",
-                  "yaxis": 2
+                  "text": "Current",
+                  "value": "current"
                 }
               ],
-              "span": 6,
-              "stack": false,
-              "steppedLine": false,
+              "datasource": "$datasource",
+              "fontSize": "100%",
+              "id": 8,
+              "links": [],
+              "minSpan": 4,
+              "pageSize": null,
+              "scroll": true,
+              "showHeader": true,
+              "sort": {
+                "col": 1,
+                "desc": true
+              },
+              "span": 4,
+              "styles": [
+                {
+                  "colorMode": "cell",
+                  "colors": [
+                    "rgba(50, 172, 45, 0.97)",
+                    "rgba(237, 129, 40, 0.89)",
+                    "rgba(245, 54, 54, 0.9)"
+                  ],
+                  "decimals": 2,
+                  "pattern": "/.*/",
+                  "thresholds": [
+                    "80",
+                    "90"
+                  ],
+                  "type": "number",
+                  "unit": "percent"
+                }
+              ],
               "targets": [
                 {
-                  "expr": "rate(node_network_transmit_bytes{instance=\"$server\",device!~\"lo\"}[5m])",
+                  "expr": "sum(100 - ((cluster_namespace_controller_pod_container:spec_memory_limit_bytes{container_name!=\"POD\",pod_name=~\"$pod\"} - cluster_namespace_controller_pod_container:memory_usage:bytes{container_name!=\"POD\",pod_name=~\"$pod\"})  * 100 / cluster_namespace_controller_pod_container:spec_memory_limit_bytes{container_name!=\"POD\",pod_name=~\"$pod\"}) ) by (pod_name) ",
                   "hide": false,
                   "intervalFactor": 2,
-                  "legendFormat": "{{device}}",
-                  "refId": "B",
-                  "step": 10,
-                  "target": ""
+                  "legendFormat": "{{pod_name}}",
+                  "refId": "A",
+                  "step": 4
                 }
               ],
-              "thresholds": [],
-              "timeFrom": null,
-              "timeShift": null,
-              "title": "Network transmitted",
-              "tooltip": {
-                "msResolution": false,
-                "shared": true,
-                "sort": 0,
-                "value_type": "cumulative"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "name": null,
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
+              "title": "Memory usage (in percent of limit)",
+              "transform": "timeseries_aggregations",
+              "type": "table"
+            },
+            {
+              "columns": [
                 {
-                  "format": "bytes",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
-                },
-                {
-                  "format": "bytes",
-                  "label": null,
-                  "logBase": 1,
-                  "max": null,
-                  "min": null,
-                  "show": true
+                  "text": "Current",
+                  "value": "current"
                 }
-              ]
+              ],
+              "datasource": "$datasource",
+              "fontSize": "100%",
+              "id": 9,
+              "links": [],
+              "minSpan": 4,
+              "pageSize": null,
+              "scroll": true,
+              "showHeader": true,
+              "sort": {
+                "col": 0,
+                "desc": true
+              },
+              "span": 4,
+              "styles": [
+                {
+                  "colorMode": "cell",
+                  "colors": [
+                    "rgba(245, 54, 54, 0.9)",
+                    "rgba(237, 129, 40, 0.89)",
+                    "rgba(50, 172, 45, 0.97)"
+                  ],
+                  "decimals": 2,
+                  "pattern": "/.*/",
+                  "thresholds": [
+                    "0",
+                    "0",
+                    "1"
+                  ],
+                  "type": "number",
+                  "unit": "short"
+                }
+              ],
+              "targets": [
+                {
+                  "expr": "cluster_namespace_controller_pod_container:memory_oom:rate{container_name!=\"POD\", pod_name=~\"$pod\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{ container_name  }}",
+                  "refId": "A",
+                  "step": 4
+                }
+              ],
+              "title": "Out-of-memory",
+              "transform": "timeseries_aggregations",
+              "type": "table"
             }
           ],
           "repeat": null,
           "repeatIteration": null,
           "repeatRowId": null,
-          "showTitle": false,
-          "title": "New row",
+          "showTitle": true,
+          "title": "Memory",
           "titleSize": "h6"
         }
       ],
       "schemaVersion": 14,
       "style": "dark",
       "tags": [
-        "prometheus"
+        "kubernetes"
       ],
       "templating": {
         "list": [
           {
-            "allValue": null,
-            "current": {},
-            "datasource": "${DS_PROMETHEUS}",
+            "current": {
+              "text": "prometheus",
+              "value": "prometheus"
+            },
+            "hide": 2,
+            "label": "",
+            "name": "datasource",
+            "options": [],
+            "query": "prometheus",
+            "refresh": 1,
+            "regex": "",
+            "type": "datasource"
+          },
+          {
+            "auto": true,
+            "auto_count": 30,
+            "auto_min": "30s",
+            "current": {
+              "text": "3m",
+              "value": "3m"
+            },
             "hide": 0,
-            "includeAll": false,
+            "label": "Interval",
+            "name": "interval",
+            "options": [
+              {
+                "selected": false,
+                "text": "auto",
+                "value": "$__auto_interval"
+              },
+              {
+                "selected": false,
+                "text": "30s",
+                "value": "30s"
+              },
+              {
+                "selected": false,
+                "text": "1m",
+                "value": "1m"
+              },
+              {
+                "selected": false,
+                "text": "2m",
+                "value": "2m"
+              },
+              {
+                "selected": true,
+                "text": "3m",
+                "value": "3m"
+              },
+              {
+                "selected": false,
+                "text": "5m",
+                "value": "5m"
+              },
+              {
+                "selected": false,
+                "text": "7m",
+                "value": "7m"
+              },
+              {
+                "selected": false,
+                "text": "10m",
+                "value": "10m"
+              },
+              {
+                "selected": false,
+                "text": "30m",
+                "value": "30m"
+              },
+              {
+                "selected": false,
+                "text": "1h",
+                "value": "1h"
+              },
+              {
+                "selected": false,
+                "text": "6h",
+                "value": "6h"
+              },
+              {
+                "selected": false,
+                "text": "12h",
+                "value": "12h"
+              },
+              {
+                "selected": false,
+                "text": "1d",
+                "value": "1d"
+              },
+              {
+                "selected": false,
+                "text": "7d",
+                "value": "7d"
+              },
+              {
+                "selected": false,
+                "text": "14d",
+                "value": "14d"
+              },
+              {
+                "selected": false,
+                "text": "30d",
+                "value": "30d"
+              }
+            ],
+            "query": "30s,1m,2m,3m,5m,7m,10m,30m,1h,6h,12h,1d,7d,14d,30d",
+            "refresh": 2,
+            "type": "interval"
+          },
+          {
+            "allValue": null,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            },
+            "datasource": "$datasource",
+            "hide": 0,
+            "includeAll": true,
             "label": null,
             "multi": false,
-            "name": "server",
+            "name": "namespace",
             "options": [],
-            "query": "label_values(node_boot_time, instance)",
+            "query": "label_values(kube_pod_info, namespace)",
             "refresh": 1,
             "regex": "",
             "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            },
+            "datasource": "$datasource",
+            "hide": 0,
+            "includeAll": true,
+            "label": null,
+            "multi": false,
+            "name": "pod",
+            "options": [],
+            "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
+            "refresh": 1,
+            "regex": "",
+            "sort": 1,
             "tagValuesQuery": "",
             "tags": [],
             "tagsQuery": "",
@@ -2928,7 +3422,7 @@ data:
         ]
       },
       "time": {
-        "from": "now-1h",
+        "from": "now-30m",
         "to": "now"
       },
       "timepicker": {
@@ -2957,9 +3451,10 @@ data:
         ]
       },
       "timezone": "browser",
-      "title": "Nodes",
-      "version": 1
-    },
+      "title": "Kubernetes Pod",
+      "version": 154
+    }
+    ,
       "inputs": [
         {
           "name": "DS_PROMETHEUS",
