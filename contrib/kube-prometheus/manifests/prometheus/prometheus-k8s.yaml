@@ -11,6 +11,8 @@ spec:
     matchExpression:
     - {key: k8s-apps, operator: Exists}
   resources:
+    limits:
+      memory: 2Gi
     requests:
       # 2Gi is default, but won't schedule if you don't have a node with >2Gi
       # memory. Modify based on your target and time-series count for
