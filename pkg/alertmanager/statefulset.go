@@ -167,6 +167,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 				},
 			},
 			Spec: v1.PodSpec{
+				NodeSelector:                  a.Spec.NodeSelector,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
 				Containers: []v1.Container{
 					{

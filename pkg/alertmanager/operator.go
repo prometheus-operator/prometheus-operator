@@ -72,16 +72,16 @@ type Config struct {
 func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "instantiating cluster config failed")
 	}
 	client, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
 	mclient, err := v1alpha1.NewForConfig(cfg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "instantiating monitoring client failed")
 	}
 
 	o := &Operator{
@@ -126,7 +126,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go func() {
 		v, err := c.kclient.Discovery().ServerVersion()
 		if err != nil {
-			errChan <- fmt.Errorf("communicating with server failed: %s", err)
+			errChan <- errors.Wrap(err, "communicating with server failed")
 			return
 		}
 		c.logger.Log("msg", "connection established", "cluster-version", v)
@@ -228,7 +228,7 @@ func (c *Operator) processNextWorkItem() bool {
 		return true
 	}
 
-	utilruntime.HandleError(fmt.Errorf("Sync %q failed with %v", key, err))
+	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("Sync %q failed", key)))
 	c.queue.AddRateLimited(key)
 
 	return true
@@ -243,7 +243,7 @@ func (c *Operator) alertmanagerForStatefulSet(sset interface{}) *v1alpha1.Alertm
 	aKey := statefulSetKeyToAlertmanagerKey(key)
 	a, exists, err := c.alrtInf.GetStore().GetByKey(aKey)
 	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("get Alertmanager resource: %s", err))
+		c.logger.Log("msg", "Alertmanager lookup failed", "err", err)
 		return nil
 	}
 	if !exists {
@@ -362,17 +362,17 @@ func (c *Operator) sync(key string) error {
 	// Ensure we have a StatefulSet running Alertmanager deployed.
 	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(alertmanagerKeyToStatefulSetKey(key))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "retrieving statefulset failed")
 	}
 
 	if !exists {
 		if _, err := ssetClient.Create(makeStatefulSet(am, nil, c.config)); err != nil {
-			return fmt.Errorf("create statefulset: %s", err)
+			return errors.Wrap(err, "creating statefulset failed")
 		}
 		return nil
 	}
 	if _, err := ssetClient.Update(makeStatefulSet(am, obj.(*v1beta1.StatefulSet), c.config)); err != nil {
-		return err
+		return errors.Wrap(err, "updating statefulset failed")
 	}
 
 	return c.syncVersion(am)
@@ -395,7 +395,7 @@ func ListOptions(name string) metav1.ListOptions {
 func (c *Operator) syncVersion(a *v1alpha1.Alertmanager) error {
 	status, oldPods, err := AlertmanagerStatus(c.kclient, a)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "retrieving Alertmanager status failed")
 	}
 
 	// If the StatefulSet is still busy scaling, don't interfere by killing pods.
@@ -405,7 +405,7 @@ func (c *Operator) syncVersion(a *v1alpha1.Alertmanager) error {
 		expectedReplicas = *a.Spec.Replicas
 	}
 	if status.Replicas != expectedReplicas {
-		return fmt.Errorf("scaling in progress")
+		return fmt.Errorf("scaling in progress, %d expected replicas, %d found replicas", expectedReplicas, status.Replicas)
 	}
 	if status.Replicas == 0 {
 		return nil
@@ -414,7 +414,7 @@ func (c *Operator) syncVersion(a *v1alpha1.Alertmanager) error {
 		return nil
 	}
 	if status.UnavailableReplicas > 0 {
-		return fmt.Errorf("waiting for pods to become ready")
+		return fmt.Errorf("waiting for %d unavailable pods to become ready", status.UnavailableReplicas)
 	}
 
 	// TODO(fabxc): delete oldest pod first.
@@ -433,7 +433,7 @@ func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager)
 
 	pods, err := kclient.Core().Pods(a.Namespace).List(ListOptions(a.Name))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
 
 	res.Replicas = int32(len(pods.Items))
@@ -442,7 +442,7 @@ func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager)
 	for _, pod := range pods.Items {
 		ready, err := k8sutil.PodRunningAndReady(pod)
 		if err != nil {
-			return nil, nil, fmt.Errorf("cannot determine pod ready state: %s", err)
+			return nil, nil, errors.Wrap(err, "cannot determine pod ready state")
 		}
 		if ready {
 			res.AvailableReplicas++
@@ -464,7 +464,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 	ssetKey := alertmanagerKeyToStatefulSetKey(key)
 	obj, exists, err := c.ssetInf.GetStore().GetByKey(ssetKey)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "retrieving statefulset from cache failed")
 	}
 	if !exists {
 		return nil
@@ -476,7 +476,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 	ssetClient := c.kclient.Apps().StatefulSets(sset.Namespace)
 
 	if _, err := ssetClient.Update(sset); err != nil {
-		return err
+		return errors.Wrap(err, "updating statefulset for scale-down failed")
 	}
 
 	podClient := c.kclient.Core().Pods(sset.Namespace)
@@ -486,7 +486,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 	for {
 		pods, err := podClient.List(ListOptions(alertmanagerNameFromStatefulSetName(sset.Name)))
 		if err != nil {
-			return err
+			return errors.Wrap(err, "retrieving pods of statefulset failed")
 		}
 		if len(pods.Items) == 0 {
 			break
@@ -496,7 +496,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 
 	// StatefulSet scaled down, we can delete it.
 	if err := ssetClient.Delete(sset.Name, nil); err != nil {
-		return err
+		return errors.Wrap(err, "deleting statefulset failed")
 	}
 
 	return nil
