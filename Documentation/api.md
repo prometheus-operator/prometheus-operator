@@ -54,6 +54,7 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | storage | Storage is the definition of how storage will be used by the Alertmanager instances. | *[StorageSpec](#storagespec) | false |
 | externalUrl | ExternalURL is the URL under which Alertmanager is externally reachable (for example, if Alertmanager is served via a reverse proxy). Used for generating relative and absolute links back to Alertmanager itself. If the URL has a path portion, it will be used to prefix all HTTP endpoints served by Alertmanager. If omitted, relevant URL components will be derived automatically. | string | false |
 | paused | If set to true all actions on the underlaying managed objects are not goint to be performed, except for delete actions. | bool | false |
+| nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 
 ## AlertmanagerStatus
 
