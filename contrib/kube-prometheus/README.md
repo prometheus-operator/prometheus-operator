@@ -82,6 +82,9 @@ This allows managing dashboards via `git` etc. and easily deploying them via CD 
 In the future, a separate Grafana operator will support gathering dashboards from multiple
 ConfigMaps based on label selection.
 
+WARNING: If you deploy multiple Grafana instances for HA, you must use session affinity.
+Otherwise if pods restart the prometheus datasource ID can get out of sync between the pods, breaking the UI
+
 ## Roadmap
 
 * Grafana Operator that dynamically discovers and deploys dashboards from ConfigMaps
