@@ -6,7 +6,7 @@ There are various kinds of volumes supported by Kubernetes. The Prometheus Opera
 
 This document assumes you have a basic understanding of `PersisentVolume`s, `PersisentVolumeClaim`s, and their [provisioning](https://kubernetes.io/docs/user-guide/persistent-volumes/#provisioning).
 
-# Storage Provisioning on AWS
+## Storage Provisioning on AWS
 
 For automatic provisioning of storage a `StorageClass` is required.
 
@@ -43,3 +43,45 @@ spec:
 
 When now creating the `Prometheus` object a `PersistentVolumeClaim` is used for each `Pod` in the `StatefulSet` and the storage should automatically be provisioned, mounted and used.
 
+## Manual storage provisioning
+
+The storage specification of the [Prometheus](../api.md#prometheus) kind is flexible enough to support arbitrary storage, not just those created via StorageClasses.
+
+The easiest way to use a volume that cannot be automatically provisioned (for whatever reason) is to use a label selector alongside a manually created PersistentVolume.
+
+For example, using an NFS volume might be accomplished with the following specifications:
+
+```yaml
+apiVersion: "monitoring.coreos.com/v1alpha1"
+kind: "Prometheus"
+metadata:
+  name: "my-example-prometheus-name"
+  labels:
+    prometheus: example
+spec:
+  ...
+  storage:
+    selector:
+      matchLabels:
+        app: "my-example-prometheus"
+    resources:
+      requests:
+        storage: 50Gi
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv-name
+  labels:
+    app: "my-example-prometheus"
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+  - ReadWriteOnce # required
+  nfs:
+    server: myServer
+    path: "/path/to/prom/db"
+```
