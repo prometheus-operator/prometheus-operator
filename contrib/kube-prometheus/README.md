@@ -20,7 +20,7 @@ which manages Prometheus servers and their configuration in a cluster. With a si
 * The Operator itself
 * The Prometheus [node_exporter](https://github.com/prometheus/node_exporter)
 * [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics)
-* The [Prometheus specification](https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md) based on which the Operator deploys a Prometheus setup
+* The [Prometheus specification](https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheus) based on which the Operator deploys a Prometheus setup
 * A Prometheus configuration covering monitoring of all Kubernetes core components and exporters
 * A default set of alerting rules on the cluster component's health
 * A Grafana instance serving dashboards on cluster metrics
