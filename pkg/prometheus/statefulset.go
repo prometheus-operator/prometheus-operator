@@ -36,10 +36,13 @@ const (
 )
 
 var (
-	minReplicas int32 = 1
+	minReplicas             int32 = 1
+	managedByOperatorLabels       = map[string]string{
+		"managed-by": "prometheus-operator",
+	}
 )
 
-func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Config) *v1beta1.StatefulSet {
+func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Config, ruleConfigMaps []*v1.ConfigMap) *v1beta1.StatefulSet {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -70,7 +73,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 			Labels:      p.ObjectMeta.Labels,
 			Annotations: p.ObjectMeta.Annotations,
 		},
-		Spec: makeStatefulSetSpec(p, config),
+		Spec: makeStatefulSetSpec(p, config, ruleConfigMaps),
 	}
 	if vc := p.Spec.Storage; vc == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -104,21 +107,47 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 	return statefulset
 }
 
+func volumesInfoFromRuleConfigMaps(ruleConfigMaps []*v1.ConfigMap) ([]v1.Volume, []v1.VolumeMount, []string) {
+	volumes := make([]v1.Volume, len(ruleConfigMaps))
+	volumeMounts := make([]v1.VolumeMount, len(ruleConfigMaps))
+	ruleFileVolumeArgs := make([]string, len(ruleConfigMaps))
+
+	for i, c := range ruleConfigMaps {
+		volumeName := fmt.Sprintf("rules-%d", i)
+		ruleFilePath := configMapRuleFileFolder(i)
+
+		volumes[i] = v1.Volume{
+			Name: volumeName,
+			VolumeSource: v1.VolumeSource{
+				ConfigMap: &v1.ConfigMapVolumeSource{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: c.Name,
+					},
+				},
+			},
+		}
+		volumeMounts[i] = v1.VolumeMount{
+			Name:      volumeName,
+			ReadOnly:  true,
+			MountPath: ruleFilePath,
+		}
+		ruleFileVolumeArgs[i] = fmt.Sprintf("-volume-dir=%s", ruleFilePath)
+	}
+
+	return volumes, volumeMounts, ruleFileVolumeArgs
+}
+
 func makeEmptyConfig(name string) *v1.Secret {
 	return &v1.Secret{
 		ObjectMeta: apimetav1.ObjectMeta{
-			Name: configSecretName(name),
+			Name:   configSecretName(name),
+			Labels: managedByOperatorLabels,
+			Annotations: map[string]string{
+				"empty": "true",
+			},
 		},
 		Data: map[string][]byte{
 			"prometheus.yaml": []byte{},
-		},
-	}
-}
-
-func makeEmptyRules(name string) *v1.ConfigMap {
-	return &v1.ConfigMap{
-		ObjectMeta: apimetav1.ObjectMeta{
-			Name: rulesConfigMapName(name),
 		},
 	}
 }
@@ -148,7 +177,7 @@ func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
 	return svc
 }
 
-func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSpec {
+func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.ConfigMap) v1beta1.StatefulSetSpec {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
@@ -195,6 +224,45 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSp
 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
+	ruleFileVolumes, ruleFileVolumeMounts, ruleFileVolumeArgs := volumesInfoFromRuleConfigMaps(ruleConfigMaps)
+
+	volumes := append([]v1.Volume{
+		{
+			Name: "config",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: configSecretName(p.Name),
+				},
+			},
+		},
+	}, ruleFileVolumes...)
+
+	promVolumeMounts := append([]v1.VolumeMount{
+		{
+			Name:      "config",
+			ReadOnly:  true,
+			MountPath: "/etc/prometheus/config",
+		},
+		{
+			Name:      volumeName(p.Name),
+			MountPath: "/var/prometheus/data",
+			SubPath:   subPathForStorage(p.Spec.Storage),
+		},
+	}, ruleFileVolumeMounts...)
+
+	configReloadVolumeMounts := append([]v1.VolumeMount{
+		{
+			Name:      "config",
+			ReadOnly:  true,
+			MountPath: "/etc/prometheus/config",
+		},
+	}, ruleFileVolumeMounts...)
+
+	configReloadArgs := append([]string{
+		fmt.Sprintf("-webhook-url=%s", localReloadURL),
+		"-volume-dir=/etc/prometheus/config",
+	}, ruleFileVolumeArgs...)
+
 	return v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    p.Spec.Replicas,
@@ -217,24 +285,8 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSp
 								Protocol:      v1.ProtocolTCP,
 							},
 						},
-						Args: promArgs,
-						VolumeMounts: []v1.VolumeMount{
-							{
-								Name:      "config",
-								ReadOnly:  true,
-								MountPath: "/etc/prometheus/config",
-							},
-							{
-								Name:      "rules",
-								ReadOnly:  true,
-								MountPath: "/etc/prometheus/rules",
-							},
-							{
-								Name:      volumeName(p.Name),
-								MountPath: "/var/prometheus/data",
-								SubPath:   subPathForStorage(p.Spec.Storage),
-							},
-						},
+						Args:         promArgs,
+						VolumeMounts: promVolumeMounts,
 						ReadinessProbe: &v1.Probe{
 							Handler: v1.Handler{
 								HTTPGet: &v1.HTTPGetAction{
@@ -251,25 +303,10 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSp
 						},
 						Resources: p.Spec.Resources,
 					}, {
-						Name:  "config-reloader",
-						Image: c.ConfigReloaderImage,
-						Args: []string{
-							fmt.Sprintf("-webhook-url=%s", localReloadURL),
-							"-volume-dir=/etc/prometheus/config",
-							"-volume-dir=/etc/prometheus/rules/",
-						},
-						VolumeMounts: []v1.VolumeMount{
-							{
-								Name:      "config",
-								ReadOnly:  true,
-								MountPath: "/etc/prometheus/config",
-							},
-							{
-								Name:      "rules",
-								ReadOnly:  true,
-								MountPath: "/etc/prometheus/rules",
-							},
-						},
+						Name:         "config-reloader",
+						Image:        c.ConfigReloaderImage,
+						Args:         configReloadArgs,
+						VolumeMounts: configReloadVolumeMounts,
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{
 								v1.ResourceCPU:    resource.MustParse("5m"),
@@ -281,26 +318,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSp
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
-				Volumes: []v1.Volume{
-					{
-						Name: "config",
-						VolumeSource: v1.VolumeSource{
-							Secret: &v1.SecretVolumeSource{
-								SecretName: configSecretName(p.Name),
-							},
-						},
-					},
-					{
-						Name: "rules",
-						VolumeSource: v1.VolumeSource{
-							ConfigMap: &v1.ConfigMapVolumeSource{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: rulesConfigMapName(p.Name),
-								},
-							},
-						},
-					},
-				},
+				Volumes: volumes,
 			},
 		},
 	}
@@ -308,10 +326,6 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config) v1beta1.StatefulSetSp
 
 func configSecretName(name string) string {
 	return prefixedName(name)
-}
-
-func rulesConfigMapName(name string) string {
-	return fmt.Sprintf("%s-rules", prefixedName(name))
 }
 
 func volumeName(name string) string {

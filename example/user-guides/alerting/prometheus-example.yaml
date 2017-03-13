@@ -15,3 +15,7 @@ spec:
   resources:
     requests:
       memory: 400Mi
+  ruleSelector:
+    matchLabels:
+      role: prometheus-rulefiles
+      prometheus: example

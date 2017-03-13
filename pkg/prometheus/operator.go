@@ -154,7 +154,8 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{},
 	)
 	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		DeleteFunc: c.handleConfigmapDelete,
+		AddFunc:    c.handleConfigMapAdd,
+		DeleteFunc: c.handleConfigMapDelete,
 	})
 	c.secrInf = cache.NewSharedIndexInformer(
 		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "secrets", api.NamespaceAll, nil),
@@ -392,24 +393,17 @@ func (c *Operator) handleSecretDelete(obj interface{}) {
 	}
 }
 
-func (c *Operator) handleConfigmapDelete(obj interface{}) {
+func (c *Operator) handleConfigMapAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
-	if !ok {
-		return
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
 	}
+}
 
-	key, ok := c.keyFunc(o)
-	if !ok {
-		return
-	}
-	key = strings.TrimSuffix(key, "-rules")
-
-	_, exists, err := c.promInf.GetIndexer().GetByKey(key)
-	if err != nil {
-		c.logger.Log("msg", "index lookup failed", "err", err)
-	}
-	if exists {
-		c.enqueue(key)
+func (c *Operator) handleConfigMapDelete(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
 	}
 }
 
@@ -566,23 +560,24 @@ func (c *Operator) sync(key string) error {
 
 	c.logger.Log("msg", "sync prometheus", "key", key)
 
+	ruleFileConfigMaps, err := c.ruleFileConfigMaps(p)
+	if err != nil {
+		return errors.Wrap(err, "retrieving rule file configmaps failed")
+	}
+
 	// If no service monitor selectors are configured, the user wants to manage
 	// configuration himself.
 	if p.Spec.ServiceMonitorSelector != nil {
 		// We just always regenerate the configuration to be safe.
-		if err := c.createConfig(p); err != nil {
+		if err := c.createConfig(p, len(ruleFileConfigMaps)); err != nil {
 			return errors.Wrap(err, "creating config failed")
 		}
 	}
 
-	// Create Secret and ConfigMap if they don't exist.
+	// Create Secret if it doesn't exist.
 	sClient := c.kclient.Core().Secrets(p.Namespace)
 	if _, err := sClient.Create(makeEmptyConfig(p.Name)); err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "creating empty config file failed")
-	}
-	cmClient := c.kclient.Core().ConfigMaps(p.Namespace)
-	if _, err := cmClient.Create(makeEmptyRules(p.Name)); err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "creating empty rules file failed")
 	}
 
 	// Create governing service if it doesn't exist.
@@ -599,12 +594,12 @@ func (c *Operator) sync(key string) error {
 	}
 
 	if !exists {
-		if _, err := ssetClient.Create(makeStatefulSet(*p, nil, &c.config)); err != nil {
+		if _, err := ssetClient.Create(makeStatefulSet(*p, nil, &c.config, ruleFileConfigMaps)); err != nil {
 			return errors.Wrap(err, "creating statefulset failed")
 		}
 		return nil
 	}
-	if _, err := ssetClient.Update(makeStatefulSet(*p, obj.(*v1beta1.StatefulSet), &c.config)); err != nil {
+	if _, err := ssetClient.Update(makeStatefulSet(*p, obj.(*v1beta1.StatefulSet), &c.config, ruleFileConfigMaps)); err != nil {
 		return errors.Wrap(err, "updating statefulset failed")
 	}
 
@@ -614,6 +609,24 @@ func (c *Operator) sync(key string) error {
 	}
 
 	return nil
+}
+
+func (c *Operator) ruleFileConfigMaps(p *v1alpha1.Prometheus) ([]*v1.ConfigMap, error) {
+	res := []*v1.ConfigMap{}
+
+	ruleSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleSelector)
+	if err != nil {
+		return nil, err
+	}
+
+	cache.ListAllByNamespace(c.cmapInf.GetIndexer(), p.Namespace, ruleSelector, func(obj interface{}) {
+		_, ok := c.keyFunc(obj)
+		if ok {
+			res = append(res, obj.(*v1.ConfigMap))
+		}
+	})
+
+	return res, nil
 }
 
 func ListOptions(name string) metav1.ListOptions {
@@ -744,27 +757,28 @@ func (c *Operator) destroyPrometheus(key string) error {
 	if err := s.Delete(sset.Name, nil); err != nil {
 		return errors.Wrap(err, "deleting config file failed")
 	}
-	cm := c.kclient.Core().ConfigMaps(sset.Namespace)
-	if err := cm.Delete(fmt.Sprintf("%s-rules", sset.Name), nil); err != nil {
-		return errors.Wrap(err, "deleting rules file failed")
-	}
+
 	return nil
 }
 
-func (c *Operator) createConfig(p *v1alpha1.Prometheus) error {
+func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps int) error {
 	smons, err := c.selectServiceMonitors(p)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
 	// Update secret based on the most recent configuration.
-	conf, err := generateConfig(p, smons)
+	conf, err := generateConfig(p, smons, ruleFileConfigMaps)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
 	}
 
 	s := &v1.Secret{
 		ObjectMeta: apimetav1.ObjectMeta{
-			Name: configSecretName(p.Name),
+			Name:   configSecretName(p.Name),
+			Labels: managedByOperatorLabels,
+			Annotations: map[string]string{
+				"generated": "true",
+			},
 		},
 		Data: map[string][]byte{
 			"prometheus.yaml": []byte(conf),

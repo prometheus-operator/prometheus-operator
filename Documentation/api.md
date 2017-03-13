@@ -125,6 +125,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
+| ruleSelector | A selector to select which ConfigMaps to mount for loading rule files from. | *[metav1.LabelSelector](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | false |
 | alerting | Define details regarding alerting. | [AlertingSpec](#alertingspec) | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements) | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |

@@ -33,7 +33,11 @@ func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
 }
 
-func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor) ([]byte, error) {
+func configMapRuleFileFolder(configMapNumber int) string {
+	return fmt.Sprintf("/etc/prometheus/rules/rules-%d/", configMapNumber)
+}
+
+func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int) ([]byte, error) {
 	cfg := map[string]interface{}{}
 
 	cfg["global"] = map[string]string{
@@ -41,7 +45,13 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 		"scrape_interval":     "30s",
 	}
 
-	cfg["rule_files"] = []string{"/etc/prometheus/rules/*.rules"}
+	if ruleConfigMaps > 0 {
+		configMaps := make([]string, ruleConfigMaps)
+		for i := 0; i < ruleConfigMaps; i++ {
+			configMaps[i] = configMapRuleFileFolder(i) + "*.rules"
+		}
+		cfg["rule_files"] = configMaps
+	}
 
 	var scrapeConfigs []interface{}
 	for _, mon := range mons {

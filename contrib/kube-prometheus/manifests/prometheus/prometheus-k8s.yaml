@@ -10,6 +10,10 @@ spec:
   serviceMonitorSelector:
     matchExpression:
     - {key: k8s-apps, operator: Exists}
+  ruleSelector:
+    matchLabels:
+      role: prometheus-rulefiles
+      prometheus: k8s
   resources:
     requests:
       # 2Gi is default, but won't schedule if you don't have a node with >2Gi

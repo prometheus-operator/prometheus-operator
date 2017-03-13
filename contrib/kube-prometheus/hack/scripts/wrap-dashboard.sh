@@ -8,12 +8,10 @@
 #    has error.
 #  * Download dashboard specification as JSON file in Grafana:
 #    Share -> Export -> Save to file.
-#  * Wrap dashboard specification to make it digestable by kube-prometheus:
-#      ./hack/scripts/wrap-dashboard.sh Nodes-1488465802729.json
-#  * Replace dashboard specification:
+#  * Drop dashboard specification in assets folder:
 #      mv Nodes-1488465802729.json assets/grafana/node-dashboard.json
 #  * Regenerate Grafana configmap:
-#      ./hack/scripts/generate-configmaps.sh
+#      ./hack/scripts/generate-manifests.sh
 #  * Apply new configmap:
 #      kubectl -n monitoring apply -f manifests/grafana/grafana-cm.yaml
 
@@ -22,17 +20,16 @@ if [ "$#" -ne 1 ]; then
     exit 1
 fi
 
-json=$1
-temp=$(tempfile -m 0644)
+dashboardjson=$1
 
-cat >> $temp <<EOF
+cat <<EOF
 {
   "dashboard":
 EOF
 
-cat $json >> $temp
+cat $dashboardjson
 
-cat >> $temp <<EOF
+cat <<EOF
 ,
   "inputs": [
     {
@@ -45,6 +42,4 @@ cat >> $temp <<EOF
   "overwrite": true
 }
 EOF
-
-mv $temp $json
 

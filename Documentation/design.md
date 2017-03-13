@@ -12,7 +12,7 @@ The third party resources that the Prometheus Operator introduces are:
 
 The `Prometheus` third party resource (TPR) declaratively defines a desired Prometheus setup to run in a Kubernetes cluster. It provides options to configure replication, persistent storage, and Alertmanagers to which the deployed Prometheus instances send alerts to.
 
-For each `Prometheus` TPR, the Operator deploys a properly configured `StatefulSet` in the same namespace. The Prometheus `Pod`s are configured to mount a `Secret` called `<prometheus-name>` containing the configuration for Prometheus and a `ConfigMap` called `<prometheus-name>-rules`, which holds Prometheus rule files that may contain alerting and recording rules.
+For each `Prometheus` TPR, the Operator deploys a properly configured `StatefulSet` in the same namespace. The Prometheus `Pod`s are configured to mount a `Secret` called `<prometheus-name>` containing the configuration for Prometheus.
 
 The TPR allows to specify which `ServiceMonitor`s should be covered by the deployed Prometheus instances based on label selection. The Operator then generates a configuration based on the included `ServiceMonitor`s and updates it in the `Secret` containing the configuration. It continuously does so for all changes that are made to `ServiceMonitor`s or the `Prometheus` TPR itself.
 

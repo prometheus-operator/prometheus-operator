@@ -47,7 +47,7 @@ func TestConfigGenerationNonNamespacedAnnotation(t *testing.T) {
 		},
 	}
 
-	config, err := generateConfig(p, smons)
+	config, err := generateConfig(p, smons, 0)
 	if err != nil {
 		t.Fatal("Config generation failed: ", err)
 	}

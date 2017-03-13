@@ -93,9 +93,15 @@ spec:
   resources:
     requests:
       memory: 400Mi
+  ruleSelector:
+    matchLabels:
+      role: prometheus-rulefiles
+      prometheus: example
 ```
 
-Prometheus rule files are held in a `ConfigMap` called `prometheus-<prometheus-object-name>-rules`. All top level files that end with the `.rules` extension will be loaded by a Prometheus instance.
+Prometheus rule files are held in a `ConfigMap`s. The `ConfigMap`s to mount rule files from are selected with a label selector field called `ruleSelector` in the Prometheus object, as seen above. All top level files that end with the `.rules` extension will be loaded.
+
+The best practice is to label the `ConfigMap`s containing rule files with `role: prometheus-rulefiles` as well as the name of the Prometheus object, `prometheus: example` in this case.
 
 [embedmd]:# (../../example/user-guides/alerting/prometheus-example-rules.yaml)
 ```yaml
@@ -103,13 +109,14 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: prometheus-example-rules
+  labels:
+    role: prometheus-rulefiles
+    prometheus: example
 data:
   example.rules: |
     ALERT ExampleAlert
     IF vector(1)
 ```
-
-> Note the Prometheus Operator will create an empty `ConfigMap` if it does not already exist.
 
 That example `ConfigMap` always immediately triggers an alert, which is only for demonstration purposes. To validate that everything is working properly have a look at each of the Prometheus web UIs.
 

@@ -73,6 +73,8 @@ type PrometheusSpec struct {
 	RoutePrefix string `json:"routePrefix,omitempty"`
 	// Storage spec to specify how storage shall be used.
 	Storage *StorageSpec `json:"storage,omitempty"`
+	// A selector to select which ConfigMaps to mount for loading rule files from.
+	RuleSelector *metav1.LabelSelector `json:"ruleSelector,omitempty"`
 	// Define details regarding alerting.
 	Alerting AlertingSpec `json:"alerting,omitempty"`
 	// Define resources requests and limits for single Pods.
