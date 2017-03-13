@@ -24,3 +24,8 @@ spec:
     - namespace: monitoring
       name: alertmanager-main
       port: web
+  storage:
+    class: gp2
+    resources:
+      requests:
+        storage: 300Gi
