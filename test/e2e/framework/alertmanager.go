@@ -201,19 +201,18 @@ func (f *Framework) GetAlertmanagerConfig(n string) (alertmanagerStatus, error) 
 	return amStatus, nil
 }
 
-func (f *Framework) WaitForAlertmanagerResolveTimeoutConfig(amName string, resolveTimeout int) error {
+func (f *Framework) WaitForSpecificAlertmanagerConfig(amName string, expectedConfig string) error {
 	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
 		config, err := f.GetAlertmanagerConfig("alertmanager-" + amName + "-0")
 		if err != nil {
 			return false, err
 		}
 
-		if config.Data.ConfigJSON.Global.ResolveTimeout != 6*60*1000000000 {
-			fmt.Print(config.Data.ConfigJSON.Global.ResolveTimeout)
-			return false, nil
+		if config.Data.Config == expectedConfig {
+			return true, nil
 		}
 
-		return true, nil
+		return false, nil
 	})
 }
 
@@ -223,15 +222,7 @@ type alertmanagerStatus struct {
 
 type alertmanagerStatusData struct {
 	MeshStatus meshStatus `json:"meshStatus"`
-	ConfigJSON configJSON `json:"configJSON"`
-}
-
-type configJSON struct {
-	Global configJSONGlobal `json:"global"`
-}
-
-type configJSONGlobal struct {
-	ResolveTimeout int `json:"resolve_timeout"`
+	Config     string     `json:"config"`
 }
 
 type meshStatus struct {

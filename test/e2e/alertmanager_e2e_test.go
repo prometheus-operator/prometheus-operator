@@ -294,7 +294,7 @@ receivers:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerResolveTimeoutConfig(alertmanager.Name, 6*60*1000000000); err != nil {
+	if err := framework.WaitForSpecificAlertmanagerConfig(alertmanager.Name, firstConfig); err != nil {
 		t.Fatal(err)
 	}
 
@@ -304,7 +304,7 @@ receivers:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerResolveTimeoutConfig(alertmanager.Name, 5*60*1000000000); err != nil {
+	if err := framework.WaitForSpecificAlertmanagerConfig(alertmanager.Name, secondConfig); err != nil {
 		t.Fatal(err)
 	}
 }
