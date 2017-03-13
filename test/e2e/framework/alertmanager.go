@@ -174,22 +174,46 @@ func amImage(version string) string {
 
 func (f *Framework) WaitForAlertmanagerInitializedMesh(name string, amountPeers int) error {
 	return f.Poll(time.Second*20, time.Second, func() (bool, error) {
-		request := f.ProxyGetPod(name, "9093", "/api/v1/status")
-		resp, err := request.DoRaw()
+		amStatus, err := f.GetAlertmanagerConfig(name)
 		if err != nil {
 			return false, err
 		}
-
-		var amStatus alertmanagerStatus
-		if err := json.Unmarshal(resp, &amStatus); err != nil {
-			return false, err
-		}
-
 		if len(amStatus.Data.MeshStatus.Peers) == amountPeers {
 			return true, nil
 		}
 
 		return false, nil
+	})
+}
+
+func (f *Framework) GetAlertmanagerConfig(n string) (alertmanagerStatus, error) {
+	var amStatus alertmanagerStatus
+	request := f.ProxyGetPod(n, "9093", "/api/v1/status")
+	resp, err := request.DoRaw()
+	if err != nil {
+		return amStatus, err
+	}
+
+	if err := json.Unmarshal(resp, &amStatus); err != nil {
+		return amStatus, err
+	}
+
+	return amStatus, nil
+}
+
+func (f *Framework) WaitForAlertmanagerResolveTimeoutConfig(amName string, resolveTimeout int) error {
+	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+		config, err := f.GetAlertmanagerConfig("alertmanager-" + amName + "-0")
+		if err != nil {
+			return false, err
+		}
+
+		if config.Data.ConfigJSON.Global.ResolveTimeout != 6*60*1000000000 {
+			fmt.Print(config.Data.ConfigJSON.Global.ResolveTimeout)
+			return false, nil
+		}
+
+		return true, nil
 	})
 }
 
@@ -199,6 +223,15 @@ type alertmanagerStatus struct {
 
 type alertmanagerStatusData struct {
 	MeshStatus meshStatus `json:"meshStatus"`
+	ConfigJSON configJSON `json:"configJSON"`
+}
+
+type configJSON struct {
+	Global configJSONGlobal `json:"global"`
+}
+
+type configJSONGlobal struct {
+	ResolveTimeout int `json:"resolve_timeout"`
 }
 
 type meshStatus struct {

@@ -230,3 +230,81 @@ func TestMeshInitialization(t *testing.T) {
 		}
 	}
 }
+
+func TestAlertmanagerReloadConfig(t *testing.T) {
+	alertmanager := framework.MakeBasicAlertmanager("reload-config", 1)
+	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
+
+	firstConfig := `
+global:
+  resolve_timeout: 6m
+route:
+  group_by: ['job']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'webhook'
+receivers:
+- name: 'webhook'
+  webhook_configs:
+  - url: 'http://alertmanagerwh:30500/'
+`
+	secondConfig := `
+global:
+  resolve_timeout: 5m
+route:
+  group_by: ['job']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'webhook'
+receivers:
+- name: 'webhook'
+  webhook_configs:
+  - url: 'http://alertmanagerwh:30500/'
+`
+
+	cfg := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
+		},
+		Data: map[string][]byte{
+			"alertmanager.yaml": []byte(firstConfig),
+		},
+	}
+
+	defer func() {
+		if err := framework.DeleteAlertmanagerAndWaitUntilGone(alertmanager.Name); err != nil {
+			t.Fatal(err)
+		}
+		if err := framework.DeleteService(alertmanagerService.Name); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	if err := framework.CreateAlertmanagerAndWaitUntilReady(alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.CreateServiceAndWaitUntilReady(alertmanagerService); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Update(cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.WaitForAlertmanagerResolveTimeoutConfig(alertmanager.Name, 6*60*1000000000); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg.Data["alertmanager.yaml"] = []byte(secondConfig)
+
+	if _, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Update(cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.WaitForAlertmanagerResolveTimeoutConfig(alertmanager.Name, 5*60*1000000000); err != nil {
+		t.Fatal(err)
+	}
+}
