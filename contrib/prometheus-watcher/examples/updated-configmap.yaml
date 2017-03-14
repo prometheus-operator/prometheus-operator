@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-watcher-example
+data:
+  list: |+
+    test0
+    test1
+    test2
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test0
+data:
+  test.rules: |+
+    test0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test1
+data:
+  test.rules: |+
+    test1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test2
+data:
+  test.rules: |+
+    test2

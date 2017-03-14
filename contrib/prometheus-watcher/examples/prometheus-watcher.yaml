@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-watcher-example
+data:
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus-watcher
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: prometheus-watcher
+    spec:
+      volumes:
+      - name: rule-files
+        emptyDir: {}
+      - name: configmap-source
+        configMap:
+          name: prometheus-watcher-example
+      containers:
+      - name: ubuntu
+        image: ubuntu
+        command: ["sleep", "3600"]
+        volumeMounts:
+        - name: rule-files
+          mountPath: /var/rules
+          readOnly: true
+      - name: prometheus-watcher
+        image: quay.io/coreos/prometheus-watcher:v0.0.1
+        args:
+        - '-configmap-file=/var/configmaps/list'
+        - '-rule-file-dir=/var/rules'
+        - '-namespace=default'
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "50m"
+          limits:
+            memory: "32Mi"
+            cpu: "100m"
+        volumeMounts:
+        - name: configmap-source
+          mountPath: /var/configmaps
+        - name: rule-files
+          mountPath: /var/rules
+
