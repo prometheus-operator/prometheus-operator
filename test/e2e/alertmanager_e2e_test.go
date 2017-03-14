@@ -233,7 +233,6 @@ func TestMeshInitialization(t *testing.T) {
 
 func TestAlertmanagerReloadConfig(t *testing.T) {
 	alertmanager := framework.MakeBasicAlertmanager("reload-config", 1)
-	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
 	firstConfig := `
 global:
@@ -277,16 +276,9 @@ receivers:
 		if err := framework.DeleteAlertmanagerAndWaitUntilGone(alertmanager.Name); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.DeleteService(alertmanagerService.Name); err != nil {
-			t.Fatal(err)
-		}
 	}()
 
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(alertmanager); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := framework.CreateServiceAndWaitUntilReady(alertmanagerService); err != nil {
 		t.Fatal(err)
 	}
 
