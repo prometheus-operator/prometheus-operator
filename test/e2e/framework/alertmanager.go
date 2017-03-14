@@ -174,18 +174,41 @@ func amImage(version string) string {
 
 func (f *Framework) WaitForAlertmanagerInitializedMesh(name string, amountPeers int) error {
 	return f.Poll(time.Second*20, time.Second, func() (bool, error) {
-		request := f.ProxyGetPod(name, "9093", "/api/v1/status")
-		resp, err := request.DoRaw()
+		amStatus, err := f.GetAlertmanagerConfig(name)
+		if err != nil {
+			return false, err
+		}
+		if len(amStatus.Data.MeshStatus.Peers) == amountPeers {
+			return true, nil
+		}
+
+		return false, nil
+	})
+}
+
+func (f *Framework) GetAlertmanagerConfig(n string) (alertmanagerStatus, error) {
+	var amStatus alertmanagerStatus
+	request := f.ProxyGetPod(n, "9093", "/api/v1/status")
+	resp, err := request.DoRaw()
+	if err != nil {
+		return amStatus, err
+	}
+
+	if err := json.Unmarshal(resp, &amStatus); err != nil {
+		return amStatus, err
+	}
+
+	return amStatus, nil
+}
+
+func (f *Framework) WaitForSpecificAlertmanagerConfig(amName string, expectedConfig string) error {
+	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+		config, err := f.GetAlertmanagerConfig("alertmanager-" + amName + "-0")
 		if err != nil {
 			return false, err
 		}
 
-		var amStatus alertmanagerStatus
-		if err := json.Unmarshal(resp, &amStatus); err != nil {
-			return false, err
-		}
-
-		if len(amStatus.Data.MeshStatus.Peers) == amountPeers {
+		if config.Data.Config == expectedConfig {
 			return true, nil
 		}
 
@@ -199,6 +222,7 @@ type alertmanagerStatus struct {
 
 type alertmanagerStatusData struct {
 	MeshStatus meshStatus `json:"meshStatus"`
+	Config     string     `json:"config"`
 }
 
 type meshStatus struct {
