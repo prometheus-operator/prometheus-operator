@@ -15,6 +15,8 @@
 package prometheus
 
 import (
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"path"
@@ -107,19 +109,71 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 	return statefulset
 }
 
-func makeEmptyConfig(name string) *v1.Secret {
+func makeEmptyConfig(name string, configMaps []*v1.ConfigMap) (*v1.Secret, error) {
+	s, err := makeConfigSecret(name, configMaps)
+	if err != nil {
+		return nil, err
+	}
+
+	s.ObjectMeta.Annotations = map[string]string{
+		"empty": "true",
+	}
+
+	return s, nil
+}
+
+type ConfigMap struct {
+	Key      string `json:"key"`
+	Checksum string `json:"checksum"`
+}
+
+type ConfigMapList struct {
+	Items []*ConfigMap `json:"items"`
+}
+
+func makeRuleConfigMap(cm *v1.ConfigMap) (*ConfigMap, error) {
+	hash := sha256.New()
+	err := json.NewEncoder(hash).Encode(cm)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ConfigMap{
+		Key:      cm.Namespace + "/" + cm.Name,
+		Checksum: fmt.Sprintf("%x", hash.Sum(nil)),
+	}, nil
+}
+
+func makeRuleConfigMapListFile(configMaps []*v1.ConfigMap) ([]byte, error) {
+	cml := &ConfigMapList{}
+
+	for _, cm := range configMaps {
+		configmap, err := makeRuleConfigMap(cm)
+		if err != nil {
+			return nil, err
+		}
+		cml.Items = append(cml.Items, configmap)
+	}
+
+	return json.Marshal(cml)
+}
+
+func makeConfigSecret(name string, configMaps []*v1.ConfigMap) (*v1.Secret, error) {
+	b, err := makeRuleConfigMapListFile(configMaps)
+	if err != nil {
+		return nil, err
+	}
+
 	return &v1.Secret{
 		ObjectMeta: apimetav1.ObjectMeta{
 			Name:   configSecretName(name),
 			Labels: managedByOperatorLabels,
-			Annotations: map[string]string{
-				"empty": "true",
-			},
 		},
 		Data: map[string][]byte{
 			"prometheus.yaml": []byte{},
+			"configmaps.json": b,
 		},
-	}
+	}, nil
 }
 
 func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
@@ -287,8 +341,8 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 						},
 						Resources: p.Spec.Resources,
 					}, {
-						Name:         "config-reloader",
-						Image:        c.ConfigReloaderImage,
+						Name:         "prometheus-watcher",
+						Image:        c.PrometheusWatcherImage,
 						Args:         configReloadArgs,
 						VolumeMounts: configReloadVolumeMounts,
 						Resources: v1.ResourceRequirements{

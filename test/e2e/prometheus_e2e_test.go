@@ -233,12 +233,12 @@ func TestPrometheusReloadRules(t *testing.T) {
 
 	// remounting a ConfigMap can take some time
 	err = framework.Poll(time.Minute*5, time.Second, func() (bool, error) {
-		logs, err := framework.GetLogs(fmt.Sprintf("prometheus-%s-0", name), "config-reloader")
+		logs, err := framework.GetLogs(fmt.Sprintf("prometheus-%s-0", name), "prometheus-watcher")
 		if err != nil {
 			return false, err
 		}
 
-		if strings.Contains(logs, "config map updated") && strings.Contains(logs, "successfully triggered reload") {
+		if strings.Contains(logs, "ConfigMap modified") && strings.Contains(logs, "Rule files updated") && strings.Contains(logs, "Prometheus successfully reloaded") {
 			return true, nil
 		}
 

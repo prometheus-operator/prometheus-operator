@@ -52,11 +52,11 @@ func newVolumeWatcher(client *k8s.Client, cfg config, logger log.Logger) *volume
 }
 
 type ConfigMap struct {
-	Name string `json:name`
+	Key string `json:"key"`
 }
 
 type ConfigMapList struct {
-	Items []*ConfigMap `json:items`
+	Items []*ConfigMap `json:"items"`
 }
 
 func (w *volumeWatcher) UpdateRuleFiles() error {
@@ -79,7 +79,7 @@ func (w *volumeWatcher) UpdateRuleFiles() error {
 	defer os.RemoveAll(tmpdir)
 
 	for i, cm := range configMaps.Items {
-		err := w.writeRuleConfigMap(tmpdir, i, cm.Name)
+		err := w.writeRuleConfigMap(tmpdir, i, cm.Key)
 		if err != nil {
 			return err
 		}
@@ -198,6 +198,24 @@ func (w *volumeWatcher) ReloadPrometheus() error {
 	return nil
 }
 
+func (w *volumeWatcher) Refresh() {
+	w.logger.Log("msg", "Updating rule files...")
+	err := w.UpdateRuleFiles()
+	if err != nil {
+		w.logger.Log("msg", "Updating rule files failed.", "err", err)
+	} else {
+		w.logger.Log("msg", "Rule files updated.")
+	}
+
+	w.logger.Log("msg", "Reloading Prometheus...")
+	err = w.ReloadPrometheus()
+	if err != nil {
+		w.logger.Log("msg", "Reloading Prometheus failed.", "err", err)
+	} else {
+		w.logger.Log("msg", "Prometheus successfully reloaded.")
+	}
+}
+
 func (w *volumeWatcher) Run() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -214,21 +232,7 @@ func (w *volumeWatcher) Run() {
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					if filepath.Base(event.Name) == "..data" {
 						w.logger.Log("msg", "ConfigMap modified.")
-						w.logger.Log("msg", "Updating rule files...")
-						err := w.UpdateRuleFiles()
-						if err != nil {
-							w.logger.Log("msg", "Updating rule files failed.", "err", err)
-						} else {
-							w.logger.Log("msg", "Rule files updated.")
-						}
-
-						w.logger.Log("msg", "Reloading Prometheus...")
-						err = w.ReloadPrometheus()
-						if err != nil {
-							w.logger.Log("msg", "Reloading Prometheus failed.", "err", err)
-						} else {
-							w.logger.Log("msg", "Prometheus successfully reloaded.")
-						}
+						w.Refresh()
 					}
 				}
 			case err := <-watcher.Errors:
@@ -238,6 +242,7 @@ func (w *volumeWatcher) Run() {
 	}()
 
 	w.logger.Log("msg", "Starting...")
+	w.Refresh()
 	err = watcher.Add(w.cfg.configVolumeDir)
 	if err != nil {
 		w.logger.Log("msg", "Adding config volume to be watched failed.", "err", err)
