@@ -32,12 +32,6 @@ kctl apply -f manifests/prometheus/prometheus-k8s-service.yaml
 kctl apply -f manifests/alertmanager/alertmanager-config.yaml
 kctl apply -f manifests/alertmanager/alertmanager-service.yaml
 
-# unfortunately statefulsets cannot be changed except for their replica count
-# so we need to make sure that the rule files are created before we create the
-# prometheus resource so it can properly discover the rule files when creating
-# the statefulset
-sleep 5
-
 # `kubectl apply` is currently not working for third party resources so we are
 # using `kubectl create` here for the time being.
 # (https://github.com/kubernetes/kubernetes/issues/29542)
