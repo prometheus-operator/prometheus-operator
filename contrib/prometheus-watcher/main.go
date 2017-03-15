@@ -15,8 +15,8 @@
 package main
 
 import (
-	"bufio"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -47,6 +47,14 @@ func newVolumeWatcher(client *k8s.Client, cfg config) *volumeWatcher {
 	}
 }
 
+type ConfigMap struct {
+	Name string `json:name`
+}
+
+type ConfigMapList struct {
+	Items []*ConfigMap `json:items`
+}
+
 func (w *volumeWatcher) UpdateRuleFiles() error {
 	file, err := os.Open(w.cfg.configMapFile)
 	if err != nil {
@@ -54,24 +62,23 @@ func (w *volumeWatcher) UpdateRuleFiles() error {
 	}
 	defer file.Close()
 
+	configMaps := ConfigMapList{}
+	err = json.NewDecoder(file).Decode(&configMaps)
+	if err != nil {
+		return err
+	}
+
 	tmpdir, err := ioutil.TempDir(w.cfg.ruleFileDir, "prometheus-rule-files")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(tmpdir)
 
-	scanner := bufio.NewScanner(file)
-	i := 0
-	for scanner.Scan() {
-		err := w.writeRuleConfigMap(tmpdir, i, scanner.Text())
+	for i, cm := range configMaps.Items {
+		err := w.writeRuleConfigMap(tmpdir, i, cm.Name)
 		if err != nil {
 			log.Println("err", err)
 		}
-		i++
-	}
-
-	if err := scanner.Err(); err != nil {
-		return err
 	}
 
 	err = w.placeNewRuleFiles(tmpdir, w.cfg.ruleFileDir)
@@ -160,7 +167,7 @@ func (w *volumeWatcher) writeConfigMapFile(filename, content string) error {
 	}
 	defer f.Close()
 
-	_, err = f.Write([]byte(content))
+	_, err = f.WriteString(content)
 	return err
 }
 

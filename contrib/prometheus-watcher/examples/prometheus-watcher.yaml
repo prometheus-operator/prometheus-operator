@@ -32,7 +32,7 @@ spec:
       - name: prometheus-watcher
         image: quay.io/coreos/prometheus-watcher:v0.0.1
         args:
-        - '-configmap-file=/var/configmaps/list'
+        - '-configmap-file=/var/configmaps/configmaps.json'
         - '-rule-file-dir=/var/rules'
         - '-namespace=default'
         resources:
