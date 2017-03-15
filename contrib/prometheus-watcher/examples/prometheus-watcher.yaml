@@ -16,9 +16,9 @@ spec:
         app: prometheus-watcher
     spec:
       volumes:
-      - name: rule-files
+      - name: rules
         emptyDir: {}
-      - name: configmap-source
+      - name: config
         configMap:
           name: prometheus-watcher-example
       containers:
@@ -26,15 +26,15 @@ spec:
         image: ubuntu
         command: ["sleep", "3600"]
         volumeMounts:
-        - name: rule-files
-          mountPath: /var/rules
+        - name: rules
+          mountPath: /etc/prometheus/rules
           readOnly: true
       - name: prometheus-watcher
         image: quay.io/coreos/prometheus-watcher:v0.0.1
         args:
-        - '-configmap-file=/var/configmaps/configmaps.json'
-        - '-rule-file-dir=/var/rules'
-        - '-namespace=default'
+        - '-config-volume-dir=/etc/prometheus/config'
+        - '-rule-volume-dir=/etc/prometheus/rules'
+        - '-reload-url=http://localhost:9090/-/reload'
         resources:
           requests:
             memory: "16Mi"
@@ -43,8 +43,9 @@ spec:
             memory: "32Mi"
             cpu: "100m"
         volumeMounts:
-        - name: configmap-source
-          mountPath: /var/configmaps
-        - name: rule-files
-          mountPath: /var/rules
+        - name: config
+          readOnly: true
+          mountPath: /etc/prometheus/config
+        - name: rules
+          mountPath: /etc/prometheus/rules
 

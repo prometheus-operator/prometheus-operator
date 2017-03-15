@@ -7,13 +7,13 @@ data:
     {
       "items": [
         {
-          "name": "test0"
+          "name": "default/test0"
         },
         {
-          "name": "test1"
+          "name": "default/test1"
         },
         {
-          "name": "test2"
+          "name": "default/test2"
         }
       ]
     }

@@ -20,30 +20,34 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	fsnotify "gopkg.in/fsnotify.v1"
 
 	"github.com/ericchiang/k8s"
+	"github.com/go-kit/kit/log"
 )
 
 type config struct {
-	configMapFile string
-	ruleFileDir   string
-	namespace     string
+	configVolumeDir string
+	ruleVolumeDir   string
+	reloadUrl       string
 }
 
 type volumeWatcher struct {
 	client *k8s.Client
 	cfg    config
+	logger log.Logger
 }
 
-func newVolumeWatcher(client *k8s.Client, cfg config) *volumeWatcher {
+func newVolumeWatcher(client *k8s.Client, cfg config, logger log.Logger) *volumeWatcher {
 	return &volumeWatcher{
 		client: client,
 		cfg:    cfg,
+		logger: logger,
 	}
 }
 
@@ -56,7 +60,7 @@ type ConfigMapList struct {
 }
 
 func (w *volumeWatcher) UpdateRuleFiles() error {
-	file, err := os.Open(w.cfg.configMapFile)
+	file, err := os.Open(filepath.Join(w.cfg.configVolumeDir, "configmaps.json"))
 	if err != nil {
 		return err
 	}
@@ -68,7 +72,7 @@ func (w *volumeWatcher) UpdateRuleFiles() error {
 		return err
 	}
 
-	tmpdir, err := ioutil.TempDir(w.cfg.ruleFileDir, "prometheus-rule-files")
+	tmpdir, err := ioutil.TempDir(w.cfg.ruleVolumeDir, "prometheus-rule-files")
 	if err != nil {
 		return err
 	}
@@ -77,11 +81,11 @@ func (w *volumeWatcher) UpdateRuleFiles() error {
 	for i, cm := range configMaps.Items {
 		err := w.writeRuleConfigMap(tmpdir, i, cm.Name)
 		if err != nil {
-			log.Println("err", err)
+			return err
 		}
 	}
 
-	err = w.placeNewRuleFiles(tmpdir, w.cfg.ruleFileDir)
+	err = w.placeNewRuleFiles(tmpdir, w.cfg.ruleVolumeDir)
 	if err != nil {
 		return err
 	}
@@ -138,8 +142,15 @@ func (w *volumeWatcher) removeOldRuleFiles(dir string, tmpdir string) error {
 	return nil
 }
 
-func (w *volumeWatcher) writeRuleConfigMap(rulesDir string, index int, configMapName string) error {
-	cm, err := w.client.CoreV1().GetConfigMap(context.TODO(), configMapName, w.cfg.namespace)
+func (w *volumeWatcher) writeRuleConfigMap(rulesDir string, index int, configMap string) error {
+	configMapParts := strings.Split(configMap, "/")
+	if len(configMapParts) != 2 {
+		return fmt.Errorf("Malformatted configmap key: %s. Format must be namespace/name.", configMap)
+	}
+	configMapNamespace := configMapParts[0]
+	configMapName := configMapParts[1]
+
+	cm, err := w.client.CoreV1().GetConfigMap(context.TODO(), configMapName, configMapNamespace)
 	if err != nil {
 		return err
 	}
@@ -171,10 +182,27 @@ func (w *volumeWatcher) writeConfigMapFile(filename, content string) error {
 	return err
 }
 
+func (w *volumeWatcher) ReloadPrometheus() error {
+	req, err := http.NewRequest("POST", w.cfg.reloadUrl, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Received response code %s, expected 200", resp.StatusCode)
+	}
+	return nil
+}
+
 func (w *volumeWatcher) Run() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(err)
+		w.logger.Log("msg", "Creating a new watcher failed.", "err", err)
+		os.Exit(1)
 	}
 	defer watcher.Close()
 
@@ -185,59 +213,74 @@ func (w *volumeWatcher) Run() {
 			case event := <-watcher.Events:
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					if filepath.Base(event.Name) == "..data" {
-						log.Println("ConfigMap modified. Updating rule files...")
+						w.logger.Log("msg", "ConfigMap modified.")
+						w.logger.Log("msg", "Updating rule files...")
 						err := w.UpdateRuleFiles()
 						if err != nil {
-							log.Println("err", err)
+							w.logger.Log("msg", "Updating rule files failed.", "err", err)
+						} else {
+							w.logger.Log("msg", "Rule files updated.")
 						}
-						log.Println("Rule files updated.")
+
+						w.logger.Log("msg", "Reloading Prometheus...")
+						err = w.ReloadPrometheus()
+						if err != nil {
+							w.logger.Log("msg", "Reloading Prometheus failed.", "err", err)
+						} else {
+							w.logger.Log("msg", "Prometheus successfully reloaded.")
+						}
 					}
 				}
 			case err := <-watcher.Errors:
-				log.Println("err", err)
+				w.logger.Log("err", err)
 			}
 		}
 	}()
 
-	log.Println("Starting...")
-	err = watcher.Add(filepath.Dir(w.cfg.configMapFile))
+	w.logger.Log("msg", "Starting...")
+	err = watcher.Add(w.cfg.configVolumeDir)
 	if err != nil {
-		log.Fatal(err)
+		w.logger.Log("msg", "Adding config volume to be watched failed.", "err", err)
+		os.Exit(1)
 	}
 
 	<-done
 }
 
 func main() {
+	logger := log.NewContext(log.NewLogfmtLogger(os.Stdout)).
+		With("ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
+
 	cfg := config{}
 	flags := flag.NewFlagSet("prometheus-watcher", flag.ExitOnError)
-	flags.StringVar(&cfg.configMapFile, "configmap-file", "", "A file containing a list of ConfigMap names.")
-	flags.StringVar(&cfg.ruleFileDir, "rule-file-dir", "", "A directory where rule files will be written to.")
-	flags.StringVar(&cfg.namespace, "namespace", "", "The namespace to get ConfigMaps from.")
+	flags.StringVar(&cfg.configVolumeDir, "config-volume-dir", "", "The directory to watch for changes to reload Prometheus.")
+	flags.StringVar(&cfg.ruleVolumeDir, "rule-volume-dir", "", "The directory to write rule files to.")
+	flags.StringVar(&cfg.reloadUrl, "reload-url", "", "The URL to call when intending to reload Prometheus.")
 	flags.Parse(os.Args[1:])
 
-	if cfg.configMapFile == "" {
-		log.Println("Missing file to watch for changes\n")
+	if cfg.ruleVolumeDir == "" {
+		logger.Log("Missing directory to write rule files into\n")
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	if cfg.ruleFileDir == "" {
-		log.Println("Missing directory to write rule files into\n")
+	if cfg.configVolumeDir == "" {
+		logger.Log("Missing directory to watch for configuration changes\n")
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	if cfg.namespace == "" {
-		log.Println("Missing namespace to get ConfigMaps from\n")
+	if cfg.reloadUrl == "" {
+		logger.Log("Missing URL to call when intending to reload Prometheus\n")
 		flag.Usage()
 		os.Exit(1)
 	}
 
 	client, err := k8s.NewInClusterClient()
 	if err != nil {
-		log.Fatal(err)
+		logger.Log("err", err)
+		os.Exit(1)
 	}
 
-	newVolumeWatcher(client, cfg).Run()
+	newVolumeWatcher(client, cfg, logger.With("component", "volume-watcher")).Run()
 }
