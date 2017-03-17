@@ -2,7 +2,7 @@ all: build
 
 FLAGS =
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
-NAME = prometheus-watcher
+NAME = prometheus-config-reloader
 REPO = quay.io/coreos/$(NAME)
 TAG = v0.0.1
 IMAGE = $(REPO):$(TAG)

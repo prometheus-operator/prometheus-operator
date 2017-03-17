@@ -122,30 +122,30 @@ func makeEmptyConfig(name string, configMaps []*v1.ConfigMap) (*v1.Secret, error
 	return s, nil
 }
 
-type ConfigMap struct {
+type ConfigMapReference struct {
 	Key      string `json:"key"`
 	Checksum string `json:"checksum"`
 }
 
-type ConfigMapList struct {
-	Items []*ConfigMap `json:"items"`
+type ConfigMapReferenceList struct {
+	Items []*ConfigMapReference `json:"items"`
 }
 
-func makeRuleConfigMap(cm *v1.ConfigMap) (*ConfigMap, error) {
+func makeRuleConfigMap(cm *v1.ConfigMap) (*ConfigMapReference, error) {
 	hash := sha256.New()
 	err := json.NewEncoder(hash).Encode(cm)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ConfigMap{
+	return &ConfigMapReference{
 		Key:      cm.Namespace + "/" + cm.Name,
 		Checksum: fmt.Sprintf("%x", hash.Sum(nil)),
 	}, nil
 }
 
 func makeRuleConfigMapListFile(configMaps []*v1.ConfigMap) ([]byte, error) {
-	cml := &ConfigMapList{}
+	cml := &ConfigMapReferenceList{}
 
 	for _, cm := range configMaps {
 		configmap, err := makeRuleConfigMap(cm)
@@ -341,8 +341,8 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 						},
 						Resources: p.Spec.Resources,
 					}, {
-						Name:         "prometheus-watcher",
-						Image:        c.PrometheusWatcherImage,
+						Name:         "prometheus-config-reloader",
+						Image:        c.PrometheusConfigReloader,
 						Args:         configReloadArgs,
 						VolumeMounts: configReloadVolumeMounts,
 						Resources: v1.ResourceRequirements{

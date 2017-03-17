@@ -51,12 +51,12 @@ func newVolumeWatcher(client *k8s.Client, cfg config, logger log.Logger) *volume
 	}
 }
 
-type ConfigMap struct {
+type ConfigMapReference struct {
 	Key string `json:"key"`
 }
 
-type ConfigMapList struct {
-	Items []*ConfigMap `json:"items"`
+type ConfigMapReferenceList struct {
+	Items []*ConfigMapReference `json:"items"`
 }
 
 func (w *volumeWatcher) UpdateRuleFiles() error {
@@ -66,7 +66,7 @@ func (w *volumeWatcher) UpdateRuleFiles() error {
 	}
 	defer file.Close()
 
-	configMaps := ConfigMapList{}
+	configMaps := ConfigMapReferenceList{}
 	err = json.NewDecoder(file).Decode(&configMaps)
 	if err != nil {
 		return err
@@ -224,23 +224,6 @@ func (w *volumeWatcher) Run() {
 	}
 	defer watcher.Close()
 
-	done := make(chan bool)
-	go func() {
-		for {
-			select {
-			case event := <-watcher.Events:
-				if event.Op&fsnotify.Create == fsnotify.Create {
-					if filepath.Base(event.Name) == "..data" {
-						w.logger.Log("msg", "ConfigMap modified.")
-						w.Refresh()
-					}
-				}
-			case err := <-watcher.Errors:
-				w.logger.Log("err", err)
-			}
-		}
-	}()
-
 	w.logger.Log("msg", "Starting...")
 	w.Refresh()
 	err = watcher.Add(w.cfg.configVolumeDir)
@@ -249,7 +232,19 @@ func (w *volumeWatcher) Run() {
 		os.Exit(1)
 	}
 
-	<-done
+	for {
+		select {
+		case event := <-watcher.Events:
+			if event.Op&fsnotify.Create == fsnotify.Create {
+				if filepath.Base(event.Name) == "..data" {
+					w.logger.Log("msg", "ConfigMap modified.")
+					w.Refresh()
+				}
+			}
+		case err := <-watcher.Errors:
+			w.logger.Log("err", err)
+		}
+	}
 }
 
 func main() {
@@ -257,7 +252,7 @@ func main() {
 		With("ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 
 	cfg := config{}
-	flags := flag.NewFlagSet("prometheus-watcher", flag.ExitOnError)
+	flags := flag.NewFlagSet("prometheus-config-reloader", flag.ExitOnError)
 	flags.StringVar(&cfg.configVolumeDir, "config-volume-dir", "", "The directory to watch for changes to reload Prometheus.")
 	flags.StringVar(&cfg.ruleVolumeDir, "rule-volume-dir", "", "The directory to write rule files to.")
 	flags.StringVar(&cfg.reloadUrl, "reload-url", "", "The URL to call when intending to reload Prometheus.")

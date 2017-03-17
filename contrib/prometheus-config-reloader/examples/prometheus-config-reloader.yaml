@@ -1,26 +1,26 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: prometheus-watcher-example
+  name: prometheus-config-reloader-example
 data:
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: prometheus-watcher
+  name: prometheus-config-reloader
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: prometheus-watcher
+        app: prometheus-config-reloader
     spec:
       volumes:
       - name: rules
         emptyDir: {}
       - name: config
         configMap:
-          name: prometheus-watcher-example
+          name: prometheus-config-reloader-example
       containers:
       - name: ubuntu
         image: ubuntu
@@ -29,8 +29,8 @@ spec:
         - name: rules
           mountPath: /etc/prometheus/rules
           readOnly: true
-      - name: prometheus-watcher
-        image: quay.io/coreos/prometheus-watcher:v0.0.1
+      - name: prometheus-config-reloader
+        image: quay.io/coreos/prometheus-config-reloader:v0.0.1
         args:
         - '-config-volume-dir=/etc/prometheus/config'
         - '-rule-volume-dir=/etc/prometheus/rules'
