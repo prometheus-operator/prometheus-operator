@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config-reloader-example
+data:
+  configmaps.json: |+
+    {
+      "items": [
+        {
+          "key": "default/test0"
+        },
+        {
+          "key": "default/test1"
+        },
+        {
+          "key": "default/test2"
+        }
+      ]
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test0
+data:
+  test.rules: |+
+    test0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test1
+data:
+  test.rules: |+
+    test1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test2
+data:
+  test.rules: |+
+    test2

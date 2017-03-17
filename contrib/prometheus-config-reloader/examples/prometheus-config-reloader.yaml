@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config-reloader-example
+data:
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus-config-reloader
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: prometheus-config-reloader
+    spec:
+      volumes:
+      - name: rules
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: prometheus-config-reloader-example
+      containers:
+      - name: ubuntu
+        image: ubuntu
+        command: ["sleep", "3600"]
+        volumeMounts:
+        - name: rules
+          mountPath: /etc/prometheus/rules
+          readOnly: true
+      - name: prometheus-config-reloader
+        image: quay.io/coreos/prometheus-config-reloader:v0.0.1
+        args:
+        - '-config-volume-dir=/etc/prometheus/config'
+        - '-rule-volume-dir=/etc/prometheus/rules'
+        - '-reload-url=http://localhost:9090/-/reload'
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "50m"
+          limits:
+            memory: "32Mi"
+            cpu: "100m"
+        volumeMounts:
+        - name: config
+          readOnly: true
+          mountPath: /etc/prometheus/config
+        - name: rules
+          mountPath: /etc/prometheus/rules
+

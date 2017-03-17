@@ -15,6 +15,8 @@
 package prometheus
 
 import (
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"path"
@@ -107,49 +109,71 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 	return statefulset
 }
 
-func volumesInfoFromRuleConfigMaps(ruleConfigMaps []*v1.ConfigMap) ([]v1.Volume, []v1.VolumeMount, []string) {
-	volumes := make([]v1.Volume, len(ruleConfigMaps))
-	volumeMounts := make([]v1.VolumeMount, len(ruleConfigMaps))
-	ruleFileVolumeArgs := make([]string, len(ruleConfigMaps))
-
-	for i, c := range ruleConfigMaps {
-		volumeName := fmt.Sprintf("rules-%d", i)
-		ruleFilePath := configMapRuleFileFolder(i)
-
-		volumes[i] = v1.Volume{
-			Name: volumeName,
-			VolumeSource: v1.VolumeSource{
-				ConfigMap: &v1.ConfigMapVolumeSource{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: c.Name,
-					},
-				},
-			},
-		}
-		volumeMounts[i] = v1.VolumeMount{
-			Name:      volumeName,
-			ReadOnly:  true,
-			MountPath: ruleFilePath,
-		}
-		ruleFileVolumeArgs[i] = fmt.Sprintf("-volume-dir=%s", ruleFilePath)
+func makeEmptyConfig(name string, configMaps []*v1.ConfigMap) (*v1.Secret, error) {
+	s, err := makeConfigSecret(name, configMaps)
+	if err != nil {
+		return nil, err
 	}
 
-	return volumes, volumeMounts, ruleFileVolumeArgs
+	s.ObjectMeta.Annotations = map[string]string{
+		"empty": "true",
+	}
+
+	return s, nil
 }
 
-func makeEmptyConfig(name string) *v1.Secret {
+type ConfigMapReference struct {
+	Key      string `json:"key"`
+	Checksum string `json:"checksum"`
+}
+
+type ConfigMapReferenceList struct {
+	Items []*ConfigMapReference `json:"items"`
+}
+
+func makeRuleConfigMap(cm *v1.ConfigMap) (*ConfigMapReference, error) {
+	hash := sha256.New()
+	err := json.NewEncoder(hash).Encode(cm)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ConfigMapReference{
+		Key:      cm.Namespace + "/" + cm.Name,
+		Checksum: fmt.Sprintf("%x", hash.Sum(nil)),
+	}, nil
+}
+
+func makeRuleConfigMapListFile(configMaps []*v1.ConfigMap) ([]byte, error) {
+	cml := &ConfigMapReferenceList{}
+
+	for _, cm := range configMaps {
+		configmap, err := makeRuleConfigMap(cm)
+		if err != nil {
+			return nil, err
+		}
+		cml.Items = append(cml.Items, configmap)
+	}
+
+	return json.Marshal(cml)
+}
+
+func makeConfigSecret(name string, configMaps []*v1.ConfigMap) (*v1.Secret, error) {
+	b, err := makeRuleConfigMapListFile(configMaps)
+	if err != nil {
+		return nil, err
+	}
+
 	return &v1.Secret{
 		ObjectMeta: apimetav1.ObjectMeta{
 			Name:   configSecretName(name),
 			Labels: managedByOperatorLabels,
-			Annotations: map[string]string{
-				"empty": "true",
-			},
 		},
 		Data: map[string][]byte{
 			"prometheus.yaml": []byte{},
+			"configmaps.json": b,
 		},
-	}
+	}, nil
 }
 
 func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
@@ -224,8 +248,6 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
-	ruleFileVolumes, ruleFileVolumeMounts, ruleFileVolumeArgs := volumesInfoFromRuleConfigMaps(ruleConfigMaps)
-
 	volumes := append([]v1.Volume{
 		{
 			Name: "config",
@@ -235,7 +257,13 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 				},
 			},
 		},
-	}, ruleFileVolumes...)
+		{
+			Name: "rules",
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		},
+	})
 
 	promVolumeMounts := append([]v1.VolumeMount{
 		{
@@ -244,11 +272,16 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 			MountPath: "/etc/prometheus/config",
 		},
 		{
+			Name:      "rules",
+			ReadOnly:  true,
+			MountPath: "/etc/prometheus/rules",
+		},
+		{
 			Name:      volumeName(p.Name),
 			MountPath: "/var/prometheus/data",
 			SubPath:   subPathForStorage(p.Spec.Storage),
 		},
-	}, ruleFileVolumeMounts...)
+	})
 
 	configReloadVolumeMounts := append([]v1.VolumeMount{
 		{
@@ -256,12 +289,17 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 			ReadOnly:  true,
 			MountPath: "/etc/prometheus/config",
 		},
-	}, ruleFileVolumeMounts...)
+		{
+			Name:      "rules",
+			MountPath: "/etc/prometheus/rules",
+		},
+	})
 
 	configReloadArgs := append([]string{
-		fmt.Sprintf("-webhook-url=%s", localReloadURL),
-		"-volume-dir=/etc/prometheus/config",
-	}, ruleFileVolumeArgs...)
+		fmt.Sprintf("-reload-url=%s", localReloadURL),
+		"-config-volume-dir=/etc/prometheus/config",
+		"-rule-volume-dir=/etc/prometheus/rules",
+	})
 
 	return v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
@@ -303,8 +341,8 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 						},
 						Resources: p.Spec.Resources,
 					}, {
-						Name:         "config-reloader",
-						Image:        c.ConfigReloaderImage,
+						Name:         "prometheus-config-reloader",
+						Image:        c.PrometheusConfigReloader,
 						Args:         configReloadArgs,
 						VolumeMounts: configReloadVolumeMounts,
 						Resources: v1.ResourceRequirements{
