@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
        - name: prometheus-operator
-         image: quay.io/coreos/prometheus-operator:v0.6.0
+         image: quay.io/coreos/prometheus-operator:v0.7.0
          args:
            - "--kubelet-object=kube-system/kubelet"
            - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
