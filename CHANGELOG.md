@@ -1,3 +1,16 @@
+## 0.7.0 / 2017-03-17
+
+This release introduces breaking changes to the generated StatefulSet's
+PodTemplate, which cannot be modified for StatefulSets. The Prometheus and
+Alertmanager objects have to be deleted and recreated for the StatefulSets to
+be created properly.
+
+* [CHANGE] Use Secrets instead of ConfigMaps for configurations.
+* [FEATURE] Allow ConfigMaps containing rules to be selected via label selector.
+* [FEATURE] `nodeSelector` added to the Alertmanager kind.
+* [ENHANCEMENT] Use Prometheus v2 chunk encoding by default.
+* [BUGFIX] Fix Alertmanager cluster mesh initialization.
+
 ## 0.6.0 / 2017-02-28
 
 * [FEATURE] Allow not tagging targets with the `namespace` label.
