@@ -28,7 +28,7 @@ spec:
             memory: 100Mi
             cpu: 100m
           limits:
-            memory: 300Mi
+            memory: 1000Mi
             cpu: 300m
       - name: grafana-watcher
         image: quay.io/coreos/grafana-watcher:latest

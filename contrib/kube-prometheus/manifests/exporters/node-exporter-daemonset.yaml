@@ -27,7 +27,7 @@ spec:
             cpu: 100m
           limits:
             memory: 50Mi
-            cpu: 200m
+            cpu: 300m
         volumeMounts:
         - name: proc
           readOnly:  true

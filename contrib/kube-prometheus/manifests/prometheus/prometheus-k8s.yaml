@@ -12,13 +12,13 @@ spec:
     - {key: k8s-apps, operator: Exists}
   resources:
     limits:
-      memory: 2Gi
+      memory: 6Gi
     requests:
       # 2Gi is default, but won't schedule if you don't have a node with >2Gi
       # memory. Modify based on your target and time-series count for
       # production use. This value is mainly meant for demonstration/testing
       # purposes.
-      memory: 2Gi
+      memory: 4Gi
   alerting:
     alertmanagers:
     - namespace: monitoring
