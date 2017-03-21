@@ -221,11 +221,8 @@ func (f *Framework) WaitForPodsRunImage(expectedReplicas int, image string, opts
 }
 
 func (f *Framework) WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {
-	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+	return f.Poll(timeout, time.Second, func() (bool, error) {
 		resp, err := http.Get(url)
-		if err != nil {
-			return false, err
-		}
 		if err == nil && resp.StatusCode == 200 {
 			return true, nil
 		}
