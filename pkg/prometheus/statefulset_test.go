@@ -18,7 +18,6 @@ import (
 	"reflect"
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
@@ -39,7 +38,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	}
 
 	sset := makeStatefulSet(v1alpha1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
 		},

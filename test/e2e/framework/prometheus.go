@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/util/intstr"
 
@@ -32,17 +32,17 @@ import (
 
 func (f *Framework) MakeBasicPrometheus(name, group string, replicas int32) *v1alpha1.Prometheus {
 	return &v1alpha1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: name,
 		},
 		Spec: v1alpha1.PrometheusSpec{
 			Replicas: &replicas,
-			ServiceMonitorSelector: &metav1.LabelSelector{
+			ServiceMonitorSelector: &unversioned.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": group,
 				},
 			},
-			RuleSelector: &metav1.LabelSelector{
+			RuleSelector: &unversioned.LabelSelector{
 				MatchLabels: map[string]string{
 					"role": "rulefile",
 				},
@@ -70,14 +70,14 @@ func (f *Framework) AddAlertingToPrometheus(p *v1alpha1.Prometheus, name string)
 
 func (f *Framework) MakeBasicServiceMonitor(name string) *v1alpha1.ServiceMonitor {
 	return &v1alpha1.ServiceMonitor{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: name,
 			Labels: map[string]string{
 				"group": name,
 			},
 		},
 		Spec: v1alpha1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
+			Selector: unversioned.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": name,
 				},
@@ -100,7 +100,7 @@ func (f *Framework) MakeBasicPrometheusNodePortService(name, group string, nodeP
 
 func (f *Framework) MakePrometheusService(name, group string, serviceType v1.ServiceType) *v1.Service {
 	service := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 			Labels: map[string]string{
 				"group": group,

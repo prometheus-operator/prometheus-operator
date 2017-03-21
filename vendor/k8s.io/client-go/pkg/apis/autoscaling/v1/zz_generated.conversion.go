@@ -21,10 +21,10 @@ limitations under the License.
 package v1
 
 import (
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	conversion "k8s.io/apimachinery/pkg/conversion"
-	runtime "k8s.io/apimachinery/pkg/runtime"
+	unversioned "k8s.io/client-go/pkg/api/unversioned"
 	autoscaling "k8s.io/client-go/pkg/apis/autoscaling"
+	conversion "k8s.io/client-go/pkg/conversion"
+	runtime "k8s.io/client-go/pkg/runtime"
 	unsafe "unsafe"
 )
 
@@ -78,7 +78,10 @@ func Convert_autoscaling_CrossVersionObjectReference_To_v1_CrossVersionObjectRef
 }
 
 func autoConvert_v1_HorizontalPodAutoscaler_To_autoscaling_HorizontalPodAutoscaler(in *HorizontalPodAutoscaler, out *autoscaling.HorizontalPodAutoscaler, s conversion.Scope) error {
-	out.ObjectMeta = in.ObjectMeta
+	// TODO: Inefficient conversion - can we improve it?
+	if err := s.Convert(&in.ObjectMeta, &out.ObjectMeta, 0); err != nil {
+		return err
+	}
 	if err := Convert_v1_HorizontalPodAutoscalerSpec_To_autoscaling_HorizontalPodAutoscalerSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
@@ -93,7 +96,10 @@ func Convert_v1_HorizontalPodAutoscaler_To_autoscaling_HorizontalPodAutoscaler(i
 }
 
 func autoConvert_autoscaling_HorizontalPodAutoscaler_To_v1_HorizontalPodAutoscaler(in *autoscaling.HorizontalPodAutoscaler, out *HorizontalPodAutoscaler, s conversion.Scope) error {
-	out.ObjectMeta = in.ObjectMeta
+	// TODO: Inefficient conversion - can we improve it?
+	if err := s.Convert(&in.ObjectMeta, &out.ObjectMeta, 0); err != nil {
+		return err
+	}
 	if err := Convert_autoscaling_HorizontalPodAutoscalerSpec_To_v1_HorizontalPodAutoscalerSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
@@ -157,7 +163,7 @@ func Convert_autoscaling_HorizontalPodAutoscalerSpec_To_v1_HorizontalPodAutoscal
 
 func autoConvert_v1_HorizontalPodAutoscalerStatus_To_autoscaling_HorizontalPodAutoscalerStatus(in *HorizontalPodAutoscalerStatus, out *autoscaling.HorizontalPodAutoscalerStatus, s conversion.Scope) error {
 	out.ObservedGeneration = (*int64)(unsafe.Pointer(in.ObservedGeneration))
-	out.LastScaleTime = (*meta_v1.Time)(unsafe.Pointer(in.LastScaleTime))
+	out.LastScaleTime = (*unversioned.Time)(unsafe.Pointer(in.LastScaleTime))
 	out.CurrentReplicas = in.CurrentReplicas
 	out.DesiredReplicas = in.DesiredReplicas
 	out.CurrentCPUUtilizationPercentage = (*int32)(unsafe.Pointer(in.CurrentCPUUtilizationPercentage))
@@ -170,7 +176,7 @@ func Convert_v1_HorizontalPodAutoscalerStatus_To_autoscaling_HorizontalPodAutosc
 
 func autoConvert_autoscaling_HorizontalPodAutoscalerStatus_To_v1_HorizontalPodAutoscalerStatus(in *autoscaling.HorizontalPodAutoscalerStatus, out *HorizontalPodAutoscalerStatus, s conversion.Scope) error {
 	out.ObservedGeneration = (*int64)(unsafe.Pointer(in.ObservedGeneration))
-	out.LastScaleTime = (*meta_v1.Time)(unsafe.Pointer(in.LastScaleTime))
+	out.LastScaleTime = (*unversioned.Time)(unsafe.Pointer(in.LastScaleTime))
 	out.CurrentReplicas = in.CurrentReplicas
 	out.DesiredReplicas = in.DesiredReplicas
 	out.CurrentCPUUtilizationPercentage = (*int32)(unsafe.Pointer(in.CurrentCPUUtilizationPercentage))
@@ -182,7 +188,10 @@ func Convert_autoscaling_HorizontalPodAutoscalerStatus_To_v1_HorizontalPodAutosc
 }
 
 func autoConvert_v1_Scale_To_autoscaling_Scale(in *Scale, out *autoscaling.Scale, s conversion.Scope) error {
-	out.ObjectMeta = in.ObjectMeta
+	// TODO: Inefficient conversion - can we improve it?
+	if err := s.Convert(&in.ObjectMeta, &out.ObjectMeta, 0); err != nil {
+		return err
+	}
 	if err := Convert_v1_ScaleSpec_To_autoscaling_ScaleSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
@@ -197,7 +206,10 @@ func Convert_v1_Scale_To_autoscaling_Scale(in *Scale, out *autoscaling.Scale, s 
 }
 
 func autoConvert_autoscaling_Scale_To_v1_Scale(in *autoscaling.Scale, out *Scale, s conversion.Scope) error {
-	out.ObjectMeta = in.ObjectMeta
+	// TODO: Inefficient conversion - can we improve it?
+	if err := s.Convert(&in.ObjectMeta, &out.ObjectMeta, 0); err != nil {
+		return err
+	}
 	if err := Convert_autoscaling_ScaleSpec_To_v1_ScaleSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}

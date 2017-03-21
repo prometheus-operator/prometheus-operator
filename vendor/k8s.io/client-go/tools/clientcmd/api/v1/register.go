@@ -17,13 +17,13 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/runtime"
 )
 
 // SchemeGroupVersion is group version used to register these objects
 // TODO this should be in the "kubeconfig" group
-var SchemeGroupVersion = schema.GroupVersion{Group: "", Version: "v1"}
+var SchemeGroupVersion = unversioned.GroupVersion{Group: "", Version: "v1"}
 
 var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes, addConversionFuncs)
@@ -37,10 +37,10 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	return nil
 }
 
-func (obj *Config) GetObjectKind() schema.ObjectKind { return obj }
-func (obj *Config) SetGroupVersionKind(gvk schema.GroupVersionKind) {
+func (obj *Config) GetObjectKind() unversioned.ObjectKind { return obj }
+func (obj *Config) SetGroupVersionKind(gvk unversioned.GroupVersionKind) {
 	obj.APIVersion, obj.Kind = gvk.ToAPIVersionAndKind()
 }
-func (obj *Config) GroupVersionKind() schema.GroupVersionKind {
-	return schema.FromAPIVersionAndKind(obj.APIVersion, obj.Kind)
+func (obj *Config) GroupVersionKind() unversioned.GroupVersionKind {
+	return unversioned.FromAPIVersionAndKind(obj.APIVersion, obj.Kind)
 }

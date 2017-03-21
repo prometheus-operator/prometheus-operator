@@ -17,11 +17,9 @@ limitations under the License.
 package v1
 
 import (
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
 	api "k8s.io/client-go/pkg/api"
 	v1 "k8s.io/client-go/pkg/api/v1"
+	watch "k8s.io/client-go/pkg/watch"
 	rest "k8s.io/client-go/rest"
 )
 
@@ -37,11 +35,11 @@ type ResourceQuotaInterface interface {
 	Update(*v1.ResourceQuota) (*v1.ResourceQuota, error)
 	UpdateStatus(*v1.ResourceQuota) (*v1.ResourceQuota, error)
 	Delete(name string, options *v1.DeleteOptions) error
-	DeleteCollection(options *v1.DeleteOptions, listOptions meta_v1.ListOptions) error
-	Get(name string, options meta_v1.GetOptions) (*v1.ResourceQuota, error)
-	List(opts meta_v1.ListOptions) (*v1.ResourceQuotaList, error)
-	Watch(opts meta_v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.ResourceQuota, err error)
+	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
+	Get(name string) (*v1.ResourceQuota, error)
+	List(opts v1.ListOptions) (*v1.ResourceQuotaList, error)
+	Watch(opts v1.ListOptions) (watch.Interface, error)
+	Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *v1.ResourceQuota, err error)
 	ResourceQuotaExpansion
 }
 
@@ -84,9 +82,6 @@ func (c *resourceQuotas) Update(resourceQuota *v1.ResourceQuota) (result *v1.Res
 	return
 }
 
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclientstatus=false comment above the type to avoid generating UpdateStatus().
-
 func (c *resourceQuotas) UpdateStatus(resourceQuota *v1.ResourceQuota) (result *v1.ResourceQuota, err error) {
 	result = &v1.ResourceQuota{}
 	err = c.client.Put().
@@ -112,7 +107,7 @@ func (c *resourceQuotas) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *resourceQuotas) DeleteCollection(options *v1.DeleteOptions, listOptions meta_v1.ListOptions) error {
+func (c *resourceQuotas) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("resourcequotas").
@@ -123,20 +118,19 @@ func (c *resourceQuotas) DeleteCollection(options *v1.DeleteOptions, listOptions
 }
 
 // Get takes name of the resourceQuota, and returns the corresponding resourceQuota object, and an error if there is any.
-func (c *resourceQuotas) Get(name string, options meta_v1.GetOptions) (result *v1.ResourceQuota, err error) {
+func (c *resourceQuotas) Get(name string) (result *v1.ResourceQuota, err error) {
 	result = &v1.ResourceQuota{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("resourcequotas").
 		Name(name).
-		VersionedParams(&options, api.ParameterCodec).
 		Do().
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of ResourceQuotas that match those selectors.
-func (c *resourceQuotas) List(opts meta_v1.ListOptions) (result *v1.ResourceQuotaList, err error) {
+func (c *resourceQuotas) List(opts v1.ListOptions) (result *v1.ResourceQuotaList, err error) {
 	result = &v1.ResourceQuotaList{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -148,7 +142,7 @@ func (c *resourceQuotas) List(opts meta_v1.ListOptions) (result *v1.ResourceQuot
 }
 
 // Watch returns a watch.Interface that watches the requested resourceQuotas.
-func (c *resourceQuotas) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
+func (c *resourceQuotas) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.client.Get().
 		Prefix("watch").
 		Namespace(c.ns).
@@ -158,7 +152,7 @@ func (c *resourceQuotas) Watch(opts meta_v1.ListOptions) (watch.Interface, error
 }
 
 // Patch applies the patch and returns the patched resourceQuota.
-func (c *resourceQuotas) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.ResourceQuota, err error) {
+func (c *resourceQuotas) Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *v1.ResourceQuota, err error) {
 	result = &v1.ResourceQuota{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).

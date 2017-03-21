@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api/unversioned"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
@@ -129,25 +129,25 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
 	for _, exp := range m.Spec.Selector.MatchExpressions {
 		switch exp.Operator {
-		case metav1.LabelSelectorOpIn:
+		case unversioned.LabelSelectorOpIn:
 			relabelings = append(relabelings, map[string]interface{}{
 				"action":        "keep",
 				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
 				"regex":         strings.Join(exp.Values, "|"),
 			})
-		case metav1.LabelSelectorOpNotIn:
+		case unversioned.LabelSelectorOpNotIn:
 			relabelings = append(relabelings, map[string]interface{}{
 				"action":        "drop",
 				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
 				"regex":         strings.Join(exp.Values, "|"),
 			})
-		case metav1.LabelSelectorOpExists:
+		case unversioned.LabelSelectorOpExists:
 			relabelings = append(relabelings, map[string]interface{}{
 				"action":        "keep",
 				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
 				"regex":         ".+",
 			})
-		case metav1.LabelSelectorOpDoesNotExist:
+		case unversioned.LabelSelectorOpDoesNotExist:
 			relabelings = append(relabelings, map[string]interface{}{
 				"action":        "drop",
 				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},

@@ -21,9 +21,9 @@ limitations under the License.
 package authentication
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	conversion "k8s.io/apimachinery/pkg/conversion"
-	runtime "k8s.io/apimachinery/pkg/runtime"
+	api "k8s.io/client-go/pkg/api"
+	conversion "k8s.io/client-go/pkg/conversion"
+	runtime "k8s.io/client-go/pkg/runtime"
 	reflect "reflect"
 )
 
@@ -46,12 +46,11 @@ func DeepCopy_authentication_TokenReview(in interface{}, out interface{}, c *con
 	{
 		in := in.(*TokenReview)
 		out := out.(*TokenReview)
-		*out = *in
-		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
+		out.TypeMeta = in.TypeMeta
+		if err := api.DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
-		} else {
-			out.ObjectMeta = *newVal.(*v1.ObjectMeta)
 		}
+		out.Spec = in.Spec
 		if err := DeepCopy_authentication_TokenReviewStatus(&in.Status, &out.Status, c); err != nil {
 			return err
 		}
@@ -63,7 +62,7 @@ func DeepCopy_authentication_TokenReviewSpec(in interface{}, out interface{}, c 
 	{
 		in := in.(*TokenReviewSpec)
 		out := out.(*TokenReviewSpec)
-		*out = *in
+		out.Token = in.Token
 		return nil
 	}
 }
@@ -72,10 +71,11 @@ func DeepCopy_authentication_TokenReviewStatus(in interface{}, out interface{}, 
 	{
 		in := in.(*TokenReviewStatus)
 		out := out.(*TokenReviewStatus)
-		*out = *in
+		out.Authenticated = in.Authenticated
 		if err := DeepCopy_authentication_UserInfo(&in.User, &out.User, c); err != nil {
 			return err
 		}
+		out.Error = in.Error
 		return nil
 	}
 }
@@ -84,11 +84,14 @@ func DeepCopy_authentication_UserInfo(in interface{}, out interface{}, c *conver
 	{
 		in := in.(*UserInfo)
 		out := out.(*UserInfo)
-		*out = *in
+		out.Username = in.Username
+		out.UID = in.UID
 		if in.Groups != nil {
 			in, out := &in.Groups, &out.Groups
 			*out = make([]string, len(*in))
 			copy(*out, *in)
+		} else {
+			out.Groups = nil
 		}
 		if in.Extra != nil {
 			in, out := &in.Extra, &out.Extra
@@ -100,6 +103,8 @@ func DeepCopy_authentication_UserInfo(in interface{}, out interface{}, c *conver
 					(*out)[key] = *newVal.(*ExtraValue)
 				}
 			}
+		} else {
+			out.Extra = nil
 		}
 		return nil
 	}

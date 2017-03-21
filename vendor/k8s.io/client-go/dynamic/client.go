@@ -26,30 +26,27 @@ import (
 	"net/url"
 	"strings"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/conversion/queryparams"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
-	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/util/flowcontrol"
+	"k8s.io/client-go/pkg/conversion/queryparams"
+	"k8s.io/client-go/pkg/runtime"
+	"k8s.io/client-go/pkg/runtime/serializer"
+	"k8s.io/client-go/pkg/util/flowcontrol"
+	"k8s.io/client-go/pkg/watch"
+	"k8s.io/client-go/rest"
 )
 
 // Client is a Kubernetes client that allows you to access metadata
 // and manipulate metadata of a Kubernetes API group.
 type Client struct {
-	cl             *restclient.RESTClient
+	cl             *rest.RESTClient
 	parameterCodec runtime.ParameterCodec
 }
 
 // NewClient returns a new client based on the passed in config. The
 // codec is ignored, as the dynamic client uses it's own codec.
-func NewClient(conf *restclient.Config) (*Client, error) {
+func NewClient(conf *rest.Config) (*Client, error) {
 	// avoid changing the original config
 	confCopy := *conf
 	conf = &confCopy
@@ -66,10 +63,10 @@ func NewClient(conf *restclient.Config) (*Client, error) {
 	}
 
 	if len(conf.UserAgent) == 0 {
-		conf.UserAgent = restclient.DefaultKubernetesUserAgent()
+		conf.UserAgent = rest.DefaultKubernetesUserAgent()
 	}
 
-	cl, err := restclient.RESTClientFor(conf)
+	cl, err := rest.RESTClientFor(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +82,7 @@ func (c *Client) GetRateLimiter() flowcontrol.RateLimiter {
 // Resource returns an API interface to the specified resource for this client's
 // group and version. If resource is not a namespaced resource, then namespace
 // is ignored. The ResourceClient inherits the parameter codec of c.
-func (c *Client) Resource(resource *metav1.APIResource, namespace string) *ResourceClient {
+func (c *Client) Resource(resource *unversioned.APIResource, namespace string) *ResourceClient {
 	return &ResourceClient{
 		cl:             c.cl,
 		resource:       resource,
@@ -105,8 +102,8 @@ func (c *Client) ParameterCodec(parameterCodec runtime.ParameterCodec) *Client {
 // ResourceClient is an API interface to a specific resource under a
 // dynamic client.
 type ResourceClient struct {
-	cl             *restclient.RESTClient
-	resource       *metav1.APIResource
+	cl             *rest.RESTClient
+	resource       *unversioned.APIResource
 	ns             string
 	parameterCodec runtime.ParameterCodec
 }
@@ -126,8 +123,8 @@ func (rc *ResourceClient) List(opts runtime.Object) (runtime.Object, error) {
 }
 
 // Get gets the resource with the specified name.
-func (rc *ResourceClient) Get(name string) (*unstructured.Unstructured, error) {
-	result := new(unstructured.Unstructured)
+func (rc *ResourceClient) Get(name string) (*runtime.Unstructured, error) {
+	result := new(runtime.Unstructured)
 	err := rc.cl.Get().
 		NamespaceIfScoped(rc.ns, rc.resource.Namespaced).
 		Resource(rc.resource.Name).
@@ -164,8 +161,8 @@ func (rc *ResourceClient) DeleteCollection(deleteOptions *v1.DeleteOptions, list
 }
 
 // Create creates the provided resource.
-func (rc *ResourceClient) Create(obj *unstructured.Unstructured) (*unstructured.Unstructured, error) {
-	result := new(unstructured.Unstructured)
+func (rc *ResourceClient) Create(obj *runtime.Unstructured) (*runtime.Unstructured, error) {
+	result := new(runtime.Unstructured)
 	err := rc.cl.Post().
 		NamespaceIfScoped(rc.ns, rc.resource.Namespaced).
 		Resource(rc.resource.Name).
@@ -176,8 +173,8 @@ func (rc *ResourceClient) Create(obj *unstructured.Unstructured) (*unstructured.
 }
 
 // Update updates the provided resource.
-func (rc *ResourceClient) Update(obj *unstructured.Unstructured) (*unstructured.Unstructured, error) {
-	result := new(unstructured.Unstructured)
+func (rc *ResourceClient) Update(obj *runtime.Unstructured) (*runtime.Unstructured, error) {
+	result := new(runtime.Unstructured)
 	if len(obj.GetName()) == 0 {
 		return result, errors.New("object missing name")
 	}
@@ -205,8 +202,8 @@ func (rc *ResourceClient) Watch(opts runtime.Object) (watch.Interface, error) {
 		Watch()
 }
 
-func (rc *ResourceClient) Patch(name string, pt types.PatchType, data []byte) (*unstructured.Unstructured, error) {
-	result := new(unstructured.Unstructured)
+func (rc *ResourceClient) Patch(name string, pt api.PatchType, data []byte) (*runtime.Unstructured, error) {
+	result := new(runtime.Unstructured)
 	err := rc.cl.Patch(pt).
 		NamespaceIfScoped(rc.ns, rc.resource.Namespaced).
 		Resource(rc.resource.Name).
@@ -221,14 +218,14 @@ func (rc *ResourceClient) Patch(name string, pt types.PatchType, data []byte) (*
 // with special handling for Status objects.
 type dynamicCodec struct{}
 
-func (dynamicCodec) Decode(data []byte, gvk *schema.GroupVersionKind, obj runtime.Object) (runtime.Object, *schema.GroupVersionKind, error) {
-	obj, gvk, err := unstructured.UnstructuredJSONScheme.Decode(data, gvk, obj)
+func (dynamicCodec) Decode(data []byte, gvk *unversioned.GroupVersionKind, obj runtime.Object) (runtime.Object, *unversioned.GroupVersionKind, error) {
+	obj, gvk, err := runtime.UnstructuredJSONScheme.Decode(data, gvk, obj)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if _, ok := obj.(*metav1.Status); !ok && strings.ToLower(gvk.Kind) == "status" {
-		obj = &metav1.Status{}
+	if _, ok := obj.(*unversioned.Status); !ok && strings.ToLower(gvk.Kind) == "status" {
+		obj = &unversioned.Status{}
 		err := json.Unmarshal(data, obj)
 		if err != nil {
 			return nil, nil, err
@@ -239,11 +236,11 @@ func (dynamicCodec) Decode(data []byte, gvk *schema.GroupVersionKind, obj runtim
 }
 
 func (dynamicCodec) Encode(obj runtime.Object, w io.Writer) error {
-	return unstructured.UnstructuredJSONScheme.Encode(obj, w)
+	return runtime.UnstructuredJSONScheme.Encode(obj, w)
 }
 
-// ContentConfig returns a restclient.ContentConfig for dynamic types.
-func ContentConfig() restclient.ContentConfig {
+// ContentConfig returns a rest.ContentConfig for dynamic types.
+func ContentConfig() rest.ContentConfig {
 	var jsonInfo runtime.SerializerInfo
 	// TODO: api.Codecs here should become "pkg/apis/server/scheme" which is the minimal core you need
 	// to talk to a kubernetes server
@@ -256,7 +253,7 @@ func ContentConfig() restclient.ContentConfig {
 
 	jsonInfo.Serializer = dynamicCodec{}
 	jsonInfo.PrettySerializer = nil
-	return restclient.ContentConfig{
+	return rest.ContentConfig{
 		AcceptContentTypes:   runtime.ContentTypeJSON,
 		ContentType:          runtime.ContentTypeJSON,
 		NegotiatedSerializer: serializer.NegotiatedSerializerWrapper(jsonInfo),
@@ -267,11 +264,11 @@ func ContentConfig() restclient.ContentConfig {
 // parameters without trying to convert to the target version.
 type parameterCodec struct{}
 
-func (parameterCodec) EncodeParameters(obj runtime.Object, to schema.GroupVersion) (url.Values, error) {
+func (parameterCodec) EncodeParameters(obj runtime.Object, to unversioned.GroupVersion) (url.Values, error) {
 	return queryparams.Convert(obj)
 }
 
-func (parameterCodec) DecodeParameters(parameters url.Values, from schema.GroupVersion, into runtime.Object) error {
+func (parameterCodec) DecodeParameters(parameters url.Values, from unversioned.GroupVersion, into runtime.Object) error {
 	return errors.New("DecodeParameters not implemented on dynamic parameterCodec")
 }
 
@@ -279,7 +276,7 @@ var defaultParameterEncoder runtime.ParameterCodec = parameterCodec{}
 
 type versionedParameterEncoderWithV1Fallback struct{}
 
-func (versionedParameterEncoderWithV1Fallback) EncodeParameters(obj runtime.Object, to schema.GroupVersion) (url.Values, error) {
+func (versionedParameterEncoderWithV1Fallback) EncodeParameters(obj runtime.Object, to unversioned.GroupVersion) (url.Values, error) {
 	ret, err := api.ParameterCodec.EncodeParameters(obj, to)
 	if err != nil && runtime.IsNotRegisteredError(err) {
 		// fallback to v1
@@ -288,7 +285,7 @@ func (versionedParameterEncoderWithV1Fallback) EncodeParameters(obj runtime.Obje
 	return ret, err
 }
 
-func (versionedParameterEncoderWithV1Fallback) DecodeParameters(parameters url.Values, from schema.GroupVersion, into runtime.Object) error {
+func (versionedParameterEncoderWithV1Fallback) DecodeParameters(parameters url.Values, from unversioned.GroupVersion, into runtime.Object) error {
 	return errors.New("DecodeParameters not implemented on versionedParameterEncoderWithV1Fallback")
 }
 

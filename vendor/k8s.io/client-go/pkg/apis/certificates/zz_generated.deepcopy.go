@@ -21,9 +21,9 @@ limitations under the License.
 package certificates
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	conversion "k8s.io/apimachinery/pkg/conversion"
-	runtime "k8s.io/apimachinery/pkg/runtime"
+	api "k8s.io/client-go/pkg/api"
+	conversion "k8s.io/client-go/pkg/conversion"
+	runtime "k8s.io/client-go/pkg/runtime"
 	reflect "reflect"
 )
 
@@ -47,11 +47,9 @@ func DeepCopy_certificates_CertificateSigningRequest(in interface{}, out interfa
 	{
 		in := in.(*CertificateSigningRequest)
 		out := out.(*CertificateSigningRequest)
-		*out = *in
-		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
+		out.TypeMeta = in.TypeMeta
+		if err := api.DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
-		} else {
-			out.ObjectMeta = *newVal.(*v1.ObjectMeta)
 		}
 		if err := DeepCopy_certificates_CertificateSigningRequestSpec(&in.Spec, &out.Spec, c); err != nil {
 			return err
@@ -67,7 +65,9 @@ func DeepCopy_certificates_CertificateSigningRequestCondition(in interface{}, ou
 	{
 		in := in.(*CertificateSigningRequestCondition)
 		out := out.(*CertificateSigningRequestCondition)
-		*out = *in
+		out.Type = in.Type
+		out.Reason = in.Reason
+		out.Message = in.Message
 		out.LastUpdateTime = in.LastUpdateTime.DeepCopy()
 		return nil
 	}
@@ -77,7 +77,8 @@ func DeepCopy_certificates_CertificateSigningRequestList(in interface{}, out int
 	{
 		in := in.(*CertificateSigningRequestList)
 		out := out.(*CertificateSigningRequestList)
-		*out = *in
+		out.TypeMeta = in.TypeMeta
+		out.ListMeta = in.ListMeta
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]CertificateSigningRequest, len(*in))
@@ -86,6 +87,8 @@ func DeepCopy_certificates_CertificateSigningRequestList(in interface{}, out int
 					return err
 				}
 			}
+		} else {
+			out.Items = nil
 		}
 		return nil
 	}
@@ -95,21 +98,21 @@ func DeepCopy_certificates_CertificateSigningRequestSpec(in interface{}, out int
 	{
 		in := in.(*CertificateSigningRequestSpec)
 		out := out.(*CertificateSigningRequestSpec)
-		*out = *in
 		if in.Request != nil {
 			in, out := &in.Request, &out.Request
 			*out = make([]byte, len(*in))
 			copy(*out, *in)
+		} else {
+			out.Request = nil
 		}
-		if in.Usages != nil {
-			in, out := &in.Usages, &out.Usages
-			*out = make([]KeyUsage, len(*in))
-			copy(*out, *in)
-		}
+		out.Username = in.Username
+		out.UID = in.UID
 		if in.Groups != nil {
 			in, out := &in.Groups, &out.Groups
 			*out = make([]string, len(*in))
 			copy(*out, *in)
+		} else {
+			out.Groups = nil
 		}
 		return nil
 	}
@@ -119,7 +122,6 @@ func DeepCopy_certificates_CertificateSigningRequestStatus(in interface{}, out i
 	{
 		in := in.(*CertificateSigningRequestStatus)
 		out := out.(*CertificateSigningRequestStatus)
-		*out = *in
 		if in.Conditions != nil {
 			in, out := &in.Conditions, &out.Conditions
 			*out = make([]CertificateSigningRequestCondition, len(*in))
@@ -128,11 +130,15 @@ func DeepCopy_certificates_CertificateSigningRequestStatus(in interface{}, out i
 					return err
 				}
 			}
+		} else {
+			out.Conditions = nil
 		}
 		if in.Certificate != nil {
 			in, out := &in.Certificate, &out.Certificate
 			*out = make([]byte, len(*in))
 			copy(*out, *in)
+		} else {
+			out.Certificate = nil
 		}
 		return nil
 	}

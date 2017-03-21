@@ -17,7 +17,6 @@ package e2e
 import (
 	"fmt"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"net/http"
 	"strconv"
@@ -195,7 +194,7 @@ func TestExposingAlertmanagerWithIngress(t *testing.T) {
 func TestMeshInitialization(t *testing.T) {
 	var amountAlertmanagers int32 = 3
 	alertmanager := &v1alpha1.Alertmanager{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: "test",
 		},
 		Spec: v1alpha1.AlertmanagerSpec{
@@ -264,7 +263,7 @@ receivers:
 `
 
 	cfg := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
 		},
 		Data: map[string][]byte{

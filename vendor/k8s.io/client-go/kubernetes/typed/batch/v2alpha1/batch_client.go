@@ -18,9 +18,10 @@ package v2alpha1
 
 import (
 	fmt "fmt"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
-	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	api "k8s.io/client-go/pkg/api"
+	unversioned "k8s.io/client-go/pkg/api/unversioned"
+	registered "k8s.io/client-go/pkg/apimachinery/registered"
+	serializer "k8s.io/client-go/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
 
@@ -30,7 +31,7 @@ type BatchV2alpha1Interface interface {
 	JobsGetter
 }
 
-// BatchV2alpha1Client is used to interact with features provided by the batch group.
+// BatchV2alpha1Client is used to interact with features provided by the k8s.io/kubernetes/pkg/apimachinery/registered.Group group.
 type BatchV2alpha1Client struct {
 	restClient rest.Interface
 }
@@ -72,12 +73,12 @@ func New(c rest.Interface) *BatchV2alpha1Client {
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	gv, err := schema.ParseGroupVersion("batch/v2alpha1")
+	gv, err := unversioned.ParseGroupVersion("batch/v2alpha1")
 	if err != nil {
 		return err
 	}
 	// if batch/v2alpha1 is not enabled, return an error
-	if !api.Registry.IsEnabledVersion(gv) {
+	if !registered.IsEnabledVersion(gv) {
 		return fmt.Errorf("batch/v2alpha1 is not enabled")
 	}
 	config.APIPath = "/apis"

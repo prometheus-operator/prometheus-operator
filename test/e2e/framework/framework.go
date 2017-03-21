@@ -21,12 +21,11 @@ import (
 	"path/filepath"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/fields"
+	"k8s.io/client-go/pkg/util/yaml"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -67,7 +66,7 @@ func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 	}
 
 	namespace, err := cli.Core().Namespaces().Create(&v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: ns,
 		},
 	})
@@ -125,7 +124,7 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 		return err
 	}
 
-	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
+	opts := v1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
 	err = f.WaitForPodsReady(1, opts)
 	if err != nil {
 		return err
@@ -173,7 +172,7 @@ func (f *Framework) Teardown() error {
 
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
-func (f *Framework) WaitForPodsReady(expectedReplicas int, opts metav1.ListOptions) error {
+func (f *Framework) WaitForPodsReady(expectedReplicas int, opts v1.ListOptions) error {
 	return f.Poll(time.Minute*2, time.Second, func() (bool, error) {
 		pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
 		if err != nil {
@@ -199,7 +198,7 @@ func (f *Framework) WaitForPodsReady(expectedReplicas int, opts metav1.ListOptio
 	})
 }
 
-func (f *Framework) WaitForPodsRunImage(expectedReplicas int, image string, opts metav1.ListOptions) error {
+func (f *Framework) WaitForPodsRunImage(expectedReplicas int, image string, opts v1.ListOptions) error {
 	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
 		pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
 		if err != nil {

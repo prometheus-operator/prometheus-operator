@@ -17,11 +17,9 @@ limitations under the License.
 package v1
 
 import (
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
 	api "k8s.io/client-go/pkg/api"
 	v1 "k8s.io/client-go/pkg/api/v1"
+	watch "k8s.io/client-go/pkg/watch"
 	rest "k8s.io/client-go/rest"
 )
 
@@ -37,11 +35,11 @@ type ServiceInterface interface {
 	Update(*v1.Service) (*v1.Service, error)
 	UpdateStatus(*v1.Service) (*v1.Service, error)
 	Delete(name string, options *v1.DeleteOptions) error
-	DeleteCollection(options *v1.DeleteOptions, listOptions meta_v1.ListOptions) error
-	Get(name string, options meta_v1.GetOptions) (*v1.Service, error)
-	List(opts meta_v1.ListOptions) (*v1.ServiceList, error)
-	Watch(opts meta_v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.Service, err error)
+	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
+	Get(name string) (*v1.Service, error)
+	List(opts v1.ListOptions) (*v1.ServiceList, error)
+	Watch(opts v1.ListOptions) (watch.Interface, error)
+	Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *v1.Service, err error)
 	ServiceExpansion
 }
 
@@ -84,9 +82,6 @@ func (c *services) Update(service *v1.Service) (result *v1.Service, err error) {
 	return
 }
 
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclientstatus=false comment above the type to avoid generating UpdateStatus().
-
 func (c *services) UpdateStatus(service *v1.Service) (result *v1.Service, err error) {
 	result = &v1.Service{}
 	err = c.client.Put().
@@ -112,7 +107,7 @@ func (c *services) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *services) DeleteCollection(options *v1.DeleteOptions, listOptions meta_v1.ListOptions) error {
+func (c *services) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("services").
@@ -123,20 +118,19 @@ func (c *services) DeleteCollection(options *v1.DeleteOptions, listOptions meta_
 }
 
 // Get takes name of the service, and returns the corresponding service object, and an error if there is any.
-func (c *services) Get(name string, options meta_v1.GetOptions) (result *v1.Service, err error) {
+func (c *services) Get(name string) (result *v1.Service, err error) {
 	result = &v1.Service{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("services").
 		Name(name).
-		VersionedParams(&options, api.ParameterCodec).
 		Do().
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of Services that match those selectors.
-func (c *services) List(opts meta_v1.ListOptions) (result *v1.ServiceList, err error) {
+func (c *services) List(opts v1.ListOptions) (result *v1.ServiceList, err error) {
 	result = &v1.ServiceList{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -148,7 +142,7 @@ func (c *services) List(opts meta_v1.ListOptions) (result *v1.ServiceList, err e
 }
 
 // Watch returns a watch.Interface that watches the requested services.
-func (c *services) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
+func (c *services) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.client.Get().
 		Prefix("watch").
 		Namespace(c.ns).
@@ -158,7 +152,7 @@ func (c *services) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
 }
 
 // Patch applies the patch and returns the patched service.
-func (c *services) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.Service, err error) {
+func (c *services) Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *v1.Service, err error) {
 	result = &v1.Service{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).

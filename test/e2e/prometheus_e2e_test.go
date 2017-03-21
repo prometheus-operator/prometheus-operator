@@ -25,8 +25,6 @@ import (
 	"testing"
 	"time"
 
-	apimetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
 
@@ -107,7 +105,7 @@ func TestPrometheusReloadConfig(t *testing.T) {
 	name := "test"
 	replicas := int32(1)
 	p := &v1alpha1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: name,
 		},
 		Spec: v1alpha1.PrometheusSpec{
@@ -133,7 +131,7 @@ scrape_configs:
 `
 
 	cfg := &v1.Secret{
-		ObjectMeta: apimetav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 		},
 		Data: map[string][]byte{
@@ -194,7 +192,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 	name := "test"
 
 	ruleFileConfigMap := &v1.ConfigMap{
-		ObjectMeta: apimetav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s-rules", name),
 			Labels: map[string]string{
 				"role": "rulefile",
@@ -284,7 +282,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 	}
 
 	log.Print("Validating Prometheus config Secret was created")
-	_, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), apimetav1.GetOptions{})
+	_, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName))
 	if err != nil {
 		t.Fatalf("Generated Secret could not be retrieved: ", err)
 	}
@@ -340,7 +338,7 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	}
 
 	log.Print("Validating Prometheus config Secret was created")
-	_, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName), apimetav1.GetOptions{})
+	_, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName))
 	if err != nil {
 		t.Fatalf("Generated Secret could not be retrieved: ", err)
 	}

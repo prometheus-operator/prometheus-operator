@@ -17,8 +17,8 @@ limitations under the License.
 package apps
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/unversioned"
 )
 
 // +genclient=true
@@ -30,18 +30,18 @@ import (
 // The StatefulSet guarantees that a given network identity will always
 // map to the same storage identity.
 type StatefulSet struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec defines the desired identities of pods in this set.
 	// +optional
-	Spec StatefulSetSpec
+	Spec StatefulSetSpec `json:"spec,omitempty"`
 
 	// Status is the current status of Pods in this StatefulSet. This data
 	// may be out of date by some window of time.
 	// +optional
-	Status StatefulSetStatus
+	Status StatefulSetStatus `json:"status,omitempty"`
 }
 
 // A StatefulSetSpec is the specification of a StatefulSet.
@@ -52,19 +52,19 @@ type StatefulSetSpec struct {
 	// If unspecified, defaults to 1.
 	// TODO: Consider a rename of this field.
 	// +optional
-	Replicas int32
+	Replicas int32 `json:"replicas,omitempty"`
 
 	// Selector is a label query over pods that should match the replica count.
 	// If empty, defaulted to labels on the pod template.
 	// More info: http://kubernetes.io/docs/user-guide/labels#label-selectors
 	// +optional
-	Selector *metav1.LabelSelector
+	Selector *unversioned.LabelSelector `json:"selector,omitempty"`
 
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected. Each pod stamped out by the StatefulSet
 	// will fulfill this Template, but have a unique identity from the rest
 	// of the StatefulSet.
-	Template api.PodTemplateSpec
+	Template api.PodTemplateSpec `json:"template"`
 
 	// VolumeClaimTemplates is a list of claims that pods are allowed to reference.
 	// The StatefulSet controller is responsible for mapping network identities to
@@ -74,30 +74,30 @@ type StatefulSetSpec struct {
 	// any volumes in the template, with the same name.
 	// TODO: Define the behavior if a claim already exists with the same name.
 	// +optional
-	VolumeClaimTemplates []api.PersistentVolumeClaim
+	VolumeClaimTemplates []api.PersistentVolumeClaim `json:"volumeClaimTemplates,omitempty"`
 
 	// ServiceName is the name of the service that governs this StatefulSet.
 	// This service must exist before the StatefulSet, and is responsible for
 	// the network identity of the set. Pods get DNS/hostnames that follow the
 	// pattern: pod-specific-string.serviceName.default.svc.cluster.local
 	// where "pod-specific-string" is managed by the StatefulSet controller.
-	ServiceName string
+	ServiceName string `json:"serviceName"`
 }
 
 // StatefulSetStatus represents the current state of a StatefulSet.
 type StatefulSetStatus struct {
-	// most recent generation observed by this StatefulSet.
+	// most recent generation observed by this autoscaler.
 	// +optional
-	ObservedGeneration *int64
+	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
 
 	// Replicas is the number of actual replicas.
-	Replicas int32
+	Replicas int32 `json:"replicas"`
 }
 
 // StatefulSetList is a collection of StatefulSets.
 type StatefulSetList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ListMeta
-	Items []StatefulSet
+	unversioned.ListMeta `json:"metadata,omitempty"`
+	Items                []StatefulSet `json:"items"`
 }

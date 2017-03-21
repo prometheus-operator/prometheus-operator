@@ -29,9 +29,9 @@ support is experimental.
 package extensions
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/util/intstr"
 )
 
@@ -46,18 +46,18 @@ const (
 type ScaleSpec struct {
 	// desired number of instances for the scaled object.
 	// +optional
-	Replicas int32
+	Replicas int32 `json:"replicas,omitempty"`
 }
 
 // represents the current status of a scale subresource.
 type ScaleStatus struct {
 	// actual number of observed instances of the scaled object.
-	Replicas int32
+	Replicas int32 `json:"replicas"`
 
 	// label query over pods that should match the replicas count.
 	// More info: http://kubernetes.io/docs/user-guide/labels#label-selectors
 	// +optional
-	Selector *metav1.LabelSelector
+	Selector *unversioned.LabelSelector `json:"selector,omitempty"`
 }
 
 // +genclient=true
@@ -65,46 +65,46 @@ type ScaleStatus struct {
 
 // represents a scaling request for a resource.
 type Scale struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// Standard object metadata; More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata.
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// defines the behavior of the scale. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status.
 	// +optional
-	Spec ScaleSpec
+	Spec ScaleSpec `json:"spec,omitempty"`
 
 	// current status of the scale. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status. Read-only.
 	// +optional
-	Status ScaleStatus
+	Status ScaleStatus `json:"status,omitempty"`
 }
 
 // Dummy definition
 type ReplicationControllerDummy struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 }
 
 // Alpha-level support for Custom Metrics in HPA (as annotations).
 type CustomMetricTarget struct {
 	// Custom Metric name.
-	Name string
+	Name string `json:"name"`
 	// Custom Metric value (average).
-	TargetValue resource.Quantity
+	TargetValue resource.Quantity `json:"value"`
 }
 
 type CustomMetricTargetList struct {
-	Items []CustomMetricTarget
+	Items []CustomMetricTarget `json:"items"`
 }
 
 type CustomMetricCurrentStatus struct {
 	// Custom Metric name.
-	Name string
+	Name string `json:"name"`
 	// Custom Metric value (average).
-	CurrentValue resource.Quantity
+	CurrentValue resource.Quantity `json:"value"`
 }
 
 type CustomMetricCurrentStatusList struct {
-	Items []CustomMetricCurrentStatus
+	Items []CustomMetricCurrentStatus `json:"items"`
 }
 
 // +genclient=true
@@ -113,103 +113,103 @@ type CustomMetricCurrentStatusList struct {
 // A ThirdPartyResource is a generic representation of a resource, it is used by add-ons and plugins to add new resource
 // types to the API.  It consists of one or more Versions of the api.
 type ThirdPartyResource struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 
 	// Standard object metadata
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// Description is the description of this object.
 	// +optional
-	Description string
+	Description string `json:"description,omitempty"`
 
 	// Versions are versions for this third party object
-	Versions []APIVersion
+	Versions []APIVersion `json:"versions,omitempty"`
 }
 
 type ThirdPartyResourceList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 
 	// Standard list metadata.
 	// +optional
-	metav1.ListMeta
+	unversioned.ListMeta `json:"metadata,omitempty"`
 
 	// Items is the list of horizontal pod autoscalers.
-	Items []ThirdPartyResource
+	Items []ThirdPartyResource `json:"items"`
 }
 
 // An APIVersion represents a single concrete version of an object model.
-// TODO: we should consider merge this struct with GroupVersion in metav1.go
+// TODO: we should consider merge this struct with GroupVersion in unversioned.go
 type APIVersion struct {
 	// Name of this version (e.g. 'v1').
-	Name string
+	Name string `json:"name,omitempty"`
 }
 
 // An internal object, used for versioned storage in etcd.  Not exposed to the end user.
 type ThirdPartyResourceData struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// Standard object metadata.
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// Data is the raw JSON data for this data.
 	// +optional
-	Data []byte
+	Data []byte `json:"data,omitempty"`
 }
 
 // +genclient=true
 
 type Deployment struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// Specification of the desired behavior of the Deployment.
 	// +optional
-	Spec DeploymentSpec
+	Spec DeploymentSpec `json:"spec,omitempty"`
 
 	// Most recently observed status of the Deployment.
 	// +optional
-	Status DeploymentStatus
+	Status DeploymentStatus `json:"status,omitempty"`
 }
 
 type DeploymentSpec struct {
 	// Number of desired pods. This is a pointer to distinguish between explicit
 	// zero and not specified. Defaults to 1.
 	// +optional
-	Replicas int32
+	Replicas int32 `json:"replicas,omitempty"`
 
 	// Label selector for pods. Existing ReplicaSets whose pods are
 	// selected by this will be the ones affected by this deployment.
 	// +optional
-	Selector *metav1.LabelSelector
+	Selector *unversioned.LabelSelector `json:"selector,omitempty"`
 
 	// Template describes the pods that will be created.
-	Template api.PodTemplateSpec
+	Template api.PodTemplateSpec `json:"template"`
 
 	// The deployment strategy to use to replace existing pods with new ones.
 	// +optional
-	Strategy DeploymentStrategy
+	Strategy DeploymentStrategy `json:"strategy,omitempty"`
 
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing, for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
 	// +optional
-	MinReadySeconds int32
+	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
 
 	// The number of old ReplicaSets to retain to allow rollback.
 	// This is a pointer to distinguish between explicit zero and not specified.
 	// +optional
-	RevisionHistoryLimit *int32
+	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty"`
 
 	// Indicates that the deployment is paused and will not be processed by the
 	// deployment controller.
 	// +optional
-	Paused bool
+	Paused bool `json:"paused,omitempty"`
 
 	// The config this deployment is rolling back to. Will be cleared after rollback is done.
 	// +optional
-	RollbackTo *RollbackConfig
+	RollbackTo *RollbackConfig `json:"rollbackTo,omitempty"`
 
 	// The maximum time in seconds for a deployment to make progress before it
 	// is considered to be failed. The deployment controller will continue to
@@ -218,25 +218,25 @@ type DeploymentSpec struct {
 	// implemented, the deployment controller will automatically rollback failed
 	// deployments. Note that progress will not be estimated during the time a
 	// deployment is paused. This is not set by default.
-	ProgressDeadlineSeconds *int32
+	ProgressDeadlineSeconds *int32 `json:"progressDeadlineSeconds,omitempty"`
 }
 
 // DeploymentRollback stores the information required to rollback a deployment.
 type DeploymentRollback struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// Required: This must match the Name of a deployment.
-	Name string
+	Name string `json:"name"`
 	// The annotations to be updated to a deployment
 	// +optional
-	UpdatedAnnotations map[string]string
+	UpdatedAnnotations map[string]string `json:"updatedAnnotations,omitempty"`
 	// The config of this deployment rollback.
-	RollbackTo RollbackConfig
+	RollbackTo RollbackConfig `json:"rollbackTo"`
 }
 
 type RollbackConfig struct {
 	// The revision to rollback to. If set to 0, rollbck to the last revision.
 	// +optional
-	Revision int64
+	Revision int64 `json:"revision,omitempty"`
 }
 
 const (
@@ -249,7 +249,7 @@ const (
 type DeploymentStrategy struct {
 	// Type of deployment. Can be "Recreate" or "RollingUpdate". Default is RollingUpdate.
 	// +optional
-	Type DeploymentStrategyType
+	Type DeploymentStrategyType `json:"type,omitempty"`
 
 	// Rolling update config params. Present only if DeploymentStrategyType =
 	// RollingUpdate.
@@ -257,7 +257,7 @@ type DeploymentStrategy struct {
 	// TODO: Update this to follow our convention for oneOf, whatever we decide it
 	// to be.
 	// +optional
-	RollingUpdate *RollingUpdateDeployment
+	RollingUpdate *RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
 }
 
 type DeploymentStrategyType string
@@ -274,7 +274,7 @@ const (
 type RollingUpdateDeployment struct {
 	// The maximum number of pods that can be unavailable during the update.
 	// Value can be an absolute number (ex: 5) or a percentage of total pods at the start of update (ex: 10%).
-	// Absolute number is calculated from percentage by rounding down.
+	// Absolute number is calculated from percentage by rounding up.
 	// This can not be 0 if MaxSurge is 0.
 	// By default, a fixed value of 1 is used.
 	// Example: when this is set to 30%, the old RC can be scaled down by 30%
@@ -283,7 +283,7 @@ type RollingUpdateDeployment struct {
 	// that at least 70% of original number of pods are available at all times
 	// during the update.
 	// +optional
-	MaxUnavailable intstr.IntOrString
+	MaxUnavailable intstr.IntOrString `json:"maxUnavailable,omitempty"`
 
 	// The maximum number of pods that can be scheduled above the original number of
 	// pods.
@@ -296,36 +296,32 @@ type RollingUpdateDeployment struct {
 	// new RC can be scaled up further, ensuring that total number of pods running
 	// at any time during the update is atmost 130% of original pods.
 	// +optional
-	MaxSurge intstr.IntOrString
+	MaxSurge intstr.IntOrString `json:"maxSurge,omitempty"`
 }
 
 type DeploymentStatus struct {
 	// The generation observed by the deployment controller.
 	// +optional
-	ObservedGeneration int64
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// Total number of non-terminated pods targeted by this deployment (their labels match the selector).
 	// +optional
-	Replicas int32
+	Replicas int32 `json:"replicas,omitempty"`
 
 	// Total number of non-terminated pods targeted by this deployment that have the desired template spec.
 	// +optional
-	UpdatedReplicas int32
-
-	// Total number of ready pods targeted by this deployment.
-	// +optional
-	ReadyReplicas int32
+	UpdatedReplicas int32 `json:"updatedReplicas,omitempty"`
 
 	// Total number of available pods (ready for at least minReadySeconds) targeted by this deployment.
 	// +optional
-	AvailableReplicas int32
+	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
 
 	// Total number of unavailable pods targeted by this deployment.
 	// +optional
-	UnavailableReplicas int32
+	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty"`
 
 	// Represents the latest available observations of a deployment's current state.
-	Conditions []DeploymentCondition
+	Conditions []DeploymentCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 type DeploymentConditionType string
@@ -348,26 +344,26 @@ const (
 // DeploymentCondition describes the state of a deployment at a certain point.
 type DeploymentCondition struct {
 	// Type of deployment condition.
-	Type DeploymentConditionType
+	Type DeploymentConditionType `json:"type"`
 	// Status of the condition, one of True, False, Unknown.
-	Status api.ConditionStatus
+	Status api.ConditionStatus `json:"status"`
 	// The last time this condition was updated.
-	LastUpdateTime metav1.Time
+	LastUpdateTime unversioned.Time `json:"lastUpdateTime,omitempty"`
 	// Last time the condition transitioned from one status to another.
-	LastTransitionTime metav1.Time
+	LastTransitionTime unversioned.Time `json:"lastTransitionTime,omitempty"`
 	// The reason for the condition's last transition.
-	Reason string
+	Reason string `json:"reason,omitempty"`
 	// A human readable message indicating details about the transition.
-	Message string
+	Message string `json:"message,omitempty"`
 }
 
 type DeploymentList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ListMeta
+	unversioned.ListMeta `json:"metadata,omitempty"`
 
 	// Items is the list of deployments.
-	Items []Deployment
+	Items []Deployment `json:"items"`
 }
 
 // TODO(madhusudancs): Uncomment while implementing DaemonSet updates.
@@ -375,7 +371,7 @@ type DeploymentList struct {
 type DaemonSetUpdateStrategy struct {
 	// Type of daemon set update. Only "RollingUpdate" is supported at this time. Default is RollingUpdate.
 // +optional
-	Type DaemonSetUpdateStrategyType
+	Type DaemonSetUpdateStrategyType `json:"type,omitempty"`
 
 	// Rolling update config params. Present only if DaemonSetUpdateStrategy =
 	// RollingUpdate.
@@ -383,7 +379,7 @@ type DaemonSetUpdateStrategy struct {
 	// TODO: Update this to follow our convention for oneOf, whatever we decide it
 	// to be. Same as DeploymentStrategy.RollingUpdate.
 // +optional
-	RollingUpdate *RollingUpdateDaemonSet
+	RollingUpdate *RollingUpdateDaemonSet `json:"rollingUpdate,omitempty"`
 }
 
 type DaemonSetUpdateStrategyType string
@@ -409,14 +405,14 @@ type RollingUpdateDaemonSet struct {
 	// 70% of original number of DaemonSet pods are available at all times
 	// during the update.
 // +optional
-	MaxUnavailable intstr.IntOrString
+	MaxUnavailable intstr.IntOrString `json:"maxUnavailable,omitempty"`
 
 	// Minimum number of seconds for which a newly created DaemonSet pod should
 	// be ready without any of its container crashing, for it to be considered
 	// available. Defaults to 0 (pod will be considered available as soon as it
 	// is ready).
 // +optional
-	MinReadySeconds int
+	MinReadySeconds int `json:"minReadySeconds,omitempty"`
 }
 */
 
@@ -427,20 +423,20 @@ type DaemonSetSpec struct {
 	// If empty, defaulted to labels on Pod template.
 	// More info: http://kubernetes.io/docs/user-guide/labels#label-selectors
 	// +optional
-	Selector *metav1.LabelSelector
+	Selector *unversioned.LabelSelector `json:"selector,omitempty"`
 
 	// Template is the object that describes the pod that will be created.
 	// The DaemonSet will create exactly one copy of this pod on every node
 	// that matches the template's node selector (or on every node if no node
 	// selector is specified).
 	// More info: http://kubernetes.io/docs/user-guide/replication-controller#pod-template
-	Template api.PodTemplateSpec
+	Template api.PodTemplateSpec `json:"template"`
 
 	// TODO(madhusudancs): Uncomment while implementing DaemonSet updates.
 	/* Commenting out for v1.2. We are planning to bring these fields back with a more robust DaemonSet update implementation in v1.3, hence not deleting but just commenting these fields out.
 		// Update strategy to replace existing DaemonSet pods with new pods.
 	// +optional
-		UpdateStrategy DaemonSetUpdateStrategy
+		UpdateStrategy DaemonSetUpdateStrategy `json:"updateStrategy,omitempty"`
 
 		// Label key that is added to DaemonSet pods to distinguish between old and
 		// new pod templates during DaemonSet update.
@@ -450,7 +446,7 @@ type DaemonSetSpec struct {
 		// Value of this key is hash of DaemonSetSpec.PodTemplateSpec.
 		// No label is added if this is set to empty string.
 	// +optional
-		UniqueLabelKey string
+		UniqueLabelKey string `json:"uniqueLabelKey,omitempty"`
 	*/
 }
 
@@ -465,39 +461,35 @@ const (
 type DaemonSetStatus struct {
 	// CurrentNumberScheduled is the number of nodes that are running at least 1
 	// daemon pod and are supposed to run the daemon pod.
-	CurrentNumberScheduled int32
+	CurrentNumberScheduled int32 `json:"currentNumberScheduled"`
 
 	// NumberMisscheduled is the number of nodes that are running the daemon pod, but are
 	// not supposed to run the daemon pod.
-	NumberMisscheduled int32
+	NumberMisscheduled int32 `json:"numberMisscheduled"`
 
 	// DesiredNumberScheduled is the total number of nodes that should be running the daemon
 	// pod (including nodes correctly running the daemon pod).
-	DesiredNumberScheduled int32
+	DesiredNumberScheduled int32 `json:"desiredNumberScheduled"`
 
 	// NumberReady is the number of nodes that should be running the daemon pod and have one
 	// or more of the daemon pod running and ready.
-	NumberReady int32
-
-	// ObservedGeneration is the most recent generation observed by the daemon set controller.
-	// +optional
-	ObservedGeneration int64
+	NumberReady int32 `json:"numberReady"`
 }
 
 // +genclient=true
 
 // DaemonSet represents the configuration of a daemon set.
 type DaemonSet struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// Standard object's metadata.
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec defines the desired behavior of this daemon set.
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 	// +optional
-	Spec DaemonSetSpec
+	Spec DaemonSetSpec `json:"spec,omitempty"`
 
 	// Status is the current status of this daemon set. This data may be
 	// out of date by some window of time.
@@ -505,29 +497,29 @@ type DaemonSet struct {
 	// Read-only.
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 	// +optional
-	Status DaemonSetStatus
+	Status DaemonSetStatus `json:"status,omitempty"`
 }
 
 // DaemonSetList is a collection of daemon sets.
 type DaemonSetList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// Standard list metadata.
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	// +optional
-	metav1.ListMeta
+	unversioned.ListMeta `json:"metadata,omitempty"`
 
 	// Items is a list of daemon sets.
-	Items []DaemonSet
+	Items []DaemonSet `json:"items"`
 }
 
 type ThirdPartyResourceDataList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	// +optional
-	metav1.ListMeta
+	unversioned.ListMeta `json:"metadata,omitempty"`
 	// Items is a list of third party objects
-	Items []ThirdPartyResourceData
+	Items []ThirdPartyResourceData `json:"items"`
 }
 
 // +genclient=true
@@ -537,33 +529,33 @@ type ThirdPartyResourceDataList struct {
 // externally-reachable urls, load balance traffic, terminate SSL, offer name
 // based virtual hosting etc.
 type Ingress struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// Standard object's metadata.
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec is the desired state of the Ingress.
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 	// +optional
-	Spec IngressSpec
+	Spec IngressSpec `json:"spec,omitempty"`
 
 	// Status is the current state of the Ingress.
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 	// +optional
-	Status IngressStatus
+	Status IngressStatus `json:"status,omitempty"`
 }
 
 // IngressList is a collection of Ingress.
 type IngressList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// Standard object's metadata.
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	// +optional
-	metav1.ListMeta
+	unversioned.ListMeta `json:"metadata,omitempty"`
 
 	// Items is the list of Ingress.
-	Items []Ingress
+	Items []Ingress `json:"items"`
 }
 
 // IngressSpec describes the Ingress the user wishes to exist.
@@ -573,7 +565,7 @@ type IngressSpec struct {
 	// is optional to allow the loadbalancer controller or defaulting logic to
 	// specify a global default.
 	// +optional
-	Backend *IngressBackend
+	Backend *IngressBackend `json:"backend,omitempty"`
 
 	// TLS configuration. Currently the Ingress only supports a single TLS
 	// port, 443. If multiple members of this list specify different hosts, they
@@ -581,12 +573,12 @@ type IngressSpec struct {
 	// through the SNI TLS extension, if the ingress controller fulfilling the
 	// ingress supports SNI.
 	// +optional
-	TLS []IngressTLS
+	TLS []IngressTLS `json:"tls,omitempty"`
 
 	// A list of host rules used to configure the Ingress. If unspecified, or
 	// no rule matches, all traffic is sent to the default backend.
 	// +optional
-	Rules []IngressRule
+	Rules []IngressRule `json:"rules,omitempty"`
 	// TODO: Add the ability to specify load-balancer IP through claims
 }
 
@@ -597,14 +589,14 @@ type IngressTLS struct {
 	// wildcard host setting for the loadbalancer controller fulfilling this
 	// Ingress, if left unspecified.
 	// +optional
-	Hosts []string
+	Hosts []string `json:"hosts,omitempty"`
 	// SecretName is the name of the secret used to terminate SSL traffic on 443.
 	// Field is left optional to allow SSL routing based on SNI hostname alone.
 	// If the SNI host in a listener conflicts with the "Host" header field used
 	// by an IngressRule, the SNI host is used for termination and value of the
 	// Host header is used for routing.
 	// +optional
-	SecretName string
+	SecretName string `json:"secretName,omitempty"`
 	// TODO: Consider specifying different modes of termination, protocols etc.
 }
 
@@ -612,7 +604,7 @@ type IngressTLS struct {
 type IngressStatus struct {
 	// LoadBalancer contains the current status of the load-balancer.
 	// +optional
-	LoadBalancer api.LoadBalancerStatus
+	LoadBalancer api.LoadBalancerStatus `json:"loadBalancer,omitempty"`
 }
 
 // IngressRule represents the rules mapping the paths under a specified host to
@@ -632,14 +624,14 @@ type IngressRule struct {
 	// If the host is unspecified, the Ingress routes all traffic based on the
 	// specified IngressRuleValue.
 	// +optional
-	Host string
+	Host string `json:"host,omitempty"`
 	// IngressRuleValue represents a rule to route requests for this IngressRule.
 	// If unspecified, the rule defaults to a http catch-all. Whether that sends
 	// just traffic matching the host to the default backend or all traffic to the
 	// default backend, is left to the controller fulfilling the Ingress. Http is
 	// currently the only supported IngressRuleValue.
 	// +optional
-	IngressRuleValue
+	IngressRuleValue `json:",inline,omitempty"`
 }
 
 // IngressRuleValue represents a rule to apply against incoming requests. If the
@@ -654,7 +646,7 @@ type IngressRuleValue struct {
 	// usable by a loadbalancer, like http keep-alive.
 
 	// +optional
-	HTTP *HTTPIngressRuleValue
+	HTTP *HTTPIngressRuleValue `json:"http,omitempty"`
 }
 
 // HTTPIngressRuleValue is a list of http selectors pointing to backends.
@@ -664,7 +656,7 @@ type IngressRuleValue struct {
 // or '#'.
 type HTTPIngressRuleValue struct {
 	// A collection of paths that map requests to backends.
-	Paths []HTTPIngressPath
+	Paths []HTTPIngressPath `json:"paths"`
 	// TODO: Consider adding fields for ingress-type specific global
 	// options usable by a loadbalancer, like http keep-alive.
 }
@@ -680,47 +672,47 @@ type HTTPIngressPath struct {
 	// a '/'. If unspecified, the path defaults to a catch all sending
 	// traffic to the backend.
 	// +optional
-	Path string
+	Path string `json:"path,omitempty"`
 
 	// Backend defines the referenced service endpoint to which the traffic
 	// will be forwarded to.
-	Backend IngressBackend
+	Backend IngressBackend `json:"backend"`
 }
 
 // IngressBackend describes all endpoints for a given service and port.
 type IngressBackend struct {
 	// Specifies the name of the referenced service.
-	ServiceName string
+	ServiceName string `json:"serviceName"`
 
 	// Specifies the port of the referenced service.
-	ServicePort intstr.IntOrString
+	ServicePort intstr.IntOrString `json:"servicePort"`
 }
 
 // +genclient=true
 
 // ReplicaSet represents the configuration of a replica set.
 type ReplicaSet struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec defines the desired behavior of this ReplicaSet.
 	// +optional
-	Spec ReplicaSetSpec
+	Spec ReplicaSetSpec `json:"spec,omitempty"`
 
 	// Status is the current status of this ReplicaSet. This data may be
 	// out of date by some window of time.
 	// +optional
-	Status ReplicaSetStatus
+	Status ReplicaSetStatus `json:"status,omitempty"`
 }
 
 // ReplicaSetList is a collection of ReplicaSets.
 type ReplicaSetList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ListMeta
+	unversioned.ListMeta `json:"metadata,omitempty"`
 
-	Items []ReplicaSet
+	Items []ReplicaSet `json:"items"`
 }
 
 // ReplicaSetSpec is the specification of a ReplicaSet.
@@ -728,51 +720,51 @@ type ReplicaSetList struct {
 // a Template set.
 type ReplicaSetSpec struct {
 	// Replicas is the number of desired replicas.
-	Replicas int32
+	Replicas int32 `json:"replicas"`
 
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing, for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
 	// +optional
-	MinReadySeconds int32
+	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
 
 	// Selector is a label query over pods that should match the replica count.
 	// Must match in order to be controlled.
 	// If empty, defaulted to labels on pod template.
 	// More info: http://kubernetes.io/docs/user-guide/labels#label-selectors
 	// +optional
-	Selector *metav1.LabelSelector
+	Selector *unversioned.LabelSelector `json:"selector,omitempty"`
 
 	// Template is the object that describes the pod that will be created if
 	// insufficient replicas are detected.
 	// +optional
-	Template api.PodTemplateSpec
+	Template api.PodTemplateSpec `json:"template,omitempty"`
 }
 
 // ReplicaSetStatus represents the current status of a ReplicaSet.
 type ReplicaSetStatus struct {
 	// Replicas is the number of actual replicas.
-	Replicas int32
+	Replicas int32 `json:"replicas"`
 
 	// The number of pods that have labels matching the labels of the pod template of the replicaset.
 	// +optional
-	FullyLabeledReplicas int32
+	FullyLabeledReplicas int32 `json:"fullyLabeledReplicas,omitempty"`
 
 	// The number of ready replicas for this replica set.
 	// +optional
-	ReadyReplicas int32
+	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
 
 	// The number of available replicas (ready for at least minReadySeconds) for this replica set.
 	// +optional
-	AvailableReplicas int32
+	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
 
 	// ObservedGeneration is the most recent generation observed by the controller.
 	// +optional
-	ObservedGeneration int64
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// Represents the latest available observations of a replica set's current state.
 	// +optional
-	Conditions []ReplicaSetCondition
+	Conditions []ReplicaSetCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 type ReplicaSetConditionType string
@@ -788,18 +780,18 @@ const (
 // ReplicaSetCondition describes the state of a replica set at a certain point.
 type ReplicaSetCondition struct {
 	// Type of replica set condition.
-	Type ReplicaSetConditionType
+	Type ReplicaSetConditionType `json:"type"`
 	// Status of the condition, one of True, False, Unknown.
-	Status api.ConditionStatus
+	Status api.ConditionStatus `json:"status"`
 	// The last time the condition transitioned from one status to another.
 	// +optional
-	LastTransitionTime metav1.Time
+	LastTransitionTime unversioned.Time `json:"lastTransitionTime,omitempty"`
 	// The reason for the condition's last transition.
 	// +optional
-	Reason string
+	Reason string `json:"reason,omitempty"`
 	// A human readable message indicating details about the transition.
 	// +optional
-	Message string
+	Message string `json:"message,omitempty"`
 }
 
 // +genclient=true
@@ -808,74 +800,74 @@ type ReplicaSetCondition struct {
 // PodSecurityPolicy governs the ability to make requests that affect the SecurityContext
 // that will be applied to a pod and container.
 type PodSecurityPolicy struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec defines the policy enforced.
 	// +optional
-	Spec PodSecurityPolicySpec
+	Spec PodSecurityPolicySpec `json:"spec,omitempty"`
 }
 
 // PodSecurityPolicySpec defines the policy enforced.
 type PodSecurityPolicySpec struct {
 	// Privileged determines if a pod can request to be run as privileged.
 	// +optional
-	Privileged bool
+	Privileged bool `json:"privileged,omitempty"`
 	// DefaultAddCapabilities is the default set of capabilities that will be added to the container
 	// unless the pod spec specifically drops the capability.  You may not list a capability in both
 	// DefaultAddCapabilities and RequiredDropCapabilities.
 	// +optional
-	DefaultAddCapabilities []api.Capability
+	DefaultAddCapabilities []api.Capability `json:"defaultAddCapabilities,omitempty"`
 	// RequiredDropCapabilities are the capabilities that will be dropped from the container.  These
 	// are required to be dropped and cannot be added.
 	// +optional
-	RequiredDropCapabilities []api.Capability
+	RequiredDropCapabilities []api.Capability `json:"requiredDropCapabilities,omitempty"`
 	// AllowedCapabilities is a list of capabilities that can be requested to add to the container.
 	// Capabilities in this field may be added at the pod author's discretion.
 	// You must not list a capability in both AllowedCapabilities and RequiredDropCapabilities.
 	// +optional
-	AllowedCapabilities []api.Capability
+	AllowedCapabilities []api.Capability `json:"allowedCapabilities,omitempty"`
 	// Volumes is a white list of allowed volume plugins.  Empty indicates that all plugins
 	// may be used.
 	// +optional
-	Volumes []FSType
+	Volumes []FSType `json:"volumes,omitempty"`
 	// HostNetwork determines if the policy allows the use of HostNetwork in the pod spec.
 	// +optional
-	HostNetwork bool
+	HostNetwork bool `json:"hostNetwork,omitempty"`
 	// HostPorts determines which host port ranges are allowed to be exposed.
 	// +optional
-	HostPorts []HostPortRange
+	HostPorts []HostPortRange `json:"hostPorts,omitempty"`
 	// HostPID determines if the policy allows the use of HostPID in the pod spec.
 	// +optional
-	HostPID bool
+	HostPID bool `json:"hostPID,omitempty"`
 	// HostIPC determines if the policy allows the use of HostIPC in the pod spec.
 	// +optional
-	HostIPC bool
+	HostIPC bool `json:"hostIPC,omitempty"`
 	// SELinux is the strategy that will dictate the allowable labels that may be set.
-	SELinux SELinuxStrategyOptions
+	SELinux SELinuxStrategyOptions `json:"seLinux"`
 	// RunAsUser is the strategy that will dictate the allowable RunAsUser values that may be set.
-	RunAsUser RunAsUserStrategyOptions
+	RunAsUser RunAsUserStrategyOptions `json:"runAsUser"`
 	// SupplementalGroups is the strategy that will dictate what supplemental groups are used by the SecurityContext.
-	SupplementalGroups SupplementalGroupsStrategyOptions
+	SupplementalGroups SupplementalGroupsStrategyOptions `json:"supplementalGroups"`
 	// FSGroup is the strategy that will dictate what fs group is used by the SecurityContext.
-	FSGroup FSGroupStrategyOptions
+	FSGroup FSGroupStrategyOptions `json:"fsGroup"`
 	// ReadOnlyRootFilesystem when set to true will force containers to run with a read only root file
 	// system.  If the container specifically requests to run with a non-read only root file system
 	// the PSP should deny the pod.
 	// If set to false the container may run with a read only root file system if it wishes but it
 	// will not be forced to.
 	// +optional
-	ReadOnlyRootFilesystem bool
+	ReadOnlyRootFilesystem bool `json:"readOnlyRootFilesystem,omitempty"`
 }
 
 // HostPortRange defines a range of host ports that will be enabled by a policy
 // for pods to use.  It requires both the start and end to be defined.
 type HostPortRange struct {
 	// Min is the start of the range, inclusive.
-	Min int
+	Min int `json:"min"`
 	// Max is the end of the range, inclusive.
-	Max int
+	Max int `json:"max"`
 }
 
 // FSType gives strong typing to different file systems that are used by volumes.
@@ -911,11 +903,11 @@ var (
 // SELinuxStrategyOptions defines the strategy type and any options used to create the strategy.
 type SELinuxStrategyOptions struct {
 	// Rule is the strategy that will dictate the allowable labels that may be set.
-	Rule SELinuxStrategy
+	Rule SELinuxStrategy `json:"rule"`
 	// seLinuxOptions required to run as; required for MustRunAs
 	// More info: http://releases.k8s.io/HEAD/docs/design/security_context.md#security-context
 	// +optional
-	SELinuxOptions *api.SELinuxOptions
+	SELinuxOptions *api.SELinuxOptions `json:"seLinuxOptions,omitempty"`
 }
 
 // SELinuxStrategy denotes strategy types for generating SELinux options for a
@@ -932,18 +924,18 @@ const (
 // RunAsUserStrategyOptions defines the strategy type and any options used to create the strategy.
 type RunAsUserStrategyOptions struct {
 	// Rule is the strategy that will dictate the allowable RunAsUser values that may be set.
-	Rule RunAsUserStrategy
+	Rule RunAsUserStrategy `json:"rule"`
 	// Ranges are the allowed ranges of uids that may be used.
 	// +optional
-	Ranges []IDRange
+	Ranges []IDRange `json:"ranges,omitempty"`
 }
 
 // IDRange provides a min/max of an allowed range of IDs.
 type IDRange struct {
 	// Min is the start of the range, inclusive.
-	Min int64
+	Min int64 `json:"min"`
 	// Max is the end of the range, inclusive.
-	Max int64
+	Max int64 `json:"max"`
 }
 
 // RunAsUserStrategy denotes strategy types for generating RunAsUser values for a
@@ -963,11 +955,11 @@ const (
 type FSGroupStrategyOptions struct {
 	// Rule is the strategy that will dictate what FSGroup is used in the SecurityContext.
 	// +optional
-	Rule FSGroupStrategyType
+	Rule FSGroupStrategyType `json:"rule,omitempty"`
 	// Ranges are the allowed ranges of fs groups.  If you would like to force a single
 	// fs group then supply a single range with the same start and end.
 	// +optional
-	Ranges []IDRange
+	Ranges []IDRange `json:"ranges,omitempty"`
 }
 
 // FSGroupStrategyType denotes strategy types for generating FSGroup values for a
@@ -985,11 +977,11 @@ const (
 type SupplementalGroupsStrategyOptions struct {
 	// Rule is the strategy that will dictate what supplemental groups is used in the SecurityContext.
 	// +optional
-	Rule SupplementalGroupsStrategyType
+	Rule SupplementalGroupsStrategyType `json:"rule,omitempty"`
 	// Ranges are the allowed ranges of supplemental groups.  If you would like to force a single
 	// supplemental group then supply a single range with the same start and end.
 	// +optional
-	Ranges []IDRange
+	Ranges []IDRange `json:"ranges,omitempty"`
 }
 
 // SupplementalGroupsStrategyType denotes strategy types for determining valid supplemental
@@ -1005,23 +997,23 @@ const (
 
 // PodSecurityPolicyList is a list of PodSecurityPolicy objects.
 type PodSecurityPolicyList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ListMeta
+	unversioned.ListMeta `json:"metadata,omitempty"`
 
-	Items []PodSecurityPolicy
+	Items []PodSecurityPolicy `json:"items"`
 }
 
 // +genclient=true
 
 type NetworkPolicy struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// Specification of the desired behavior for this NetworkPolicy.
 	// +optional
-	Spec NetworkPolicySpec
+	Spec NetworkPolicySpec `json:"spec,omitempty"`
 }
 
 type NetworkPolicySpec struct {
@@ -1030,7 +1022,7 @@ type NetworkPolicySpec struct {
 	// same set of pods.  In this case, the ingress rules for each are combined additively.
 	// This field is NOT optional and follows standard label selector semantics.
 	// An empty podSelector matches all pods in this namespace.
-	PodSelector metav1.LabelSelector
+	PodSelector unversioned.LabelSelector `json:"podSelector"`
 
 	// List of ingress rules to be applied to the selected pods.
 	// Traffic is allowed to a pod if namespace.networkPolicy.ingress.isolation is undefined and cluster policy allows it,
@@ -1041,7 +1033,7 @@ type NetworkPolicySpec struct {
 	// If this field is present and contains at least one rule, this policy allows any traffic
 	// which matches at least one of the ingress rules in this list.
 	// +optional
-	Ingress []NetworkPolicyIngressRule
+	Ingress []NetworkPolicyIngressRule `json:"ingress,omitempty"`
 }
 
 // This NetworkPolicyIngressRule matches traffic if and only if the traffic matches both ports AND from.
@@ -1054,7 +1046,7 @@ type NetworkPolicyIngressRule struct {
 	// only if the traffic matches at least one port in the list.
 	// TODO: Update this to be a pointer to slice as soon as auto-generation supports it.
 	// +optional
-	Ports []NetworkPolicyPort
+	Ports []NetworkPolicyPort `json:"ports,omitempty"`
 
 	// List of sources which should be able to access the pods selected for this rule.
 	// Items in this list are combined using a logical OR operation.
@@ -1064,14 +1056,14 @@ type NetworkPolicyIngressRule struct {
 	// traffic matches at least one item in the from list.
 	// TODO: Update this to be a pointer to slice as soon as auto-generation supports it.
 	// +optional
-	From []NetworkPolicyPeer
+	From []NetworkPolicyPeer `json:"from,omitempty"`
 }
 
 type NetworkPolicyPort struct {
 	// Optional.  The protocol (TCP or UDP) which traffic must match.
 	// If not specified, this field defaults to TCP.
 	// +optional
-	Protocol *api.Protocol
+	Protocol *api.Protocol `json:"protocol,omitempty"`
 
 	// If specified, the port on the given protocol.  This can
 	// either be a numerical or named port on a pod.  If this field is not provided,
@@ -1079,7 +1071,7 @@ type NetworkPolicyPort struct {
 	// If present, only traffic on the specified protocol AND port
 	// will be matched.
 	// +optional
-	Port *intstr.IntOrString
+	Port *intstr.IntOrString `json:"port,omitempty"`
 }
 
 type NetworkPolicyPeer struct {
@@ -1090,7 +1082,7 @@ type NetworkPolicyPeer struct {
 	// If not provided, this selector selects no pods.
 	// If present but empty, this selector selects all pods in this namespace.
 	// +optional
-	PodSelector *metav1.LabelSelector
+	PodSelector *unversioned.LabelSelector `json:"podSelector,omitempty"`
 
 	// Selects Namespaces using cluster scoped-labels.  This
 	// matches all pods in all namespaces selected by this label selector.
@@ -1098,14 +1090,14 @@ type NetworkPolicyPeer struct {
 	// If omitted, this selector selects no namespaces.
 	// If present but empty, this selector selects all namespaces.
 	// +optional
-	NamespaceSelector *metav1.LabelSelector
+	NamespaceSelector *unversioned.LabelSelector `json:"namespaceSelector,omitempty"`
 }
 
 // NetworkPolicyList is a list of NetworkPolicy objects.
 type NetworkPolicyList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ListMeta
+	unversioned.ListMeta `json:"metadata,omitempty"`
 
-	Items []NetworkPolicy
+	Items []NetworkPolicy `json:"items"`
 }

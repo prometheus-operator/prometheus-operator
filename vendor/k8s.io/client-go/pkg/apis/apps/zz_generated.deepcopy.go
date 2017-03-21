@@ -21,10 +21,10 @@ limitations under the License.
 package apps
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	conversion "k8s.io/apimachinery/pkg/conversion"
-	runtime "k8s.io/apimachinery/pkg/runtime"
 	api "k8s.io/client-go/pkg/api"
+	unversioned "k8s.io/client-go/pkg/api/unversioned"
+	conversion "k8s.io/client-go/pkg/conversion"
+	runtime "k8s.io/client-go/pkg/runtime"
 	reflect "reflect"
 )
 
@@ -47,11 +47,9 @@ func DeepCopy_apps_StatefulSet(in interface{}, out interface{}, c *conversion.Cl
 	{
 		in := in.(*StatefulSet)
 		out := out.(*StatefulSet)
-		*out = *in
-		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
+		out.TypeMeta = in.TypeMeta
+		if err := api.DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
-		} else {
-			out.ObjectMeta = *newVal.(*v1.ObjectMeta)
 		}
 		if err := DeepCopy_apps_StatefulSetSpec(&in.Spec, &out.Spec, c); err != nil {
 			return err
@@ -67,7 +65,8 @@ func DeepCopy_apps_StatefulSetList(in interface{}, out interface{}, c *conversio
 	{
 		in := in.(*StatefulSetList)
 		out := out.(*StatefulSetList)
-		*out = *in
+		out.TypeMeta = in.TypeMeta
+		out.ListMeta = in.ListMeta
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]StatefulSet, len(*in))
@@ -76,6 +75,8 @@ func DeepCopy_apps_StatefulSetList(in interface{}, out interface{}, c *conversio
 					return err
 				}
 			}
+		} else {
+			out.Items = nil
 		}
 		return nil
 	}
@@ -85,14 +86,15 @@ func DeepCopy_apps_StatefulSetSpec(in interface{}, out interface{}, c *conversio
 	{
 		in := in.(*StatefulSetSpec)
 		out := out.(*StatefulSetSpec)
-		*out = *in
+		out.Replicas = in.Replicas
 		if in.Selector != nil {
 			in, out := &in.Selector, &out.Selector
-			if newVal, err := c.DeepCopy(*in); err != nil {
+			*out = new(unversioned.LabelSelector)
+			if err := unversioned.DeepCopy_unversioned_LabelSelector(*in, *out, c); err != nil {
 				return err
-			} else {
-				*out = newVal.(*v1.LabelSelector)
 			}
+		} else {
+			out.Selector = nil
 		}
 		if err := api.DeepCopy_api_PodTemplateSpec(&in.Template, &out.Template, c); err != nil {
 			return err
@@ -105,7 +107,10 @@ func DeepCopy_apps_StatefulSetSpec(in interface{}, out interface{}, c *conversio
 					return err
 				}
 			}
+		} else {
+			out.VolumeClaimTemplates = nil
 		}
+		out.ServiceName = in.ServiceName
 		return nil
 	}
 }
@@ -114,12 +119,14 @@ func DeepCopy_apps_StatefulSetStatus(in interface{}, out interface{}, c *convers
 	{
 		in := in.(*StatefulSetStatus)
 		out := out.(*StatefulSetStatus)
-		*out = *in
 		if in.ObservedGeneration != nil {
 			in, out := &in.ObservedGeneration, &out.ObservedGeneration
 			*out = new(int64)
 			**out = **in
+		} else {
+			out.ObservedGeneration = nil
 		}
+		out.Replicas = in.Replicas
 		return nil
 	}
 }

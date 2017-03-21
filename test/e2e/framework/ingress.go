@@ -15,18 +15,17 @@
 package framework
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/pkg/util/intstr"
+	"k8s.io/client-go/pkg/util/yaml"
 	"os"
 	"time"
 )
 
 func (f *Framework) MakeBasicIngress(serviceName string, servicePort int) *v1beta1.Ingress {
 	return &v1beta1.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: "monitoring",
 		},
 		Spec: v1beta1.IngressSpec{
@@ -124,7 +123,7 @@ func (f *Framework) GetIngressIP(ingressName string) (*string, error) {
 	var ingress *v1beta1.Ingress
 	err := f.Poll(time.Minute*5, time.Millisecond*500, func() (bool, error) {
 		var err error
-		ingress, err = f.KubeClient.Extensions().Ingresses(f.Namespace.Name).Get(ingressName, metav1.GetOptions{})
+		ingress, err = f.KubeClient.Extensions().Ingresses(f.Namespace.Name).Get(ingressName)
 		if err != nil {
 			return false, err
 		}

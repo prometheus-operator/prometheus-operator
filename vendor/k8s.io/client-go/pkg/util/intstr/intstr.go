@@ -20,14 +20,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"runtime/debug"
 	"strconv"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/openapi"
+	"k8s.io/client-go/pkg/genericapiserver/openapi/common"
 
 	"github.com/go-openapi/spec"
-	"github.com/golang/glog"
 	"github.com/google/gofuzz"
 )
 
@@ -39,6 +37,7 @@ import (
 //
 // +protobuf=true
 // +protobuf.options.(gogoproto.goproto_stringer)=false
+// +k8s:openapi-gen=true
 type IntOrString struct {
 	Type   Type   `protobuf:"varint,1,opt,name=type,casttype=Type"`
 	IntVal int32  `protobuf:"varint,2,opt,name=intVal"`
@@ -58,25 +57,12 @@ const (
 // than int32.
 // TODO: convert to (val int32)
 func FromInt(val int) IntOrString {
-	if val > math.MaxInt32 || val < math.MinInt32 {
-		glog.Errorf("value: %d overflows int32\n%s\n", val, debug.Stack())
-	}
 	return IntOrString{Type: Int, IntVal: int32(val)}
 }
 
 // FromString creates an IntOrString object with a string value.
 func FromString(val string) IntOrString {
 	return IntOrString{Type: String, StrVal: val}
-}
-
-// Parse the given string and try to convert it to an integer before
-// setting it as a string value.
-func Parse(val string) IntOrString {
-	i, err := strconv.Atoi(val)
-	if err != nil {
-		return FromString(val)
-	}
-	return FromInt(i)
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface.
@@ -119,8 +105,8 @@ func (intstr IntOrString) MarshalJSON() ([]byte, error) {
 	}
 }
 
-func (_ IntOrString) OpenAPIDefinition() openapi.OpenAPIDefinition {
-	return openapi.OpenAPIDefinition{
+func (_ IntOrString) OpenAPIDefinition() common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Type:   []string{"string"},

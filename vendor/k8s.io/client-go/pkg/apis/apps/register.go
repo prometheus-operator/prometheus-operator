@@ -17,9 +17,9 @@ limitations under the License.
 package apps
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/runtime"
 )
 
 var (
@@ -31,15 +31,15 @@ var (
 const GroupName = "apps"
 
 // SchemeGroupVersion is group version used to register these objects
-var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: runtime.APIVersionInternal}
+var SchemeGroupVersion = unversioned.GroupVersion{Group: GroupName, Version: runtime.APIVersionInternal}
 
 // Kind takes an unqualified kind and returns a Group qualified GroupKind
-func Kind(kind string) schema.GroupKind {
+func Kind(kind string) unversioned.GroupKind {
 	return SchemeGroupVersion.WithKind(kind).GroupKind()
 }
 
 // Resource takes an unqualified resource and returns a Group qualified GroupResource
-func Resource(resource string) schema.GroupResource {
+func Resource(resource string) unversioned.GroupResource {
 	return SchemeGroupVersion.WithResource(resource).GroupResource()
 }
 
@@ -49,6 +49,7 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&StatefulSet{},
 		&StatefulSetList{},
+		&api.ListOptions{},
 		&api.DeleteOptions{},
 	)
 	return nil

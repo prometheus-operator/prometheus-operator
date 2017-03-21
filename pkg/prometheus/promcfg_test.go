@@ -18,7 +18,8 @@ import (
 	"testing"
 
 	promconfig "github.com/prometheus/prometheus/config"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
@@ -27,16 +28,16 @@ func TestConfigGenerationNonNamespacedAnnotation(t *testing.T) {
 	p := &v1alpha1.Prometheus{}
 	smons := map[string]*v1alpha1.ServiceMonitor{
 		"1": &v1alpha1.ServiceMonitor{
-			ObjectMeta: metav1.ObjectMeta{
+			ObjectMeta: v1.ObjectMeta{
 				Name:      "test",
 				Namespace: "test",
 			},
 			Spec: v1alpha1.ServiceMonitorSpec{
-				Selector: metav1.LabelSelector{
-					MatchExpressions: []metav1.LabelSelectorRequirement{
-						metav1.LabelSelectorRequirement{
+				Selector: unversioned.LabelSelector{
+					MatchExpressions: []unversioned.LabelSelectorRequirement{
+						unversioned.LabelSelectorRequirement{
 							Key:      "k8s-app",
-							Operator: metav1.LabelSelectorOpExists,
+							Operator: unversioned.LabelSelectorOpExists,
 						},
 					},
 				},

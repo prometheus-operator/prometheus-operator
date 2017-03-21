@@ -18,7 +18,7 @@ Describes an Alertmanager cluster.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| metadata | Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ObjectMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_objectmeta) | false |
+| metadata | Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [v1.ObjectMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_objectmeta) | false |
 | spec | Specification of the desired behavior of the Alertmanager cluster. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status | [AlertmanagerSpec](#alertmanagerspec) | true |
 | status | Most recent observed status of the Alertmanager cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status | *[AlertmanagerStatus](#alertmanagerstatus) | false |
 
@@ -39,7 +39,7 @@ A list of Alertmanagers.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| metadata | Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_listmeta) | false |
+| metadata | Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [unversioned.ListMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_listmeta) | false |
 | items | List of Alertmanagers | [][Alertmanager](#alertmanager) | true |
 
 ## AlertmanagerSpec
@@ -97,7 +97,7 @@ Prometheus defines a Prometheus deployment.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| metadata | Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ObjectMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_objectmeta) | false |
+| metadata | Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [v1.ObjectMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_objectmeta) | false |
 | spec | Specification of the desired behavior of the Prometheus cluster. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status | [PrometheusSpec](#prometheusspec) | true |
 | status | Most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status | *[PrometheusStatus](#prometheusstatus) | false |
 
@@ -107,7 +107,7 @@ PrometheusList is a list of Prometheuses.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| metadata | Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_listmeta) | false |
+| metadata | Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [unversioned.ListMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_listmeta) | false |
 | items | List of Prometheuses | []*[Prometheus](#prometheus) | true |
 
 ## PrometheusSpec
@@ -116,7 +116,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| serviceMonitorSelector | ServiceMonitors to be selected for target discovery. | *[metav1.LabelSelector](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | false |
+| serviceMonitorSelector | ServiceMonitors to be selected for target discovery. | *[unversioned.LabelSelector](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | false |
 | version | Version of Prometheus to be deployed. | string | false |
 | paused | When a Prometheus deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
 | baseImage | Base image to use for a Prometheus deployment. | string | false |
@@ -125,7 +125,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
-| ruleSelector | A selector to select which ConfigMaps to mount for loading rule files from. | *[metav1.LabelSelector](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | false |
+| ruleSelector | A selector to select which ConfigMaps to mount for loading rule files from. | *[unversioned.LabelSelector](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | false |
 | alerting | Define details regarding alerting. | [AlertingSpec](#alertingspec) | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements) | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
@@ -149,7 +149,7 @@ ServiceMonitor defines monitoring for a set of services.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| metadata | Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ObjectMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_objectmeta) | false |
+| metadata | Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [v1.ObjectMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_objectmeta) | false |
 | spec | Specification of desired Service selection for target discrovery by Prometheus. | [ServiceMonitorSpec](#servicemonitorspec) | true |
 
 ## ServiceMonitorList
@@ -158,7 +158,7 @@ A list of ServiceMonitors.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| metadata | Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_listmeta) | false |
+| metadata | Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [unversioned.ListMeta](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_listmeta) | false |
 | items | List of ServiceMonitors | []*[ServiceMonitor](#servicemonitor) | true |
 
 ## ServiceMonitorSpec
@@ -169,7 +169,7 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 | ----- | ----------- | ------ | -------- |
 | jobLabel | The label to use to retrieve the job name from. | string | false |
 | endpoints | A list of endpoints allowed as part of this ServiceMonitor. | [][Endpoint](#endpoint) | false |
-| selector | Selector to select Endpoints objects. | [metav1.LabelSelector](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | true |
+| selector | Selector to select Endpoints objects. | [unversioned.LabelSelector](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | true |
 | namespaceSelector | Selector to select which namespaces the Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
 
 ## StorageSpec
@@ -179,7 +179,7 @@ StorageSpec defines the configured storage for a group Prometheus servers.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | class | Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses | string | true |
-| selector | A label query over volumes to consider for binding. | *[metav1.LabelSelector](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | true |
+| selector | A label query over volumes to consider for binding. | *[unversioned.LabelSelector](https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector) | true |
 | resources | Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources | [v1.ResourceRequirements](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements) | true |
 
 ## TLSConfig

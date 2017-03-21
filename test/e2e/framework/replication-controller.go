@@ -15,9 +15,8 @@
 package framework
 
 import (
-	apimetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/util/yaml"
 	"os"
 	"time"
 )
@@ -75,7 +74,7 @@ func scaleDownReplicationController(f *Framework, rC v1.ReplicationController) e
 	}
 
 	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
-		currentRC, err := rCAPI.Get(rC.Name, apimetav1.GetOptions{})
+		currentRC, err := rCAPI.Get(rC.Name)
 		if err != nil {
 			return false, err
 		}
