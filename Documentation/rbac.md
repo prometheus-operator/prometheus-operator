@@ -80,6 +80,8 @@ The Prometheus server itself accesses the Kubernetes API to discover targets and
 
 As Prometheus does not modify any Objects in the Kubernetes API, but just reads them it simply requires the `get`, `list`, and `watch` actions.
 
+In addition to the resources Prometheus itself needs to access, the Prometheus side-car needs to be able to `get` configmaps to be able to pull in rule files from configmap objects.
+
 [embedmd]:# (../example/rbac/prometheus-cluster-role.yaml)
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1alpha1
@@ -94,6 +96,10 @@ rules:
   - endpoints
   - pods
   verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
 ```
 
 > Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus `Pod`s.  The `ServiceAccount` used by the Prometheus `Pod`s can be specified in the `Prometheus` object.
