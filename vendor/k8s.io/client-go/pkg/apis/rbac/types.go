@@ -17,7 +17,9 @@ limitations under the License.
 package rbac
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/runtime"
 )
 
 // Authorization is calculated against
@@ -34,6 +36,8 @@ const (
 	GroupKind          = "Group"
 	ServiceAccountKind = "ServiceAccount"
 	UserKind           = "User"
+
+	UserAll = "*"
 )
 
 // PolicyRule holds information that describes a policy rule, but does not contain information
@@ -41,9 +45,12 @@ const (
 type PolicyRule struct {
 	// Verbs is a list of Verbs that apply to ALL the ResourceKinds and AttributeRestrictions contained in this rule.  VerbAll represents all kinds.
 	Verbs []string
-
+	// AttributeRestrictions will vary depending on what the Authorizer/AuthorizationAttributeBuilder pair supports.
+	// If the Authorizer does not recognize how to handle the AttributeRestrictions, the Authorizer should report an error.
+	AttributeRestrictions runtime.Object
 	// APIGroups is the name of the APIGroup that contains the resources.
 	// If multiple API groups are specified, any action requested against one of the enumerated resources in any API group will be allowed.
+
 	APIGroups []string
 	// Resources is a list of resources this rule applies to.  ResourceAll represents all resources.
 	Resources []string
@@ -87,9 +94,9 @@ type RoleRef struct {
 
 // Role is a namespaced, logical grouping of PolicyRules that can be referenced as a unit by a RoleBinding.
 type Role struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 	// Standard object's metadata.
-	metav1.ObjectMeta
+	api.ObjectMeta
 
 	// Rules holds all the PolicyRules for this Role
 	Rules []PolicyRule
@@ -101,8 +108,8 @@ type Role struct {
 // It adds who information via Subjects and namespace information by which namespace it exists in.  RoleBindings in a given
 // namespace only have effect in that namespace.
 type RoleBinding struct {
-	metav1.TypeMeta
-	metav1.ObjectMeta
+	unversioned.TypeMeta
+	api.ObjectMeta
 
 	// Subjects holds references to the objects the role applies to.
 	Subjects []Subject
@@ -114,9 +121,9 @@ type RoleBinding struct {
 
 // RoleBindingList is a collection of RoleBindings
 type RoleBindingList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 	// Standard object's metadata.
-	metav1.ListMeta
+	unversioned.ListMeta
 
 	// Items is a list of roleBindings
 	Items []RoleBinding
@@ -124,9 +131,9 @@ type RoleBindingList struct {
 
 // RoleList is a collection of Roles
 type RoleList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 	// Standard object's metadata.
-	metav1.ListMeta
+	unversioned.ListMeta
 
 	// Items is a list of roles
 	Items []Role
@@ -137,9 +144,9 @@ type RoleList struct {
 
 // ClusterRole is a cluster level, logical grouping of PolicyRules that can be referenced as a unit by a RoleBinding or ClusterRoleBinding.
 type ClusterRole struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 	// Standard object's metadata.
-	metav1.ObjectMeta
+	api.ObjectMeta
 
 	// Rules holds all the PolicyRules for this ClusterRole
 	Rules []PolicyRule
@@ -151,9 +158,9 @@ type ClusterRole struct {
 // ClusterRoleBinding references a ClusterRole, but not contain it.  It can reference a ClusterRole in the global namespace,
 // and adds who information via Subject.
 type ClusterRoleBinding struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 	// Standard object's metadata.
-	metav1.ObjectMeta
+	api.ObjectMeta
 
 	// Subjects holds references to the objects the role applies to.
 	Subjects []Subject
@@ -165,9 +172,9 @@ type ClusterRoleBinding struct {
 
 // ClusterRoleBindingList is a collection of ClusterRoleBindings
 type ClusterRoleBindingList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 	// Standard object's metadata.
-	metav1.ListMeta
+	unversioned.ListMeta
 
 	// Items is a list of ClusterRoleBindings
 	Items []ClusterRoleBinding
@@ -175,9 +182,9 @@ type ClusterRoleBindingList struct {
 
 // ClusterRoleList is a collection of ClusterRoles
 type ClusterRoleList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta
 	// Standard object's metadata.
-	metav1.ListMeta
+	unversioned.ListMeta
 
 	// Items is a list of ClusterRoles
 	Items []ClusterRole

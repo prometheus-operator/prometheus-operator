@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"path"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api/unversioned"
 )
 
 const (
@@ -57,7 +57,7 @@ func ServerAPIVersions(c *Config) (groupVersions []string, err error) {
 	if err != nil {
 		return nil, err
 	}
-	var v metav1.APIVersions
+	var v unversioned.APIVersions
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&v)
 	if err != nil {
@@ -71,7 +71,7 @@ func ServerAPIVersions(c *Config) (groupVersions []string, err error) {
 	if err != nil {
 		return nil, err
 	}
-	var apiGroupList metav1.APIGroupList
+	var apiGroupList unversioned.APIGroupList
 	defer resp2.Body.Close()
 	err = json.NewDecoder(resp2.Body).Decode(&apiGroupList)
 	if err != nil {

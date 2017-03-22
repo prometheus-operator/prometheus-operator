@@ -21,10 +21,10 @@ limitations under the License.
 package policy
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	conversion "k8s.io/apimachinery/pkg/conversion"
-	runtime "k8s.io/apimachinery/pkg/runtime"
 	api "k8s.io/client-go/pkg/api"
+	unversioned "k8s.io/client-go/pkg/api/unversioned"
+	conversion "k8s.io/client-go/pkg/conversion"
+	runtime "k8s.io/client-go/pkg/runtime"
 	reflect "reflect"
 )
 
@@ -48,11 +48,9 @@ func DeepCopy_policy_Eviction(in interface{}, out interface{}, c *conversion.Clo
 	{
 		in := in.(*Eviction)
 		out := out.(*Eviction)
-		*out = *in
-		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
+		out.TypeMeta = in.TypeMeta
+		if err := api.DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
-		} else {
-			out.ObjectMeta = *newVal.(*v1.ObjectMeta)
 		}
 		if in.DeleteOptions != nil {
 			in, out := &in.DeleteOptions, &out.DeleteOptions
@@ -60,6 +58,8 @@ func DeepCopy_policy_Eviction(in interface{}, out interface{}, c *conversion.Clo
 			if err := api.DeepCopy_api_DeleteOptions(*in, *out, c); err != nil {
 				return err
 			}
+		} else {
+			out.DeleteOptions = nil
 		}
 		return nil
 	}
@@ -69,11 +69,9 @@ func DeepCopy_policy_PodDisruptionBudget(in interface{}, out interface{}, c *con
 	{
 		in := in.(*PodDisruptionBudget)
 		out := out.(*PodDisruptionBudget)
-		*out = *in
-		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
+		out.TypeMeta = in.TypeMeta
+		if err := api.DeepCopy_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
-		} else {
-			out.ObjectMeta = *newVal.(*v1.ObjectMeta)
 		}
 		if err := DeepCopy_policy_PodDisruptionBudgetSpec(&in.Spec, &out.Spec, c); err != nil {
 			return err
@@ -89,7 +87,8 @@ func DeepCopy_policy_PodDisruptionBudgetList(in interface{}, out interface{}, c 
 	{
 		in := in.(*PodDisruptionBudgetList)
 		out := out.(*PodDisruptionBudgetList)
-		*out = *in
+		out.TypeMeta = in.TypeMeta
+		out.ListMeta = in.ListMeta
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
 			*out = make([]PodDisruptionBudget, len(*in))
@@ -98,6 +97,8 @@ func DeepCopy_policy_PodDisruptionBudgetList(in interface{}, out interface{}, c 
 					return err
 				}
 			}
+		} else {
+			out.Items = nil
 		}
 		return nil
 	}
@@ -107,14 +108,15 @@ func DeepCopy_policy_PodDisruptionBudgetSpec(in interface{}, out interface{}, c 
 	{
 		in := in.(*PodDisruptionBudgetSpec)
 		out := out.(*PodDisruptionBudgetSpec)
-		*out = *in
+		out.MinAvailable = in.MinAvailable
 		if in.Selector != nil {
 			in, out := &in.Selector, &out.Selector
-			if newVal, err := c.DeepCopy(*in); err != nil {
+			*out = new(unversioned.LabelSelector)
+			if err := unversioned.DeepCopy_unversioned_LabelSelector(*in, *out, c); err != nil {
 				return err
-			} else {
-				*out = newVal.(*v1.LabelSelector)
 			}
+		} else {
+			out.Selector = nil
 		}
 		return nil
 	}
@@ -124,14 +126,20 @@ func DeepCopy_policy_PodDisruptionBudgetStatus(in interface{}, out interface{}, 
 	{
 		in := in.(*PodDisruptionBudgetStatus)
 		out := out.(*PodDisruptionBudgetStatus)
-		*out = *in
+		out.ObservedGeneration = in.ObservedGeneration
 		if in.DisruptedPods != nil {
 			in, out := &in.DisruptedPods, &out.DisruptedPods
-			*out = make(map[string]v1.Time)
+			*out = make(map[string]unversioned.Time)
 			for key, val := range *in {
 				(*out)[key] = val.DeepCopy()
 			}
+		} else {
+			out.DisruptedPods = nil
 		}
+		out.PodDisruptionsAllowed = in.PodDisruptionsAllowed
+		out.CurrentHealthy = in.CurrentHealthy
+		out.DesiredHealthy = in.DesiredHealthy
+		out.ExpectedPods = in.ExpectedPods
 		return nil
 	}
 }

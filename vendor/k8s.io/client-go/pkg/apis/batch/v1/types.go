@@ -17,7 +17,7 @@ limitations under the License.
 package v1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
 )
 
@@ -25,11 +25,11 @@ import (
 
 // Job represents the configuration of a single job.
 type Job struct {
-	metav1.TypeMeta `json:",inline"`
+	unversioned.TypeMeta `json:",inline"`
 	// Standard object's metadata.
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	v1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Spec is a structure defining the expected behavior of a job.
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
@@ -44,11 +44,11 @@ type Job struct {
 
 // JobList is a collection of jobs.
 type JobList struct {
-	metav1.TypeMeta `json:",inline"`
+	unversioned.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	// +optional
-	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	unversioned.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Items is the list of Job.
 	Items []Job `json:"items" protobuf:"bytes,2,rep,name=items"`
@@ -83,7 +83,7 @@ type JobSpec struct {
 	// Normally, the system sets this field for you.
 	// More info: http://kubernetes.io/docs/user-guide/labels#label-selectors
 	// +optional
-	Selector *metav1.LabelSelector `json:"selector,omitempty" protobuf:"bytes,4,opt,name=selector"`
+	Selector *unversioned.LabelSelector `json:"selector,omitempty" protobuf:"bytes,4,opt,name=selector"`
 
 	// ManualSelector controls generation of pod labels and pod selectors.
 	// Leave `manualSelector` unset unless you are certain what you are doing.
@@ -116,13 +116,13 @@ type JobStatus struct {
 	// It is not guaranteed to be set in happens-before order across separate operations.
 	// It is represented in RFC3339 form and is in UTC.
 	// +optional
-	StartTime *metav1.Time `json:"startTime,omitempty" protobuf:"bytes,2,opt,name=startTime"`
+	StartTime *unversioned.Time `json:"startTime,omitempty" protobuf:"bytes,2,opt,name=startTime"`
 
 	// CompletionTime represents time when the job was completed. It is not guaranteed to
 	// be set in happens-before order across separate operations.
 	// It is represented in RFC3339 form and is in UTC.
 	// +optional
-	CompletionTime *metav1.Time `json:"completionTime,omitempty" protobuf:"bytes,3,opt,name=completionTime"`
+	CompletionTime *unversioned.Time `json:"completionTime,omitempty" protobuf:"bytes,3,opt,name=completionTime"`
 
 	// Active is the number of actively running pods.
 	// +optional
@@ -155,10 +155,10 @@ type JobCondition struct {
 	Status v1.ConditionStatus `json:"status" protobuf:"bytes,2,opt,name=status,casttype=k8s.io/kubernetes/pkg/api/v1.ConditionStatus"`
 	// Last time the condition was checked.
 	// +optional
-	LastProbeTime metav1.Time `json:"lastProbeTime,omitempty" protobuf:"bytes,3,opt,name=lastProbeTime"`
+	LastProbeTime unversioned.Time `json:"lastProbeTime,omitempty" protobuf:"bytes,3,opt,name=lastProbeTime"`
 	// Last time the condition transit from one status to another.
 	// +optional
-	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty" protobuf:"bytes,4,opt,name=lastTransitionTime"`
+	LastTransitionTime unversioned.Time `json:"lastTransitionTime,omitempty" protobuf:"bytes,4,opt,name=lastTransitionTime"`
 	// (brief) reason for the condition's last transition.
 	// +optional
 	Reason string `json:"reason,omitempty" protobuf:"bytes,5,opt,name=reason"`

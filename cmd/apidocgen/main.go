@@ -36,10 +36,10 @@ This Document documents the types introduced by the Prometheus Operator to be co
 
 var (
 	links = map[string]string{
-		"metav1.ObjectMeta":       "https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_objectmeta",
-		"metav1.ListMeta":         "https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_listmeta",
-		"metav1.LabelSelector":    "https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector",
-		"v1.ResourceRequirements": "https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements",
+		"v1.ObjectMeta":             "https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_objectmeta",
+		"unversioned.ListMeta":      "https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_listmeta",
+		"unversioned.LabelSelector": "https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector",
+		"v1.ResourceRequirements":   "https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements",
 	}
 
 	selfLinks = map[string]string{}

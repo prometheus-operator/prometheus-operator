@@ -17,21 +17,16 @@ limitations under the License.
 package v1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/runtime"
+	versionedwatch "k8s.io/client-go/pkg/watch/versioned"
 )
 
 // GroupName is the group name use in this package
 const GroupName = ""
 
 // SchemeGroupVersion is group version used to register these objects
-var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1"}
-
-// Resource takes an unqualified resource and returns a Group qualified GroupResource
-func Resource(resource string) schema.GroupResource {
-	return SchemeGroupVersion.WithResource(resource).GroupResource()
-}
+var SchemeGroupVersion = unversioned.GroupVersion{Group: GroupName, Version: "v1"}
 
 var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes, addDefaultingFuncs, addConversionFuncs, addFastPathConversionFuncs)
@@ -75,13 +70,11 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&PersistentVolumeClaim{},
 		&PersistentVolumeClaimList{},
 		&DeleteOptions{},
-		&metav1.ExportOptions{},
-		&metav1.GetOptions{},
+		&ExportOptions{},
 		&ListOptions{},
 		&PodAttachOptions{},
 		&PodLogOptions{},
 		&PodExecOptions{},
-		&PodPortForwardOptions{},
 		&PodProxyOptions{},
 		&ComponentStatus{},
 		&ComponentStatusList{},
@@ -92,9 +85,9 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	)
 
 	// Add common types
-	scheme.AddKnownTypes(SchemeGroupVersion, &metav1.Status{})
+	scheme.AddKnownTypes(SchemeGroupVersion, &unversioned.Status{})
 
 	// Add the watch version that applies
-	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
+	versionedwatch.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil
 }

@@ -15,7 +15,6 @@
 package framework
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"time"
 )
@@ -33,7 +32,7 @@ func (f *Framework) CreateServiceAndWaitUntilReady(service *v1.Service) error {
 
 func (f *Framework) WaitForServiceReady(serviceName string) error {
 	err := f.Poll(time.Minute*5, time.Second, func() (bool, error) {
-		endpoints, err := f.KubeClient.CoreV1().Endpoints(f.Namespace.Name).Get(serviceName, metav1.GetOptions{})
+		endpoints, err := f.KubeClient.CoreV1().Endpoints(f.Namespace.Name).Get(serviceName)
 		if err != nil {
 			return false, err
 		}

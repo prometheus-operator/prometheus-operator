@@ -17,12 +17,10 @@ limitations under the License.
 package v2alpha1
 
 import (
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
 	api "k8s.io/client-go/pkg/api"
 	v1 "k8s.io/client-go/pkg/api/v1"
 	v2alpha1 "k8s.io/client-go/pkg/apis/batch/v2alpha1"
+	watch "k8s.io/client-go/pkg/watch"
 	rest "k8s.io/client-go/rest"
 )
 
@@ -38,11 +36,11 @@ type JobInterface interface {
 	Update(*v2alpha1.Job) (*v2alpha1.Job, error)
 	UpdateStatus(*v2alpha1.Job) (*v2alpha1.Job, error)
 	Delete(name string, options *v1.DeleteOptions) error
-	DeleteCollection(options *v1.DeleteOptions, listOptions meta_v1.ListOptions) error
-	Get(name string, options meta_v1.GetOptions) (*v2alpha1.Job, error)
-	List(opts meta_v1.ListOptions) (*v2alpha1.JobList, error)
-	Watch(opts meta_v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v2alpha1.Job, err error)
+	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
+	Get(name string) (*v2alpha1.Job, error)
+	List(opts v1.ListOptions) (*v2alpha1.JobList, error)
+	Watch(opts v1.ListOptions) (watch.Interface, error)
+	Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *v2alpha1.Job, err error)
 	JobExpansion
 }
 
@@ -85,9 +83,6 @@ func (c *jobs) Update(job *v2alpha1.Job) (result *v2alpha1.Job, err error) {
 	return
 }
 
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclientstatus=false comment above the type to avoid generating UpdateStatus().
-
 func (c *jobs) UpdateStatus(job *v2alpha1.Job) (result *v2alpha1.Job, err error) {
 	result = &v2alpha1.Job{}
 	err = c.client.Put().
@@ -113,7 +108,7 @@ func (c *jobs) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *jobs) DeleteCollection(options *v1.DeleteOptions, listOptions meta_v1.ListOptions) error {
+func (c *jobs) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("jobs").
@@ -124,20 +119,19 @@ func (c *jobs) DeleteCollection(options *v1.DeleteOptions, listOptions meta_v1.L
 }
 
 // Get takes name of the job, and returns the corresponding job object, and an error if there is any.
-func (c *jobs) Get(name string, options meta_v1.GetOptions) (result *v2alpha1.Job, err error) {
+func (c *jobs) Get(name string) (result *v2alpha1.Job, err error) {
 	result = &v2alpha1.Job{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("jobs").
 		Name(name).
-		VersionedParams(&options, api.ParameterCodec).
 		Do().
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of Jobs that match those selectors.
-func (c *jobs) List(opts meta_v1.ListOptions) (result *v2alpha1.JobList, err error) {
+func (c *jobs) List(opts v1.ListOptions) (result *v2alpha1.JobList, err error) {
 	result = &v2alpha1.JobList{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -149,7 +143,7 @@ func (c *jobs) List(opts meta_v1.ListOptions) (result *v2alpha1.JobList, err err
 }
 
 // Watch returns a watch.Interface that watches the requested jobs.
-func (c *jobs) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
+func (c *jobs) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.client.Get().
 		Prefix("watch").
 		Namespace(c.ns).
@@ -159,7 +153,7 @@ func (c *jobs) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
 }
 
 // Patch applies the patch and returns the patched job.
-func (c *jobs) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v2alpha1.Job, err error) {
+func (c *jobs) Patch(name string, pt api.PatchType, data []byte, subresources ...string) (result *v2alpha1.Job, err error) {
 	result = &v2alpha1.Job{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).

@@ -18,9 +18,10 @@ package v1alpha1
 
 import (
 	fmt "fmt"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
-	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	api "k8s.io/client-go/pkg/api"
+	unversioned "k8s.io/client-go/pkg/api/unversioned"
+	registered "k8s.io/client-go/pkg/apimachinery/registered"
+	serializer "k8s.io/client-go/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
 
@@ -32,7 +33,7 @@ type RbacV1alpha1Interface interface {
 	RoleBindingsGetter
 }
 
-// RbacV1alpha1Client is used to interact with features provided by the rbac.authorization.k8s.io group.
+// RbacV1alpha1Client is used to interact with features provided by the k8s.io/kubernetes/pkg/apimachinery/registered.Group group.
 type RbacV1alpha1Client struct {
 	restClient rest.Interface
 }
@@ -82,12 +83,12 @@ func New(c rest.Interface) *RbacV1alpha1Client {
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	gv, err := schema.ParseGroupVersion("rbac.authorization.k8s.io/v1alpha1")
+	gv, err := unversioned.ParseGroupVersion("rbac.authorization.k8s.io/v1alpha1")
 	if err != nil {
 		return err
 	}
 	// if rbac.authorization.k8s.io/v1alpha1 is not enabled, return an error
-	if !api.Registry.IsEnabledVersion(gv) {
+	if !registered.IsEnabledVersion(gv) {
 		return fmt.Errorf("rbac.authorization.k8s.io/v1alpha1 is not enabled")
 	}
 	config.APIPath = "/apis"

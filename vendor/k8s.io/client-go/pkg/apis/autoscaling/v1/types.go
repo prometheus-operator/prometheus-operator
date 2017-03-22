@@ -16,7 +16,10 @@ limitations under the License.
 
 package v1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/api/v1"
+)
 
 // CrossVersionObjectReference contains enough information to let you identify the referred resource.
 type CrossVersionObjectReference struct {
@@ -54,7 +57,7 @@ type HorizontalPodAutoscalerStatus struct {
 	// last time the HorizontalPodAutoscaler scaled the number of pods;
 	// used by the autoscaler to control how often the number of pods is changed.
 	// +optional
-	LastScaleTime *metav1.Time `json:"lastScaleTime,omitempty" protobuf:"bytes,2,opt,name=lastScaleTime"`
+	LastScaleTime *unversioned.Time `json:"lastScaleTime,omitempty" protobuf:"bytes,2,opt,name=lastScaleTime"`
 
 	// current number of replicas of pods managed by this autoscaler.
 	CurrentReplicas int32 `json:"currentReplicas" protobuf:"varint,3,opt,name=currentReplicas"`
@@ -72,10 +75,10 @@ type HorizontalPodAutoscalerStatus struct {
 
 // configuration of a horizontal pod autoscaler.
 type HorizontalPodAutoscaler struct {
-	metav1.TypeMeta `json:",inline"`
+	unversioned.TypeMeta `json:",inline"`
 	// Standard object metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	v1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// behaviour of autoscaler. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status.
 	// +optional
@@ -88,10 +91,10 @@ type HorizontalPodAutoscaler struct {
 
 // list of horizontal pod autoscaler objects.
 type HorizontalPodAutoscalerList struct {
-	metav1.TypeMeta `json:",inline"`
+	unversioned.TypeMeta `json:",inline"`
 	// Standard list metadata.
 	// +optional
-	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	unversioned.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// list of horizontal pod autoscaler objects.
 	Items []HorizontalPodAutoscaler `json:"items" protobuf:"bytes,2,rep,name=items"`
@@ -99,10 +102,10 @@ type HorizontalPodAutoscalerList struct {
 
 // Scale represents a scaling request for a resource.
 type Scale struct {
-	metav1.TypeMeta `json:",inline"`
+	unversioned.TypeMeta `json:",inline"`
 	// Standard object metadata; More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata.
 	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	v1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// defines the behavior of the scale. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status.
 	// +optional

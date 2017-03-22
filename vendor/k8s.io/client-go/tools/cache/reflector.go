@@ -34,13 +34,13 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	apierrs "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/pkg/api"
+	apierrs "k8s.io/client-go/pkg/api/errors"
+	"k8s.io/client-go/pkg/api/meta"
+	"k8s.io/client-go/pkg/runtime"
+	utilruntime "k8s.io/client-go/pkg/util/runtime"
+	"k8s.io/client-go/pkg/util/wait"
+	"k8s.io/client-go/pkg/watch"
 )
 
 // Reflector watches a specified resource and causes all changes to be reflected in the given store.
@@ -239,7 +239,7 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 	// Explicitly set "0" as resource version - it's fine for the List()
 	// to be served from cache and potentially be delayed relative to
 	// etcd contents. Reflector framework will catch up via Watch() eventually.
-	options := metav1.ListOptions{ResourceVersion: "0"}
+	options := api.ListOptions{ResourceVersion: "0"}
 	list, err := r.listerWatcher.List(options)
 	if err != nil {
 		return fmt.Errorf("%s: Failed to list %v: %v", r.name, r.expectedType, err)
@@ -282,7 +282,7 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 
 	for {
 		timemoutseconds := int64(minWatchTimeout.Seconds() * (rand.Float64() + 1.0))
-		options = metav1.ListOptions{
+		options = api.ListOptions{
 			ResourceVersion: resourceVersion,
 			// We want to avoid situations of hanging watchers. Stop any wachers that do not
 			// receive any events within the timeout window.
@@ -367,23 +367,14 @@ loop:
 			newResourceVersion := meta.GetResourceVersion()
 			switch event.Type {
 			case watch.Added:
-				err := r.store.Add(event.Object)
-				if err != nil {
-					utilruntime.HandleError(fmt.Errorf("%s: unable to add watch event object (%#v) to store: %v", r.name, event.Object, err))
-				}
+				r.store.Add(event.Object)
 			case watch.Modified:
-				err := r.store.Update(event.Object)
-				if err != nil {
-					utilruntime.HandleError(fmt.Errorf("%s: unable to update watch event object (%#v) to store: %v", r.name, event.Object, err))
-				}
+				r.store.Update(event.Object)
 			case watch.Deleted:
 				// TODO: Will any consumers need access to the "last known
 				// state", which is passed in event.Object? If so, may need
 				// to change this.
-				err := r.store.Delete(event.Object)
-				if err != nil {
-					utilruntime.HandleError(fmt.Errorf("%s: unable to delete watch event object (%#v) from store: %v", r.name, event.Object, err))
-				}
+				r.store.Delete(event.Object)
 			default:
 				utilruntime.HandleError(fmt.Errorf("%s: unable to understand watch event %#v", r.name, event))
 			}

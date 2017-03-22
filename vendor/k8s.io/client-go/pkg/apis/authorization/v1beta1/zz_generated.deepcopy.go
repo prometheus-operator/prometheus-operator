@@ -21,9 +21,9 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	conversion "k8s.io/apimachinery/pkg/conversion"
-	runtime "k8s.io/apimachinery/pkg/runtime"
+	v1 "k8s.io/client-go/pkg/api/v1"
+	conversion "k8s.io/client-go/pkg/conversion"
+	runtime "k8s.io/client-go/pkg/runtime"
 	reflect "reflect"
 )
 
@@ -50,15 +50,14 @@ func DeepCopy_v1beta1_LocalSubjectAccessReview(in interface{}, out interface{}, 
 	{
 		in := in.(*LocalSubjectAccessReview)
 		out := out.(*LocalSubjectAccessReview)
-		*out = *in
-		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
+		out.TypeMeta = in.TypeMeta
+		if err := v1.DeepCopy_v1_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
-		} else {
-			out.ObjectMeta = *newVal.(*v1.ObjectMeta)
 		}
 		if err := DeepCopy_v1beta1_SubjectAccessReviewSpec(&in.Spec, &out.Spec, c); err != nil {
 			return err
 		}
+		out.Status = in.Status
 		return nil
 	}
 }
@@ -67,7 +66,8 @@ func DeepCopy_v1beta1_NonResourceAttributes(in interface{}, out interface{}, c *
 	{
 		in := in.(*NonResourceAttributes)
 		out := out.(*NonResourceAttributes)
-		*out = *in
+		out.Path = in.Path
+		out.Verb = in.Verb
 		return nil
 	}
 }
@@ -76,7 +76,13 @@ func DeepCopy_v1beta1_ResourceAttributes(in interface{}, out interface{}, c *con
 	{
 		in := in.(*ResourceAttributes)
 		out := out.(*ResourceAttributes)
-		*out = *in
+		out.Namespace = in.Namespace
+		out.Verb = in.Verb
+		out.Group = in.Group
+		out.Version = in.Version
+		out.Resource = in.Resource
+		out.Subresource = in.Subresource
+		out.Name = in.Name
 		return nil
 	}
 }
@@ -85,15 +91,14 @@ func DeepCopy_v1beta1_SelfSubjectAccessReview(in interface{}, out interface{}, c
 	{
 		in := in.(*SelfSubjectAccessReview)
 		out := out.(*SelfSubjectAccessReview)
-		*out = *in
-		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
+		out.TypeMeta = in.TypeMeta
+		if err := v1.DeepCopy_v1_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
-		} else {
-			out.ObjectMeta = *newVal.(*v1.ObjectMeta)
 		}
 		if err := DeepCopy_v1beta1_SelfSubjectAccessReviewSpec(&in.Spec, &out.Spec, c); err != nil {
 			return err
 		}
+		out.Status = in.Status
 		return nil
 	}
 }
@@ -102,16 +107,19 @@ func DeepCopy_v1beta1_SelfSubjectAccessReviewSpec(in interface{}, out interface{
 	{
 		in := in.(*SelfSubjectAccessReviewSpec)
 		out := out.(*SelfSubjectAccessReviewSpec)
-		*out = *in
 		if in.ResourceAttributes != nil {
 			in, out := &in.ResourceAttributes, &out.ResourceAttributes
 			*out = new(ResourceAttributes)
 			**out = **in
+		} else {
+			out.ResourceAttributes = nil
 		}
 		if in.NonResourceAttributes != nil {
 			in, out := &in.NonResourceAttributes, &out.NonResourceAttributes
 			*out = new(NonResourceAttributes)
 			**out = **in
+		} else {
+			out.NonResourceAttributes = nil
 		}
 		return nil
 	}
@@ -121,15 +129,14 @@ func DeepCopy_v1beta1_SubjectAccessReview(in interface{}, out interface{}, c *co
 	{
 		in := in.(*SubjectAccessReview)
 		out := out.(*SubjectAccessReview)
-		*out = *in
-		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
+		out.TypeMeta = in.TypeMeta
+		if err := v1.DeepCopy_v1_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta, c); err != nil {
 			return err
-		} else {
-			out.ObjectMeta = *newVal.(*v1.ObjectMeta)
 		}
 		if err := DeepCopy_v1beta1_SubjectAccessReviewSpec(&in.Spec, &out.Spec, c); err != nil {
 			return err
 		}
+		out.Status = in.Status
 		return nil
 	}
 }
@@ -138,21 +145,27 @@ func DeepCopy_v1beta1_SubjectAccessReviewSpec(in interface{}, out interface{}, c
 	{
 		in := in.(*SubjectAccessReviewSpec)
 		out := out.(*SubjectAccessReviewSpec)
-		*out = *in
 		if in.ResourceAttributes != nil {
 			in, out := &in.ResourceAttributes, &out.ResourceAttributes
 			*out = new(ResourceAttributes)
 			**out = **in
+		} else {
+			out.ResourceAttributes = nil
 		}
 		if in.NonResourceAttributes != nil {
 			in, out := &in.NonResourceAttributes, &out.NonResourceAttributes
 			*out = new(NonResourceAttributes)
 			**out = **in
+		} else {
+			out.NonResourceAttributes = nil
 		}
+		out.User = in.User
 		if in.Groups != nil {
 			in, out := &in.Groups, &out.Groups
 			*out = make([]string, len(*in))
 			copy(*out, *in)
+		} else {
+			out.Groups = nil
 		}
 		if in.Extra != nil {
 			in, out := &in.Extra, &out.Extra
@@ -164,6 +177,8 @@ func DeepCopy_v1beta1_SubjectAccessReviewSpec(in interface{}, out interface{}, c
 					(*out)[key] = *newVal.(*ExtraValue)
 				}
 			}
+		} else {
+			out.Extra = nil
 		}
 		return nil
 	}
@@ -173,7 +188,9 @@ func DeepCopy_v1beta1_SubjectAccessReviewStatus(in interface{}, out interface{},
 	{
 		in := in.(*SubjectAccessReviewStatus)
 		out := out.(*SubjectAccessReviewStatus)
-		*out = *in
+		out.Allowed = in.Allowed
+		out.Reason = in.Reason
+		out.EvaluationError = in.EvaluationError
 		return nil
 	}
 }

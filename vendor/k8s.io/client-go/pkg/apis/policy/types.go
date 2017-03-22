@@ -17,8 +17,8 @@ limitations under the License.
 package policy
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/util/intstr"
 )
 
@@ -29,12 +29,12 @@ type PodDisruptionBudgetSpec struct {
 	// absence of the evicted pod.  So for example you can prevent all voluntary
 	// evictions by specifying "100%".
 	// +optional
-	MinAvailable intstr.IntOrString
+	MinAvailable intstr.IntOrString `json:"minAvailable,omitempty"`
 
 	// Label query over pods whose evictions are managed by the disruption
 	// budget.
 	// +optional
-	Selector *metav1.LabelSelector
+	Selector *unversioned.LabelSelector `json:"selector,omitempty"`
 }
 
 // PodDisruptionBudgetStatus represents information about the status of a
@@ -43,7 +43,7 @@ type PodDisruptionBudgetStatus struct {
 	// Most recent generation observed when updating this PDB status. PodDisruptionsAllowed and other
 	// status informatio is valid only if observedGeneration equals to PDB's object generation.
 	// +optional
-	ObservedGeneration int64
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// DisruptedPods contains information about pods whose eviction was
 	// processed by the API server eviction subresource handler but has not
@@ -56,43 +56,43 @@ type PodDisruptionBudgetStatus struct {
 	// the list automatically by PodDisruptionBudget controller after some time.
 	// If everything goes smooth this map should be empty for the most of the time.
 	// Large number of entries in the map may indicate problems with pod deletions.
-	DisruptedPods map[string]metav1.Time
+	DisruptedPods map[string]unversioned.Time `json:"disruptedPods" protobuf:"bytes,5,rep,name=disruptedPods"`
 
 	// Number of pod disruptions that are currently allowed.
-	PodDisruptionsAllowed int32
+	PodDisruptionsAllowed int32 `json:"disruptionsAllowed"`
 
 	// current number of healthy pods
-	CurrentHealthy int32
+	CurrentHealthy int32 `json:"currentHealthy"`
 
 	// minimum desired number of healthy pods
-	DesiredHealthy int32
+	DesiredHealthy int32 `json:"desiredHealthy"`
 
 	// total number of pods counted by this disruption budget
-	ExpectedPods int32
+	ExpectedPods int32 `json:"expectedPods"`
 }
 
 // +genclient=true
 
 // PodDisruptionBudget is an object to define the max disruption that can be caused to a collection of pods
 type PodDisruptionBudget struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// Specification of the desired behavior of the PodDisruptionBudget.
 	// +optional
-	Spec PodDisruptionBudgetSpec
+	Spec PodDisruptionBudgetSpec `json:"spec,omitempty"`
 	// Most recently observed status of the PodDisruptionBudget.
 	// +optional
-	Status PodDisruptionBudgetStatus
+	Status PodDisruptionBudgetStatus `json:"status,omitempty"`
 }
 
 // PodDisruptionBudgetList is a collection of PodDisruptionBudgets.
 type PodDisruptionBudgetList struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ListMeta
-	Items []PodDisruptionBudget
+	unversioned.ListMeta `json:"metadata,omitempty"`
+	Items                []PodDisruptionBudget `json:"items"`
 }
 
 // +genclient=true
@@ -102,13 +102,13 @@ type PodDisruptionBudgetList struct {
 // This is a subresource of Pod.  A request to cause such an eviction is
 // created by POSTing to .../pods/<pod name>/eviction.
 type Eviction struct {
-	metav1.TypeMeta
+	unversioned.TypeMeta `json:",inline"`
 
 	// ObjectMeta describes the pod that is being evicted.
 	// +optional
-	metav1.ObjectMeta
+	api.ObjectMeta `json:"metadata,omitempty"`
 
 	// DeleteOptions may be provided
 	// +optional
-	DeleteOptions *api.DeleteOptions
+	DeleteOptions *api.DeleteOptions `json:"deleteOptions,omitempty"`
 }

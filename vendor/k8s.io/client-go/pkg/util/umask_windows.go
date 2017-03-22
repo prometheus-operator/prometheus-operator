@@ -22,6 +22,6 @@ import (
 	"errors"
 )
 
-func Umask(mask int) (int, error) {
+func Umask(mask int) (old int, err error) {
 	return 0, errors.New("platform and architecture is not supported")
 }
