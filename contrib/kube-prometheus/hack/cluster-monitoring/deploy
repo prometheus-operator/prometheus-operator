@@ -14,7 +14,7 @@ kctl() {
     kubectl --namespace "$NAMESPACE" "$@"
 }
 
-kctl apply -f manifests/prometheus-operator.yaml
+kctl apply -f manifests/prometheus-operator
 
 # Wait for TPRs to be ready.
 printf "Waiting for Operator to register third party objects..."
@@ -28,6 +28,9 @@ kctl apply -f manifests/grafana
 
 kctl apply -f manifests/prometheus/prometheus-k8s-rules.yaml
 kctl apply -f manifests/prometheus/prometheus-k8s-service.yaml
+kctl apply -f manifests/prometheus/prometheus-cluster-role-binding.yaml
+kctl apply -f manifests/prometheus/prometheus-cluster-role.yaml
+kctl apply -f manifests/prometheus/prometheus-k8s-service-account.yaml
 
 kctl apply -f manifests/alertmanager/alertmanager-config.yaml
 kctl apply -f manifests/alertmanager/alertmanager-service.yaml
