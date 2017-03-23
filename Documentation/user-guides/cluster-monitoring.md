@@ -26,7 +26,7 @@ Once you complete this guide you will monitor the following:
 
 The manifests used here use the [Prometheus Operator](https://github.com/coreos/prometheus-operator), which manages Prometheus servers and their configuration in a cluster. Prometheus discovers targets through `Endpoints` objects, which means all targets that are running as `Pod`s in the Kubernetes cluster are easily monitored. Many Kubernetes components can be [self-hosted](https://coreos.com/blog/self-hosted-kubernetes.html) today. The kubelet, however, is not. Therefore the Prometheus Operator implements a functionality to synchronize the kubelets into an `Endpoints` object. To make use of that functionality the `--kubelet-object` argument must be passed to the Prometheus Operator when running it.
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-operator.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml)
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -41,12 +41,13 @@ spec:
       labels:
         operator: prometheus
     spec:
+      serviceAccountName: prometheus-operator
       containers:
        - name: prometheus-operator
          image: quay.io/coreos/prometheus-operator:v0.7.0
          args:
-           - "--kubelet-object=kube-system/kubelet"
-           - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
+         - "--kubelet-object=kube-system/kubelet"
+         - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
          resources:
            requests:
              cpu: 100m
@@ -55,6 +56,8 @@ spec:
              cpu: 200m
              memory: 300Mi
 ```
+
+> Make sure that the `ServiceAccount` called `prometheus-operator` exists and if using RBAC, is bound to the correct role. Read more on [RBAC when using the Prometheus Operator](../rbac.md).
 
 Once started it ensures that all internal IPs of the nodes in the cluster are synchronized into the specified `Endpoints` object. In this case the object is called `kubelet` and is located in the `kube-system` namespace.
 
@@ -278,6 +281,7 @@ metadata:
 spec:
   replicas: 2
   version: v1.5.2
+  serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpression:
     - {key: k8s-apps, operator: Exists}
@@ -298,6 +302,8 @@ spec:
       name: alertmanager-main
       port: web
 ```
+
+> Make sure that the `ServiceAccount` called `prometheus-k8s` exists and if using RBAC, is bound to the correct role. Read more on [RBAC when using the Prometheus Operator](../rbac.md).
 
 The expression to match for selecting `ServiceMonitor`s here is that they must have a label which has a key called `k8s-apps`. If you look closely at all the `Service` objects described above they all have a label called `k8s-app` and their component name this allows to conveniently select them with `ServiceMonitor`s.
 
