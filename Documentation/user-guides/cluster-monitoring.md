@@ -226,6 +226,7 @@ spec:
       labels:
         app: kube-state-metrics
     spec:
+      serviceAccountName: kube-state-metrics
       containers:
       - name: kube-state-metrics
         image: gcr.io/google_containers/kube-state-metrics:v0.4.1
@@ -241,6 +242,8 @@ spec:
             cpu: 200m
 
 ```
+
+> Make sure that the `ServiceAccount` called `kube-state-metrics` exists and if using RBAC, is bound to the correct role. See the kube-state-metrics [repository for RBAC requirements](https://github.com/kubernetes/kube-state-metrics/tree/master/kubernetes).
 
 And the respective `Service` manifest:
 
