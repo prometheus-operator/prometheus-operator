@@ -3,18 +3,19 @@ all: build
 FLAGS =
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 REGISTRY = quay.io/coreos
-TAG = latest
+TAG = v0.0.1
+NAME = grafana-watcher
 
 build:
-	$(ENVVAR) go build -o grafana-watcher main.go
+	$(ENVVAR) go build -o ${NAME} main.go
 
 image: build
-	docker build -t ${REGISTRY}/grafana-watcher:$(TAG) .
+	docker build -t ${REGISTRY}/${NAME}:$(TAG) .
 
 push: image
-	docker push ${REGISTRY}/grafana-watcher:$(TAG)
+	docker push ${REGISTRY}/${NAME}:$(TAG)
 
 clean:
-	rm -f grafana-watcher
+	rm -f ${NAME}
 
 .PHONY: all build image push clean

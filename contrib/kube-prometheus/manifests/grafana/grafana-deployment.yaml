@@ -31,7 +31,7 @@ spec:
             memory: 300Mi
             cpu: 300m
       - name: grafana-watcher
-        image: quay.io/coreos/grafana-watcher:latest
+        image: quay.io/coreos/grafana-watcher:v0.0.1
         args:
           - '--watch-dir=/var/grafana-dashboards'
           - '--grafana-url=http://admin:admin@localhost:3000'
