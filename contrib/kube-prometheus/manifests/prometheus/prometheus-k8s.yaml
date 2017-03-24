@@ -7,6 +7,7 @@ metadata:
 spec:
   replicas: 2
   version: v1.5.2
+  serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpression:
     - {key: k8s-apps, operator: Exists}

@@ -86,18 +86,18 @@ spec:
 
 [embedmd]:# (../example/networkpolicies/grafana.yaml)
 ```yaml
-- apiVersion: extensions/v1beta1
-  kind: NetworkPolicy
-  metadata:
-    name: grafana
-  spec:
-    ingress:
-    - ports:
-      - port: 3000
-        protocol: tcp
-    podSelector:
-      matchLabels:
-        app: grafana
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: grafana
+spec:
+  ingress:
+  - ports:
+    - port: 3000
+      protocol: tcp
+  podSelector:
+    matchLabels:
+      app: grafana
 ```
 
 #### Prometheus
