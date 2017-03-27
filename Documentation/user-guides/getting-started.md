@@ -6,8 +6,69 @@ The mission of the Prometheus Operator is to make running Prometheus on top of K
 
 To follow this getting started you will need a Kubernetes cluster you have access to. Let's give the Prometheus Operator a spin:
 
-[embedmd]:# (../../deployment.yaml)
+[embedmd]:# (../../bundle.yaml)
 ```yaml
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-operator
+subjects:
+- kind: ServiceAccount
+  name: prometheus-operator
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRole
+metadata:
+  name: prometheus-operator
+rules:
+- apiGroups:
+  - extensions
+  resources:
+  - thirdpartyresources
+  verbs:
+  - create
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagers
+  - prometheuses
+  - servicemonitors
+  verbs:
+  - "*"
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs: ["*"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  - secrets
+  verbs: ["*"]
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs: ["list", "delete"]
+- apiGroups: [""]
+  resources:
+  - services
+  - endpoints
+  verbs: ["get", "create", "update"]
+- apiGroups: [""]
+  resources:
+  - nodes
+  verbs: ["list", "watch"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus-operator
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -21,16 +82,17 @@ spec:
       labels:
         operator: prometheus
     spec:
+      serviceAccountName: prometheus-operator
       containers:
-       - name: prometheus-operator
-         image: quay.io/coreos/prometheus-operator:v0.7.0
-         resources:
-           requests:
-             cpu: 100m
-             memory: 50Mi
-           limits:
-             cpu: 200m
-             memory: 100Mi
+      - name: prometheus-operator
+        image: quay.io/coreos/prometheus-operator:v0.7.0
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+          limits:
+            cpu: 200m
+            memory: 100Mi
 ```
 
 The Prometheus Operator introduces third party resources in Kubernetes to declare the desired state of a Prometheus and Alertmanager cluster as well as the Prometheus configuration. The resources it introduces are:

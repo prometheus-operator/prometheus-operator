@@ -88,8 +88,10 @@ at the [design doc](Documentation/design.md).
 Install the Operator inside a cluster by running the following command:
 
 ```
-kubectl apply -f deployment.yaml
+kubectl apply -f bundle.yaml
 ```
+
+> Note: make sure to adapt the namespace in the ClusterRoleBinding if deploying in another namespace than the default namespace.
 
 To run the Operator outside of a cluster:
 
@@ -112,7 +114,7 @@ done
 After a couple of minutes you can go ahead and remove the operator itself.
 
 ```
-kubectl delete -f deployment.yaml
+kubectl delete -f bundle.yaml
 ```
 
 The operator automatically creates services in each namespace where you created a Prometheus or Alertmanager resources,

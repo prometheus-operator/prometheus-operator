@@ -11,10 +11,9 @@ spec:
       labels:
         operator: prometheus
     spec:
-      serviceAccountName: prometheus-operator
       containers:
       - name: prometheus-operator
-        image: quay.io/brancz/prometheus-operator:9c58518
+        image: quay.io/coreos/prometheus-operator:v0.7.0
         resources:
           requests:
             cpu: 100m

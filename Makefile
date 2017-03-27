@@ -56,5 +56,8 @@ docs: embedmd apidocgen
 	embedmd -w `find Documentation -name "*.md"`
 	apidocgen pkg/client/monitoring/v1alpha1/types.go > Documentation/api.md
 
+generate:
+	hack/generate.sh
+	@$(MAKE) docs
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs

@@ -100,7 +100,7 @@ func (f *Framework) setup(opImage string) error {
 }
 
 func (f *Framework) setupPrometheusOperator(opImage string) error {
-	fn, err := filepath.Abs("../../deployment.yaml")
+	fn, err := filepath.Abs("../../example/non-rbac/prometheus-operator.yaml")
 	if err != nil {
 		return err
 	}
