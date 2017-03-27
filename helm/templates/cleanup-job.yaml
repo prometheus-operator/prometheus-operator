@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    helm.sh/hook: post-delete
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}-cleanup
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+      name: {{ template "fullname" . }}-cleanup
+    spec:
+      containers:
+        - name: delete-services
+          image: "{{ .Values.global.hyperkube.repository }}:{{ .Values.global.hyperkube.tag }}"
+          imagePullPolicy: "{{ .Values.global.hyperkube.pullPolicy }}"
+          command:
+            - /bin/bash
+            - -c
+            - for n in $(/kubectl get namespaces -o jsonpath={..metadata.name}); do /kubectl delete --ignore-not-found --namespace $n services prometheus-operated alertmanager-operated; done
+        - name: delete-tprs
+          image: "{{ .Values.global.hyperkube.repository }}:{{ .Values.global.hyperkube.tag }}"
+          imagePullPolicy: "{{ .Values.global.hyperkube.pullPolicy }}"
+          command:
+            - /kubectl
+            - delete
+            - --ignore-not-found
+            - thirdpartyresource
+            - alertmanager.monitoring.coreos.com
+            - prometheus.monitoring.coreos.com
+            - service-monitor.monitoring.coreos.com
+      restartPolicy: OnFailure
