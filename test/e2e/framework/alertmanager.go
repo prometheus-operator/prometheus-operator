@@ -27,6 +27,7 @@ import (
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/pkg/errors"
 )
 
 var ValidAlertmanagerConfig = `global:
@@ -113,23 +114,24 @@ func (f *Framework) AlertmanagerConfigSecret(name string) (*v1.Secret, error) {
 
 func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager) error {
 	log.Printf("Creating Alertmanager (%s/%s)", f.Namespace.Name, a.Name)
-	s, err := f.AlertmanagerConfigSecret(fmt.Sprintf("alertmanager-%s", a.Name))
+	amConfigSecretName := fmt.Sprintf("alertmanager-%s", a.Name)
+	s, err := f.AlertmanagerConfigSecret(amConfigSecretName)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("making alertmanager config secret %v failed", amConfigSecretName))
 	}
 	_, err = f.KubeClient.CoreV1().Secrets(f.Namespace.Name).Create(s)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("creating alertmanager config secret %v failed", s.Name))
 	}
 
 	_, err = f.MonClient.Alertmanagers(f.Namespace.Name).Create(a)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
 	err = f.WaitForPodsReady(int(*a.Spec.Replicas), alertmanager.ListOptions(a.Name))
 	if err != nil {
-		return fmt.Errorf("failed to create an Alertmanager cluster (%s) with %d instances: %v", a.Name, a.Spec.Replicas, err)
+		return errors.Wrap(err, fmt.Sprintf("failed to create an Alertmanager cluster (%s) with %d instances", a.Name, a.Spec.Replicas))
 	}
 	return nil
 }
@@ -153,15 +155,15 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(name string) error {
 	log.Printf("Deleting Alertmanager (%s/%s)", f.Namespace.Name, name)
 	_, err := f.MonClient.Alertmanagers(f.Namespace.Name).Get(name)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("requesting Alertmanager tpr %v failed", name))
 	}
 
 	if err := f.MonClient.Alertmanagers(f.Namespace.Name).Delete(name, nil); err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("deleting Alertmanager tpr %v failed", name))
 	}
 
 	if err := f.WaitForPodsReady(0, alertmanager.ListOptions(name)); err != nil {
-		return fmt.Errorf("failed to teardown Alertmanager (%s) instances: %v", name, err)
+		return errors.Wrap(err, fmt.Sprintf("waiting for Alertmanager tpr (%s) to vanish timed out", name))
 	}
 
 	return f.KubeClient.CoreV1().Secrets(f.Namespace.Name).Delete(fmt.Sprintf("alertmanager-%s", name), nil)

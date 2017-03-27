@@ -15,13 +15,15 @@
 package framework
 
 import (
+	"fmt"
+	"github.com/pkg/errors"
 	"k8s.io/client-go/pkg/api/v1"
 	"time"
 )
 
 func (f *Framework) CreateServiceAndWaitUntilReady(service *v1.Service) error {
 	if _, err := f.KubeClient.CoreV1().Services(f.Namespace.Name).Create(service); err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("creating service %v failed", service.Name))
 	}
 
 	if err := f.WaitForServiceReady(service.Name); err != nil {
@@ -34,7 +36,7 @@ func (f *Framework) WaitForServiceReady(serviceName string) error {
 	err := f.Poll(time.Minute*5, time.Second, func() (bool, error) {
 		endpoints, err := f.KubeClient.CoreV1().Endpoints(f.Namespace.Name).Get(serviceName)
 		if err != nil {
-			return false, err
+			return false, errors.Wrap(err, fmt.Sprintf("requesting endpoints for servce %v failed", serviceName))
 		}
 		if len(endpoints.Subsets) != 0 && len(endpoints.Subsets[0].Addresses) > 0 {
 			return true, nil
@@ -46,7 +48,7 @@ func (f *Framework) WaitForServiceReady(serviceName string) error {
 
 func (f *Framework) DeleteService(serviceName string) error {
 	if err := f.KubeClient.CoreV1().Services(f.Namespace.Name).Delete(serviceName, nil); err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("deleting service %v failed", serviceName))
 	}
 	return nil
 }
