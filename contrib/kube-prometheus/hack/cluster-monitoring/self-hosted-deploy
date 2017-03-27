@@ -2,5 +2,5 @@
 
 hack/cluster-monitoring/deploy
 
-kubectl --namespace=kube-system apply -f manifests/k8s/self-hosted
+kubectl apply -f manifests/k8s/self-hosted
 

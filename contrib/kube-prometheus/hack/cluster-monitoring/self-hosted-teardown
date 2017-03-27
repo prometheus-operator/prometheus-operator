@@ -2,5 +2,5 @@
 
 hack/cluster-monitoring/teardown
 
-kubectl --namespace=kube-system delete -f manifests/k8s/self-hosted
+kubectl delete -f manifests/k8s/self-hosted
 

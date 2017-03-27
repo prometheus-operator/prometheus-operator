@@ -72,6 +72,7 @@ kube-scheduler:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: kube-system
   name: kube-scheduler-prometheus-discovery
   labels:
     k8s-app: kube-scheduler
@@ -94,6 +95,7 @@ kube-controller-manager:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: kube-system
   name: kube-controller-manager-prometheus-discovery
   labels:
     k8s-app: kube-controller-manager
@@ -116,6 +118,7 @@ kube-dns:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: kube-system
   name: kube-dns-prometheus-discovery
   labels:
     k8s-app: kube-dns
