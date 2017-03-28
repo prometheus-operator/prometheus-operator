@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/util/intstr"
+	"k8s.io/client-go/pkg/util/wait"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
@@ -186,7 +187,7 @@ func promImage(version string) string {
 func (f *Framework) WaitForTargets(amount int) error {
 	var targets []*Target
 
-	if err := f.Poll(time.Minute*10, time.Second, func() (bool, error) {
+	if err := wait.Poll(time.Second, time.Minute*10, func() (bool, error) {
 		var err error
 		targets, err = f.GetActiveTargets()
 		if err != nil {

@@ -27,6 +27,7 @@ import (
 
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/util/wait"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
@@ -230,7 +231,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 	}
 
 	// remounting a ConfigMap can take some time
-	err = framework.Poll(time.Minute*5, time.Second, func() (bool, error) {
+	err = wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		logs, err := framework.GetLogs(fmt.Sprintf("prometheus-%s-0", name), "prometheus-config-reloader")
 		if err != nil {
 			return false, err
@@ -288,7 +289,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 	}
 
 	log.Print("Validating Prometheus Targets were properly discovered")
-	err = framework.Poll(18*time.Minute, time.Second, isDiscoveryWorking(prometheusName))
+	err = wait.Poll(time.Second, 18*time.Minute, isDiscoveryWorking(prometheusName))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -353,7 +354,7 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	}
 
 	log.Print("Validating Prometheus properly discovered alertmanagers")
-	err = framework.Poll(18*time.Minute, time.Second, isAlertmanagerDiscoveryWorking(alertmanagerName))
+	err = wait.Poll(time.Second, 18*time.Minute, isAlertmanagerDiscoveryWorking(alertmanagerName))
 	if err != nil {
 		t.Fatal(err)
 	}

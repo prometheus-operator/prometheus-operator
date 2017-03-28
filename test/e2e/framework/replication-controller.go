@@ -15,10 +15,12 @@
 package framework
 
 import (
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/util/yaml"
 	"os"
 	"time"
+
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/util/wait"
+	"k8s.io/client-go/pkg/util/yaml"
 )
 
 func createReplicationControllerViaYml(filepath string, f *Framework) error {
@@ -73,7 +75,7 @@ func scaleDownReplicationController(f *Framework, rC v1.ReplicationController) e
 		return err
 	}
 
-	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		currentRC, err := rCAPI.Get(rC.Name)
 		if err != nil {
 			return false, err

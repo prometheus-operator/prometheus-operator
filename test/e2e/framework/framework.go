@@ -32,6 +32,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/pkg/errors"
+	"k8s.io/client-go/pkg/util/wait"
 )
 
 type Framework struct {
@@ -174,7 +175,7 @@ func (f *Framework) Teardown() error {
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
 func (f *Framework) WaitForPodsReady(expectedReplicas int, opts v1.ListOptions) error {
-	return f.Poll(time.Minute*2, time.Second, func() (bool, error) {
+	return wait.Poll(time.Second, time.Minute*2, func() (bool, error) {
 		pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
 		if err != nil {
 			return false, err
@@ -200,7 +201,7 @@ func (f *Framework) WaitForPodsReady(expectedReplicas int, opts v1.ListOptions) 
 }
 
 func (f *Framework) WaitForPodsRunImage(expectedReplicas int, image string, opts v1.ListOptions) error {
-	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
 		if err != nil {
 			return false, err
@@ -222,7 +223,7 @@ func (f *Framework) WaitForPodsRunImage(expectedReplicas int, image string, opts
 
 func (f *Framework) WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {
 	var resp *http.Response
-	err := f.Poll(timeout, time.Second, func() (bool, error) {
+	err := wait.Poll(time.Second, timeout, func() (bool, error) {
 		var err error
 		resp, err = http.Get(url)
 		if err == nil && resp.StatusCode == 200 {
@@ -272,27 +273,6 @@ func (f *Framework) GetLogs(podName, containerName string) (string, error) {
 		return "", err
 	}
 	return string(logs), err
-}
-
-func (f *Framework) Poll(timeout, pollInterval time.Duration, pollFunc func() (bool, error)) error {
-	t := time.After(timeout)
-	ticker := time.NewTicker(pollInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-t:
-			return fmt.Errorf("timed out")
-		case <-ticker.C:
-			b, err := pollFunc()
-			if err != nil {
-				return err
-			}
-			if b {
-				return nil
-			}
-		}
-	}
 }
 
 func (f *Framework) ProxyGetPod(podName string, port string, path string) *rest.Request {

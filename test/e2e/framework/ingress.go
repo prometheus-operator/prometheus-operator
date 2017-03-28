@@ -20,6 +20,7 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/pkg/util/intstr"
+	"k8s.io/client-go/pkg/util/wait"
 	"k8s.io/client-go/pkg/util/yaml"
 	"os"
 	"time"
@@ -123,7 +124,7 @@ func (f *Framework) DeleteNginxIngressControllerIncDefaultBackend() error {
 
 func (f *Framework) GetIngressIP(ingressName string) (*string, error) {
 	var ingress *v1beta1.Ingress
-	err := f.Poll(time.Minute*5, time.Millisecond*500, func() (bool, error) {
+	err := wait.Poll(time.Millisecond*500, time.Minute*5, func() (bool, error) {
 		var err error
 		ingress, err = f.KubeClient.Extensions().Ingresses(f.Namespace.Name).Get(ingressName)
 		if err != nil {
