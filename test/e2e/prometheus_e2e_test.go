@@ -461,7 +461,7 @@ func TestExposingPrometheusWithIngress(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = framework.WaitForHTTPSuccessStatusCode(time.Second*30, fmt.Sprintf("http://%s:/metrics", *ip))
+	err = framework.WaitForHTTPSuccessStatusCode(time.Minute, fmt.Sprintf("http://%s:/metrics", *ip))
 	if err != nil {
 		t.Fatal(err)
 	}

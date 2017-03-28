@@ -31,6 +31,7 @@ import (
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/pkg/errors"
 )
 
 type Framework struct {
@@ -220,13 +221,17 @@ func (f *Framework) WaitForPodsRunImage(expectedReplicas int, image string, opts
 }
 
 func (f *Framework) WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {
-	return f.Poll(timeout, time.Second, func() (bool, error) {
-		resp, err := http.Get(url)
+	var resp *http.Response
+	err := f.Poll(timeout, time.Second, func() (bool, error) {
+		var err error
+		resp, err = http.Get(url)
 		if err == nil && resp.StatusCode == 200 {
 			return true, nil
 		}
 		return false, nil
 	})
+
+	return errors.Wrap(err, fmt.Sprintf("waiting for %v to return a successfull status code timed out. Last response from server was: %v", url, resp))
 }
 
 func podRunsImage(p v1.Pod, image string) bool {

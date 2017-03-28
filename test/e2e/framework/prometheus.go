@@ -28,6 +28,7 @@ import (
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	"github.com/pkg/errors"
 )
 
 func (f *Framework) MakeBasicPrometheus(name, group string, replicas int32) *v1alpha1.Prometheus {
@@ -157,15 +158,15 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
 	log.Printf("Deleting Prometheus (%s/%s)", f.Namespace.Name, name)
 	_, err := f.MonClient.Prometheuses(f.Namespace.Name).Get(name)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("requesting Prometheus tpr %v failed", name))
 	}
 
 	if err := f.MonClient.Prometheuses(f.Namespace.Name).Delete(name, nil); err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("deleting Prometheus tpr %v failed", name))
 	}
 
 	if err := f.WaitForPodsReady(0, prometheus.ListOptions(name)); err != nil {
-		return fmt.Errorf("failed to teardown Prometheus instances (%s): %v", name, err)
+		return errors.Wrap(err, fmt.Sprintf("waiting for Prometheus tpr (%s) to vanish timed out", name))
 	}
 
 	return nil
