@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/util/wait"
 	"time"
 )
 
@@ -33,7 +34,7 @@ func (f *Framework) CreateServiceAndWaitUntilReady(service *v1.Service) error {
 }
 
 func (f *Framework) WaitForServiceReady(serviceName string) error {
-	err := f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		endpoints, err := f.KubeClient.CoreV1().Endpoints(f.Namespace.Name).Get(serviceName)
 		if err != nil {
 			return false, errors.Wrap(err, fmt.Sprintf("requesting endpoints for servce %v failed", serviceName))

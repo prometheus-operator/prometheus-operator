@@ -23,6 +23,7 @@ import (
 
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/util/intstr"
+	"k8s.io/client-go/pkg/util/wait"
 	"k8s.io/client-go/pkg/util/yaml"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
@@ -174,7 +175,7 @@ func amImage(version string) string {
 }
 
 func (f *Framework) WaitForAlertmanagerInitializedMesh(name string, amountPeers int) error {
-	return f.Poll(time.Second*20, time.Second, func() (bool, error) {
+	return wait.Poll(time.Second, time.Second*20, func() (bool, error) {
 		amStatus, err := f.GetAlertmanagerConfig(name)
 		if err != nil {
 			return false, err
@@ -203,7 +204,7 @@ func (f *Framework) GetAlertmanagerConfig(n string) (alertmanagerStatus, error) 
 }
 
 func (f *Framework) WaitForSpecificAlertmanagerConfig(amName string, expectedConfig string) error {
-	return f.Poll(time.Minute*5, time.Second, func() (bool, error) {
+	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		config, err := f.GetAlertmanagerConfig("alertmanager-" + amName + "-0")
 		if err != nil {
 			return false, err
