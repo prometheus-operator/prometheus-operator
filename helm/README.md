@@ -42,10 +42,10 @@ The following tables lists the configurable parameters of the prometheus-operato
 Parameter | Description | Default
 --- | --- | ---
 `global.hyperkube.repository` | Hyperkube image | `quay.io/coreos/hyperkube`
-`global.hyperkube.tag` | Hyperkube image tag | `v1.5.3_coreos.0`
+`global.hyperkube.tag` | Hyperkube image tag | `v1.5.6_coreos.0`
 `global.hyperkube.pullPolicy` | Hyperkube image pull policy | `IfNotPresent`
 `image.repository` | Image | `quay.io/coreos/prometheus-operator`
-`image.tag` | Image tag | `v0.6.0`
+`image.tag` | Image tag | `v0.7.0`
 `image.pullPolicy` | Image pull policy | `IfNotPresent`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `resources` | Pod resource requests & limits | `{}`
