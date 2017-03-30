@@ -29,3 +29,6 @@ spec:
             - prometheus.monitoring.coreos.com
             - service-monitor.monitoring.coreos.com
       restartPolicy: OnFailure
+    {{- if .Values.rbacEnable }}
+      serviceAccountName: {{ template "fullname" . }}
+    {{- end }}

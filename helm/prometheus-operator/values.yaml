@@ -17,6 +17,10 @@ image:
 ##
 nodeSelector: {}
 
+## If true, create & use RBAC resources
+##
+rbacEnable: true
+
 ## If true, collect & send anonymous usage statistics
 ## Ref: https://github.com/coreos/prometheus-operator#installation
 ##

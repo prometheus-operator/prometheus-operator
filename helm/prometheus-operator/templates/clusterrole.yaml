@@ -1,0 +1,39 @@
+{{- if .Values.rbacEnable }}
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRole
+metadata:
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["*"]
+
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["delete", "list"]
+
+  - apiGroups: [""]
+    resources: ["services", "endpoints"]
+    verbs: ["create", "get", "update"]
+
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["list", "watch"]
+
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["*"]
+
+  - apiGroups: ["extensions"]
+    resources: ["thirdpartyresources"]
+    verbs: ["create", "get"]
+
+  - apiGroups: ["monitoring.coreos.com"]
+    resources: ["alertmanagers", "prometheuses", "servicemonitors"]
+    verbs: ["*"]
+{{- end }}
