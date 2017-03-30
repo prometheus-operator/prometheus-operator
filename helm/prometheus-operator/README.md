@@ -5,6 +5,7 @@ Installs [prometheus-operator](https://github.com/coreos/prometheus-operator) to
 ## TL;DR;
 
 ```console
+$ helm repo add opsgoodness http://charts.opsgoodness.com
 $ helm install opsgoodness/prometheus-operator
 ```
 
@@ -20,7 +21,7 @@ This chart bootstraps a [prometheus-operator](https://github.com/coreos/promethe
 To install the chart with the release name `my-release`:
 
 ```console
-$ helm install opsgoodness/prometheus-operator --name my-release
+$ helm install --name my-release opsgoodness/prometheus-operator
 ```
 
 The command deploys prometheus-operator on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -42,10 +43,10 @@ The following tables lists the configurable parameters of the prometheus-operato
 Parameter | Description | Default
 --- | --- | ---
 `global.hyperkube.repository` | Hyperkube image | `quay.io/coreos/hyperkube`
-`global.hyperkube.tag` | Hyperkube image tag | `v1.5.3_coreos.0`
+`global.hyperkube.tag` | Hyperkube image tag | `v1.5.6_coreos.0`
 `global.hyperkube.pullPolicy` | Hyperkube image pull policy | `IfNotPresent`
 `image.repository` | Image | `quay.io/coreos/prometheus-operator`
-`image.tag` | Image tag | `v0.6.0`
+`image.tag` | Image tag | `v0.7.0`
 `image.pullPolicy` | Image pull policy | `IfNotPresent`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `resources` | Pod resource requests & limits | `{}`
@@ -54,13 +55,13 @@ Parameter | Description | Default
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```console
-$ helm install opsgoodness/prometheus-operator --name my-release --set sendAnalytics=true
+$ helm install --name my-release opsgoodness/prometheus-operator --set sendAnalytics=true
 ```
 
 Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
 
 ```console
-$ helm install opsgoodness/prometheus-operator --name my-release -f values.yaml
+$ helm install --name my-release opsgoodness/prometheus-operator -f values.yaml
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
