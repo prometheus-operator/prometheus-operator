@@ -37,7 +37,7 @@ job('prometheus-operator-unit-tests') {
         shell('docker run --rm -v $PWD:/go/src/github.com/coreos/prometheus-operator -w /go/src/github.com/coreos/prometheus-operator golang make test')
     }
 }
-job('prometheus-operator-docs') {
+job('prometheus-operator-generate-content') {
     concurrentBuild()
 
     parameters {
@@ -74,7 +74,7 @@ job('prometheus-operator-docs') {
     }
 
     steps {
-        shell('docker run -v $PWD:/go/src/github.com/coreos/prometheus-operator -w /go/src/github.com/coreos/prometheus-operator/ golang make docs')
+        shell('docker run -v $PWD:/go/src/github.com/coreos/prometheus-operator -w /go/src/github.com/coreos/prometheus-operator/ golang make generate')
         shell('git diff --exit-code')
     }
 }
