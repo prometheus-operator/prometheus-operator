@@ -130,7 +130,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 		return errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	err = f.WaitForPodsReady(int(*a.Spec.Replicas), alertmanager.ListOptions(a.Name))
+	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, int(*a.Spec.Replicas), alertmanager.ListOptions(a.Name))
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to create an Alertmanager cluster (%s) with %d instances", a.Name, a.Spec.Replicas))
 	}
@@ -144,7 +144,7 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 		return err
 	}
 
-	err = f.WaitForPodsReady(int(*a.Spec.Replicas), alertmanager.ListOptions(a.Name))
+	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, int(*a.Spec.Replicas), alertmanager.ListOptions(a.Name))
 	if err != nil {
 		return fmt.Errorf("failed to update %d Alertmanager instances (%s): %v", a.Spec.Replicas, a.Name, err)
 	}
@@ -163,7 +163,7 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(name string) error {
 		return errors.Wrap(err, fmt.Sprintf("deleting Alertmanager tpr %v failed", name))
 	}
 
-	if err := f.WaitForPodsReady(0, alertmanager.ListOptions(name)); err != nil {
+	if err := WaitForPodsReady(f.KubeClient, f.Namespace.Name, 0, alertmanager.ListOptions(name)); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("waiting for Alertmanager tpr (%s) to vanish timed out", name))
 	}
 
@@ -190,7 +190,7 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(name string, amountPeers 
 
 func (f *Framework) GetAlertmanagerConfig(n string) (alertmanagerStatus, error) {
 	var amStatus alertmanagerStatus
-	request := f.ProxyGetPod(n, "9093", "/api/v1/status")
+	request := ProxyGetPod(f.KubeClient, f.Namespace.Name, n, "9093", "/api/v1/status")
 	resp, err := request.DoRaw()
 	if err != nil {
 		return amStatus, err

@@ -18,12 +18,13 @@ import (
 	"os"
 	"time"
 
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/util/wait"
 	"k8s.io/client-go/pkg/util/yaml"
 )
 
-func createReplicationControllerViaYml(filepath string, f *Framework) error {
+func createReplicationControllerViaYml(kubeClient kubernetes.Interface, namespace string, filepath string) error {
 	manifest, err := os.Open(filepath)
 	if err != nil {
 		return err
@@ -35,7 +36,7 @@ func createReplicationControllerViaYml(filepath string, f *Framework) error {
 		return err
 	}
 
-	_, err = f.KubeClient.CoreV1().ReplicationControllers(f.Namespace.Name).Create(&rC)
+	_, err = kubeClient.CoreV1().ReplicationControllers(namespace).Create(&rC)
 	if err != nil {
 		return err
 	}
@@ -43,7 +44,7 @@ func createReplicationControllerViaYml(filepath string, f *Framework) error {
 	return nil
 }
 
-func deleteReplicationControllerViaYml(filepath string, f *Framework) error {
+func deleteReplicationControllerViaYml(kubeClient kubernetes.Interface, namespace string, filepath string) error {
 	manifest, err := os.Open(filepath)
 	if err != nil {
 		return err
@@ -55,22 +56,22 @@ func deleteReplicationControllerViaYml(filepath string, f *Framework) error {
 		return err
 	}
 
-	if err := scaleDownReplicationController(f, rC); err != nil {
+	if err := scaleDownReplicationController(kubeClient, namespace, rC); err != nil {
 		return err
 	}
 
-	if err := f.KubeClient.CoreV1().ReplicationControllers(f.Namespace.Name).Delete(rC.Name, nil); err != nil {
+	if err := kubeClient.CoreV1().ReplicationControllers(namespace).Delete(rC.Name, nil); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func scaleDownReplicationController(f *Framework, rC v1.ReplicationController) error {
+func scaleDownReplicationController(kubeClient kubernetes.Interface, namespace string, rC v1.ReplicationController) error {
 	*rC.Spec.Replicas = 0
-	rCAPI := f.KubeClient.CoreV1().ReplicationControllers(f.Namespace.Name)
+	rCAPI := kubeClient.CoreV1().ReplicationControllers(namespace)
 
-	_, err := f.KubeClient.CoreV1().ReplicationControllers(f.Namespace.Name).Update(&rC)
+	_, err := kubeClient.CoreV1().ReplicationControllers(namespace).Update(&rC)
 	if err != nil {
 		return err
 	}

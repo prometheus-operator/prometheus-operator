@@ -132,7 +132,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 		return err
 	}
 
-	err = f.WaitForPodsReady(int(*p.Spec.Replicas), prometheus.ListOptions(p.Name))
+	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, int(*p.Spec.Replicas), prometheus.ListOptions(p.Name))
 	if err != nil {
 		return fmt.Errorf("failed to create %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -147,7 +147,7 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 		return err
 	}
 
-	err = f.WaitForPodsReady(int(*p.Spec.Replicas), prometheus.ListOptions(p.Name))
+	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, int(*p.Spec.Replicas), prometheus.ListOptions(p.Name))
 	if err != nil {
 		return fmt.Errorf("failed to update %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -166,7 +166,7 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
 		return errors.Wrap(err, fmt.Sprintf("deleting Prometheus tpr %v failed", name))
 	}
 
-	if err := f.WaitForPodsReady(0, prometheus.ListOptions(name)); err != nil {
+	if err := WaitForPodsReady(f.KubeClient, f.Namespace.Name, 0, prometheus.ListOptions(name)); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("waiting for Prometheus tpr (%s) to vanish timed out", name))
 	}
 
@@ -174,10 +174,10 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
 }
 
 func (f *Framework) WaitForPrometheusRunImageAndReady(p *v1alpha1.Prometheus) error {
-	if err := f.WaitForPodsRunImage(int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
+	if err := WaitForPodsRunImage(f.KubeClient, f.Namespace.Name, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
 		return err
 	}
-	return f.WaitForPodsReady(int(*p.Spec.Replicas), prometheus.ListOptions(p.Name))
+	return WaitForPodsReady(f.KubeClient, f.Namespace.Name, int(*p.Spec.Replicas), prometheus.ListOptions(p.Name))
 }
 
 func promImage(version string) string {

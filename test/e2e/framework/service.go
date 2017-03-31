@@ -16,26 +16,29 @@ package framework
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/pkg/errors"
+
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/util/wait"
-	"time"
 )
 
-func (f *Framework) CreateServiceAndWaitUntilReady(service *v1.Service) error {
-	if _, err := f.KubeClient.CoreV1().Services(f.Namespace.Name).Create(service); err != nil {
+func CreateServiceAndWaitUntilReady(kubeClient kubernetes.Interface, namespace string, service *v1.Service) error {
+	if _, err := kubeClient.CoreV1().Services(namespace).Create(service); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("creating service %v failed", service.Name))
 	}
 
-	if err := f.WaitForServiceReady(service.Name); err != nil {
+	if err := WaitForServiceReady(kubeClient, namespace, service.Name); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (f *Framework) WaitForServiceReady(serviceName string) error {
+func WaitForServiceReady(kubeClient kubernetes.Interface, namespace string, serviceName string) error {
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		endpoints, err := f.KubeClient.CoreV1().Endpoints(f.Namespace.Name).Get(serviceName)
+		endpoints, err := kubeClient.CoreV1().Endpoints(namespace).Get(serviceName)
 		if err != nil {
 			return false, errors.Wrap(err, fmt.Sprintf("requesting endpoints for servce %v failed", serviceName))
 		}
@@ -47,8 +50,8 @@ func (f *Framework) WaitForServiceReady(serviceName string) error {
 	return err
 }
 
-func (f *Framework) DeleteService(serviceName string) error {
-	if err := f.KubeClient.CoreV1().Services(f.Namespace.Name).Delete(serviceName, nil); err != nil {
+func DeleteService(kubeClient kubernetes.Interface, namespace string, serviceName string) error {
+	if err := kubeClient.CoreV1().Services(namespace).Delete(serviceName, nil); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting service %v failed", serviceName))
 	}
 	return nil

@@ -15,24 +15,16 @@
 package framework
 
 import (
-	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
-	"time"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/pkg/fields"
-	"k8s.io/client-go/pkg/util/yaml"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/pkg/errors"
-	"k8s.io/client-go/pkg/util/wait"
 )
 
 type Framework struct {
@@ -101,33 +93,23 @@ func (f *Framework) setup(opImage string) error {
 }
 
 func (f *Framework) setupPrometheusOperator(opImage string) error {
-	fn, err := filepath.Abs("../../example/non-rbac/prometheus-operator.yaml")
+	deploy, err := MakeDeployment("../../example/non-rbac/prometheus-operator.yaml")
 	if err != nil {
 		return err
 	}
 
-	deployManifest, err := os.Open(fn)
-	if err != nil {
-		return err
-	}
-
-	deploy := v1beta1.Deployment{}
-	err = yaml.NewYAMLOrJSONDecoder(deployManifest, 100).Decode(&deploy)
-	if err != nil {
-		return err
-	}
 	if opImage != "" {
 		// Override operator image used, if specified when running tests.
 		deploy.Spec.Template.Spec.Containers[0].Image = opImage
 	}
 
-	err = f.createDeployment(&deploy)
+	err = CreateDeployment(f.KubeClient, f.Namespace.Name, deploy)
 	if err != nil {
 		return err
 	}
 
 	opts := v1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
-	err = f.WaitForPodsReady(1, opts)
+	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, 1, opts)
 	if err != nil {
 		return err
 	}
@@ -170,111 +152,4 @@ func (f *Framework) Teardown() error {
 	}
 
 	return nil
-}
-
-// WaitForPodsReady waits for a selection of Pods to be running and each
-// container to pass its readiness check.
-func (f *Framework) WaitForPodsReady(expectedReplicas int, opts v1.ListOptions) error {
-	return wait.Poll(time.Second, time.Minute*2, func() (bool, error) {
-		pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
-		if err != nil {
-			return false, err
-		}
-
-		runningAndReady := 0
-		for _, p := range pl.Items {
-			isRunningAndReady, err := k8sutil.PodRunningAndReady(p)
-			if err != nil {
-				return false, err
-			}
-
-			if isRunningAndReady {
-				runningAndReady++
-			}
-		}
-
-		if runningAndReady == expectedReplicas {
-			return true, nil
-		}
-		return false, nil
-	})
-}
-
-func (f *Framework) WaitForPodsRunImage(expectedReplicas int, image string, opts v1.ListOptions) error {
-	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
-		if err != nil {
-			return false, err
-		}
-
-		runningImage := 0
-		for _, p := range pl.Items {
-			if podRunsImage(p, image) {
-				runningImage++
-			}
-		}
-
-		if runningImage == expectedReplicas {
-			return true, nil
-		}
-		return false, nil
-	})
-}
-
-func (f *Framework) WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {
-	var resp *http.Response
-	err := wait.Poll(time.Second, timeout, func() (bool, error) {
-		var err error
-		resp, err = http.Get(url)
-		if err == nil && resp.StatusCode == 200 {
-			return true, nil
-		}
-		return false, nil
-	})
-
-	return errors.Wrap(err, fmt.Sprintf("waiting for %v to return a successfull status code timed out. Last response from server was: %v", url, resp))
-}
-
-func podRunsImage(p v1.Pod, image string) bool {
-	for _, c := range p.Spec.Containers {
-		if image == c.Image {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (f *Framework) CreateDeployment(kclient kubernetes.Interface, ns string, deploy *v1beta1.Deployment) error {
-	if _, err := f.KubeClient.Extensions().Deployments(ns).Create(deploy); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (f *Framework) createDeployment(deploy *v1beta1.Deployment) error {
-	if _, err := f.KubeClient.Extensions().Deployments(f.Namespace.Name).Create(deploy); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (f *Framework) GetLogs(podName, containerName string) (string, error) {
-	logs, err := f.KubeClient.Core().RESTClient().Get().
-		Resource("pods").
-		Namespace(f.Namespace.Name).
-		Name(podName).SubResource("log").
-		Param("container", containerName).
-		Do().
-		Raw()
-	if err != nil {
-		return "", err
-	}
-	return string(logs), err
-}
-
-func (f *Framework) ProxyGetPod(podName string, port string, path string) *rest.Request {
-	return f.KubeClient.CoreV1().RESTClient().Get().Prefix("proxy").Namespace(f.Namespace.Name).Resource("pods").Name(podName + ":" + port).Suffix(path)
 }
