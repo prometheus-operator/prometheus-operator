@@ -168,10 +168,10 @@ Then it will be available under http://127.0.0.1:8001/api/v1/proxy/namespaces/de
 
 Exposing the Prometheus or Alertmanager web UI via an `Ingress` object is requires a running ingress controller. If you are unfamiliar with Ingress, have a look at the [documentation](https://kubernetes.io/docs/user-guide/ingress/).
 
-This example was tested with the [nginx ingress controller](https://github.com/kubernetes/contrib/tree/master/ingress/controllers/nginx).  For a quick-start for running the nginx ingress controller run:
+This example was tested with the [nginx ingress controller](https://github.com/kubernetes/ingress/tree/master/controllers/nginx).  For a quick-start for running the nginx ingress controller run:
 
 ```
-kubectl create -f https://raw.githubusercontent.com/kubernetes/contrib/master/ingress/controllers/nginx/rc.yaml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/deployment/nginx/nginx-ingress-controller.yaml
 ```
 
 > It is highly recommended to compare the available ingress controllers for a production environment. The nginx ingress controller may or may not be what is suitable for your production environment. Also have a look at HA Proxy, Træfɪk, GCE, AWS, and more.
