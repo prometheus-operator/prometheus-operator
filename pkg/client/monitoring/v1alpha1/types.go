@@ -84,6 +84,14 @@ type PrometheusSpec struct {
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+	// Secrets is a list of Secrets in the same namespace as the Prometheus
+	// object, which shall be mounted into the Prometheus Pods.
+	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name>.
+	// Secrets changes after initial creation of a Prometheus object are not
+	// reflected in the running Pods. To change the secrets mounted into the
+	// Prometheus Pods, the object must be deleted and recreated with the new list
+	// of secrets.
+	Secrets []string `json:"secrets,omitempty"`
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...

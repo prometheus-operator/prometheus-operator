@@ -104,6 +104,13 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 
 	if old != nil {
 		statefulset.Annotations = old.Annotations
+
+		// mounted volumes are not reconciled as StatefulSets do not allow
+		// modification of the PodTemplate.
+		// TODO(brancz): remove this once StatefulSets allow modification of the
+		// PodTemplate.
+		statefulset.Spec.Template.Spec.Containers[0].VolumeMounts = old.Spec.Template.Spec.Containers[0].VolumeMounts
+		statefulset.Spec.Template.Spec.Volumes = old.Spec.Template.Spec.Volumes
 	}
 	return statefulset
 }
@@ -247,7 +254,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
-	volumes := append([]v1.Volume{
+	volumes := []v1.Volume{
 		{
 			Name: "config",
 			VolumeSource: v1.VolumeSource{
@@ -262,9 +269,9 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
 		},
-	})
+	}
 
-	promVolumeMounts := append([]v1.VolumeMount{
+	promVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config",
 			ReadOnly:  true,
@@ -280,9 +287,25 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 			MountPath: "/var/prometheus/data",
 			SubPath:   subPathForStorage(p.Spec.Storage),
 		},
-	})
+	}
 
-	configReloadVolumeMounts := append([]v1.VolumeMount{
+	for _, s := range p.Spec.Secrets {
+		volumes = append(volumes, v1.Volume{
+			Name: "secret-" + s,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: s,
+				},
+			},
+		})
+		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+			Name:      "secret-" + s,
+			ReadOnly:  true,
+			MountPath: "/etc/prometheus/secrets/" + s,
+		})
+	}
+
+	configReloadVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config",
 			ReadOnly:  true,
@@ -292,13 +315,13 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 			Name:      "rules",
 			MountPath: "/etc/prometheus/rules",
 		},
-	})
+	}
 
-	configReloadArgs := append([]string{
+	configReloadArgs := []string{
 		fmt.Sprintf("-reload-url=%s", localReloadURL),
 		"-config-volume-dir=/etc/prometheus/config",
 		"-rule-volume-dir=/etc/prometheus/rules",
-	})
+	}
 
 	return v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
