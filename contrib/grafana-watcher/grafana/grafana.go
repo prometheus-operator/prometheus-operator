@@ -16,6 +16,7 @@ package grafana
 
 import (
 	"net/http"
+	"net/url"
 )
 
 type Interface interface {
@@ -24,11 +25,11 @@ type Interface interface {
 }
 
 type Clientset struct {
-	BaseUrl    string
+	BaseUrl    *url.URL
 	HTTPClient *http.Client
 }
 
-func New(baseUrl string) Interface {
+func New(baseUrl *url.URL) Interface {
 	return &Clientset{
 		BaseUrl:    baseUrl,
 		HTTPClient: http.DefaultClient,

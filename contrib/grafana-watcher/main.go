@@ -17,6 +17,7 @@ package main
 import (
 	"flag"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -99,7 +100,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	g := grafana.New(*grafanaUrl)
+	gUrl, err := url.Parse(*grafanaUrl)
+	if err != nil {
+		log.Fatalf("Grafana URL could not be parsed: ", *grafanaUrl)
+	}
+
+	if os.Getenv("GRAFANA_USER") != "" && os.Getenv("GRAFANA_PASSWORD") == "" {
+		gUrl.User = url.User(os.Getenv("GRAFANA_USER"))
+	}
+
+	if os.Getenv("GRAFANA_USER") != "" && os.Getenv("GRAFANA_PASSWORD") != "" {
+		gUrl.User = url.UserPassword(os.Getenv("GRAFANA_USER"), os.Getenv("GRAFANA_PASSWORD"))
+	}
+
+	g := grafana.New(gUrl)
 
 	for {
 		log.Println("Waiting for Grafana to be available.")
@@ -112,7 +126,7 @@ func main() {
 
 	su := updater.NewGrafanaDatasourceUpdater(g.Datasources(), filepath.Join(*watchDir, "*-datasource.json"))
 	log.Println("Initializing datasources.")
-	err := su.Init()
+	err = su.Init()
 	if err != nil {
 		log.Fatal(err)
 	}

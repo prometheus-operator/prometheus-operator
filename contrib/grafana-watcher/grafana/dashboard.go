@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ type DashboardsInterface interface {
 }
 
 type DashboardsClient struct {
-	BaseUrl    string
+	BaseUrl    *url.URL
 	HTTPClient *http.Client
 }
 
@@ -44,7 +45,7 @@ func (d *GrafanaDashboard) Slug() string {
 	return strings.TrimPrefix(d.Uri, "db/")
 }
 
-func NewDashboardsClient(baseUrl string, c *http.Client) DashboardsInterface {
+func NewDashboardsClient(baseUrl *url.URL, c *http.Client) DashboardsInterface {
 	return &DashboardsClient{
 		BaseUrl:    baseUrl,
 		HTTPClient: c,
@@ -52,7 +53,7 @@ func NewDashboardsClient(baseUrl string, c *http.Client) DashboardsInterface {
 }
 
 func (c *DashboardsClient) Search() ([]GrafanaDashboard, error) {
-	searchUrl := c.BaseUrl + "/api/search"
+	searchUrl := makeUrl(c.BaseUrl, "/api/search")
 	resp, err := c.HTTPClient.Get(searchUrl)
 	if err != nil {
 		return nil, err
@@ -69,7 +70,7 @@ func (c *DashboardsClient) Search() ([]GrafanaDashboard, error) {
 }
 
 func (c *DashboardsClient) Delete(slug string) error {
-	deleteUrl := c.BaseUrl + "/api/dashboards/db/" + slug
+	deleteUrl := makeUrl(c.BaseUrl, "/api/dashboards/db/"+slug)
 	req, err := http.NewRequest("DELETE", deleteUrl, nil)
 	if err != nil {
 		return err
@@ -84,7 +85,7 @@ func (c *DashboardsClient) Delete(slug string) error {
 }
 
 func (c *DashboardsClient) Create(dashboardJson io.Reader) error {
-	importDashboardUrl := c.BaseUrl + "/api/dashboards/import"
+	importDashboardUrl := makeUrl(c.BaseUrl, "/api/dashboards/import")
 	_, err := c.HTTPClient.Post(importDashboardUrl, "application/json", dashboardJson)
 	if err != nil {
 		return err

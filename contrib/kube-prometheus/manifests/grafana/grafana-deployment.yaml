@@ -17,6 +17,16 @@ spec:
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "true"
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: grafana-credentials
+              key: user
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-credentials
+              key: password
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/grafana-storage
@@ -28,13 +38,25 @@ spec:
             memory: 100Mi
             cpu: 100m
           limits:
-            memory: 300Mi
-            cpu: 300m
+            memory: 200Mi
+            cpu: 200m
       - name: grafana-watcher
-        image: quay.io/coreos/grafana-watcher:v0.0.2
+        image: quay.io/coreos/grafana-watcher:v0.0.3
+        imagePullPolicy: Never
         args:
           - '--watch-dir=/var/grafana-dashboards'
-          - '--grafana-url=http://admin:admin@localhost:3000'
+          - '--grafana-url=http://localhost:3000'
+        env:
+        - name: GRAFANA_USER
+          valueFrom:
+            secretKeyRef:
+              name: grafana-credentials
+              key: user
+        - name: GRAFANA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-credentials
+              key: password
         volumeMounts:
         - name: grafana-dashboards
           mountPath: /var/grafana-dashboards
