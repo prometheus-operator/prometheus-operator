@@ -14,3 +14,5 @@ rules:
   resources:
   - configmaps
   verbs: ["get"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]

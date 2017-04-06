@@ -78,7 +78,7 @@ As the kubelet is currently not self-hosted, the Prometheus Operator has a featu
 
 The Prometheus server itself accesses the Kubernetes API to discover targets and Alertmanagers. Therefore a separate `ClusterRole` for those Prometheus servers needs to exist.
 
-As Prometheus does not modify any Objects in the Kubernetes API, but just reads them it simply requires the `get`, `list`, and `watch` actions.
+As Prometheus does not modify any Objects in the Kubernetes API, but just reads them it simply requires the `get`, `list`, and `watch` actions. As Prometheus can also be used to scrape metrics from the Kubernetes apiserver, it also requires access to the `/metrics/` endpoint of it.
 
 In addition to the resources Prometheus itself needs to access, the Prometheus side-car needs to be able to `get` configmaps to be able to pull in rule files from configmap objects.
 
@@ -99,6 +99,8 @@ rules:
 - apiGroups: [""]
   resources:
   - configmaps
+  verbs: ["get"]
+- nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ```
 
