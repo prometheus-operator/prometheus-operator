@@ -23,6 +23,15 @@ metadata:
   name: grafana-dashboards
 data:
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-credentials
+type: Opaque
+data:
+  password: c3VwZXJzZWNyZXRwYXNzd29yZA== # supersecretpassword
+  user: c3VwZXJzZWNyZXR1c2Vy             # supersecretuser
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -34,12 +43,6 @@ spec:
       labels:
         app: grafana
     spec:
-      volumes:
-      - name: grafana-storage
-        emptyDir: {}
-      - name: grafana-dashboards
-        configMap:
-          name: grafana-dashboards
       containers:
       - name: grafana
         image: grafana/grafana:4.1.1
@@ -48,11 +51,22 @@ spec:
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "true"
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: grafana-credentials
+              key: user
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-credentials
+              key: password
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/grafana-storage
         ports:
-        - containerPort: 3000
+        - name: web
+          containerPort: 3000
         resources:
           requests:
             memory: 100Mi
@@ -61,11 +75,22 @@ spec:
             memory: 200Mi
             cpu: 200m
       - name: grafana-watcher
-        image: quay.io/coreos/grafana-watcher:v0.0.2
+        image: quay.io/coreos/grafana-watcher:v0.0.3
         imagePullPolicy: Never
         args:
           - '--watch-dir=/var/grafana-dashboards'
-          - '--grafana-url=http://admin:admin@localhost:3000'
+          - '--grafana-url=http://localhost:3000'
+        env:
+        - name: GRAFANA_USER
+          valueFrom:
+            secretKeyRef:
+              name: grafana-credentials
+              key: user
+        - name: GRAFANA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-credentials
+              key: password
         volumeMounts:
         - name: grafana-dashboards
           mountPath: /var/grafana-dashboards
@@ -79,4 +104,10 @@ spec:
         volumeMounts:
         - name: grafana-dashboards
           mountPath: /var/grafana-dashboards
+      volumes:
+      - name: grafana-storage
+        emptyDir: {}
+      - name: grafana-dashboards
+        configMap:
+          name: grafana-dashboards
 

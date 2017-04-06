@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
+	"path"
 	"strconv"
 )
 
@@ -30,7 +32,7 @@ type DatasourcesInterface interface {
 // DatasourcesClient is an implementation of the DatasourcesInterface. The
 // datasources HTTP API of Grafana requires admin access.
 type DatasourcesClient struct {
-	BaseUrl    string
+	BaseUrl    *url.URL
 	HTTPClient *http.Client
 }
 
@@ -39,7 +41,7 @@ type GrafanaDatasource struct {
 	Name string `json:"name"`
 }
 
-func NewDatasourcesClient(baseUrl string, c *http.Client) DatasourcesInterface {
+func NewDatasourcesClient(baseUrl *url.URL, c *http.Client) DatasourcesInterface {
 	return &DatasourcesClient{
 		BaseUrl:    baseUrl,
 		HTTPClient: c,
@@ -47,7 +49,7 @@ func NewDatasourcesClient(baseUrl string, c *http.Client) DatasourcesInterface {
 }
 
 func (c *DatasourcesClient) All() ([]GrafanaDatasource, error) {
-	allUrl := c.BaseUrl + "/api/datasources"
+	allUrl := makeUrl(c.BaseUrl, "/api/datasources")
 	resp, err := c.HTTPClient.Get(allUrl)
 	if err != nil {
 		return nil, err
@@ -65,7 +67,7 @@ func (c *DatasourcesClient) All() ([]GrafanaDatasource, error) {
 }
 
 func (c *DatasourcesClient) Delete(id int) error {
-	deleteUrl := c.BaseUrl + "/api/datasources/" + strconv.Itoa(id)
+	deleteUrl := makeUrl(c.BaseUrl, "/api/datasources/"+strconv.Itoa(id))
 	req, err := http.NewRequest("DELETE", deleteUrl, nil)
 	if err != nil {
 		return err
@@ -80,11 +82,20 @@ func (c *DatasourcesClient) Delete(id int) error {
 }
 
 func (c *DatasourcesClient) Create(datasourceJson io.Reader) error {
-	createUrl := c.BaseUrl + "/api/datasources"
+	createUrl := makeUrl(c.BaseUrl, "/api/datasources")
 	_, err := c.HTTPClient.Post(createUrl, "application/json", datasourceJson)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func makeUrl(baseUrl *url.URL, endpoint string) string {
+	result := &url.URL{}
+	*result = *baseUrl
+
+	result.Path = path.Join(result.Path, endpoint)
+
+	return result.String()
 }
