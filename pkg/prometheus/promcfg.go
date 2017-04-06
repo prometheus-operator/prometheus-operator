@@ -234,6 +234,14 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 			"regex":       "__meta_kubernetes_pod_label_(.+)",
 			"replacement": "pod_$1",
 		},
+		map[string]interface{}{
+			"source_labels": []string{"__meta_kubernetes_pod_name"},
+			"target_label":  "pod",
+		},
+		map[string]interface{}{
+			"source_labels": []string{"__meta_kubernetes_service_name"},
+			"target_label":  "service",
+		},
 	}...)
 
 	// By default, generate a safe job name from the service name.  We also keep
