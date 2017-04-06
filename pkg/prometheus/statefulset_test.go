@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
@@ -46,5 +47,166 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	if !reflect.DeepEqual(labels, sset.Labels) || !reflect.DeepEqual(annotations, sset.Annotations) {
 		t.Fatal("Labels or Annotations are not properly being propagated to the StatefulSet")
+	}
+}
+
+func TestStatefulSetVolumeInitial(t *testing.T) {
+	expected := &v1beta1.StatefulSet{
+		Spec: v1beta1.StatefulSetSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "config",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/config",
+									SubPath:   "",
+								}, {
+									Name:      "rules",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/rules",
+									SubPath:   "",
+								}, {
+									Name:      "prometheus--db",
+									ReadOnly:  false,
+									MountPath: "/var/prometheus/data",
+									SubPath:   "",
+								}, {
+									Name:      "secret-test-secret1",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/secrets/test-secret1",
+									SubPath:   "",
+								},
+							},
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "config",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: configSecretName(""),
+								},
+							},
+						},
+						{
+							Name: "rules",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+						{
+							Name: "secret-test-secret1",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: "test-secret1",
+								},
+							},
+						},
+						{
+							Name: "prometheus--db",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	sset := makeStatefulSet(v1alpha1.Prometheus{
+		Spec: v1alpha1.PrometheusSpec{
+			Secrets: []string{
+				"test-secret1",
+			},
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+
+	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) || !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts) {
+		t.Fatal("Volumes mounted in a Pod are not created correctly initially.")
+	}
+}
+
+func TestStatefulSetVolumeSkip(t *testing.T) {
+	old := &v1beta1.StatefulSet{
+		Spec: v1beta1.StatefulSetSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "config",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/config",
+									SubPath:   "",
+								}, {
+									Name:      "rules",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/rules",
+									SubPath:   "",
+								}, {
+									Name:      "prometheus--db",
+									ReadOnly:  false,
+									MountPath: "/var/prometheus/data",
+									SubPath:   "",
+								}, {
+									Name:      "secret-test-secret1",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/secrets/test-secret1",
+									SubPath:   "",
+								},
+							},
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "config",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: configSecretName(""),
+								},
+							},
+						},
+						{
+							Name: "rules",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+						{
+							Name: "secret-test-secret1",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: "test-secret1",
+								},
+							},
+						},
+						{
+							Name: "prometheus--db",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	sset := makeStatefulSet(v1alpha1.Prometheus{
+		Spec: v1alpha1.PrometheusSpec{
+			Secrets: []string{
+				"test-secret1",
+				"test-secret2",
+			},
+		},
+	}, old, defaultTestConfig, []*v1.ConfigMap{})
+
+	if !reflect.DeepEqual(old.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) || !reflect.DeepEqual(old.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts) {
+		t.Fatal("Volumes mounted in a Pod should not be reconciled.")
 	}
 }
