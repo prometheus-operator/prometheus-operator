@@ -42,7 +42,6 @@ spec:
             cpu: 200m
       - name: grafana-watcher
         image: quay.io/coreos/grafana-watcher:v0.0.3
-        imagePullPolicy: Never
         args:
           - '--watch-dir=/var/grafana-dashboards'
           - '--grafana-url=http://localhost:3000'
