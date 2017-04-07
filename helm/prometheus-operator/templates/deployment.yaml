@@ -22,6 +22,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           args:
+            - --kubelet-object={{ .Values.kubeletObject }}
             - --analytics={{ .Values.sendAnalytics }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}

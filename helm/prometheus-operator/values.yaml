@@ -36,3 +36,8 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 50Mi
+
+## The prometheus operator will create an endpoint for the kubelet.
+## Format: namespace/name
+##
+kubeletObject: kube-system/kubelet
