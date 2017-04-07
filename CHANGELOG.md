@@ -1,3 +1,10 @@
+## 0.8.0 / 2017-04-07
+
+* [FEATURE] Add ability to mount custom secrets into Prometheus Pods. Note that
+  secrets cannot be modified after creation, if the list if modified after
+  creation it will not effect the Prometheus Pods.
+* [FEATURE] Attach pod and service name as labels to Pod targets.
+
 ## 0.7.0 / 2017-03-17
 
 This release introduces breaking changes to the generated StatefulSet's
