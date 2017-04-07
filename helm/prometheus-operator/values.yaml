@@ -40,4 +40,6 @@ resources: {}
 ## The prometheus operator will create an endpoint for the kubelet.
 ## Format: namespace/name
 ##
-kubeletObject: kube-system/kubelet
+kubeletObject:
+  enable: true
+  object: kube-system/kubelet

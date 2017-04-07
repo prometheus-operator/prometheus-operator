@@ -51,6 +51,8 @@ Parameter | Description | Default
 `nodeSelector` | Node labels for pod assignment | `{}`
 `resources` | Pod resource requests & limits | `{}`
 `sendAnalytics` | Collect & send anonymous usage statistics | `true`
+`kubeletObject.enable` | Enable ``--kubelet-object`` option for the operator | `true`
+`kubeletObject.object` | The value given to the ``--kubelet-object`` option | `kube-system/kubelet`
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
