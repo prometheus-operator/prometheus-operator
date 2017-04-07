@@ -17,7 +17,7 @@ This chart bootstraps a [prometheus-operator](https://github.com/coreos/promethe
   - Kubernetes 1.4+ with Beta APIs & ThirdPartyResources enabled
 
 ### RBAC
-You may need to give Tiller (the server-side component of Helm) additional permissions if role-based access control (RBAC) is enabled in your cluster. While RBAC configuration is out of scope for this chart, we are providing the following steps for convenience.
+If role-based access control (RBAC) is enabled in your cluster, you may need to give Tiller (the server-side component of Helm) additional permissions. *If RBAC is not enabled, be sure to set `rbacEnable` to `false` when installing the chart.*
 
 1. Create a ServiceAccount for Tiller in the `kube-system` namespace
 ```console
@@ -84,6 +84,7 @@ Parameter | Description | Default
 `image.tag` | Image tag | `v0.7.0`
 `image.pullPolicy` | Image pull policy | `IfNotPresent`
 `nodeSelector` | Node labels for pod assignment | `{}`
+`rbacEnable` | If true, create & use RBAC resources | `true`
 `resources` | Pod resource requests & limits | `{}`
 `sendAnalytics` | Collect & send anonymous usage statistics | `true`
 
