@@ -16,6 +16,41 @@ This chart bootstraps a [prometheus-operator](https://github.com/coreos/promethe
 ## Prerequisites
   - Kubernetes 1.4+ with Beta APIs & ThirdPartyResources enabled
 
+### RBAC
+If role-based access control (RBAC) is enabled in your cluster, you may need to give Tiller (the server-side component of Helm) additional permissions. **If RBAC is not enabled, be sure to set `rbacEnable` to `false` when installing the chart.**
+
+1. Create a ServiceAccount for Tiller in the `kube-system` namespace
+```console
+$ kubectl -n kube-system create sa tiller
+```
+
+2. Create a ClusterRoleBinding for Tiller
+```console
+# kubectl v1.5.x
+$ cat <<EOF | kubectl create -f -
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+kind: ClusterRoleBinding
+metadata:
+  name: tiller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: tiller
+    namespace: kube-system
+EOF
+
+# kubectl v1.6.x
+$ kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+```
+
+3. Patch Tiller's Deployment to use the new ServiceAccount
+```console
+$ kubectl -n kube-system patch deploy/tiller-deploy -p '{"spec": {"template": {"spec": {"serviceAccountName": "tiller"}}}}'
+```
+
 ## Installing the Chart
 
 To install the chart with the release name `my-release`:
@@ -49,6 +84,7 @@ Parameter | Description | Default
 `image.tag` | Image tag | `v0.7.0`
 `image.pullPolicy` | Image pull policy | `IfNotPresent`
 `nodeSelector` | Node labels for pod assignment | `{}`
+`rbacEnable` | If true, create & use RBAC resources | `true`
 `resources` | Pod resource requests & limits | `{}`
 `sendAnalytics` | Collect & send anonymous usage statistics | `true`
 `kubeletObject.enable` | Enable ``--kubelet-object`` option for the operator | `true`
