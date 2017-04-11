@@ -176,6 +176,8 @@ kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/ex
 
 > It is highly recommended to compare the available ingress controllers for a production environment. The nginx ingress controller may or may not be what is suitable for your production environment. Also have a look at HA Proxy, Træfɪk, GCE, AWS, and more.
 
+> WARNING: If you ingress is exposed to the internet, everyone can have full acesss on your resources. It's strongly recommend to enable an [external authentication](https://github.com/kubernetes/ingress/blob/858e3ff2354fb0f5066a88774b904b2427fb9433/examples/external-auth/nginx/README.md) or [whitelisting ip address](https://github.com/kubernetes/ingress/blob/7ca7652ab26e1a5775f3066f53f28d5ea5eb3bb7/controllers/nginx/configuration.md#whitelist-source-range) 
+
 An `Ingress` object also requires a `Service` to be setup as the requests are simply routed from the ingress endpoint to the internal `Service`.
 
 ```yaml
@@ -215,6 +217,8 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: monitoring
+  annotations:
+    ingress.kubernetes.io/whitelist-source-range: 10.0.0.0/16 # change this range to admin ips  
 spec:
   rules:
   - http:
