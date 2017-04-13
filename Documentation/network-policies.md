@@ -151,3 +151,34 @@ spec:
     matchLabels:
       app: node-exporter
 ```
+
+#### Kube-state-metrics
+
+* Allow inbound tcp dst port 8080 from only prometheus-k8s to kube-state-metrics  
+
+[embedmd]:# (../example/networkpolicies/kube-state-metrics.yaml)
+```yaml
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: kube-state-metrics
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - prometheus
+        - key: prometheus
+          operator: In
+          values:
+          - prometheus-k8s
+    ports:
+    - port: 8080
+      protocol: tcp
+  podSelector:
+    matchLabels:
+      app: kube-state-metrics
+```
