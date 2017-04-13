@@ -44,7 +44,7 @@ spec:
       serviceAccountName: prometheus-operator
       containers:
        - name: prometheus-operator
-         image: quay.io/coreos/prometheus-operator:v0.8.0
+         image: quay.io/coreos/prometheus-operator:v0.8.1
          args:
          - "--kubelet-object=kube-system/kubelet"
          - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
@@ -337,29 +337,6 @@ spec:
     tlsConfig:
       caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
       serverName: kubernetes
-    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
----
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: ServiceMonitor
-metadata:
-  name: k8s-apps-https
-  labels:
-    k8s-apps: https
-spec:
-  jobLabel: k8s-app
-  selector:
-    matchExpressions:
-    - {key: k8s-app, operator: Exists}
-  namespaceSelector:
-    matchNames:
-    - kube-system
-  endpoints:
-  - port: https-metrics
-    interval: 15s
-    scheme: https
-    tlsConfig:
-      caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-      insecureSkipVerify: true
     bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
 ---
 apiVersion: monitoring.coreos.com/v1alpha1

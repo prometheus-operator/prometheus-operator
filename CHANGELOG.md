@@ -1,3 +1,7 @@
+## 0.8.1 / 2017-04-13
+
+* [ENHANCEMENT] Include kubelet insecure port in kubelet Enpdoints object.
+
 ## 0.8.0 / 2017-04-07
 
 * [FEATURE] Add ability to mount custom secrets into Prometheus Pods. Note that
