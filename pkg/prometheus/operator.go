@@ -297,6 +297,10 @@ func (c *Operator) syncNodeEndpoints() {
 						Name: "https-metrics",
 						Port: 10250,
 					},
+					v1.EndpointPort{
+						Name: "http-metrics",
+						Port: 10255,
+					},
 				},
 			},
 		},
