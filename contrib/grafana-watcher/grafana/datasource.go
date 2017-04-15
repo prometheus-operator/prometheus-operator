@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"errors"
 )
 
 type DatasourcesInterface interface {
@@ -56,6 +57,10 @@ func (c *DatasourcesClient) All() ([]GrafanaDatasource, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusUnauthorized {
+		err := errors.New("Invalid credentials. Update and reapply the grafana-credentials manifest, then redeploy grafana.")
+		return nil, err
+	}
 	datasources := make([]GrafanaDatasource, 0)
 
 	err = json.NewDecoder(resp.Body).Decode(&datasources)
