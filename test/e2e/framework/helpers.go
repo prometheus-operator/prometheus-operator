@@ -32,8 +32,8 @@ func PathToOSFile(relativPath string) (*os.File, error) {
 
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
-func WaitForPodsReady(kubeClient kubernetes.Interface, namespace string, expectedReplicas int, opts v1.ListOptions) error {
-	return wait.Poll(time.Second, time.Minute, func() (bool, error) {
+func WaitForPodsReady(kubeClient kubernetes.Interface, namespace string, timeout time.Duration, expectedReplicas int, opts v1.ListOptions) error {
+	return wait.Poll(time.Second, timeout, func() (bool, error) {
 		pl, err := kubeClient.Core().Pods(namespace).List(opts)
 		if err != nil {
 			return false, err

@@ -16,6 +16,7 @@ package framework
 
 import (
 	"net/http"
+	"time"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
@@ -28,13 +29,14 @@ import (
 )
 
 type Framework struct {
-	KubeClient  kubernetes.Interface
-	MonClient   *v1alpha1.MonitoringV1alpha1Client
-	HTTPClient  *http.Client
-	MasterHost  string
-	Namespace   *v1.Namespace
-	OperatorPod *v1.Pod
-	ClusterIP   string
+	KubeClient     kubernetes.Interface
+	MonClient      *v1alpha1.MonitoringV1alpha1Client
+	HTTPClient     *http.Client
+	MasterHost     string
+	Namespace      *v1.Namespace
+	OperatorPod    *v1.Pod
+	ClusterIP      string
+	DefaultTimeout time.Duration
 }
 
 // Setup setups a test framework and returns it.
@@ -69,12 +71,13 @@ func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 	}
 
 	f := &Framework{
-		MasterHost: config.Host,
-		KubeClient: cli,
-		MonClient:  mclient,
-		HTTPClient: httpc,
-		Namespace:  namespace,
-		ClusterIP:  ip,
+		MasterHost:     config.Host,
+		KubeClient:     cli,
+		MonClient:      mclient,
+		HTTPClient:     httpc,
+		Namespace:      namespace,
+		ClusterIP:      ip,
+		DefaultTimeout: time.Minute,
 	}
 
 	err = f.setup(opImage)
@@ -109,7 +112,7 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 
 	opts := v1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
-	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, 1, opts)
+	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, f.DefaultTimeout, 1, opts)
 	if err != nil {
 		return err
 	}
