@@ -267,6 +267,13 @@
 			"revisionTime": "2016-10-29T09:36:37Z"
 		},
 		{
+			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "d77da356e56a7428ad25149ca77381849a6a5232",
+			"revisionTime": "2016-06-15T09:26:46Z"
+		},
+		{
 			"checksumSHA1": "vopCLXHzYm+3l5fPKOf4/fQwrCM=",
 			"origin": "github.com/prometheus/prometheus/vendor/github.com/prometheus/common/model",
 			"path": "github.com/prometheus/common/model",
@@ -278,6 +285,18 @@
 			"path": "github.com/prometheus/prometheus/config",
 			"revision": "bd1182d29f462c39544f94cc822830e1c64cf55b",
 			"revisionTime": "2017-02-10T14:34:18Z"
+		},
+		{
+			"checksumSHA1": "iydUphwYqZRq3WhstEdGsbvBAKs=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "d77da356e56a7428ad25149ca77381849a6a5232",
+			"revisionTime": "2016-06-15T09:26:46Z"
+		},
+		{
+			"checksumSHA1": "P9FJpir2c4G5PA46qEkaWy3l60U=",
+			"path": "github.com/stretchr/testify/require",
+			"revision": "d77da356e56a7428ad25149ca77381849a6a5232",
+			"revisionTime": "2016-06-15T09:26:46Z"
 		},
 		{
 			"checksumSHA1": "0bs9QxbsLB3lMUU7vOo3gurUzEo=",
