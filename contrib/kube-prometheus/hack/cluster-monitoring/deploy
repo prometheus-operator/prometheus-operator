@@ -24,6 +24,7 @@ until kctl get alertmanager > /dev/null 2>&1; do sleep 1; printf "."; done
 echo "done!"
 
 kctl apply -f manifests/exporters
+kctl apply -f manifests/grafana/grafana-credentials.yaml
 kctl apply -f manifests/grafana
 
 kctl apply -f manifests/prometheus/prometheus-k8s-rules.yaml
