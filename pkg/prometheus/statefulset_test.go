@@ -22,6 +22,7 @@ import (
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -38,12 +39,14 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	sset := makeStatefulSet(v1alpha1.Prometheus{
+	sset, err := makeStatefulSet(v1alpha1.Prometheus{
 		ObjectMeta: v1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
 		},
 	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+
+	require.NoError(t, err)
 
 	if !reflect.DeepEqual(labels, sset.Labels) || !reflect.DeepEqual(annotations, sset.Annotations) {
 		t.Fatal("Labels or Annotations are not properly being propagated to the StatefulSet")
@@ -117,13 +120,15 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		},
 	}
 
-	sset := makeStatefulSet(v1alpha1.Prometheus{
+	sset, err := makeStatefulSet(v1alpha1.Prometheus{
 		Spec: v1alpha1.PrometheusSpec{
 			Secrets: []string{
 				"test-secret1",
 			},
 		},
 	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+
+	require.NoError(t, err)
 
 	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) || !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts) {
 		t.Fatal("Volumes mounted in a Pod are not created correctly initially.")
@@ -197,7 +202,7 @@ func TestStatefulSetVolumeSkip(t *testing.T) {
 		},
 	}
 
-	sset := makeStatefulSet(v1alpha1.Prometheus{
+	sset, err := makeStatefulSet(v1alpha1.Prometheus{
 		Spec: v1alpha1.PrometheusSpec{
 			Secrets: []string{
 				"test-secret1",
@@ -205,6 +210,8 @@ func TestStatefulSetVolumeSkip(t *testing.T) {
 			},
 		},
 	}, old, defaultTestConfig, []*v1.ConfigMap{})
+
+	require.NoError(t, err)
 
 	if !reflect.DeepEqual(old.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) || !reflect.DeepEqual(old.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts) {
 		t.Fatal("Volumes mounted in a Pod should not be reconciled.")

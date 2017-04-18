@@ -26,7 +26,11 @@ import (
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	"k8s.io/client-go/pkg/util/intstr"
 
+	"strings"
+
+	"github.com/blang/semver"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -43,7 +47,7 @@ var (
 	}
 )
 
-func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Config, ruleConfigMaps []*v1.ConfigMap) *v1beta1.StatefulSet {
+func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Config, ruleConfigMaps []*v1.ConfigMap) (*v1beta1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -68,13 +72,18 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 		p.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("2Gi")
 	}
 
+	spec, err := makeStatefulSetSpec(p, config, ruleConfigMaps)
+	if err != nil {
+		return nil, errors.Wrap(err, "make StatefulSet spec")
+	}
+
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
 			Name:        prefixedName(p.Name),
 			Labels:      p.ObjectMeta.Labels,
 			Annotations: p.ObjectMeta.Annotations,
 		},
-		Spec: makeStatefulSetSpec(p, config, ruleConfigMaps),
+		Spec: *spec,
 	}
 	if vc := p.Spec.Storage; vc == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
@@ -112,7 +121,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 		statefulset.Spec.Template.Spec.Containers[0].VolumeMounts = old.Spec.Template.Spec.Containers[0].VolumeMounts
 		statefulset.Spec.Template.Spec.Volumes = old.Spec.Template.Spec.Volumes
 	}
-	return statefulset
+	return statefulset, nil
 }
 
 func makeEmptyConfig(name string, configMaps []*v1.ConfigMap) (*v1.Secret, error) {
@@ -207,40 +216,66 @@ func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
 	return svc
 }
 
-func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.ConfigMap) v1beta1.StatefulSetSpec {
+func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.ConfigMap) (*v1beta1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
 
-	// We attempt to specify decent storage tuning flags based on how much the
-	// requested memory can fit. The user has to specify an appropriate buffering
-	// in memory limits to catch increased memory usage during query bursts.
-	// More info: https://prometheus.io/docs/operating/storage/.
-	reqMem := p.Spec.Resources.Requests[v1.ResourceMemory]
-	// 1024 byte is the fixed chunk size. With increasing number of chunks actually
-	// in memory, overhead owed to their management, higher ingestion buffers, etc.
-	// increases.
-	// We are conservative for now an assume this to be 80% as the Kubernetes environment
-	// generally has a very high time series churn.
-	memChunks := reqMem.Value() / 1024 / 5
+	versionStr := strings.TrimLeft(p.Spec.Version, "v")
 
-	promArgs := []string{
-		"-storage.local.retention=" + p.Spec.Retention,
-		"-storage.local.memory-chunks=" + fmt.Sprintf("%d", memChunks),
-		"-storage.local.max-chunks-to-persist=" + fmt.Sprintf("%d", memChunks/2),
-		"-storage.local.num-fingerprint-mutexes=4096",
-		"-storage.local.path=/var/prometheus/data",
-		"-storage.local.chunk-encoding-version=2",
-		"-config.file=/etc/prometheus/config/prometheus.yaml",
+	version, err := semver.Parse(versionStr)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse version")
+	}
+
+	var promArgs []string
+
+	switch version.Major {
+	case 1:
+		promArgs = append(promArgs,
+			"-storage.local.retention="+p.Spec.Retention,
+			"-storage.local.num-fingerprint-mutexes=4096",
+			"-storage.local.path=/var/prometheus/data",
+			"-storage.local.chunk-encoding-version=2",
+			"-config.file=/etc/prometheus/config/prometheus.yaml",
+		)
+		// We attempt to specify decent storage tuning flags based on how much the
+		// requested memory can fit. The user has to specify an appropriate buffering
+		// in memory limits to catch increased memory usage during query bursts.
+		// More info: https://prometheus.io/docs/operating/storage/.
+		reqMem := p.Spec.Resources.Requests[v1.ResourceMemory]
+
+		if version.Minor < 6 {
+			// 1024 byte is the fixed chunk size. With increasing number of chunks actually
+			// in memory, overhead owed to their management, higher ingestion buffers, etc.
+			// increases.
+			// We are conservative for now an assume this to be 80% as the Kubernetes environment
+			// generally has a very high time series churn.
+			memChunks := reqMem.Value() / 1024 / 5
+
+			promArgs = append(promArgs,
+				"-storage.local.memory-chunks="+fmt.Sprintf("%d", memChunks),
+				"-storage.local.max-chunks-to-persist="+fmt.Sprintf("%d", memChunks/2),
+			)
+		} else {
+			// Leave 1/3 head room for other overhead.
+			promArgs = append(promArgs,
+				"-storage.local.target-heap-size="+fmt.Sprintf("%d", reqMem.Value()/3*2),
+			)
+		}
+	default:
+		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
 
 	webRoutePrefix := ""
+
 	if p.Spec.ExternalURL != "" {
-		promArgs = append(promArgs, "-web.external-url="+p.Spec.ExternalURL)
 		extUrl, err := url.Parse(p.Spec.ExternalURL)
-		if err == nil {
-			webRoutePrefix = extUrl.Path
+		if err != nil {
+			return nil, errors.Errorf("invalid external URL %s", p.Spec.ExternalURL)
 		}
+		webRoutePrefix = extUrl.Path
+		promArgs = append(promArgs, "-web.external-url="+p.Spec.ExternalURL)
 	}
 
 	if p.Spec.RoutePrefix != "" {
@@ -323,7 +358,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		"-rule-volume-dir=/etc/prometheus/rules",
 	}
 
-	return v1beta1.StatefulSetSpec{
+	return &v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    p.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
@@ -381,7 +416,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 				Volumes: volumes,
 			},
 		},
-	}
+	}, nil
 }
 
 func configSecretName(name string) string {
