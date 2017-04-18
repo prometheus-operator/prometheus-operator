@@ -130,7 +130,13 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 		return errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, int(*a.Spec.Replicas), alertmanager.ListOptions(a.Name))
+	err = WaitForPodsReady(
+		f.KubeClient,
+		f.Namespace.Name,
+		f.DefaultTimeout,
+		int(*a.Spec.Replicas),
+		alertmanager.ListOptions(a.Name),
+	)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to create an Alertmanager cluster (%s) with %d instances", a.Name, a.Spec.Replicas))
 	}
@@ -144,7 +150,13 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(a *v1alpha1.Alertmanager
 		return err
 	}
 
-	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, int(*a.Spec.Replicas), alertmanager.ListOptions(a.Name))
+	err = WaitForPodsReady(
+		f.KubeClient,
+		f.Namespace.Name,
+		f.DefaultTimeout,
+		int(*a.Spec.Replicas),
+		alertmanager.ListOptions(a.Name),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to update %d Alertmanager instances (%s): %v", a.Spec.Replicas, a.Name, err)
 	}
@@ -163,7 +175,13 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(name string) error {
 		return errors.Wrap(err, fmt.Sprintf("deleting Alertmanager tpr %v failed", name))
 	}
 
-	if err := WaitForPodsReady(f.KubeClient, f.Namespace.Name, 0, alertmanager.ListOptions(name)); err != nil {
+	if err := WaitForPodsReady(
+		f.KubeClient,
+		f.Namespace.Name,
+		f.DefaultTimeout,
+		0,
+		alertmanager.ListOptions(name),
+	); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("waiting for Alertmanager tpr (%s) to vanish timed out", name))
 	}
 
