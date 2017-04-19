@@ -10,4 +10,4 @@ spec:
   podSelector:
     matchLabels:
       app: prometheus
-      prometheus: prometheus-k8s
+      prometheus: k8s
