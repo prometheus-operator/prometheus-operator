@@ -34,8 +34,8 @@ networkpolicy "prometheus" configured
 
 #### Alertmanager
 
-* Allow inbound tcp dst port 9093 from any source to alertmanager-main  
-* Allow inbound tcp dst port 6783 from only alertmanager-main to alertmanager-main 
+* Allow inbound tcp dst port 9093 from any source to alertmanager  
+* Allow inbound tcp dst port 6783 from only alertmanager to alertmanager 
  
 [embedmd]:# (../example/networkpolicies/alertmanager.yaml)
 ```yaml
@@ -51,7 +51,7 @@ spec:
       protocol: tcp
   podSelector:
     matchLabels:
-      alertmanager: alertmanager-main
+      alertmanager: main
       app: alertmanager
 ---
 apiVersion: extensions/v1beta1
@@ -70,13 +70,13 @@ spec:
         - key: alertmanager
           operator: In
           values:
-          - alertmanager-main
+          - main
     ports:
     - port: 6783
       protocol: tcp
   podSelector:
     matchLabels:
-      alertmanager: alertmanager-main
+      alertmanager: main
       app: alertmanager
 ```
 
@@ -102,7 +102,7 @@ spec:
 
 #### Prometheus
 
-* Allow inbound tcp dst port 9090 from any source to prometheus-k8s  
+* Allow inbound tcp dst port 9090 from any source to prometheus  
 
 [embedmd]:# (../example/networkpolicies/prometheus.yaml)
 ```yaml
@@ -118,12 +118,12 @@ spec:
   podSelector:
     matchLabels:
       app: prometheus
-      prometheus: prometheus-k8s
+      prometheus: k8s
 ```
 
 #### Node-exporter
 
-* Allow inbound tcp dst port 9100 from only prometheus-k8s to node-exporter  
+* Allow inbound tcp dst port 9100 from only prometheus to node-exporter  
 
 [embedmd]:# (../example/networkpolicies/node-exporter.yaml)
 ```yaml
@@ -143,7 +143,7 @@ spec:
         - key: prometheus
           operator: In
           values:
-          - prometheus-k8s
+          - k8s
     ports:
     - port: 9100
       protocol: tcp
@@ -154,7 +154,7 @@ spec:
 
 #### Kube-state-metrics
 
-* Allow inbound tcp dst port 8080 from only prometheus-k8s to kube-state-metrics  
+* Allow inbound tcp dst port 8080 from only prometheus to kube-state-metrics  
 
 [embedmd]:# (../example/networkpolicies/kube-state-metrics.yaml)
 ```yaml
@@ -174,7 +174,7 @@ spec:
         - key: prometheus
           operator: In
           values:
-          - prometheus-k8s
+          - k8s
     ports:
     - port: 8080
       protocol: tcp

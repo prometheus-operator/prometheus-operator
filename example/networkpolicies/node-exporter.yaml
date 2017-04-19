@@ -14,7 +14,7 @@ spec:
         - key: prometheus
           operator: In
           values:
-          - prometheus-k8s
+          - k8s
     ports:
     - port: 9100
       protocol: tcp

@@ -10,7 +10,7 @@ spec:
       protocol: tcp
   podSelector:
     matchLabels:
-      alertmanager: alertmanager-main
+      alertmanager: main
       app: alertmanager
 ---
 apiVersion: extensions/v1beta1
@@ -29,11 +29,11 @@ spec:
         - key: alertmanager
           operator: In
           values:
-          - alertmanager-main
+          - main
     ports:
     - port: 6783
       protocol: tcp
   podSelector:
     matchLabels:
-      alertmanager: alertmanager-main
+      alertmanager: main
       app: alertmanager
