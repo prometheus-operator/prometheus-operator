@@ -609,12 +609,20 @@ func (c *Operator) sync(key string) error {
 	}
 
 	if !exists {
-		if _, err := ssetClient.Create(makeStatefulSet(*p, nil, &c.config, ruleFileConfigMaps)); err != nil {
+		sset, err := makeStatefulSet(*p, nil, &c.config, ruleFileConfigMaps)
+		if err != nil {
+			return errors.Wrap(err, "creating statefulset failed")
+		}
+		if _, err := ssetClient.Create(sset); err != nil {
 			return errors.Wrap(err, "creating statefulset failed")
 		}
 		return nil
 	}
-	if _, err := ssetClient.Update(makeStatefulSet(*p, obj.(*v1beta1.StatefulSet), &c.config, ruleFileConfigMaps)); err != nil {
+	sset, err := makeStatefulSet(*p, obj.(*v1beta1.StatefulSet), &c.config, ruleFileConfigMaps)
+	if err != nil {
+		return errors.Wrap(err, "updating statefulset failed")
+	}
+	if _, err := ssetClient.Update(sset); err != nil {
 		return errors.Wrap(err, "updating statefulset failed")
 	}
 
