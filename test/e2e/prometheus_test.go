@@ -85,7 +85,7 @@ func TestPrometheusVersionMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p.Spec.Version = "v1.5.2"
+	p.Spec.Version = "v1.6.1"
 	if err := framework.UpdatePrometheusAndWaitUntilReady(p); err != nil {
 		t.Fatal(err)
 	}

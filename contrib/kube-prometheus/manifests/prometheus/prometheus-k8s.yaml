@@ -6,7 +6,7 @@ metadata:
     prometheus: k8s
 spec:
   replicas: 2
-  version: v1.5.2
+  version: v1.6.1
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpression:
