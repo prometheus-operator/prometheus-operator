@@ -44,3 +44,29 @@ spec:
     interval: 15s
   - port: http-metrics-skydns
     interval: 15s
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: prometheus
+  labels:
+    prometheus: k8s
+spec:
+  endpoints:
+  - port: web
+  selector:
+    matchExpressions:
+    - {key: prometheus, operator: In, values: [k8s]}
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  labels:
+    alertmanager: main
+  name: alertmanager
+spec:
+  endpoints:
+  - port: web
+  selector:
+    matchExpressions:
+    - {key: alertmanager, operator: In, values: [main]}
