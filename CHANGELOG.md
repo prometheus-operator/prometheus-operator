@@ -1,3 +1,7 @@
+## 0.8.2 / 2017-04-20
+
+* [ENHANCEMENT] Use new Prometheus 1.6 storage flags and make it default.
+
 ## 0.8.1 / 2017-04-13
 
 * [ENHANCEMENT] Include kubelet insecure port in kubelet Enpdoints object.

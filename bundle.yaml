@@ -75,7 +75,7 @@ spec:
       serviceAccountName: prometheus-operator
       containers:
       - name: prometheus-operator
-        image: quay.io/coreos/prometheus-operator:v0.8.1
+        image: quay.io/coreos/prometheus-operator:v0.8.2
         resources:
           requests:
             cpu: 100m
