@@ -516,4 +516,52 @@ data:
         summary = "Kubelet is close to pod limit",
         description = "Kubelet {{$labels.instance}} is running {{$value}} pods, close to the limit of 110",
       }
-    
+
+    ALERT K8SPodWaiting
+      IF sum(sum_over_time(kube_pod_container_status_waiting[5m]) > 0 ) BY (job, exported_pod, instance, namespace)
+      FOR 5m
+      LABELS {
+        service = "k8s",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "Pod is waiting too long",
+        description = "Pod {{ $labels.namespace }}/{{ $labels.exported_pod }} is in waiting state",
+      }
+
+    ALERT K8sPodRestartingTooMuch
+      IF sum (rate(kube_pod_container_status_restarts[5m]) > 0) BY(job, exported_pod, instance, namespace)
+      FOR 5m
+      LABELS {
+        service = "k8s",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "Pod is in a restart loop",
+        description = "Pod {{ $labels.namespace }}/{{ $labels.exported_pod }} is restarting constantly",
+      }
+
+  docker.rules: |+
+    ALERT DockerHasErrors
+      IF irate(kubelet_docker_operations_errors[10m])  > 0
+      FOR 1m
+      LABELS {
+        service = "docker",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "Docker has errors!",
+        description = "Docker on instance {{ $labels.instance }} has some errors",
+      }
+
+    ALERT DockerHasTimeout
+      IF irate(kubelet_docker_operations_timeout[5m]) > 0
+      FOR 1m
+      LABELS {
+        service = "docker",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "Docker timeout!",
+        description = "Docker on {{ $labels.instance }} has timeouts",
+      }
