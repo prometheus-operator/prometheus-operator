@@ -45,6 +45,7 @@ var (
 	managedByOperatorLabels       = map[string]string{
 		"managed-by": "prometheus-operator",
 	}
+	probeTimeoutSeconds	int32 =	3
 )
 
 func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Config, ruleConfigMaps []*v1.ConfigMap) (*v1beta1.StatefulSet, error) {
@@ -358,6 +359,12 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		"-rule-volume-dir=/etc/prometheus/rules",
 	}
 
+	probeHandler := v1.Handler{
+		HTTPGet: &v1.HTTPGetAction{
+			Path: path.Clean(webRoutePrefix + "/status"),
+			Port: intstr.FromString("web"),
+		},
+	}
 	return &v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    p.Spec.Replicas,
@@ -382,15 +389,15 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 						},
 						Args:         promArgs,
 						VolumeMounts: promVolumeMounts,
+						LivenessProbe: &v1.Probe{
+							Handler:          probeHandler,
+							TimeoutSeconds:   probeTimeoutSeconds,
+							FailureThreshold: 10,
+						},
 						ReadinessProbe: &v1.Probe{
-							Handler: v1.Handler{
-								HTTPGet: &v1.HTTPGetAction{
-									Path: path.Clean(webRoutePrefix + "/status"),
-									Port: intstr.FromString("web"),
-								},
-							},
+							Handler:             probeHandler,
 							InitialDelaySeconds: 1,
-							TimeoutSeconds:      3,
+							TimeoutSeconds:      probeTimeoutSeconds,
 							PeriodSeconds:       5,
 							// For larger servers, restoring a checkpoint on startup may take quite a bit of time.
 							// Wait up to 5 minutes.
