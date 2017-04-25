@@ -10,7 +10,7 @@ Here is a ready to use manifest of a `ClusterRole` that can be used to start the
 
 [embedmd]:# (../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml)
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1alpha1
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: prometheus-operator
@@ -84,7 +84,7 @@ In addition to the resources Prometheus itself needs to access, the Prometheus s
 
 [embedmd]:# (../example/rbac/prometheus/prometheus-cluster-role.yaml)
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1alpha1
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: prometheus
@@ -126,7 +126,7 @@ And then a `ClusterRoleBinding`:
 
 [embedmd]:# (../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml)
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1alpha1
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: prometheus-operator
@@ -156,7 +156,7 @@ And then because the `ClusterRole` named `prometheus`, as described above, is li
 
 [embedmd]:# (../example/rbac/prometheus/prometheus-cluster-role-binding.yaml)
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1alpha1
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: prometheus

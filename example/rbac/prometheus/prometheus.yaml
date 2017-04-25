@@ -1,16 +1,16 @@
 apiVersion: "monitoring.coreos.com/v1alpha1"
 kind: "Prometheus"
 metadata:
-  name: "main"
+  name: prometheus
   labels:
-    prometheus: "main"
+    prometheus: "prometheus"
 spec:
   replicas: 2
   version: v1.5.2
   serviceAccountName: prometheus
   serviceMonitorSelector:
-    matchExpressions:
-    - {key: app, operator: In, values: [node-exporter, example-app]}
+    matchLabels:
+      team: frontend
   alerting:
     alertmanagers:
     - namespace: default
