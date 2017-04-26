@@ -8,7 +8,7 @@ To follow this getting started you will need a Kubernetes cluster you have acces
 
 [embedmd]:# (../../bundle.yaml)
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1alpha1
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: prometheus-operator
@@ -21,7 +21,7 @@ subjects:
   name: prometheus-operator
   namespace: default
 ---
-apiVersion: rbac.authorization.k8s.io/v1alpha1
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: prometheus-operator
@@ -85,7 +85,7 @@ spec:
       serviceAccountName: prometheus-operator
       containers:
       - name: prometheus-operator
-        image: quay.io/coreos/prometheus-operator:v0.8.1
+        image: quay.io/coreos/prometheus-operator:v0.8.2
         resources:
           requests:
             cpu: 100m
@@ -168,14 +168,68 @@ spec:
   - port: web
 ```
 
+---
+
+>**Important**: If you have [RBAC](https://kubernetes.io/docs/admin/authorization/) authorization activated you need to create RBAC rules for both *Prometheus* and *Prometheus Operator*. We already created a `ClusterRole` and a `ClusterRoleBinding` for the *Prometheus Operator* in the first step. The same has to be done for the *Prometheus* Pods:
+
+[embedmd]:# (../../example/rbac/prometheus/prometheus-service-account.yaml)
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+```
+
+[embedmd]:# (../../example/rbac/prometheus/prometheus-cluster-role.yaml)
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+```
+
+[embedmd]:# (../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml)
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus
+  namespace: default
+```
+
+You can find further details in the [*Prometheus Operator RBAC* guide](../rbac.md).
+
+---
+
 Finally, a `Prometheus` object defines the `serviceMonitorSelector` to specify which `ServiceMonitor`s should be included. Above the label `team: frontend` was specified, so that's what the `Prometheus` object selects by.
 
-[embedmd]:# (../../example/user-guides/getting-started/prometheus-example.yaml)
+[embedmd]:# (../../example/user-guides/getting-started/prometheus.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: Prometheus
 metadata:
-  name: example
+  name: prometheus
 spec:
   serviceMonitorSelector:
     matchLabels:
@@ -185,17 +239,19 @@ spec:
     requests:
       memory: 400Mi
 ```
+> If you have RBAC authorization activated, use the RBAC aware [*Prometheus* manifest](../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml) instead.
+
 
 This way the frontend team can create new `ServiceMonitor`s and `Service`s resulting in `Prometheus` to be dynamically reconfigured.
 
 To be able to access the Prometheus instance it will have to be exposed to the outside somehow. For demonstration purpose it will be exposed via a `Service` of type `NodePort`.
 
-[embedmd]:# (../../example/user-guides/getting-started/prometheus-example-service.yaml)
+[embedmd]:# (../../example/user-guides/getting-started/prometheus-service.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-example
+  name: prometheus
 spec:
   type: NodePort
   ports:
@@ -205,7 +261,7 @@ spec:
     protocol: TCP
     targetPort: web
   selector:
-    prometheus: example
+    prometheus: prometheus
 ```
 
 Once this `Service` is created the Prometheus web UI is available under the node's IP address on port `30900`. The targets page in the web UI now shows that the instances of the example application have successfully been discovered.
