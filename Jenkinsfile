@@ -19,6 +19,8 @@ job('prometheus-operator-unit-tests') {
         githubPullRequest {
             useGitHubHooks()
             orgWhitelist(['coreos-inc'])
+            allowMembersOfWhitelistedOrgsAsAdmin()
+            triggerPhrase('Test this please.')
             extensions {
                 commitStatus {
                     context('prometheus-operator-unit-tests')
@@ -59,6 +61,8 @@ job('prometheus-operator-generate-content') {
         githubPullRequest {
             useGitHubHooks()
             orgWhitelist(['coreos-inc'])
+            allowMembersOfWhitelistedOrgsAsAdmin()
+            triggerPhrase('Test this please.')
             extensions {
                 commitStatus {
                     context('prometheus-operator-docs')
@@ -110,6 +114,8 @@ job('prometheus-operator-e2e-tests') {
         githubPullRequest {
             useGitHubHooks()
             orgWhitelist(['coreos-inc'])
+            allowMembersOfWhitelistedOrgsAsAdmin()
+            triggerPhrase('Test this please.')
             extensions {
                 commitStatus {
                     context('prometheus-operator-e2e-tests')
