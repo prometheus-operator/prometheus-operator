@@ -74,7 +74,8 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 
 func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int) interface{} {
 	cfg := map[string]interface{}{
-		"job_name": fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+		"job_name":     fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+		"honor_labels": ep.HonorLabels,
 		"kubernetes_sd_configs": []map[string]interface{}{
 			{
 				"role": "endpoints",

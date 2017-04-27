@@ -4,8 +4,6 @@ metadata:
   labels:
     app: kube-state-metrics
     k8s-app: kube-state-metrics
-  annotations:
-    alpha.monitoring.coreos.com/non-namespaced: "true"
   name: kube-state-metrics
 spec:
   ports:

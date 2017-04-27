@@ -81,6 +81,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | interval | Interval at which metrics should be scraped | string | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint | *[TLSConfig](#tlsconfig) | false |
 | bearerTokenFile | File to read bearer token for scraping targets. | string | false |
+| honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 
 ## NamespaceSelector
 
