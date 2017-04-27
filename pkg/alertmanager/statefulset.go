@@ -51,6 +51,12 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 	if am.Spec.Replicas != nil && *am.Spec.Replicas < minReplicas {
 		am.Spec.Replicas = &minReplicas
 	}
+	if am.Spec.Resources.Requests == nil {
+		am.Spec.Resources.Requests = v1.ResourceList{}
+	}
+	if _, ok := am.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
+		am.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
+	}
 
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
@@ -213,6 +219,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 							PeriodSeconds:       5,
 							FailureThreshold:    10,
 						},
+						Resources: a.Spec.Resources,
 					}, {
 						Name:  "config-reloader",
 						Image: config.ConfigReloaderImage,
