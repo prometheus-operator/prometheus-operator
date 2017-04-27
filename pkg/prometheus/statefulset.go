@@ -88,8 +88,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 	}
 
 	if p.Spec.ImagePullSecrets != nil && len(p.Spec.ImagePullSecrets) > 0 {
-		statefulset.Spec.Template.Spec.ImagePullSecrets = make([]v1.LocalObjectReference, len(p.Spec.ImagePullSecrets))
-		copy(statefulset.Spec.Template.Spec.ImagePullSecrets, p.Spec.ImagePullSecrets)
+		statefulset.Spec.Template.Spec.ImagePullSecrets=p.Spec.ImagePullSecrets
 	}
 
 	if vc := p.Spec.Storage; vc == nil {

@@ -62,8 +62,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 	}
 
 	if am.Spec.ImagePullSecrets != nil && len(am.Spec.ImagePullSecrets) > 0 {
-		statefulset.Spec.Template.Spec.ImagePullSecrets = make([]v1.LocalObjectReference, len(am.Spec.ImagePullSecrets))
-		copy(statefulset.Spec.Template.Spec.ImagePullSecrets, am.Spec.ImagePullSecrets)
+		statefulset.Spec.Template.Spec.ImagePullSecrets=am.Spec.ImagePullSecrets
 	}
 
 	if vc := am.Spec.Storage; vc == nil {
