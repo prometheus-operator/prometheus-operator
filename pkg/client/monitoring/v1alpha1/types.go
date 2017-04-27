@@ -188,6 +188,9 @@ type Endpoint struct {
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// File to read bearer token for scraping targets.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
+	// HonorLabels does not override labels from discovery on label name
+	// collisions when scraping.
+	HonorLabels bool `json:"honorLabels,omitempty"`
 }
 
 // TLSConfig specifies TLS configuration parameters.
