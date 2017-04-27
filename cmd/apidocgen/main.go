@@ -40,6 +40,7 @@ var (
 		"unversioned.ListMeta":      "https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_listmeta",
 		"unversioned.LabelSelector": "https://kubernetes.io/docs/api-reference/v1/definitions/#_unversioned_labelselector",
 		"v1.ResourceRequirements":   "https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_resourcerequirements",
+		"v1.LocalObjectReference":   "https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_localobjectreference",
 	}
 
 	selfLinks = map[string]string{}

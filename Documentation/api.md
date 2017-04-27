@@ -50,6 +50,7 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | ----- | ----------- | ------ | -------- |
 | version | Version the cluster should be on. | string | false |
 | baseImage | Base image that is used to deploy pods. | string | false |
+| imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_localobjectreference) | false |
 | replicas | Size is the expected size of the alertmanager cluster. The controller will eventually make the size of the running cluster equal to the expected size. | *int32 | false |
 | storage | Storage is the definition of how storage will be used by the Alertmanager instances. | *[StorageSpec](#storagespec) | false |
 | externalUrl | ExternalURL is the URL under which Alertmanager is externally reachable (for example, if Alertmanager is served via a reverse proxy). Used for generating relative and absolute links back to Alertmanager itself. If the URL has a path portion, it will be used to prefix all HTTP endpoints served by Alertmanager. If omitted, relevant URL components will be derived automatically. | string | false |
@@ -121,6 +122,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | version | Version of Prometheus to be deployed. | string | false |
 | paused | When a Prometheus deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
 | baseImage | Base image to use for a Prometheus deployment. | string | false |
+| imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_localobjectreference) | false |
 | replicas | Number of instances to deploy for a Prometheus deployment. | *int32 | false |
 | retention | Time duration Prometheus shall retain data for. | string | false |
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
