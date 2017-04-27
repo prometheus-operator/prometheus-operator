@@ -330,9 +330,6 @@ func (c *Operator) syncNodeEndpoints() {
 			Labels: map[string]string{
 				"k8s-app": "kubelet",
 			},
-			Annotations: map[string]string{
-				"alpha.monitoring.coreos.com/non-namespaced": "true",
-			},
 		},
 		Spec: v1.ServiceSpec{
 			Type:      v1.ServiceTypeClusterIP,
