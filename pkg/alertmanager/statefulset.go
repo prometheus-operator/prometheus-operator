@@ -34,7 +34,8 @@ const (
 )
 
 var (
-	minReplicas int32 = 1
+	minReplicas         int32 = 1
+	probeTimeoutSeconds int32 = 3
 )
 
 func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config Config) *v1beta1.StatefulSet {
@@ -161,6 +162,13 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
+	probeHandler := v1.Handler{
+		HTTPGet: &v1.HTTPGetAction{
+			Path: path.Clean(webRoutePrefix + "/api/v1/status"),
+			Port: intstr.FromString("web"),
+		},
+	}
+
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
 		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
 	}
@@ -207,13 +215,13 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 								SubPath:   subPathForStorage(a.Spec.Storage),
 							},
 						},
+						LivenessProbe: &v1.Probe{
+							Handler:          probeHandler,
+							TimeoutSeconds:   probeTimeoutSeconds,
+							FailureThreshold: 10,
+						},
 						ReadinessProbe: &v1.Probe{
-							Handler: v1.Handler{
-								HTTPGet: &v1.HTTPGetAction{
-									Path: path.Clean(webRoutePrefix + "/api/v1/status"),
-									Port: intstr.FromString("web"),
-								},
-							},
+							Handler:             probeHandler,
 							InitialDelaySeconds: 3,
 							TimeoutSeconds:      3,
 							PeriodSeconds:       5,
