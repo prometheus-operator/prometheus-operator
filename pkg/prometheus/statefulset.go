@@ -45,7 +45,7 @@ var (
 	managedByOperatorLabels       = map[string]string{
 		"managed-by": "prometheus-operator",
 	}
-	probeTimeoutSeconds	int32 =	3
+	probeTimeoutSeconds int32 = 3
 )
 
 func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Config, ruleConfigMaps []*v1.ConfigMap) (*v1beta1.StatefulSet, error) {
@@ -86,6 +86,11 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 		},
 		Spec: *spec,
 	}
+
+	if p.Spec.ImagePullSecrets != nil && len(p.Spec.ImagePullSecrets) > 0 {
+		statefulset.Spec.Template.Spec.ImagePullSecrets = p.Spec.ImagePullSecrets
+	}
+
 	if vc := p.Spec.Storage; vc == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: volumeName(p.Name),

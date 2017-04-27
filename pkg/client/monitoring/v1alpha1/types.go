@@ -58,6 +58,10 @@ type PrometheusSpec struct {
 	Paused bool `json:"paused,omitempty"`
 	// Base image to use for a Prometheus deployment.
 	BaseImage string `json:"baseImage,omitempty"`
+	// An optional list of references to secrets in the same namespace
+	// to use for pulling prometheus and alertmanager images from registries
+	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Number of instances to deploy for a Prometheus deployment.
 	Replicas *int32 `json:"replicas,omitempty"`
 	// Time duration Prometheus shall retain data for.
@@ -239,6 +243,10 @@ type AlertmanagerSpec struct {
 	Version string `json:"version,omitempty"`
 	// Base image that is used to deploy pods.
 	BaseImage string `json:"baseImage,omitempty"`
+	// An optional list of references to secrets in the same namespace
+	// to use for pulling prometheus and alertmanager images from registries
+	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will
 	// eventually make the size of the running cluster equal to the expected
 	// size.
