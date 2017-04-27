@@ -258,8 +258,6 @@ metadata:
   labels:
     app: kube-state-metrics
     k8s-app: kube-state-metrics
-  annotations:
-    alpha.monitoring.coreos.com/non-namespaced: "true"
   name: kube-state-metrics
 spec:
   ports:
@@ -313,7 +311,7 @@ spec:
 
 The expression to match for selecting `ServiceMonitor`s here is that they must have a label which has a key called `k8s-apps`. If you look closely at all the `Service` objects described above they all have a label called `k8s-app` and their component name this allows to conveniently select them with `ServiceMonitor`s.
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-servicemonitors.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-apiserver.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
@@ -338,11 +336,36 @@ spec:
       caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
       serverName: kubernetes
     bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
----
+```
+
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kubelet.yaml)
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: kubelet
+  labels:
+    k8s-apps: http
+spec:
+  jobLabel: k8s-app
+  selector:
+    matchLabels:
+      k8s-app: kubelet
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  endpoints:
+  - port: http-metrics
+    interval: 15s
+```
+
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-k8s-apps-http.yaml)
+```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
   name: k8s-apps-http
+  namespace: monitoring
   labels:
     k8s-apps: http
 spec:
@@ -350,10 +373,10 @@ spec:
   selector:
     matchExpressions:
     - {key: k8s-app, operator: Exists}
+    - {key: k8s-app, operator: NotIn, values: [kubelet]}
   namespaceSelector:
     matchNames:
     - kube-system
-    - monitoring
   endpoints:
   - port: http-metrics
     interval: 15s
@@ -361,7 +384,55 @@ spec:
     interval: 15s
   - port: http-metrics-skydns
     interval: 15s
----
+```
+
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kube-state-metrics.yaml)
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+  labels:
+    k8s-apps: http
+spec:
+  jobLabel: k8s-app
+  selector:
+    matchLabels:
+      k8s-app: kube-state-metrics
+  namespaceSelector:
+    matchNames:
+    - monitoring
+  endpoints:
+  - port: http-metrics
+    interval: 15s
+    honorLabels: true
+```
+
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-node-exporter.yaml)
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    k8s-apps: http
+spec:
+  jobLabel: k8s-app
+  selector:
+    matchLabels:
+      k8s-app: node-exporter
+  namespaceSelector:
+    matchNames:
+    - monitoring
+  endpoints:
+  - port: http-metrics
+    interval: 15s
+```
+
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-prometheus.yaml)
+```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
@@ -374,7 +445,10 @@ spec:
   selector:
     matchExpressions:
     - {key: prometheus, operator: In, values: [k8s]}
----
+```
+
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-alertmanager.yaml)
+```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
