@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: prometheus
+  labels:
+    prometheus: k8s
+spec:
+  endpoints:
+  - port: web
+  selector:
+    matchExpressions:
+    - {key: prometheus, operator: In, values: [k8s]}
