@@ -51,7 +51,7 @@ metadata:
   name: "main"
 spec:
   replicas: 3
-  version: v0.5.1
+  version: v0.6.1
   resources:
     requests:
       memory: 400Mi
@@ -136,7 +136,7 @@ metadata:
   name: "main"
 spec:
   replicas: 3
-  version: v0.5.1
+  version: v0.6.1
   resources:
     requests:
       memory: 400Mi
@@ -254,7 +254,7 @@ metadata:
   name: "main"
 spec:
   replicas: 3
-  version: v0.5.1
+  version: v0.6.1
   externalUrl: http://monitoring.my.systems/alertmanager
   resources:
     requests:

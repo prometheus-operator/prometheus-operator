@@ -73,17 +73,17 @@ func TestAlertmanagerVersionMigration(t *testing.T) {
 	}()
 
 	am := framework.MakeBasicAlertmanager(name, 3)
-	am.Spec.Version = "v0.5.0"
+	am.Spec.Version = "v0.6.0"
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(am); err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.5.1"
+	am.Spec.Version = "v0.6.1"
 	if err := framework.UpdateAlertmanagerAndWaitUntilReady(am); err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.5.0"
+	am.Spec.Version = "v0.6.0"
 	if err := framework.UpdateAlertmanagerAndWaitUntilReady(am); err != nil {
 		t.Fatal(err)
 	}
