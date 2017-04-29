@@ -99,7 +99,7 @@ spec:
       prometheus: example
 ```
 
-Prometheus rule files are held in a `ConfigMap`s. The `ConfigMap`s to mount rule files from are selected with a label selector field called `ruleSelector` in the Prometheus object, as seen above. All top level files that end with the `.rules` extension will be loaded.
+Prometheus rule files are held in `ConfigMap`s. The `ConfigMap`s to mount rule files from are selected with a label selector field called `ruleSelector` in the Prometheus object, as seen above. All top level files that end with the `.rules` extension will be loaded.
 
 The best practice is to label the `ConfigMap`s containing rule files with `role: prometheus-rulefiles` as well as the name of the Prometheus object, `prometheus: example` in this case.
 
