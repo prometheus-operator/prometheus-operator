@@ -212,14 +212,6 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 			"source_labels": []string{"__meta_kubernetes_namespace"},
 			"target_label":  "namespace",
 		},
-		// If the annotation alpha.monitoring.coreos.com/namespaced is true we
-		// want to remove the namespace label.
-		map[string]interface{}{
-			"source_labels": []string{"__meta_kubernetes_service_annotation_alpha_monitoring_coreos_com_non_namespaced"},
-			"regex":         "true",
-			"target_label":  "namespace",
-			"replacement":   "",
-		},
 		map[string]interface{}{
 			"action":      "labelmap",
 			"regex":       "__meta_kubernetes_service_label_(.+)",
