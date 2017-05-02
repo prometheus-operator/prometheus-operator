@@ -858,8 +858,10 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+
 	// Update secret based on the most recent configuration.
-	conf, err := generateConfig(p, smons, len(ruleFileConfigMaps))
+	conf, err := generateConfig(p, smons, len(ruleFileConfigMaps), sClient)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
 	}
@@ -872,7 +874,6 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 		"generated": "true",
 	}
 	s.Data["prometheus.yaml"] = []byte(conf)
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 
 	_, err = sClient.Get(s.Name)
 	if apierrors.IsNotFound(err) {

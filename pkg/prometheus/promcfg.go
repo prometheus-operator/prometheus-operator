@@ -23,6 +23,7 @@ import (
 	"k8s.io/client-go/pkg/api/unversioned"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 var (
@@ -37,7 +38,7 @@ func configMapRuleFileFolder(configMapNumber int) string {
 	return fmt.Sprintf("/etc/prometheus/rules/rules-%d/", configMapNumber)
 }
 
-func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int) ([]byte, error) {
+func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int, sClient v1.SecretInterface) ([]byte, error) {
 	cfg := map[string]interface{}{}
 
 	cfg["global"] = map[string]string{
@@ -56,7 +57,7 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 	var scrapeConfigs []interface{}
 	for _, mon := range mons {
 		for i, ep := range mon.Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mon, ep, i))
+			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mon, ep, i, sClient))
 		}
 	}
 	var alertmanagerConfigs []interface{}
@@ -72,7 +73,7 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 	return yaml.Marshal(cfg)
 }
 
-func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int) interface{} {
+func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int, sClient v1.SecretInterface) interface{} {
 	cfg := map[string]interface{}{
 		"job_name":     fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
 		"honor_labels": ep.HonorLabels,
@@ -112,6 +113,29 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	}
 	if ep.BearerTokenFile != "" {
 		cfg["bearer_token_file"] = ep.BearerTokenFile
+	}
+
+	if ep.BasicAuth != nil {
+
+		basicAuth := map[string]interface{}{"username": "",
+			"password": ""}
+
+		usernameSecret, err := sClient.Get(ep.BasicAuth.Username.Key)
+
+		if err != nil {
+			//TODO implement log error
+		} else if err == nil {
+			basicAuth["username"] = usernameSecret
+		}
+
+		passwordSecret, err := sClient.Get(ep.BasicAuth.Password.Key)
+		if err != nil {
+			//TODO implement log error
+		} else if err == nil {
+			basicAuth["password"] = passwordSecret
+		}
+
+		cfg["basic_auth"] = basicAuth
 	}
 
 	var relabelings []interface{}

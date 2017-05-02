@@ -194,6 +194,15 @@ type Endpoint struct {
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	HonorLabels bool `json:"honorLabels,omitempty"`
+
+	BasicAuth *BasicAuth `json:basicAuth,omitempty`
+}
+
+type BasicAuth struct {
+	// The secret that contains the username for authenticate
+	Username v1.SecretKeySelector`json:"username,omitempty"`
+	// The secret that contains the password for authenticate
+	Password v1.SecretKeySelector `json:"password,omitempty"`
 }
 
 // TLSConfig specifies TLS configuration parameters.
