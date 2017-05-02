@@ -1,7 +1,7 @@
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: Prometheus
 metadata:
-  name: prometheus-frontend
+  name: frontend
   namespace: default
   labels:
     prometheus: frontend
