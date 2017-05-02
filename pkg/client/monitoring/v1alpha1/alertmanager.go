@@ -16,7 +16,6 @@ package v1alpha1
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/pkg/api"
@@ -69,12 +68,12 @@ func newAlertmanagers(r rest.Interface, c *dynamic.Client, namespace string) *al
 func (a *alertmanagers) Create(o *Alertmanager) (*Alertmanager, error) {
 	ua, err := UnstructuredFromAlertmanager(o)
 	if err != nil {
-		return nil, fmt.Errorf("unstructuring alertmanager failed: %s", err)
+		return nil, err
 	}
 
 	ua, err = a.client.Create(ua)
 	if err != nil {
-		return nil, fmt.Errorf("creating alertmanager failed: %s", err)
+		return nil, err
 	}
 
 	return AlertmanagerFromUnstructured(ua)
@@ -83,7 +82,7 @@ func (a *alertmanagers) Create(o *Alertmanager) (*Alertmanager, error) {
 func (a *alertmanagers) Get(name string) (*Alertmanager, error) {
 	obj, err := a.client.Get(name)
 	if err != nil {
-		return nil, fmt.Errorf("retrieving alertmanager failed: %s", err)
+		return nil, err
 	}
 	return AlertmanagerFromUnstructured(obj)
 }
@@ -91,12 +90,12 @@ func (a *alertmanagers) Get(name string) (*Alertmanager, error) {
 func (a *alertmanagers) Update(o *Alertmanager) (*Alertmanager, error) {
 	ua, err := UnstructuredFromAlertmanager(o)
 	if err != nil {
-		return nil, fmt.Errorf("unstructuring alertmanager failed: %s", err)
+		return nil, err
 	}
 
 	ua, err = a.client.Update(ua)
 	if err != nil {
-		return nil, fmt.Errorf("updating alertmanager failed: %s", err)
+		return nil, err
 	}
 
 	return AlertmanagerFromUnstructured(ua)
