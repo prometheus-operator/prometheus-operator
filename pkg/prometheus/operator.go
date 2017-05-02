@@ -308,19 +308,32 @@ func (c *Operator) syncNodeEndpoints() {
 
 	cache.ListAll(c.nodeInf.GetStore(), labels.Everything(), func(obj interface{}) {
 		n := obj.(*v1.Node)
+		var internalIP, externalIP string
 		for _, a := range n.Status.Addresses {
 			if a.Type == v1.NodeInternalIP {
-				eps.Subsets[0].Addresses = append(eps.Subsets[0].Addresses, v1.EndpointAddress{
-					IP:       a.Address,
-					NodeName: &n.Name,
-					TargetRef: &v1.ObjectReference{
-						Kind:       "Node",
-						Name:       n.Name,
-						UID:        n.UID,
-						APIVersion: n.APIVersion,
-					},
-				})
+				internalIP = a.Address
+			} else if a.Type == v1.NodeExternalIP {
+				externalIP = a.Address
 			}
+		}
+		// Fallback to externalIP if a node doesn't have an internalIP
+		var address string
+		if internalIP != "" {
+			address = internalIP
+		} else if externalIP != "" {
+			address = externalIP
+		}
+		if address != "" {
+			eps.Subsets[0].Addresses = append(eps.Subsets[0].Addresses, v1.EndpointAddress{
+				IP:       address,
+				NodeName: &n.Name,
+				TargetRef: &v1.ObjectReference{
+					Kind:       "Node",
+					Name:       n.Name,
+					UID:        n.UID,
+					APIVersion: n.APIVersion,
+				},
+			})
 		}
 	})
 
