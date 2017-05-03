@@ -102,12 +102,63 @@ func TestPrometheusVersionMigration(t *testing.T) {
 	}
 }
 
+func TestPrometheusResourceUpdate(t *testing.T) {
+	name := "test"
+
+	defer func() {
+		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	p := framework.MakeBasicPrometheus(name, name, 1)
+
+	p.Spec.Resources = v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("100Mi"),
+		},
+	}
+	if err := framework.CreatePrometheusAndWaitUntilReady(p); err != nil {
+		t.Fatal(err)
+	}
+
+	pods, err := framework.KubeClient.Core().Pods(framework.Namespace.Name).List(prometheus.ListOptions(name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := pods.Items[0].Spec.Containers[0].Resources
+
+	if !reflect.DeepEqual(res, p.Spec.Resources) {
+		t.Fatalf("resources don't match. Has %q, want %q", res, p.Spec.Resources)
+	}
+
+	p.Spec.Resources = v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("200Mi"),
+		},
+	}
+	if err := framework.UpdatePrometheusAndWaitUntilReady(p); err != nil {
+		t.Fatal(err)
+	}
+
+	pods, err = framework.KubeClient.Core().Pods(framework.Namespace.Name).List(prometheus.ListOptions(name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	res = pods.Items[0].Spec.Containers[0].Resources
+
+	if !reflect.DeepEqual(res, p.Spec.Resources) {
+		t.Fatalf("resources don't match. Has %q, want %q", res, p.Spec.Resources)
+	}
+}
+
 func TestPrometheusReloadConfig(t *testing.T) {
 	name := "test"
 	replicas := int32(1)
 	p := &v1alpha1.Prometheus{
 		ObjectMeta: v1.ObjectMeta{
-			Name: name,
+			Name:      name,
+			Namespace: framework.Namespace.Name,
 		},
 		Spec: v1alpha1.PrometheusSpec{
 			Replicas: &replicas,
@@ -150,6 +201,10 @@ scrape_configs:
 			t.Fatal(err)
 		}
 	}()
+
+	// TODO(fabxc): tests are all running in the same namespace and not reliable cleaned
+	// up from all resources.
+	framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Delete(cfg.Name, nil)
 
 	if _, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Create(cfg); err != nil {
 		t.Fatal(err)

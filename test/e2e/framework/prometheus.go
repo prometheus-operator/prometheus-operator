@@ -35,7 +35,8 @@ import (
 func (f *Framework) MakeBasicPrometheus(name, group string, replicas int32) *v1alpha1.Prometheus {
 	return &v1alpha1.Prometheus{
 		ObjectMeta: v1.ObjectMeta{
-			Name: name,
+			Name:      name,
+			Namespace: f.Namespace.Name,
 		},
 		Spec: v1alpha1.PrometheusSpec{
 			Replicas: &replicas,
@@ -132,14 +133,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 		return err
 	}
 
-	err = WaitForPodsReady(
-		f.KubeClient,
-		f.Namespace.Name,
-		f.DefaultTimeout,
-		int(*p.Spec.Replicas),
-		prometheus.ListOptions(p.Name),
-	)
-	if err != nil {
+	if err := f.WaitForPrometheusReady(p, time.Minute); err != nil {
 		return fmt.Errorf("failed to create %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
 
@@ -152,18 +146,21 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) er
 	if err != nil {
 		return err
 	}
-
-	if err := WaitForPodsReady(
-		f.KubeClient,
-		f.Namespace.Name,
-		f.DefaultTimeout,
-		int(*p.Spec.Replicas),
-		prometheus.ListOptions(p.Name),
-	); err != nil {
+	if err := f.WaitForPrometheusReady(p, time.Minute); err != nil {
 		return fmt.Errorf("failed to update %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
 	}
 
 	return nil
+}
+
+func (f *Framework) WaitForPrometheusReady(p *v1alpha1.Prometheus, timeout time.Duration) error {
+	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
+		st, _, err := prometheus.PrometheusStatus(f.KubeClient, p)
+		if err != nil {
+			return false, err
+		}
+		return st.UpdatedReplicas == *p.Spec.Replicas, nil
+	})
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
