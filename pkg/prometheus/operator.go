@@ -282,6 +282,34 @@ func (c *Operator) handleAddNode(obj interface{})         { c.syncNodeEndpoints(
 func (c *Operator) handleDeleteNode(obj interface{})      { c.syncNodeEndpoints() }
 func (c *Operator) handleUpdateNode(old, cur interface{}) { c.syncNodeEndpoints() }
 
+// nodeAddresses returns the provided node's address, based on the priority:
+// 1. NodeInternalIP
+// 2. NodeExternalIP
+// 3. NodeLegacyHostIP
+// 3. NodeHostName
+//
+// Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go
+func nodeAddress(node *v1.Node) (string, map[v1.NodeAddressType][]string, error) {
+	m := map[v1.NodeAddressType][]string{}
+	for _, a := range node.Status.Addresses {
+		m[a.Type] = append(m[a.Type], a.Address)
+	}
+
+	if addresses, ok := m[v1.NodeInternalIP]; ok {
+		return addresses[0], m, nil
+	}
+	if addresses, ok := m[v1.NodeExternalIP]; ok {
+		return addresses[0], m, nil
+	}
+	if addresses, ok := m[v1.NodeAddressType(api.NodeLegacyHostIP)]; ok {
+		return addresses[0], m, nil
+	}
+	if addresses, ok := m[v1.NodeHostName]; ok {
+		return addresses[0], m, nil
+	}
+	return "", m, fmt.Errorf("host address unknown")
+}
+
 func (c *Operator) syncNodeEndpoints() {
 	eps := &v1.Endpoints{
 		ObjectMeta: v1.ObjectMeta{
@@ -308,22 +336,8 @@ func (c *Operator) syncNodeEndpoints() {
 
 	cache.ListAll(c.nodeInf.GetStore(), labels.Everything(), func(obj interface{}) {
 		n := obj.(*v1.Node)
-		var internalIP, externalIP string
-		for _, a := range n.Status.Addresses {
-			if a.Type == v1.NodeInternalIP {
-				internalIP = a.Address
-			} else if a.Type == v1.NodeExternalIP {
-				externalIP = a.Address
-			}
-		}
-		// Fallback to externalIP if a node doesn't have an internalIP
-		var address string
-		if internalIP != "" {
-			address = internalIP
-		} else if externalIP != "" {
-			address = externalIP
-		}
-		if address != "" {
+		address, _, err := nodeAddress(n)
+		if err == nil {
 			eps.Subsets[0].Addresses = append(eps.Subsets[0].Addresses, v1.EndpointAddress{
 				IP:       address,
 				NodeName: &n.Name,
