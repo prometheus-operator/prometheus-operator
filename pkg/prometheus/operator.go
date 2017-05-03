@@ -337,18 +337,20 @@ func (c *Operator) syncNodeEndpoints() {
 	cache.ListAll(c.nodeInf.GetStore(), labels.Everything(), func(obj interface{}) {
 		n := obj.(*v1.Node)
 		address, _, err := nodeAddress(n)
-		if err == nil {
-			eps.Subsets[0].Addresses = append(eps.Subsets[0].Addresses, v1.EndpointAddress{
-				IP:       address,
-				NodeName: &n.Name,
-				TargetRef: &v1.ObjectReference{
-					Kind:       "Node",
-					Name:       n.Name,
-					UID:        n.UID,
-					APIVersion: n.APIVersion,
-				},
-			})
+		if err != nil {
+			c.logger.Log("msg", "failed to determine hostname for node", "err", err, "node", n.Name)
+			return
 		}
+		eps.Subsets[0].Addresses = append(eps.Subsets[0].Addresses, v1.EndpointAddress{
+			IP:       address,
+			NodeName: &n.Name,
+			TargetRef: &v1.ObjectReference{
+				Kind:       "Node",
+				Name:       n.Name,
+				UID:        n.UID,
+				APIVersion: n.APIVersion,
+			},
+		})
 	})
 
 	svc := &v1.Service{
