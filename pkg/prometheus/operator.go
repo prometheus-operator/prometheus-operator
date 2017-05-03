@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -535,6 +536,10 @@ func prometheusNameFromStatefulSetName(name string) string {
 	return strings.TrimPrefix(name, "prometheus-")
 }
 
+func statefulSetNameFromPrometheusName(name string) string {
+	return "prometheus-" + name
+}
+
 func statefulSetKeyToPrometheusKey(key string) string {
 	keyParts := strings.Split(key, "/")
 	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "prometheus-")
@@ -728,12 +733,19 @@ func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
 	return nil
 }
 
-func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v1alpha1.PrometheusStatus, []v1.Pod, error) {
+// PrometheusStatus evaluates the current status of a Prometheus deployment with respect
+// to its specified resource object. It return the status and a list of pods that
+// are not updated.
+func PrometheusStatus(kclient kubernetes.Interface, p *v1alpha1.Prometheus) (*v1alpha1.PrometheusStatus, []v1.Pod, error) {
 	res := &v1alpha1.PrometheusStatus{Paused: p.Spec.Paused}
 
 	pods, err := kclient.Core().Pods(p.Namespace).List(ListOptions(p.Name))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
+	}
+	sset, err := kclient.Apps().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name))
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 	}
 
 	res.Replicas = int32(len(pods.Items))
@@ -747,10 +759,10 @@ func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v
 		if ready {
 			res.AvailableReplicas++
 			// TODO(fabxc): detect other fields of the pod template that are mutable.
-			if strings.HasSuffix(pod.Spec.Containers[0].Image, p.Spec.Version) {
-				res.UpdatedReplicas++
-			} else {
+			if needsUpdate(&pod, sset.Spec.Template) {
 				oldPods = append(oldPods, pod)
+			} else {
+				res.UpdatedReplicas++
 			}
 			continue
 		}
@@ -758,6 +770,25 @@ func PrometheusStatus(kclient *kubernetes.Clientset, p *v1alpha1.Prometheus) (*v
 	}
 
 	return res, oldPods, nil
+}
+
+// needsUpdate checks whether the given pod conforms with the pod template spec
+// for various attributes that are influenced by the Prometheus TPR settings.
+func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
+	c1 := pod.Spec.Containers[0]
+	c2 := tmpl.Spec.Containers[0]
+
+	if c1.Image != c2.Image {
+		return true
+	}
+	if !reflect.DeepEqual(c1.Resources, c2.Resources) {
+		return true
+	}
+	if !reflect.DeepEqual(c1.Args, c2.Args) {
+		return true
+	}
+
+	return false
 }
 
 func (c *Operator) destroyPrometheus(key string) error {
