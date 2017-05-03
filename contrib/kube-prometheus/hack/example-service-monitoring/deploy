@@ -10,10 +10,6 @@ fi
 
 kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/prometheus-frontend-svc.yaml
 kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/example-app.yaml
-
-# `kubectl apply` is currently not working for third party resources so we are
-# using `kubectl create` here for the time being.
-# (https://github.com/kubernetes/kubernetes/issues/29542)
-kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" create -f manifests/examples/example-app/prometheus-frontend.yaml
-kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" create -f manifests/examples/example-app/servicemonitor-frontend.yaml
+kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/prometheus-frontend.yaml
+kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/servicemonitor-frontend.yaml
 
