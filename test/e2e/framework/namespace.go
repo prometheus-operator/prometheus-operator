@@ -2,6 +2,7 @@ package framework
 
 import (
 	"fmt"
+	"testing"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
@@ -19,6 +20,24 @@ func CreateNamespace(kubeClient kubernetes.Interface, name string) (*v1.Namespac
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to create namespace with name %v", name))
 	}
 	return namespace, nil
+}
+
+func (ctx *TestCtx) CreateNamespace(t *testing.T, kubeClient kubernetes.Interface) string {
+	name := ctx.GetObjID()
+	if _, err := CreateNamespace(kubeClient, name); err != nil {
+		t.Fatal(err)
+	}
+
+	namespaceFinalizerFn := func() error {
+		if err := DeleteNamespace(kubeClient, name); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	ctx.AddFinalizerFn(namespaceFinalizerFn)
+
+	return name
 }
 
 func DeleteNamespace(kubeClient kubernetes.Interface, name string) error {

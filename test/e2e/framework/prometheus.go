@@ -132,7 +132,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *v1alpha1.Pro
 		return err
 	}
 
-	if err := f.WaitForPrometheusReady(p, 3*time.Minute); err != nil {
+	if err := f.WaitForPrometheusReady(p, 5*time.Minute); err != nil {
 		return fmt.Errorf("failed to create %d Prometheus instances (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
@@ -144,7 +144,7 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *v1alpha1.Pro
 	if err != nil {
 		return err
 	}
-	if err := f.WaitForPrometheusReady(p, 3*time.Minute); err != nil {
+	if err := f.WaitForPrometheusReady(p, 5*time.Minute); err != nil {
 		return fmt.Errorf("failed to update %d Prometheus instances (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 

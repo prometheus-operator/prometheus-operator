@@ -7,41 +7,33 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
-	"k8s.io/client-go/kubernetes"
 )
 
 type TestCtx struct {
-	Id         string
+	ID         string
 	cleanUpFns []finalizerFn
 }
 
 type finalizerFn func() error
 
-func NewTestCtx(t *testing.T) TestCtx {
+func (f *Framework) NewTestCtx(t *testing.T) TestCtx {
 	prefix := strings.TrimPrefix(strings.ToLower(t.Name()), "test")
 
 	id := prefix + "-" + strconv.FormatInt(time.Now().Unix(), 10)
 	return TestCtx{
-		Id: id,
+		ID: id,
 	}
 }
 
-func (ctx *TestCtx) BasicSetup(t *testing.T, kubeClient kubernetes.Interface) {
-	if _, err := CreateNamespace(kubeClient, ctx.Id); err != nil {
-		t.Fatal(err)
-	}
-
-	namespaceFinalizerFn := func() error {
-		if err := DeleteNamespace(kubeClient, ctx.Id); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	ctx.AddFinalizerFn(namespaceFinalizerFn)
+// GetObjID returns an ascending ID based on the length of cleanUpFns. It is
+// based on the premise that every new object also appends a new finalizerFn on
+// cleanUpFns. This can e.g. be used to create multiple namespaces in the same
+// test context.
+func (ctx *TestCtx) GetObjID() string {
+	return ctx.ID + "-" + strconv.Itoa(len(ctx.cleanUpFns))
 }
 
-func (ctx *TestCtx) CleanUp(t *testing.T) {
+func (ctx *TestCtx) Cleanup(t *testing.T) {
 	var eg errgroup.Group
 
 	for i := len(ctx.cleanUpFns) - 1; i >= 0; i-- {
