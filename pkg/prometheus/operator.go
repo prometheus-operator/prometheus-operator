@@ -831,11 +831,23 @@ func (c *Operator) destroyPrometheus(key string) error {
 	}
 
 	// Delete the auto-generate configuration.
-	// TODO(fabxc): add an ownerRef at creation so we don't delete config maps
+	// TODO(fabxc): add an ownerRef at creation so we don't delete Secrets
 	// manually created for Prometheus servers with no ServiceMonitor selectors.
 	s := c.kclient.Core().Secrets(sset.Namespace)
-	if err := s.Delete(sset.Name, nil); err != nil {
-		return errors.Wrap(err, "deleting config file failed")
+	secret, err := s.Get(sset.Name)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return errors.Wrap(err, "retrieving config Secret failed")
+	}
+	if apierrors.IsNotFound(err) {
+		// Secret does not exist so nothing to clean up
+		return nil
+	}
+
+	value, found := secret.Labels[managedByOperatorLabel]
+	if found && value == managedByOperatorLabelValue {
+		if err := s.Delete(sset.Name, nil); err != nil {
+			return errors.Wrap(err, "deleting config Secret failed")
+		}
 	}
 
 	return nil

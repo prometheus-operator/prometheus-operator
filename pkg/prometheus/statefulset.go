@@ -41,9 +41,11 @@ const (
 )
 
 var (
-	minReplicas             int32 = 1
-	managedByOperatorLabels       = map[string]string{
-		"managed-by": "prometheus-operator",
+	minReplicas                 int32 = 1
+	managedByOperatorLabel            = "managed-by"
+	managedByOperatorLabelValue       = "prometheus-operator"
+	managedByOperatorLabels           = map[string]string{
+		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
 	probeTimeoutSeconds int32 = 3
 )
