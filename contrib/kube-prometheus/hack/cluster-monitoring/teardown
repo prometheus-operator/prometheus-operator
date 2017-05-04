@@ -12,7 +12,8 @@ kctl() {
     kubectl --namespace "$NAMESPACE" "$@"
 }
 
-kctl delete -f manifests/exporters
+kctl delete -f manifests/node-exporter
+kctl delete -f manifests/kube-state-metrics
 kctl delete -f manifests/grafana
 kctl delete -f manifests/prometheus
 kctl delete -f manifests/alertmanager
