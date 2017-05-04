@@ -36,93 +36,106 @@ import (
 )
 
 func TestPrometheusCreateDeleteCluster(t *testing.T) {
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
 	name := "test"
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(framework.MakeBasicPrometheus(name, name, 1)); err != nil {
+	prometheusTPR := framework.MakeBasicPrometheus(ctx.Id, name, name, 1)
+	prometheusTPR.Namespace = ctx.Id
+
+	if err := framework.CreatePrometheusAndWaitUntilReady(ctx.Id, prometheusTPR); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
+	if err := framework.DeletePrometheusAndWaitUntilGone(ctx.Id, name); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestPrometheusScaleUpDownCluster(t *testing.T) {
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
 	name := "test"
 
-	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
-	if err := framework.CreatePrometheusAndWaitUntilReady(framework.MakeBasicPrometheus(name, name, 1)); err != nil {
+	if err := framework.CreatePrometheusAndWaitUntilReady(ctx.Id, framework.MakeBasicPrometheus(ctx.Id, name, name, 1)); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.UpdatePrometheusAndWaitUntilReady(framework.MakeBasicPrometheus(name, name, 3)); err != nil {
+	if err := framework.UpdatePrometheusAndWaitUntilReady(ctx.Id, framework.MakeBasicPrometheus(ctx.Id, name, name, 3)); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.UpdatePrometheusAndWaitUntilReady(framework.MakeBasicPrometheus(name, name, 2)); err != nil {
+	if err := framework.UpdatePrometheusAndWaitUntilReady(ctx.Id, framework.MakeBasicPrometheus(ctx.Id, name, name, 2)); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestPrometheusVersionMigration(t *testing.T) {
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
 	name := "test"
 
 	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
+		if err := framework.DeletePrometheusAndWaitUntilGone(ctx.Id, name); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	p := framework.MakeBasicPrometheus(name, name, 1)
+	p := framework.MakeBasicPrometheus(ctx.Id, name, name, 1)
 
 	p.Spec.Version = "v1.5.1"
-	if err := framework.CreatePrometheusAndWaitUntilReady(p); err != nil {
+	if err := framework.CreatePrometheusAndWaitUntilReady(ctx.Id, p); err != nil {
 		t.Fatal(err)
 	}
 
 	p.Spec.Version = "v1.6.1"
-	if err := framework.UpdatePrometheusAndWaitUntilReady(p); err != nil {
+	if err := framework.UpdatePrometheusAndWaitUntilReady(ctx.Id, p); err != nil {
 		t.Fatal(err)
 	}
-	if err := framework.WaitForPrometheusRunImageAndReady(p); err != nil {
+	if err := framework.WaitForPrometheusRunImageAndReady(ctx.Id, p); err != nil {
 		t.Fatal(err)
 	}
 
 	p.Spec.Version = "v1.5.1"
-	if err := framework.UpdatePrometheusAndWaitUntilReady(p); err != nil {
+	if err := framework.UpdatePrometheusAndWaitUntilReady(ctx.Id, p); err != nil {
 		t.Fatal(err)
 	}
-	if err := framework.WaitForPrometheusRunImageAndReady(p); err != nil {
+	if err := framework.WaitForPrometheusRunImageAndReady(ctx.Id, p); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestPrometheusResourceUpdate(t *testing.T) {
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
 	name := "test"
 
 	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
+		if err := framework.DeletePrometheusAndWaitUntilGone(ctx.Id, name); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	p := framework.MakeBasicPrometheus(name, name, 1)
+	p := framework.MakeBasicPrometheus(ctx.Id, name, name, 1)
 
 	p.Spec.Resources = v1.ResourceRequirements{
 		Requests: v1.ResourceList{
 			v1.ResourceMemory: resource.MustParse("100Mi"),
 		},
 	}
-	if err := framework.CreatePrometheusAndWaitUntilReady(p); err != nil {
+	if err := framework.CreatePrometheusAndWaitUntilReady(ctx.Id, p); err != nil {
 		t.Fatal(err)
 	}
 
-	pods, err := framework.KubeClient.Core().Pods(framework.Namespace.Name).List(prometheus.ListOptions(name))
+	pods, err := framework.KubeClient.Core().Pods(ctx.Id).List(prometheus.ListOptions(name))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,11 +150,11 @@ func TestPrometheusResourceUpdate(t *testing.T) {
 			v1.ResourceMemory: resource.MustParse("200Mi"),
 		},
 	}
-	if err := framework.UpdatePrometheusAndWaitUntilReady(p); err != nil {
+	if err := framework.UpdatePrometheusAndWaitUntilReady(ctx.Id, p); err != nil {
 		t.Fatal(err)
 	}
 
-	pods, err = framework.KubeClient.Core().Pods(framework.Namespace.Name).List(prometheus.ListOptions(name))
+	pods, err = framework.KubeClient.Core().Pods(ctx.Id).List(prometheus.ListOptions(name))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,12 +166,16 @@ func TestPrometheusResourceUpdate(t *testing.T) {
 }
 
 func TestPrometheusReloadConfig(t *testing.T) {
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
 	name := "test"
 	replicas := int32(1)
 	p := &v1alpha1.Prometheus{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      name,
-			Namespace: framework.Namespace.Name,
+			Namespace: ctx.Id,
 		},
 		Spec: v1alpha1.PrometheusSpec{
 			Replicas: &replicas,
@@ -194,27 +211,27 @@ scrape_configs:
 	svc := framework.MakeBasicPrometheusNodePortService(name, "reloadconfig-group", 30900)
 
 	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
+		if err := framework.DeletePrometheusAndWaitUntilGone(ctx.Id, name); err != nil {
 			t.Fatal(err)
 		}
-		if err := testFramework.DeleteService(framework.KubeClient, framework.Namespace.Name, svc.Name); err != nil {
+		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, svc.Name); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
 	// TODO(fabxc): tests are all running in the same namespace and not reliable cleaned
 	// up from all resources.
-	framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Delete(cfg.Name, nil)
+	framework.KubeClient.CoreV1().Secrets(ctx.Id).Delete(cfg.Name, nil)
 
-	if _, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Create(cfg); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(ctx.Id).Create(cfg); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(p); err != nil {
+	if err := framework.CreatePrometheusAndWaitUntilReady(ctx.Id, p); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, framework.Namespace.Name, svc); err != nil {
+	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, svc); err != nil {
 		t.Fatal(err)
 	}
 
@@ -235,7 +252,7 @@ scrape_configs:
 `
 
 	cfg.Data["prometheus.yaml"] = []byte(secondConfig)
-	if _, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Update(cfg); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(ctx.Id).Update(cfg); err != nil {
 		t.Fatal(err)
 	}
 
@@ -245,6 +262,10 @@ scrape_configs:
 }
 
 func TestPrometheusReloadRules(t *testing.T) {
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
 	name := "test"
 
 	ruleFileConfigMap := &v1.ConfigMap{
@@ -259,35 +280,35 @@ func TestPrometheusReloadRules(t *testing.T) {
 		},
 	}
 
-	_, err := framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Create(ruleFileConfigMap)
+	_, err := framework.KubeClient.CoreV1().ConfigMaps(ctx.Id).Create(ruleFileConfigMap)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(name); err != nil {
+		if err := framework.DeletePrometheusAndWaitUntilGone(ctx.Id, name); err != nil {
 			t.Fatal(err)
 		}
 
-		err = framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Delete(ruleFileConfigMap.Name, nil)
+		err = framework.KubeClient.CoreV1().ConfigMaps(ctx.Id).Delete(ruleFileConfigMap.Name, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(framework.MakeBasicPrometheus(name, name, 1)); err != nil {
+	if err := framework.CreatePrometheusAndWaitUntilReady(ctx.Id, framework.MakeBasicPrometheus(ctx.Id, name, name, 1)); err != nil {
 		t.Fatal(err)
 	}
 
 	ruleFileConfigMap.Data["test.rules"] = "# comment to trigger a configmap reload"
-	_, err = framework.KubeClient.CoreV1().ConfigMaps(framework.Namespace.Name).Update(ruleFileConfigMap)
+	_, err = framework.KubeClient.CoreV1().ConfigMaps(ctx.Id).Update(ruleFileConfigMap)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// remounting a ConfigMap can take some time
 	err = wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		logs, err := testFramework.GetLogs(framework.KubeClient, framework.Namespace.Name, fmt.Sprintf("prometheus-%s-0", name), "prometheus-config-reloader")
+		logs, err := testFramework.GetLogs(framework.KubeClient, ctx.Id, fmt.Sprintf("prometheus-%s-0", name), "prometheus-config-reloader")
 		if err != nil {
 			return false, err
 		}
@@ -304,53 +325,61 @@ func TestPrometheusReloadRules(t *testing.T) {
 }
 
 func TestPrometheusDiscovery(t *testing.T) {
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
 	prometheusName := "test"
 	group := "servicediscovery-test"
 	svc := framework.MakeBasicPrometheusNodePortService(prometheusName, group, 30900)
 
 	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(prometheusName); err != nil {
+		if err := framework.DeletePrometheusAndWaitUntilGone(ctx.Id, prometheusName); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Delete(group, nil); err != nil {
+		if err := framework.MonClient.ServiceMonitors(ctx.Id).Delete(group, nil); err != nil {
 			t.Fatal(err)
 		}
-		if err := testFramework.DeleteService(framework.KubeClient, framework.Namespace.Name, svc.Name); err != nil {
+		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, svc.Name); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
 	log.Print("Creating Prometheus ServiceMonitor")
 	s := framework.MakeBasicServiceMonitor(group)
-	if _, err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Create(s); err != nil {
+	if _, err := framework.MonClient.ServiceMonitors(ctx.Id).Create(s); err != nil {
 		t.Fatal("Creating ServiceMonitor failed: ", err)
 	}
 
-	p := framework.MakeBasicPrometheus(prometheusName, group, 1)
+	p := framework.MakeBasicPrometheus(ctx.Id, prometheusName, group, 1)
 	p.Spec.Version = "v1.5.0"
-	if err := framework.CreatePrometheusAndWaitUntilReady(p); err != nil {
+	if err := framework.CreatePrometheusAndWaitUntilReady(ctx.Id, p); err != nil {
 		t.Fatal(err)
 	}
 
 	log.Print("Creating Prometheus Service")
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, framework.Namespace.Name, svc); err != nil {
+	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, svc); err != nil {
 		t.Fatal(err)
 	}
 
 	log.Print("Validating Prometheus config Secret was created")
-	_, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName))
+	_, err := framework.KubeClient.CoreV1().Secrets(ctx.Id).Get(fmt.Sprintf("prometheus-%s", prometheusName))
 	if err != nil {
 		t.Fatal("Generated Secret could not be retrieved: ", err)
 	}
 
 	log.Print("Validating Prometheus Targets were properly discovered")
-	err = wait.Poll(time.Second, 18*time.Minute, isDiscoveryWorking(prometheusName))
+	err = wait.Poll(time.Second, 18*time.Minute, isDiscoveryWorking(ctx.Id, prometheusName))
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
 	prometheusName := "test"
 	alertmanagerName := "test"
 	group := "servicediscovery-test"
@@ -358,81 +387,85 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	amsvc := framework.MakeAlertmanagerNodePortService(alertmanagerName, group, 30903)
 
 	defer func() {
-		if err := framework.DeleteAlertmanagerAndWaitUntilGone(alertmanagerName); err != nil {
+		if err := framework.DeleteAlertmanagerAndWaitUntilGone(ctx.Id, alertmanagerName); err != nil {
 			t.Fatal(err)
 		}
-		if err := testFramework.DeleteService(framework.KubeClient, framework.Namespace.Name, amsvc.Name); err != nil {
+		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, amsvc.Name); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.DeletePrometheusAndWaitUntilGone(prometheusName); err != nil {
+		if err := framework.DeletePrometheusAndWaitUntilGone(ctx.Id, prometheusName); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Delete(group, nil); err != nil {
+		if err := framework.MonClient.ServiceMonitors(ctx.Id).Delete(group, nil); err != nil {
 			t.Fatal(err)
 		}
-		if err := testFramework.DeleteService(framework.KubeClient, framework.Namespace.Name, svc.Name); err != nil {
+		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, svc.Name); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	p := framework.MakeBasicPrometheus(prometheusName, group, 1)
-	framework.AddAlertingToPrometheus(p, alertmanagerName)
+	p := framework.MakeBasicPrometheus(ctx.Id, prometheusName, group, 1)
+	framework.AddAlertingToPrometheus(p, ctx.Id, alertmanagerName)
 	p.Spec.Version = "v1.5.0"
-	if err := framework.CreatePrometheusAndWaitUntilReady(p); err != nil {
+	if err := framework.CreatePrometheusAndWaitUntilReady(ctx.Id, p); err != nil {
 		t.Fatal(err)
 	}
 
 	log.Print("Creating Prometheus Service")
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, framework.Namespace.Name, svc); err != nil {
+	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, svc); err != nil {
 		t.Fatal(err)
 	}
 
 	log.Print("Creating Prometheus ServiceMonitor")
 	s := framework.MakeBasicServiceMonitor(group)
-	if _, err := framework.MonClient.ServiceMonitors(framework.Namespace.Name).Create(s); err != nil {
-		t.Fatalf("Creating ServiceMonitor failed: ", err)
+	if _, err := framework.MonClient.ServiceMonitors(ctx.Id).Create(s); err != nil {
+		t.Fatalf("Creating ServiceMonitor failed: %v", err)
 	}
 
 	log.Print("Validating Prometheus config Secret was created")
-	_, err := framework.KubeClient.CoreV1().Secrets(framework.Namespace.Name).Get(fmt.Sprintf("prometheus-%s", prometheusName))
+	_, err := framework.KubeClient.CoreV1().Secrets(ctx.Id).Get(fmt.Sprintf("prometheus-%s", prometheusName))
 	if err != nil {
-		t.Fatalf("Generated Secret could not be retrieved: ", err)
+		t.Fatalf("Generated Secret could not be retrieved: %v", err)
 	}
 
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(framework.MakeBasicAlertmanager(alertmanagerName, 3)); err != nil {
+	if err := framework.CreateAlertmanagerAndWaitUntilReady(ctx.Id, framework.MakeBasicAlertmanager(alertmanagerName, 3)); err != nil {
 		t.Fatal(err)
 	}
 
 	log.Print("Creating Alertmanager Service")
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, framework.Namespace.Name, amsvc); err != nil {
+	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, amsvc); err != nil {
 		t.Fatal(err)
 	}
 
 	log.Print("Validating Prometheus properly discovered alertmanagers")
-	err = wait.Poll(time.Second, 18*time.Minute, isAlertmanagerDiscoveryWorking(alertmanagerName))
+	err = wait.Poll(time.Second, 18*time.Minute, isAlertmanagerDiscoveryWorking(ctx.Id, alertmanagerName))
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestExposingPrometheusWithNodePort(t *testing.T) {
-	basicPrometheus := framework.MakeBasicPrometheus("test", "test", 1)
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
+	basicPrometheus := framework.MakeBasicPrometheus(ctx.Id, "test", "test", 1)
 	service := framework.MakeBasicPrometheusNodePortService(basicPrometheus.Name, "nodeport-service", 30900)
 
 	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(basicPrometheus.Name); err != nil {
+		if err := framework.DeletePrometheusAndWaitUntilGone(ctx.Id, basicPrometheus.Name); err != nil {
 			t.Fatal(err)
 		}
-		if err := testFramework.DeleteService(framework.KubeClient, framework.Namespace.Name, service.Name); err != nil {
+		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, service.Name); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(basicPrometheus); err != nil {
+	if err := framework.CreatePrometheusAndWaitUntilReady(ctx.Id, basicPrometheus); err != nil {
 		t.Fatal("Creating prometheus failed: ", err)
 	}
 
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, framework.Namespace.Name, service); err != nil {
+	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, service); err != nil {
 		t.Fatal("Creating prometheus service failed: ", err)
 	}
 
@@ -445,27 +478,31 @@ func TestExposingPrometheusWithNodePort(t *testing.T) {
 }
 
 func TestExposingPrometheusWithKubernetesAPI(t *testing.T) {
-	basicPrometheus := framework.MakeBasicPrometheus("basic-prometheus", "test-group", 1)
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
+	basicPrometheus := framework.MakeBasicPrometheus(ctx.Id, "basic-prometheus", "test-group", 1)
 	service := framework.MakePrometheusService(basicPrometheus.Name, "test-group", v1.ServiceTypeClusterIP)
 
 	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(basicPrometheus.Name); err != nil {
+		if err := framework.DeletePrometheusAndWaitUntilGone(ctx.Id, basicPrometheus.Name); err != nil {
 			t.Fatal(err)
 		}
-		if err := testFramework.DeleteService(framework.KubeClient, framework.Namespace.Name, service.Name); err != nil {
+		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, service.Name); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(basicPrometheus); err != nil {
+	if err := framework.CreatePrometheusAndWaitUntilReady(ctx.Id, basicPrometheus); err != nil {
 		t.Fatal("Creating prometheus failed: ", err)
 	}
 
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, framework.Namespace.Name, service); err != nil {
+	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, service); err != nil {
 		t.Fatal("Creating prometheus service failed: ", err)
 	}
 
-	ProxyGet := framework.KubeClient.CoreV1().Services(framework.Namespace.Name).ProxyGet
+	ProxyGet := framework.KubeClient.CoreV1().Services(ctx.Id).ProxyGet
 	request := ProxyGet("", service.Name, "web", "/metrics", make(map[string]string))
 	_, err := request.DoRaw()
 	if err != nil {
@@ -474,45 +511,49 @@ func TestExposingPrometheusWithKubernetesAPI(t *testing.T) {
 }
 
 func TestExposingPrometheusWithIngress(t *testing.T) {
-	prometheus := framework.MakeBasicPrometheus("main", "test-group", 1)
+	ctx := testFramework.NewTestCtx(t)
+	defer ctx.CleanUp(t)
+	ctx.BasicSetup(t, framework.KubeClient)
+
+	prometheus := framework.MakeBasicPrometheus(ctx.Id, "main", "test-group", 1)
 	prometheusService := framework.MakePrometheusService(prometheus.Name, "test-group", v1.ServiceTypeClusterIP)
 	ingress := testFramework.MakeBasicIngress(prometheusService.Name, 9090)
 
 	defer func() {
-		if err := framework.DeletePrometheusAndWaitUntilGone(prometheus.Name); err != nil {
+		if err := framework.DeletePrometheusAndWaitUntilGone(ctx.Id, prometheus.Name); err != nil {
 			t.Fatal(err)
 		}
-		if err := testFramework.DeleteService(framework.KubeClient, framework.Namespace.Name, prometheusService.Name); err != nil {
+		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, prometheusService.Name); err != nil {
 			t.Fatal(err)
 		}
-		if err := framework.KubeClient.Extensions().Ingresses(framework.Namespace.Name).Delete(ingress.Name, nil); err != nil {
+		if err := framework.KubeClient.Extensions().Ingresses(ctx.Id).Delete(ingress.Name, nil); err != nil {
 			t.Fatal(err)
 		}
-		if err := testFramework.DeleteNginxIngressControllerIncDefaultBackend(framework.KubeClient, framework.Namespace.Name); err != nil {
+		if err := testFramework.DeleteNginxIngressControllerIncDefaultBackend(framework.KubeClient, ctx.Id); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	err := testFramework.SetupNginxIngressControllerIncDefaultBackend(framework.KubeClient, framework.Namespace.Name)
+	err := testFramework.SetupNginxIngressControllerIncDefaultBackend(framework.KubeClient, ctx.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = framework.CreatePrometheusAndWaitUntilReady(prometheus)
+	err = framework.CreatePrometheusAndWaitUntilReady(ctx.Id, prometheus)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, framework.Namespace.Name, prometheusService); err != nil {
+	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, prometheusService); err != nil {
 		t.Fatal(err)
 	}
 
-	err = testFramework.CreateIngress(framework.KubeClient, framework.Namespace.Name, ingress)
+	err = testFramework.CreateIngress(framework.KubeClient, ctx.Id, ingress)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ip, err := testFramework.GetIngressIP(framework.KubeClient, framework.Namespace.Name, ingress.Name)
+	ip, err := testFramework.GetIngressIP(framework.KubeClient, ctx.Id, ingress.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -522,9 +563,9 @@ func TestExposingPrometheusWithIngress(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-func isDiscoveryWorking(prometheusName string) func() (bool, error) {
+func isDiscoveryWorking(ns, prometheusName string) func() (bool, error) {
 	return func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(framework.Namespace.Name).List(prometheus.ListOptions(prometheusName))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(prometheusName))
 		if err != nil {
 			return false, err
 		}
@@ -590,9 +631,9 @@ func basicQueryWorking() (bool, error) {
 	return true, nil
 }
 
-func isAlertmanagerDiscoveryWorking(alertmanagerName string) func() (bool, error) {
+func isAlertmanagerDiscoveryWorking(ns, alertmanagerName string) func() (bool, error) {
 	return func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(framework.Namespace.Name).List(alertmanager.ListOptions(alertmanagerName))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(alertmanager.ListOptions(alertmanagerName))
 		if err != nil {
 			return false, err
 		}
