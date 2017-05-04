@@ -142,7 +142,7 @@ spec:
 
 Unrelated to Kubernetes itself, but still important is to gather various metrics about the actual nodes. Typical metrics are CPU, memory, disk and network utilization, all of these metrics can be gathered using the node_exporter.
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/exporters/node-exporter-daemonset.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter/node-exporter-daemonset.yaml)
 ```yaml
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -158,7 +158,7 @@ spec:
       hostNetwork: true
       hostPID: true
       containers:
-      - image:  quay.io/prometheus/node-exporter:v0.13.0
+      - image:  quay.io/prometheus/node-exporter:v0.14.0
         args:
         - "-collector.procfs=/host/proc"
         - "-collector.sysfs=/host/sys"
@@ -193,7 +193,7 @@ spec:
 
 And the respective `Service` manifest:
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/exporters/node-exporter-service.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter/node-exporter-service.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
@@ -216,7 +216,7 @@ spec:
 
 And last but not least, kube-state-metrics which collects information about Kubernetes objects themselves as they are accessible from the API. Find more information on what kind of metrics kube-state-metrics exposes in [its repository](https://github.com/kubernetes/kube-state-metrics).
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/exporters/kube-state-metrics-deployment.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics/kube-state-metrics-deployment.yaml)
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -232,7 +232,7 @@ spec:
       serviceAccountName: kube-state-metrics
       containers:
       - name: kube-state-metrics
-        image: gcr.io/google_containers/kube-state-metrics:v0.4.1
+        image: quay.io/coreos/kube-state-metrics:v0.5.0
         ports:
         - name: metrics
           containerPort: 8080
@@ -250,7 +250,7 @@ spec:
 
 And the respective `Service` manifest:
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/exporters/kube-state-metrics-service.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics/kube-state-metrics-service.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
