@@ -34,13 +34,11 @@ func TestAlertmanagerCreateDeleteCluster(t *testing.T) {
 
 	name := "test"
 
-	defer func() {
-		if err := framework.DeleteAlertmanagerAndWaitUntilGone(ctx.Id, name); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ctx.Id, framework.MakeBasicAlertmanager(name, 3)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.DeleteAlertmanagerAndWaitUntilGone(ctx.Id, name); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -51,12 +49,6 @@ func TestAlertmanagerScaling(t *testing.T) {
 	ctx.BasicSetup(t, framework.KubeClient)
 
 	name := "test"
-
-	defer func() {
-		if err := framework.DeleteAlertmanagerAndWaitUntilGone(ctx.Id, name); err != nil {
-			t.Fatal(err)
-		}
-	}()
 
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ctx.Id, framework.MakeBasicAlertmanager(name, 3)); err != nil {
 		t.Fatal(err)
@@ -78,13 +70,7 @@ func TestAlertmanagerVersionMigration(t *testing.T) {
 
 	name := "test"
 
-	defer func() {
-		if err := framework.DeleteAlertmanagerAndWaitUntilGone(ctx.Id, name); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
-	am := framework.MakeBasicAlertmanager(name, 3)
+	am := framework.MakeBasicAlertmanager(name, 1)
 	am.Spec.Version = "v0.6.0"
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ctx.Id, am); err != nil {
 		t.Fatal(err)
@@ -109,21 +95,14 @@ func TestExposingAlertmanagerWithNodePort(t *testing.T) {
 	alertmanager := framework.MakeBasicAlertmanager("test-alertmanager", 1)
 	alertmanagerService := framework.MakeAlertmanagerNodePortService(alertmanager.Name, "nodeport-service", 30903)
 
-	defer func() {
-		if err := framework.DeleteAlertmanagerAndWaitUntilGone(ctx.Id, alertmanager.Name); err != nil {
-			t.Fatal(err)
-		}
-		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, alertmanagerService.Name); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ctx.Id, alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, alertmanagerService); err != nil {
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, alertmanagerService); err != nil {
 		t.Fatal(err)
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
 	}
 
 	resp, err := http.Get(fmt.Sprintf("http://%s:30903/", framework.ClusterIP))
@@ -142,20 +121,11 @@ func TestExposingAlertmanagerWithKubernetesAPI(t *testing.T) {
 	alertmanager := framework.MakeBasicAlertmanager("test-alertmanager", 1)
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
-	defer func() {
-		if err := framework.DeleteAlertmanagerAndWaitUntilGone(ctx.Id, alertmanager.Name); err != nil {
-			t.Fatal(err)
-		}
-		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, alertmanagerService.Name); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ctx.Id, alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, alertmanagerService); err != nil {
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, alertmanagerService); err != nil {
 		t.Fatal(err)
 	}
 
@@ -176,21 +146,6 @@ func TestExposingAlertmanagerWithIngress(t *testing.T) {
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "test-group", v1.ServiceTypeClusterIP)
 	ingress := testFramework.MakeBasicIngress(alertmanagerService.Name, 9093)
 
-	defer func() {
-		if err := framework.DeleteAlertmanagerAndWaitUntilGone(ctx.Id, alertmanager.Name); err != nil {
-			t.Fatal(err)
-		}
-		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, alertmanagerService.Name); err != nil {
-			t.Fatal(err)
-		}
-		if err := framework.KubeClient.Extensions().Ingresses(ctx.Id).Delete(ingress.Name, nil); err != nil {
-			t.Fatal(err)
-		}
-		if err := testFramework.DeleteNginxIngressControllerIncDefaultBackend(framework.KubeClient, ctx.Id); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
 	if err := testFramework.SetupNginxIngressControllerIncDefaultBackend(framework.KubeClient, ctx.Id); err != nil {
 		t.Fatal(err)
 	}
@@ -199,7 +154,7 @@ func TestExposingAlertmanagerWithIngress(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, alertmanagerService); err != nil {
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, alertmanagerService); err != nil {
 		t.Fatal(err)
 	}
 
@@ -236,20 +191,11 @@ func TestMeshInitialization(t *testing.T) {
 
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
-	defer func() {
-		if err := framework.DeleteAlertmanagerAndWaitUntilGone(ctx.Id, alertmanager.Name); err != nil {
-			t.Fatal(err)
-		}
-		if err := testFramework.DeleteService(framework.KubeClient, ctx.Id, alertmanagerService.Name); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ctx.Id, alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, alertmanagerService); err != nil {
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ctx.Id, alertmanagerService); err != nil {
 		t.Fatal(err)
 	}
 
@@ -305,12 +251,6 @@ receivers:
 			"alertmanager.yaml": []byte(firstConfig),
 		},
 	}
-
-	defer func() {
-		if err := framework.DeleteAlertmanagerAndWaitUntilGone(ctx.Id, alertmanager.Name); err != nil {
-			t.Fatal(err)
-		}
-	}()
 
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ctx.Id, alertmanager); err != nil {
 		t.Fatal(err)

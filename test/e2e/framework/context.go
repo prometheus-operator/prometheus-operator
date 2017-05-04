@@ -31,23 +31,28 @@ func (ctx *TestCtx) BasicSetup(t *testing.T, kubeClient kubernetes.Interface) {
 		t.Fatal(err)
 	}
 
-	ctx.cleanUpFns = append(ctx.cleanUpFns, func() error {
+	namespaceFinalizerFn := func() error {
 		if err := DeleteNamespace(kubeClient, ctx.Id); err != nil {
 			return err
 		}
 		return nil
-	})
+	}
+
+	ctx.AddFinalizerFn(namespaceFinalizerFn)
 }
 
 func (ctx *TestCtx) CleanUp(t *testing.T) {
 	var eg errgroup.Group
 
-	// TODO: Should be a stack not a list
-	for _, f := range ctx.cleanUpFns {
-		eg.Go(f)
+	for i := len(ctx.cleanUpFns) - 1; i >= 0; i-- {
+		eg.Go(ctx.cleanUpFns[i])
 	}
 
 	if err := eg.Wait(); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func (ctx *TestCtx) AddFinalizerFn(fn finalizerFn) {
+	ctx.cleanUpFns = append(ctx.cleanUpFns, fn)
 }

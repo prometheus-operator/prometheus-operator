@@ -90,7 +90,11 @@ func WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {
 		return false, nil
 	})
 
-	return errors.Wrap(err, fmt.Sprintf("waiting for %v to return a successfull status code timed out. Last response from server was: %v", url, resp))
+	return errors.Wrap(err, fmt.Sprintf(
+		"waiting for %v to return a successfull status code timed out. Last response from server was: %v",
+		url,
+		resp,
+	))
 }
 
 func podRunsImage(p v1.Pod, image string) bool {

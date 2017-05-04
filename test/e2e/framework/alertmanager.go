@@ -131,7 +131,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *v1alpha1.A
 	err = WaitForPodsReady(
 		f.KubeClient,
 		ns,
-		f.DefaultTimeout,
+		3*time.Minute,
 		int(*a.Spec.Replicas),
 		alertmanager.ListOptions(a.Name),
 	)

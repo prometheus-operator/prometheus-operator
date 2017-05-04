@@ -35,21 +35,23 @@ func TestMain(m *testing.M) {
 	ip := flag.String("cluster-ip", "", "ip of the kubernetes cluster to use for external requests")
 	flag.Parse()
 
-	log.Println("setting up e2e tests ...")
-	var err error
+	var (
+		err  error
+		code int = 0
+	)
+
 	if framework, err = operatorFramework.New(*ns, *kubeconfig, *opImage, *ip); err != nil {
 		log.Printf("failed to setup framework: %v\n", err)
 		os.Exit(1)
 	}
-	log.Println("e2e setup successful")
 
-	code := m.Run()
+	defer func() {
+		if err := framework.Teardown(); err != nil {
+			log.Printf("failed to teardown framework: %v\n", err)
+			os.Exit(1)
+		}
+		os.Exit(code)
+	}()
 
-	log.Println("e2e teardown started ...")
-	if err := framework.Teardown(); err != nil {
-		log.Printf("failed to teardown framework: %v\n", err)
-		os.Exit(1)
-	}
-	log.Println("e2e teardown successful")
-	os.Exit(code)
+	code = m.Run()
 }
