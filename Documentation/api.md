@@ -70,6 +70,15 @@ Most recent observed status of the Alertmanager cluster. Read-only. Not included
 | availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this Alertmanager cluster. | int32 | true |
 | unavailableReplicas | Total number of unavailable pods targeted by this Alertmanager cluster. | int32 | true |
 
+## BasicAuth
+
+BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| username | The secret that contains the username for authenticate | v1.SecretKeySelector | false |
+| password | The secret that contains the password for authenticate | v1.SecretKeySelector | false |
+
 ## Endpoint
 
 Endpoint defines a scrapeable endpoint serving Prometheus metrics.
@@ -84,6 +93,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | tlsConfig | TLS configuration to use when scraping the endpoint | *[TLSConfig](#tlsconfig) | false |
 | bearerTokenFile | File to read bearer token for scraping targets. | string | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
+| basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
 
 ## NamespaceSelector
 

@@ -194,10 +194,13 @@ type Endpoint struct {
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	HonorLabels bool `json:"honorLabels,omitempty"`
-
-	BasicAuth *BasicAuth `json:basicAuth,omitempty`
+	// BasicAuth allow an endpoint to authenticate over basic authentication
+	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 }
 
+// BasicAuth allow an endpoint to authenticate over basic authentication
+// More info: https://prometheus.io/docs/operating/configuration/#endpoints
 type BasicAuth struct {
 	// The secret that contains the username for authenticate
 	Username v1.SecretKeySelector`json:"username,omitempty"`
