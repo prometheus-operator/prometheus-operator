@@ -6,6 +6,7 @@ There are various kinds of volumes supported by Kubernetes. The Prometheus Opera
 
 This document assumes you have a basic understanding of `PersisentVolume`s, `PersisentVolumeClaim`s, and their [provisioning](https://kubernetes.io/docs/user-guide/persistent-volumes/#provisioning).
 
+
 ## Storage Provisioning on AWS
 
 For automatic provisioning of storage a `StorageClass` is required.
@@ -42,6 +43,7 @@ spec:
 > The full documentation of the `storage` field can be found in the [spec documentation](../api.md#storagespec).
 
 When now creating the `Prometheus` object a `PersistentVolumeClaim` is used for each `Pod` in the `StatefulSet` and the storage should automatically be provisioned, mounted and used.
+
 
 ## Manual storage provisioning
 
@@ -84,4 +86,28 @@ spec:
   nfs:
     server: myServer
     path: "/path/to/prom/db"
+```
+
+### Disabling Default StorageClasses
+
+In order to manually provoision volumes, as of Kubernetes 1.6.0, you may need to disable the default `StorageClass` that is automatically created for certain Cloud Providers. Default StorageClasses are pre-installed on Azure, AWS, GCE, OpenStack, and vSphere. 
+
+The default `StorageClass`s behavior will override manual storage provisioning, causing `PerisistentVolumeClaim`s not to bind manually created `PersistentVolume`s automatically. 
+
+To override this behavior, you must explicitely create the same resource, but set it to *not* be default ([see changelog for details](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#volumes)).
+
+To accomplish this on a Google Container Engine cluster, create the following `StorageClass`:
+
+```yaml
+kind: StorageClass
+apiVersion: storage.k8s.io/v1beta1
+metadata:
+  name: standard 
+  annotations:
+    # disable this default storage class by setting this annotation to false.
+    storageclass.beta.kubernetes.io/is-default-class: "false"
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+  zone: us-east1-d
 ```
