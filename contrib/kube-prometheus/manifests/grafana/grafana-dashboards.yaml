@@ -1782,7 +1782,7 @@ data:
                                 "step": 10
                             },
                             {
-                                "expr": "kube_pod_container_requested_memory_bytes{pod=\"$pod\", container=~\"$container\"}",
+                                "expr": "kube_pod_container_requested_memory_bytes{exported_pod=\"$pod\", container=~\"$container\"}",
                                 "interval": "10s",
                                 "intervalFactor": 2,
                                 "legendFormat": "Requested: {{ container }}",
@@ -2031,7 +2031,7 @@ data:
                     "multi": false,
                     "name": "pod",
                     "options": [],
-                    "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
+                    "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, exported_pod)",
                     "refresh": 1,
                     "regex": "",
                     "type": "query"
@@ -2046,7 +2046,7 @@ data:
                     "multi": false,
                     "name": "container",
                     "options": [],
-                    "query": "label_values(kube_pod_container_info{exported_namespace=\"$namespace\", pod=\"$pod\"}, container)",
+                    "query": "label_values(kube_pod_container_info{exported_namespace=\"$namespace\", exported_pod=\"$pod\"}, container)",
                     "refresh": 1,
                     "regex": "",
                     "type": "query"
