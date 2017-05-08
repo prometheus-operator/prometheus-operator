@@ -213,21 +213,6 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 			"target_label":  "namespace",
 		},
 		map[string]interface{}{
-			"action":      "labelmap",
-			"regex":       "__meta_kubernetes_service_label_(.+)",
-			"replacement": "svc_$1",
-		},
-		map[string]interface{}{
-			"action":       "replace",
-			"target_label": "__meta_kubernetes_pod_label_pod_template_hash",
-			"replacement":  "",
-		},
-		map[string]interface{}{
-			"action":      "labelmap",
-			"regex":       "__meta_kubernetes_pod_label_(.+)",
-			"replacement": "pod_$1",
-		},
-		map[string]interface{}{
 			"source_labels": []string{"__meta_kubernetes_pod_name"},
 			"target_label":  "pod",
 		},
