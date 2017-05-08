@@ -397,18 +397,19 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 						Args:         promArgs,
 						VolumeMounts: promVolumeMounts,
 						LivenessProbe: &v1.Probe{
-							Handler:          probeHandler,
-							TimeoutSeconds:   probeTimeoutSeconds,
-							FailureThreshold: 10,
-						},
-						ReadinessProbe: &v1.Probe{
-							Handler:             probeHandler,
-							InitialDelaySeconds: 1,
-							TimeoutSeconds:      probeTimeoutSeconds,
-							PeriodSeconds:       5,
+							Handler: probeHandler,
 							// For larger servers, restoring a checkpoint on startup may take quite a bit of time.
 							// Wait up to 5 minutes.
-							FailureThreshold: 100,
+							InitialDelaySeconds: 300,
+							PeriodSeconds:       5,
+							TimeoutSeconds:      probeTimeoutSeconds,
+							FailureThreshold:    10,
+						},
+						ReadinessProbe: &v1.Probe{
+							Handler:          probeHandler,
+							TimeoutSeconds:   probeTimeoutSeconds,
+							PeriodSeconds:    5,
+							FailureThreshold: 6,
 						},
 						Resources: p.Spec.Resources,
 					}, {
