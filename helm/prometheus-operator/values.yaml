@@ -10,7 +10,7 @@ global:
 ##
 image:
   repository: quay.io/coreos/prometheus-operator
-  tag: v0.7.0
+  tag: v0.8.2
   pullPolicy: IfNotPresent
 
 ## Node labels for prometheus-operator pod assignment
@@ -37,9 +37,8 @@ resources: {}
   #   cpu: 100m
   #   memory: 50Mi
 
-## The prometheus operator will create an endpoint for the kubelet.
-## Format: namespace/name
+## If enabled, prometheus-operator will create a service for scraping kubelets
 ##
-kubeletObject:
+kubeletService:
   enable: true
-  object: kube-system/kubelet
+  name: kube-system/kubelet

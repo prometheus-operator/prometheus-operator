@@ -22,9 +22,9 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           args:
-            {{- if .Values.kubeletObject.enable }}
-            - --kubelet-object={{ .Values.kubeletObject.object }}
-            {{- end }}
+          {{- if .Values.kubeletService.enable }}
+            - --kubelet-object={{ .Values.kubeletService.name }}
+          {{- end }}
             - --analytics={{ .Values.sendAnalytics }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}

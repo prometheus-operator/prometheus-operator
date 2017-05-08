@@ -81,14 +81,14 @@ Parameter | Description | Default
 `global.hyperkube.tag` | Hyperkube image tag | `v1.5.6_coreos.0`
 `global.hyperkube.pullPolicy` | Hyperkube image pull policy | `IfNotPresent`
 `image.repository` | Image | `quay.io/coreos/prometheus-operator`
-`image.tag` | Image tag | `v0.7.0`
+`image.tag` | Image tag | `v0.8.2`
 `image.pullPolicy` | Image pull policy | `IfNotPresent`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `rbacEnable` | If true, create & use RBAC resources | `true`
 `resources` | Pod resource requests & limits | `{}`
 `sendAnalytics` | Collect & send anonymous usage statistics | `true`
-`kubeletObject.enable` | Enable ``--kubelet-object`` option for the operator | `true`
-`kubeletObject.object` | The value given to the ``--kubelet-object`` option | `kube-system/kubelet`
+`kubeletService.enable` | Enable ``--kubelet-object`` option for the operator | `true`
+`kubeletService.name` | The value given to the ``--kubelet-object`` option | `kube-system/kubelet`
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
