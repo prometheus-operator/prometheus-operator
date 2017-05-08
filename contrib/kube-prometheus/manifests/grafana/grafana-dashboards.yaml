@@ -1218,7 +1218,7 @@ data:
                         },
                         "targets": [
                             {
-                                "expr": "max(kube_deployment_spec_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance, pod)",
+                                "expr": "max(kube_deployment_spec_replicas{deployment=\"$deployment_name\",exported_namespace=\"$deployment_namespace\"}) without (instance, pod)",
                                 "intervalFactor": 2,
                                 "metric": "kube_deployment_spec_replicas",
                                 "refId": "A",
@@ -1296,7 +1296,7 @@ data:
                         },
                         "targets": [
                             {
-                                "expr": "min(kube_deployment_status_replicas_available{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance, pod)",
+                                "expr": "min(kube_deployment_status_replicas_available{deployment=\"$deployment_name\",exported_namespace=\"$deployment_namespace\"}) without (instance, pod)",
                                 "intervalFactor": 2,
                                 "refId": "A",
                                 "step": 600
@@ -1373,7 +1373,7 @@ data:
                         },
                         "targets": [
                             {
-                                "expr": "max(kube_deployment_status_observed_generation{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance, pod)",
+                                "expr": "max(kube_deployment_status_observed_generation{deployment=\"$deployment_name\",exported_namespace=\"$deployment_namespace\"}) without (instance, pod)",
                                 "intervalFactor": 2,
                                 "legendFormat": "",
                                 "refId": "A",
@@ -1451,7 +1451,7 @@ data:
                         },
                         "targets": [
                             {
-                                "expr": "max(kube_deployment_metadata_generation{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance, pod)",
+                                "expr": "max(kube_deployment_metadata_generation{deployment=\"$deployment_name\",exported_namespace=\"$deployment_namespace\"}) without (instance, pod)",
                                 "intervalFactor": 2,
                                 "legendFormat": "",
                                 "refId": "A",
@@ -1518,35 +1518,35 @@ data:
                         "steppedLine": false,
                         "targets": [
                             {
-                                "expr": "max(kube_deployment_status_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance, pod)",
+                                "expr": "max(kube_deployment_status_replicas{deployment=\"$deployment_name\",exported_namespace=\"$deployment_namespace\"}) without (instance, pod)",
                                 "intervalFactor": 2,
                                 "legendFormat": "current replicas",
                                 "refId": "A",
                                 "step": 30
                             },
                             {
-                                "expr": "min(kube_deployment_status_replicas_available{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance, pod)",
+                                "expr": "min(kube_deployment_status_replicas_available{deployment=\"$deployment_name\",exported_namespace=\"$deployment_namespace\"}) without (instance, pod)",
                                 "intervalFactor": 2,
                                 "legendFormat": "available",
                                 "refId": "B",
                                 "step": 30
                             },
                             {
-                                "expr": "max(kube_deployment_status_replicas_unavailable{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance, pod)",
+                                "expr": "max(kube_deployment_status_replicas_unavailable{deployment=\"$deployment_name\",exported_namespace=\"$deployment_namespace\"}) without (instance, pod)",
                                 "intervalFactor": 2,
                                 "legendFormat": "unavailable",
                                 "refId": "C",
                                 "step": 30
                             },
                             {
-                                "expr": "min(kube_deployment_status_replicas_updated{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance, pod)",
+                                "expr": "min(kube_deployment_status_replicas_updated{deployment=\"$deployment_name\",exported_namespace=\"$deployment_namespace\"}) without (instance, pod)",
                                 "intervalFactor": 2,
                                 "legendFormat": "updated",
                                 "refId": "D",
                                 "step": 30
                             },
                             {
-                                "expr": "max(kube_deployment_spec_replicas{deployment=\"$deployment_name\",namespace=\"$deployment_namespace\"}) without (instance, pod)",
+                                "expr": "max(kube_deployment_spec_replicas{deployment=\"$deployment_name\",exported_namespace=\"$deployment_namespace\"}) without (instance, pod)",
                                 "intervalFactor": 2,
                                 "legendFormat": "desired",
                                 "refId": "E",
@@ -1611,7 +1611,7 @@ data:
                     "multi": false,
                     "name": "deployment_namespace",
                     "options": [],
-                    "query": "label_values(kube_deployment_metadata_generation, namespace)",
+                    "query": "label_values(kube_deployment_metadata_generation, exported_namespace)",
                     "refresh": 1,
                     "regex": "",
                     "sort": 0,
@@ -1630,7 +1630,7 @@ data:
                     "multi": false,
                     "name": "deployment_name",
                     "options": [],
-                    "query": "label_values(kube_deployment_metadata_generation{namespace=\"$deployment_namespace\"}, deployment)",
+                    "query": "label_values(kube_deployment_metadata_generation{exported_namespace=\"$deployment_namespace\"}, deployment)",
                     "refresh": 1,
                     "regex": "",
                     "sort": 0,
@@ -1782,7 +1782,7 @@ data:
                                 "step": 10
                             },
                             {
-                                "expr": "kube_pod_container_requested_memory_bytes{pod=\"$pod\", container=~\"$container\"}",
+                                "expr": "kube_pod_container_requested_memory_bytes{exported_pod=\"$pod\", container=~\"$container\"}",
                                 "interval": "10s",
                                 "intervalFactor": 2,
                                 "legendFormat": "Requested: {{ container }}",
@@ -2017,7 +2017,7 @@ data:
                     "multi": false,
                     "name": "namespace",
                     "options": [],
-                    "query": "label_values(kube_pod_info, namespace)",
+                    "query": "label_values(kube_pod_info, exported_namespace)",
                     "refresh": 1,
                     "regex": "",
                     "type": "query"
@@ -2031,7 +2031,7 @@ data:
                     "multi": false,
                     "name": "pod",
                     "options": [],
-                    "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)",
+                    "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, exported_pod)",
                     "refresh": 1,
                     "regex": "",
                     "type": "query"
@@ -2046,7 +2046,7 @@ data:
                     "multi": false,
                     "name": "container",
                     "options": [],
-                    "query": "label_values(kube_pod_container_info{namespace=\"$namespace\", pod=\"$pod\"}, container)",
+                    "query": "label_values(kube_pod_container_info{exported_namespace=\"$namespace\", exported_pod=\"$pod\"}, container)",
                     "refresh": 1,
                     "regex": "",
                     "type": "query"
