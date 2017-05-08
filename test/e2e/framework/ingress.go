@@ -58,7 +58,7 @@ func MakeBasicIngress(serviceName string, servicePort int) *v1beta1.Ingress {
 
 func CreateIngress(kubeClient kubernetes.Interface, namespace string, i *v1beta1.Ingress) error {
 	_, err := kubeClient.Extensions().Ingresses(namespace).Create(i)
-	return errors.Wrap(err, fmt.Sprintf("creating the ingress %v failed", i.Name))
+	return errors.Wrap(err, fmt.Sprintf("creating ingress %v failed", i.Name))
 }
 
 func SetupNginxIngressControllerIncDefaultBackend(kubeClient kubernetes.Interface, namespace string) error {

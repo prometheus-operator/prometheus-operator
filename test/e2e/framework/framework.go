@@ -26,6 +26,7 @@ import (
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/pkg/errors"
 )
 
 type Framework struct {
@@ -61,11 +62,7 @@ func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 		return nil, err
 	}
 
-	namespace, err := cli.Core().Namespaces().Create(&v1.Namespace{
-		ObjectMeta: v1.ObjectMeta{
-			Name: ns,
-		},
-	})
+	namespace, err := CreateNamespace(cli, ns)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +111,7 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	opts := v1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
 	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, f.DefaultTimeout, 1, opts)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to wait for prometheus operator to become ready")
 	}
 
 	pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
@@ -149,8 +146,7 @@ func (f *Framework) Teardown() error {
 	if err := f.KubeClient.Extensions().Deployments(f.Namespace.Name).Delete("prometheus-operator", nil); err != nil {
 		return err
 	}
-
-	if err := f.KubeClient.Core().Namespaces().Delete(f.Namespace.Name, nil); err != nil {
+	if err := DeleteNamespace(f.KubeClient, f.Namespace.Name); err != nil {
 		return err
 	}
 

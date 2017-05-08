@@ -1,4 +1,4 @@
-FROM golang:1.7.5-wheezy
+FROM golang:1.8.1-stretch
 
 ENV TERRAFORM_VERSION 0.8.7
 ENV KOPS_VERSION 1.5.1
@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     wget \
     unzip \
-    python python-pip jq \
+    python python-pip jq python-setuptools \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl https://get.docker.com/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz | tar -xvz && \
