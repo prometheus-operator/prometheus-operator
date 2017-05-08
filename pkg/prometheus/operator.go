@@ -169,7 +169,9 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		&v1.Secret{}, resyncPeriod, cache.Indexers{},
 	)
 	c.secrInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleSecretAdd,
 		DeleteFunc: c.handleSecretDelete,
+		UpdateFunc: c.handleSecretUpdate,
 	})
 
 	c.ssetInf = cache.NewSharedIndexInformer(
@@ -412,21 +414,22 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 
 func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
-	if !ok {
-		return
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
 	}
+}
 
-	key, ok := c.keyFunc(o)
-	if !ok {
-		return
+func (c *Operator) handleSecretUpdate(old, cur interface{}) {
+	o, ok := c.getObject(cur)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
 	}
+}
 
-	_, exists, err := c.promInf.GetIndexer().GetByKey(key)
-	if err != nil {
-		c.logger.Log("msg", "index lookup failed", "err", err)
-	}
-	if exists {
-		c.enqueue(key)
+func (c *Operator) handleSecretAdd(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
 	}
 }
 
