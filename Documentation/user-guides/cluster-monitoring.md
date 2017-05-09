@@ -357,6 +357,7 @@ spec:
   endpoints:
   - port: http-metrics
     interval: 15s
+    honorLabels: true
 ```
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-k8s-apps-http.yaml)
