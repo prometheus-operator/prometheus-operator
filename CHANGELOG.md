@@ -1,3 +1,17 @@
+## 0.9.0 / 2017-05-09
+
+* [CHANGE] The `kubelet-object` flag has been renamed to `kubelet-service`.
+* [CHANGE] Remove automatic relabelling of Pod and Service labels onto targets.
+* [CHANGE] Remove "non-namespaced" alpha annotation in favor of `honor_labels`.
+* [FEATURE] Add ability make use of the Prometheus `honor_labels` configuration option.
+* [FEATURE] Add ability to specify image pull secrets for Prometheus and Alertmanager pods.
+* [FEATURE] Add basic auth configuration option through ServiceMonitor.
+* [ENHANCEMENT] Add liveness and readiness probes to Prometheus and Alertmanger pods.
+* [ENHANCEMENT] Add default resource requests for Alertmanager pods.
+* [ENHANCEMENT] Fallback to ExternalIPs when InternalIPs are not available in kubelet sync.
+* [ENHANCEMENT] Improved change detection to trigger Prometheus rollout.
+* [ENHANCEMENT] Do not delete unmanaged Prometheus configuration Secret.
+
 ## 0.8.2 / 2017-04-20
 
 * [ENHANCEMENT] Use new Prometheus 1.6 storage flags and make it default.
