@@ -23,7 +23,7 @@ spec:
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           args:
           {{- if .Values.kubeletService.enable }}
-            - --kubelet-object={{ .Values.kubeletService.name }}
+            - --kubelet-object={{ .Values.kubeletService.namespace }}/{{ .Values.kubeletService.name }}
           {{- end }}
             - --analytics={{ .Values.sendAnalytics }}
           resources:
