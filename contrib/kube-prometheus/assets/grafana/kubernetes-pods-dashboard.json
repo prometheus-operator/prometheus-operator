@@ -92,11 +92,11 @@
                             "step": 10
                         },
                         {
-                            "expr": "kube_pod_container_requested_memory_bytes{pod=\"$pod\", container=~\"$container\"}",
+                            "expr": "kube_pod_container_resource_requests_memory_bytes{pod=\"$pod\", container=~\"$container\"}",
                             "interval": "10s",
                             "intervalFactor": 2,
                             "legendFormat": "Requested: {{ container }}",
-                            "metric": "kube_pod_container_requested_memory_bytes",
+                            "metric": "kube_pod_container_resource_requests_memory_bytes",
                             "refId": "B",
                             "step": 20
                         }
