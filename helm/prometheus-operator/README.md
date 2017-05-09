@@ -81,7 +81,7 @@ Parameter | Description | Default
 `global.hyperkube.tag` | Hyperkube image tag | `v1.6.2_coreos.0`
 `global.hyperkube.pullPolicy` | Hyperkube image pull policy | `IfNotPresent`
 `image.repository` | Image | `quay.io/coreos/prometheus-operator`
-`image.tag` | Image tag | `v0.8.2`
+`image.tag` | Image tag | `v0.9.0`
 `image.pullPolicy` | Image pull policy | `IfNotPresent`
 `kubeletService.enable` | If true, the operator will create a service for scraping kubelets | `true`
 `kubeletService.namespace` | The namespace in which the kubelet service should be created | `kube-system`

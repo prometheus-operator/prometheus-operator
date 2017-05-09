@@ -10,7 +10,7 @@ global:
 ##
 image:
   repository: quay.io/coreos/prometheus-operator
-  tag: v0.8.2
+  tag: v0.9.0
   pullPolicy: IfNotPresent
 
 ## If enabled, prometheus-operator will create a service for scraping kubelets
