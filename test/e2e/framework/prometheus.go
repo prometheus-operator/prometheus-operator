@@ -32,11 +32,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (f *Framework) MakeBasicPrometheus(name, group string, replicas int32) *v1alpha1.Prometheus {
+func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *v1alpha1.Prometheus {
 	return &v1alpha1.Prometheus{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      name,
-			Namespace: f.Namespace.Name,
+			Namespace: ns,
 		},
 		Spec: v1alpha1.PrometheusSpec{
 			Replicas: &replicas,
@@ -59,11 +59,11 @@ func (f *Framework) MakeBasicPrometheus(name, group string, replicas int32) *v1a
 	}
 }
 
-func (f *Framework) AddAlertingToPrometheus(p *v1alpha1.Prometheus, name string) {
+func (f *Framework) AddAlertingToPrometheus(p *v1alpha1.Prometheus, ns, name string) {
 	p.Spec.Alerting = v1alpha1.AlertingSpec{
 		Alertmanagers: []v1alpha1.AlertmanagerEndpoints{
 			v1alpha1.AlertmanagerEndpoints{
-				Namespace: f.Namespace.Name,
+				Namespace: ns,
 				Name:      fmt.Sprintf("alertmanager-%s", name),
 				Port:      intstr.FromString("web"),
 			},
@@ -126,28 +126,26 @@ func (f *Framework) MakePrometheusService(name, group string, serviceType v1.Ser
 	return service
 }
 
-func (f *Framework) CreatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) error {
-	log.Printf("Creating Prometheus (%s/%s)", f.Namespace.Name, p.Name)
-	_, err := f.MonClient.Prometheuses(f.Namespace.Name).Create(p)
+func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *v1alpha1.Prometheus) error {
+	_, err := f.MonClient.Prometheuses(ns).Create(p)
 	if err != nil {
 		return err
 	}
 
-	if err := f.WaitForPrometheusReady(p, time.Minute); err != nil {
-		return fmt.Errorf("failed to create %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
+	if err := f.WaitForPrometheusReady(p, 5*time.Minute); err != nil {
+		return fmt.Errorf("failed to create %d Prometheus instances (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
 	return nil
 }
 
-func (f *Framework) UpdatePrometheusAndWaitUntilReady(p *v1alpha1.Prometheus) error {
-	log.Printf("Updating Prometheus (%s/%s)", f.Namespace.Name, p.Name)
-	_, err := f.MonClient.Prometheuses(f.Namespace.Name).Update(p)
+func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *v1alpha1.Prometheus) error {
+	_, err := f.MonClient.Prometheuses(ns).Update(p)
 	if err != nil {
 		return err
 	}
-	if err := f.WaitForPrometheusReady(p, time.Minute); err != nil {
-		return fmt.Errorf("failed to update %d Prometheus instances (%s): %v", p.Spec.Replicas, p.Name, err)
+	if err := f.WaitForPrometheusReady(p, 5*time.Minute); err != nil {
+		return fmt.Errorf("failed to update %d Prometheus instances (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
 	return nil
@@ -157,26 +155,26 @@ func (f *Framework) WaitForPrometheusReady(p *v1alpha1.Prometheus, timeout time.
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
 		st, _, err := prometheus.PrometheusStatus(f.KubeClient, p)
 		if err != nil {
-			return false, err
+			log.Print(err)
+			return false, nil
 		}
 		return st.UpdatedReplicas == *p.Spec.Replicas, nil
 	})
 }
 
-func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
-	log.Printf("Deleting Prometheus (%s/%s)", f.Namespace.Name, name)
-	_, err := f.MonClient.Prometheuses(f.Namespace.Name).Get(name)
+func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
+	_, err := f.MonClient.Prometheuses(ns).Get(name)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting Prometheus tpr %v failed", name))
 	}
 
-	if err := f.MonClient.Prometheuses(f.Namespace.Name).Delete(name, nil); err != nil {
+	if err := f.MonClient.Prometheuses(ns).Delete(name, nil); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting Prometheus tpr %v failed", name))
 	}
 
 	if err := WaitForPodsReady(
 		f.KubeClient,
-		f.Namespace.Name,
+		ns,
 		f.DefaultTimeout,
 		0,
 		prometheus.ListOptions(name),
@@ -187,13 +185,13 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(name string) error {
 	return nil
 }
 
-func (f *Framework) WaitForPrometheusRunImageAndReady(p *v1alpha1.Prometheus) error {
-	if err := WaitForPodsRunImage(f.KubeClient, f.Namespace.Name, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
+func (f *Framework) WaitForPrometheusRunImageAndReady(ns string, p *v1alpha1.Prometheus) error {
+	if err := WaitForPodsRunImage(f.KubeClient, ns, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
 		return err
 	}
 	return WaitForPodsReady(
 		f.KubeClient,
-		f.Namespace.Name,
+		ns,
 		f.DefaultTimeout,
 		int(*p.Spec.Replicas),
 		prometheus.ListOptions(p.Name),
