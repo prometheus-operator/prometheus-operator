@@ -78,17 +78,18 @@ The following tables lists the configurable parameters of the prometheus-operato
 Parameter | Description | Default
 --- | --- | ---
 `global.hyperkube.repository` | Hyperkube image | `quay.io/coreos/hyperkube`
-`global.hyperkube.tag` | Hyperkube image tag | `v1.5.6_coreos.0`
+`global.hyperkube.tag` | Hyperkube image tag | `v1.6.2_coreos.0`
 `global.hyperkube.pullPolicy` | Hyperkube image pull policy | `IfNotPresent`
 `image.repository` | Image | `quay.io/coreos/prometheus-operator`
-`image.tag` | Image tag | `v0.7.0`
+`image.tag` | Image tag | `v0.9.0`
 `image.pullPolicy` | Image pull policy | `IfNotPresent`
+`kubeletService.enable` | If true, the operator will create a service for scraping kubelets | `true`
+`kubeletService.namespace` | The namespace in which the kubelet service should be created | `kube-system`
+`kubeletService.name` | The name of the kubelet service to be created | `kubelet`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `rbacEnable` | If true, create & use RBAC resources | `true`
 `resources` | Pod resource requests & limits | `{}`
 `sendAnalytics` | Collect & send anonymous usage statistics | `true`
-`kubeletObject.enable` | Enable ``--kubelet-object`` option for the operator | `true`
-`kubeletObject.object` | The value given to the ``--kubelet-object`` option | `kube-system/kubelet`
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
