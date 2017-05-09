@@ -24,7 +24,7 @@ Once you complete this guide you will monitor the following:
 
 ## Preparing Kubernetes Components
 
-The manifests used here use the [Prometheus Operator](https://github.com/coreos/prometheus-operator), which manages Prometheus servers and their configuration in a cluster. Prometheus discovers targets through `Endpoints` objects, which means all targets that are running as `Pod`s in the Kubernetes cluster are easily monitored. Many Kubernetes components can be [self-hosted](https://coreos.com/blog/self-hosted-kubernetes.html) today. The kubelet, however, is not. Therefore the Prometheus Operator implements a functionality to synchronize the kubelets into an `Endpoints` object. To make use of that functionality the `--kubelet-object` argument must be passed to the Prometheus Operator when running it.
+The manifests used here use the [Prometheus Operator](https://github.com/coreos/prometheus-operator), which manages Prometheus servers and their configuration in a cluster. Prometheus discovers targets through `Endpoints` objects, which means all targets that are running as `Pod`s in the Kubernetes cluster are easily monitored. Many Kubernetes components can be [self-hosted](https://coreos.com/blog/self-hosted-kubernetes.html) today. The kubelet, however, is not. Therefore the Prometheus Operator implements a functionality to synchronize the kubelets into an `Endpoints` object. To make use of that functionality the `--kubelet-service` argument must be passed to the Prometheus Operator when running it.
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml)
 ```yaml
@@ -46,7 +46,7 @@ spec:
        - name: prometheus-operator
          image: quay.io/coreos/prometheus-operator:v0.8.2
          args:
-         - "--kubelet-object=kube-system/kubelet"
+         - "--kubelet-service=kube-system/kubelet"
          - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
          resources:
            requests:
