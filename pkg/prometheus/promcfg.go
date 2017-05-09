@@ -37,7 +37,7 @@ func configMapRuleFileFolder(configMapNumber int) string {
 	return fmt.Sprintf("/etc/prometheus/rules/rules-%d/", configMapNumber)
 }
 
-func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int) ([]byte, error) {
+func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
 	cfg := map[string]interface{}{}
 
 	cfg["global"] = map[string]string{
@@ -56,7 +56,7 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 	var scrapeConfigs []interface{}
 	for _, mon := range mons {
 		for i, ep := range mon.Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mon, ep, i))
+			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mon, ep, i, basicAuthSecrets))
 		}
 	}
 	var alertmanagerConfigs []interface{}
@@ -72,7 +72,7 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 	return yaml.Marshal(cfg)
 }
 
-func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int) interface{} {
+func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int, basicAuthSecrets map[string]BasicAuthCredentials) interface{} {
 	cfg := map[string]interface{}{
 		"job_name":     fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
 		"honor_labels": ep.HonorLabels,
@@ -112,6 +112,16 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	}
 	if ep.BearerTokenFile != "" {
 		cfg["bearer_token_file"] = ep.BearerTokenFile
+	}
+
+	if ep.BasicAuth != nil {
+		if s, ok := basicAuthSecrets[fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)]; ok {
+			cfg["basic_auth"] = map[string]interface{}{
+				"username": s.username,
+				"password": s.password,
+			}
+		}
+
 	}
 
 	var relabelings []interface{}

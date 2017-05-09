@@ -82,6 +82,11 @@ type Config struct {
 	PrometheusConfigReloader string
 }
 
+type BasicAuthCredentials struct {
+	username string
+	password string
+}
+
 // New creates a new controller.
 func New(conf Config, logger log.Logger) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
@@ -164,7 +169,9 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		&v1.Secret{}, resyncPeriod, cache.Indexers{},
 	)
 	c.secrInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleSecretAdd,
 		DeleteFunc: c.handleSecretDelete,
+		UpdateFunc: c.handleSecretUpdate,
 	})
 
 	c.ssetInf = cache.NewSharedIndexInformer(
@@ -407,21 +414,22 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 
 func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
-	if !ok {
-		return
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
 	}
+}
 
-	key, ok := c.keyFunc(o)
-	if !ok {
-		return
+func (c *Operator) handleSecretUpdate(old, cur interface{}) {
+	o, ok := c.getObject(cur)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
 	}
+}
 
-	_, exists, err := c.promInf.GetIndexer().GetByKey(key)
-	if err != nil {
-		c.logger.Log("msg", "index lookup failed", "err", err)
-	}
-	if exists {
-		c.enqueue(key)
+func (c *Operator) handleSecretAdd(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
 	}
 }
 
@@ -853,13 +861,79 @@ func (c *Operator) destroyPrometheus(key string) error {
 	return nil
 }
 
+func (c *Operator) loadBasicAuthSecrets(mons map[string]*v1alpha1.ServiceMonitor, s *v1.SecretList) (map[string]BasicAuthCredentials, error) {
+
+	secrets := map[string]BasicAuthCredentials{}
+
+	for _, mon := range mons {
+
+		for i, ep := range mon.Spec.Endpoints {
+
+			if ep.BasicAuth != nil {
+
+				var username string
+				var password string
+
+				for _, secret := range s.Items {
+
+					if secret.Name == ep.BasicAuth.Username.Key {
+
+						if u, ok := secret.Data[ep.BasicAuth.Username.Name]; ok {
+							username = string(u)
+						} else {
+							return nil, fmt.Errorf("Secret password of servicemonitor %s not found.")
+						}
+
+					}
+
+					if secret.Name == ep.BasicAuth.Password.Key {
+
+						if p, ok := secret.Data[ep.BasicAuth.Password.Name]; ok {
+							password = string(p)
+						} else {
+							return nil, fmt.Errorf("Secret username of servicemonitor %s not found.",
+								mon.Name)
+						}
+
+					}
+				}
+
+				secrets[fmt.Sprintf("%s/%s/%d", mon.Namespace, mon.Name, i)] =
+					BasicAuthCredentials{
+						username: username,
+						password: password,
+					}
+
+			}
+		}
+	}
+
+	return secrets, nil
+
+}
+
 func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1.ConfigMap) error {
 	smons, err := c.selectServiceMonitors(p)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
+
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+
+	listSecrets, err := sClient.List(v1.ListOptions{})
+
+	if err != nil {
+		return err
+	}
+
+	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, listSecrets)
+
+	if err != nil {
+		return err
+	}
+
 	// Update secret based on the most recent configuration.
-	conf, err := generateConfig(p, smons, len(ruleFileConfigMaps))
+	conf, err := generateConfig(p, smons, len(ruleFileConfigMaps), basicAuthSecrets)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
 	}
@@ -872,7 +946,6 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 		"generated": "true",
 	}
 	s.Data["prometheus.yaml"] = []byte(conf)
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 
 	_, err = sClient.Get(s.Name)
 	if apierrors.IsNotFound(err) {
