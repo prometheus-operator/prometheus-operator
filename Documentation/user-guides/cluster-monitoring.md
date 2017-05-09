@@ -44,7 +44,7 @@ spec:
       serviceAccountName: prometheus-operator
       containers:
        - name: prometheus-operator
-         image: quay.io/coreos/prometheus-operator:v0.8.2
+         image: quay.io/coreos/prometheus-operator:v0.9.0
          args:
          - "--kubelet-service=kube-system/kubelet"
          - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
@@ -357,6 +357,7 @@ spec:
   endpoints:
   - port: http-metrics
     interval: 15s
+    honorLabels: true
 ```
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-k8s-apps-http.yaml)
@@ -475,7 +476,7 @@ metadata:
     alertmanager: "main"
 spec:
   replicas: 3
-  version: v0.6.1
+  version: v0.6.2
 ```
 
 Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid configuration mounted through a `Secret`. Note that the `Secret` has to be in the same namespace as the `Alertmanager` resource as well as have the name `alertmanager-<name-of-alertmanager-object` and the key of the configuration is `alertmanager.yaml`.
