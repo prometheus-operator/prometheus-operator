@@ -1,12 +1,13 @@
 package framework
 
 import (
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/pkg/util/wait"
-	"k8s.io/client-go/pkg/util/yaml"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 func CreateAndWaitForThirdPartyRessource(kubeClient kubernetes.Interface, relativePath string, apiPath string) error {
@@ -59,7 +60,7 @@ func DeleteThirdPartyResource(kubeClient kubernetes.Interface, relativePath stri
 		return err
 	}
 
-	if err := kubeClient.Extensions().ThirdPartyResources().Delete(tpr.Name, &v1.DeleteOptions{}); err != nil {
+	if err := kubeClient.Extensions().ThirdPartyResources().Delete(tpr.Name, &metav1.DeleteOptions{}); err != nil {
 		return err
 	}
 

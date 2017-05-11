@@ -15,17 +15,17 @@
 package v1alpha1
 
 import (
-	"k8s.io/client-go/pkg/api/unversioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/util/intstr"
 )
 
 // Prometheus defines a Prometheus deployment.
 type Prometheus struct {
-	unversioned.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
 	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	v1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Prometheus cluster. More info:
 	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 	Spec PrometheusSpec `json:"spec"`
@@ -38,10 +38,10 @@ type Prometheus struct {
 
 // PrometheusList is a list of Prometheuses.
 type PrometheusList struct {
-	unversioned.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	unversioned.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Prometheuses
 	Items []*Prometheus `json:"items"`
 }
@@ -50,7 +50,7 @@ type PrometheusList struct {
 // http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 type PrometheusSpec struct {
 	// ServiceMonitors to be selected for target discovery.
-	ServiceMonitorSelector *unversioned.LabelSelector `json:"serviceMonitorSelector,omitempty"`
+	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
 	// Version of Prometheus to be deployed.
 	Version string `json:"version,omitempty"`
 	// When a Prometheus deployment is paused, no actions except for deletion
@@ -78,7 +78,7 @@ type PrometheusSpec struct {
 	// Storage spec to specify how storage shall be used.
 	Storage *StorageSpec `json:"storage,omitempty"`
 	// A selector to select which ConfigMaps to mount for loading rule files from.
-	RuleSelector *unversioned.LabelSelector `json:"ruleSelector,omitempty"`
+	RuleSelector *metav1.LabelSelector `json:"ruleSelector,omitempty"`
 	// Define details regarding alerting.
 	Alerting AlertingSpec `json:"alerting,omitempty"`
 	// Define resources requests and limits for single Pods.
@@ -134,7 +134,7 @@ type StorageSpec struct {
 	// info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
 	Class string `json:"class"`
 	// A label query over volumes to consider for binding.
-	Selector *unversioned.LabelSelector `json:"selector"`
+	Selector *metav1.LabelSelector `json:"selector"`
 	// Resources represents the minimum resources the volume should have. More
 	// info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources
 	Resources v1.ResourceRequirements `json:"resources"`
@@ -155,10 +155,10 @@ type AlertmanagerEndpoints struct {
 
 // ServiceMonitor defines monitoring for a set of services.
 type ServiceMonitor struct {
-	unversioned.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
 	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	v1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired Service selection for target discrovery by
 	// Prometheus.
 	Spec ServiceMonitorSpec `json:"spec"`
@@ -171,7 +171,7 @@ type ServiceMonitorSpec struct {
 	// A list of endpoints allowed as part of this ServiceMonitor.
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	// Selector to select Endpoints objects.
-	Selector unversioned.LabelSelector `json:"selector"`
+	Selector metav1.LabelSelector `json:"selector"`
 	// Selector to select which namespaces the Endpoints objects are discovered from.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 }
@@ -203,7 +203,7 @@ type Endpoint struct {
 // More info: https://prometheus.io/docs/operating/configuration/#endpoints
 type BasicAuth struct {
 	// The secret that contains the username for authenticate
-	Username v1.SecretKeySelector`json:"username,omitempty"`
+	Username v1.SecretKeySelector `json:"username,omitempty"`
 	// The secret that contains the password for authenticate
 	Password v1.SecretKeySelector `json:"password,omitempty"`
 }
@@ -224,20 +224,20 @@ type TLSConfig struct {
 
 // A list of ServiceMonitors.
 type ServiceMonitorList struct {
-	unversioned.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	unversioned.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of ServiceMonitors
 	Items []*ServiceMonitor `json:"items"`
 }
 
 // Describes an Alertmanager cluster.
 type Alertmanager struct {
-	unversioned.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
 	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	v1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Alertmanager cluster. More info:
 	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 	Spec AlertmanagerSpec `json:"spec"`
@@ -284,10 +284,10 @@ type AlertmanagerSpec struct {
 
 // A list of Alertmanagers.
 type AlertmanagerList struct {
-	unversioned.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	unversioned.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Alertmanagers
 	Items []Alertmanager `json:"items"`
 }
@@ -322,7 +322,7 @@ type NamespaceSelector struct {
 	// List of namespace names.
 	MatchNames []string `json:"matchNames,omitempty"`
 
-	// TODO(fabxc): this should embed unversioned.LabelSelector eventually.
+	// TODO(fabxc): this should embed metav1.LabelSelector eventually.
 	// Currently the selector is only used for namespaces which require more complex
 	// implementation to support label selections.
 }

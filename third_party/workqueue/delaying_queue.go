@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/coreos/prometheus-operator/third_party/clock"
-	utilruntime "k8s.io/client-go/pkg/util/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
 
 // DelayingInterface is an Interface that can Add an item at a later time. This makes it easier to

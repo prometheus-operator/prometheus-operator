@@ -21,11 +21,11 @@ import (
 	"net/http"
 	"time"
 
-	"k8s.io/client-go/pkg/api/resource"
-	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/util/intstr"
-	"k8s.io/client-go/pkg/util/wait"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
@@ -34,18 +34,18 @@ import (
 
 func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *v1alpha1.Prometheus {
 	return &v1alpha1.Prometheus{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: ns,
 		},
 		Spec: v1alpha1.PrometheusSpec{
 			Replicas: &replicas,
-			ServiceMonitorSelector: &unversioned.LabelSelector{
+			ServiceMonitorSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": group,
 				},
 			},
-			RuleSelector: &unversioned.LabelSelector{
+			RuleSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"role": "rulefile",
 				},
@@ -73,14 +73,14 @@ func (f *Framework) AddAlertingToPrometheus(p *v1alpha1.Prometheus, ns, name str
 
 func (f *Framework) MakeBasicServiceMonitor(name string) *v1alpha1.ServiceMonitor {
 	return &v1alpha1.ServiceMonitor{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 			Labels: map[string]string{
 				"group": name,
 			},
 		},
 		Spec: v1alpha1.ServiceMonitorSpec{
-			Selector: unversioned.LabelSelector{
+			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": name,
 				},
@@ -103,7 +103,7 @@ func (f *Framework) MakeBasicPrometheusNodePortService(name, group string, nodeP
 
 func (f *Framework) MakePrometheusService(name, group string, serviceType v1.ServiceType) *v1.Service {
 	service := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 			Labels: map[string]string{
 				"group": group,

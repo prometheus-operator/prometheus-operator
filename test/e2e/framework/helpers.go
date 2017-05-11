@@ -7,9 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/util/wait"
 	"k8s.io/client-go/rest"
 
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
@@ -32,7 +33,7 @@ func PathToOSFile(relativPath string) (*os.File, error) {
 
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
-func WaitForPodsReady(kubeClient kubernetes.Interface, namespace string, timeout time.Duration, expectedReplicas int, opts v1.ListOptions) error {
+func WaitForPodsReady(kubeClient kubernetes.Interface, namespace string, timeout time.Duration, expectedReplicas int, opts metav1.ListOptions) error {
 	return wait.Poll(time.Second, timeout, func() (bool, error) {
 		pl, err := kubeClient.Core().Pods(namespace).List(opts)
 		if err != nil {
@@ -58,7 +59,7 @@ func WaitForPodsReady(kubeClient kubernetes.Interface, namespace string, timeout
 	})
 }
 
-func WaitForPodsRunImage(kubeClient kubernetes.Interface, namespace string, expectedReplicas int, image string, opts v1.ListOptions) error {
+func WaitForPodsRunImage(kubeClient kubernetes.Interface, namespace string, expectedReplicas int, image string, opts metav1.ListOptions) error {
 	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		pl, err := kubeClient.Core().Pods(namespace).List(opts)
 		if err != nil {

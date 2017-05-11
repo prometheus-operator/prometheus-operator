@@ -27,17 +27,17 @@ import (
 	"github.com/coreos/prometheus-operator/third_party/workqueue"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api"
-	apierrors "k8s.io/client-go/pkg/api/errors"
-	"k8s.io/client-go/pkg/api/meta"
-	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	extensionsobj "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/pkg/fields"
-	"k8s.io/client-go/pkg/labels"
-	utilruntime "k8s.io/client-go/pkg/util/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 )
@@ -320,7 +320,7 @@ func nodeAddress(node *v1.Node) (string, map[v1.NodeAddressType][]string, error)
 
 func (c *Operator) syncNodeEndpoints() {
 	eps := &v1.Endpoints{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
 			Labels: map[string]string{
 				"k8s-app": "kubelet",
@@ -362,7 +362,7 @@ func (c *Operator) syncNodeEndpoints() {
 	})
 
 	svc := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
 			Labels: map[string]string{
 				"k8s-app": "kubelet",
@@ -454,7 +454,7 @@ func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
 	}
 }
 
-func (c *Operator) getObject(obj interface{}) (meta.Object, bool) {
+func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
 	ts, ok := obj.(cache.DeletedFinalStateUnknown)
 	if ok {
 		obj = ts.Obj
@@ -676,7 +676,7 @@ func (c *Operator) sync(key string) error {
 func (c *Operator) ruleFileConfigMaps(p *v1alpha1.Prometheus) ([]*v1.ConfigMap, error) {
 	res := []*v1.ConfigMap{}
 
-	ruleSelector, err := unversioned.LabelSelectorAsSelector(p.Spec.RuleSelector)
+	ruleSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -691,8 +691,8 @@ func (c *Operator) ruleFileConfigMaps(p *v1alpha1.Prometheus) ([]*v1.ConfigMap, 
 	return res, nil
 }
 
-func ListOptions(name string) v1.ListOptions {
-	return v1.ListOptions{
+func ListOptions(name string) metav1.ListOptions {
+	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
 			"app":        "prometheus",
 			"prometheus": name,
@@ -751,7 +751,7 @@ func PrometheusStatus(kclient kubernetes.Interface, p *v1alpha1.Prometheus) (*v1
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.Apps().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name))
+	sset, err := kclient.Apps().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 	}
@@ -842,7 +842,7 @@ func (c *Operator) destroyPrometheus(key string) error {
 	// TODO(fabxc): add an ownerRef at creation so we don't delete Secrets
 	// manually created for Prometheus servers with no ServiceMonitor selectors.
 	s := c.kclient.Core().Secrets(sset.Namespace)
-	secret, err := s.Get(sset.Name)
+	secret, err := s.Get(sset.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "retrieving config Secret failed")
 	}
@@ -920,7 +920,7 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 
-	listSecrets, err := sClient.List(v1.ListOptions{})
+	listSecrets, err := sClient.List(metav1.ListOptions{})
 
 	if err != nil {
 		return err
@@ -947,7 +947,7 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 	}
 	s.Data["prometheus.yaml"] = []byte(conf)
 
-	_, err = sClient.Get(s.Name)
+	_, err = sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		_, err = sClient.Create(s)
 	} else if err == nil {
@@ -960,7 +960,7 @@ func (c *Operator) selectServiceMonitors(p *v1alpha1.Prometheus) (map[string]*v1
 	// Selectors might overlap. Deduplicate them along the keyFunc.
 	res := make(map[string]*v1alpha1.ServiceMonitor)
 
-	selector, err := unversioned.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
+	selector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -980,7 +980,7 @@ func (c *Operator) selectServiceMonitors(p *v1alpha1.Prometheus) (map[string]*v1
 func (c *Operator) createTPRs() error {
 	tprs := []*extensionsobj.ThirdPartyResource{
 		{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: tprServiceMonitor,
 			},
 			Versions: []extensionsobj.APIVersion{
@@ -989,7 +989,7 @@ func (c *Operator) createTPRs() error {
 			Description: "Prometheus monitoring for a service",
 		},
 		{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: tprPrometheus,
 			},
 			Versions: []extensionsobj.APIVersion{

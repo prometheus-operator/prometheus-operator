@@ -1,10 +1,10 @@
 package framework
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/pkg/util/yaml"
 )
 
 func MakeDeployment(pathToYaml string) (*v1beta1.Deployment, error) {
@@ -29,7 +29,7 @@ func CreateDeployment(kubeClient kubernetes.Interface, namespace string, d *v1be
 }
 
 func DeleteDeployment(kubeClient kubernetes.Interface, namespace, name string) error {
-	d, err := kubeClient.Extensions().Deployments(namespace).Get(name)
+	d, err := kubeClient.Extensions().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -41,5 +41,5 @@ func DeleteDeployment(kubeClient kubernetes.Interface, namespace, name string) e
 	if err != nil {
 		return err
 	}
-	return kubeClient.Extensions().Deployments(namespace).Delete(d.Name, &v1.DeleteOptions{})
+	return kubeClient.Extensions().Deployments(namespace).Delete(d.Name, &metav1.DeleteOptions{})
 }
