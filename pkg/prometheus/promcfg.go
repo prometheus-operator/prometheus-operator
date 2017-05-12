@@ -40,9 +40,10 @@ func configMapRuleFileFolder(configMapNumber int) string {
 func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
 	cfg := map[string]interface{}{}
 
-	cfg["global"] = map[string]string{
+	cfg["global"] = map[string]interface{}{
 		"evaluation_interval": "30s",
 		"scrape_interval":     "30s",
+		"external_labels":     p.Spec.ExternalLabels,
 	}
 
 	if ruleConfigMaps > 0 {
