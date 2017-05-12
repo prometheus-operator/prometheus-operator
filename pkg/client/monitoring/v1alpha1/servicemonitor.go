@@ -17,12 +17,11 @@ package v1alpha1
 import (
 	"encoding/json"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/api/unversioned"
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/watch"
 	"k8s.io/client-go/rest"
 )
 
@@ -39,9 +38,9 @@ type ServiceMonitorInterface interface {
 	Create(*ServiceMonitor) (*ServiceMonitor, error)
 	Get(name string) (*ServiceMonitor, error)
 	Update(*ServiceMonitor) (*ServiceMonitor, error)
-	Delete(name string, options *v1.DeleteOptions) error
-	List(opts api.ListOptions) (runtime.Object, error)
-	Watch(opts api.ListOptions) (watch.Interface, error)
+	Delete(name string, options *metav1.DeleteOptions) error
+	List(opts metav1.ListOptions) (runtime.Object, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
 }
 
 type servicemonitors struct {
@@ -54,7 +53,7 @@ func newServiceMonitors(r rest.Interface, c *dynamic.Client, namespace string) *
 	return &servicemonitors{
 		r,
 		c.Resource(
-			&unversioned.APIResource{
+			&metav1.APIResource{
 				Kind:       TPRServiceMonitorsKind,
 				Name:       TPRServiceMonitorName,
 				Namespaced: true,
@@ -101,11 +100,11 @@ func (s *servicemonitors) Update(o *ServiceMonitor) (*ServiceMonitor, error) {
 	return ServiceMonitorFromUnstructured(us)
 }
 
-func (s *servicemonitors) Delete(name string, options *v1.DeleteOptions) error {
+func (s *servicemonitors) Delete(name string, options *metav1.DeleteOptions) error {
 	return s.client.Delete(name, options)
 }
 
-func (s *servicemonitors) List(opts api.ListOptions) (runtime.Object, error) {
+func (s *servicemonitors) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := s.restClient.Get().
 		Namespace(s.ns).
 		Resource("servicemonitors").
@@ -120,7 +119,7 @@ func (s *servicemonitors) List(opts api.ListOptions) (runtime.Object, error) {
 	return &sm, json.Unmarshal(b, &sm)
 }
 
-func (s *servicemonitors) Watch(opts api.ListOptions) (watch.Interface, error) {
+func (s *servicemonitors) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	r, err := s.restClient.Get().
 		Prefix("watch").
 		Namespace(s.ns).
@@ -138,7 +137,7 @@ func (s *servicemonitors) Watch(opts api.ListOptions) (watch.Interface, error) {
 }
 
 // ServiceMonitorFromUnstructured unmarshals a ServiceMonitor object from dynamic client's unstructured
-func ServiceMonitorFromUnstructured(r *runtime.Unstructured) (*ServiceMonitor, error) {
+func ServiceMonitorFromUnstructured(r *unstructured.Unstructured) (*ServiceMonitor, error) {
 	b, err := json.Marshal(r.Object)
 	if err != nil {
 		return nil, err
@@ -153,14 +152,14 @@ func ServiceMonitorFromUnstructured(r *runtime.Unstructured) (*ServiceMonitor, e
 }
 
 // UnstructuredFromServiceMonitor marshals a ServiceMonitor object into dynamic client's unstructured
-func UnstructuredFromServiceMonitor(s *ServiceMonitor) (*runtime.Unstructured, error) {
+func UnstructuredFromServiceMonitor(s *ServiceMonitor) (*unstructured.Unstructured, error) {
 	s.TypeMeta.Kind = TPRServiceMonitorsKind
 	s.TypeMeta.APIVersion = TPRGroup + "/" + TPRVersion
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
 	}
-	var r runtime.Unstructured
+	var r unstructured.Unstructured
 	if err := json.Unmarshal(b, &r.Object); err != nil {
 		return nil, err
 	}

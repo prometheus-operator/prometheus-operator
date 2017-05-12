@@ -19,27 +19,28 @@ package dynamic
 import (
 	"sync"
 
-	"k8s.io/client-go/pkg/api/meta"
-	"k8s.io/client-go/pkg/api/unversioned"
-	"k8s.io/client-go/rest"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/pkg/api"
+	restclient "k8s.io/client-go/rest"
 )
 
 // ClientPool manages a pool of dynamic clients.
 type ClientPool interface {
 	// ClientForGroupVersionKind returns a client configured for the specified groupVersionResource.
 	// Resource may be empty.
-	ClientForGroupVersionResource(resource unversioned.GroupVersionResource) (*Client, error)
+	ClientForGroupVersionResource(resource schema.GroupVersionResource) (*Client, error)
 	// ClientForGroupVersionKind returns a client configured for the specified groupVersionKind.
 	// Kind may be empty.
-	ClientForGroupVersionKind(kind unversioned.GroupVersionKind) (*Client, error)
+	ClientForGroupVersionKind(kind schema.GroupVersionKind) (*Client, error)
 }
 
 // APIPathResolverFunc knows how to convert a groupVersion to its API path. The Kind field is
 // optional.
-type APIPathResolverFunc func(kind unversioned.GroupVersionKind) string
+type APIPathResolverFunc func(kind schema.GroupVersionKind) string
 
 // LegacyAPIPathResolverFunc can resolve paths properly with the legacy API.
-func LegacyAPIPathResolverFunc(kind unversioned.GroupVersionKind) string {
+func LegacyAPIPathResolverFunc(kind schema.GroupVersionKind) string {
 	if len(kind.Group) == 0 {
 		return "/api"
 	}
@@ -50,8 +51,8 @@ func LegacyAPIPathResolverFunc(kind unversioned.GroupVersionKind) string {
 // is asked to retrieve. This type is thread safe.
 type clientPoolImpl struct {
 	lock                sync.RWMutex
-	config              *rest.Config
-	clients             map[unversioned.GroupVersion]*Client
+	config              *restclient.Config
+	clients             map[schema.GroupVersion]*Client
 	apiPathResolverFunc APIPathResolverFunc
 	mapper              meta.RESTMapper
 }
@@ -59,24 +60,31 @@ type clientPoolImpl struct {
 // NewClientPool returns a ClientPool from the specified config. It reuses clients for the the same
 // group version. It is expected this type may be wrapped by specific logic that special cases certain
 // resources or groups.
-func NewClientPool(config *rest.Config, mapper meta.RESTMapper, apiPathResolverFunc APIPathResolverFunc) ClientPool {
+func NewClientPool(config *restclient.Config, mapper meta.RESTMapper, apiPathResolverFunc APIPathResolverFunc) ClientPool {
 	confCopy := *config
 
 	return &clientPoolImpl{
 		config:              &confCopy,
-		clients:             map[unversioned.GroupVersion]*Client{},
+		clients:             map[schema.GroupVersion]*Client{},
 		apiPathResolverFunc: apiPathResolverFunc,
 		mapper:              mapper,
 	}
 }
 
+// Instantiates a new dynamic client pool with the given config.
+func NewDynamicClientPool(cfg *restclient.Config) ClientPool {
+	// TODO: should use a dynamic RESTMapper built from the discovery results.
+	restMapper := api.Registry.RESTMapper()
+	return NewClientPool(cfg, restMapper, LegacyAPIPathResolverFunc)
+}
+
 // ClientForGroupVersionResource uses the provided RESTMapper to identify the appropriate resource. Resource may
 // be empty. If no matching kind is found the underlying client for that group is still returned.
-func (c *clientPoolImpl) ClientForGroupVersionResource(resource unversioned.GroupVersionResource) (*Client, error) {
+func (c *clientPoolImpl) ClientForGroupVersionResource(resource schema.GroupVersionResource) (*Client, error) {
 	kinds, err := c.mapper.KindsFor(resource)
 	if err != nil {
 		if meta.IsNoMatchError(err) {
-			return c.ClientForGroupVersionKind(unversioned.GroupVersionKind{Group: resource.Group, Version: resource.Version})
+			return c.ClientForGroupVersionKind(schema.GroupVersionKind{Group: resource.Group, Version: resource.Version})
 		}
 		return nil, err
 	}
@@ -85,7 +93,7 @@ func (c *clientPoolImpl) ClientForGroupVersionResource(resource unversioned.Grou
 
 // ClientForGroupVersion returns a client for the specified groupVersion, creates one if none exists. Kind
 // in the GroupVersionKind may be empty.
-func (c *clientPoolImpl) ClientForGroupVersionKind(kind unversioned.GroupVersionKind) (*Client, error) {
+func (c *clientPoolImpl) ClientForGroupVersionKind(kind schema.GroupVersionKind) (*Client, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 

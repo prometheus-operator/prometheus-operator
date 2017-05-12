@@ -18,10 +18,11 @@ import (
 	"os"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/util/wait"
-	"k8s.io/client-go/pkg/util/yaml"
 )
 
 func createReplicationControllerViaYml(kubeClient kubernetes.Interface, namespace string, filepath string) error {
@@ -77,7 +78,7 @@ func scaleDownReplicationController(kubeClient kubernetes.Interface, namespace s
 	}
 
 	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		currentRC, err := rCAPI.Get(rC.Name)
+		currentRC, err := rCAPI.Get(rC.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

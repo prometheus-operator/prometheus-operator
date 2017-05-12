@@ -20,10 +20,11 @@ import (
 	"os"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/util/intstr"
-	"k8s.io/client-go/pkg/util/wait"
-	"k8s.io/client-go/pkg/util/yaml"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
@@ -46,7 +47,7 @@ receivers:
 
 func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *v1alpha1.Alertmanager {
 	return &v1alpha1.Alertmanager{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 		Spec: v1alpha1.AlertmanagerSpec{
@@ -63,7 +64,7 @@ func (f *Framework) MakeAlertmanagerNodePortService(name, group string, nodePort
 
 func (f *Framework) MakeAlertmanagerService(name, group string, serviceType v1.ServiceType) *v1.Service {
 	service := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", name),
 			Labels: map[string]string{
 				"group": group,

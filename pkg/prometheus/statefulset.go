@@ -21,10 +21,11 @@ import (
 	"net/url"
 	"path"
 
-	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
-	"k8s.io/client-go/pkg/util/intstr"
 
 	"strings"
 
@@ -81,7 +82,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 	}
 
 	statefulset := &v1beta1.StatefulSet{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(p.Name),
 			Labels:      p.ObjectMeta.Labels,
 			Annotations: p.ObjectMeta.Annotations,
@@ -102,7 +103,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 		})
 	} else {
 		pvc := v1.PersistentVolumeClaim{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: volumeName(p.Name),
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
@@ -188,7 +189,7 @@ func makeConfigSecret(name string, configMaps []*v1.ConfigMap) (*v1.Secret, erro
 	}
 
 	return &v1.Secret{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:   configSecretName(name),
 			Labels: managedByOperatorLabels,
 		},
@@ -201,7 +202,7 @@ func makeConfigSecret(name string, configMaps []*v1.ConfigMap) (*v1.Secret, erro
 
 func makeStatefulSetService(p *v1alpha1.Prometheus) *v1.Service {
 	svc := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: governingServiceName,
 			Labels: map[string]string{
 				"operated-prometheus": "true",
@@ -376,7 +377,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		ServiceName: governingServiceName,
 		Replicas:    p.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
 					"app":        "prometheus",
 					"prometheus": p.Name,

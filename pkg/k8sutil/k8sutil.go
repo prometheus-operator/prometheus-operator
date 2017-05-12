@@ -21,11 +21,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	apierrors "k8s.io/client-go/pkg/api/errors"
-	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/util/wait"
 	"k8s.io/client-go/rest"
 )
 
@@ -106,14 +106,14 @@ func IsResourceNotFoundError(err error) bool {
 	if !ok {
 		return false
 	}
-	if se.Status().Code == http.StatusNotFound && se.Status().Reason == unversioned.StatusReasonNotFound {
+	if se.Status().Code == http.StatusNotFound && se.Status().Reason == metav1.StatusReasonNotFound {
 		return true
 	}
 	return false
 }
 
 func CreateOrUpdateService(sclient clientv1.ServiceInterface, svc *v1.Service) error {
-	service, err := sclient.Get(svc.Name)
+	service, err := sclient.Get(svc.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "retrieving service object failed")
 	}
@@ -135,7 +135,7 @@ func CreateOrUpdateService(sclient clientv1.ServiceInterface, svc *v1.Service) e
 }
 
 func CreateOrUpdateEndpoints(eclient clientv1.EndpointsInterface, eps *v1.Endpoints) error {
-	endpoints, err := eclient.Get(eps.Name)
+	endpoints, err := eclient.Get(eps.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "retrieving existing kubelet endpoints object failed")
 	}

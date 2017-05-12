@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
-
-	"github.com/pkg/errors"
 )
 
 func CreateNamespace(kubeClient kubernetes.Interface, name string) (*v1.Namespace, error) {
 	namespace, err := kubeClient.Core().Namespaces().Create(&v1.Namespace{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 	})

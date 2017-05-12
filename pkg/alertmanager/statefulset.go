@@ -19,10 +19,11 @@ import (
 	"net/url"
 	"path"
 
-	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
-	"k8s.io/client-go/pkg/util/intstr"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
@@ -60,7 +61,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 	}
 
 	statefulset := &v1beta1.StatefulSet{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(am.Name),
 			Labels:      am.ObjectMeta.Labels,
 			Annotations: am.ObjectMeta.Annotations,
@@ -81,7 +82,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 		})
 	} else {
 		pvc := v1.PersistentVolumeClaim{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: volumeName(am.Name),
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
@@ -106,7 +107,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 
 func makeStatefulSetService(p *v1alpha1.Alertmanager) *v1.Service {
 	svc := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: governingServiceName,
 			Labels: map[string]string{
 				"operated-alertmanager": "true",
@@ -178,7 +179,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 		ServiceName: governingServiceName,
 		Replicas:    a.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
 					"app":          "alertmanager",
 					"alertmanager": a.Name,

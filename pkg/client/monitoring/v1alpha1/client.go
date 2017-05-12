@@ -15,10 +15,10 @@
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/api/unversioned"
-	"k8s.io/client-go/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
 )
 
@@ -72,7 +72,7 @@ func NewForConfig(c *rest.Config) (*MonitoringV1alpha1Client, error) {
 }
 
 func setConfigDefaults(config *rest.Config) {
-	config.GroupVersion = &unversioned.GroupVersion{
+	config.GroupVersion = &schema.GroupVersion{
 		Group:   TPRGroup,
 		Version: TPRVersion,
 	}

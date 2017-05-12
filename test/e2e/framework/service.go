@@ -19,10 +19,10 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/util/wait"
 )
 
 func CreateServiceAndWaitUntilReady(kubeClient kubernetes.Interface, namespace string, service *v1.Service) (finalizerFn, error) {
@@ -72,7 +72,7 @@ func DeleteServiceAndWaitUntilGone(kubeClient kubernetes.Interface, namespace st
 }
 
 func getEndpoints(kubeClient kubernetes.Interface, namespace, serviceName string) (*v1.Endpoints, error) {
-	endpoints, err := kubeClient.CoreV1().Endpoints(namespace).Get(serviceName)
+	endpoints, err := kubeClient.CoreV1().Endpoints(namespace).Get(serviceName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("requesting endpoints for servce %v failed", serviceName))
 	}

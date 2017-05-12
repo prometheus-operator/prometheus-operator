@@ -1,10 +1,10 @@
 package framework
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
 	rbacv1alpha1 "k8s.io/client-go/pkg/apis/rbac/v1alpha1"
-	"k8s.io/client-go/pkg/util/yaml"
 )
 
 func CreateClusterRoleBinding(kubeClient kubernetes.Interface, relativePath string) error {
@@ -13,7 +13,7 @@ func CreateClusterRoleBinding(kubeClient kubernetes.Interface, relativePath stri
 		return err
 	}
 
-	_, err = kubeClient.RbacV1alpha1().ClusterRoleBindings().Get(clusterRoleBinding.Name)
+	_, err = kubeClient.RbacV1alpha1().ClusterRoleBindings().Get(clusterRoleBinding.Name, metav1.GetOptions{})
 
 	if err == nil {
 		// ClusterRoleBinding already exists -> Update
@@ -38,7 +38,7 @@ func DeleteClusterRoleBinding(kubeClient kubernetes.Interface, relativePath stri
 		return err
 	}
 
-	if err := kubeClient.RbacV1alpha1().ClusterRoleBindings().Delete(clusterRoleBinding.Name, &v1.DeleteOptions{}); err != nil {
+	if err := kubeClient.RbacV1alpha1().ClusterRoleBindings().Delete(clusterRoleBinding.Name, &metav1.DeleteOptions{}); err != nil {
 		return err
 	}
 

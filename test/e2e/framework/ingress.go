@@ -20,18 +20,18 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/pkg/util/intstr"
-	"k8s.io/client-go/pkg/util/wait"
-	"k8s.io/client-go/pkg/util/yaml"
 )
 
 func MakeBasicIngress(serviceName string, servicePort int) *v1beta1.Ingress {
 	return &v1beta1.Ingress{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: "monitoring",
 		},
 		Spec: v1beta1.IngressSpec{
@@ -129,7 +129,7 @@ func GetIngressIP(kubeClient kubernetes.Interface, namespace string, ingressName
 	var ingress *v1beta1.Ingress
 	err := wait.Poll(time.Millisecond*500, time.Minute*5, func() (bool, error) {
 		var err error
-		ingress, err = kubeClient.Extensions().Ingresses(namespace).Get(ingressName)
+		ingress, err = kubeClient.Extensions().Ingresses(namespace).Get(ingressName, metav1.GetOptions{})
 		if err != nil {
 			return false, errors.Wrap(err, fmt.Sprintf("requesting the ingress %v failed", ingressName))
 		}
