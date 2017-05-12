@@ -272,6 +272,23 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 				"-storage.local.target-heap-size="+fmt.Sprintf("%d", reqMem.Value()/3*2),
 			)
 		}
+	case 2:
+
+		// Prometheus 2.0 is in alpha and is highly experimental, and therefore
+		// flags and other things may change for the final release of 2.0. This
+		// section is also regarded as experimental until a Prometheus 2.0 stable
+		// has been released. These flags will be updated to work with every new
+		// 2.0 release until a stable release. These flags are taregeted at version
+		// v2.0.0-alpha.1, there is no guarantee that these flags will continue to
+		// work for any further version, this feature is experimental and developed
+		// on a best effort basis.
+
+		promArgs = append(promArgs,
+			"-config.file=/etc/prometheus/config/prometheus.yaml",
+			"-storage.local.path=/var/prometheus/data",
+			"-storage.tsdb.no-lockfile",
+			"-storage.tsdb.retention="+p.Spec.Retention,
+		)
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
