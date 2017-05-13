@@ -17,6 +17,7 @@ package prometheus
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
@@ -37,104 +38,151 @@ func configMapRuleFileFolder(configMapNumber int) string {
 	return fmt.Sprintf("/etc/prometheus/rules/rules-%d/", configMapNumber)
 }
 
-func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
-	cfg := map[string]interface{}{}
+func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
+	res := yaml.MapSlice{}
 
-	cfg["global"] = map[string]interface{}{
-		"evaluation_interval": "30s",
-		"scrape_interval":     "30s",
-		"external_labels":     p.Spec.ExternalLabels,
+	for k, v := range m {
+		res = append(res, yaml.MapItem{Key: k, Value: v})
 	}
+
+	return res
+}
+
+func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
+	cfg := yaml.MapSlice{}
+
+	cfg = append(cfg, yaml.MapItem{
+		Key: "global",
+		Value: yaml.MapSlice{
+			{Key: "evaluation_interval", Value: "30s"},
+			{Key: "scrape_interval", Value: "30s"},
+			{Key: "external_labels", Value: stringMapToMapSlice(p.Spec.ExternalLabels)},
+		},
+	})
 
 	if ruleConfigMaps > 0 {
 		configMaps := make([]string, ruleConfigMaps)
 		for i := 0; i < ruleConfigMaps; i++ {
 			configMaps[i] = configMapRuleFileFolder(i) + "*.rules"
 		}
-		cfg["rule_files"] = configMaps
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "rule_files",
+			Value: configMaps,
+		})
 	}
 
-	var scrapeConfigs []interface{}
-	for _, mon := range mons {
-		for i, ep := range mon.Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mon, ep, i, basicAuthSecrets))
+	identifiers := make([]string, len(mons))
+	i := 0
+	for k, _ := range mons {
+		identifiers[i] = k
+		i++
+	}
+
+	// Sorting ensures, that we always generate the config in the same order.
+	sort.Strings(identifiers)
+
+	var scrapeConfigs []yaml.MapSlice
+	for _, identifier := range identifiers {
+		for i, ep := range mons[identifier].Spec.Endpoints {
+			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mons[identifier], ep, i, basicAuthSecrets))
 		}
 	}
-	var alertmanagerConfigs []interface{}
+	var alertmanagerConfigs []yaml.MapSlice
 	for _, am := range p.Spec.Alerting.Alertmanagers {
 		alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(am))
 	}
 
-	cfg["scrape_configs"] = scrapeConfigs
-	cfg["alerting"] = map[string]interface{}{
-		"alertmanagers": alertmanagerConfigs,
-	}
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "scrape_configs",
+		Value: scrapeConfigs,
+	})
+
+	cfg = append(cfg, yaml.MapItem{
+		Key: "alerting",
+		Value: yaml.MapSlice{
+			{
+				Key:   "alertmanagers",
+				Value: alertmanagerConfigs,
+			},
+		},
+	})
 
 	return yaml.Marshal(cfg)
 }
 
-func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int, basicAuthSecrets map[string]BasicAuthCredentials) interface{} {
-	cfg := map[string]interface{}{
-		"job_name":     fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
-		"honor_labels": ep.HonorLabels,
-		"kubernetes_sd_configs": []map[string]interface{}{
-			{
-				"role": "endpoints",
+func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
+	cfg := yaml.MapSlice{
+		{
+			Key:   "job_name",
+			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+		},
+		{
+			Key:   "honor_labels",
+			Value: ep.HonorLabels,
+		},
+		{
+			Key: "kubernetes_sd_configs",
+			Value: []yaml.MapSlice{
+				yaml.MapSlice{
+					{Key: "role", Value: "endpoints"},
+				},
 			},
 		},
 	}
 
 	if ep.Interval != "" {
-		cfg["scrape_interval"] = ep.Interval
+		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
 	}
 	if ep.Path != "" {
-		cfg["metrics_path"] = ep.Path
+		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: ep.Path})
 	}
 	if ep.Scheme != "" {
-		cfg["scheme"] = ep.Scheme
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
 	if ep.TLSConfig != nil {
-		tlsConfig := map[string]interface{}{
-			"insecure_skip_verify": ep.TLSConfig.InsecureSkipVerify,
+		tlsConfig := yaml.MapSlice{
+			{Key: "insecure_skip_verify", Value: ep.TLSConfig.InsecureSkipVerify},
 		}
 		if ep.TLSConfig.CAFile != "" {
-			tlsConfig["ca_file"] = ep.TLSConfig.CAFile
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: ep.TLSConfig.CAFile})
 		}
 		if ep.TLSConfig.CertFile != "" {
-			tlsConfig["cert_file"] = ep.TLSConfig.CertFile
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: ep.TLSConfig.CertFile})
 		}
 		if ep.TLSConfig.KeyFile != "" {
-			tlsConfig["key_file"] = ep.TLSConfig.KeyFile
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: ep.TLSConfig.KeyFile})
 		}
 		if ep.TLSConfig.ServerName != "" {
-			tlsConfig["server_name"] = ep.TLSConfig.ServerName
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: ep.TLSConfig.ServerName})
 		}
-		cfg["tls_config"] = tlsConfig
+		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 	}
 	if ep.BearerTokenFile != "" {
-		cfg["bearer_token_file"] = ep.BearerTokenFile
+		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
 	}
 
 	if ep.BasicAuth != nil {
 		if s, ok := basicAuthSecrets[fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)]; ok {
-			cfg["basic_auth"] = map[string]interface{}{
-				"username": s.username,
-				"password": s.password,
-			}
+			cfg = append(cfg, yaml.MapItem{
+				Key: "basic_auth", Value: yaml.MapSlice{
+					{Key: "username", Value: s.username},
+					{Key: "password", Value: s.password},
+				},
+			})
 		}
 
 	}
 
-	var relabelings []interface{}
+	var relabelings []yaml.MapSlice
 
 	// Filter targets by services selected by the monitor.
 
 	// Exact label matches.
 	for k, v := range m.Spec.Selector.MatchLabels {
-		relabelings = append(relabelings, map[string]interface{}{
-			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k)},
-			"regex":         v,
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k)}},
+			{Key: "regex", Value: v},
 		})
 	}
 	// Set based label matching. We have to map the valid relations
@@ -142,28 +190,28 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	for _, exp := range m.Spec.Selector.MatchExpressions {
 		switch exp.Operator {
 		case metav1.LabelSelectorOpIn:
-			relabelings = append(relabelings, map[string]interface{}{
-				"action":        "keep",
-				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
-				"regex":         strings.Join(exp.Values, "|"),
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: strings.Join(exp.Values, "|")},
 			})
 		case metav1.LabelSelectorOpNotIn:
-			relabelings = append(relabelings, map[string]interface{}{
-				"action":        "drop",
-				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
-				"regex":         strings.Join(exp.Values, "|"),
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "drop"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: strings.Join(exp.Values, "|")},
 			})
 		case metav1.LabelSelectorOpExists:
-			relabelings = append(relabelings, map[string]interface{}{
-				"action":        "keep",
-				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
-				"regex":         ".+",
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: ".+"},
 			})
 		case metav1.LabelSelectorOpDoesNotExist:
-			relabelings = append(relabelings, map[string]interface{}{
-				"action":        "drop",
-				"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)},
-				"regex":         ".+",
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "drop"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: ".+"},
 			})
 		}
 	}
@@ -183,53 +231,53 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	nsel := m.Spec.NamespaceSelector
 
 	if !nsel.Any && len(nsel.MatchNames) == 0 {
-		relabelings = append(relabelings, map[string]interface{}{
-			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_namespace"},
-			"regex":         m.Namespace,
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
+			{Key: "regex", Value: m.Namespace},
 		})
 	} else if len(nsel.MatchNames) > 0 {
-		relabelings = append(relabelings, map[string]interface{}{
-			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_namespace"},
-			"regex":         strings.Join(nsel.MatchNames, "|"),
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
+			{Key: "regex", Value: strings.Join(nsel.MatchNames, "|")},
 		})
 	}
 
 	// Filter targets based on correct port for the endpoint.
 	if ep.Port != "" {
-		relabelings = append(relabelings, map[string]interface{}{
-			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_endpoint_port_name"},
-			"regex":         ep.Port,
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}},
+			{Key: "regex", Value: ep.Port},
 		})
 	} else if ep.TargetPort.StrVal != "" {
-		relabelings = append(relabelings, map[string]interface{}{
-			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_container_port_name"},
-			"regex":         ep.TargetPort.String(),
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_container_port_name"}},
+			{Key: "regex", Value: ep.TargetPort.String()},
 		})
 	} else if ep.TargetPort.IntVal != 0 {
-		relabelings = append(relabelings, map[string]interface{}{
-			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_container_port_number"},
-			"regex":         ep.TargetPort.String(),
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_container_port_number"}},
+			{Key: "regex", Value: ep.TargetPort.String()},
 		})
 	}
 
 	// Relabel namespace and pod and service labels into proper labels.
-	relabelings = append(relabelings, []interface{}{
-		map[string]interface{}{
-			"source_labels": []string{"__meta_kubernetes_namespace"},
-			"target_label":  "namespace",
+	relabelings = append(relabelings, []yaml.MapSlice{
+		yaml.MapSlice{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
+			{Key: "target_label", Value: "namespace"},
 		},
-		map[string]interface{}{
-			"source_labels": []string{"__meta_kubernetes_pod_name"},
-			"target_label":  "pod",
+		yaml.MapSlice{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_name"}},
+			{Key: "target_label", Value: "pod"},
 		},
-		map[string]interface{}{
-			"source_labels": []string{"__meta_kubernetes_service_name"},
-			"target_label":  "service",
+		yaml.MapSlice{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
+			{Key: "target_label", Value: "service"},
 		},
 	}...)
 
@@ -239,78 +287,82 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	// endpoints, therefore the endpoints labels is filled with the ports name or
 	// as a fallback the port number.
 
-	relabelings = append(relabelings, map[string]interface{}{
-		"source_labels": []string{"__meta_kubernetes_service_name"},
-		"target_label":  "job",
-		"replacement":   "${1}",
+	relabelings = append(relabelings, yaml.MapSlice{
+		{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
+		{Key: "target_label", Value: "job"},
+		{Key: "replacement", Value: "${1}"},
 	})
 	if m.Spec.JobLabel != "" {
-		relabelings = append(relabelings, map[string]interface{}{
-			"source_labels": []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(m.Spec.JobLabel)},
-			"target_label":  "job",
-			"regex":         "(.+)",
-			"replacement":   "${1}",
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(m.Spec.JobLabel)}},
+			{Key: "target_label", Value: "job"},
+			{Key: "regex", Value: "(.+)"},
+			{Key: "replacement", Value: "${1}"},
 		})
 	}
 
 	if ep.Port != "" {
-		relabelings = append(relabelings, map[string]interface{}{
-			"target_label": "endpoint",
-			"replacement":  ep.Port,
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "target_label", Value: "endpoint"},
+			{Key: "replacement", Value: ep.Port},
 		})
 	} else if ep.TargetPort.String() != "" {
-		relabelings = append(relabelings, map[string]interface{}{
-			"target_label": "endpoint",
-			"replacement":  ep.TargetPort.String(),
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "target_label", Value: "endpoint"},
+			{Key: "replacement", Value: ep.TargetPort.String()},
 		})
 	}
 
-	cfg["relabel_configs"] = relabelings
+	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	return cfg
 }
 
-func generateAlertmanagerConfig(am v1alpha1.AlertmanagerEndpoints) interface{} {
+func generateAlertmanagerConfig(am v1alpha1.AlertmanagerEndpoints) yaml.MapSlice {
 	if am.Scheme == "" {
 		am.Scheme = "http"
 	}
-	cfg := map[string]interface{}{
-		"kubernetes_sd_configs": []map[string]interface{}{
-			{
-				"role": "endpoints",
+
+	cfg := yaml.MapSlice{
+		{
+			Key: "kubernetes_sd_configs",
+			Value: []yaml.MapSlice{
+				yaml.MapSlice{
+					{Key: "role", Value: "endpoints"},
+				},
 			},
 		},
-		"scheme": am.Scheme,
+		{Key: "scheme", Value: am.Scheme},
 	}
 
-	var relabelings []interface{}
+	var relabelings []yaml.MapSlice
 
-	relabelings = append(relabelings, map[string]interface{}{
-		"action":        "keep",
-		"source_labels": []string{"__meta_kubernetes_service_name"},
-		"regex":         am.Name,
+	relabelings = append(relabelings, yaml.MapSlice{
+		{Key: "action", Value: "keep"},
+		{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
+		{Key: "regex", Value: am.Name},
 	})
-	relabelings = append(relabelings, map[string]interface{}{
-		"action":        "keep",
-		"source_labels": []string{"__meta_kubernetes_namespace"},
-		"regex":         am.Namespace,
+	relabelings = append(relabelings, yaml.MapSlice{
+		{Key: "action", Value: "keep"},
+		{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
+		{Key: "regex", Value: am.Namespace},
 	})
 
 	if am.Port.StrVal != "" {
-		relabelings = append(relabelings, map[string]interface{}{
-			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_endpoint_port_name"},
-			"regex":         am.Port.String(),
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}},
+			{Key: "regex", Value: am.Port.String()},
 		})
 	} else if am.Port.IntVal != 0 {
-		relabelings = append(relabelings, map[string]interface{}{
-			"action":        "keep",
-			"source_labels": []string{"__meta_kubernetes_container_port_number"},
-			"regex":         am.Port.String(),
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_container_port_number"}},
+			{Key: "regex", Value: am.Port.String()},
 		})
 	}
 
-	cfg["relabel_configs"] = relabelings
+	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	return cfg
 }
