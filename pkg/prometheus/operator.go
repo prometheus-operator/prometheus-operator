@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
@@ -45,6 +46,7 @@ import (
 const (
 	tprServiceMonitor = "service-monitor." + v1alpha1.TPRGroup
 	tprPrometheus     = "prometheus." + v1alpha1.TPRGroup
+	configFilename    = "prometheus.yaml"
 
 	resyncPeriod = 5 * time.Minute
 )
@@ -945,14 +947,22 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 	s.ObjectMeta.Annotations = map[string]string{
 		"generated": "true",
 	}
-	s.Data["prometheus.yaml"] = []byte(conf)
+	generatedConf := []byte(conf)
+	s.Data[configFilename] = generatedConf
 
-	_, err = sClient.Get(s.Name, metav1.GetOptions{})
+	curSecret, err := sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
+		c.logger.Log("msg", "Creating configuration")
 		_, err = sClient.Create(s)
-	} else if err == nil {
-		_, err = sClient.Update(s)
+		return err
 	}
+
+	if curConfig, ok := curSecret.Data[configFilename]; ok && bytes.Equal(curConfig, generatedConf) {
+		c.logger.Log("msg", "Updating config skipped, no configuration change")
+	}
+
+	c.logger.Log("msg", "Updating configuration")
+	_, err = sClient.Update(s)
 	return err
 }
 
