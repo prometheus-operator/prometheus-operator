@@ -947,21 +947,31 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 	s.ObjectMeta.Annotations = map[string]string{
 		"generated": "true",
 	}
-	generatedConf := []byte(conf)
-	s.Data[configFilename] = generatedConf
+	s.Data[configFilename] = []byte(conf)
 
 	curSecret, err := sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		c.logger.Log("msg", "Creating configuration")
+		c.logger.Log("msg", "creating configuration")
 		_, err = sClient.Create(s)
 		return err
 	}
 
-	if curConfig, ok := curSecret.Data[configFilename]; ok && bytes.Equal(curConfig, generatedConf) {
-		c.logger.Log("msg", "Updating config skipped, no configuration change")
+	generatedConf := s.Data[configFilename]
+	generatedConfigMaps := s.Data[configMapsFilename]
+	curConfig, curConfigFound := curSecret.Data[configFilename]
+	curConfigMaps, curConfigMapsFound := curSecret.Data[configMapsFilename]
+	if curConfigFound && curConfigMapsFound {
+		if bytes.Equal(curConfig, generatedConf) && bytes.Equal(curConfigMaps, generatedConfigMaps) {
+			c.logger.Log("msg", "updating config skipped, no configuration change")
+			return nil
+		} else {
+			c.logger.Log("msg", "current config or current configmaps has changed")
+		}
+	} else {
+		c.logger.Log("msg", "no current config or current configmaps found", "currentConfigFound", curConfigFound, "currentConfigMapsFound", curConfigMapsFound)
 	}
 
-	c.logger.Log("msg", "Updating configuration")
+	c.logger.Log("msg", "updating configuration")
 	_, err = sClient.Update(s)
 	return err
 }

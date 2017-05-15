@@ -109,7 +109,8 @@ func makeServiceMonitors() map[string]*v1alpha1.ServiceMonitor {
 		Spec: v1alpha1.ServiceMonitorSpec{
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"group": "group2",
+					"group":  "group2",
+					"group3": "group3",
 				},
 			},
 			Endpoints: []v1alpha1.Endpoint{

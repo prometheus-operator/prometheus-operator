@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"sort"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,11 +29,10 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 
-	"strings"
-
 	"github.com/blang/semver"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/pkg/errors"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -39,6 +40,8 @@ const (
 	defaultBaseImage     = "quay.io/prometheus/prometheus"
 	defaultVersion       = "v1.6.1"
 	defaultRetention     = "24h"
+
+	configMapsFilename = "configmaps.json"
 )
 
 var (
@@ -155,16 +158,38 @@ type ConfigMapReferenceList struct {
 	Items []*ConfigMapReference `json:"items"`
 }
 
+func (l *ConfigMapReferenceList) Len() int {
+	return len(l.Items)
+}
+
+func (l *ConfigMapReferenceList) Less(i, j int) bool {
+	return l.Items[i].Key < l.Items[j].Key
+}
+
+func (l *ConfigMapReferenceList) Swap(i, j int) {
+	l.Items[i], l.Items[j] = l.Items[j], l.Items[i]
+}
+
 func makeRuleConfigMap(cm *v1.ConfigMap) (*ConfigMapReference, error) {
-	hash := sha256.New()
-	err := json.NewEncoder(hash).Encode(cm)
+	keys := []string{}
+	for k, _ := range cm.Data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	m := yaml.MapSlice{}
+	for _, k := range keys {
+		m = append(m, yaml.MapItem{Key: k, Value: cm.Data[k]})
+	}
+
+	b, err := yaml.Marshal(m)
 	if err != nil {
 		return nil, err
 	}
 
 	return &ConfigMapReference{
 		Key:      cm.Namespace + "/" + cm.Name,
-		Checksum: fmt.Sprintf("%x", hash.Sum(nil)),
+		Checksum: fmt.Sprintf("%x", sha256.Sum256(b)),
 	}, nil
 }
 
@@ -179,6 +204,7 @@ func makeRuleConfigMapListFile(configMaps []*v1.ConfigMap) ([]byte, error) {
 		cml.Items = append(cml.Items, configmap)
 	}
 
+	sort.Sort(cml)
 	return json.Marshal(cml)
 }
 
@@ -194,8 +220,8 @@ func makeConfigSecret(name string, configMaps []*v1.ConfigMap) (*v1.Secret, erro
 			Labels: managedByOperatorLabels,
 		},
 		Data: map[string][]byte{
-			"prometheus.yaml": []byte{},
-			"configmaps.json": b,
+			configFilename:     []byte{},
+			configMapsFilename: b,
 		},
 	}, nil
 }

@@ -178,7 +178,16 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	// Filter targets by services selected by the monitor.
 
 	// Exact label matches.
-	for k, v := range m.Spec.Selector.MatchLabels {
+	labelKeys := make([]string, len(m.Spec.Selector.MatchLabels))
+	i = 0
+	for k, _ := range m.Spec.Selector.MatchLabels {
+		labelKeys[i] = k
+		i++
+	}
+	sort.Strings(labelKeys)
+	for i := range labelKeys {
+		k := labelKeys[i]
+		v := m.Spec.Selector.MatchLabels[k]
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k)}},
