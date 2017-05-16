@@ -218,3 +218,37 @@ func TestStatefulSetVolumeSkip(t *testing.T) {
 		t.Fatal("Volumes mounted in a Pod should not be reconciled.")
 	}
 }
+
+func TestDeterministicRuleFileHashing(t *testing.T) {
+	cmr, err := makeRuleConfigMap(makeConfigMap())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < 1000; i++ {
+		testcmr, err := makeRuleConfigMap(makeConfigMap())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if cmr.Checksum != testcmr.Checksum {
+			t.Fatalf("Non-deterministic rule file hash generation")
+		}
+	}
+}
+
+func makeConfigMap() *v1.ConfigMap {
+	res := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testcm",
+			Namespace: "default",
+		},
+		Data: map[string]string{},
+	}
+
+	res.Data["test1"] = "value 1"
+	res.Data["test2"] = "value 2"
+	res.Data["test3"] = "value 3"
+
+	return res
+}

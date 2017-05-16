@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
@@ -45,6 +46,7 @@ import (
 const (
 	tprServiceMonitor = "service-monitor." + v1alpha1.TPRGroup
 	tprPrometheus     = "prometheus." + v1alpha1.TPRGroup
+	configFilename    = "prometheus.yaml"
 
 	resyncPeriod = 5 * time.Minute
 )
@@ -945,14 +947,32 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 	s.ObjectMeta.Annotations = map[string]string{
 		"generated": "true",
 	}
-	s.Data["prometheus.yaml"] = []byte(conf)
+	s.Data[configFilename] = []byte(conf)
 
-	_, err = sClient.Get(s.Name, metav1.GetOptions{})
+	curSecret, err := sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
+		c.logger.Log("msg", "creating configuration")
 		_, err = sClient.Create(s)
-	} else if err == nil {
-		_, err = sClient.Update(s)
+		return err
 	}
+
+	generatedConf := s.Data[configFilename]
+	generatedConfigMaps := s.Data[configMapsFilename]
+	curConfig, curConfigFound := curSecret.Data[configFilename]
+	curConfigMaps, curConfigMapsFound := curSecret.Data[configMapsFilename]
+	if curConfigFound && curConfigMapsFound {
+		if bytes.Equal(curConfig, generatedConf) && bytes.Equal(curConfigMaps, generatedConfigMaps) {
+			c.logger.Log("msg", "updating config skipped, no configuration change")
+			return nil
+		} else {
+			c.logger.Log("msg", "current config or current configmaps has changed")
+		}
+	} else {
+		c.logger.Log("msg", "no current config or current configmaps found", "currentConfigFound", curConfigFound, "currentConfigMapsFound", curConfigMapsFound)
+	}
+
+	c.logger.Log("msg", "updating configuration")
+	_, err = sClient.Update(s)
 	return err
 }
 
