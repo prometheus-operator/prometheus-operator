@@ -128,5 +128,13 @@ job('po-tests-master') {
             onlyIfBuildSucceeds(false)
             onlyIfBuildFails(false)
         }
+        slackNotifier {
+            room('#team-monitoring')
+            teamDomain('coreos')
+            authTokenCredentialId('team-monitoring-slack-jenkins')
+            notifyFailure(true)
+            notifyRegression(true)
+            notifyRepeatedFailure(true)
+        }
     }
 }
