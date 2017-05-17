@@ -1,4 +1,5 @@
 // Copyright 2016 The prometheus-operator Authors
+
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +21,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/go-kit/kit/log"
 	yaml "gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
@@ -48,7 +52,7 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	return res
 }
 
-func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
+func generateConfig(l log.Logger, kclient *kubernetes.Clientset, p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
 	cfg := yaml.MapSlice{}
 
 	cfg = append(cfg, yaml.MapItem{
@@ -83,8 +87,26 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range identifiers {
-		for i, ep := range mons[identifier].Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mons[identifier], ep, i, basicAuthSecrets))
+		if len(mons[identifier].Spec.Endpoints) == 0 {
+			// Do some calls to lookup from the kubernetes API from this service.
+			listOpts := metav1.ListOptions{
+				LabelSelector: metav1.FormatLabelSelector(&mons[identifier].Spec.Selector),
+			}
+			svcList, err := kclient.Core().Services(mons[identifier].Namespace).List(listOpts)
+			if err != nil {
+				l.Log("msg", "get object failed", "err", err)
+				continue
+			}
+			for x, s := range svcList.Items {
+				// We should generate a service configuration for each item here.
+				scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfigSvc(mons[identifier], s, x, basicAuthSecrets))
+			}
+
+		} else {
+
+			for i, ep := range mons[identifier].Spec.Endpoints {
+				scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mons[identifier], ep, i, basicAuthSecrets))
+			}
 		}
 	}
 	var alertmanagerConfigs []yaml.MapSlice
@@ -109,7 +131,115 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 
 	return yaml.Marshal(cfg)
 }
+func generateServiceMonitorConfigSvc(m *v1alpha1.ServiceMonitor, svc v1.Service, i int, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
+	cfg := yaml.MapSlice{
+		{
+			Key:   "job_name",
+			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+		},
+	}
 
+	//dnsConf := []yaml.MapSlice{
+	dnsConf := yaml.MapSlice{
+		{
+			Key: "names",
+			Value: []string{
+				svc.Spec.ExternalName,
+			},
+		},
+		{
+			Key:   "type",
+			Value: m.Spec.ExternalName.DnsType,
+		},
+		{
+			Key:   "refresh_interval",
+			Value: "30s",
+		},
+	}
+	//}
+
+	if m.Spec.ExternalName.DnsType != "SRV" {
+		portConf := yaml.MapItem{Key: "port", Value: 0}
+		for _, p := range svc.Spec.Ports {
+			if p.Name == m.Spec.ExternalName.Port {
+				portConf.Value = p.Port
+			}
+		}
+
+		if portConf.Value == 0 {
+			// At this point, we're not an SRV record, and we've not been explictly given a port.
+			// We require a port for this config to work.
+			// Fallback to the first port number on the service
+			portConf.Value = svc.Spec.Ports[0].Port
+		}
+
+		dnsConf = append(dnsConf, portConf)
+	}
+
+	cfg = append(cfg, yaml.MapItem{Key: "dns_sd_configs", Value: []yaml.MapSlice{dnsConf}})
+
+	if m.Spec.ExternalName.Interval != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: m.Spec.ExternalName.Interval})
+	}
+	if m.Spec.ExternalName.Path != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: m.Spec.ExternalName.Path})
+	}
+	if m.Spec.ExternalName.Scheme != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ExternalName.Scheme})
+	}
+	if m.Spec.ExternalName.TLSConfig != nil {
+		tlsConfig := yaml.MapSlice{
+			{Key: "insecure_skip_verify", Value: m.Spec.ExternalName.TLSConfig.InsecureSkipVerify},
+		}
+		if m.Spec.ExternalName.TLSConfig.CAFile != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: m.Spec.ExternalName.TLSConfig.CAFile})
+		}
+		if m.Spec.ExternalName.TLSConfig.CertFile != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: m.Spec.ExternalName.TLSConfig.CertFile})
+		}
+		if m.Spec.ExternalName.TLSConfig.KeyFile != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: m.Spec.ExternalName.TLSConfig.KeyFile})
+		}
+		if m.Spec.ExternalName.TLSConfig.ServerName != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: m.Spec.ExternalName.TLSConfig.ServerName})
+		}
+		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
+	}
+	if m.Spec.ExternalName.BearerTokenFile != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: m.Spec.ExternalName.BearerTokenFile})
+	}
+
+	if m.Spec.ExternalName.BasicAuth != nil {
+		if s, ok := basicAuthSecrets[fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)]; ok {
+			cfg = append(cfg, yaml.MapItem{
+				Key: "basic_auth", Value: yaml.MapSlice{
+					{Key: "username", Value: s.username},
+					{Key: "password", Value: s.password},
+				},
+			})
+		}
+
+	}
+
+	var relabelings []yaml.MapSlice
+
+	// Add some namespace and service labels in order to be consistant.
+	relabelings = append(relabelings, []yaml.MapSlice{
+		yaml.MapSlice{
+			{Key: "replacement", Value: m.Namespace},
+			{Key: "target_label", Value: "namespace"},
+		},
+		yaml.MapSlice{
+			{Key: "replacement", Value: svc.Name},
+			{Key: "target_label", Value: "service"},
+		},
+	}...)
+
+	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
+
+	return cfg
+
+}
 func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
 	cfg := yaml.MapSlice{
 		{
@@ -176,7 +306,6 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	var relabelings []yaml.MapSlice
 
 	// Filter targets by services selected by the monitor.
-
 	// Exact label matches.
 	labelKeys := make([]string, len(m.Spec.Selector.MatchLabels))
 	i = 0
