@@ -935,7 +935,7 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 	}
 
 	// Update secret based on the most recent configuration.
-	conf, err := generateConfig(p, smons, len(ruleFileConfigMaps), basicAuthSecrets)
+	conf, err := generateConfig(c.logger, c.kclient, p, smons, len(ruleFileConfigMaps), basicAuthSecrets)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
 	}
