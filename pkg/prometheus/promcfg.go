@@ -88,7 +88,6 @@ func generateConfig(l log.Logger, kclient *kubernetes.Clientset, p *v1alpha1.Pro
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range identifiers {
 		if len(mons[identifier].Spec.Endpoints) == 0 {
-			// Do some calls to lookup from the kubernetes API from this service.
 			listOpts := metav1.ListOptions{
 				LabelSelector: metav1.FormatLabelSelector(&mons[identifier].Spec.Selector),
 			}
@@ -234,6 +233,22 @@ func generateServiceMonitorConfigSvc(m *v1alpha1.ServiceMonitor, svc v1.Service,
 			{Key: "target_label", Value: "service"},
 		},
 	}...)
+
+	// Add a proper job name
+	relabelings = append(relabelings, yaml.MapSlice{
+		{Key: "source_labels", Value: svc, Name},
+		{Key: "target_label", Value: "job"},
+		{Key: "replacement", Value: "${1}"},
+	})
+
+	// Use a joblabel if we're given one.
+	if m.Spec.JobLabel != "" {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "source_labels", Value: m.Spec.JobLabel},
+			{Key: "target_label", Value: "job"},
+			{Key: "replacement", Value: "${1}"},
+		})
+	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
