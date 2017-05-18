@@ -38,7 +38,7 @@ import (
 const (
 	governingServiceName = "prometheus-operated"
 	defaultBaseImage     = "quay.io/prometheus/prometheus"
-	defaultVersion       = "v1.6.1"
+	defaultVersion       = "v1.6.3"
 	defaultRetention     = "24h"
 
 	configMapsFilename = "configmaps.json"
