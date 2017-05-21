@@ -183,8 +183,8 @@ type ServiceMonitorSpec struct {
 
 // ExternalName contains configuration for handling ExternalName type services.
 type ExternalName struct {
-	Endpoint
-
+	// The endpoint configuration
+	Endpoint Endpoint `json:"endpoint, omitempty"`
 	// The DNS type, one of A, AAAA, SRV
 	DnsType string `json:"dnsType,omitempty"`
 }
