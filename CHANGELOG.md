@@ -1,3 +1,9 @@
+## 0.9.1 / 2017-05-18
+
+* [FEATURE] Add experimental Prometheus 2.0 support.
+* [FEATURE] Add support for setting Prometheus external labels.
+* [BUGFIX] Fix non-deterministic config generation.
+
 ## 0.9.0 / 2017-05-09
 
 * [CHANGE] The `kubelet-object` flag has been renamed to `kubelet-service`.

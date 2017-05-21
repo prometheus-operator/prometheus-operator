@@ -72,7 +72,7 @@ spec:
 
 Once created it allows the web UI to be accessible via a node's IP and the port `30903`.
 
-Now this is a fully functional highly available Alertmanager cluster, but it does not get any alerts fired against it. Let's setup Prometheus instances that will actually fire alerts against it.
+Now this is a fully functional highly available Alertmanager cluster, but it does not get any alerts fired against it. Let's setup Prometheus instances that will actually fire alerts to our alertmanagers.
 
 [embedmd]:# (../../example/user-guides/alerting/prometheus-example.yaml)
 ```yaml
@@ -98,6 +98,8 @@ spec:
       role: prometheus-rulefiles
       prometheus: example
 ```
+
+The above configuration specifies a `Prometheus` that finds all of the alertmanagers behind the `Service` we just created. The `name` and `port` fields under alertmanagers, should match those of our `Service` to allow this to occur.
 
 Prometheus rule files are held in `ConfigMap`s. The `ConfigMap`s to mount rule files from are selected with a label selector field called `ruleSelector` in the Prometheus object, as seen above. All top level files that end with the `.rules` extension will be loaded.
 
