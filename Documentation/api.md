@@ -146,6 +146,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods. The Secrets are mounted into /etc/prometheus/secrets/<secret-name>. Secrets changes after initial creation of a Prometheus object are not reflected in the running Pods. To change the secrets mounted into the Prometheus Pods, the object must be deleted and recreated with the new list of secrets. | []string | false |
+| tolerations | An optional list of tolerations to determine which tainted nodes the pod can execute on see https://github.com/kubernetes/community/blob/master/contributors/design-proposals/taint-toleration-dedicated.md | [][v1.Toleration](https://kubernetes.io/docs/api-reference/v1.6/#toleration-v1-core) | false |
 
 ## PrometheusStatus
 
