@@ -471,6 +471,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 				},
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
+				Tolerations:                   p.Spec.Tolerations,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
 				Volumes: volumes,
 			},

@@ -102,6 +102,8 @@ type PrometheusSpec struct {
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...
+	// Define which tolerations are appicable for the pods
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not
