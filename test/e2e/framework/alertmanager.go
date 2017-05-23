@@ -225,7 +225,7 @@ func (f *Framework) WaitForSpecificAlertmanagerConfig(ns, amName string, expecte
 			return false, err
 		}
 
-		if config.Data.Config == expectedConfig {
+		if config.Data.ConfigYAML == expectedConfig {
 			return true, nil
 		}
 
@@ -239,7 +239,7 @@ type alertmanagerStatus struct {
 
 type alertmanagerStatusData struct {
 	MeshStatus meshStatus `json:"meshStatus"`
-	Config     string     `json:"config"`
+	ConfigYAML string     `json:"configYAML"`
 }
 
 type meshStatus struct {
