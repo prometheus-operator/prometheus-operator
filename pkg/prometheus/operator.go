@@ -791,9 +791,6 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	if c1.Image != c2.Image {
 		return true
 	}
-	if !reflect.DeepEqual(c1.Resources, c2.Resources) {
-		return true
-	}
 	if !reflect.DeepEqual(c1.Args, c2.Args) {
 		return true
 	}
