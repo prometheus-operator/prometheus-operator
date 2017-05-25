@@ -1024,8 +1024,12 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 		cache.ListAll(c.servInf.GetStore(), cs, func(obj interface{}) {
 			s := obj.(*v1.Service)
 			// Filter By namespace here.
-			if s.Namespace == smon.Namespace {
-				services = append(services, s)
+			if !smon.Spec.NamespaceSelector.Any {
+				for _, n := range smon.Spec.NamespaceSelector.MatchItems {
+					if s.Namespace == n {
+						services = append(services, s)
+					}
+				}
 			}
 		})
 
