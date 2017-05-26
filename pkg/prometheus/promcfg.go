@@ -15,9 +15,12 @@
 package prometheus
 
 import (
+	"bytes"
 	"fmt"
+	"net/url"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
@@ -132,9 +135,6 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
-	}
-	if ep.Path != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: ep.Path})
 	}
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
@@ -289,6 +289,43 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 			{Key: "target_label", Value: "service"},
 		},
 	}...)
+	if ep.Address != "" {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "target_label", Value: "__address__"},
+			{Key: "replacement", Value: ep.Address},
+		})
+	}
+	if ep.Path != "" {
+		if u, err := url.Parse(ep.Path); err == nil {
+			path, sourceLabels := parsePath(u.Path)
+			if len(sourceLabels) == 0 {
+				cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: path})
+			} else {
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "source_labels", Value: sourceLabels},
+					{Key: "regex", Value: strings.Repeat(";(.+)", len(sourceLabels))[1:]},
+					{Key: "target_label", Value: "__metrics_path__"},
+					{Key: "replacement", Value: path},
+				})
+			}
+			for k, v := range u.Query() {
+				path, sourceLabels := parsePath(v[0])
+				if len(sourceLabels) == 0 {
+					relabelings = append(relabelings, yaml.MapSlice{
+						{Key: "target_label", Value: "__param_" + k},
+						{Key: "replacement", Value: path},
+					})
+				} else {
+					relabelings = append(relabelings, yaml.MapSlice{
+						{Key: "source_labels", Value: sourceLabels},
+						{Key: "regex", Value: strings.Repeat(";(.+)", len(sourceLabels))[1:]},
+						{Key: "target_label", Value: "__param_" + k},
+						{Key: "replacement", Value: path},
+					})
+				}
+			}
+		}
+	}
 
 	// By default, generate a safe job name from the service name.  We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
@@ -325,6 +362,74 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	return cfg
+}
+
+func parsePath(path string) (string, []string) {
+	if strings.HasSuffix(path, "__meta_kubernetes_") {
+		return "$1", []string{path}
+	}
+
+	m := make(map[string]int) // meta_label => regex_pos
+	var r bytes.Buffer        // resulting metrics_path
+
+	meta := []rune("${__meta_kubernetes_")
+	meta_len := len(meta)
+
+	s := make([]rune, 0, len(path))
+	for _, c := range path {
+		s = append(s, c)
+	}
+
+	i := 0
+	for i < len(s)-meta_len-1 {
+		if eq(s[i:i+meta_len], meta) {
+			start := i
+			end := i + meta_len + 1
+			for end < len(s) {
+				if s[end] == '}' {
+					break
+				} else {
+					end += 1
+				}
+			}
+			key := string(s[start+2 : end])
+			pos, ok := m[key]
+			if !ok {
+				pos = len(m)
+				m[key] = pos
+			}
+
+			r.WriteString("${")
+			r.WriteString(strconv.Itoa(pos + 1))
+			r.WriteRune('}')
+
+			i = end + 1
+		} else {
+			r.WriteRune(s[i])
+			i += 1
+		}
+	}
+	for i < len(s) {
+		r.WriteRune(s[i])
+		i += 1
+	}
+	sourceLabels := make([]string, len(m))
+	for k, v := range m {
+		sourceLabels[v] = k
+	}
+	return r.String(), sourceLabels
+}
+
+func eq(a, b []rune) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, x := range a {
+		if b[i] != x {
+			return false
+		}
+	}
+	return true
 }
 
 func generateAlertmanagerConfig(am v1alpha1.AlertmanagerEndpoints) yaml.MapSlice {
