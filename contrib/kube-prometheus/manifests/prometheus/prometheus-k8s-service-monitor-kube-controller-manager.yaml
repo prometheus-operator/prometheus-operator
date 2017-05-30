@@ -1,18 +1,17 @@
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
-  name: kubelet
+  name: kube-controller-manager
   labels:
-    k8s-app: kubelet
+    k8s-app: kube-controller-manager
 spec:
   jobLabel: k8s-app
   endpoints:
   - port: http-metrics
     interval: 30s
-    honorLabels: true
   selector:
     matchLabels:
-      k8s-app: kubelet
+      k8s-app: kube-controller-manager
   namespaceSelector:
     matchNames:
     - kube-system

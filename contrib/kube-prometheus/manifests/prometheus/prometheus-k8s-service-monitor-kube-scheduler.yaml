@@ -1,17 +1,17 @@
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
-  name: node-exporter
+  name: kube-scheduler
   labels:
-    k8s-app: node-exporter
+    k8s-app: kube-scheduler
 spec:
   jobLabel: k8s-app
-  selector:
-    matchLabels:
-      k8s-app: node-exporter
-  namespaceSelector:
-    matchNames:
-    - monitoring
   endpoints:
   - port: http-metrics
     interval: 30s
+  selector:
+    matchLabels:
+      k8s-app: kube-scheduler
+  namespaceSelector:
+    matchNames:
+    - kube-system
