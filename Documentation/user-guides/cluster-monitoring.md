@@ -33,28 +33,31 @@ kind: Deployment
 metadata:
   name: prometheus-operator
   labels:
-    operator: prometheus
+    k8s-app: prometheus-operator
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        operator: prometheus
+        k8s-app: prometheus-operator
     spec:
       serviceAccountName: prometheus-operator
       containers:
-       - name: prometheus-operator
-         image: quay.io/coreos/prometheus-operator:v0.9.1
-         args:
-         - "--kubelet-service=kube-system/kubelet"
-         - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
-         resources:
-           requests:
-             cpu: 100m
-             memory: 50Mi
-           limits:
-             cpu: 200m
-             memory: 300Mi
+      - name: prometheus-operator
+        image: quay.io/coreos/prometheus-operator:v0.9.1
+        args:
+        - "--kubelet-service=kube-system/kubelet"
+        - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
+        ports:
+        - name: http
+          containerPort: 8080
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+          limits:
+            cpu: 200m
+            memory: 300Mi
 ```
 
 > Make sure that the `ServiceAccount` called `prometheus-operator` exists and if using RBAC, is bound to the correct role. Read more on [RBAC when using the Prometheus Operator](../rbac.md).
