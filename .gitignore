@@ -2,3 +2,4 @@
 .build/
 *~
 *.tgz
+requirements.lock
