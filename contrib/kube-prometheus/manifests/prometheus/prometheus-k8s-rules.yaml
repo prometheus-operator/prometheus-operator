@@ -360,7 +360,7 @@ data:
     ALERT K8SApiServerLatency
       IF histogram_quantile(
           0.99,
-          sum without (instance,resource) (apiserver_request_latencies_bucket{verb!~"CONNECT|WATCHLIST|WATCH"})
+          sum without (instance,resource) (apiserver_request_latencies_bucket{verb!~"CONNECT|WATCHLIST|WATCH|PROXY"})
         ) / 1e6 > 1.0
       FOR 10m
       LABELS {
