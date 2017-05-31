@@ -11,6 +11,18 @@ Alert TargetDown
     description = "A target of type {{ $labels.job }} is down."
   }
 
+### Dead man's switch ###
+
+ALERT DeadMansSwitch
+  IF vector(1)
+  LABELS {
+    severity = "none",
+  }
+  ANNOTATIONS {
+    summary = "Alerting DeadMansSwitch",
+    description = "This is a DeadMansSwitch meant to ensure that the entire Alerting pipeline is functional.",
+  }
+
 ### File descriptor alerts ###
 
 ALERT TooManyOpenFiles
