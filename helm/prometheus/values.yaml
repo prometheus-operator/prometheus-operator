@@ -114,7 +114,7 @@ service:
   ## Port to expose on each node
   ## Only used if service.type is 'NodePort'
   ##
-  nodePort: 30900
+  nodePort: 39090
 
   ## Service type
   ##
