@@ -1,0 +1,215 @@
+## Alertmanagers to which alerts will be sent
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#alertmanagerendpoints
+##
+alertingEndpoints: []
+#   - name: ""
+#     namespace: ""
+#     port: 9093
+#     scheme: http
+
+## Prometheus configuration directives
+## Ignored if serviceMonitors are defined
+## Ref: https://prometheus.io/docs/operating/configuration/
+##
+config:
+  specifiedInValues: true
+  value: {}
+
+## External URL at which Prometheus will be reachable
+##
+externalUrl: ""
+
+## Prometheus container image
+##
+image:
+  repository: quay.io/prometheus/prometheus
+  tag: v1.5.2
+
+ingress:
+  ## If true, Prometheus Ingress will be created
+  ##
+  enabled: false
+
+  ## Annotations for Prometheus Ingress
+  ##
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+
+  fqdn: ""
+
+  ## TLS configuration for Prometheus Ingress
+  ## Secret must be manually created in the namespace
+  ##
+  tls: []
+    # - secretName: prometheus-k8s-tls
+    #   hosts:
+    #     - prometheus.example.com
+
+## Node labels for Prometheus pod assignment
+## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+##
+nodeSelector: {}
+
+## If true, the Operator won't process any Prometheus configuration changes
+##
+paused: false
+
+## Number of Prometheus replicas desired
+##
+replicaCount: 1
+
+## Resource limits & requests
+## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
+##
+resources: {}
+  # requests:
+  #   memory: 400Mi
+
+## How long to retain metrics
+##
+retention: 24h
+
+## Prefix used to register routes, overriding externalUrl route.
+## Useful for proxies that rewrite URLs.
+##
+routePrefix: /
+
+## Rules configmap selector
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md
+##
+rulesSelector: {}
+
+## Prometheus alerting & recording rules
+## Ref: https://prometheus.io/docs/querying/rules/
+## Ref: https://prometheus.io/docs/alerting/rules/
+##
+rules:
+  specifiedInValues: true
+  value: {}
+
+service:
+  ## Annotations to be added to the Service
+  ##
+  annotations: {}
+
+  ## Cluster-internal IP address for Prometheus Service
+  ##
+  clusterIP: ""
+
+  ## List of external IP addresses at which the Prometheus Service will be available
+  ##
+  externalIPs: []
+
+  ## External IP address to assign to Prometheus Service
+  ## Only used if service.type is 'LoadBalancer' and supported by cloud provider
+  ##
+  loadBalancerIP: ""
+
+  ## List of client IPs allowed to access Prometheus Service
+  ## Only used if service.type is 'LoadBalancer' and supported by cloud provider
+  ##
+  loadBalancerSourceRanges: []
+
+  ## Port to expose on each node
+  ## Only used if service.type is 'NodePort'
+  ##
+  nodePort: 39090
+
+  ## Service type
+  ##
+  type: ClusterIP
+
+## Service monitors selector
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md
+##
+serviceMonitorsSelector: {}
+
+## ServiceMonitor TPRs to create & be scraped by the Prometheus instance.
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/service-monitor.md
+##
+serviceMonitors: []
+  ## Name of the ServiceMonitor to create
+  ##
+  # - name: ""
+
+    ## Service label for use in assembling a job name of the form <label value>-<port>
+    ## If no label is specified, the service name is used.
+    ##
+    # jobLabel: ""
+
+    ## Label selector for services to which this ServiceMonitor applies
+    ##
+    # selector: {}
+
+    ## Namespaces from which services are selected
+    ##
+    # namespaceSelector:
+      ## Match any namespace
+      ##
+      # any: false
+
+      ## Explicit list of namespace names to select
+      ##
+      # matchNames: []
+
+    ## Endpoints of the selected service to be monitored
+    ##
+    # endpoints: []
+      ## Name of the endpoint's service port
+      ## Mutually exclusive with targetPort
+      # - port: ""
+
+      ## Name or number of the endpoint's target port
+      ## Mutually exclusive with port
+      # - targetPort: ""
+
+      ## File containing bearer token to be used when scraping targets
+      ##
+      #   bearerTokenFile: ""
+
+      ## Interval at which metrics should be scraped
+      ##
+      #   interval: 30s
+
+      ## HTTP path to scrape for metrics
+      ##
+      #   path: /metrics
+
+      ## HTTP scheme to use for scraping
+      ##
+      #   scheme: http
+
+      ## TLS configuration to use when scraping the endpoint
+      ##
+      #   tlsConfig:
+
+          ## Path to the CA file
+          ##
+          # caFile: ""
+
+          ## Path to client certificate file
+          ##
+          # certFile: ""
+
+          ## Skip certificate verification
+          ##
+          # insecureSkipVerify: false
+
+          ## Path to client key file
+          ##
+          # keyFile: ""
+
+          ## Server name used to verify host name
+          ##
+          # serverName: ""
+
+## Prometheus StorageSpec for persistent data
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#storagespec
+##
+storageSpec: {}
+#   class: default
+#   resources:
+#     requests:
+#       storage: 16Gi
+#   selector: {}

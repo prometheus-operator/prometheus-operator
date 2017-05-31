@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: prometheus
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    component: kube-api
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+    prometheus: {{ .Release.Name }}
+  name: {{ template "fullname" . }}
+spec:
+  jobLabel: {{ template "fullname" . }}
+  selector:
+    matchLabels:
+      app: {{ template "name" . }}
+      component: kube-api
+  namespaceSelector:
+    matchNames:
+      - "kube-system"
+  endpoints:
+  - port: https-metrics
+    interval: 15s
+    scheme: https
+    tlsConfig:
+      caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      # Skip verification until we have resolved why the certificate validation
+      # for the kubelet on API server nodes fail.
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token

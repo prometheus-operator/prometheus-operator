@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: "prometheus"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    prometheus: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}
+data:
+  kube-controller-manager.rules: |-
+    # NOTE: These rules were kindly contributed by the SoundCloud engineering team.
+
+    ### Scheduling latency ###
+
+    cluster:scheduler_e2e_scheduling_latency:quantile_seconds{quantile="0.99"} =
+      histogram_quantile(0.99,sum by (le,cluster) (scheduler_e2e_scheduling_latency_microseconds_bucket)) / 1e6
+    cluster:scheduler_e2e_scheduling_latency:quantile_seconds{quantile="0.9"} =
+      histogram_quantile(0.9,sum by (le,cluster) (scheduler_e2e_scheduling_latency_microseconds_bucket)) / 1e6
+    cluster:scheduler_e2e_scheduling_latency:quantile_seconds{quantile="0.5"} =
+      histogram_quantile(0.5,sum by (le,cluster) (scheduler_e2e_scheduling_latency_microseconds_bucket)) / 1e6
+
+    cluster:scheduler_scheduling_algorithm_latency:quantile_seconds{quantile="0.99"} =
+      histogram_quantile(0.99,sum by (le,cluster) (scheduler_scheduling_algorithm_latency_microseconds_bucket)) / 1e6
+    cluster:scheduler_scheduling_algorithm_latency:quantile_seconds{quantile="0.9"} =
+      histogram_quantile(0.9,sum by (le,cluster) (scheduler_scheduling_algorithm_latency_microseconds_bucket)) / 1e6
+    cluster:scheduler_scheduling_algorithm_latency:quantile_seconds{quantile="0.5"} =
+      histogram_quantile(0.5,sum by (le,cluster) (scheduler_scheduling_algorithm_latency_microseconds_bucket)) / 1e6
+
+    cluster:scheduler_binding_latency:quantile_seconds{quantile="0.99"} =
+      histogram_quantile(0.99,sum by (le,cluster) (scheduler_binding_latency_microseconds_bucket)) / 1e6
+    cluster:scheduler_binding_latency:quantile_seconds{quantile="0.9"} =
+      histogram_quantile(0.9,sum by (le,cluster) (scheduler_binding_latency_microseconds_bucket)) / 1e6
+    cluster:scheduler_binding_latency:quantile_seconds{quantile="0.5"} =
+      histogram_quantile(0.5,sum by (le,cluster) (scheduler_binding_latency_microseconds_bucket)) / 1e6
+
+    ALERT K8SSchedulerDown
+      IF absent(up{job="{{ template "fullname" . }}"}) or (count by(cluster) (up{job="{{ template "fullname" . }}"} == 1) == 0)
+      FOR 5m
+      LABELS {
+        service = "k8s",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "Scheduler is down",
+        description = "There is no running K8S scheduler. New pods are not being assigned to nodes.",
+      }

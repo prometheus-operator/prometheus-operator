@@ -1,0 +1,172 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: "prometheus"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    prometheus: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}
+data:
+  kubelets.rules: |-
+    # NOTE: These rules were kindly contributed by the SoundCloud engineering team.
+
+    ### Container resources ###
+
+    cluster_namespace_controller_pod_container:spec_memory_limit_bytes =
+      sum by (cluster,namespace,controller,pod_name,container_name) (
+        label_replace(
+          container_spec_memory_limit_bytes{container_name!=""},
+          "controller", "$1",
+          "pod_name", "^(.*)-[a-z0-9]+"
+        )
+      )
+
+    cluster_namespace_controller_pod_container:spec_cpu_shares =
+      sum by (cluster,namespace,controller,pod_name,container_name) (
+        label_replace(
+          container_spec_cpu_shares{container_name!=""},
+          "controller", "$1",
+          "pod_name", "^(.*)-[a-z0-9]+"
+        )
+      )
+
+    cluster_namespace_controller_pod_container:cpu_usage:rate =
+      sum by (cluster,namespace,controller,pod_name,container_name) (
+        label_replace(
+          irate(
+            container_cpu_usage_seconds_total{container_name!=""}[5m]
+          ),
+          "controller", "$1",
+          "pod_name", "^(.*)-[a-z0-9]+"
+        )
+      )
+
+    cluster_namespace_controller_pod_container:memory_usage:bytes =
+      sum by (cluster,namespace,controller,pod_name,container_name) (
+        label_replace(
+          container_memory_usage_bytes{container_name!=""},
+          "controller", "$1",
+          "pod_name", "^(.*)-[a-z0-9]+"
+        )
+      )
+
+    cluster_namespace_controller_pod_container:memory_working_set:bytes =
+      sum by (cluster,namespace,controller,pod_name,container_name) (
+        label_replace(
+          container_memory_working_set_bytes{container_name!=""},
+          "controller", "$1",
+          "pod_name", "^(.*)-[a-z0-9]+"
+        )
+      )
+
+    cluster_namespace_controller_pod_container:memory_rss:bytes =
+      sum by (cluster,namespace,controller,pod_name,container_name) (
+        label_replace(
+          container_memory_rss{container_name!=""},
+          "controller", "$1",
+          "pod_name", "^(.*)-[a-z0-9]+"
+        )
+      )
+
+    cluster_namespace_controller_pod_container:memory_cache:bytes =
+      sum by (cluster,namespace,controller,pod_name,container_name) (
+        label_replace(
+          container_memory_cache{container_name!=""},
+          "controller", "$1",
+          "pod_name", "^(.*)-[a-z0-9]+"
+        )
+      )
+
+    cluster_namespace_controller_pod_container:disk_usage:bytes =
+      sum by (cluster,namespace,controller,pod_name,container_name) (
+        label_replace(
+          container_disk_usage_bytes{container_name!=""},
+          "controller", "$1",
+          "pod_name", "^(.*)-[a-z0-9]+"
+        )
+      )
+
+    cluster_namespace_controller_pod_container:memory_pagefaults:rate =
+      sum by (cluster,namespace,controller,pod_name,container_name,scope,type) (
+        label_replace(
+          irate(
+            container_memory_failures_total{container_name!=""}[5m]
+          ),
+          "controller", "$1",
+          "pod_name", "^(.*)-[a-z0-9]+"
+        )
+      )
+
+    cluster_namespace_controller_pod_container:memory_oom:rate =
+      sum by (cluster,namespace,controller,pod_name,container_name,scope,type) (
+        label_replace(
+          irate(
+            container_memory_failcnt{container_name!=""}[5m]
+          ),
+          "controller", "$1",
+          "pod_name", "^(.*)-[a-z0-9]+"
+        )
+      )
+
+    ### Cluster resources ###
+
+    cluster:memory_allocation:percent =
+      100 * sum by (cluster) (
+        container_spec_memory_limit_bytes{pod_name!=""}
+      ) / sum by (cluster) (
+        machine_memory_bytes
+      )
+
+    cluster:memory_used:percent =
+      100 * sum by (cluster) (
+        container_memory_usage_bytes{pod_name!=""}
+      ) / sum by (cluster) (
+        machine_memory_bytes
+      )
+
+    cluster:cpu_allocation:percent =
+      100 * sum by (cluster) (
+        container_spec_cpu_shares{pod_name!=""}
+      ) / sum by (cluster) (
+        container_spec_cpu_shares{id="/"} * on(cluster,instance) machine_cpu_cores
+      )
+
+    ALERT K8SNodeDown
+      IF up{job="kubelet"} == 0
+      FOR 1h
+      LABELS {
+        service = "k8s",
+        severity = "warning"
+      }
+      ANNOTATIONS {
+        summary = "Kubelet cannot be scraped",
+        description = "Prometheus could not scrape a {{`{{ $labels.job }}`}} for more than one hour",
+      }
+
+    ALERT K8SKubeletDown
+      IF absent(up{job="kubelet"}) or count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.1
+      FOR 1h
+      LABELS {
+        service = "k8s",
+        severity = "critical"
+      }
+      ANNOTATIONS {
+        summary = "Many Kubelets cannot be scraped",
+        description = "Prometheus failed to scrape more than 10% of kubelets, or all Kubelets have disappeared from service discovery.",
+      }
+
+    # Some verbs excluded because they are expected to be long-lasting:
+    # WATCHLIST is long-poll, CONNECT is `kubectl exec`.
+
+    ALERT K8SKubeletTooManyPods
+      IF kubelet_running_pod_count > 100
+      LABELS {
+        service = "k8s",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Kubelet is close to pod limit",
+        description = "Kubelet {{`{{$labels.instance}}`}} is running {{`{{$value}}`}} pods, close to the limit of 110",
+      }

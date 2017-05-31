@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: prometheus
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    component: node-exporter
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+    prometheus: {{ .Release.Name }}
+  name: {{ template "fullname" . }}
+spec:
+  jobLabel: {{ template "name" . }}
+  selector:
+    matchLabels:
+      app: {{ template "name" . }}
+      component: node-exporter
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  endpoints:
+  - port: metrics
+    interval: 15s
