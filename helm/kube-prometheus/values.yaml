@@ -1,4 +1,7 @@
 alertmanager:
+  ## Alertmanager configuration directives
+  ## Ref: https://prometheus.io/docs/alerting/configuration/
+  ##
   config:
     global:
       resolve_timeout: 5m
@@ -92,7 +95,7 @@ alertmanager:
     ## Port to expose on each node
     ## Only used if service.type is 'NodePort'
     ##
-    nodePort: 30903
+    nodePort: 39093
 
     ## Service type
     ##
@@ -225,7 +228,7 @@ prometheus:
     ## Port to expose on each node
     ## Only used if service.type is 'NodePort'
     ##
-    nodePort: 30900
+    nodePort: 39090
 
     ## Service type
     ##
