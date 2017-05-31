@@ -11,4 +11,4 @@ spec:
     protocol: TCP
     targetPort: web
   selector:
-    prometheus: prometheus-frontend
+    prometheus: frontend
