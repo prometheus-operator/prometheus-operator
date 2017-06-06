@@ -225,14 +225,14 @@ data:
     ### Up Alerting ###
     
     Alert TargetDown
-      IF up == 0
+      IF 100 * (count(up == 0) / count(up)) > 3
       FOR 10m
       LABELS {
         severity = "warning"
       }
       ANNOTATIONS {
-        summary = "target is down",
-        description = "A target of type {{ $labels.job }} is down."
+        summary = "Targets are down",
+        description = "More than {{ $value }}% of targets are down."
       }
     
     ### Dead man's switch ###
@@ -249,26 +249,15 @@ data:
     
     ### File descriptor alerts ###
     
-    ALERT TooManyOpenFiles
-      IF 100*process_open_fds / process_max_fds > 50
-      FOR 10m
-      LABELS {
-        severity = "warning"
-      }
-      ANNOTATIONS {
-        summary = "too many open file descriptors",
-        description = "{{ $labels.job }}: {{ $labels.namespace }}/{{ $labels.pod }} is using {{ $value }}% of the available file/socket descriptors.",
-      }
-    
-    ALERT K8STooManyOpenFiles
-      IF 100*process_open_fds / process_max_fds > 80
+    ALERT TooManyOpenFileDescriptors
+      IF 100 * (process_open_fds / process_max_fds) > 95
       FOR 10m
       LABELS {
         severity = "critical"
       }
       ANNOTATIONS {
         summary = "too many open file descriptors",
-        description = "{{ $labels.job }}: {{ $labels.namespace }}/{{ $labels.pod }} is using {{ $value }}% of the available file/socket descriptors.",
+        description = "{{ $labels.job }}: {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.instance }}) is using {{ $value }}% of the available file/socket descriptors.",
       }
     
     instance:fd_utilization = process_open_fds / process_max_fds
@@ -282,7 +271,7 @@ data:
       }
       ANNOTATIONS {
         summary = "file descriptors soon exhausted",
-        description = "{{ $labels.job }}: {{ $labels.namespace }}/{{ $labels.pod }} instance {{ $labels.namespace }}/{{ $labels.pod }} will exhaust in file descriptors soon",
+        description = "{{ $labels.job }}: {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.instance }}) instance will exhaust in file/socket descriptors soon",
       }
     
     # alert if file descriptors are likely to exhaust within the next hour
@@ -294,56 +283,9 @@ data:
       }
       ANNOTATIONS {
         summary = "file descriptors soon exhausted",
-        description = "{{ $labels.job }}: {{ $labels.namespace }}/{{ $labels.pod }} instance {{ $labels.namespace }}/{{ $labels.pod }} will exhaust in file descriptors soon",
-      }
-    
-    ### Contrack alerts ###
-    
-    # To catch the conntrack sysctl de-tuning when it happens
-    ALERT ConntrackTuningMissing
-      IF node_nf_conntrack_udp_timeout > 10
-      FOR 10m
-      LABELS {
-        severity = "warning",
-      }
-      ANNOTATIONS {
-        summary = "Node does not have the correct conntrack tunings",
-        description = "Nodes keep un-setting the correct tunings, investigate when it happens.",
-      }
-    
-    ALERT ConntrackTableFull
-      IF 100*node_nf_conntrack_entries / node_nf_conntrack_entries_limit > 50
-      FOR 10m
-      LABELS {
-        severity = "warning"
-      }
-      ANNOTATIONS {
-        summary = "Number of tracked connections is near the limit",
-        description = "The nf_conntrack table is {{ $value }}% full.",
-      }
-    
-    ALERT ConntrackTableFull
-      IF 100*node_nf_conntrack_entries / node_nf_conntrack_entries_limit > 90
-      LABELS {
-        severity = "critical"
-      }
-      ANNOTATIONS {
-        summary = "Number of tracked connections is near the limit",
-        description = "The nf_conntrack table is {{ $value }}% full.",
+        description = "{{ $labels.job }}: {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.instance }}) instance will exhaust in file/socket descriptors soon",
       }
   kube-apiserver.rules: |+
-    ALERT K8SApiserverDown
-      IF up{job="apiserver"} == 0
-      FOR 15m
-      LABELS {
-        severity = "warning"
-      }
-      ANNOTATIONS {
-        summary = "API server unreachable",
-        description = "An API server could not be scraped.",
-      }
-    
-    # Disable for non HA kubernetes setups.
     ALERT K8SApiserverDown
       IF absent({job="apiserver"}) or (count by(cluster) (up{job="apiserver"} == 1) < count by(cluster) (up{job="apiserver"}))
       FOR 5m
@@ -352,11 +294,13 @@ data:
       }
       ANNOTATIONS {
         summary = "API server unreachable",
-        description = "Prometheus failed to scrape multiple API servers, or all API servers have disappeared from service discovery.",
+        description = "Prometheus failed to scrape API server(s), or all API servers have disappeared from service discovery.",
       }
     
     # Some verbs excluded because they are expected to be long-lasting:
     # WATCHLIST is long-poll, CONNECT is `kubectl exec`.
+    #
+    # apiserver_request_latencies' unit is microseconds
     ALERT K8SApiServerLatency
       IF histogram_quantile(
           0.99,
@@ -382,17 +326,6 @@ data:
         description = "There is no running K8S controller manager. Deployments and replication controllers are not making progress.",
       }
   kubelet.rules: |+
-    ALERT K8SNodeDown
-      IF up{job="kubelet"} == 0
-      FOR 1h
-      LABELS {
-        severity = "warning"
-      }
-      ANNOTATIONS {
-        summary = "Kubelet cannot be scraped",
-        description = "Prometheus could not scrape a {{ $labels.job }} for more than one hour",
-      }
-    
     ALERT K8SNodeNotReady
       IF kube_node_status_ready{condition="true"} == 0
       FOR 1h
@@ -423,15 +356,25 @@ data:
       }
     
     ALERT K8SKubeletDown
-      IF absent(up{job="kubelet"}) or count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.1
+      IF count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.03
       FOR 1h
       LABELS {
-        service = "k8s",
-        severity = "critical"
+        severity = "warning",
       }
       ANNOTATIONS {
         summary = "Many Kubelets cannot be scraped",
-        description = "Prometheus failed to scrape more than 10% of kubelets, or all Kubelets have disappeared from service discovery.",
+        description = "Prometheus failed to scrape {{ $value }}% of kubelets.",
+      }
+    
+    ALERT K8SKubeletDown
+      IF absent(up{job="kubelet"}) or count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.1
+      FOR 1h
+      LABELS {
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "Many Kubelets cannot be scraped",
+        description = "Prometheus failed to scrape {{ $value }}% of kubelets, or all Kubelets have disappeared from service discovery.",
       }
     
     ALERT K8SKubeletTooManyPods
@@ -625,7 +568,6 @@ data:
       ANNOTATIONS {
         summary = "Scheduler is down",
         description = "There is no running K8S scheduler. New pods are not being assigned to nodes.",
-        runbook = "https://github.com/coreos/tectonic-installer/blob/master/Documentation/troubleshooting/controller-recovery.md#disaster-recovery-of-scheduler-and-controller-manager-pods"
       }
   node.rules: |+
     ALERT NodeExporterDown
