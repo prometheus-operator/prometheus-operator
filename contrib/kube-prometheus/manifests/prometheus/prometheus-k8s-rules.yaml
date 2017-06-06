@@ -625,6 +625,7 @@ data:
       ANNOTATIONS {
         summary = "Scheduler is down",
         description = "There is no running K8S scheduler. New pods are not being assigned to nodes.",
+        runbook = "https://github.com/coreos/tectonic-installer/blob/master/Documentation/troubleshooting/controller-recovery.md#disaster-recovery-of-scheduler-and-controller-manager-pods"
       }
   node.rules: |+
     ALERT NodeExporterDown

@@ -1,16 +1,4 @@
 ALERT K8SApiserverDown
-  IF up{job="apiserver"} == 0
-  FOR 15m
-  LABELS {
-    severity = "warning"
-  }
-  ANNOTATIONS {
-    summary = "API server unreachable",
-    description = "An API server could not be scraped.",
-  }
-
-# Disable for non HA kubernetes setups.
-ALERT K8SApiserverDown
   IF absent({job="apiserver"}) or (count by(cluster) (up{job="apiserver"} == 1) < count by(cluster) (up{job="apiserver"}))
   FOR 5m
   LABELS {
@@ -18,7 +6,7 @@ ALERT K8SApiserverDown
   }
   ANNOTATIONS {
     summary = "API server unreachable",
-    description = "Prometheus failed to scrape multiple API servers, or all API servers have disappeared from service discovery.",
+    description = "Prometheus failed to scrape API server(s), or all API servers have disappeared from service discovery.",
   }
 
 # Some verbs excluded because they are expected to be long-lasting:

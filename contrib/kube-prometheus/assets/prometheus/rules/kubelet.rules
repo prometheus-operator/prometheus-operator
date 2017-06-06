@@ -1,14 +1,3 @@
-ALERT K8SNodeDown
-  IF up{job="kubelet"} == 0
-  FOR 1h
-  LABELS {
-    severity = "warning"
-  }
-  ANNOTATIONS {
-    summary = "Kubelet cannot be scraped",
-    description = "Prometheus could not scrape a {{ $labels.job }} for more than one hour",
-  }
-
 ALERT K8SNodeNotReady
   IF kube_node_status_ready{condition="true"} == 0
   FOR 1h
@@ -39,15 +28,25 @@ ALERT K8SManyNodesNotReady
   }
 
 ALERT K8SKubeletDown
-  IF absent(up{job="kubelet"}) or count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.1
+  IF count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.03
   FOR 1h
   LABELS {
-    service = "k8s",
-    severity = "critical"
+    severity = "warning",
   }
   ANNOTATIONS {
     summary = "Many Kubelets cannot be scraped",
-    description = "Prometheus failed to scrape more than 10% of kubelets, or all Kubelets have disappeared from service discovery.",
+    description = "Prometheus failed to scrape {{ $value }}% of kubelets.",
+  }
+
+ALERT K8SKubeletDown
+  IF absent(up{job="kubelet"}) or count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.1
+  FOR 1h
+  LABELS {
+    severity = "critical",
+  }
+  ANNOTATIONS {
+    summary = "Many Kubelets cannot be scraped",
+    description = "Prometheus failed to scrape {{ $value }}% of kubelets, or all Kubelets have disappeared from service discovery.",
   }
 
 ALERT K8SKubeletTooManyPods
