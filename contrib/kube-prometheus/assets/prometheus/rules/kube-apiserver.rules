@@ -11,6 +11,8 @@ ALERT K8SApiserverDown
 
 # Some verbs excluded because they are expected to be long-lasting:
 # WATCHLIST is long-poll, CONNECT is `kubectl exec`.
+#
+# apiserver_request_latencies' unit is microseconds
 ALERT K8SApiServerLatency
   IF histogram_quantile(
       0.99,
