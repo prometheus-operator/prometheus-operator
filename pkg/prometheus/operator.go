@@ -34,6 +34,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api"
@@ -63,6 +64,7 @@ type Operator struct {
 	smonInf cache.SharedIndexInformer
 	cmapInf cache.SharedIndexInformer
 	secrInf cache.SharedIndexInformer
+	servInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
 	nodeInf cache.SharedIndexInformer
 
@@ -88,6 +90,11 @@ type Config struct {
 type BasicAuthCredentials struct {
 	username string
 	password string
+}
+
+type ServiceMonitorMapItem struct {
+	Monitor  *v1alpha1.ServiceMonitor
+	Services []*v1.Service
 }
 
 // New creates a new controller.
@@ -177,6 +184,16 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		UpdateFunc: c.handleSecretUpdate,
 	})
 
+	c.servInf = cache.NewSharedIndexInformer(
+		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "services", api.NamespaceAll, nil),
+		&v1.Service{}, resyncPeriod, cache.Indexers{},
+	)
+	c.servInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleServiceAdd,
+		DeleteFunc: c.handleServiceDelete,
+		UpdateFunc: c.handleServiceUpdate,
+	})
+
 	c.ssetInf = cache.NewSharedIndexInformer(
 		cache.NewListWatchFromClient(c.kclient.Apps().RESTClient(), "statefulsets", api.NamespaceAll, nil),
 		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
@@ -241,6 +258,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.promInf.Run(stopc)
 	go c.smonInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
+	go c.servInf.Run(stopc)
 	go c.secrInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
 
@@ -433,13 +451,33 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 	}
 }
 
-func (c *Operator) handleSecretAdd(obj interface{}) {
+func (c *Operator) handleServiceAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		c.enqueueForNamespace(o.GetNamespace())
 	}
 }
 
+func (c *Operator) handleServiceDelete(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleServiceUpdate(old, cur interface{}) {
+	o, ok := c.getObject(cur)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleSecretAdd(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		c.enqueueForNamespace(o.GetNamespace())
+	}
+}
 func (c *Operator) handleConfigMapAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -936,8 +974,75 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 		return err
 	}
 
+	// Here we need to get a list of services for each servicemonitor,
+	// and map them to the correct servicemonitor
+	ssmon := map[string]*ServiceMonitorMapItem{}
+
+	for k, smon := range smons {
+		var services []*v1.Service
+		cs := labels.NewSelector()
+		// Create requirements from MatchLabels
+		for k, v := range smon.Spec.Selector.MatchLabels {
+			req, err := labels.NewRequirement(k, selection.In, []string{v})
+			if err != nil {
+				return errors.Wrap(err, "generating config failed")
+			}
+			cs = cs.Add(*req)
+		}
+
+		// Create requirements for Selector
+		for _, exp := range smon.Spec.Selector.MatchExpressions {
+			switch exp.Operator {
+			case metav1.LabelSelectorOpIn:
+				req, err := labels.NewRequirement(exp.Key, selection.In, exp.Values)
+				if err != nil {
+					return errors.Wrap(err, "generating config failed")
+				}
+				cs = cs.Add(*req)
+
+			case metav1.LabelSelectorOpNotIn:
+				req, err := labels.NewRequirement(exp.Key, selection.NotIn, exp.Values)
+				if err != nil {
+					return errors.Wrap(err, "generating config failed")
+				}
+				cs = cs.Add(*req)
+
+			case metav1.LabelSelectorOpExists:
+				req, err := labels.NewRequirement(exp.Key, selection.Exists, exp.Values)
+				if err != nil {
+					return errors.Wrap(err, "generating config failed")
+				}
+				cs = cs.Add(*req)
+
+			case metav1.LabelSelectorOpDoesNotExist:
+				req, err := labels.NewRequirement(exp.Key, selection.DoesNotExist, exp.Values)
+				if err != nil {
+					return errors.Wrap(err, "generating config failed")
+				}
+				cs = cs.Add(*req)
+			}
+		}
+
+		cache.ListAll(c.servInf.GetStore(), cs, func(obj interface{}) {
+			s := obj.(*v1.Service)
+			// Filter By namespace here.
+			if !smon.Spec.NamespaceSelector.Any {
+				for _, n := range smon.Spec.NamespaceSelector.MatchItems {
+					if s.Namespace == n {
+						services = append(services, s)
+					}
+				}
+			}
+		})
+
+		ssmon[k] = &ServiceMonitorMapItem{
+			Monitor:  smon,
+			Services: services,
+		}
+	}
+
 	// Update secret based on the most recent configuration.
-	conf, err := generateConfig(p, smons, len(ruleFileConfigMaps), basicAuthSecrets)
+	conf, err := generateConfig(c.logger, p, ssmon, len(ruleFileConfigMaps), basicAuthSecrets)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
 	}

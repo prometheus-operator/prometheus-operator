@@ -169,6 +169,8 @@ type ServiceMonitor struct {
 
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 type ServiceMonitorSpec struct {
+	// Configuration for external name services
+	ExternalName ExternalName `json:"externalName"`
 	// The label to use to retrieve the job name from.
 	JobLabel string `json:"jobLabel,omitempty"`
 	// A list of endpoints allowed as part of this ServiceMonitor.
@@ -177,6 +179,14 @@ type ServiceMonitorSpec struct {
 	Selector metav1.LabelSelector `json:"selector"`
 	// Selector to select which namespaces the Endpoints objects are discovered from.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
+}
+
+// ExternalName contains configuration for handling ExternalName type services.
+type ExternalName struct {
+	// The endpoint configuration
+	Endpoint Endpoint `json:"endpoint, omitempty"`
+	// The DNS type, one of A, AAAA, SRV
+	DnsType string `json:"dnsType,omitempty"`
 }
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.

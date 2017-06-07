@@ -95,6 +95,15 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
 
+## ExternalName
+
+ExternalName contains configuration for handling ExternalName type services.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| endpoint | The endpoint configuration | [Endpoint](#endpoint) | false |
+| dnsType | The DNS type, one of A, AAAA, SRV | string | false |
+
 ## NamespaceSelector
 
 A selector for selecting namespaces either selecting all namespaces or a list of namespaces.
@@ -183,6 +192,7 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
+| externalName | Configuration for external name services | [ExternalName](#externalname) | true |
 | jobLabel | The label to use to retrieve the job name from. | string | false |
 | endpoints | A list of endpoints allowed as part of this ServiceMonitor. | [][Endpoint](#endpoint) | false |
 | selector | Selector to select Endpoints objects. | [metav1.LabelSelector](https://kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | true |
