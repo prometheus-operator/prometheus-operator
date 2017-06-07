@@ -181,6 +181,8 @@ type ServiceMonitorSpec struct {
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 type Endpoint struct {
+	// Address of http server scraped for this endpoint
+	Address string `json:"address,omitempty"`
 	// Name of the service port this endpoint refers to. Mutually exclusive with targetPort.
 	Port string `json:"port,omitempty"`
 	// Name or number of the target port of the endpoint. Mutually exclusive with port.
