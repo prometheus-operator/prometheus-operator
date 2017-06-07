@@ -22,11 +22,12 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
 	"github.com/coreos/prometheus-operator/third_party/workqueue"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,7 +69,7 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
+func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -115,6 +116,10 @@ func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 	})
 
 	return o, nil
+}
+
+func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
+	r.MustRegister(NewAlertmanagerCollector(c.alrtInf.GetStore()))
 }
 
 // Run the controller.

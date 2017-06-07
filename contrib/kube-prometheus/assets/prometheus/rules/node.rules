@@ -1,0 +1,10 @@
+ALERT NodeExporterDown
+  IF up{job="node-exporter"} == 0
+  FOR 10m
+  LABELS {
+    severity = "warning"
+  }
+  ANNOTATIONS {
+    summary = "node-exporter cannot be scraped",
+    description = "Prometheus could not scrape a node-exporter for more than 10m.",
+  }

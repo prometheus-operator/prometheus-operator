@@ -24,17 +24,19 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/api"
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/go-kit/kit/log"
 )
 
 var (
-	cfg              prometheus.Config
+	cfg              prometheuscontroller.Config
 	analyticsEnabled bool
 )
 
@@ -58,11 +60,14 @@ func Main() int {
 	logger := log.NewContext(log.NewLogfmtLogger(os.Stdout)).
 		With("ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 
+	r := prometheus.NewRegistry()
+	r.MustRegister(prometheus.NewGoCollector())
+
 	if analyticsEnabled {
 		analytics.Enable()
 	}
 
-	po, err := prometheus.New(cfg, logger.With("component", "prometheusoperator"))
+	po, err := prometheuscontroller.New(cfg, logger.With("component", "prometheusoperator"))
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return 1
@@ -74,18 +79,23 @@ func Main() int {
 		return 1
 	}
 
+	mux := http.NewServeMux()
 	web, err := api.New(cfg, logger.With("component", "api"))
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return 1
 	}
 
-	web.Register(http.DefaultServeMux)
+	web.Register(mux)
 	l, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return 1
 	}
+
+	po.RegisterMetrics(r)
+	ao.RegisterMetrics(r)
+	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg, ctx := errgroup.WithContext(ctx)
@@ -93,7 +103,8 @@ func Main() int {
 	wg.Go(func() error { return po.Run(ctx.Done()) })
 	wg.Go(func() error { return ao.Run(ctx.Done()) })
 
-	go http.Serve(l, nil)
+	srv := &http.Server{Handler: mux}
+	go srv.Serve(l)
 
 	term := make(chan os.Signal)
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)

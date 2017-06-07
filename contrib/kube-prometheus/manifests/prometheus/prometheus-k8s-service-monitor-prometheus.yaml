@@ -3,10 +3,14 @@ kind: ServiceMonitor
 metadata:
   name: prometheus
   labels:
-    prometheus: k8s
+    app: prometheus
 spec:
+  selector:
+    matchLabels:
+      prometheus: k8s
+  namespaceSelector:
+    matchNames:
+    - monitoring
   endpoints:
   - port: web
-  selector:
-    matchExpressions:
-    - {key: prometheus, operator: In, values: [k8s]}
+    interval: 30s

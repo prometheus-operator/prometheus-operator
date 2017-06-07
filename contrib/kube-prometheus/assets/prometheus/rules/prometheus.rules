@@ -1,0 +1,10 @@
+ALERT FailedReload
+  IF prometheus_config_last_reload_successful == 0
+  FOR 10m
+  LABELS {
+    severity = "warning"
+  }
+  ANNOTATIONS {
+    summary = "Prometheus configuration reload has failed",
+    description = "Reloading Prometheus' configuration has failed for {{ $labels.namespace }}/{{ $labels.pod}}."
+  }
