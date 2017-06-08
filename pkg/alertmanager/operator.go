@@ -370,12 +370,21 @@ func (c *Operator) sync(key string) error {
 	}
 
 	if !exists {
-		if _, err := ssetClient.Create(makeStatefulSet(am, nil, c.config)); err != nil {
+		sset, err := makeStatefulSet(am, nil, c.config)
+		if err != nil {
+			return errors.Wrap(err, "making the statefulset, to create, failed")
+		}
+		if _, err := ssetClient.Create(sset); err != nil {
 			return errors.Wrap(err, "creating statefulset failed")
 		}
 		return nil
 	}
-	if _, err := ssetClient.Update(makeStatefulSet(am, obj.(*v1beta1.StatefulSet), c.config)); err != nil {
+
+	sset, err := makeStatefulSet(am, obj.(*v1beta1.StatefulSet), c.config)
+	if err != nil {
+		return errors.Wrap(err, "making the statefulset, to update, failed")
+	}
+	if _, err := ssetClient.Update(sset); err != nil {
 		return errors.Wrap(err, "updating statefulset failed")
 	}
 
