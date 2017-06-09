@@ -14,7 +14,7 @@ docker login -u="$QUAY_ROBOT_USERNAME" -p="$QUAY_ROBOT_SECRET" quay.io
 
 docker tag \
        $PO_QUAY_REPO:$BUILD_ID \
-       $PO_QUAY_REPO::master
+       $PO_QUAY_REPO:master
 
 docker push $PO_QUAY_REPO:master
 
