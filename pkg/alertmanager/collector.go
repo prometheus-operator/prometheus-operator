@@ -53,5 +53,9 @@ func (c *alertmanagerCollector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (c *alertmanagerCollector) collectAlertmanager(ch chan<- prometheus.Metric, a *v1alpha1.Alertmanager) {
-	ch <- prometheus.MustNewConstMetric(descAlertmanagerSpecReplicas, prometheus.GaugeValue, float64(*a.Spec.Replicas), a.Namespace, a.Name)
+	replicas := float64(minReplicas)
+	if a.Spec.Replicas != nil {
+		replicas = float64(*a.Spec.Replicas)
+	}
+	ch <- prometheus.MustNewConstMetric(descAlertmanagerSpecReplicas, prometheus.GaugeValue, replicas, a.Namespace, a.Name)
 }
