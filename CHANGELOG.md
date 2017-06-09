@@ -1,3 +1,13 @@
+## 0.10.0 / 2017-06-09
+
+* [CHANGE] Prometheus route prefix defaults to root.
+* [CHANGE] Default to Prometheus v1.7.0.
+* [CHANGE] Default to Alertmanager v0.7.0.
+* [FEATURE] Add route prefix support to Alertmanager resource.
+* [FEATURE] Add metrics on expected replicas.
+* [FEATURE] Support for runing Alertmanager v0.7.0.
+* [BUGFIX] Fix sensitive rollout triggering.
+
 ## 0.9.1 / 2017-05-18
 
 * [FEATURE] Add experimental Prometheus 2.0 support.
