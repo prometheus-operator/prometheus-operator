@@ -31,7 +31,7 @@ const (
 )
 
 type ServiceMonitorsGetter interface {
-	ServiceMonitors(namespace string) *dynamic.ResourceClient
+	ServiceMonitors(namespace string) ServiceMonitorInterface
 }
 
 type ServiceMonitorInterface interface {
