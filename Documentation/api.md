@@ -32,6 +32,7 @@ AlertmanagerEndpoints defines a selection of a single Endpoints object containin
 | name | Name of Endpoints object in Namespace. | string | true |
 | port | Port the Alertmanager API is exposed on. | intstr.IntOrString | true |
 | scheme | Scheme to use when firing alerts. | string | true |
+| pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | true |
 
 ## AlertmanagerList
 
