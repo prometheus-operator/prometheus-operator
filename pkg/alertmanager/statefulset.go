@@ -34,7 +34,7 @@ import (
 const (
 	governingServiceName = "alertmanager-operated"
 	defaultBaseImage     = "quay.io/prometheus/alertmanager"
-	defaultVersion       = "v0.7.0"
+	defaultVersion       = "v0.7.1"
 )
 
 var (

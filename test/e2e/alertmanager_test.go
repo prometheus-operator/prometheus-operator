@@ -78,17 +78,17 @@ func TestAlertmanagerVersionMigration(t *testing.T) {
 	name := "test"
 
 	am := framework.MakeBasicAlertmanager(name, 1)
-	am.Spec.Version = "v0.6.0"
+	am.Spec.Version = "v0.7.0"
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.6.1"
+	am.Spec.Version = "v0.7.1"
 	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.6.0"
+	am.Spec.Version = "v0.7.0"
 	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
 		t.Fatal(err)
 	}
@@ -198,7 +198,7 @@ func TestMeshInitialization(t *testing.T) {
 		},
 		Spec: v1alpha1.AlertmanagerSpec{
 			Replicas: &amountAlertmanagers,
-			Version:  "v0.7.0",
+			Version:  "v0.7.1",
 		},
 	}
 
