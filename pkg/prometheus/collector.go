@@ -53,5 +53,9 @@ func (c *prometheusCollector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (c *prometheusCollector) collectPrometheus(ch chan<- prometheus.Metric, p *v1alpha1.Prometheus) {
-	ch <- prometheus.MustNewConstMetric(descPrometheusSpecReplicas, prometheus.GaugeValue, float64(*p.Spec.Replicas), p.Namespace, p.Name)
+	replicas := float64(minReplicas)
+	if p.Spec.Replicas != nil {
+		replicas = float64(*p.Spec.Replicas)
+	}
+	ch <- prometheus.MustNewConstMetric(descPrometheusSpecReplicas, prometheus.GaugeValue, replicas, p.Namespace, p.Name)
 }
