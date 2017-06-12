@@ -8,11 +8,11 @@ spec:
   endpoints:
   - basicAuth:
       password:
-        key: basic-auth
-        name: password
+        name: basic-auth
+        key: password
       username:
-        key: basic-auth
-        name: user
+        name: basic-auth
+        key: user
     port: metrics
   namespaceSelector:
     matchNames:
