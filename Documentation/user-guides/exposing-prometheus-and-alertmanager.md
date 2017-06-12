@@ -15,7 +15,7 @@ metadata:
   name: "main"
 spec:
   replicas: 1
-  version: v1.7.0
+  version: v1.7.1
   resources:
     requests:
       memory: 400Mi
@@ -51,7 +51,7 @@ metadata:
   name: "main"
 spec:
   replicas: 3
-  version: v0.7.0
+  version: v0.7.1
   resources:
     requests:
       memory: 400Mi
@@ -115,7 +115,7 @@ metadata:
   name: "main"
 spec:
   replicas: 1
-  version: v1.7.0
+  version: v1.7.1
   externalUrl: http://127.0.0.1:8001/api/v1/proxy/namespaces/default/services/prometheus-main:web/
   resources:
     requests:
@@ -135,7 +135,7 @@ metadata:
   name: "main"
 spec:
   replicas: 3
-  version: v0.7.0
+  version: v0.7.1
   externalUrl: http://127.0.0.1:8001/api/v1/proxy/namespaces/default/services/alertmanager-main:web/
   resources:
     requests:
@@ -243,7 +243,7 @@ metadata:
   name: "main"
 spec:
   replicas: 1
-  version: v1.7.0
+  version: v1.7.1
   externalUrl: http://monitoring.my.systems/prometheus
   resources:
     requests:
@@ -255,7 +255,7 @@ metadata:
   name: "main"
 spec:
   replicas: 3
-  version: v0.7.0
+  version: v0.7.1
   externalUrl: http://monitoring.my.systems/alertmanager
   resources:
     requests:
