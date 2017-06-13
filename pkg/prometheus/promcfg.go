@@ -332,6 +332,10 @@ func generateAlertmanagerConfig(am v1alpha1.AlertmanagerEndpoints) yaml.MapSlice
 		am.Scheme = "http"
 	}
 
+	if am.PathPrefix == "" {
+		am.PathPrefix = "/"
+	}
+
 	cfg := yaml.MapSlice{
 		{
 			Key: "kubernetes_sd_configs",

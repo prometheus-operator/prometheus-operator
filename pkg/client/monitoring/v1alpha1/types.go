@@ -154,6 +154,8 @@ type AlertmanagerEndpoints struct {
 	Port intstr.IntOrString `json:"port"`
 	// Scheme to use when firing alerts.
 	Scheme string `json:"scheme"`
+	// Prefix for the HTTP path alerts are pushed to.
+	PathPrefix string `json:"pathPrefix"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.
