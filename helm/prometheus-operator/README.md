@@ -46,9 +46,9 @@ EOF
 $ kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
 ```
 
-3. Patch Tiller's Deployment to use the new ServiceAccount
+3. Install Tiller, specifying the new ServiceAccount
 ```console
-$ kubectl -n kube-system patch deploy/tiller-deploy -p '{"spec": {"template": {"spec": {"serviceAccountName": "tiller"}}}}'
+$ helm init --service-account tiller
 ```
 
 ## Installing the Chart

@@ -1,0 +1,10 @@
+ALERT K8SSchedulerDown
+  IF absent(up{job="kube-scheduler"}) or (count by(cluster) (up{job="kube-scheduler"} == 1) == 0)
+  FOR 5m
+  LABELS {
+    severity = "critical",
+  }
+  ANNOTATIONS {
+    summary = "Scheduler is down",
+    description = "There is no running K8S scheduler. New pods are not being assigned to nodes.",
+  }

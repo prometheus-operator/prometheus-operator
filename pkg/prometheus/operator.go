@@ -28,6 +28,7 @@ import (
 	"github.com/coreos/prometheus-operator/third_party/workqueue"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -199,6 +200,10 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	}
 
 	return c, nil
+}
+
+func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
+	r.MustRegister(NewPrometheusCollector(c.promInf.GetStore()))
 }
 
 // Run the controller.
@@ -789,9 +794,6 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	c2 := tmpl.Spec.Containers[0]
 
 	if c1.Image != c2.Image {
-		return true
-	}
-	if !reflect.DeepEqual(c1.Resources, c2.Resources) {
 		return true
 	}
 	if !reflect.DeepEqual(c1.Args, c2.Args) {

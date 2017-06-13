@@ -1,0 +1,60 @@
+ALERT K8SNodeNotReady
+  IF kube_node_status_ready{condition="true"} == 0
+  FOR 1h
+  LABELS {
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Node status is NotReady",
+    description = "The Kubelet on {{ $labels.node }} has not checked in with the API, or has set itself to NotReady, for more than an hour",
+  }
+
+ALERT K8SManyNodesNotReady
+  IF
+    count by (cluster) (kube_node_status_ready{condition="true"} == 0) > 1
+    AND
+      (
+        count by (cluster) (kube_node_status_ready{condition="true"} == 0)
+      /
+        count by (cluster) (kube_node_status_ready{condition="true"})
+      ) > 0.2
+  FOR 1m
+  LABELS {
+    severity = "critical",
+  }
+  ANNOTATIONS {
+    summary = "Many K8s nodes are Not Ready",
+    description = "{{ $value }} K8s nodes (more than 10% of cluster {{ $labels.cluster }}) are in the NotReady state.",
+  }
+
+ALERT K8SKubeletDown
+  IF count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.03
+  FOR 1h
+  LABELS {
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Many Kubelets cannot be scraped",
+    description = "Prometheus failed to scrape {{ $value }}% of kubelets.",
+  }
+
+ALERT K8SKubeletDown
+  IF absent(up{job="kubelet"}) or count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.1
+  FOR 1h
+  LABELS {
+    severity = "critical",
+  }
+  ANNOTATIONS {
+    summary = "Many Kubelets cannot be scraped",
+    description = "Prometheus failed to scrape {{ $value }}% of kubelets, or all Kubelets have disappeared from service discovery.",
+  }
+
+ALERT K8SKubeletTooManyPods
+  IF kubelet_running_pod_count > 100
+  LABELS {
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Kubelet is close to pod limit",
+    description = "Kubelet {{$labels.instance}} is running {{$value}} pods, close to the limit of 110",
+  }

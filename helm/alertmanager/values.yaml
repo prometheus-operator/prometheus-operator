@@ -1,0 +1,111 @@
+## Alertmanager configuration directives
+## Ref: https://prometheus.io/docs/alerting/configuration/
+##
+config:
+  global:
+    resolve_timeout: 5m
+
+  receivers:
+    - name: webhook
+      webhook_configs:
+        - url: 'http://alertmanagerwh:30500/'
+
+  route:
+    group_by: ['job']
+    group_interval: 5m
+    group_wait: 30s
+    receiver: webhook
+    repeat_interval: 12h
+
+## External URL at which Alertmanager will be reachable
+##
+externalUrl: ""
+
+## Alertmanager container image
+##
+image:
+  repository: quay.io/prometheus/alertmanager
+  tag: v0.5.1
+
+ingress:
+  ## If true, Alertmanager Ingress will be created
+  ##
+  enabled: false
+
+  ## Annotations for Alertmanager Ingress
+  ##
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+
+  fqdn: ""
+
+  ## TLS configuration for Alertmanager Ingress
+  ## Secret must be manually created in the namespace
+  ##
+  tls: []
+    # - secretName: alertmanager-general-tls
+    #   hosts:
+    #     - alertmanager.example.com
+
+## Node labels for Alertmanager pod assignment
+## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+##
+nodeSelector: {}
+
+## If true, the Operator won't process any Alertmanager configuration changes
+##
+paused: false
+
+## Number of Alertmanager replicas desired
+##
+replicaCount: 1
+
+## Resource limits & requests
+## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
+##
+resources: {}
+  # requests:
+  #   memory: 400Mi
+
+service:
+  ## Annotations to be added to the Service
+  ##
+  annotations: {}
+
+  ## Cluster-internal IP address for Alertmanager Service
+  ##
+  clusterIP: ""
+
+  ## List of external IP addresses at which the Alertmanager Service will be available
+  ##
+  externalIPs: []
+
+  ## External IP address to assign to Alertmanager Service
+  ## Only used if service.type is 'LoadBalancer' and supported by cloud provider
+  ##
+  loadBalancerIP: ""
+
+  ## List of client IPs allowed to access Alertmanager Service
+  ## Only used if service.type is 'LoadBalancer' and supported by cloud provider
+  ##
+  loadBalancerSourceRanges: []
+
+  ## Port to expose on each node
+  ## Only used if service.type is 'NodePort'
+  ##
+  nodePort: 39093
+
+  ## Service type
+  ##
+  type: ClusterIP
+
+## Alertmanager StorageSpec for persistent data
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#storagespec
+##
+storageSpec: {}
+#   class: default
+#   resources:
+#     requests:
+#       storage: 2Gi
+#   selector: {}

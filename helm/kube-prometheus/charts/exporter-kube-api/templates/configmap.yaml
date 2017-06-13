@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: "prometheus"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    prometheus: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}
+data:
+  kube-api.rules: |-
+    # NOTE: These rules were kindly contributed by the SoundCloud engineering team.
+
+    ALERT K8SApiServerLatency
+      IF histogram_quantile(
+          0.99,
+          sum without (instance,node,resource) (apiserver_request_latencies_bucket{verb!~"CONNECT|WATCHLIST|WATCH"})
+        ) / 1e6 > 1.0
+      FOR 10m
+      LABELS {
+        service = "k8s",
+        severity = "warning"
+      }
+      ANNOTATIONS {
+        summary = "Kubernetes apiserver latency is high",
+        description = "99th percentile Latency for {{`{{ $labels.verb }}`}} requests to the kube-apiserver is higher than 1s.",
+      }
+
+    ### API latency ###
+
+    # Raw metrics are in microseconds. Convert to seconds.
+    cluster_resource_verb:apiserver_latency:quantile_seconds{quantile="0.99"} =
+      histogram_quantile(
+        0.99,
+        sum by(le,cluster,job,resource,verb) (apiserver_request_latencies_bucket)
+      ) / 1e6
+    cluster_resource_verb:apiserver_latency:quantile_seconds{quantile="0.9"} =
+      histogram_quantile(
+        0.9,
+        sum by(le,cluster,job,resource,verb) (apiserver_request_latencies_bucket)
+      ) / 1e6
+    cluster_resource_verb:apiserver_latency:quantile_seconds{quantile="0.5"} =
+      histogram_quantile(
+        0.5,
+        sum by(le,cluster,job,resource,verb) (apiserver_request_latencies_bucket)
+      ) / 1e6
+
+    ### File descriptor alerts
+
+    instance:fd_utilization = process_open_fds / process_max_fds
+
+    # alert if file descriptors are likely to exhaust within the next 4 hours
+    ALERT FdExhaustionClose
+      IF predict_linear(instance:fd_utilization[1h], 3600 * 4) > 1
+      FOR 10m
+      LABELS
+      {
+        severity = "warning"
+      }
+      ANNOTATIONS {
+        summary = "file descriptors soon exhausted",
+        description = "{{`{{ $labels.job }}`}} instance {{`{{ $labels.instance }}`}} will exhaust in file descriptors soon",
+      }
+
+    # alert if file descriptors are likely to exhaust within the next hour
+    ALERT FdExhaustionClose
+      IF predict_linear(instance:fd_utilization[10m], 3600) > 1
+      FOR 10m
+      LABELS {
+        severity = "critical"
+      }
+      ANNOTATIONS
+      {
+        summary = "file descriptors soon exhausted",
+        description = "{{`{{ $labels.job }}`}} instance {{`{{ $labels.instance }}`}} will exhaust in file descriptors soon",
+      }
+
+    ALERT K8STooManyOpenFiles
+      IF 100*process_open_fds{job=~"kubelets|kubernetes"} / process_max_fds > 50
+      FOR 10m
+      LABELS {
+        service = "k8s",
+        severity = "warning"
+      }
+      ANNOTATIONS {
+        summary = "{{`{{ $labels.job }}`}} has too many open file descriptors",
+        description = "{{`{{ $labels.node }}`}} is using {{`{{ $value }}`}}% of the available file/socket descriptors.",
+      }
+
+    ALERT K8STooManyOpenFiles
+      IF 100*process_open_fds{job=~"kubelets|kubernetes"} / process_max_fds > 80
+      FOR 10m
+      LABELS {
+        service = "k8s",
+        severity = "critical"
+      }
+      ANNOTATIONS {
+        summary = "{{`{{ $labels.job }}`}} has too many open file descriptors",
+        description = "{{`{{ $labels.node }}`}} is using {{`{{ $value }}`}}% of the available file/socket descriptors.",
+      }
+

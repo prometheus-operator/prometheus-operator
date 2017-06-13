@@ -22,11 +22,12 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
 	"github.com/coreos/prometheus-operator/third_party/workqueue"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,7 +69,7 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
+func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -115,6 +116,10 @@ func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 	})
 
 	return o, nil
+}
+
+func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
+	r.MustRegister(NewAlertmanagerCollector(c.alrtInf.GetStore()))
 }
 
 // Run the controller.
@@ -365,12 +370,21 @@ func (c *Operator) sync(key string) error {
 	}
 
 	if !exists {
-		if _, err := ssetClient.Create(makeStatefulSet(am, nil, c.config)); err != nil {
+		sset, err := makeStatefulSet(am, nil, c.config)
+		if err != nil {
+			return errors.Wrap(err, "making the statefulset, to create, failed")
+		}
+		if _, err := ssetClient.Create(sset); err != nil {
 			return errors.Wrap(err, "creating statefulset failed")
 		}
 		return nil
 	}
-	if _, err := ssetClient.Update(makeStatefulSet(am, obj.(*v1beta1.StatefulSet), c.config)); err != nil {
+
+	sset, err := makeStatefulSet(am, obj.(*v1beta1.StatefulSet), c.config)
+	if err != nil {
+		return errors.Wrap(err, "making the statefulset, to update, failed")
+	}
+	if _, err := ssetClient.Update(sset); err != nil {
 		return errors.Wrap(err, "updating statefulset failed")
 	}
 

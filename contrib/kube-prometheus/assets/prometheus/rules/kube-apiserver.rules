@@ -1,0 +1,28 @@
+ALERT K8SApiserverDown
+  IF absent({job="apiserver"}) or (count by(cluster) (up{job="apiserver"} == 1) < count by(cluster) (up{job="apiserver"}))
+  FOR 5m
+  LABELS {
+    severity = "critical"
+  }
+  ANNOTATIONS {
+    summary = "API server unreachable",
+    description = "Prometheus failed to scrape API server(s), or all API servers have disappeared from service discovery.",
+  }
+
+# Some verbs excluded because they are expected to be long-lasting:
+# WATCHLIST is long-poll, CONNECT is `kubectl exec`.
+#
+# apiserver_request_latencies' unit is microseconds
+ALERT K8SApiServerLatency
+  IF histogram_quantile(
+      0.99,
+      sum without (instance,resource) (apiserver_request_latencies_bucket{verb!~"CONNECT|WATCHLIST|WATCH|PROXY"})
+    ) / 1e6 > 1.0
+  FOR 10m
+  LABELS {
+    severity = "warning"
+  }
+  ANNOTATIONS {
+    summary = "Kubernetes apiserver latency is high",
+    description = "99th percentile Latency for {{ $labels.verb }} requests to the kube-apiserver is higher than 1s.",
+  }

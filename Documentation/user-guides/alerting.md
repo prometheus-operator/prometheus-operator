@@ -44,8 +44,35 @@ receivers:
 
 Save the above alertmanager config in a file called `alertmanager.yaml` and create a secret from it using `kubectl`.
 
+The Alertmanager instance needs an special naming on the secret resource in order to be able to grab it. It looks for
+`alertmanager-{ALERTMANAGER_NAME}` pattern, in this example the name of the Alertmanager is `example` so the secret name
+should be `alertmanager-example` and the name of the config file `alertmanager.yaml` 
+
 ```bash
 $ kubectl create secret generic alertmanager-example --from-file=alertmanager.yaml
+```
+
+Note that altermanagers configurations can use templates(`.tmpl` files), these can be added on the secret along with the
+`alertmanager.yaml` config file, for example:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-example
+data:
+  alertmanager.yaml: {BASE64_CONFIG}
+  template_1.tmpl: {BASE64_TEMPLATE_1}
+  template_2.tmpl: {BASE64_TEMPLATE_2}
+  ...
+```
+
+Templates will be placed on the same path as the configuration, in order to be able to load the templates, the configuration (`alertmanager.yaml`)
+should point to them:
+
+```yaml
+templates:
+- '*.tmpl'
 ```
 
 Once created this `Secret` is mounted by Alertmanager `Pod`s created through the `Alertmanager` object.
@@ -72,7 +99,7 @@ spec:
 
 Once created it allows the web UI to be accessible via a node's IP and the port `30903`.
 
-Now this is a fully functional highly available Alertmanager cluster, but it does not get any alerts fired against it. Let's setup Prometheus instances that will actually fire alerts against it.
+Now this is a fully functional highly available Alertmanager cluster, but it does not get any alerts fired against it. Let's setup Prometheus instances that will actually fire alerts to our alertmanagers.
 
 [embedmd]:# (../../example/user-guides/alerting/prometheus-example.yaml)
 ```yaml
@@ -98,6 +125,8 @@ spec:
       role: prometheus-rulefiles
       prometheus: example
 ```
+
+The above configuration specifies a `Prometheus` that finds all of the alertmanagers behind the `Service` we just created. The `name` and `port` fields under alertmanagers, should match those of our `Service` to allow this to occur.
 
 Prometheus rule files are held in `ConfigMap`s. The `ConfigMap`s to mount rule files from are selected with a label selector field called `ruleSelector` in the Prometheus object, as seen above. All top level files that end with the `.rules` extension will be loaded.
 

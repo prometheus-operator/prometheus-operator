@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: prometheus
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    component: kube-state
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+    prometheus: {{ .Release.Name }}
+  name: {{ template "fullname" . }}
+spec:
+  jobLabel: {{ template "name" . }}
+  selector:
+    matchLabels:
+      app: {{ template "name" . }}
+      component: kube-state
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  endpoints:
+  - port: {{ .Values.service.name }}
+    interval: 15s

@@ -1,0 +1,44 @@
+dependencies:
+  - name: alertmanager
+    version: 0.0.1
+    repository: http://charts.opsgoodness.com
+
+  - name: prometheus
+    version: 0.0.1
+    repository: http://charts.opsgoodness.com
+
+  - name: exporter-kube-api
+    version: 0.1.0
+    repository: https://charts.cloudposse.com/incubator
+
+  - name: exporter-kube-controller-manager
+    version: 0.1.0
+    repository: https://charts.cloudposse.com/incubator
+
+  - name: exporter-kube-dns
+    version: 0.1.0
+    repository: https://charts.cloudposse.com/incubator
+
+  - name: exporter-kube-etcd
+    version: 0.1.0
+    repository: https://charts.cloudposse.com/incubator
+
+  - name: exporter-kube-scheduler
+    version: 0.1.0
+    repository: https://charts.cloudposse.com/incubator
+
+  - name: exporter-kube-state
+    version: 0.1.0
+    repository: https://charts.cloudposse.com/incubator
+
+  - name: exporter-kubelets
+    version: 0.1.0
+    repository: https://charts.cloudposse.com/incubator
+
+  - name: exporter-kubernetes
+    version: 0.1.0
+    repository: https://charts.cloudposse.com/incubator
+
+  - name: exporter-node
+    version: 0.1.0
+    repository: https://charts.cloudposse.com/incubator

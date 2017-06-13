@@ -47,12 +47,11 @@ job('po-tests-pr') {
     }
 
     steps {
-        shell('docker run -v $PWD:/go/src/github.com/coreos/prometheus-operator -w /go/src/github.com/coreos/prometheus-operator/ golang make generate')
-        shell('git diff --exit-code')
+        shell('./scripts/jenkins/check-make-generate.sh')
     }
 
     steps {
-        shell('docker run --rm -v $PWD:/go/src/github.com/coreos/prometheus-operator -w /go/src/github.com/coreos/prometheus-operator golang make test')
+        shell('./scripts/jenkins/make-test.sh')
     }
 
     steps {
@@ -101,12 +100,11 @@ job('po-tests-master') {
     }
 
     steps {
-        shell('docker run -v $PWD:/go/src/github.com/coreos/prometheus-operator -w /go/src/github.com/coreos/prometheus-operator/ golang make generate')
-        shell('git diff --exit-code')
+        shell('./scripts/jenkins/check-make-generate.sh')
     }
 
     steps {
-        shell('docker run --rm -v $PWD:/go/src/github.com/coreos/prometheus-operator -w /go/src/github.com/coreos/prometheus-operator golang make test')
+        shell('./scripts/jenkins/make-test.sh')
     }
 
     steps {
@@ -116,8 +114,7 @@ job('po-tests-master') {
     publishers {
         postBuildScripts {
             steps {
-                shell('docker tag quay.io/coreos/prometheus-operator-dev:$BUILD_ID quay.io/coreos/prometheus-operator:master')
-                shell('docker push quay.io/coreos/prometheus-operator:master')
+                shell('./scripts/jenkins/push-to-quay.sh')
             }
             onlyIfBuildSucceeds(true)
         }

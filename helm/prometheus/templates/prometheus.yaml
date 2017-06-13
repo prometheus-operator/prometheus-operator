@@ -1,0 +1,67 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: Prometheus
+metadata:
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    prometheus: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+  name: {{ .Release.Name }}
+spec:
+{{- if .Values.alertingEndpoints }}
+  alerting:
+    alertmanagers:
+{{ toYaml .Values.alertingEndpoints | indent 6 }}
+{{- else }}
+  alerting:
+    alertmanagers:
+      - namespace: {{ .Release.Namespace }}
+        name: {{ printf "%s-alertmanager" .Release.Name | trunc 63 | trimSuffix "-" }}
+        port: http
+{{- end }}
+  baseImage: "{{ .Values.image.repository }}"
+{{- if .Values.externalUrl }}
+  externalUrl: "{{ .Values.externalUrl }}"
+{{- else if .Values.ingress.fqdn }}
+  externalUrl: http://{{ .Values.ingress.fqdn }}{{ .Values.routePrefix }}
+{{- else }}
+  externalUrl: http://{{ template "fullname" . }}.{{ .Release.Namespace }}:9090
+{{- end }}
+{{- if .Values.nodeSelector }}
+  nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 4 }}
+{{- end }}
+  paused: {{ .Values.paused }}
+  replicas: {{ .Values.replicaCount }}
+  resources:
+{{ toYaml .Values.resources | indent 4 }}
+  retention: "{{ .Values.retention }}"
+{{- if .Values.routePrefix }}
+  routePrefix: "{{ .Values.routePrefix }}"
+{{- end }}
+{{- if .Values.serviceMonitorsSelector }}
+  serviceMonitorSelector:
+    matchLabels:
+{{ toYaml .Values.serviceMonitorsSelector | indent 6 }}
+{{- else }}
+  serviceMonitorSelector:
+    matchLabels:
+      app: {{ template "name" . }}
+      prometheus: {{ .Release.Name }}
+{{- end }}
+{{- if .Values.rulesSelector }}
+  ruleSelector:
+    matchLabels:
+{{ toYaml .Values.rulesSelector | indent 6 }}
+{{- else }}
+  ruleSelector:
+    matchLabels:
+      app: {{ template "name" . }}
+      prometheus: {{ .Release.Name }}
+{{- end }}
+{{- if .Values.storageSpec }}
+  storage:
+{{ toYaml .Values.storageSpec | indent 4 }}
+{{- end }}
+  version: "{{ .Values.image.tag }}"

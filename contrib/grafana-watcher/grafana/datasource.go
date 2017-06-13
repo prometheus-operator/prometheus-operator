@@ -16,12 +16,12 @@ package grafana
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
 	"path"
 	"strconv"
-	"errors"
 )
 
 type DatasourcesInterface interface {

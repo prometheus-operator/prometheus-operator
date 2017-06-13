@@ -20,7 +20,6 @@ Once you complete this guide you will monitor the following:
 * apiserver
 * kube-scheduler
 * kube-controller-manager
-* kube-dns
 
 ## Preparing Kubernetes Components
 
@@ -33,28 +32,31 @@ kind: Deployment
 metadata:
   name: prometheus-operator
   labels:
-    operator: prometheus
+    k8s-app: prometheus-operator
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        operator: prometheus
+        k8s-app: prometheus-operator
     spec:
       serviceAccountName: prometheus-operator
       containers:
-       - name: prometheus-operator
-         image: quay.io/coreos/prometheus-operator:v0.9.0
-         args:
-         - "--kubelet-service=kube-system/kubelet"
-         - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
-         resources:
-           requests:
-             cpu: 100m
-             memory: 50Mi
-           limits:
-             cpu: 200m
-             memory: 300Mi
+      - name: prometheus-operator
+        image: quay.io/coreos/prometheus-operator:v0.10.0
+        args:
+        - "--kubelet-service=kube-system/kubelet"
+        - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
+        ports:
+        - name: http
+          containerPort: 8080
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+          limits:
+            cpu: 200m
+            memory: 300Mi
 ```
 
 > Make sure that the `ServiceAccount` called `prometheus-operator` exists and if using RBAC, is bound to the correct role. Read more on [RBAC when using the Prometheus Operator](../rbac.md).
@@ -108,33 +110,6 @@ spec:
   - name: http-metrics
     port: 10252
     targetPort: 10252
-    protocol: TCP
-```
-
-kube-dns:
-
-[embedmd]:# (../../contrib/kube-prometheus/manifests/k8s/self-hosted/kube-dns.yaml)
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: kube-system
-  name: kube-dns-prometheus-discovery
-  labels:
-    k8s-app: kube-dns
-spec:
-  selector:
-    k8s-app: kube-dns
-  type: ClusterIP
-  clusterIP: None
-  ports:
-  - name: http-metrics-skydns
-    port: 10055
-    targetPort: 10055
-    protocol: TCP
-  - name: http-metrics-dnsmasq
-    port: 10054
-    targetPort: 10054
     protocol: TCP
 ```
 
@@ -223,7 +198,7 @@ kind: Deployment
 metadata:
   name: kube-state-metrics
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
@@ -284,7 +259,7 @@ metadata:
     prometheus: k8s
 spec:
   replicas: 2
-  version: v1.6.1
+  version: v1.7.0
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpression:
@@ -318,9 +293,9 @@ kind: ServiceMonitor
 metadata:
   name: kube-apiserver
   labels:
-    k8s-apps: https
+    k8s-app: apiserver
 spec:
-  jobLabel: provider
+  jobLabel: component
   selector:
     matchLabels:
       component: apiserver
@@ -330,7 +305,7 @@ spec:
     - default
   endpoints:
   - port: https
-    interval: 15s
+    interval: 30s
     scheme: https
     tlsConfig:
       caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -345,46 +320,61 @@ kind: ServiceMonitor
 metadata:
   name: kubelet
   labels:
-    k8s-apps: http
+    k8s-app: kubelet
 spec:
   jobLabel: k8s-app
+  endpoints:
+  - port: http-metrics
+    interval: 30s
+    honorLabels: true
   selector:
     matchLabels:
       k8s-app: kubelet
   namespaceSelector:
     matchNames:
     - kube-system
-  endpoints:
-  - port: http-metrics
-    interval: 15s
-    honorLabels: true
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-k8s-apps-http.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kube-controller-manager.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
-  name: k8s-apps-http
-  namespace: monitoring
+  name: kube-controller-manager
   labels:
-    k8s-apps: http
+    k8s-app: kube-controller-manager
 spec:
   jobLabel: k8s-app
+  endpoints:
+  - port: http-metrics
+    interval: 30s
   selector:
-    matchExpressions:
-    - {key: k8s-app, operator: Exists}
-    - {key: k8s-app, operator: NotIn, values: [kubelet]}
+    matchLabels:
+      k8s-app: kube-controller-manager
   namespaceSelector:
     matchNames:
     - kube-system
+```
+
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kube-scheduler.yaml)
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ServiceMonitor
+metadata:
+  name: kube-scheduler
+  labels:
+    k8s-app: kube-scheduler
+spec:
+  jobLabel: k8s-app
   endpoints:
   - port: http-metrics
-    interval: 15s
-  - port: http-metrics-dnsmasq
-    interval: 15s
-  - port: http-metrics-skydns
-    interval: 15s
+    interval: 30s
+  selector:
+    matchLabels:
+      k8s-app: kube-scheduler
+  namespaceSelector:
+    matchNames:
+    - kube-system
 ```
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kube-state-metrics.yaml)
@@ -393,9 +383,8 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
   name: kube-state-metrics
-  namespace: monitoring
   labels:
-    k8s-apps: http
+    k8s-app: kube-state-metrics
 spec:
   jobLabel: k8s-app
   selector:
@@ -406,7 +395,7 @@ spec:
     - monitoring
   endpoints:
   - port: http-metrics
-    interval: 15s
+    interval: 30s
     honorLabels: true
 ```
 
@@ -416,9 +405,8 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
   name: node-exporter
-  namespace: monitoring
   labels:
-    k8s-apps: http
+    k8s-app: node-exporter
 spec:
   jobLabel: k8s-app
   selector:
@@ -429,39 +417,7 @@ spec:
     - monitoring
   endpoints:
   - port: http-metrics
-    interval: 15s
-```
-
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-prometheus.yaml)
-```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: ServiceMonitor
-metadata:
-  name: prometheus
-  labels:
-    prometheus: k8s
-spec:
-  endpoints:
-  - port: web
-  selector:
-    matchExpressions:
-    - {key: prometheus, operator: In, values: [k8s]}
-```
-
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-alertmanager.yaml)
-```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: ServiceMonitor
-metadata:
-  labels:
-    alertmanager: main
-  name: alertmanager
-spec:
-  endpoints:
-  - port: web
-  selector:
-    matchExpressions:
-    - {key: alertmanager, operator: In, values: [main]}
+    interval: 30s
 ```
 
 And the Alertmanager:
@@ -476,7 +432,7 @@ metadata:
     alertmanager: "main"
 spec:
   replicas: 3
-  version: v0.6.2
+  version: v0.7.1
 ```
 
 Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid configuration mounted through a `Secret`. Note that the `Secret` has to be in the same namespace as the `Alertmanager` resource as well as have the name `alertmanager-<name-of-alertmanager-object` and the key of the configuration is `alertmanager.yaml`.

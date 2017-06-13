@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: "prometheus"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    prometheus: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}
+data:
+  node.rules: |-
+    # NOTE: These rules were kindly contributed by the SoundCloud engineering team.
+
+    cluster:node_cpu_use:percent =
+      100 * sum by (cluster) (
+        rate(node_cpu{mode!="idle"}[5m])
+      ) / sum by (cluster) (
+        machine_cpu_cores
+      )
+
+    ALERT K8SKubeletNodeExporterDown
+      IF up{job="{{ template "fullname" . }}"} == 0
+      FOR 15m
+      LABELS {
+        service = "k8s",
+        severity = "warning"
+      }
+      ANNOTATIONS {
+        summary = "Kubelet node_exporter cannot be scraped",
+        description = "Prometheus could not scrape a {{`{{ $labels.job }}`}} for more than one hour.",
+      }
+
+    ALERT K8SConntrackTableFull
+      IF 100*node_nf_conntrack_entries / node_nf_conntrack_entries_limit > 50
+      FOR 10m
+      LABELS {
+        service = "k8s",
+        severity = "warning"
+      }
+      ANNOTATIONS {
+        summary = "Number of tracked connections is near the limit",
+        description = "The nf_conntrack table is {{`{{ $value }}`}}% full.",
+      }
+
+    ALERT K8SConntrackTableFull
+      IF 100*node_nf_conntrack_entries / node_nf_conntrack_entries_limit > 90
+      LABELS {
+        service = "k8s",
+        severity = "critical"
+      }
+      ANNOTATIONS {
+        summary = "Number of tracked connections is near the limit",
+        description = "The nf_conntrack table is {{`{{ $value }}`}}% full.",
+      }
+
+    # To catch the conntrack sysctl de-tuning when it happens
+    ALERT K8SConntrackTuningMissing
+      IF node_nf_conntrack_udp_timeout > 10
+      FOR 10m
+      LABELS {
+        service = "k8s",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Node does not have the correct conntrack tunings",
+        description = "Nodes keep un-setting the correct tunings, investigate when it happens.",
+      }

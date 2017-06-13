@@ -38,7 +38,7 @@ import (
 const (
 	governingServiceName = "prometheus-operated"
 	defaultBaseImage     = "quay.io/prometheus/prometheus"
-	defaultVersion       = "v1.6.1"
+	defaultVersion       = "v1.7.0"
 	defaultRetention     = "24h"
 
 	configMapsFilename = "configmaps.json"
@@ -319,21 +319,15 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
 
-	webRoutePrefix := ""
-
 	if p.Spec.ExternalURL != "" {
-		extUrl, err := url.Parse(p.Spec.ExternalURL)
-		if err != nil {
-			return nil, errors.Errorf("invalid external URL %s", p.Spec.ExternalURL)
-		}
-		webRoutePrefix = extUrl.Path
 		promArgs = append(promArgs, "-web.external-url="+p.Spec.ExternalURL)
 	}
 
+	webRoutePrefix := "/"
 	if p.Spec.RoutePrefix != "" {
-		promArgs = append(promArgs, "-web.route-prefix="+p.Spec.RoutePrefix)
 		webRoutePrefix = p.Spec.RoutePrefix
 	}
+	promArgs = append(promArgs, "-web.route-prefix="+p.Spec.RoutePrefix)
 
 	localReloadURL := &url.URL{
 		Scheme: "http",

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,13 +26,15 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 
+	"github.com/blang/semver"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/pkg/errors"
 )
 
 const (
 	governingServiceName = "alertmanager-operated"
 	defaultBaseImage     = "quay.io/prometheus/alertmanager"
-	defaultVersion       = "v0.6.2"
+	defaultVersion       = "v0.7.1"
 )
 
 var (
@@ -39,7 +42,7 @@ var (
 	probeTimeoutSeconds int32 = 3
 )
 
-func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config Config) *v1beta1.StatefulSet {
+func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config Config) (*v1beta1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -60,13 +63,17 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 		am.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
+	spec, err := makeStatefulSetSpec(am, config)
+	if err != nil {
+		return nil, err
+	}
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(am.Name),
 			Labels:      am.ObjectMeta.Labels,
 			Annotations: am.ObjectMeta.Annotations,
 		},
-		Spec: makeStatefulSetSpec(am, config),
+		Spec: *spec,
 	}
 
 	if am.Spec.ImagePullSecrets != nil && len(am.Spec.ImagePullSecrets) > 0 {
@@ -102,7 +109,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 	if old != nil {
 		statefulset.Annotations = old.Annotations
 	}
-	return statefulset
+	return statefulset, nil
 }
 
 func makeStatefulSetService(p *v1alpha1.Alertmanager) *v1.Service {
@@ -137,8 +144,14 @@ func makeStatefulSetService(p *v1alpha1.Alertmanager) *v1.Service {
 	return svc
 }
 
-func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.StatefulSetSpec {
+func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) (*v1beta1.StatefulSetSpec, error) {
 	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Version)
+	versionStr := strings.TrimLeft(a.Spec.Version, "v")
+
+	version, err := semver.Parse(versionStr)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse version")
+	}
 
 	commands := []string{
 		"/bin/alertmanager",
@@ -148,13 +161,22 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 		fmt.Sprintf("-storage.path=%s", "/etc/alertmanager/data"),
 	}
 
-	webRoutePrefix := ""
 	if a.Spec.ExternalURL != "" {
 		commands = append(commands, "-web.external-url="+a.Spec.ExternalURL)
-		extUrl, err := url.Parse(a.Spec.ExternalURL)
-		if err == nil {
-			webRoutePrefix = extUrl.Path
+	}
+
+	webRoutePrefix := "/"
+	if a.Spec.RoutePrefix != "" {
+		webRoutePrefix = a.Spec.RoutePrefix
+	}
+
+	switch version.Major {
+	case 0:
+		if version.Minor >= 7 {
+			commands = append(commands, "-web.route-prefix="+webRoutePrefix)
 		}
+	default:
+		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
 	}
 
 	localReloadURL := &url.URL{
@@ -175,7 +197,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 	}
 
 	terminationGracePeriod := int64(0)
-	return v1beta1.StatefulSetSpec{
+	return &v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    a.Spec.Replicas,
 		Template: v1.PodTemplateSpec{
@@ -263,7 +285,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) v1beta1.Statef
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 func configSecretName(name string) string {
