@@ -1,3 +1,16 @@
+## 0.10.1 / 2017-06-13
+
+Attention: if the basic auth feature was previously used, the `key` and `name`
+fields need to be switched. This was not intentional, and the bug is not fixed,
+but causes this change.
+
+* [CHANGE] Prometheus default version v1.7.1.
+* [CHANGE] Alertmanager default version v0.7.1.
+* [BUGFIX] Fix basic auth secret key selector `key` and `name` switched.
+* [BUGFIX] Fix route prefix flag not always being set for Prometheus.
+* [BUGFIX] Fix nil panic on replica metrics.
+* [FEATURE] Add ability to specify Alertmanager path prefix for Prometheus.
+
 ## 0.10.0 / 2017-06-09
 
 * [CHANGE] Prometheus route prefix defaults to root.
