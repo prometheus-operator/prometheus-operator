@@ -80,6 +80,7 @@ Parameter | Description | Default
 `global.hyperkube.repository` | Hyperkube image | `quay.io/coreos/hyperkube`
 `global.hyperkube.tag` | Hyperkube image tag | `v1.6.2_coreos.0`
 `global.hyperkube.pullPolicy` | Hyperkube image pull policy | `IfNotPresent`
+`global.hyperkube.nodeSelector` | Node labels for Hyperkube pod assignment | `{}`
 `image.repository` | Image | `quay.io/coreos/prometheus-operator`
 `image.tag` | Image tag | `v0.9.0`
 `image.pullPolicy` | Image pull policy | `IfNotPresent`
