@@ -2,7 +2,7 @@ ALERT NodeExporterDown
   IF up{job="node-exporter"} == 0
   FOR 10m
   LABELS {
-    severity = "ticket"
+    severity = "warning"
   }
   ANNOTATIONS {
     summary = "node-exporter cannot be scraped",

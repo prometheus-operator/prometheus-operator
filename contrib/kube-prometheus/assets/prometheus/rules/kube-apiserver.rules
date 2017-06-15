@@ -2,7 +2,7 @@ ALERT K8SApiserverDown
   IF absent({job="apiserver"}) or (count by(cluster) (up{job="apiserver"} == 1) < count by(cluster) (up{job="apiserver"}))
   FOR 5m
   LABELS {
-    severity = "page"
+    severity = "critical"
   }
   ANNOTATIONS {
     summary = "API server unreachable",
@@ -20,7 +20,7 @@ ALERT K8SApiServerLatency
     ) / 1e6 > 1.0
   FOR 10m
   LABELS {
-    severity = "ticket"
+    severity = "warning"
   }
   ANNOTATIONS {
     summary = "Kubernetes apiserver latency is high",
