@@ -2,7 +2,7 @@ ALERT K8SControllerManagerDown
   IF absent(up{job="kube-controller-manager"}) or (count by(cluster) (up{job="kube-controller-manager"} == 1) == 0)
   FOR 5m
   LABELS {
-    severity = "critical",
+    severity = "page",
   }
   ANNOTATIONS {
     summary = "Controller manager is down",

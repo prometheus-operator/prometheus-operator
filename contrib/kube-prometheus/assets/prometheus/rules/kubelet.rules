@@ -2,7 +2,7 @@ ALERT K8SNodeNotReady
   IF kube_node_status_ready{condition="true"} == 0
   FOR 1h
   LABELS {
-    severity = "warning",
+    severity = "ticket",
   }
   ANNOTATIONS {
     summary = "Node status is NotReady",
@@ -20,7 +20,7 @@ ALERT K8SManyNodesNotReady
       ) > 0.2
   FOR 1m
   LABELS {
-    severity = "critical",
+    severity = "page",
   }
   ANNOTATIONS {
     summary = "Many K8s nodes are Not Ready",
@@ -31,7 +31,7 @@ ALERT K8SKubeletDown
   IF count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.03
   FOR 1h
   LABELS {
-    severity = "warning",
+    severity = "ticket",
   }
   ANNOTATIONS {
     summary = "Many Kubelets cannot be scraped",
@@ -42,7 +42,7 @@ ALERT K8SKubeletDown
   IF absent(up{job="kubelet"}) or count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.1
   FOR 1h
   LABELS {
-    severity = "critical",
+    severity = "page",
   }
   ANNOTATIONS {
     summary = "Many Kubelets cannot be scraped",
@@ -52,7 +52,7 @@ ALERT K8SKubeletDown
 ALERT K8SKubeletTooManyPods
   IF kubelet_running_pod_count > 100
   LABELS {
-    severity = "warning",
+    severity = "ticket",
   }
   ANNOTATIONS {
     summary = "Kubelet is close to pod limit",

@@ -4,7 +4,7 @@ ALERT AlertmanagerConfigInconsistent
        label_replace(prometheus_operator_alertmanager_spec_replicas, "service", "alertmanager-$1", "alertmanager", "(.*)") != 1
   FOR 5m
   LABELS {
-    severity = "critical"
+    severity = "page"
   }
   ANNOTATIONS {
     summary = "Alertmanager configurations are inconsistent",
@@ -17,7 +17,7 @@ ALERT AlertmanagerDownOrMissing
        sum by(job) (up) != 1
   FOR 5m
   LABELS {
-    severity = "warning"
+    severity = "ticket"
   }
   ANNOTATIONS {
     summary = "Alertmanager down or not discovered",
@@ -28,7 +28,7 @@ ALERT FailedReload
   IF alertmanager_config_last_reload_successful == 0
   FOR 10m
   LABELS {
-    severity = "warning"
+    severity = "ticket"
   }
   ANNOTATIONS {
     summary = "Alertmanager configuration reload has failed",
