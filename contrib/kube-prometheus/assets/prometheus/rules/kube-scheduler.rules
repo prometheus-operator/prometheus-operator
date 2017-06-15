@@ -2,7 +2,7 @@ ALERT K8SSchedulerDown
   IF absent(up{job="kube-scheduler"}) or (count by(cluster) (up{job="kube-scheduler"} == 1) == 0)
   FOR 5m
   LABELS {
-    severity = "critical",
+    severity = "page",
   }
   ANNOTATIONS {
     summary = "Scheduler is down",

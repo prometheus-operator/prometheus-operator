@@ -4,7 +4,7 @@ Alert TargetDown
   IF 100 * (count(up == 0) / count(up)) > 3
   FOR 10m
   LABELS {
-    severity = "warning"
+    severity = "ticket"
   }
   ANNOTATIONS {
     summary = "Targets are down",
@@ -15,9 +15,6 @@ Alert TargetDown
 
 ALERT DeadMansSwitch
   IF vector(1)
-  LABELS {
-    severity = "none",
-  }
   ANNOTATIONS {
     summary = "Alerting DeadMansSwitch",
     description = "This is a DeadMansSwitch meant to ensure that the entire Alerting pipeline is functional.",
@@ -29,7 +26,7 @@ ALERT TooManyOpenFileDescriptors
   IF 100 * (process_open_fds / process_max_fds) > 95
   FOR 10m
   LABELS {
-    severity = "critical"
+    severity = "page"
   }
   ANNOTATIONS {
     summary = "too many open file descriptors",
@@ -43,7 +40,7 @@ ALERT FdExhaustionClose
   IF predict_linear(instance:fd_utilization[1h], 3600 * 4) > 1
   FOR 10m
   LABELS {
-    severity = "warning"
+    severity = "ticket"
   }
   ANNOTATIONS {
     summary = "file descriptors soon exhausted",
@@ -55,7 +52,7 @@ ALERT FdExhaustionClose
   IF predict_linear(instance:fd_utilization[10m], 3600) > 1
   FOR 10m
   LABELS {
-    severity = "critical"
+    severity = "page"
   }
   ANNOTATIONS {
     summary = "file descriptors soon exhausted",
