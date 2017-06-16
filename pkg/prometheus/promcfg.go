@@ -111,6 +111,17 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 }
 
 func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
+	nsel := m.Spec.NamespaceSelector
+	namespaces := []string{}
+	if !nsel.Any && len(nsel.MatchNames) == 0 {
+		namespaces = append(namespaces, m.Namespace)
+	}
+	if !nsel.Any && len(nsel.MatchNames) > 0 {
+		for i := range nsel.MatchNames {
+			namespaces = append(namespaces, nsel.MatchNames[i])
+		}
+	}
+
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -124,7 +135,19 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 			Key: "kubernetes_sd_configs",
 			Value: []yaml.MapSlice{
 				yaml.MapSlice{
-					{Key: "role", Value: "endpoints"},
+					{
+						Key:   "role",
+						Value: "endpoints",
+					},
+					{
+						Key: "namespaces",
+						Value: yaml.MapSlice{
+							{
+								Key:   "names",
+								Value: namespaces,
+							},
+						},
+					},
 				},
 			},
 		},
@@ -170,7 +193,6 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 				},
 			})
 		}
-
 	}
 
 	var relabelings []yaml.MapSlice
@@ -223,34 +245,6 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 				{Key: "regex", Value: ".+"},
 			})
 		}
-	}
-
-	// Filter targets based on the namespace selection configuration.
-	// By default we only discover services within the namespace of the
-	// ServiceMonitor.
-	// Selections allow extending this to all namespaces or to a subset
-	// of them specified by label or name matching.
-	//
-	// Label selections are not supported yet as they require either supported
-	// in the upstream SD integration or require out-of-band implementation
-	// in the operator with configuration reload.
-	//
-	// There's no explicit nil for the selector, we decide for the default
-	// case if it's all zero values.
-	nsel := m.Spec.NamespaceSelector
-
-	if !nsel.Any && len(nsel.MatchNames) == 0 {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-			{Key: "regex", Value: m.Namespace},
-		})
-	} else if len(nsel.MatchNames) > 0 {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-			{Key: "regex", Value: strings.Join(nsel.MatchNames, "|")},
-		})
 	}
 
 	// Filter targets based on correct port for the endpoint.
@@ -341,7 +335,19 @@ func generateAlertmanagerConfig(am v1alpha1.AlertmanagerEndpoints) yaml.MapSlice
 			Key: "kubernetes_sd_configs",
 			Value: []yaml.MapSlice{
 				yaml.MapSlice{
-					{Key: "role", Value: "endpoints"},
+					{
+						Key:   "role",
+						Value: "endpoints",
+					},
+					{
+						Key: "namespaces",
+						Value: yaml.MapSlice{
+							{
+								Key:   "names",
+								Value: []string{am.Namespace},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -354,11 +360,6 @@ func generateAlertmanagerConfig(am v1alpha1.AlertmanagerEndpoints) yaml.MapSlice
 		{Key: "action", Value: "keep"},
 		{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
 		{Key: "regex", Value: am.Name},
-	})
-	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "action", Value: "keep"},
-		{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-		{Key: "regex", Value: am.Namespace},
 	})
 
 	if am.Port.StrVal != "" {

@@ -317,7 +317,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	p.Spec.Version = "v1.5.0"
+	p.Spec.Version = "v1.7.1"
 	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
@@ -352,7 +352,7 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
 	framework.AddAlertingToPrometheus(p, ns, alertmanagerName)
-	p.Spec.Version = "v1.5.0"
+	p.Spec.Version = "v1.7.1"
 	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
