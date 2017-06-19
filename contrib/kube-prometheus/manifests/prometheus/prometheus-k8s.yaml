@@ -10,7 +10,7 @@ spec:
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpression:
-    - {key: k8s-apps, operator: Exists}
+    - {key: k8s-app, operator: Exists}
   ruleSelector:
     matchLabels:
       role: prometheus-rulefiles
