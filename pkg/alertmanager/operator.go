@@ -490,8 +490,7 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 		return true
 	}
 
-	// TODO: Prometheus TPR checks on Args which seems to be the sane thing to do.
-	if !reflect.DeepEqual(c1.Command, c2.Command) {
+	if !reflect.DeepEqual(c1.Args, c2.Args) {
 		return true
 	}
 
