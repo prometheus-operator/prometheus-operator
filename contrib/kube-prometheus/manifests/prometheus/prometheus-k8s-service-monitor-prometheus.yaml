@@ -3,7 +3,7 @@ kind: ServiceMonitor
 metadata:
   name: prometheus
   labels:
-    app: prometheus
+    k8s-app: prometheus
 spec:
   selector:
     matchLabels:
