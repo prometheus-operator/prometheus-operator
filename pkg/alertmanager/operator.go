@@ -16,6 +16,7 @@ package alertmanager
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -260,6 +261,10 @@ func alertmanagerNameFromStatefulSetName(name string) string {
 	return strings.TrimPrefix(name, "alertmanager-")
 }
 
+func statefulSetNameFromAlertmanagerName(name string) string {
+	return "alertmanager-" + name
+}
+
 func statefulSetKeyToAlertmanagerKey(key string) string {
 	keyParts := strings.Split(key, "/")
 	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "alertmanager-")
@@ -448,6 +453,10 @@ func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
+	sset, err := kclient.Apps().StatefulSets(a.Namespace).Get(statefulSetNameFromAlertmanagerName(a.Name), metav1.GetOptions{})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
+	}
 
 	res.Replicas = int32(len(pods.Items))
 
@@ -460,10 +469,10 @@ func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager)
 		if ready {
 			res.AvailableReplicas++
 			// TODO(fabxc): detect other fields of the pod template that are mutable.
-			if strings.HasSuffix(pod.Spec.Containers[0].Image, a.Spec.Version) {
-				res.UpdatedReplicas++
-			} else {
+			if needsUpdate(&pod, sset.Spec.Template) {
 				oldPods = append(oldPods, pod)
+			} else {
+				res.UpdatedReplicas++
 			}
 			continue
 		}
@@ -471,6 +480,21 @@ func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager)
 	}
 
 	return res, oldPods, nil
+}
+
+func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
+	c1 := pod.Spec.Containers[0]
+	c2 := tmpl.Spec.Containers[0]
+
+	if c1.Image != c2.Image {
+		return true
+	}
+
+	if !reflect.DeepEqual(c1.Args, c2.Args) {
+		return true
+	}
+
+	return false
 }
 
 func (c *Operator) destroyAlertmanager(key string) error {
