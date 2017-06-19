@@ -3,7 +3,7 @@ kind: ServiceMonitor
 metadata:
   name: alertmanager
   labels:
-    app: alertmanager
+    k8s-app: alertmanager
 spec:
   selector:
     matchLabels:
