@@ -36,7 +36,6 @@ import (
 
 const (
 	governingServiceName = "prometheus-operated"
-	defaultBaseImage     = "quay.io/prometheus/prometheus"
 	defaultVersion       = "v1.7.0"
 	defaultRetention     = "24h"
 
@@ -59,7 +58,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 	// Potentially an update handler on first insertion.
 
 	if p.Spec.BaseImage == "" {
-		p.Spec.BaseImage = defaultBaseImage
+		p.Spec.BaseImage = config.PrometheusDefaultBaseImage
 	}
 	if p.Spec.Version == "" {
 		p.Spec.Version = defaultVersion

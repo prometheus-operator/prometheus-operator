@@ -65,8 +65,9 @@ type Operator struct {
 }
 
 type Config struct {
-	Host                string
-	ConfigReloaderImage string
+	Host                         string
+	ConfigReloaderImage          string
+	AlertmanagerDefaultBaseImage string
 }
 
 // New creates a new controller.
@@ -90,7 +91,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		mclient: mclient,
 		logger:  logger,
 		queue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
-		config:  Config{Host: c.Host, ConfigReloaderImage: c.ConfigReloaderImage},
+		config:  Config{Host: c.Host, ConfigReloaderImage: c.ConfigReloaderImage, AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage},
 	}
 
 	o.alrtInf = cache.NewSharedIndexInformer(

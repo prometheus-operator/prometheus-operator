@@ -33,7 +33,6 @@ import (
 
 const (
 	governingServiceName = "alertmanager-operated"
-	defaultBaseImage     = "quay.io/prometheus/alertmanager"
 	defaultVersion       = "v0.7.1"
 )
 
@@ -48,7 +47,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 	// Potentially an update handler on first insertion.
 
 	if am.Spec.BaseImage == "" {
-		am.Spec.BaseImage = defaultBaseImage
+		am.Spec.BaseImage = config.AlertmanagerDefaultBaseImage
 	}
 	if am.Spec.Version == "" {
 		am.Spec.Version = defaultVersion
