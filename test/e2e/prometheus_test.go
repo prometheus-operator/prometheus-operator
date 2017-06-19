@@ -88,28 +88,23 @@ func TestPrometheusVersionMigration(t *testing.T) {
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 
 	name := "test"
+	startVersion := prometheus.CompatibilityMatrix[0]
+	compatibilityMatrix := prometheus.CompatibilityMatrix[1:]
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-
-	p.Spec.Version = "v1.5.1"
+	p.Spec.Version = startVersion
 	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
 
-	p.Spec.Version = "v1.6.1"
-	if err := framework.UpdatePrometheusAndWaitUntilReady(ns, p); err != nil {
-		t.Fatal(err)
-	}
-	if err := framework.WaitForPrometheusRunImageAndReady(ns, p); err != nil {
-		t.Fatal(err)
-	}
-
-	p.Spec.Version = "v1.5.1"
-	if err := framework.UpdatePrometheusAndWaitUntilReady(ns, p); err != nil {
-		t.Fatal(err)
-	}
-	if err := framework.WaitForPrometheusRunImageAndReady(ns, p); err != nil {
-		t.Fatal(err)
+	for _, v := range compatibilityMatrix {
+		p.Spec.Version = v
+		if err := framework.UpdatePrometheusAndWaitUntilReady(ns, p); err != nil {
+			t.Fatal(err)
+		}
+		if err := framework.WaitForPrometheusRunImageAndReady(ns, p); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 

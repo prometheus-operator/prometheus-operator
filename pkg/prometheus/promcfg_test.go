@@ -27,24 +27,26 @@ import (
 )
 
 func TestConfigGeneration(t *testing.T) {
-	cfg, err := generateTestConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for i := 0; i < 1000; i++ {
-		testcfg, err := generateTestConfig()
+	for _, v := range CompatibilityMatrix {
+		cfg, err := generateTestConfig(v)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if !bytes.Equal(cfg, testcfg) {
-			t.Fatalf("Config generation is not deterministic.\n\n\nFirst generation: \n\n%s\n\nDifferent generation: \n\n%s\n\n", string(cfg), string(testcfg))
+		for i := 0; i < 1000; i++ {
+			testcfg, err := generateTestConfig(v)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !bytes.Equal(cfg, testcfg) {
+				t.Fatalf("Config generation is not deterministic.\n\n\nFirst generation: \n\n%s\n\nDifferent generation: \n\n%s\n\n", string(cfg), string(testcfg))
+			}
 		}
 	}
 }
 
-func generateTestConfig() ([]byte, error) {
+func generateTestConfig(version string) ([]byte, error) {
 	replicas := int32(1)
 	return generateConfig(
 		&v1alpha1.Prometheus{
@@ -62,6 +64,7 @@ func generateTestConfig() ([]byte, error) {
 						},
 					},
 				},
+				Version:  version,
 				Replicas: &replicas,
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
