@@ -23,7 +23,7 @@ externalUrl: ""
 ##
 image:
   repository: quay.io/prometheus/prometheus
-  tag: v1.5.2
+  tag: v1.7.1
 
 ingress:
   ## If true, Prometheus Ingress will be created
@@ -54,6 +54,10 @@ nodeSelector: {}
 ## If true, the Operator won't process any Prometheus configuration changes
 ##
 paused: false
+
+## If true, create & use RBAC resources
+##
+rbacEnable: true
 
 ## Number of Prometheus replicas desired
 ##

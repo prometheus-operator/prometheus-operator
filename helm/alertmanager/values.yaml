@@ -25,7 +25,7 @@ externalUrl: ""
 ##
 image:
   repository: quay.io/prometheus/alertmanager
-  tag: v0.5.1
+  tag: v0.7.1
 
 ingress:
   ## If true, Alertmanager Ingress will be created
@@ -99,6 +99,10 @@ service:
   ## Service type
   ##
   type: ClusterIP
+
+## If true, create & use RBAC resources
+##
+rbacEnable: true
 
 ## Alertmanager StorageSpec for persistent data
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#storagespec
