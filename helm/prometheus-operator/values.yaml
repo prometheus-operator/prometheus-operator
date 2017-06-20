@@ -40,6 +40,15 @@ nodeSelector: {}
 ##
 rbacEnable: true
 
+## IF true, remove the thirdypartyresource
+##
+cleanupOnDelete: false
+
+## If true, collect & send anonymous usage statistics
+## Ref: https://github.com/coreos/prometheus-operator#installation
+##
+sendAnalytics: true
+
 ## Prometheus-operator resource limits & requests
 ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
 ##

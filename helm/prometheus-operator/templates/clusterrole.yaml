@@ -13,51 +13,35 @@ metadata:
     release: {{ .Release.Name }}
   name: {{ template "fullname" . }}
 rules:
-- apiGroups:
-  - extensions
-  resources:
-  - thirdpartyresources
-  verbs:
-  - "*"
-- apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - "*"
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - alertmanagers
-  - prometheuses
-  - servicemonitors
-  verbs:
-  - "*"
-- apiGroups:
-  - apps
-  resources:
-  - statefulsets
-  verbs: ["*"]
-- apiGroups: [""]
-  resources:
-  - configmaps
-  - secrets
-  verbs: ["*"]
-- apiGroups: [""]
-  resources:
-  - pods
-  verbs: ["list", "delete"]
-- apiGroups: [""]
-  resources:
-  - services
-  - endpoints
-  verbs: ["get", "create", "update"]
-- apiGroups: [""]
-  resources:
-  - nodes
-  verbs: ["list", "watch"]
-- apiGroups: [""]
-  resources:
-  - namespaces
-  verbs: ["list"]
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["*"]
+
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["delete", "list"]
+
+  - apiGroups: [""]
+    resources: ["services", "endpoints"]
+    verbs: ["create", "get", "update"]
+
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["list", "watch"]
+
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "update"]
+
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["*"]
+
+  - apiGroups: ["extensions"]
+    resources: ["thirdpartyresources"]
+    verbs: ["create", "get"]
+
+  - apiGroups: ["monitoring.coreos.com"]
+    resources: ["alertmanagers", "prometheuses", "servicemonitors"]
+    verbs: ["*"]
 {{- end }}
