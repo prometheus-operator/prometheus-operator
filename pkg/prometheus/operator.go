@@ -77,12 +77,14 @@ type Operator struct {
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
-	Host                     string
-	KubeletObject            string
-	TLSInsecure              bool
-	TLSConfig                rest.TLSClientConfig
-	ConfigReloaderImage      string
-	PrometheusConfigReloader string
+	Host                         string
+	KubeletObject                string
+	TLSInsecure                  bool
+	TLSConfig                    rest.TLSClientConfig
+	ConfigReloaderImage          string
+	PrometheusConfigReloader     string
+	AlertmanagerDefaultBaseImage string
+	PrometheusDefaultBaseImage   string
 }
 
 type BasicAuthCredentials struct {
