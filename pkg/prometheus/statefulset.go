@@ -51,6 +51,22 @@ var (
 		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
 	probeTimeoutSeconds int32 = 3
+
+	CompatibilityMatrix = []string{
+		"v1.4.0",
+		"v1.4.1",
+		"v1.5.0",
+		"v1.5.1",
+		"v1.5.2",
+		"v1.5.3",
+		"v1.6.0",
+		"v1.6.1",
+		"v1.6.2",
+		"v1.6.3",
+		"v1.7.0",
+		"v1.7.1",
+		"v2.0.0-alpha.2",
+	}
 )
 
 func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Config, ruleConfigMaps []*v1.ConfigMap) (*v1beta1.StatefulSet, error) {
