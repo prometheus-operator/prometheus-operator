@@ -17,12 +17,16 @@ package e2e
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	testFramework "github.com/coreos/prometheus-operator/test/e2e/framework"
 )
 
@@ -130,17 +134,8 @@ func TestMeshInitialization(t *testing.T) {
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
-	var amountAlertmanagers int32 = 3
-	alertmanager := &v1alpha1.Alertmanager{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-		},
-		Spec: v1alpha1.AlertmanagerSpec{
-			Replicas: &amountAlertmanagers,
-			Version:  "v0.7.1",
-		},
-	}
-
+	amClusterSize := 3
+	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
@@ -151,9 +146,9 @@ func TestMeshInitialization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for i := 0; i < int(amountAlertmanagers); i++ {
+	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitializedMesh(ns, name, int(amountAlertmanagers)); err != nil {
+		if err := framework.WaitForAlertmanagerInitializedMesh(ns, name, amClusterSize); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -229,5 +224,190 @@ receivers:
 	secondExpectedConfig := "global:\n  resolve_timeout: 5m\n  smtp_from: \"\"\n  smtp_smarthost: \"\"\n  smtp_auth_username: \"\"\n  smtp_auth_password: null\n  smtp_auth_secret: null\n  smtp_auth_identity: \"\"\n  smtp_require_tls: true\n  slack_api_url: null\n  pagerduty_url: https://events.pagerduty.com/generic/2010-04-15/create_event.json\n  hipchat_url: https://api.hipchat.com/\n  hipchat_auth_token: null\n  opsgenie_api_host: https://api.opsgenie.com/\n  victorops_api_url: https://alert.victorops.com/integrations/generic/20131114/alert/\nroute:\n  receiver: webhook\n  group_by:\n  - job\n  group_wait: 30s\n  group_interval: 5m\n  repeat_interval: 12h\nreceivers:\n- name: webhook\n  webhook_configs:\n  - send_resolved: true\n    url: http://alertmanagerwh:30500/\ntemplates: []\n"
 	if err := framework.WaitForSpecificAlertmanagerConfig(ns, alertmanager.Name, secondExpectedConfig); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestAlertmanagerZeroDowntimeRollingDeployment(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	whReplicas := int32(1)
+	whdpl := &v1beta1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "alertmanager-webhook",
+		},
+		Spec: v1beta1.DeploymentSpec{
+			Replicas: &whReplicas,
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": "alertmanager-webhook",
+					},
+				},
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:  "webhook-server",
+							Image: "quay.io/coreos/prometheus-alertmanager-test-webhook",
+							Ports: []v1.ContainerPort{
+								{
+									Name:          "web",
+									ContainerPort: 5001,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	whsvc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "alertmanager-webhook",
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeClusterIP,
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:       "web",
+					Port:       5001,
+					TargetPort: intstr.FromString("web"),
+				},
+			},
+			Selector: map[string]string{
+				"app": "alertmanager-webhook",
+			},
+		},
+	}
+	if err := testFramework.CreateDeployment(framework.KubeClient, ns, whdpl); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, whsvc); err != nil {
+		t.Fatal(err)
+	}
+	err := testFramework.WaitForPodsReady(framework.KubeClient, ns, time.Minute*5, 1,
+		metav1.ListOptions{
+			LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+				"app": "alertmanager-webhook",
+			})).String(),
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	alertmanager := framework.MakeBasicAlertmanager("rolling-deploy", 2)
+	alertmanager.Spec.Version = "v0.7.0"
+	amsvc := framework.MakeAlertmanagerService(alertmanager.Name, "test", v1.ServiceTypeClusterIP)
+	amcfg := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
+		},
+		Data: map[string][]byte{
+			"alertmanager.yaml": []byte(fmt.Sprintf(`
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'webhook'
+receivers:
+- name: 'webhook'
+  webhook_configs:
+  - url: 'http://%s.%s.svc:5001/'
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']
+`, whsvc.Name, ns)),
+		},
+	}
+
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(amcfg); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := framework.MonClient.Alertmanagers(ns).Create(alertmanager); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, amsvc); err != nil {
+		t.Fatal(err)
+	}
+
+	p := framework.MakeBasicPrometheus(ns, "test", "test", 3)
+	p.Spec.EvaluationInterval = "100ms"
+	framework.AddAlertingToPrometheus(p, ns, alertmanager.Name)
+	alertRule := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("prometheus-%s-rules", p.Name),
+			Labels: map[string]string{
+				"role": "rulefile",
+			},
+		},
+		Data: map[string]string{
+			"alerting.rules": `
+ALERT Test
+  IF vector(1)
+`,
+		},
+	}
+
+	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(alertRule); err != nil {
+		t.Fatal(err)
+	}
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(1 * time.Minute)
+
+	opts := metav1.ListOptions{
+		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+			"app": "alertmanager-webhook",
+		})).String(),
+	}
+	pl, err := framework.KubeClient.Core().Pods(ns).List(opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(pl.Items) != 1 {
+		t.Fatalf("Expected one webhook pod, but got %d", len(pl.Items))
+	}
+
+	podName := pl.Items[0].Name
+	logs, err := testFramework.GetLogs(framework.KubeClient, ns, podName, "webhook-server")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c := strings.Count(logs, "Alertmanager Notification Payload Received")
+	if c != 1 {
+		t.Fatalf("One notification expected, but %d received.\n\n%s", c, logs)
+	}
+
+	alertmanager.Spec.Version = "v0.7.1"
+	if _, err := framework.MonClient.Alertmanagers(ns).Update(alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(1 * time.Minute)
+
+	logs, err = testFramework.GetLogs(framework.KubeClient, ns, podName, "webhook-server")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c = strings.Count(logs, "Alertmanager Notification Payload Received")
+	if c != 1 {
+		t.Fatalf("Only one notification expected, but %d received after rolling update of Alertmanager cluster.\n\n%s", c, logs)
 	}
 }
