@@ -52,6 +52,8 @@ func init() {
 	flagset.BoolVar(&analyticsEnabled, "analytics", true, "Send analytical event (Cluster Created/Deleted etc.) to Google Analytics")
 	flagset.StringVar(&cfg.PrometheusConfigReloader, "prometheus-config-reloader", "quay.io/coreos/prometheus-config-reloader:v0.0.1", "Config and rule reload image")
 	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", "quay.io/coreos/configmap-reload:v0.0.1", "Reload Image")
+	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", "quay.io/prometheus/alertmanager", "Alertmanager default base image")
+	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", "quay.io/prometheus/prometheus", "Prometheus default base image")
 
 	flagset.Parse(os.Args[1:])
 }

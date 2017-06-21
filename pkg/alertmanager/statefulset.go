@@ -33,7 +33,6 @@ import (
 
 const (
 	governingServiceName = "alertmanager-operated"
-	defaultBaseImage     = "quay.io/prometheus/alertmanager"
 	defaultVersion       = "v0.7.1"
 )
 
@@ -48,7 +47,7 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 	// Potentially an update handler on first insertion.
 
 	if am.Spec.BaseImage == "" {
-		am.Spec.BaseImage = defaultBaseImage
+		am.Spec.BaseImage = config.AlertmanagerDefaultBaseImage
 	}
 	if am.Spec.Version == "" {
 		am.Spec.Version = defaultVersion
@@ -153,8 +152,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) (*v1beta1.Stat
 		return nil, errors.Wrap(err, "parse version")
 	}
 
-	commands := []string{
-		"/bin/alertmanager",
+	amArgs := []string{
 		fmt.Sprintf("-config.file=%s", "/etc/alertmanager/config/alertmanager.yaml"),
 		fmt.Sprintf("-web.listen-address=:%d", 9093),
 		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
@@ -162,7 +160,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) (*v1beta1.Stat
 	}
 
 	if a.Spec.ExternalURL != "" {
-		commands = append(commands, "-web.external-url="+a.Spec.ExternalURL)
+		amArgs = append(amArgs, "-web.external-url="+a.Spec.ExternalURL)
 	}
 
 	webRoutePrefix := "/"
@@ -173,7 +171,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) (*v1beta1.Stat
 	switch version.Major {
 	case 0:
 		if version.Minor >= 7 {
-			commands = append(commands, "-web.route-prefix="+webRoutePrefix)
+			amArgs = append(amArgs, "-web.route-prefix="+webRoutePrefix)
 		}
 	default:
 		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
@@ -193,7 +191,7 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) (*v1beta1.Stat
 	}
 
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
-		commands = append(commands, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
+		amArgs = append(amArgs, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
 	}
 
 	terminationGracePeriod := int64(0)
@@ -212,9 +210,9 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) (*v1beta1.Stat
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
 				Containers: []v1.Container{
 					{
-						Command: commands,
-						Name:    "alertmanager",
-						Image:   image,
+						Args:  amArgs,
+						Name:  "alertmanager",
+						Image: image,
 						Ports: []v1.ContainerPort{
 							{
 								Name:          "web",

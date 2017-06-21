@@ -15,15 +15,13 @@
 package prometheus
 
 import (
-	"reflect"
-	"testing"
-
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
-
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
-	"github.com/stretchr/testify/require"
+	"reflect"
+	"testing"
 )
 
 var (
@@ -52,6 +50,46 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	if !reflect.DeepEqual(labels, sset.Labels) || !reflect.DeepEqual(annotations, sset.Annotations) {
 		t.Fatal("Labels or Annotations are not properly being propagated to the StatefulSet")
 	}
+}
+
+func TestStatefulSetPVC(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	storageClass := "storageclass"
+
+	pvc := v1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: annotations,
+		},
+		Spec: v1.PersistentVolumeClaimSpec{
+			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+			StorageClassName: &storageClass,
+		},
+	}
+
+	sset, err := makeStatefulSet(v1alpha1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: v1alpha1.PrometheusSpec{
+			Storage: &v1alpha1.StorageSpec{
+				VolumeClaimTemplate: pvc,
+			},
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+
+	require.NoError(t, err)
+	ssetPvc := sset.Spec.VolumeClaimTemplates[0]
+	if !reflect.DeepEqual(*pvc.Spec.StorageClassName, *ssetPvc.Spec.StorageClassName) {
+		t.Fatal("Error adding PVC Spec to StatefulSetSpec")
+	}
+
 }
 
 func TestStatefulSetVolumeInitial(t *testing.T) {

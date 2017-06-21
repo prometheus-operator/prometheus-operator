@@ -6,6 +6,18 @@ global:
     tag: v1.6.4_coreos.0
     pullPolicy: IfNotPresent
 
+## Prometheus-config-reloader image to use for config and rule reloading
+##
+prometheusConfigReloader:
+  repository: quay.io/coreos/prometheus-config-reloader
+  tag: v0.0.1
+
+## Configmap-reload image to use for reloading configmaps
+##
+configmapReload:
+  repository: quay.io/coreos/configmap-reload
+  tag: v0.0.1
+
 ## Prometheus-operator image
 ##
 image:

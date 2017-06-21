@@ -25,6 +25,8 @@ spec:
           {{- if .Values.kubeletService.enable }}
             - --kubelet-service={{ .Values.kubeletService.namespace }}/{{ .Values.kubeletService.name }}
           {{- end }}
+            - --prometheus-config-reloader={{ .Values.prometheusConfigReloader.repository }}:{{ .Values.prometheusConfigReloader.tag }}
+            - --config-reloader-image={{ .Values.configmapReload.repository }}:{{ .Values.configmapReload.tag }}
             - --analytics={{ .Values.sendAnalytics }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
