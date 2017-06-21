@@ -32,7 +32,7 @@ spec:
     {{- if .Values.rbacEnable }}
       serviceAccountName: {{ template "fullname" . }}
     {{- end }}
-    {{- if .Values.global.hyperkube.nodeSelector }}
+    {{- if .Values.nodeSelector }}
       nodeSelector:
-{{ toYaml .Values.global.hyperkube.nodeSelector | indent 8 }}
+{{ toYaml .Values.nodeSelector | indent 8 }}
     {{- end }}

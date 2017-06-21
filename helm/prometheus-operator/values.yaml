@@ -5,8 +5,6 @@ global:
     repository: quay.io/coreos/hyperkube
     tag: v1.6.4_coreos.0
     pullPolicy: IfNotPresent
-    ## Node labels for ThirdPartyResources job pod assignment
-    nodeSelector: {}
 
 ## Prometheus-operator image
 ##
