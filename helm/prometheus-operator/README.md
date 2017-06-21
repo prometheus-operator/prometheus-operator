@@ -77,6 +77,8 @@ The following tables lists the configurable parameters of the prometheus-operato
 
 Parameter | Description | Default
 --- | --- | ---
+`configmapReload.repository` | configmap-reload image | `quay.io/coreos/configmap-reload`
+`configmapReload.tag` | configmap-reload tag | `v0.0.1`
 `global.hyperkube.repository` | Hyperkube image | `quay.io/coreos/hyperkube`
 `global.hyperkube.tag` | Hyperkube image tag | `v1.6.2_coreos.0`
 `global.hyperkube.pullPolicy` | Hyperkube image pull policy | `IfNotPresent`
@@ -87,6 +89,8 @@ Parameter | Description | Default
 `kubeletService.namespace` | The namespace in which the kubelet service should be created | `kube-system`
 `kubeletService.name` | The name of the kubelet service to be created | `kubelet`
 `nodeSelector` | Node labels for pod assignment | `{}`
+`prometheusConfigReloader.repository` | prometheus-config-reloader image | `quay.io/coreos/prometheus-config-reloader`
+`prometheusConfigReloader.tag` | prometheus-config-reloader tag | `v0.0.1`
 `rbacEnable` | If true, create & use RBAC resources | `true`
 `resources` | Pod resource requests & limits | `{}`
 `sendAnalytics` | Collect & send anonymous usage statistics | `true`
