@@ -1,3 +1,7 @@
+## 0.10.2 / 2017-06-21
+
+* [BUGFIX] Use computed route prefix instead of directly from manifest.
+
 ## 0.10.1 / 2017-06-13
 
 Attention: if the basic auth feature was previously used, the `key` and `name`
