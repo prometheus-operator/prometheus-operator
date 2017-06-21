@@ -327,7 +327,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 	if p.Spec.RoutePrefix != "" {
 		webRoutePrefix = p.Spec.RoutePrefix
 	}
-	promArgs = append(promArgs, "-web.route-prefix="+p.Spec.RoutePrefix)
+	promArgs = append(promArgs, "-web.route-prefix="+webRoutePrefix)
 
 	localReloadURL := &url.URL{
 		Scheme: "http",
