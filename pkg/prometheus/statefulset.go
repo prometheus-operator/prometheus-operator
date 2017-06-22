@@ -18,15 +18,16 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"path"
+	"sort"
+	"strings"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
-	"net/url"
-	"path"
-	"sort"
-	"strings"
 
 	"github.com/blang/semver"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
@@ -64,7 +65,7 @@ var (
 		"v1.6.3",
 		"v1.7.0",
 		"v1.7.1",
-		"v2.0.0-alpha.2",
+		"v2.0.0-alpha.3",
 	}
 )
 
@@ -307,14 +308,13 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		// section is also regarded as experimental until a Prometheus 2.0 stable
 		// has been released. These flags will be updated to work with every new
 		// 2.0 release until a stable release. These flags are taregeted at version
-		// v2.0.0-alpha.1, there is no guarantee that these flags will continue to
+		// v2.0.0-alpha.3, there is no guarantee that these flags will continue to
 		// work for any further version, this feature is experimental and developed
 		// on a best effort basis.
 
 		promArgs = append(promArgs,
 			"-config.file=/etc/prometheus/config/prometheus.yaml",
-			"-storage.local.path=/var/prometheus/data",
-			"-storage.tsdb.no-lockfile",
+			"-storage.tsdb.path=/var/prometheus/data",
 			"-storage.tsdb.retention="+p.Spec.Retention,
 		)
 	default:
@@ -330,6 +330,12 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		webRoutePrefix = p.Spec.RoutePrefix
 	}
 	promArgs = append(promArgs, "-web.route-prefix="+webRoutePrefix)
+
+	if version.Major == 2 {
+		for i, a := range promArgs {
+			promArgs[i] = "-" + a
+		}
+	}
 
 	localReloadURL := &url.URL{
 		Scheme: "http",
