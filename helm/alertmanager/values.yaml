@@ -101,7 +101,7 @@ service:
   type: ClusterIP
 
 ## Alertmanager StorageSpec for persistent data
-## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#storagespec
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
 ##
 storageSpec: {}
 #   class: default
