@@ -102,7 +102,7 @@ alertmanager:
     type: ClusterIP
 
   ## Alertmanager StorageSpec for persistent data
-  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#storagespec
+  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
   ##
   storageSpec: {}
   #   class: default
@@ -113,7 +113,7 @@ alertmanager:
 
 prometheus:
   ## Alertmanagers to which alerts will be sent
-  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#alertmanagerendpoints
+  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#alertmanagerendpoints
   ##
   alertingEndpoints: []
   #   - name: ""
@@ -319,7 +319,7 @@ prometheus:
             # serverName: ""
 
   ## Prometheus StorageSpec for persistent data
-  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#storagespec
+  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
   ##
   storageSpec: {}
   #   class: default

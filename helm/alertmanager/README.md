@@ -76,5 +76,6 @@ $ helm install opsgoodness/alertmanager --name my-release -f values.yaml
 > **Tip**: You can use the default [values.yaml](values.yaml)
 
 ### Third-party Resource Documentation
-- [alertmanager](https://github.com/coreos/prometheus-operator/blob/master/Documentation/alertmanager.md)
-- [prometheus](https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md)
+- [Alertmanager](/Documentation/design.md#alertmanager)
+- [Prometheus](/Documentation/design.md#prometheus)
+- [ServiceMonitor](/Documentation/design.md#servicemonitor)
