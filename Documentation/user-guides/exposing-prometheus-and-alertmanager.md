@@ -15,7 +15,7 @@ metadata:
   name: "main"
 spec:
   replicas: 1
-  version: v1.5.0
+  version: v1.7.1
   resources:
     requests:
       memory: 400Mi
@@ -51,7 +51,7 @@ metadata:
   name: "main"
 spec:
   replicas: 3
-  version: v0.6.2
+  version: v0.7.1
   resources:
     requests:
       memory: 400Mi
@@ -115,9 +115,8 @@ metadata:
   name: "main"
 spec:
   replicas: 1
-  version: v1.5.0
+  version: v1.7.1
   externalUrl: http://127.0.0.1:8001/api/v1/proxy/namespaces/default/services/prometheus-main:web/
-  routePrefix: /
   resources:
     requests:
       memory: 400Mi
@@ -127,7 +126,7 @@ spec:
 
 Once the Prometheus `Pod`s are running they are reachable under the specified `externalUrl`.
 
-In contrast, the Alertmanager is able to perform all requests relative to its root when using this approach so the manifest for the `Alertmanager` object is simply the following:
+The Alertmanager works with the same approach so the manifest for the `Alertmanager` object is simply the following:
 
 ```yaml
 apiVersion: "monitoring.coreos.com/v1alpha1"
@@ -136,7 +135,8 @@ metadata:
   name: "main"
 spec:
   replicas: 3
-  version: v0.6.2
+  version: v0.7.1
+  externalUrl: http://127.0.0.1:8001/api/v1/proxy/namespaces/default/services/alertmanager-main:web/
   resources:
     requests:
       memory: 400Mi
@@ -219,6 +219,7 @@ metadata:
   name: monitoring
   annotations:
     ingress.kubernetes.io/whitelist-source-range: 10.0.0.0/16 # change this range to admin ips  
+    ingress.kubernetes.io/rewrite-target: "/"
 spec:
   rules:
   - http:
@@ -242,7 +243,7 @@ metadata:
   name: "main"
 spec:
   replicas: 1
-  version: v1.5.0
+  version: v1.7.1
   externalUrl: http://monitoring.my.systems/prometheus
   resources:
     requests:
@@ -254,7 +255,7 @@ metadata:
   name: "main"
 spec:
   replicas: 3
-  version: v0.6.2
+  version: v0.7.1
   externalUrl: http://monitoring.my.systems/alertmanager
   resources:
     requests:

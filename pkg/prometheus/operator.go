@@ -28,6 +28,7 @@ import (
 	"github.com/coreos/prometheus-operator/third_party/workqueue"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,12 +77,14 @@ type Operator struct {
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
-	Host                     string
-	KubeletObject            string
-	TLSInsecure              bool
-	TLSConfig                rest.TLSClientConfig
-	ConfigReloaderImage      string
-	PrometheusConfigReloader string
+	Host                         string
+	KubeletObject                string
+	TLSInsecure                  bool
+	TLSConfig                    rest.TLSClientConfig
+	ConfigReloaderImage          string
+	PrometheusConfigReloader     string
+	AlertmanagerDefaultBaseImage string
+	PrometheusDefaultBaseImage   string
 }
 
 type BasicAuthCredentials struct {
@@ -199,6 +202,10 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	}
 
 	return c, nil
+}
+
+func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
+	r.MustRegister(NewPrometheusCollector(c.promInf.GetStore()))
 }
 
 // Run the controller.
@@ -875,19 +882,19 @@ func (c *Operator) loadBasicAuthSecrets(mons map[string]*v1alpha1.ServiceMonitor
 
 				for _, secret := range s.Items {
 
-					if secret.Name == ep.BasicAuth.Username.Key {
+					if secret.Name == ep.BasicAuth.Username.Name {
 
-						if u, ok := secret.Data[ep.BasicAuth.Username.Name]; ok {
+						if u, ok := secret.Data[ep.BasicAuth.Username.Key]; ok {
 							username = string(u)
 						} else {
-							return nil, fmt.Errorf("Secret password of servicemonitor %s not found.")
+							return nil, fmt.Errorf("Secret password of servicemonitor %s not found.", mon.Name)
 						}
 
 					}
 
-					if secret.Name == ep.BasicAuth.Password.Key {
+					if secret.Name == ep.BasicAuth.Password.Name {
 
-						if p, ok := secret.Data[ep.BasicAuth.Password.Name]; ok {
+						if p, ok := secret.Data[ep.BasicAuth.Password.Key]; ok {
 							password = string(p)
 						} else {
 							return nil, fmt.Errorf("Secret username of servicemonitor %s not found.",
@@ -897,11 +904,16 @@ func (c *Operator) loadBasicAuthSecrets(mons map[string]*v1alpha1.ServiceMonitor
 					}
 				}
 
-				secrets[fmt.Sprintf("%s/%s/%d", mon.Namespace, mon.Name, i)] =
-					BasicAuthCredentials{
-						username: username,
-						password: password,
-					}
+				if username == "" && password == "" {
+					return nil, fmt.Errorf("Could not generate basicAuth for servicemonitor %s. Username and password are empty.",
+						mon.Name)
+				} else {
+					secrets[fmt.Sprintf("%s/%s/%d", mon.Namespace, mon.Name, i)] =
+						BasicAuthCredentials{
+							username: username,
+							password: password,
+						}
+				}
 
 			}
 		}

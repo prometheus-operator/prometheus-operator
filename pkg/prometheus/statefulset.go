@@ -37,8 +37,7 @@ import (
 
 const (
 	governingServiceName = "prometheus-operated"
-	defaultBaseImage     = "quay.io/prometheus/prometheus"
-	defaultVersion       = "v1.6.3"
+	defaultVersion       = "v1.7.0"
 	defaultRetention     = "24h"
 
 	configMapsFilename = "configmaps.json"
@@ -52,6 +51,22 @@ var (
 		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
 	probeTimeoutSeconds int32 = 3
+
+	CompatibilityMatrix = []string{
+		"v1.4.0",
+		"v1.4.1",
+		"v1.5.0",
+		"v1.5.1",
+		"v1.5.2",
+		"v1.5.3",
+		"v1.6.0",
+		"v1.6.1",
+		"v1.6.2",
+		"v1.6.3",
+		"v1.7.0",
+		"v1.7.1",
+		"v2.0.0-alpha.3",
+	}
 )
 
 func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Config, ruleConfigMaps []*v1.ConfigMap) (*v1beta1.StatefulSet, error) {
@@ -60,7 +75,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 	// Potentially an update handler on first insertion.
 
 	if p.Spec.BaseImage == "" {
-		p.Spec.BaseImage = defaultBaseImage
+		p.Spec.BaseImage = config.PrometheusDefaultBaseImage
 	}
 	if p.Spec.Version == "" {
 		p.Spec.Version = defaultVersion
@@ -96,8 +111,8 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 	if p.Spec.ImagePullSecrets != nil && len(p.Spec.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = p.Spec.ImagePullSecrets
 	}
-
-	if vc := p.Spec.Storage; vc == nil {
+	storageSpec := p.Spec.Storage
+	if storageSpec == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: volumeName(p.Name),
 			VolumeSource: v1.VolumeSource{
@@ -105,22 +120,10 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 			},
 		})
 	} else {
-		pvc := v1.PersistentVolumeClaim{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: volumeName(p.Name),
-			},
-			Spec: v1.PersistentVolumeClaimSpec{
-				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-				Resources:   vc.Resources,
-				Selector:    vc.Selector,
-			},
-		}
-		if len(vc.Class) > 0 {
-			pvc.ObjectMeta.Annotations = map[string]string{
-				"volume.beta.kubernetes.io/storage-class": vc.Class,
-			}
-		}
-		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, pvc)
+		pvcTemplate := storageSpec.VolumeClaimTemplate
+		pvcTemplate.Name = volumeName(p.Name)
+		pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, pvcTemplate)
 	}
 
 	if old != nil {
@@ -305,34 +308,33 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		// section is also regarded as experimental until a Prometheus 2.0 stable
 		// has been released. These flags will be updated to work with every new
 		// 2.0 release until a stable release. These flags are taregeted at version
-		// v2.0.0-alpha.1, there is no guarantee that these flags will continue to
+		// v2.0.0-alpha.3, there is no guarantee that these flags will continue to
 		// work for any further version, this feature is experimental and developed
 		// on a best effort basis.
 
 		promArgs = append(promArgs,
 			"-config.file=/etc/prometheus/config/prometheus.yaml",
-			"-storage.local.path=/var/prometheus/data",
-			"-storage.tsdb.no-lockfile",
+			"-storage.tsdb.path=/var/prometheus/data",
 			"-storage.tsdb.retention="+p.Spec.Retention,
 		)
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
 
-	webRoutePrefix := ""
-
 	if p.Spec.ExternalURL != "" {
-		extUrl, err := url.Parse(p.Spec.ExternalURL)
-		if err != nil {
-			return nil, errors.Errorf("invalid external URL %s", p.Spec.ExternalURL)
-		}
-		webRoutePrefix = extUrl.Path
 		promArgs = append(promArgs, "-web.external-url="+p.Spec.ExternalURL)
 	}
 
+	webRoutePrefix := "/"
 	if p.Spec.RoutePrefix != "" {
-		promArgs = append(promArgs, "-web.route-prefix="+p.Spec.RoutePrefix)
 		webRoutePrefix = p.Spec.RoutePrefix
+	}
+	promArgs = append(promArgs, "-web.route-prefix="+webRoutePrefix)
+
+	if version.Major == 2 {
+		for i, a := range promArgs {
+			promArgs[i] = "-" + a
+		}
 	}
 
 	localReloadURL := &url.URL{

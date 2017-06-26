@@ -14,6 +14,7 @@ This chart bootstraps a [Prometheus](https://github.com/prometheus/prometheus) d
 
 ## Prerequisites
   - Kubernetes 1.4+ with Beta APIs & ThirdPartyResources enabled
+  - [prometheus-operator](https://github.com/coreos/prometheus-operator/blob/master/helm/prometheus-operator/README.md).
 
 ## Installing the Chart
 

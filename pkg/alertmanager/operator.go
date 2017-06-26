@@ -16,17 +16,19 @@ package alertmanager
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
 	"github.com/coreos/prometheus-operator/third_party/workqueue"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,12 +65,13 @@ type Operator struct {
 }
 
 type Config struct {
-	Host                string
-	ConfigReloaderImage string
+	Host                         string
+	ConfigReloaderImage          string
+	AlertmanagerDefaultBaseImage string
 }
 
 // New creates a new controller.
-func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
+func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -88,7 +91,7 @@ func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 		mclient: mclient,
 		logger:  logger,
 		queue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
-		config:  Config{Host: c.Host, ConfigReloaderImage: c.ConfigReloaderImage},
+		config:  Config{Host: c.Host, ConfigReloaderImage: c.ConfigReloaderImage, AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage},
 	}
 
 	o.alrtInf = cache.NewSharedIndexInformer(
@@ -115,6 +118,10 @@ func New(c prometheus.Config, logger log.Logger) (*Operator, error) {
 	})
 
 	return o, nil
+}
+
+func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
+	r.MustRegister(NewAlertmanagerCollector(c.alrtInf.GetStore()))
 }
 
 // Run the controller.
@@ -255,6 +262,10 @@ func alertmanagerNameFromStatefulSetName(name string) string {
 	return strings.TrimPrefix(name, "alertmanager-")
 }
 
+func statefulSetNameFromAlertmanagerName(name string) string {
+	return "alertmanager-" + name
+}
+
 func statefulSetKeyToAlertmanagerKey(key string) string {
 	keyParts := strings.Split(key, "/")
 	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "alertmanager-")
@@ -365,12 +376,21 @@ func (c *Operator) sync(key string) error {
 	}
 
 	if !exists {
-		if _, err := ssetClient.Create(makeStatefulSet(am, nil, c.config)); err != nil {
+		sset, err := makeStatefulSet(am, nil, c.config)
+		if err != nil {
+			return errors.Wrap(err, "making the statefulset, to create, failed")
+		}
+		if _, err := ssetClient.Create(sset); err != nil {
 			return errors.Wrap(err, "creating statefulset failed")
 		}
 		return nil
 	}
-	if _, err := ssetClient.Update(makeStatefulSet(am, obj.(*v1beta1.StatefulSet), c.config)); err != nil {
+
+	sset, err := makeStatefulSet(am, obj.(*v1beta1.StatefulSet), c.config)
+	if err != nil {
+		return errors.Wrap(err, "making the statefulset, to update, failed")
+	}
+	if _, err := ssetClient.Update(sset); err != nil {
 		return errors.Wrap(err, "updating statefulset failed")
 	}
 
@@ -434,6 +454,10 @@ func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
+	sset, err := kclient.Apps().StatefulSets(a.Namespace).Get(statefulSetNameFromAlertmanagerName(a.Name), metav1.GetOptions{})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
+	}
 
 	res.Replicas = int32(len(pods.Items))
 
@@ -446,10 +470,10 @@ func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager)
 		if ready {
 			res.AvailableReplicas++
 			// TODO(fabxc): detect other fields of the pod template that are mutable.
-			if strings.HasSuffix(pod.Spec.Containers[0].Image, a.Spec.Version) {
-				res.UpdatedReplicas++
-			} else {
+			if needsUpdate(&pod, sset.Spec.Template) {
 				oldPods = append(oldPods, pod)
+			} else {
+				res.UpdatedReplicas++
 			}
 			continue
 		}
@@ -457,6 +481,21 @@ func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager)
 	}
 
 	return res, oldPods, nil
+}
+
+func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
+	c1 := pod.Spec.Containers[0]
+	c2 := tmpl.Spec.Containers[0]
+
+	if c1.Image != c2.Image {
+		return true
+	}
+
+	if !reflect.DeepEqual(c1.Args, c2.Args) {
+		return true
+	}
+
+	return false
 }
 
 func (c *Operator) destroyAlertmanager(key string) error {

@@ -2,9 +2,8 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: ServiceMonitor
 metadata:
   name: kube-state-metrics
-  namespace: monitoring
   labels:
-    k8s-apps: http
+    k8s-app: kube-state-metrics
 spec:
   jobLabel: k8s-app
   selector:
@@ -15,5 +14,5 @@ spec:
     - monitoring
   endpoints:
   - port: http-metrics
-    interval: 15s
+    interval: 30s
     honorLabels: true

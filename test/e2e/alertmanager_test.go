@@ -78,17 +78,17 @@ func TestAlertmanagerVersionMigration(t *testing.T) {
 	name := "test"
 
 	am := framework.MakeBasicAlertmanager(name, 1)
-	am.Spec.Version = "v0.6.0"
+	am.Spec.Version = "v0.7.0"
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.6.1"
+	am.Spec.Version = "v0.7.1"
 	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.6.0"
+	am.Spec.Version = "v0.7.0"
 	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
 		t.Fatal(err)
 	}
@@ -198,7 +198,7 @@ func TestMeshInitialization(t *testing.T) {
 		},
 		Spec: v1alpha1.AlertmanagerSpec{
 			Replicas: &amountAlertmanagers,
-			Version:  "master",
+			Version:  "v0.7.1",
 		},
 	}
 
@@ -275,7 +275,8 @@ receivers:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForSpecificAlertmanagerConfig(ns, alertmanager.Name, firstConfig); err != nil {
+	firstExpectedConfig := "global:\n  resolve_timeout: 6m\n  smtp_from: \"\"\n  smtp_smarthost: \"\"\n  smtp_auth_username: \"\"\n  smtp_auth_password: null\n  smtp_auth_secret: null\n  smtp_auth_identity: \"\"\n  smtp_require_tls: true\n  slack_api_url: null\n  pagerduty_url: https://events.pagerduty.com/generic/2010-04-15/create_event.json\n  hipchat_url: https://api.hipchat.com/\n  hipchat_auth_token: null\n  opsgenie_api_host: https://api.opsgenie.com/\n  victorops_api_url: https://alert.victorops.com/integrations/generic/20131114/alert/\nroute:\n  receiver: webhook\n  group_by:\n  - job\n  group_wait: 30s\n  group_interval: 5m\n  repeat_interval: 12h\nreceivers:\n- name: webhook\n  webhook_configs:\n  - send_resolved: true\n    url: http://alertmanagerwh:30500/\ntemplates: []\n"
+	if err := framework.WaitForSpecificAlertmanagerConfig(ns, alertmanager.Name, firstExpectedConfig); err != nil {
 		t.Fatal(err)
 	}
 
@@ -285,7 +286,8 @@ receivers:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForSpecificAlertmanagerConfig(ns, alertmanager.Name, secondConfig); err != nil {
+	secondExpectedConfig := "global:\n  resolve_timeout: 5m\n  smtp_from: \"\"\n  smtp_smarthost: \"\"\n  smtp_auth_username: \"\"\n  smtp_auth_password: null\n  smtp_auth_secret: null\n  smtp_auth_identity: \"\"\n  smtp_require_tls: true\n  slack_api_url: null\n  pagerduty_url: https://events.pagerduty.com/generic/2010-04-15/create_event.json\n  hipchat_url: https://api.hipchat.com/\n  hipchat_auth_token: null\n  opsgenie_api_host: https://api.opsgenie.com/\n  victorops_api_url: https://alert.victorops.com/integrations/generic/20131114/alert/\nroute:\n  receiver: webhook\n  group_by:\n  - job\n  group_wait: 30s\n  group_interval: 5m\n  repeat_interval: 12h\nreceivers:\n- name: webhook\n  webhook_configs:\n  - send_resolved: true\n    url: http://alertmanagerwh:30500/\ntemplates: []\n"
+	if err := framework.WaitForSpecificAlertmanagerConfig(ns, alertmanager.Name, secondExpectedConfig); err != nil {
 		t.Fatal(err)
 	}
 }

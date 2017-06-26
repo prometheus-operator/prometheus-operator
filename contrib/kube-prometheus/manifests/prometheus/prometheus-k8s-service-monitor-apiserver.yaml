@@ -3,9 +3,9 @@ kind: ServiceMonitor
 metadata:
   name: kube-apiserver
   labels:
-    k8s-apps: https
+    k8s-app: apiserver
 spec:
-  jobLabel: provider
+  jobLabel: component
   selector:
     matchLabels:
       component: apiserver
@@ -15,7 +15,7 @@ spec:
     - default
   endpoints:
   - port: https
-    interval: 15s
+    interval: 30s
     scheme: https
     tlsConfig:
       caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt

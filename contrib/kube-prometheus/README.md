@@ -47,7 +47,7 @@ hack/cluster-monitoring/teardown
 
 ## Monitoring custom services
 
-The example manifests in [/manifests/examples/example-app](/manifests/examples/example-app)
+The example manifests in [/manifests/examples/example-app](/contrib/kube-prometheus/manifests/examples/example-app)
 deploy a fake service exposing Prometheus metrics. They additionally define a new Prometheus
 server and a [`ServiceMonitor`](https://github.com/coreos/prometheus-operator/blob/master/Documentation/service-monitor.md),
 which specifies how the example service should be monitored.
@@ -120,7 +120,7 @@ service as well.
 > Note that minikube hides some components like etcd so to see the extend of
 > this setup we recommend setting up a [local cluster using bootkube](https://github.com/kubernetes-incubator/bootkube/tree/master/hack/multi-node).
 
-An example for bootkube's multi-node vagrant setup is [here](/manifests/etcd/etcd-bootkube-vagrant-multi.yaml).
+An example for bootkube's multi-node vagrant setup is [here](/contrib/kube-prometheus/manifests/etcd/etcd-bootkube-vagrant-multi.yaml).
 
 > Hint: this is merely an example for a local setup. The addresses will have to
 > be adapted for a setup, that is not a single etcd bootkube created cluster.

@@ -44,8 +44,35 @@ receivers:
 
 Save the above alertmanager config in a file called `alertmanager.yaml` and create a secret from it using `kubectl`.
 
+The Alertmanager instance needs an special naming on the secret resource in order to be able to grab it. It looks for
+`alertmanager-{ALERTMANAGER_NAME}` pattern, in this example the name of the Alertmanager is `example` so the secret name
+should be `alertmanager-example` and the name of the config file `alertmanager.yaml` 
+
 ```bash
 $ kubectl create secret generic alertmanager-example --from-file=alertmanager.yaml
+```
+
+Note that altermanagers configurations can use templates(`.tmpl` files), these can be added on the secret along with the
+`alertmanager.yaml` config file, for example:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-example
+data:
+  alertmanager.yaml: {BASE64_CONFIG}
+  template_1.tmpl: {BASE64_TEMPLATE_1}
+  template_2.tmpl: {BASE64_TEMPLATE_2}
+  ...
+```
+
+Templates will be placed on the same path as the configuration, in order to be able to load the templates, the configuration (`alertmanager.yaml`)
+should point to them:
+
+```yaml
+templates:
+- '*.tmpl'
 ```
 
 Once created this `Secret` is mounted by Alertmanager `Pod`s created through the `Alertmanager` object.

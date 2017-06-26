@@ -135,12 +135,17 @@ type AlertingSpec struct {
 type StorageSpec struct {
 	// Name of the StorageClass to use when requesting storage provisioning. More
 	// info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
+	// DEPRECATED
 	Class string `json:"class"`
 	// A label query over volumes to consider for binding.
+	// DEPRECATED
 	Selector *metav1.LabelSelector `json:"selector"`
 	// Resources represents the minimum resources the volume should have. More
 	// info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources
+	// DEPRECATED
 	Resources v1.ResourceRequirements `json:"resources"`
+	// Pvc A pvc spec to be used by the Prometheus statefulsets.
+	VolumeClaimTemplate v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
@@ -154,6 +159,8 @@ type AlertmanagerEndpoints struct {
 	Port intstr.IntOrString `json:"port"`
 	// Scheme to use when firing alerts.
 	Scheme string `json:"scheme"`
+	// Prefix for the HTTP path alerts are pushed to.
+	PathPrefix string `json:"pathPrefix"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.
@@ -269,13 +276,15 @@ type AlertmanagerSpec struct {
 	// Storage is the definition of how storage will be used by the Alertmanager
 	// instances.
 	Storage *StorageSpec `json:"storage,omitempty"`
-	// ExternalURL is the URL under which Alertmanager is externally reachable
-	// (for example, if Alertmanager is served via a reverse proxy). Used for
-	// generating relative and absolute links back to Alertmanager itself. If the
-	// URL has a path portion, it will be used to prefix all HTTP endpoints
-	// served by Alertmanager. If omitted, relevant URL components will be
-	// derived automatically.
+	// The external URL the Alertmanager instances will be available under. This is
+	// necessary to generate correct URLs. This is necessary if Alertmanager is not
+	// served from root of a DNS name.
 	ExternalURL string `json:"externalUrl,omitempty"`
+	// The route prefix Alertmanager registers HTTP handlers for. This is useful,
+	// if using ExternalURL and a proxy is rewriting HTTP routes of a request,
+	// and the actual ExternalURL is still true, but the server serves requests
+	// under a different route prefix. For example for use with `kubectl proxy`.
+	RoutePrefix string `json:"routePrefix,omitempty"`
 	// If set to true all actions on the underlaying managed objects are not
 	// goint to be performed, except for delete actions.
 	Paused bool `json:"paused,omitempty"`

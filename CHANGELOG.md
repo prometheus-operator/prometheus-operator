@@ -1,3 +1,30 @@
+## 0.10.2 / 2017-06-21
+
+* [BUGFIX] Use computed route prefix instead of directly from manifest.
+
+## 0.10.1 / 2017-06-13
+
+Attention: if the basic auth feature was previously used, the `key` and `name`
+fields need to be switched. This was not intentional, and the bug is not fixed,
+but causes this change.
+
+* [CHANGE] Prometheus default version v1.7.1.
+* [CHANGE] Alertmanager default version v0.7.1.
+* [BUGFIX] Fix basic auth secret key selector `key` and `name` switched.
+* [BUGFIX] Fix route prefix flag not always being set for Prometheus.
+* [BUGFIX] Fix nil panic on replica metrics.
+* [FEATURE] Add ability to specify Alertmanager path prefix for Prometheus.
+
+## 0.10.0 / 2017-06-09
+
+* [CHANGE] Prometheus route prefix defaults to root.
+* [CHANGE] Default to Prometheus v1.7.0.
+* [CHANGE] Default to Alertmanager v0.7.0.
+* [FEATURE] Add route prefix support to Alertmanager resource.
+* [FEATURE] Add metrics on expected replicas.
+* [FEATURE] Support for runing Alertmanager v0.7.0.
+* [BUGFIX] Fix sensitive rollout triggering.
+
 ## 0.9.1 / 2017-05-18
 
 * [FEATURE] Add experimental Prometheus 2.0 support.

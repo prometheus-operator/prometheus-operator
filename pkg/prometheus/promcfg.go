@@ -20,6 +20,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/blang/semver"
+	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -49,6 +51,16 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 }
 
 func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
+	versionStr := p.Spec.Version
+	if versionStr == "" {
+		versionStr = defaultVersion
+	}
+
+	version, err := semver.Parse(strings.TrimLeft(versionStr, "v"))
+	if err != nil {
+		return nil, errors.Wrap(err, "parse version")
+	}
+
 	cfg := yaml.MapSlice{}
 
 	cfg = append(cfg, yaml.MapItem{
@@ -84,12 +96,12 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range identifiers {
 		for i, ep := range mons[identifier].Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(mons[identifier], ep, i, basicAuthSecrets))
+			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(version, mons[identifier], ep, i, basicAuthSecrets))
 		}
 	}
 	var alertmanagerConfigs []yaml.MapSlice
 	for _, am := range p.Spec.Alerting.Alertmanagers {
-		alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(am))
+		alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(version, am))
 	}
 
 	cfg = append(cfg, yaml.MapItem{
@@ -110,7 +122,7 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 	return yaml.Marshal(cfg)
 }
 
-func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
+func generateServiceMonitorConfig(version semver.Version, m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -120,14 +132,17 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 			Key:   "honor_labels",
 			Value: ep.HonorLabels,
 		},
-		{
-			Key: "kubernetes_sd_configs",
-			Value: []yaml.MapSlice{
-				yaml.MapSlice{
-					{Key: "role", Value: "endpoints"},
-				},
-			},
-		},
+	}
+
+	switch version.Major {
+	case 1:
+		if version.Minor < 7 {
+			cfg = append(cfg, k8sSDAllNamespaces())
+		} else {
+			cfg = append(cfg, k8sSDFromServiceMonitor(m))
+		}
+	case 2:
+		cfg = append(cfg, k8sSDFromServiceMonitor(m))
 	}
 
 	if ep.Interval != "" {
@@ -170,7 +185,6 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 				},
 			})
 		}
-
 	}
 
 	var relabelings []yaml.MapSlice
@@ -225,32 +239,34 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 		}
 	}
 
-	// Filter targets based on the namespace selection configuration.
-	// By default we only discover services within the namespace of the
-	// ServiceMonitor.
-	// Selections allow extending this to all namespaces or to a subset
-	// of them specified by label or name matching.
-	//
-	// Label selections are not supported yet as they require either supported
-	// in the upstream SD integration or require out-of-band implementation
-	// in the operator with configuration reload.
-	//
-	// There's no explicit nil for the selector, we decide for the default
-	// case if it's all zero values.
-	nsel := m.Spec.NamespaceSelector
+	if version.Major == 1 && version.Minor < 7 {
+		// Filter targets based on the namespace selection configuration.
+		// By default we only discover services within the namespace of the
+		// ServiceMonitor.
+		// Selections allow extending this to all namespaces or to a subset
+		// of them specified by label or name matching.
+		//
+		// Label selections are not supported yet as they require either supported
+		// in the upstream SD integration or require out-of-band implementation
+		// in the operator with configuration reload.
+		//
+		// There's no explicit nil for the selector, we decide for the default
+		// case if it's all zero values.
+		nsel := m.Spec.NamespaceSelector
 
-	if !nsel.Any && len(nsel.MatchNames) == 0 {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-			{Key: "regex", Value: m.Namespace},
-		})
-	} else if len(nsel.MatchNames) > 0 {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-			{Key: "regex", Value: strings.Join(nsel.MatchNames, "|")},
-		})
+		if !nsel.Any && len(nsel.MatchNames) == 0 {
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
+				{Key: "regex", Value: m.Namespace},
+			})
+		} else if len(nsel.MatchNames) > 0 {
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
+				{Key: "regex", Value: strings.Join(nsel.MatchNames, "|")},
+			})
+		}
 	}
 
 	// Filter targets based on correct port for the endpoint.
@@ -327,21 +343,81 @@ func generateServiceMonitorConfig(m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoi
 	return cfg
 }
 
-func generateAlertmanagerConfig(am v1alpha1.AlertmanagerEndpoints) yaml.MapSlice {
+func k8sSDFromServiceMonitor(m *v1alpha1.ServiceMonitor) yaml.MapItem {
+	nsel := m.Spec.NamespaceSelector
+	namespaces := []string{}
+	if !nsel.Any && len(nsel.MatchNames) == 0 {
+		namespaces = append(namespaces, m.Namespace)
+	}
+	if !nsel.Any && len(nsel.MatchNames) > 0 {
+		for i := range nsel.MatchNames {
+			namespaces = append(namespaces, nsel.MatchNames[i])
+		}
+	}
+
+	return k8sSDWithNamespaces(namespaces)
+}
+
+func k8sSDWithNamespaces(namespaces []string) yaml.MapItem {
+	return yaml.MapItem{
+		Key: "kubernetes_sd_configs",
+		Value: []yaml.MapSlice{
+			yaml.MapSlice{
+				{
+					Key:   "role",
+					Value: "endpoints",
+				},
+				{
+					Key: "namespaces",
+					Value: yaml.MapSlice{
+						{
+							Key:   "names",
+							Value: namespaces,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func k8sSDAllNamespaces() yaml.MapItem {
+	return yaml.MapItem{
+		Key: "kubernetes_sd_configs",
+		Value: []yaml.MapSlice{
+			yaml.MapSlice{
+				{
+					Key:   "role",
+					Value: "endpoints",
+				},
+			},
+		},
+	}
+}
+
+func generateAlertmanagerConfig(version semver.Version, am v1alpha1.AlertmanagerEndpoints) yaml.MapSlice {
 	if am.Scheme == "" {
 		am.Scheme = "http"
 	}
 
+	if am.PathPrefix == "" {
+		am.PathPrefix = "/"
+	}
+
 	cfg := yaml.MapSlice{
-		{
-			Key: "kubernetes_sd_configs",
-			Value: []yaml.MapSlice{
-				yaml.MapSlice{
-					{Key: "role", Value: "endpoints"},
-				},
-			},
-		},
+		{Key: "path_prefix", Value: am.PathPrefix},
 		{Key: "scheme", Value: am.Scheme},
+	}
+
+	switch version.Major {
+	case 1:
+		if version.Minor < 7 {
+			cfg = append(cfg, k8sSDAllNamespaces())
+		} else {
+			cfg = append(cfg, k8sSDWithNamespaces([]string{am.Namespace}))
+		}
+	case 2:
+		cfg = append(cfg, k8sSDWithNamespaces([]string{am.Namespace}))
 	}
 
 	var relabelings []yaml.MapSlice
@@ -350,11 +426,6 @@ func generateAlertmanagerConfig(am v1alpha1.AlertmanagerEndpoints) yaml.MapSlice
 		{Key: "action", Value: "keep"},
 		{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
 		{Key: "regex", Value: am.Name},
-	})
-	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "action", Value: "keep"},
-		{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-		{Key: "regex", Value: am.Namespace},
 	})
 
 	if am.Port.StrVal != "" {
@@ -368,6 +439,14 @@ func generateAlertmanagerConfig(am v1alpha1.AlertmanagerEndpoints) yaml.MapSlice
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_container_port_number"}},
 			{Key: "regex", Value: am.Port.String()},
+		})
+	}
+
+	if version.Major == 1 && version.Minor < 7 {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
+			{Key: "regex", Value: am.Namespace},
 		})
 	}
 
