@@ -15,6 +15,8 @@
 package framework
 
 import (
+	"fmt"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
@@ -28,7 +30,7 @@ func MakeDeployment(pathToYaml string) (*v1beta1.Deployment, error) {
 	}
 	tectonicPromOp := v1beta1.Deployment{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&tectonicPromOp); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to decode file %s", pathToYaml))
 	}
 
 	return &tectonicPromOp, nil
@@ -37,7 +39,7 @@ func MakeDeployment(pathToYaml string) (*v1beta1.Deployment, error) {
 func CreateDeployment(kubeClient kubernetes.Interface, namespace string, d *v1beta1.Deployment) error {
 	_, err := kubeClient.Extensions().Deployments(namespace).Create(d)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
 	}
 	return nil
 }

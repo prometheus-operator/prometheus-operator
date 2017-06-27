@@ -34,12 +34,12 @@ import (
 func PathToOSFile(relativPath string) (*os.File, error) {
 	path, err := filepath.Abs(relativPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed generate absolut file path of %s", relativPath))
 	}
 
 	manifest, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", path))
 	}
 
 	return manifest, nil
