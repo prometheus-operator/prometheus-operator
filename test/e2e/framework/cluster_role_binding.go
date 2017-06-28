@@ -21,11 +21,13 @@ import (
 	rbacv1alpha1 "k8s.io/client-go/pkg/apis/rbac/v1alpha1"
 )
 
-func CreateClusterRoleBinding(kubeClient kubernetes.Interface, relativePath string) error {
+func CreateClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) error {
 	clusterRoleBinding, err := parseClusterRoleBindingYaml(relativePath)
 	if err != nil {
 		return err
 	}
+
+	clusterRoleBinding.Subjects[0].Namespace = ns
 
 	_, err = kubeClient.RbacV1alpha1().ClusterRoleBindings().Get(clusterRoleBinding.Name, metav1.GetOptions{})
 
