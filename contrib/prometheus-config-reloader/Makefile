@@ -4,7 +4,7 @@ FLAGS =
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 NAME = prometheus-config-reloader
 REPO = quay.io/coreos/$(NAME)
-TAG = v0.0.1
+TAG = v0.0.2
 IMAGE = $(REPO):$(TAG)
 
 build:
