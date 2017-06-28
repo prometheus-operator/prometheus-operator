@@ -21,6 +21,12 @@
 			"revisionTime": "2016-08-04T10:47:26Z"
 		},
 		{
+			"checksumSHA1": "NfQBkfSVHEmnR2OaORxdOXmhLcs=",
+			"path": "github.com/cenkalti/backoff",
+			"revision": "5d150e7eec023ce7a124856b37c68e54b4050ac7",
+			"revisionTime": "2017-03-29T03:22:34Z"
+		},
+		{
 			"checksumSHA1": "jyYz6OqzmWw6CAfSc8WwjDB1S3k=",
 			"path": "github.com/emicklei/go-restful",
 			"revision": "89ef8af493ab468a45a42bb0d89a06fccdd2fb22",
