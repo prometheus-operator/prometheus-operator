@@ -1,5 +1,5 @@
 ALERT K8SControllerManagerDown
-  IF absent(up{job="kube-controller-manager"}) or (count by(cluster) (up{job="kube-controller-manager"} == 1) == 0)
+  IF absent(up{job="kube-controller-manager"} == 1)
   FOR 5m
   LABELS {
     severity = "critical",
@@ -7,4 +7,5 @@ ALERT K8SControllerManagerDown
   ANNOTATIONS {
     summary = "Controller manager is down",
     description = "There is no running K8S controller manager. Deployments and replication controllers are not making progress.",
+    runbook = "https://coreos.com/tectonic/docs/latest/troubleshooting/controller-recovery.html#recovering-a-controller-manager",
   }
