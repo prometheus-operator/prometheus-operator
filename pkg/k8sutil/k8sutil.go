@@ -29,11 +29,12 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// WaitForTPRReady waits for a third party resource to be available
+// WaitForCRDReady waits for a third party resource to be available
 // for use.
-func WaitForTPRReady(restClient rest.Interface, tprGroup, tprVersion, tprName string) error {
+// TODO(gouthamve): Move to clientset.Get()
+func WaitForCRDReady(restClient rest.Interface, crdGroup, crdVersion, crdName string) error {
 	return wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
-		res := restClient.Get().AbsPath("apis", tprGroup, tprVersion, tprName).Do()
+		res := restClient.Get().AbsPath("apis", crdGroup, crdVersion, crdName).Do()
 		err := res.Error()
 		if err != nil {
 			// RESTClient returns *apierrors.StatusError for any status codes < 200 or > 206
