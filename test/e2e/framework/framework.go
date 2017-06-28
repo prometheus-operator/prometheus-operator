@@ -45,22 +45,22 @@ type Framework struct {
 func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "build config from flags failed")
 	}
 
 	cli, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "creating new kube-client failed")
 	}
 
 	httpc := cli.CoreV1().RESTClient().(*rest.RESTClient).Client
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "creating http-client failed")
 	}
 
 	mclient, err := v1alpha1.NewForConfig(config)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "creating monitoring client failed")
 	}
 
 	namespace, err := CreateNamespace(cli, ns)
@@ -80,7 +80,7 @@ func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 
 	err = f.setup(opImage)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "setup test environment failed")
 	}
 
 	return f, nil
@@ -88,7 +88,7 @@ func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 
 func (f *Framework) setup(opImage string) error {
 	if err := f.setupPrometheusOperator(opImage); err != nil {
-		return err
+		return errors.Wrap(err, "setup prometheus operator failed")
 	}
 	return nil
 }
