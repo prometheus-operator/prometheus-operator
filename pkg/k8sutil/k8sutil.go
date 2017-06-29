@@ -18,12 +18,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
@@ -155,4 +157,15 @@ func CreateOrUpdateEndpoints(eclient clientv1.EndpointsInterface, eps *v1.Endpoi
 	}
 
 	return nil
+}
+
+// GetMinorVersion returns the minor version as an integer
+func GetMinorVersion(kclient *kubernetes.Clientset) (int, error) {
+	v, err := kclient.Discovery().ServerVersion()
+	if err != nil {
+		return 0, nil
+	}
+
+	// TODO(gouthamve): Super fragile, will break post 1.10. But minor sometimes returns 7+
+	return strconv.Atoi(string(v.Minor[0]))
 }
