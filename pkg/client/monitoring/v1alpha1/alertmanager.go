@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	CRDAlertmanagersKind = "Alertmanager"
-	CRDAlertmanagerName  = "alertmanagers"
+	AlertmanagersKind = "Alertmanager"
+	AlertmanagerName  = "alertmanagers"
 )
 
 type AlertmanagersGetter interface {
@@ -56,8 +56,8 @@ func newAlertmanagers(r rest.Interface, c *dynamic.Client, namespace string) *al
 		r,
 		c.Resource(
 			&metav1.APIResource{
-				Kind:       CRDAlertmanagersKind,
-				Name:       CRDAlertmanagerName,
+				Kind:       AlertmanagersKind,
+				Name:       AlertmanagerName,
 				Namespaced: true,
 			},
 			namespace,
@@ -154,15 +154,15 @@ func AlertmanagerFromUnstructured(r *unstructured.Unstructured) (*Alertmanager, 
 	if err := json.Unmarshal(b, &a); err != nil {
 		return nil, err
 	}
-	a.TypeMeta.Kind = CRDAlertmanagersKind
-	a.TypeMeta.APIVersion = CRDGroup + "/" + CRDVersion
+	a.TypeMeta.Kind = AlertmanagersKind
+	a.TypeMeta.APIVersion = Group + "/" + Version
 	return &a, nil
 }
 
 // UnstructuredFromAlertmanager marshals an Alertmanager object into dynamic client's unstructured
 func UnstructuredFromAlertmanager(a *Alertmanager) (*unstructured.Unstructured, error) {
-	a.TypeMeta.Kind = CRDAlertmanagersKind
-	a.TypeMeta.APIVersion = CRDGroup + "/" + CRDVersion
+	a.TypeMeta.Kind = AlertmanagersKind
+	a.TypeMeta.APIVersion = Group + "/" + Version
 	b, err := json.Marshal(a)
 	if err != nil {
 		return nil, err

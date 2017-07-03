@@ -28,9 +28,9 @@ import (
 )
 
 const (
-	CRDPrometheusesKind = "Prometheus"
-	CRDPrometheusName   = "prometheuses"
-	CRDPrometheusShort  = "prom"
+	PrometheusesKind = "Prometheus"
+	PrometheusName   = "prometheuses"
+	PrometheusShort  = "prom"
 )
 
 type PrometheusesGetter interface {
@@ -57,8 +57,8 @@ func newPrometheuses(r rest.Interface, c *dynamic.Client, namespace string) *pro
 		r,
 		c.Resource(
 			&metav1.APIResource{
-				Kind:       CRDPrometheusesKind,
-				Name:       CRDPrometheusName,
+				Kind:       PrometheusesKind,
+				Name:       PrometheusName,
 				Namespaced: true,
 			},
 			namespace,
@@ -155,15 +155,15 @@ func PrometheusFromUnstructured(r *unstructured.Unstructured) (*Prometheus, erro
 	if err := json.Unmarshal(b, &p); err != nil {
 		return nil, err
 	}
-	p.TypeMeta.Kind = CRDPrometheusesKind
-	p.TypeMeta.APIVersion = CRDGroup + "/" + CRDVersion
+	p.TypeMeta.Kind = PrometheusesKind
+	p.TypeMeta.APIVersion = Group + "/" + Version
 	return &p, nil
 }
 
 // UnstructuredFromPrometheus marshals a Prometheus object into dynamic client's unstructured
 func UnstructuredFromPrometheus(p *Prometheus) (*unstructured.Unstructured, error) {
-	p.TypeMeta.Kind = CRDPrometheusesKind
-	p.TypeMeta.APIVersion = CRDGroup + "/" + CRDVersion
+	p.TypeMeta.Kind = PrometheusesKind
+	p.TypeMeta.APIVersion = Group + "/" + Version
 	b, err := json.Marshal(p)
 	if err != nil {
 		return nil, err

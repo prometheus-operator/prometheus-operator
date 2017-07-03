@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	CRDGroup   = "monitoring.coreos.com"
-	CRDVersion = "v1alpha1"
+	Group   = "monitoring.coreos.com"
+	Version = "v1alpha1"
 )
 
 type MonitoringV1alpha1Interface interface {
@@ -73,8 +73,8 @@ func NewForConfig(c *rest.Config) (*MonitoringV1alpha1Client, error) {
 
 func setConfigDefaults(config *rest.Config) {
 	config.GroupVersion = &schema.GroupVersion{
-		Group:   CRDGroup,
-		Version: CRDVersion,
+		Group:   Group,
+		Version: Version,
 	}
 	config.APIPath = "/apis"
 	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: api.Codecs}

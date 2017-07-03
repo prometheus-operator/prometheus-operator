@@ -49,8 +49,8 @@ import (
 const (
 	configFilename = "prometheus.yaml"
 
-	crdServiceMonitor = v1alpha1.CRDServiceMonitorName + "." + v1alpha1.CRDGroup
-	crdPrometheus     = v1alpha1.CRDPrometheusName + "." + v1alpha1.CRDGroup
+	crdServiceMonitor = v1alpha1.ServiceMonitorName + "." + v1alpha1.Group
+	crdPrometheus     = v1alpha1.PrometheusName + "." + v1alpha1.Group
 
 	resyncPeriod = 5 * time.Minute
 )
@@ -231,7 +231,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		}
 		c.logger.Log("msg", "connection established", "cluster-version", v)
 
-		mv, err := k8sutil.GetMinorVersion(c.kclient)
+		mv, err := k8sutil.GetMinorVersion(c.kclient.Discovery())
 		if mv < 7 {
 			if err := c.createTPRs(); err != nil {
 				errChan <- errors.Wrap(err, "creating TPRs failed")
@@ -1031,19 +1031,19 @@ func (c *Operator) createTPRs() error {
 	tprs := []*extensionsobjold.ThirdPartyResource{
 		{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "service-monitor." + v1alpha1.CRDGroup,
+				Name: "service-monitor." + v1alpha1.Group,
 			},
 			Versions: []extensionsobjold.APIVersion{
-				{Name: v1alpha1.CRDVersion},
+				{Name: v1alpha1.Version},
 			},
 			Description: "Prometheus monitoring for a service",
 		},
 		{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "prometheus." + v1alpha1.CRDGroup,
+				Name: "prometheus." + v1alpha1.Group,
 			},
 			Versions: []extensionsobjold.APIVersion{
-				{Name: v1alpha1.CRDVersion},
+				{Name: v1alpha1.Version},
 			},
 			Description: "Managed Prometheus server",
 		},
@@ -1058,11 +1058,11 @@ func (c *Operator) createTPRs() error {
 	}
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	err := k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.CRDGroup, v1alpha1.CRDVersion, v1alpha1.CRDPrometheusName)
+	err := k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.PrometheusName)
 	if err != nil {
 		return err
 	}
-	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.CRDGroup, v1alpha1.CRDVersion, v1alpha1.CRDServiceMonitorName)
+	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.ServiceMonitorName)
 }
 
 func (c *Operator) createCRDs() error {
@@ -1072,12 +1072,12 @@ func (c *Operator) createCRDs() error {
 				Name: crdServiceMonitor,
 			},
 			Spec: extensionsobj.CustomResourceDefinitionSpec{
-				Group:   v1alpha1.CRDGroup,
-				Version: v1alpha1.CRDVersion,
+				Group:   v1alpha1.Group,
+				Version: v1alpha1.Version,
 				Scope:   extensionsobj.NamespaceScoped,
 				Names: extensionsobj.CustomResourceDefinitionNames{
-					Plural: v1alpha1.CRDServiceMonitorName,
-					Kind:   v1alpha1.CRDServiceMonitorsKind,
+					Plural: v1alpha1.ServiceMonitorName,
+					Kind:   v1alpha1.ServiceMonitorsKind,
 				},
 			},
 		},
@@ -1086,13 +1086,13 @@ func (c *Operator) createCRDs() error {
 				Name: crdPrometheus,
 			},
 			Spec: extensionsobj.CustomResourceDefinitionSpec{
-				Group:   v1alpha1.CRDGroup,
-				Version: v1alpha1.CRDVersion,
+				Group:   v1alpha1.Group,
+				Version: v1alpha1.Version,
 				Scope:   extensionsobj.NamespaceScoped,
 				Names: extensionsobj.CustomResourceDefinitionNames{
-					Plural:     v1alpha1.CRDPrometheusName,
-					Kind:       v1alpha1.CRDPrometheusesKind,
-					ShortNames: []string{v1alpha1.CRDPrometheusShort},
+					Plural:     v1alpha1.PrometheusName,
+					Kind:       v1alpha1.PrometheusesKind,
+					ShortNames: []string{v1alpha1.PrometheusShort},
 				},
 			},
 		},
@@ -1108,9 +1108,9 @@ func (c *Operator) createCRDs() error {
 	}
 
 	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
-	err := k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.CRDGroup, v1alpha1.CRDVersion, v1alpha1.CRDPrometheusName)
+	err := k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.PrometheusName)
 	if err != nil {
 		return err
 	}
-	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.CRDGroup, v1alpha1.CRDVersion, v1alpha1.CRDServiceMonitorName)
+	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.ServiceMonitorName)
 }

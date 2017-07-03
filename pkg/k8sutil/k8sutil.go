@@ -25,7 +25,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/discovery"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
@@ -160,8 +160,8 @@ func CreateOrUpdateEndpoints(eclient clientv1.EndpointsInterface, eps *v1.Endpoi
 }
 
 // GetMinorVersion returns the minor version as an integer
-func GetMinorVersion(kclient *kubernetes.Clientset) (int, error) {
-	v, err := kclient.Discovery().ServerVersion()
+func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
+	v, err := dclient.ServerVersion()
 	if err != nil {
 		return 0, nil
 	}

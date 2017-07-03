@@ -121,17 +121,17 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 	f.OperatorPod = &pl.Items[0]
 
-	err = k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), v1alpha1.CRDGroup, v1alpha1.CRDVersion, v1alpha1.CRDPrometheusName)
+	err = k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.PrometheusName)
 	if err != nil {
 		return err
 	}
 
-	err = k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), v1alpha1.CRDGroup, v1alpha1.CRDVersion, v1alpha1.CRDServiceMonitorName)
+	err = k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.ServiceMonitorName)
 	if err != nil {
 		return err
 	}
 
-	return k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), v1alpha1.CRDGroup, v1alpha1.CRDVersion, v1alpha1.CRDAlertmanagerName)
+	return k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.AlertmanagerName)
 }
 
 // Teardown tears down a previously initialized test environment.

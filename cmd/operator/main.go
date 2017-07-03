@@ -31,6 +31,8 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/api"
+	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/coreos/prometheus-operator/pkg/migrator"
 	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/go-kit/kit/log"
 )
@@ -98,6 +100,23 @@ func Main() int {
 	po.RegisterMetrics(r)
 	ao.RegisterMetrics(r)
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
+
+	conf, err := k8sutil.NewClusterConfig(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig)
+	if err != nil {
+		fmt.Fprint(os.Stderr, err)
+		return 1
+	}
+
+	mg, err := migrator.GetMigration(conf, logger.With("component", "migrator"))
+	switch mg {
+	case migrator.TPR2CRD:
+		err = migrator.MigrateTPR2CRD(conf, logger.With("component", "migrator"))
+		if err != nil {
+			fmt.Fprint(os.Stderr, err)
+			return 1
+		}
+	default:
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg, ctx := errgroup.WithContext(ctx)

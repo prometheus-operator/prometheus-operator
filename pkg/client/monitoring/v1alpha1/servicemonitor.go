@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	CRDServiceMonitorsKind = "ServiceMonitor"
-	CRDServiceMonitorName  = "servicemonitors"
+	ServiceMonitorsKind = "ServiceMonitor"
+	ServiceMonitorName  = "servicemonitors"
 )
 
 type ServiceMonitorsGetter interface {
@@ -56,8 +56,8 @@ func newServiceMonitors(r rest.Interface, c *dynamic.Client, namespace string) *
 		r,
 		c.Resource(
 			&metav1.APIResource{
-				Kind:       CRDServiceMonitorsKind,
-				Name:       CRDServiceMonitorName,
+				Kind:       ServiceMonitorsKind,
+				Name:       ServiceMonitorName,
 				Namespaced: true,
 			},
 			namespace,
@@ -154,15 +154,15 @@ func ServiceMonitorFromUnstructured(r *unstructured.Unstructured) (*ServiceMonit
 	if err := json.Unmarshal(b, &s); err != nil {
 		return nil, err
 	}
-	s.TypeMeta.Kind = CRDServiceMonitorsKind
-	s.TypeMeta.APIVersion = CRDGroup + "/" + CRDVersion
+	s.TypeMeta.Kind = ServiceMonitorsKind
+	s.TypeMeta.APIVersion = Group + "/" + Version
 	return &s, nil
 }
 
 // UnstructuredFromServiceMonitor marshals a ServiceMonitor object into dynamic client's unstructured
 func UnstructuredFromServiceMonitor(s *ServiceMonitor) (*unstructured.Unstructured, error) {
-	s.TypeMeta.Kind = CRDServiceMonitorsKind
-	s.TypeMeta.APIVersion = CRDGroup + "/" + CRDVersion
+	s.TypeMeta.Kind = ServiceMonitorsKind
+	s.TypeMeta.APIVersion = Group + "/" + Version
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err

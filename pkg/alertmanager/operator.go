@@ -46,7 +46,7 @@ import (
 )
 
 const (
-	crdAlertmanager = v1alpha1.CRDAlertmanagerName + "." + v1alpha1.CRDGroup
+	crdAlertmanager = v1alpha1.AlertmanagerName + "." + v1alpha1.Group
 
 	resyncPeriod = 5 * time.Minute
 )
@@ -147,7 +147,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		}
 		c.logger.Log("msg", "connection established", "cluster-version", v)
 
-		mv, err := k8sutil.GetMinorVersion(c.kclient)
+		mv, err := k8sutil.GetMinorVersion(c.kclient.Discovery())
 		if mv < 7 {
 			if err := c.createTPRs(); err != nil {
 				errChan <- errors.Wrap(err, "creating TPRs failed")
@@ -568,12 +568,12 @@ func (c *Operator) createCRDs() error {
 				Name: crdAlertmanager,
 			},
 			Spec: extensionsobj.CustomResourceDefinitionSpec{
-				Group:   v1alpha1.CRDGroup,
-				Version: v1alpha1.CRDVersion,
+				Group:   v1alpha1.Group,
+				Version: v1alpha1.Version,
 				Scope:   extensionsobj.NamespaceScoped,
 				Names: extensionsobj.CustomResourceDefinitionNames{
-					Plural: v1alpha1.CRDAlertmanagerName,
-					Kind:   v1alpha1.CRDAlertmanagersKind,
+					Plural: v1alpha1.AlertmanagerName,
+					Kind:   v1alpha1.AlertmanagersKind,
 				},
 			},
 		},
@@ -589,17 +589,17 @@ func (c *Operator) createCRDs() error {
 	}
 
 	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
-	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.CRDGroup, v1alpha1.CRDVersion, v1alpha1.CRDAlertmanagerName)
+	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.AlertmanagerName)
 }
 
 func (c *Operator) createTPRs() error {
 	tprs := []*extensionsobjold.ThirdPartyResource{
 		{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "alertmanager." + v1alpha1.CRDGroup,
+				Name: "alertmanager." + v1alpha1.Group,
 			},
 			Versions: []extensionsobjold.APIVersion{
-				{Name: v1alpha1.CRDVersion},
+				{Name: v1alpha1.Version},
 			},
 			Description: "Managed Alertmanager cluster",
 		},
@@ -614,5 +614,5 @@ func (c *Operator) createTPRs() error {
 	}
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.CRDGroup, v1alpha1.CRDVersion, v1alpha1.CRDAlertmanagerName)
+	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.AlertmanagerName)
 }
