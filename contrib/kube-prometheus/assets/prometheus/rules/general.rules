@@ -1,14 +1,14 @@
 ### Up Alerting ###
 
 Alert TargetDown
-  IF 100 * (count(up == 0) / count(up)) > 3
+  IF 100 * (count by(job) (up == 0) / count by(job) (up)) > 10
   FOR 10m
   LABELS {
     severity = "warning"
   }
   ANNOTATIONS {
     summary = "Targets are down",
-    description = "More than {{ $value }}% of targets are down."
+    description = "{{ $value }}% or more of {{ $labels.job }} targets are down."
   }
 
 ### Dead man's switch ###

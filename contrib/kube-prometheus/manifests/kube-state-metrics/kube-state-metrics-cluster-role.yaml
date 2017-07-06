@@ -7,7 +7,10 @@ rules:
   resources:
   - nodes
   - pods
+  - services
   - resourcequotas
+  - replicationcontrollers
+  - limitranges
   verbs: ["list", "watch"]
 - apiGroups: ["extensions"]
   resources:

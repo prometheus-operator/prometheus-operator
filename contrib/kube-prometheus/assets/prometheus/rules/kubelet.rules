@@ -11,24 +11,24 @@ ALERT K8SNodeNotReady
 
 ALERT K8SManyNodesNotReady
   IF
-    count by (cluster) (kube_node_status_ready{condition="true"} == 0) > 1
+    count(kube_node_status_ready{condition="true"} == 0) > 1
     AND
       (
-        count by (cluster) (kube_node_status_ready{condition="true"} == 0)
+        count(kube_node_status_ready{condition="true"} == 0)
       /
-        count by (cluster) (kube_node_status_ready{condition="true"})
+        count(kube_node_status_ready{condition="true"})
       ) > 0.2
   FOR 1m
   LABELS {
     severity = "critical",
   }
   ANNOTATIONS {
-    summary = "Many K8s nodes are Not Ready",
-    description = "{{ $value }} K8s nodes (more than 10% of cluster {{ $labels.cluster }}) are in the NotReady state.",
+    summary = "Many Kubernetes nodes are Not Ready",
+    description = "{{ $value }} Kubernetes nodes (more than 10% are in the NotReady state).",
   }
 
 ALERT K8SKubeletDown
-  IF count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.03
+  IF count(up{job="kubelet"} == 0) / count(up{job="kubelet"}) > 0.03
   FOR 1h
   LABELS {
     severity = "warning",
@@ -39,7 +39,7 @@ ALERT K8SKubeletDown
   }
 
 ALERT K8SKubeletDown
-  IF absent(up{job="kubelet"}) or count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.1
+  IF absent(up{job="kubelet"} == 1) or count(up{job="kubelet"} == 0) / count(up{job="kubelet"}) > 0.1
   FOR 1h
   LABELS {
     severity = "critical",

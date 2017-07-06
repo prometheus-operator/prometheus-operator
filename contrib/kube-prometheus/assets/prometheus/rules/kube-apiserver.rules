@@ -1,5 +1,5 @@
 ALERT K8SApiserverDown
-  IF absent({job="apiserver"}) or (count by(cluster) (up{job="apiserver"} == 1) < count by(cluster) (up{job="apiserver"}))
+  IF absent(up{job="apiserver"} == 1)
   FOR 5m
   LABELS {
     severity = "critical"
