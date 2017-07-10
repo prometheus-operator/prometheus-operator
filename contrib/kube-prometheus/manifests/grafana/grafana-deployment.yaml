@@ -56,9 +56,6 @@ spec:
             secretKeyRef:
               name: grafana-credentials
               key: password
-        volumeMounts:
-        - name: grafana-dashboards
-          mountPath: /var/grafana-dashboards
         resources:
           requests:
             memory: "16Mi"
