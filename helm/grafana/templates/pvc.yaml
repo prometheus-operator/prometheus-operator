@@ -1,0 +1,18 @@
+{{- if .Values.storageSpec -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: {{ template "grafana.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "grafana.server.fullname" . }}
+spec:
+  accessModes:
+    - {{ .Values.storageSpec.accessMode }}
+  storageClassName: {{ .Values.storageSpec.class }}
+  resources:
+    requests:
+      storage: {{ .Values.storageSpec.resources.requests.storage | quote }}
+{{- end -}}

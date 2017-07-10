@@ -52,7 +52,7 @@ func doRequest(c *http.Client, req *http.Request) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("doRequest failed, Code:%d, Status:%s", resp.StatusCode, resp.Status)
+		return fmt.Errorf("Unexpected status code returned from Grafana API (got: %d, expected: 200, msg:%s)", resp.StatusCode, resp.Status)
 	}
 	return nil
 }
