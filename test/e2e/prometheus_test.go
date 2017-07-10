@@ -27,6 +27,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/pkg/api/v1"
 
@@ -474,6 +475,64 @@ func TestExposingPrometheusWithIngress(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestPrometheusDiscoverTargetPort(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+
+	prometheusName := "test"
+	group := "servicediscovery-test"
+	svc := framework.MakeBasicPrometheusNodePortService(prometheusName, group, 30900)
+
+	if _, err := framework.MonClient.ServiceMonitors(ns).Create(&v1alpha1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: prometheusName,
+			Labels: map[string]string{
+				"group": group,
+			},
+		},
+		Spec: v1alpha1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": group,
+				},
+			},
+			Endpoints: []v1alpha1.Endpoint{
+				v1alpha1.Endpoint{
+					TargetPort: intstr.FromInt(9090),
+					Interval:   "30s",
+				},
+			},
+		},
+	}); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		t.Fatal(err)
+	}
+
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, svc); err != nil {
+		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	_, err := framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+	if err != nil {
+		t.Fatal("Generated Secret could not be retrieved: ", err)
+	}
+
+	err = wait.Poll(time.Second, 3*time.Minute, isDiscoveryWorking(ns, prometheusName))
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
+	}
+}
+
 func isDiscoveryWorking(ns, prometheusName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(prometheusName))

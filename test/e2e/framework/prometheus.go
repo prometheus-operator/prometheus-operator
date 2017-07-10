@@ -40,6 +40,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 		},
 		Spec: v1alpha1.PrometheusSpec{
 			Replicas: &replicas,
+			Version:  prometheus.DefaultVersion,
 			ServiceMonitorSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": group,

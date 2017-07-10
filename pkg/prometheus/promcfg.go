@@ -53,7 +53,7 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
 	versionStr := p.Spec.Version
 	if versionStr == "" {
-		versionStr = defaultVersion
+		versionStr = DefaultVersion
 	}
 
 	version, err := semver.Parse(strings.TrimLeft(versionStr, "v"))
@@ -279,13 +279,13 @@ func generateServiceMonitorConfig(version semver.Version, m *v1alpha1.ServiceMon
 	} else if ep.TargetPort.StrVal != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_container_port_name"}},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_name"}},
 			{Key: "regex", Value: ep.TargetPort.String()},
 		})
 	} else if ep.TargetPort.IntVal != 0 {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_container_port_number"}},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
 			{Key: "regex", Value: ep.TargetPort.String()},
 		})
 	}
