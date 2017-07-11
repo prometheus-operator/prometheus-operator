@@ -40,6 +40,9 @@ spec:
 {{- if .Values.routePrefix }}
   routePrefix: "{{ .Values.routePrefix }}"
 {{- end }}
+{{- if .Values.rbacEnable }}
+  serviceAccountName: {{ template "fullname" . }}
+{{- end }}
 {{- if .Values.serviceMonitorsSelector }}
   serviceMonitorSelector:
     matchLabels:
