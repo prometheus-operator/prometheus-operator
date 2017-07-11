@@ -15,6 +15,10 @@ config:
   specifiedInValues: true
   value: {}
 
+## External labels to add to any time series or alerts when communicating with external systems
+##
+externalLabels: {}
+
 ## External URL at which Prometheus will be reachable
 ##
 externalUrl: ""
