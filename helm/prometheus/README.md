@@ -81,5 +81,6 @@ $ helm install opsgoodness/prometheus --name my-release -f values.yaml
 > **Tip**: You can use the default [values.yaml](values.yaml)
 
 ### Third-party Resource Documentation
-- [prometheus](https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md)
-- [servicemonitor](https://github.com/coreos/prometheus-operator/blob/master/Documentation/service-monitor.md)
+- [Alertmanager](/Documentation/design.md#alertmanager)
+- [Prometheus](/Documentation/design.md#prometheus)
+- [ServiceMonitor](/Documentation/design.md#servicemonitor)
