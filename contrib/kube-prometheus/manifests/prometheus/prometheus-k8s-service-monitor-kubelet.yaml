@@ -9,6 +9,8 @@ spec:
   endpoints:
   - port: http-metrics
     interval: 30s
+  - port: cadvisor
+    interval: 30s
     honorLabels: true
   selector:
     matchLabels:
