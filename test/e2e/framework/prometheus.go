@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -203,12 +202,12 @@ func promImage(version string) string {
 	return fmt.Sprintf("quay.io/prometheus/prometheus:%s", version)
 }
 
-func (f *Framework) WaitForTargets(amount int) error {
+func (f *Framework) WaitForTargets(ns, svcName string, amount int) error {
 	var targets []*Target
 
 	if err := wait.Poll(time.Second, time.Minute*10, func() (bool, error) {
 		var err error
-		targets, err = f.GetActiveTargets()
+		targets, err = f.GetActiveTargets(ns, svcName)
 		if err != nil {
 			return false, err
 		}
@@ -225,15 +224,16 @@ func (f *Framework) WaitForTargets(amount int) error {
 	return nil
 }
 
-func (f *Framework) GetActiveTargets() ([]*Target, error) {
-	resp, err := http.Get(fmt.Sprintf("http://%s:30900/api/v1/targets", f.ClusterIP))
+func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
+	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
+	request := ProxyGet("", svcName, "web", "/api/v1/targets", make(map[string]string))
+	response, err := request.Stream()
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	rt := prometheusTargetAPIResponse{}
-	if err := json.NewDecoder(resp.Body).Decode(&rt); err != nil {
+	if err := json.NewDecoder(response).Decode(&rt); err != nil {
 		return nil, err
 	}
 

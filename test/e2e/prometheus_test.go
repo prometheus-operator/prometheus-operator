@@ -202,7 +202,7 @@ scrape_configs:
 		},
 	}
 
-	svc := framework.MakeBasicPrometheusNodePortService(name, "reloadconfig-group", 30900)
+	svc := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
 
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(cfg); err != nil {
 		t.Fatal(err)
@@ -218,7 +218,7 @@ scrape_configs:
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	if err := framework.WaitForTargets(1); err != nil {
+	if err := framework.WaitForTargets(ns, svc.Name, 1); err != nil {
 		t.Fatal(err)
 	}
 
@@ -239,7 +239,7 @@ scrape_configs:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForTargets(2); err != nil {
+	if err := framework.WaitForTargets(ns, svc.Name, 2); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -305,7 +305,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 
 	prometheusName := "test"
 	group := "servicediscovery-test"
-	svc := framework.MakeBasicPrometheusNodePortService(prometheusName, group, 30900)
+	svc := framework.MakePrometheusService(ctx.ID, ctx.ID, v1.ServiceTypeClusterIP)
 
 	s := framework.MakeBasicServiceMonitor(group)
 	if _, err := framework.MonClient.ServiceMonitors(ns).Create(s); err != nil {
@@ -329,7 +329,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 		t.Fatal("Generated Secret could not be retrieved: ", err)
 	}
 
-	err = wait.Poll(time.Second, 18*time.Minute, isDiscoveryWorking(ns, prometheusName))
+	err = wait.Poll(time.Second, 18*time.Minute, isDiscoveryWorking(ns, svc.Name, prometheusName))
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
 	}
@@ -485,7 +485,7 @@ func TestPrometheusDiscoverTargetPort(t *testing.T) {
 
 	prometheusName := "test"
 	group := "servicediscovery-test"
-	svc := framework.MakeBasicPrometheusNodePortService(prometheusName, group, 30900)
+	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
 
 	if _, err := framework.MonClient.ServiceMonitors(ns).Create(&v1alpha1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
@@ -527,13 +527,13 @@ func TestPrometheusDiscoverTargetPort(t *testing.T) {
 		t.Fatal("Generated Secret could not be retrieved: ", err)
 	}
 
-	err = wait.Poll(time.Second, 3*time.Minute, isDiscoveryWorking(ns, prometheusName))
+	err = wait.Poll(time.Second, 3*time.Minute, isDiscoveryWorking(ns, svc.Name, prometheusName))
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
 	}
 }
 
-func isDiscoveryWorking(ns, prometheusName string) func() (bool, error) {
+func isDiscoveryWorking(ns, svcName, prometheusName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(prometheusName))
 		if err != nil {
@@ -545,7 +545,7 @@ func isDiscoveryWorking(ns, prometheusName string) func() (bool, error) {
 		podIP := pods.Items[0].Status.PodIP
 		expectedTargets := []string{fmt.Sprintf("http://%s:9090/metrics", podIP)}
 
-		activeTargets, err := framework.GetActiveTargets()
+		activeTargets, err := framework.GetActiveTargets(ns, svcName)
 		if err != nil {
 			return false, err
 		}
