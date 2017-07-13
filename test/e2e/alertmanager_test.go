@@ -16,7 +16,6 @@ package e2e
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 	"testing"
 	"time"
@@ -94,31 +93,32 @@ func TestAlertmanagerVersionMigration(t *testing.T) {
 	}
 }
 
-func TestExposingAlertmanagerWithNodePort(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-
-	alertmanager := framework.MakeBasicAlertmanager("test-alertmanager", 1)
-	alertmanagerService := framework.MakeAlertmanagerNodePortService(alertmanager.Name, "nodeport-service", 30903)
-
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
-		t.Fatal(err)
-	}
-
-	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
-		t.Fatal(err)
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
-
-	resp, err := http.Get(fmt.Sprintf("http://%s:30903/", framework.ClusterIP))
-	if err != nil {
-		t.Fatal("Retrieving alertmanager landing page failed with error: ", err)
-	} else if resp.StatusCode != 200 {
-		t.Fatal("Retrieving alertmanager landing page failed with http status code: ", resp.StatusCode)
-	}
-}
+// K8s clusters brought up with tectonic-installer do not expose any node ports.
+//func TestExposingAlertmanagerWithNodePort(t *testing.T) {
+//	ctx := framework.NewTestCtx(t)
+//	defer ctx.Cleanup(t)
+//	ns := ctx.CreateNamespace(t, framework.KubeClient)
+//
+//	alertmanager := framework.MakeBasicAlertmanager("test-alertmanager", 1)
+//	alertmanagerService := framework.MakeAlertmanagerNodePortService(alertmanager.Name, "nodeport-service", 30903)
+//
+//	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
+//		t.Fatal(err)
+//	} else {
+//		ctx.AddFinalizerFn(finalizerFn)
+//	}
+//
+//	resp, err := http.Get(fmt.Sprintf("http://%s:30903/", framework.ClusterIP))
+//	if err != nil {
+//		t.Fatal("Retrieving alertmanager landing page failed with error: ", err)
+//	} else if resp.StatusCode != 200 {
+//		t.Fatal("Retrieving alertmanager landing page failed with http status code: ", resp.StatusCode)
+//	}
+//}
 
 func TestExposingAlertmanagerWithKubernetesAPI(t *testing.T) {
 	t.Parallel()

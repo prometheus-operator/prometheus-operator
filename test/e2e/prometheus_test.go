@@ -383,31 +383,32 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	}
 }
 
-func TestExposingPrometheusWithNodePort(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-
-	basicPrometheus := framework.MakeBasicPrometheus(ns, "test", "test", 1)
-	service := framework.MakeBasicPrometheusNodePortService(basicPrometheus.Name, "nodeport-service", 30900)
-
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, basicPrometheus); err != nil {
-		t.Fatal("Creating prometheus failed: ", err)
-	}
-
-	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, service); err != nil {
-		t.Fatal("Creating prometheus service failed: ", err)
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
-
-	resp, err := http.Get(fmt.Sprintf("http://%s:30900/metrics", framework.ClusterIP))
-	if err != nil {
-		t.Fatal("Retrieving prometheus metrics failed with error: ", err)
-	} else if resp.StatusCode != 200 {
-		t.Fatal("Retrieving prometheus metrics failed with http status code: ", resp.StatusCode)
-	}
-}
+// K8s clusters brought up with tectonic-installer do not expose any node ports.
+// func TestExposingPrometheusWithNodePort(t *testing.T) {
+// 	ctx := framework.NewTestCtx(t)
+// 	defer ctx.Cleanup(t)
+// 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+//
+// 	basicPrometheus := framework.MakeBasicPrometheus(ns, "test", "test", 1)
+// 	service := framework.MakeBasicPrometheusNodePortService(basicPrometheus.Name, "nodeport-service", 30900)
+//
+// 	if err := framework.CreatePrometheusAndWaitUntilReady(ns, basicPrometheus); err != nil {
+// 		t.Fatal("Creating prometheus failed: ", err)
+// 	}
+//
+// 	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, service); err != nil {
+// 		t.Fatal("Creating prometheus service failed: ", err)
+// 	} else {
+// 		ctx.AddFinalizerFn(finalizerFn)
+// 	}
+//
+// 	resp, err := http.Get(fmt.Sprintf("http://%s:30900/metrics", framework.ClusterIP))
+// 	if err != nil {
+// 		t.Fatal("Retrieving prometheus metrics failed with error: ", err)
+// 	} else if resp.StatusCode != 200 {
+// 		t.Fatal("Retrieving prometheus metrics failed with http status code: ", resp.StatusCode)
+// 	}
+// }
 
 func TestExposingPrometheusWithKubernetesAPI(t *testing.T) {
 	t.Parallel()
