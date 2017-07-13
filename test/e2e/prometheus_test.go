@@ -303,9 +303,21 @@ func TestPrometheusDiscovery(t *testing.T) {
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 
+	if finalizerFn, err := testFramework.CreateServiceAccount(framework.KubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	if finalizerFn, err := testFramework.CreateClusterRoleBinding(framework.KubeClient, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus cluster role binding"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
 	prometheusName := "test"
 	group := "servicediscovery-test"
-	svc := framework.MakePrometheusService(ctx.ID, ctx.ID, v1.ServiceTypeClusterIP)
+	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
 
 	s := framework.MakeBasicServiceMonitor(group)
 	if _, err := framework.MonClient.ServiceMonitors(ns).Create(s); err != nil {
@@ -314,6 +326,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
 	p.Spec.Version = "v1.7.1"
+	p.Spec.ServiceAccountName = "prometheus"
 	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
@@ -555,7 +568,7 @@ func isDiscoveryWorking(ns, svcName, prometheusName string) func() (bool, error)
 			return false, nil
 		}
 
-		working, err := basicQueryWorking()
+		working, err := basicQueryWorking(ns, svcName)
 		if err != nil {
 			return false, err
 		}
@@ -582,15 +595,14 @@ type prometheusQueryAPIResponse struct {
 	Data   *queryResult `json:"data"`
 }
 
-func basicQueryWorking() (bool, error) {
-	resp, err := http.Get(fmt.Sprintf("http://%s:30900/api/v1/query?query=up", framework.ClusterIP))
+func basicQueryWorking(ns, svcName string) (bool, error) {
+	response, err := framework.QueryPrometheusSvc(ns, svcName, "/api/v1/query", map[string]string{"query": "up"})
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close()
 
 	rq := prometheusQueryAPIResponse{}
-	if err := json.NewDecoder(resp.Body).Decode(&rq); err != nil {
+	if err := json.NewDecoder(response).Decode(&rq); err != nil {
 		return false, err
 	}
 

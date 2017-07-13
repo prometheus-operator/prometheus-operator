@@ -94,16 +94,20 @@ func (f *Framework) setup(opImage string) error {
 }
 
 func (f *Framework) setupPrometheusOperator(opImage string) error {
-	if err := CreateServiceAccount(f.KubeClient, f.Namespace.Name, "../../example/rbac/prometheus-operator/prometheus-operator-service-account.yaml"); err != nil {
+	if _, err := CreateServiceAccount(f.KubeClient, f.Namespace.Name, "../../example/rbac/prometheus-operator/prometheus-operator-service-account.yaml"); err != nil {
 		return errors.Wrap(err, "failed to create prometheus operator service account")
 	}
 
 	if err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml"); err != nil {
-		return errors.Wrap(err, "failed to create prometheus operator cluster role")
+		return errors.Wrap(err, "failed to create prometheus cluster role")
 	}
 
-	if err := CreateClusterRoleBinding(f.KubeClient, f.Namespace.Name, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil {
-		return errors.Wrap(err, "failed to create prometheus operator cluster role binding")
+	if _, err := CreateClusterRoleBinding(f.KubeClient, f.Namespace.Name, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil {
+		return errors.Wrap(err, "failed to create prometheus cluster role binding")
+	}
+
+	if err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil {
+		return errors.Wrap(err, "failed to create prometheus cluster role")
 	}
 
 	deploy, err := MakeDeployment("../../example/rbac/prometheus-operator/prometheus-operator.yaml")
