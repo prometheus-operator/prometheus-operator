@@ -6,8 +6,6 @@ KUBECONFIG?=$(HOME)/.kube/config
 PROMU := $(GOPATH)/bin/promu
 PREFIX ?= $(shell pwd)
 
-CLUSTER_IP?=$(kubectl config view --minify | grep server: | cut -f 3 -d ":" | tr -d "//")
-
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 
 all: check-license format build test
@@ -31,7 +29,7 @@ container:
 	docker build -t $(REPO):$(TAG) .
 
 e2e-test:
-	go test -timeout 20m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE) --cluster-ip=$(CLUSTER_IP)
+	go test -timeout 20m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE)
 
 e2e-status:
 	kubectl get prometheus,alertmanager,servicemonitor,statefulsets,deploy,svc,endpoints,pods,cm,secrets,replicationcontrollers --all-namespaces

@@ -38,12 +38,11 @@ type Framework struct {
 	MasterHost     string
 	Namespace      *v1.Namespace
 	OperatorPod    *v1.Pod
-	ClusterIP      string
 	DefaultTimeout time.Duration
 }
 
 // Setup setups a test framework and returns it.
-func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
+func New(ns, kubeconfig, opImage string) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
@@ -75,7 +74,6 @@ func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 		MonClient:      mclient,
 		HTTPClient:     httpc,
 		Namespace:      namespace,
-		ClusterIP:      ip,
 		DefaultTimeout: time.Minute,
 	}
 
@@ -158,8 +156,8 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	if finalizerFn, err := CreateClusterRoleBinding(kubeClient, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to create prometheus cluster role binding"))
+	if finalizerFn, err := CreateRoleBinding(kubeClient, ns, "framework/ressources/prometheus-role-binding.yml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus role binding"))
 	} else {
 		ctx.AddFinalizerFn(finalizerFn)
 	}
