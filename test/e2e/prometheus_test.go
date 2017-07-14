@@ -43,6 +43,7 @@ func TestPrometheusCreateDeleteCluster(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
 
@@ -64,6 +65,7 @@ func TestPrometheusScaleUpDownCluster(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
 
@@ -86,6 +88,7 @@ func TestPrometheusVersionMigration(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
 	startVersion := prometheus.CompatibilityMatrix[0]
@@ -114,6 +117,7 @@ func TestPrometheusResourceUpdate(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
 
@@ -162,6 +166,7 @@ func TestPrometheusReloadConfig(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
 	replicas := int32(1)
@@ -249,6 +254,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
 
@@ -269,7 +275,8 @@ func TestPrometheusReloadRules(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, framework.MakeBasicPrometheus(ns, name, name, 1)); err != nil {
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
 
@@ -301,18 +308,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
-
-	if finalizerFn, err := testFramework.CreateServiceAccount(framework.KubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
-
-	if finalizerFn, err := testFramework.CreateClusterRoleBinding(framework.KubeClient, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to create prometheus cluster role binding"))
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	prometheusName := "test"
 	group := "servicediscovery-test"
@@ -325,7 +321,6 @@ func TestPrometheusDiscovery(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
 	p.Spec.Version = "v1.7.1"
-	p.Spec.ServiceAccountName = "prometheus"
 	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
@@ -351,18 +346,7 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
-
-	if finalizerFn, err := testFramework.CreateServiceAccount(framework.KubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
-
-	if finalizerFn, err := testFramework.CreateClusterRoleBinding(framework.KubeClient, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil {
-		t.Fatal(errors.Wrap(err, "failed to create prometheus cluster role binding"))
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	prometheusName := "test"
 	alertmanagerName := "test"
@@ -373,7 +357,6 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
 	framework.AddAlertingToPrometheus(p, ns, alertmanagerName)
 	p.Spec.Version = "v1.7.1"
-	p.Spec.ServiceAccountName = "prometheus"
 	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
@@ -408,39 +391,13 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	}
 }
 
-// K8s clusters brought up with tectonic-installer do not expose any node ports.
-// func TestExposingPrometheusWithNodePort(t *testing.T) {
-// 	ctx := framework.NewTestCtx(t)
-// 	defer ctx.Cleanup(t)
-// 	ns := ctx.CreateNamespace(t, framework.KubeClient)
-//
-// 	basicPrometheus := framework.MakeBasicPrometheus(ns, "test", "test", 1)
-// 	service := framework.MakeBasicPrometheusNodePortService(basicPrometheus.Name, "nodeport-service", 30900)
-//
-// 	if err := framework.CreatePrometheusAndWaitUntilReady(ns, basicPrometheus); err != nil {
-// 		t.Fatal("Creating prometheus failed: ", err)
-// 	}
-//
-// 	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, service); err != nil {
-// 		t.Fatal("Creating prometheus service failed: ", err)
-// 	} else {
-// 		ctx.AddFinalizerFn(finalizerFn)
-// 	}
-//
-// 	resp, err := http.Get(fmt.Sprintf("http://%s:30900/metrics", framework.ClusterIP))
-// 	if err != nil {
-// 		t.Fatal("Retrieving prometheus metrics failed with error: ", err)
-// 	} else if resp.StatusCode != 200 {
-// 		t.Fatal("Retrieving prometheus metrics failed with http status code: ", resp.StatusCode)
-// 	}
-// }
-
 func TestExposingPrometheusWithKubernetesAPI(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	basicPrometheus := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
 	service := framework.MakePrometheusService(basicPrometheus.Name, "test-group", v1.ServiceTypeClusterIP)
@@ -460,49 +417,6 @@ func TestExposingPrometheusWithKubernetesAPI(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-
-// K8s clusters brought up with tectonic-installer do not expose any node ports.
-// Thereby we can not expose a k8s ingress controller.
-// func TestExposingPrometheusWithIngress(t *testing.T) {
-// 	t.Parallel()
-//
-// 	ctx := framework.NewTestCtx(t)
-// 	defer ctx.Cleanup(t)
-// 	ns := ctx.CreateNamespace(t, framework.KubeClient)
-//
-// 	prometheus := framework.MakeBasicPrometheus(ns, "main", "test-group", 1)
-// 	prometheusService := framework.MakePrometheusService(prometheus.Name, "test-group", v1.ServiceTypeClusterIP)
-// 	ingress := testFramework.MakeBasicIngress(prometheusService.Name, 9090)
-//
-// 	err := testFramework.SetupNginxIngressControllerIncDefaultBackend(framework.KubeClient, ns)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-//
-// 	err = framework.CreatePrometheusAndWaitUntilReady(ns, prometheus)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-//
-// 	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, prometheusService); err != nil {
-// 		t.Fatal(err)
-// 	}
-//
-// 	err = testFramework.CreateIngress(framework.KubeClient, ns, ingress)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-//
-// 	ip, err := testFramework.GetIngressIP(framework.KubeClient, ns, ingress.Name)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-//
-// 	err = testFramework.WaitForHTTPSuccessStatusCode(time.Minute, fmt.Sprintf("http://%s:/metrics", *ip))
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
 
 func TestPrometheusDiscoverTargetPort(t *testing.T) {
 	t.Parallel()

@@ -16,6 +16,7 @@ package framework
 
 import (
 	"net/http"
+	"testing"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -148,6 +149,20 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 
 	return k8sutil.WaitForTPRReady(f.KubeClient.Core().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRAlertmanagerName)
+}
+
+func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kubernetes.Interface) {
+	if finalizerFn, err := CreateServiceAccount(kubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	if finalizerFn, err := CreateClusterRoleBinding(kubeClient, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus cluster role binding"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
 }
 
 // Teardown tears down a previously initialized test environment.
