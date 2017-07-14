@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
-	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
@@ -146,43 +145,45 @@ func TestExposingAlertmanagerWithKubernetesAPI(t *testing.T) {
 	}
 }
 
-func TestExposingAlertmanagerWithIngress(t *testing.T) {
-	t.Parallel()
-
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-
-	alertmanager := framework.MakeBasicAlertmanager("main", 1)
-	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "test-group", v1.ServiceTypeClusterIP)
-	ingress := testFramework.MakeBasicIngress(alertmanagerService.Name, 9093)
-
-	if err := testFramework.SetupNginxIngressControllerIncDefaultBackend(framework.KubeClient, ns); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := testFramework.CreateIngress(framework.KubeClient, ns, ingress); err != nil {
-		t.Fatal(err)
-	}
-
-	ip, err := testFramework.GetIngressIP(framework.KubeClient, ns, ingress.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = testFramework.WaitForHTTPSuccessStatusCode(time.Minute, fmt.Sprintf("http://%s/metrics", *ip))
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+// K8s clusters brought up with tectonic-installer do not expose any node ports.
+// Thereby we can not expose a k8s ingress controller.
+// func TestExposingAlertmanagerWithIngress(t *testing.T) {
+// 	t.Parallel()
+//
+// 	ctx := framework.NewTestCtx(t)
+// 	defer ctx.Cleanup(t)
+// 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+//
+// 	alertmanager := framework.MakeBasicAlertmanager("main", 1)
+// 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "test-group", v1.ServiceTypeClusterIP)
+// 	ingress := testFramework.MakeBasicIngress(alertmanagerService.Name, 9093)
+//
+// 	if err := testFramework.SetupNginxIngressControllerIncDefaultBackend(framework.KubeClient, ns); err != nil {
+// 		t.Fatal(err)
+// 	}
+//
+// 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+// 		t.Fatal(err)
+// 	}
+//
+// 	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
+// 		t.Fatal(err)
+// 	}
+//
+// 	if err := testFramework.CreateIngress(framework.KubeClient, ns, ingress); err != nil {
+// 		t.Fatal(err)
+// 	}
+//
+// 	ip, err := testFramework.GetIngressIP(framework.KubeClient, ns, ingress.Name)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+//
+// 	err = testFramework.WaitForHTTPSuccessStatusCode(time.Minute, fmt.Sprintf("http://%s/metrics", *ip))
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
 func TestMeshInitialization(t *testing.T) {
 	t.Parallel()

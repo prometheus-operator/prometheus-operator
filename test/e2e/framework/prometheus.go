@@ -96,12 +96,6 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *v1alpha1.ServiceMonito
 	}
 }
 
-func (f *Framework) MakeBasicPrometheusNodePortService(name, group string, nodePort int32) *v1.Service {
-	pService := f.MakePrometheusService(name, group, v1.ServiceTypeNodePort)
-	pService.Spec.Ports[0].NodePort = nodePort
-	return pService
-}
-
 func (f *Framework) MakePrometheusService(name, group string, serviceType v1.ServiceType) *v1.Service {
 	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -225,14 +219,14 @@ func (f *Framework) WaitForTargets(ns, svcName string, amount int) error {
 	return nil
 }
 
-func (f *Framework) QueryPrometheusSvc(ns, svcName, endpoint string, query map[string]string) (io.ReadCloser, error) {
+func (f *Framework) QueryPrometheusSVC(ns, svcName, endpoint string, query map[string]string) (io.ReadCloser, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := ProxyGet("", svcName, "web", endpoint, query)
 	return request.Stream()
 }
 
 func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
-	response, err := f.QueryPrometheusSvc(ns, svcName, "/api/v1/targets", map[string]string{})
+	response, err := f.QueryPrometheusSVC(ns, svcName, "/api/v1/targets", map[string]string{})
 	if err != nil {
 		return nil, err
 	}

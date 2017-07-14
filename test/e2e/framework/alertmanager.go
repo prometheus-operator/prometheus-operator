@@ -56,12 +56,6 @@ func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *v1alpha1
 	}
 }
 
-func (f *Framework) MakeAlertmanagerNodePortService(name, group string, nodePort int32) *v1.Service {
-	aMService := f.MakeAlertmanagerService(name, group, v1.ServiceTypeNodePort)
-	aMService.Spec.Ports[0].NodePort = nodePort
-	return aMService
-}
-
 func (f *Framework) MakeAlertmanagerService(name, group string, serviceType v1.ServiceType) *v1.Service {
 	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{

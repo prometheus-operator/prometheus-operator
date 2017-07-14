@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"reflect"
 	"sort"
 	"strings"
@@ -353,15 +352,28 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 
+	if finalizerFn, err := testFramework.CreateServiceAccount(framework.KubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	if finalizerFn, err := testFramework.CreateClusterRoleBinding(framework.KubeClient, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus cluster role binding"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
 	prometheusName := "test"
 	alertmanagerName := "test"
 	group := "servicediscovery-test"
-	svc := framework.MakeBasicPrometheusNodePortService(prometheusName, group, 30900)
-	amsvc := framework.MakeAlertmanagerNodePortService(alertmanagerName, group, 30903)
+	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+	amsvc := framework.MakeAlertmanagerService(alertmanagerName, group, v1.ServiceTypeClusterIP)
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
 	framework.AddAlertingToPrometheus(p, ns, alertmanagerName)
 	p.Spec.Version = "v1.7.1"
+	p.Spec.ServiceAccountName = "prometheus"
 	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
@@ -390,7 +402,7 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 		t.Fatal(errors.Wrap(err, "creating Alertmanager service failed"))
 	}
 
-	err = wait.Poll(time.Second, 18*time.Minute, isAlertmanagerDiscoveryWorking(ns, alertmanagerName))
+	err = wait.Poll(time.Second, 18*time.Minute, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "validating Prometheus Alertmanager discovery failed"))
 	}
@@ -449,46 +461,48 @@ func TestExposingPrometheusWithKubernetesAPI(t *testing.T) {
 	}
 }
 
-func TestExposingPrometheusWithIngress(t *testing.T) {
-	t.Parallel()
-
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-
-	prometheus := framework.MakeBasicPrometheus(ns, "main", "test-group", 1)
-	prometheusService := framework.MakePrometheusService(prometheus.Name, "test-group", v1.ServiceTypeClusterIP)
-	ingress := testFramework.MakeBasicIngress(prometheusService.Name, 9090)
-
-	err := testFramework.SetupNginxIngressControllerIncDefaultBackend(framework.KubeClient, ns)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = framework.CreatePrometheusAndWaitUntilReady(ns, prometheus)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, prometheusService); err != nil {
-		t.Fatal(err)
-	}
-
-	err = testFramework.CreateIngress(framework.KubeClient, ns, ingress)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ip, err := testFramework.GetIngressIP(framework.KubeClient, ns, ingress.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = testFramework.WaitForHTTPSuccessStatusCode(time.Minute, fmt.Sprintf("http://%s:/metrics", *ip))
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+// K8s clusters brought up with tectonic-installer do not expose any node ports.
+// Thereby we can not expose a k8s ingress controller.
+// func TestExposingPrometheusWithIngress(t *testing.T) {
+// 	t.Parallel()
+//
+// 	ctx := framework.NewTestCtx(t)
+// 	defer ctx.Cleanup(t)
+// 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+//
+// 	prometheus := framework.MakeBasicPrometheus(ns, "main", "test-group", 1)
+// 	prometheusService := framework.MakePrometheusService(prometheus.Name, "test-group", v1.ServiceTypeClusterIP)
+// 	ingress := testFramework.MakeBasicIngress(prometheusService.Name, 9090)
+//
+// 	err := testFramework.SetupNginxIngressControllerIncDefaultBackend(framework.KubeClient, ns)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+//
+// 	err = framework.CreatePrometheusAndWaitUntilReady(ns, prometheus)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+//
+// 	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, prometheusService); err != nil {
+// 		t.Fatal(err)
+// 	}
+//
+// 	err = testFramework.CreateIngress(framework.KubeClient, ns, ingress)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+//
+// 	ip, err := testFramework.GetIngressIP(framework.KubeClient, ns, ingress.Name)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+//
+// 	err = testFramework.WaitForHTTPSuccessStatusCode(time.Minute, fmt.Sprintf("http://%s:/metrics", *ip))
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
 func TestPrometheusDiscoverTargetPort(t *testing.T) {
 	t.Parallel()
@@ -596,7 +610,7 @@ type prometheusQueryAPIResponse struct {
 }
 
 func basicQueryWorking(ns, svcName string) (bool, error) {
-	response, err := framework.QueryPrometheusSvc(ns, svcName, "/api/v1/query", map[string]string{"query": "up"})
+	response, err := framework.QueryPrometheusSVC(ns, svcName, "/api/v1/query", map[string]string{"query": "up"})
 	if err != nil {
 		return false, err
 	}
@@ -614,7 +628,7 @@ func basicQueryWorking(ns, svcName string) (bool, error) {
 	return true, nil
 }
 
-func isAlertmanagerDiscoveryWorking(ns, alertmanagerName string) func() (bool, error) {
+func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(alertmanager.ListOptions(alertmanagerName))
 		if err != nil {
@@ -628,14 +642,13 @@ func isAlertmanagerDiscoveryWorking(ns, alertmanagerName string) func() (bool, e
 			expectedAlertmanagerTargets = append(expectedAlertmanagerTargets, fmt.Sprintf("http://%s:9093/api/v1/alerts", p.Status.PodIP))
 		}
 
-		resp, err := http.Get(fmt.Sprintf("http://%s:30900/api/v1/alertmanagers", framework.ClusterIP))
+		response, err := framework.QueryPrometheusSVC(ns, promSVCName, "/api/v1/alertmanagers", map[string]string{})
 		if err != nil {
 			return false, err
 		}
-		defer resp.Body.Close()
 
 		ra := prometheusAlertmanagerAPIResponse{}
-		if err := json.NewDecoder(resp.Body).Decode(&ra); err != nil {
+		if err := json.NewDecoder(response).Decode(&ra); err != nil {
 			return false, err
 		}
 
