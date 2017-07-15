@@ -424,6 +424,7 @@ func TestPrometheusDiscoverTargetPort(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	prometheusName := "test"
 	group := "servicediscovery-test"
