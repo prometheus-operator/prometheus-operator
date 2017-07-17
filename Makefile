@@ -53,8 +53,8 @@ apidocgen:
 	@go install github.com/coreos/prometheus-operator/cmd/apidocgen
 
 docs: embedmd apidocgen
-	embedmd -w `find Documentation -name "*.md"`
-	apidocgen pkg/client/monitoring/v1alpha1/types.go > Documentation/api.md
+	$(GOPATH)/bin/embedmd -w `find Documentation -name "*.md"`
+	$(GOPATH)/bin/apidocgen pkg/client/monitoring/v1alpha1/types.go > Documentation/api.md
 
 generate:
 	hack/generate.sh
