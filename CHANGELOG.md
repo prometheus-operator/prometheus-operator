@@ -1,3 +1,8 @@
+## 0.10.3 / 2017-07-11
+
+* [BUGFIX] Properly set PVC template attributes in StatefulSet
+* [ENHANCEMENT] Use exponential backoff when reloading configs
+
 ## 0.10.2 / 2017-06-21
 
 * [BUGFIX] Use computed route prefix instead of directly from manifest.
