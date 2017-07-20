@@ -42,6 +42,7 @@ var (
 		"v1.ResourceRequirements": "https://kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core",
 		"v1.LocalObjectReference": "https://kubernetes.io/docs/api-reference/v1.6/#localobjectreference-v1-core",
 		"v1.SecretKeySelector":    "https://kubernetes.io/docs/api-reference/v1.6/#secretkeyselector-v1-core",
+		"v1.PersistentVolumeClaim": "https://kubernetes.io/docs/api-reference/v1.6/#persistentvolumeclaim-v1-core",
 	}
 
 	selfLinks = map[string]string{}
