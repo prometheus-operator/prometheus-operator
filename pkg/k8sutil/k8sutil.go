@@ -32,7 +32,7 @@ import (
 // WaitForTPRReady waits for a third party resource to be available
 // for use.
 func WaitForTPRReady(restClient rest.Interface, tprGroup, tprVersion, tprName string) error {
-	err := wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
+	err := wait.Poll(3*time.Second, 5*time.Minute, func() (bool, error) {
 		res := restClient.Get().AbsPath("apis", tprGroup, tprVersion, tprName).Do()
 		err := res.Error()
 		if err != nil {
