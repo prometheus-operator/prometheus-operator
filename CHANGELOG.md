@@ -1,3 +1,15 @@
+## 0.11.0 / 2017-07-20
+
+Warning: This release deprecates the previously used storage definition in favor of upstream PersistentVolumeClaim templates. While this should not have an immediate effect on a running cluster, Prometheus object definitions that have storage configured need to be adapted. The previously existing fields are still there, but have no effect anymore.
+
+* [FEATURE] Add Prometheus 2.0 alpha3 support.
+* [FEATURE] Use PVC templates instead of custom storage definition.
+* [FEATURE] Add cAdvisor port to kubelet sync.
+* [FEATURE] Allow default base images to be configurable.
+* [FEATURE] Configure Prometheus to only use necessary namespaces.
+* [ENHANCEMENT] Improve rollout detection for Alertmanager clusters.
+* [BUGFIX] Fix targetPort relabeling.
+
 ## 0.10.2 / 2017-06-21
 
 * [BUGFIX] Use computed route prefix instead of directly from manifest.
