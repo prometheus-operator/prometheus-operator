@@ -1,10 +1,10 @@
 dependencies:
   - name: alertmanager
-    version: 0.0.1
+    version: 0.0.3
     repository: http://charts.opsgoodness.com
 
   - name: prometheus
-    version: 0.0.1
+    version: 0.0.3
     repository: http://charts.opsgoodness.com
 
   - name: exporter-kube-api
