@@ -78,7 +78,7 @@ func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 		DefaultTimeout: time.Minute,
 	}
 
-	err = f.setup(opImage)
+	err = f.Setup(opImage)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func New(ns, kubeconfig, opImage, ip string) (*Framework, error) {
 	return f, nil
 }
 
-func (f *Framework) setup(opImage string) error {
+func (f *Framework) Setup(opImage string) error {
 	if err := f.setupPrometheusOperator(opImage); err != nil {
 		return err
 	}
