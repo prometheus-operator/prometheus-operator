@@ -17,8 +17,8 @@ package framework
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
-	"net/http"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -40,11 +40,13 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 		},
 		Spec: v1alpha1.PrometheusSpec{
 			Replicas: &replicas,
+			Version:  prometheus.DefaultVersion,
 			ServiceMonitorSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": group,
 				},
 			},
+			ServiceAccountName: "prometheus",
 			RuleSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"role": "rulefile",
@@ -93,12 +95,6 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *v1alpha1.ServiceMonito
 			},
 		},
 	}
-}
-
-func (f *Framework) MakeBasicPrometheusNodePortService(name, group string, nodePort int32) *v1.Service {
-	pService := f.MakePrometheusService(name, group, v1.ServiceTypeNodePort)
-	pService.Spec.Ports[0].NodePort = nodePort
-	return pService
 }
 
 func (f *Framework) MakePrometheusService(name, group string, serviceType v1.ServiceType) *v1.Service {
@@ -202,12 +198,12 @@ func promImage(version string) string {
 	return fmt.Sprintf("quay.io/prometheus/prometheus:%s", version)
 }
 
-func (f *Framework) WaitForTargets(amount int) error {
+func (f *Framework) WaitForTargets(ns, svcName string, amount int) error {
 	var targets []*Target
 
 	if err := wait.Poll(time.Second, time.Minute*10, func() (bool, error) {
 		var err error
-		targets, err = f.GetActiveTargets()
+		targets, err = f.GetActiveTargets(ns, svcName)
 		if err != nil {
 			return false, err
 		}
@@ -224,15 +220,20 @@ func (f *Framework) WaitForTargets(amount int) error {
 	return nil
 }
 
-func (f *Framework) GetActiveTargets() ([]*Target, error) {
-	resp, err := http.Get(fmt.Sprintf("http://%s:30900/api/v1/targets", f.ClusterIP))
+func (f *Framework) QueryPrometheusSVC(ns, svcName, endpoint string, query map[string]string) (io.ReadCloser, error) {
+	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
+	request := ProxyGet("", svcName, "web", endpoint, query)
+	return request.Stream()
+}
+
+func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
+	response, err := f.QueryPrometheusSVC(ns, svcName, "/api/v1/targets", map[string]string{})
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	rt := prometheusTargetAPIResponse{}
-	if err := json.NewDecoder(resp.Body).Decode(&rt); err != nil {
+	if err := json.NewDecoder(response).Decode(&rt); err != nil {
 		return nil, err
 	}
 

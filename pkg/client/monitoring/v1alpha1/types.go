@@ -125,7 +125,7 @@ type PrometheusStatus struct {
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
 
-// AlertingSpec defines paramters for alerting configuration of Prometheus servers.
+// AlertingSpec defines parameters for alerting configuration of Prometheus servers.
 type AlertingSpec struct {
 	// AlertmanagerEndpoints Prometheus should fire alerts against.
 	Alertmanagers []AlertmanagerEndpoints `json:"alertmanagers"`
@@ -144,7 +144,7 @@ type StorageSpec struct {
 	// info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources
 	// DEPRECATED
 	Resources v1.ResourceRequirements `json:"resources"`
-	// Pvc A pvc spec to be used by the Prometheus statefulsets.
+	// A PVC spec to be used by the Prometheus StatefulSets.
 	VolumeClaimTemplate v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 

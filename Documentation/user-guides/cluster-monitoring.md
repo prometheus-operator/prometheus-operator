@@ -43,7 +43,7 @@ spec:
       serviceAccountName: prometheus-operator
       containers:
       - name: prometheus-operator
-        image: quay.io/coreos/prometheus-operator:v0.10.1
+        image: quay.io/coreos/prometheus-operator:v0.11.0
         args:
         - "--kubelet-service=kube-system/kubelet"
         - "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"
@@ -325,6 +325,8 @@ spec:
   jobLabel: k8s-app
   endpoints:
   - port: http-metrics
+    interval: 30s
+  - port: cadvisor
     interval: 30s
     honorLabels: true
   selector:

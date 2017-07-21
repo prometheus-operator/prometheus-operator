@@ -35,7 +35,7 @@ import (
 // for use.
 // TODO(gouthamve): Move to clientset.Get()
 func WaitForCRDReady(restClient rest.Interface, crdGroup, crdVersion, crdName string) error {
-	return wait.Poll(3*time.Second, 30*time.Second, func() (bool, error) {
+	err := wait.Poll(3*time.Second, 5*time.Minute, func() (bool, error) {
 		res := restClient.Get().AbsPath("apis", crdGroup, crdVersion, crdName).Do()
 		err := res.Error()
 		if err != nil {
@@ -57,6 +57,8 @@ func WaitForCRDReady(restClient rest.Interface, crdGroup, crdVersion, crdName st
 
 		return true, nil
 	})
+
+	return errors.Wrap(err, fmt.Sprintf("timed out waiting for TPR %s", crdName))
 }
 
 // PodRunningAndReady returns whether a pod is running and each container has

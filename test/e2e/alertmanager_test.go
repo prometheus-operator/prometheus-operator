@@ -16,10 +16,8 @@ package e2e
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 	"testing"
-	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
@@ -34,6 +32,7 @@ func TestAlertmanagerCreateDeleteCluster(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
 
@@ -52,6 +51,7 @@ func TestAlertmanagerScaling(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
 
@@ -74,6 +74,7 @@ func TestAlertmanagerVersionMigration(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
 
@@ -94,38 +95,13 @@ func TestAlertmanagerVersionMigration(t *testing.T) {
 	}
 }
 
-func TestExposingAlertmanagerWithNodePort(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-
-	alertmanager := framework.MakeBasicAlertmanager("test-alertmanager", 1)
-	alertmanagerService := framework.MakeAlertmanagerNodePortService(alertmanager.Name, "nodeport-service", 30903)
-
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
-		t.Fatal(err)
-	}
-
-	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
-		t.Fatal(err)
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
-
-	resp, err := http.Get(fmt.Sprintf("http://%s:30903/", framework.ClusterIP))
-	if err != nil {
-		t.Fatal("Retrieving alertmanager landing page failed with error: ", err)
-	} else if resp.StatusCode != 200 {
-		t.Fatal("Retrieving alertmanager landing page failed with http status code: ", resp.StatusCode)
-	}
-}
-
 func TestExposingAlertmanagerWithKubernetesAPI(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	alertmanager := framework.MakeBasicAlertmanager("test-alertmanager", 1)
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
@@ -146,50 +122,13 @@ func TestExposingAlertmanagerWithKubernetesAPI(t *testing.T) {
 	}
 }
 
-func TestExposingAlertmanagerWithIngress(t *testing.T) {
-	t.Parallel()
-
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-
-	alertmanager := framework.MakeBasicAlertmanager("main", 1)
-	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "test-group", v1.ServiceTypeClusterIP)
-	ingress := testFramework.MakeBasicIngress(alertmanagerService.Name, 9093)
-
-	if err := testFramework.SetupNginxIngressControllerIncDefaultBackend(framework.KubeClient, ns); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := testFramework.CreateIngress(framework.KubeClient, ns, ingress); err != nil {
-		t.Fatal(err)
-	}
-
-	ip, err := testFramework.GetIngressIP(framework.KubeClient, ns, ingress.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = testFramework.WaitForHTTPSuccessStatusCode(time.Minute, fmt.Sprintf("http://%s/metrics", *ip))
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestMeshInitialization(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	var amountAlertmanagers int32 = 3
 	alertmanager := &v1alpha1.Alertmanager{
@@ -226,6 +165,7 @@ func TestAlertmanagerReloadConfig(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	alertmanager := framework.MakeBasicAlertmanager("reload-config", 1)
 

@@ -357,15 +357,19 @@ func (c *Operator) syncNodeEndpoints() {
 			},
 		},
 		Subsets: []v1.EndpointSubset{
-			v1.EndpointSubset{
+			{
 				Ports: []v1.EndpointPort{
-					v1.EndpointPort{
+					{
 						Name: "https-metrics",
 						Port: 10250,
 					},
-					v1.EndpointPort{
+					{
 						Name: "http-metrics",
 						Port: 10255,
+					},
+					{
+						Name: "cadvisor",
+						Port: 4194,
 					},
 				},
 			},
@@ -402,7 +406,7 @@ func (c *Operator) syncNodeEndpoints() {
 			Type:      v1.ServiceTypeClusterIP,
 			ClusterIP: "None",
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name: "https-metrics",
 					Port: 10250,
 				},

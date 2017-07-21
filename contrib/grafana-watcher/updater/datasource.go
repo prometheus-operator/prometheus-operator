@@ -82,7 +82,7 @@ func (u *GrafanaDatasourceUpdater) createDatasourcesFromFiles() error {
 	}
 
 	for _, fp := range filePaths {
-		u.createDatasourceFromFile(fp)
+		err = u.createDatasourceFromFile(fp)
 		if err != nil {
 			return err
 		}

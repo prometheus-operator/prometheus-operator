@@ -24,9 +24,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	fsnotify "gopkg.in/fsnotify.v1"
 
+	"github.com/cenkalti/backoff"
 	"github.com/ericchiang/k8s"
 	"github.com/go-kit/kit/log"
 )
@@ -208,7 +210,9 @@ func (w *volumeWatcher) Refresh() {
 	}
 
 	w.logger.Log("msg", "Reloading Prometheus...")
-	err = w.ReloadPrometheus()
+	err = backoff.RetryNotify(w.ReloadPrometheus, backoff.NewExponentialBackOff(), func(err error, next time.Duration) {
+		w.logger.Log("msg", "Reloading Prometheus temporarily failed.", "err", err, "next-retry", next)
+	})
 	if err != nil {
 		w.logger.Log("msg", "Reloading Prometheus failed.", "err", err)
 	} else {

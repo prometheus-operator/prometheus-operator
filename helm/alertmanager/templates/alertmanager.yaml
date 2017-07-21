@@ -17,14 +17,14 @@ spec:
 {{- else }}
   externalUrl: http://{{ template "fullname" . }}.{{ .Release.Namespace }}:9093
 {{- end }}
-# {{- if .Values.nodeSelector }}
-#   nodeSelector:
-# {{ toYaml .Values.nodeSelector | indent 4 }}
-# {{- end }}
+{{- if .Values.nodeSelector }}
+  nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 4 }}
+{{- end }}
   paused: {{ .Values.paused }}
   replicas: {{ .Values.replicaCount }}
-#   resources:
-# {{ toYaml .Values.resources | indent 4 }}
+  resources:
+{{ toYaml .Values.resources | indent 4 }}
 {{- if .Values.storageSpec }}
   storage:
 {{ toYaml .Values.storageSpec | indent 4 }}

@@ -21,11 +21,14 @@ import (
 	rbacv1alpha1 "k8s.io/client-go/pkg/apis/rbac/v1alpha1"
 )
 
-func CreateClusterRoleBinding(kubeClient kubernetes.Interface, relativePath string) error {
+func CreateClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) (finalizerFn, error) {
+	finalizerFn := func() error { return DeleteClusterRoleBinding(kubeClient, relativePath) }
 	clusterRoleBinding, err := parseClusterRoleBindingYaml(relativePath)
 	if err != nil {
-		return err
+		return finalizerFn, err
 	}
+
+	clusterRoleBinding.Subjects[0].Namespace = ns
 
 	_, err = kubeClient.RbacV1alpha1().ClusterRoleBindings().Get(clusterRoleBinding.Name, metav1.GetOptions{})
 
@@ -33,17 +36,17 @@ func CreateClusterRoleBinding(kubeClient kubernetes.Interface, relativePath stri
 		// ClusterRoleBinding already exists -> Update
 		_, err = kubeClient.RbacV1alpha1().ClusterRoleBindings().Update(clusterRoleBinding)
 		if err != nil {
-			return err
+			return finalizerFn, err
 		}
 	} else {
 		// ClusterRoleBinding doesn't exists -> Create
 		_, err = kubeClient.RbacV1alpha1().ClusterRoleBindings().Create(clusterRoleBinding)
 		if err != nil {
-			return err
+			return finalizerFn, err
 		}
 	}
 
-	return nil
+	return finalizerFn, err
 }
 
 func DeleteClusterRoleBinding(kubeClient kubernetes.Interface, relativePath string) error {

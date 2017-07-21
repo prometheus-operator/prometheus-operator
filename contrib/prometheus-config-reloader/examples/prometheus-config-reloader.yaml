@@ -30,7 +30,7 @@ spec:
           mountPath: /etc/prometheus/rules
           readOnly: true
       - name: prometheus-config-reloader
-        image: quay.io/coreos/prometheus-config-reloader:v0.0.1
+        image: quay.io/coreos/prometheus-config-reloader:v0.0.2
         args:
         - '-config-volume-dir=/etc/prometheus/config'
         - '-rule-volume-dir=/etc/prometheus/rules'

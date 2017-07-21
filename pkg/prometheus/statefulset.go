@@ -37,7 +37,7 @@ import (
 
 const (
 	governingServiceName = "prometheus-operated"
-	defaultVersion       = "v1.7.0"
+	DefaultVersion       = "v1.7.1"
 	defaultRetention     = "24h"
 
 	configMapsFilename = "configmaps.json"
@@ -78,7 +78,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 		p.Spec.BaseImage = config.PrometheusDefaultBaseImage
 	}
 	if p.Spec.Version == "" {
-		p.Spec.Version = defaultVersion
+		p.Spec.Version = DefaultVersion
 	}
 	if p.Spec.Replicas != nil && *p.Spec.Replicas < minReplicas {
 		p.Spec.Replicas = &minReplicas
@@ -123,6 +123,8 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 		pvcTemplate := storageSpec.VolumeClaimTemplate
 		pvcTemplate.Name = volumeName(p.Name)
 		pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
+		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
 		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, pvcTemplate)
 	}
 

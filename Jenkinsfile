@@ -66,6 +66,12 @@ job('po-tests-pr') {
             onlyIfBuildSucceeds(false)
             onlyIfBuildFails(false)
         }
+        postBuildScripts {
+            archiveArtifacts('build/**/*')
+            onlyIfBuildSucceeds(false)
+            onlyIfBuildFails(false)
+        }
+        wsCleanup()
     }
 }
 
@@ -125,6 +131,11 @@ job('po-tests-master') {
             onlyIfBuildSucceeds(false)
             onlyIfBuildFails(false)
         }
+        postBuildScripts {
+            archiveArtifacts('build/**/*')
+            onlyIfBuildSucceeds(false)
+            onlyIfBuildFails(false)
+        }
         slackNotifier {
             room('#team-monitoring')
             teamDomain('coreos')
@@ -133,5 +144,6 @@ job('po-tests-master') {
             notifyRegression(true)
             notifyRepeatedFailure(true)
         }
+        wsCleanup()
     }
 }

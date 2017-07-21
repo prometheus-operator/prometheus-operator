@@ -225,14 +225,14 @@ data:
     ### Up Alerting ###
     
     Alert TargetDown
-      IF 100 * (count(up == 0) / count(up)) > 3
+      IF 100 * (count by(job) (up == 0) / count by(job) (up)) > 10
       FOR 10m
       LABELS {
         severity = "warning"
       }
       ANNOTATIONS {
         summary = "Targets are down",
-        description = "More than {{ $value }}% of targets are down."
+        description = "{{ $value }}% or more of {{ $labels.job }} targets are down."
       }
     
     ### Dead man's switch ###
@@ -287,7 +287,7 @@ data:
       }
   kube-apiserver.rules: |+
     ALERT K8SApiserverDown
-      IF absent({job="apiserver"}) or (count by(cluster) (up{job="apiserver"} == 1) < count by(cluster) (up{job="apiserver"}))
+      IF absent(up{job="apiserver"} == 1)
       FOR 5m
       LABELS {
         severity = "critical"
@@ -316,7 +316,7 @@ data:
       }
   kube-controller-manager.rules: |+
     ALERT K8SControllerManagerDown
-      IF absent(up{job="kube-controller-manager"}) or (count by(cluster) (up{job="kube-controller-manager"} == 1) == 0)
+      IF absent(up{job="kube-controller-manager"} == 1)
       FOR 5m
       LABELS {
         severity = "critical",
@@ -324,6 +324,7 @@ data:
       ANNOTATIONS {
         summary = "Controller manager is down",
         description = "There is no running K8S controller manager. Deployments and replication controllers are not making progress.",
+        runbook = "https://coreos.com/tectonic/docs/latest/troubleshooting/controller-recovery.html#recovering-a-controller-manager",
       }
   kubelet.rules: |+
     ALERT K8SNodeNotReady
@@ -339,24 +340,24 @@ data:
     
     ALERT K8SManyNodesNotReady
       IF
-        count by (cluster) (kube_node_status_ready{condition="true"} == 0) > 1
+        count(kube_node_status_ready{condition="true"} == 0) > 1
         AND
           (
-            count by (cluster) (kube_node_status_ready{condition="true"} == 0)
+            count(kube_node_status_ready{condition="true"} == 0)
           /
-            count by (cluster) (kube_node_status_ready{condition="true"})
+            count(kube_node_status_ready{condition="true"})
           ) > 0.2
       FOR 1m
       LABELS {
         severity = "critical",
       }
       ANNOTATIONS {
-        summary = "Many K8s nodes are Not Ready",
-        description = "{{ $value }} K8s nodes (more than 10% of cluster {{ $labels.cluster }}) are in the NotReady state.",
+        summary = "Many Kubernetes nodes are Not Ready",
+        description = "{{ $value }} Kubernetes nodes (more than 10% are in the NotReady state).",
       }
     
     ALERT K8SKubeletDown
-      IF count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.03
+      IF count(up{job="kubelet"} == 0) / count(up{job="kubelet"}) > 0.03
       FOR 1h
       LABELS {
         severity = "warning",
@@ -367,7 +368,7 @@ data:
       }
     
     ALERT K8SKubeletDown
-      IF absent(up{job="kubelet"}) or count by (cluster) (up{job="kubelet"} == 0) / count by (cluster) (up{job="kubelet"}) > 0.1
+      IF absent(up{job="kubelet"} == 1) or count(up{job="kubelet"} == 0) / count(up{job="kubelet"}) > 0.1
       FOR 1h
       LABELS {
         severity = "critical",
@@ -560,7 +561,7 @@ data:
       histogram_quantile(0.5,sum by (le,cluster) (scheduler_binding_latency_microseconds_bucket)) / 1e6
   kube-scheduler.rules: |+
     ALERT K8SSchedulerDown
-      IF absent(up{job="kube-scheduler"}) or (count by(cluster) (up{job="kube-scheduler"} == 1) == 0)
+      IF absent(up{job="kube-scheduler"} == 1)
       FOR 5m
       LABELS {
         severity = "critical",
@@ -568,17 +569,18 @@ data:
       ANNOTATIONS {
         summary = "Scheduler is down",
         description = "There is no running K8S scheduler. New pods are not being assigned to nodes.",
+        runbook = "https://coreos.com/tectonic/docs/latest/troubleshooting/controller-recovery.html#recovering-a-scheduler",
       }
   node.rules: |+
     ALERT NodeExporterDown
-      IF up{job="node-exporter"} == 0
+      IF absent(up{job="node-exporter"} == 1)
       FOR 10m
       LABELS {
         severity = "warning"
       }
       ANNOTATIONS {
         summary = "node-exporter cannot be scraped",
-        description = "Prometheus could not scrape a node-exporter for more than 10m.",
+        description = "Prometheus could not scrape a node-exporter for more than 10m, or node-exporters have disappeared from discovery.",
       }
   prometheus.rules: |+
     ALERT FailedReload
