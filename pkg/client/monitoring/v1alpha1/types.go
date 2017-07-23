@@ -68,6 +68,8 @@ type PrometheusSpec struct {
 	Retention string `json:"retention,omitempty"`
 	// Interval between consecutive evaluations.
 	EvaluationInterval string `json:"evaluationInterval,omitempty"`
+	// The Prometheus logger format and level configuration.
+	Log *LogSpec `json:"log,omitempty"`
 	// The labels to add to any time series or alerts when communicating with
 	// external systems (federation, remote storage, Alertmanager).
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
@@ -125,6 +127,16 @@ type PrometheusStatus struct {
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// Total number of unavailable pods targeted by this Prometheus deployment.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
+}
+
+// LogSpec defines the configured log messages from the Prometheus logger.
+type LogSpec struct {
+	// The log target and format. Example:
+	// "logger:syslog?appname=bob&local=7" or "logger:stdout?json=true"
+	Format string `json:"format"`
+	// Only log messages with the given severity or above. Valid labels:
+	// [debug, info, warn, error, fatal]
+	Level string `json:"level"`
 }
 
 // AlertingSpec defines parameters for alerting configuration of Prometheus servers.
