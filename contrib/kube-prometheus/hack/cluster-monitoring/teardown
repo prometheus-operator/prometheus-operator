@@ -15,7 +15,9 @@ kctl() {
 kctl delete -f manifests/node-exporter
 kctl delete -f manifests/kube-state-metrics
 kctl delete -f manifests/grafana
-kctl delete -f manifests/prometheus
+find manifests/prometheus -type f ! -name prometheus-k8s-roles.yaml ! -name prometheus-k8s-role-bindings.yaml -exec kubectl --namespace "$NAMESPACE" delete -f {} \;
+kubectl delete -f manifests/prometheus/prometheus-k8s-roles.yaml
+kubectl delete -f manifests/prometheus/prometheus-k8s-role-bindings.yaml
 kctl delete -f manifests/alertmanager
 
 # Hack: wait a bit to let the controller delete the deployed Prometheus server.
