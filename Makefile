@@ -59,4 +59,9 @@ generate:
 	hack/generate.sh
 	@$(MAKE) docs
 
+jsonnet:
+	jsonnet -J $(GOPATH)/src/github.com/ksonnet/ksonnet-lib hack/generate/prometheus-operator.jsonnet | json2yaml > example/non-rbac/prometheus-operator.yaml
+	jsonnet -J $(GOPATH)/src/github.com/ksonnet/ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | json2yaml > example/rbac/prometheus-operator/prometheus-operator.yaml
+	jsonnet -J $(GOPATH)/src/github.com/ksonnet/ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | json2yaml > contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml
+
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs
