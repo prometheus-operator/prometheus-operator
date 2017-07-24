@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
@@ -93,19 +94,19 @@ func (f *Framework) Setup(opImage string) error {
 }
 
 func (f *Framework) setupPrometheusOperator(opImage string) error {
-	if _, err := CreateServiceAccount(f.KubeClient, f.Namespace.Name, "../../example/rbac/prometheus-operator/prometheus-operator-service-account.yaml"); err != nil {
+	if _, err := CreateServiceAccount(f.KubeClient, f.Namespace.Name, "../../example/rbac/prometheus-operator/prometheus-operator-service-account.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "failed to create prometheus operator service account")
 	}
 
-	if err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml"); err != nil {
+	if err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "failed to create prometheus cluster role")
 	}
 
-	if _, err := CreateClusterRoleBinding(f.KubeClient, f.Namespace.Name, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil {
+	if _, err := CreateClusterRoleBinding(f.KubeClient, f.Namespace.Name, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "failed to create prometheus cluster role binding")
 	}
 
-	if err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil {
+	if err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "failed to create prometheus cluster role")
 	}
 
@@ -156,7 +157,7 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	if finalizerFn, err := CreateRoleBinding(kubeClient, ns, "framework/ressources/prometheus-role-binding.yml"); err != nil {
+	if finalizerFn, err := CreateRoleBinding(kubeClient, ns, "../framework/ressources/prometheus-role-binding.yml"); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus role binding"))
 	} else {
 		ctx.AddFinalizerFn(finalizerFn)

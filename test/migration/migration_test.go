@@ -10,7 +10,7 @@ import (
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	operatorFramework "github.com/coreos/prometheus-operator/test/e2e/framework"
+	operatorFramework "github.com/coreos/prometheus-operator/test/framework"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -24,7 +24,6 @@ func TestMain(m *testing.M) {
 	kubeconfig = flag.String("kubeconfig", "", "kube config path, e.g. $HOME/.kube/config")
 	opImage = flag.String("operator-image", "", "operator image, e.g. quay.io/coreos/prometheus-operator")
 	ns = flag.String("namespace", "prometheus-operator-e2e-tests", "e2e test namespace")
-	ip = flag.String("cluster-ip", "", "ip of the kubernetes cluster to use for external requests")
 	flag.Parse()
 
 	os.Exit(m.Run())
@@ -68,7 +67,6 @@ func TestMigration(t *testing.T) {
 		*ns,
 		*kubeconfig,
 		"quay.io/coreos/prometheus-operator:v0.10.2",
-		*ip,
 	); err != nil {
 		log.Printf("failed to setup framework: %v\n", err)
 		t.Fatal(err)
@@ -77,6 +75,7 @@ func TestMigration(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns2 := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns2, framework.KubeClient)
 
 	// Launch the objects.
 	name := "test"

@@ -29,7 +29,7 @@ container:
 	docker build -t $(REPO):$(TAG) .
 
 e2e-test:
-	go test -timeout 20m -v ./test/migration/ $(TEST_RUN_ARGS) --kubeconfig "$(HOME)/.kube/config" --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE) --cluster-ip=$(CLUSTER_IP)
+	go test -timeout 20m -v ./test/migration/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE)
 	go test -timeout 20m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE)
 
 e2e-status:

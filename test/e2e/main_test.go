@@ -20,7 +20,7 @@ import (
 	"os"
 	"testing"
 
-	operatorFramework "github.com/coreos/prometheus-operator/test/e2e/framework"
+	operatorFramework "github.com/coreos/prometheus-operator/test/framework"
 )
 
 var framework *operatorFramework.Framework

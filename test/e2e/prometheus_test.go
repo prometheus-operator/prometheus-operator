@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+/// Copyright 2016 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
-	testFramework "github.com/coreos/prometheus-operator/test/e2e/framework"
+	testFramework "github.com/coreos/prometheus-operator/test/framework"
 	"github.com/pkg/errors"
 )
 
