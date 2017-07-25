@@ -1,17 +1,27 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: grafana
+  labels:
+    app: {{ template "grafana.fullname" . }}
+    chart: "{{.Chart.Name}}-{{.Chart.Version}}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "grafana.server.fullname" . }}
 spec:
   replicas: 1
   template:
     metadata:
+      annotations:
+      {{- range $key, $value := .Values.annotations }}
+        {{ $key }}: {{ $value }}
+      {{- end }}
       labels:
-        app: grafana
+        app: {{ template "grafana.fullname" . }}
+        release: "{{ .Release.Name }}"
     spec:
       containers:
       - name: grafana
-        image: grafana/grafana:4.4.1
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         env:
         - name: GF_AUTH_BASIC_ENABLED
           value: "true"
@@ -20,12 +30,12 @@ spec:
         - name: GF_SECURITY_ADMIN_USER
           valueFrom:
             secretKeyRef:
-              name: grafana-credentials
+              name: {{ template "grafana.server.fullname" . }}
               key: user
         - name: GF_SECURITY_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: grafana-credentials
+              name: {{ template "grafana.server.fullname" . }}
               key: password
         volumeMounts:
         - name: grafana-storage
@@ -49,12 +59,12 @@ spec:
         - name: GRAFANA_USER
           valueFrom:
             secretKeyRef:
-              name: grafana-credentials
+              name: {{ template "grafana.server.fullname" . }}
               key: user
         - name: GRAFANA_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: grafana-credentials
+              name: {{ template "grafana.server.fullname" . }}
               key: password
         resources:
           requests:
@@ -64,11 +74,16 @@ spec:
             memory: "32Mi"
             cpu: "100m"
         volumeMounts:
-        - name: grafana-dashboards
-          mountPath: /var/grafana-dashboards
+          - name: grafana-dashboards
+            mountPath: /var/grafana-dashboards
       volumes:
-      - name: grafana-storage
-        emptyDir: {}
-      - name: grafana-dashboards
-        configMap:
-          name: grafana-dashboards
+        - name: grafana-storage
+          {{- if .Values.storageSpec }}
+          persistentVolumeClaim:
+            claimName: {{ template "grafana.server.fullname" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: grafana-dashboards
+          configMap:
+            name: {{ template "grafana.server.fullname" . }}
