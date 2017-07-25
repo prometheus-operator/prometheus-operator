@@ -70,12 +70,13 @@ spec:
   ...
   storage:
     volumeClaimTemplate:
-      selector:
-        matchLabels:
-          app: "my-example-prometheus"
-      resources:
-        requests:
-          storage: 50Gi
+      spec:
+        selector:
+          matchLabels:
+            app: "my-example-prometheus"
+        resources:
+          requests:
+            storage: 50Gi
 
 ---
 
