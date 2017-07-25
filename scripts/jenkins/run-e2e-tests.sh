@@ -37,10 +37,12 @@ TF_VAR_tectonic_dns_name="${CLUSTER}"
 TECTONIC_INSTALLER_DIR=/go/src/github.com/coreos/tectonic-installer
 PO_DIR=/go/src/github.com/coreos/prometheus-operator
 KUBECONFIG="${PO_DIR}/build/${CLUSTER}/generated/auth/kubeconfig"
+TECTONIC_INSTALLER="quay.io/coreos/tectonic-installer:master"
 
 mkdir -p build/${CLUSTER}
 cp ${WORKSPACE}/scripts/jenkins/kubernetes-vanilla.tfvars build/${CLUSTER}/terraform.tfvars
 
+docker pull $TECTONIC_INSTALLER
 docker run \
        --rm \
        -v $PWD/build/:$TECTONIC_INSTALLER_DIR/build/ \
@@ -54,7 +56,7 @@ docker run \
        -e TF_VAR_tectonic_cluster_name=${TF_VAR_tectonic_cluster_name} \
        -e TF_VAR_tectonic_dns_name=${TF_VAR_tectonic_dns_name} \
        -w $TECTONIC_INSTALLER_DIR \
-       quay.io/coreos/tectonic-installer:master \
+       $TECTONIC_INSTALLER \
        /bin/bash -c "touch license secret && make plan && make apply"
 
 docker build \
