@@ -72,27 +72,33 @@ metadata:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: prometheus-operator
   labels:
-    operator: prometheus
+    k8s-app: prometheus-operator
+  name: prometheus-operator
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        operator: prometheus
+        k8s-app: prometheus-operator
     spec:
-      serviceAccountName: prometheus-operator
       containers:
-      - name: prometheus-operator
+      - args:
+        - --kubelet-service=kube-system/kubelet
+        - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
         image: quay.io/coreos/prometheus-operator:v0.11.0
+        name: prometheus-operator
+        ports:
+        - containerPort: 8080
+          name: http
         resources:
-          requests:
-            cpu: 100m
-            memory: 50Mi
           limits:
             cpu: 200m
             memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+      serviceAccountName: prometheus-operator
 ```
 
 The Prometheus Operator introduces third party resources in Kubernetes to declare the desired state of a Prometheus and Alertmanager cluster as well as the Prometheus configuration. The resources it introduces are:
