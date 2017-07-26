@@ -16,8 +16,12 @@ package framework
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
@@ -58,4 +62,22 @@ func DeleteDeployment(kubeClient kubernetes.Interface, namespace, name string) e
 		return err
 	}
 	return kubeClient.Extensions().Deployments(namespace).Delete(d.Name, &metav1.DeleteOptions{})
+}
+
+func WaitUntilDeploymentGone(kubeClient kubernetes.Interface, namespace, name string, timeout time.Duration) error {
+	return wait.Poll(time.Second, timeout, func() (bool, error) {
+		_, err := kubeClient.
+			AppsV1beta1().Deployments(namespace).
+			Get(name, metav1.GetOptions{})
+
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return true, nil
+			}
+
+			return false, err
+		}
+
+		return false, nil
+	})
 }

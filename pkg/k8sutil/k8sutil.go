@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
+	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -165,9 +165,13 @@ func CreateOrUpdateEndpoints(eclient clientv1.EndpointsInterface, eps *v1.Endpoi
 func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	v, err := dclient.ServerVersion()
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
-	// TODO(gouthamve): Super fragile, will break post 1.10. But minor sometimes returns 7+
-	return strconv.Atoi(string(v.Minor[0]))
+	ver, err := version.NewVersion(v.String())
+	if err != nil {
+		return 0, err
+	}
+
+	return ver.Segments()[1], nil
 }

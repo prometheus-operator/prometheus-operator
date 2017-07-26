@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
@@ -23,7 +22,7 @@ var kubeconfig, opImage, ns, ip *string
 func TestMain(m *testing.M) {
 	kubeconfig = flag.String("kubeconfig", "", "kube config path, e.g. $HOME/.kube/config")
 	opImage = flag.String("operator-image", "", "operator image, e.g. quay.io/coreos/prometheus-operator")
-	ns = flag.String("namespace", "prometheus-operator-e2e-tests", "e2e test namespace")
+	ns = flag.String("namespace", "prometheus-operator-migration-tests", "migration test namespace")
 	flag.Parse()
 
 	os.Exit(m.Run())
@@ -55,11 +54,6 @@ func TestMigration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	monClient, err := v1alpha1.NewForConfig(config)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	tprClient := kclient.ExtensionsV1beta1().ThirdPartyResources()
 	crdClient := extClient.ApiextensionsV1beta1().CustomResourceDefinitions()
 
@@ -79,7 +73,7 @@ func TestMigration(t *testing.T) {
 
 	// Launch the objects.
 	name := "test"
-	group := "servicediscovery-test"
+	group := "tpr-migration-test"
 
 	prometheusTPR := framework.MakeBasicPrometheus(ns2, name, name, 1)
 	prometheusTPR.Namespace = ns2
@@ -96,36 +90,42 @@ func TestMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	obj, err := monClient.Prometheuses(ns2).List(metav1.ListOptions{})
+	obj, err := framework.MonClient.Prometheuses(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	proms := obj.(*v1alpha1.PrometheusList)
 
 	// Get the objects.
-	obj, err = monClient.Alertmanagers(ns2).List(metav1.ListOptions{})
+	obj, err = framework.MonClient.Alertmanagers(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	ams := obj.(*v1alpha1.AlertmanagerList)
 
-	obj, err = monClient.ServiceMonitors(ns2).List(metav1.ListOptions{})
+	obj, err = framework.MonClient.ServiceMonitors(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	sms := obj.(*v1alpha1.ServiceMonitorList)
 
 	// Delete and launch new operator.
-	if err := framework.
-		KubeClient.
-		Extensions().
-		Deployments(framework.Namespace.Name).
-		Delete("prometheus-operator", nil); err != nil {
+	if err := operatorFramework.DeleteDeployment(
+		framework.KubeClient,
+		framework.Namespace.Name,
+		"prometheus-operator",
+	); err != nil {
 		t.Fatal(err)
 	}
 
-	// TODO: Wait until terminated.
-	time.Sleep(15 * time.Second)
+	if err := operatorFramework.WaitUntilDeploymentGone(
+		framework.KubeClient,
+		framework.Namespace.Name,
+		"prometheus-operator",
+		framework.DefaultTimeout,
+	); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := framework.Setup(*opImage); err != nil {
 		t.Fatal(err)
@@ -146,52 +146,52 @@ func TestMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(crdList.Items) != 3 {
-		t.Fatalf("expected 3 TPRs got %d", len(crdList.Items))
+		t.Fatalf("expected 3 CRDs got %d", len(crdList.Items))
 	}
 
 	// Compare old and new objects.
-	obj, err = monClient.Prometheuses(ns2).List(metav1.ListOptions{})
+	obj, err = framework.MonClient.Prometheuses(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	promsNew := obj.(*v1alpha1.PrometheusList)
 	if len(promsNew.Items) != len(proms.Items) {
-		t.Fatal("expected %d proms, got %d", len(proms.Items), len(promsNew.Items))
+		t.Fatalf("expected %d prometheuses, got %d", len(proms.Items), len(promsNew.Items))
 	}
 
 	for i, prom := range proms.Items {
 		if !reflect.DeepEqual(prom.Spec, promsNew.Items[i].Spec) {
-			t.Fatal("yolo")
+			t.Fatalf("The prometheus object changed %d", i)
 		}
 	}
 
-	obj, err = monClient.Alertmanagers(ns2).List(metav1.ListOptions{})
+	obj, err = framework.MonClient.Alertmanagers(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	amsNew := obj.(*v1alpha1.AlertmanagerList)
 	if len(amsNew.Items) != len(ams.Items) {
-		t.Fatal("expected %d ams, got %d", len(ams.Items), len(amsNew.Items))
+		t.Fatalf("expected %d ams, got %d", len(ams.Items), len(amsNew.Items))
 	}
 
 	for i, am := range ams.Items {
 		if !reflect.DeepEqual(am.Spec, amsNew.Items[i].Spec) {
-			t.Fatal("yolo")
+			t.Fatalf("The alertmanager object changed %d", i)
 		}
 	}
 
-	obj, err = monClient.ServiceMonitors(ns2).List(metav1.ListOptions{})
+	obj, err = framework.MonClient.ServiceMonitors(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	smsNew := obj.(*v1alpha1.ServiceMonitorList)
 	if len(smsNew.Items) != len(sms.Items) {
-		t.Fatal("expected %d ams, got %d", len(sms.Items), len(smsNew.Items))
+		t.Fatalf("expected %d ams, got %d", len(sms.Items), len(smsNew.Items))
 	}
 
 	for i, sm := range sms.Items {
 		if !reflect.DeepEqual(sm.Spec, smsNew.Items[i].Spec) {
-			t.Fatal("yolo")
+			t.Fatalf("The servicemonitor object changed %d", i)
 		}
 	}
 

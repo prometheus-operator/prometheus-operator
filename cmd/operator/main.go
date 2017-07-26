@@ -114,6 +114,11 @@ func Main() int {
 	}
 
 	mg, err := migrator.GetMigration(conf, logger.With("component", "migrator"))
+	if err != nil {
+		fmt.Fprint(os.Stderr, err)
+		return 1
+	}
+
 	switch mg {
 	case migrator.TPR2CRD:
 		err = migrator.MigrateTPR2CRD(conf, logger.With("component", "migrator"))
