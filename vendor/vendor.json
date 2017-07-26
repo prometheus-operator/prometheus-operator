@@ -243,6 +243,12 @@
 			"revisionTime": "2015-03-04T23:37:14Z"
 		},
 		{
+			"checksumSHA1": "tUGxc7rfX0cmhOOUDhMuAZ9rWsA=",
+			"path": "github.com/hashicorp/go-version",
+			"revision": "03c5bf6be031b6dd45afec16b1cf94fc8938bc77",
+			"revisionTime": "2017-02-02T08:07:59Z"
+		},
+		{
 			"checksumSHA1": "f+svTLsUm0KFNDl8cQqPy/M7qGg=",
 			"path": "github.com/jpillora/go-ogle-analytics",
 			"revision": "14b04e0594ef6a9fd943363b135656f0ec8c9d0e",
