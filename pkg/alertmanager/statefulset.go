@@ -79,7 +79,8 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 		statefulset.Spec.Template.Spec.ImagePullSecrets = am.Spec.ImagePullSecrets
 	}
 
-	if vc := am.Spec.Storage; vc == nil {
+	storageSpec := am.Spec.Storage
+	if storageSpec == nil {
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: volumeName(am.Name),
 			VolumeSource: v1.VolumeSource{
@@ -87,22 +88,12 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 			},
 		})
 	} else {
-		pvc := v1.PersistentVolumeClaim{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: volumeName(am.Name),
-			},
-			Spec: v1.PersistentVolumeClaimSpec{
-				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-				Resources:   vc.Resources,
-				Selector:    vc.Selector,
-			},
-		}
-		if len(vc.Class) > 0 {
-			pvc.ObjectMeta.Annotations = map[string]string{
-				"volume.beta.kubernetes.io/storage-class": vc.Class,
-			}
-		}
-		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, pvc)
+		pvcTemplate := storageSpec.VolumeClaimTemplate
+		pvcTemplate.Name = volumeName(am.Name)
+		pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
+		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
+		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
+		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, pvcTemplate)
 	}
 
 	if old != nil {
