@@ -95,7 +95,7 @@ alertmanager:
     ## Port to expose on each node
     ## Only used if service.type is 'NodePort'
     ##
-    nodePort: 39093
+    nodePort: 30903
 
     ## Service type
     ##
@@ -228,7 +228,7 @@ prometheus:
     ## Port to expose on each node
     ## Only used if service.type is 'NodePort'
     ##
-    nodePort: 39090
+    nodePort: 30900
 
     ## Service type
     ##
