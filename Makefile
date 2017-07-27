@@ -55,8 +55,18 @@ docs: embedmd apidocgen
 	$(GOPATH)/bin/embedmd -w `find Documentation -name "*.md"`
 	$(GOPATH)/bin/apidocgen pkg/client/monitoring/v1alpha1/types.go > Documentation/api.md
 
-generate:
-	hack/generate.sh
-	@$(MAKE) docs
+generate: jsonnet-docker
+	docker run --rm -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make jsonnet generate-bundle docs
+
+generate-bundle:
+	hack/generate-bundle.sh
+
+jsonnet:
+	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator.jsonnet | json2yaml > example/non-rbac/prometheus-operator.yaml
+	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | json2yaml > example/rbac/prometheus-operator/prometheus-operator.yaml
+	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | json2yaml > contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml
+
+jsonnet-docker:
+	docker build -f scripts/jenkins/jsonnet/Dockerfile -t po-jsonnet .
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs
