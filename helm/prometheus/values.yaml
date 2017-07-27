@@ -147,6 +147,10 @@ serviceMonitors: []
   ##
   # - name: ""
 
+    ## Labels to set used for the ServiceMonitorSelector.
+    ##
+    # serviceMonitorSelectorLabels: {}
+
     ## Service label for use in assembling a job name of the form <label value>-<port>
     ## If no label is specified, the service name is used.
     ##

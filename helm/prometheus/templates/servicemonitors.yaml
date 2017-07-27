@@ -16,7 +16,7 @@ items:
         chart: {{ $chartName }}-{{ $chartVersion }}
         heritage: {{ $releaseService }}
         release: {{ $releaseName }}
-{{ toYaml .Values.serviceMonitorSelector | indent 8 }}
+{{ toYaml .labels | indent 8 }}
       name: {{ .name }}
     spec:
       endpoints:
