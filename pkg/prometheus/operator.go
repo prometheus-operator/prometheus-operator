@@ -339,7 +339,8 @@ func nodeAddress(node *v1.Node) (string, map[v1.NodeAddressType][]string, error)
 	if addresses, ok := m[v1.NodeExternalIP]; ok {
 		return addresses[0], m, nil
 	}
-	if addresses, ok := m[v1.NodeAddressType(api.NodeLegacyHostIP)]; ok {
+	// NodeLegacyHostIP support has been removed in 1.7, this is here for prolonged 1.6 support.
+	if addresses, ok := m[v1.NodeAddressType("LegacyHostIP")]; ok {
 		return addresses[0], m, nil
 	}
 	if addresses, ok := m[v1.NodeHostName]; ok {

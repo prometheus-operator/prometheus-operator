@@ -159,7 +159,7 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *v1alpha1.A
 }
 
 func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClient.Alertmanagers(ns).Get(name)
+	_, err := f.MonClient.Alertmanagers(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting Alertmanager tpr %v failed", name))
 	}

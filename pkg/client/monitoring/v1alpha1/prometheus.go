@@ -39,7 +39,7 @@ type PrometheusesGetter interface {
 
 type PrometheusInterface interface {
 	Create(*Prometheus) (*Prometheus, error)
-	Get(name string) (*Prometheus, error)
+	Get(name string, opts metav1.GetOptions) (*Prometheus, error)
 	Update(*Prometheus) (*Prometheus, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
@@ -81,8 +81,8 @@ func (p *prometheuses) Create(o *Prometheus) (*Prometheus, error) {
 	return PrometheusFromUnstructured(up)
 }
 
-func (p *prometheuses) Get(name string) (*Prometheus, error) {
-	obj, err := p.client.Get(name)
+func (p *prometheuses) Get(name string, opts metav1.GetOptions) (*Prometheus, error) {
+	obj, err := p.client.Get(name, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (p *prometheuses) Update(o *Prometheus) (*Prometheus, error) {
 		return nil, err
 	}
 
-	curp, err := p.Get(o.Name)
+	curp, err := p.Get(o.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get current version for update")
 	}

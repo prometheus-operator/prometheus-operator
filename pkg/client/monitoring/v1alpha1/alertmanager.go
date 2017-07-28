@@ -38,7 +38,7 @@ type AlertmanagersGetter interface {
 
 type AlertmanagerInterface interface {
 	Create(*Alertmanager) (*Alertmanager, error)
-	Get(name string) (*Alertmanager, error)
+	Get(name string, opts metav1.GetOptions) (*Alertmanager, error)
 	Update(*Alertmanager) (*Alertmanager, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
@@ -80,8 +80,8 @@ func (a *alertmanagers) Create(o *Alertmanager) (*Alertmanager, error) {
 	return AlertmanagerFromUnstructured(ua)
 }
 
-func (a *alertmanagers) Get(name string) (*Alertmanager, error) {
-	obj, err := a.client.Get(name)
+func (a *alertmanagers) Get(name string, opts metav1.GetOptions) (*Alertmanager, error) {
+	obj, err := a.client.Get(name, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (a *alertmanagers) Update(o *Alertmanager) (*Alertmanager, error) {
 		return nil, err
 	}
 
-	cura, err := a.Get(o.Name)
+	cura, err := a.Get(o.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get current version for update")
 	}
