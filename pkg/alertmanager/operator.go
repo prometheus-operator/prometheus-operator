@@ -25,7 +25,6 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
-	"github.com/coreos/prometheus-operator/third_party/workqueue"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -43,6 +42,7 @@ import (
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	extensionsobjold "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/workqueue"
 )
 
 const (

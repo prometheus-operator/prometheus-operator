@@ -1262,6 +1262,12 @@
 			"path": "k8s.io/client-go/util/integer",
 			"revision": "df46f7f13b3da19b90b8b4f0d18b8adc6fbf28dc",
 			"revisionTime": "2017-07-07T20:27:35Z"
+		},
+		{
+			"checksumSHA1": "xFqAG5NxiwN+sRWpjb1LCYY1nCo=",
+			"path": "k8s.io/client-go/util/workqueue",
+			"revision": "df46f7f13b3da19b90b8b4f0d18b8adc6fbf28dc",
+			"revisionTime": "2017-07-07T20:27:35Z"
 		}
 	],
 	"rootPath": "github.com/coreos/prometheus-operator"
