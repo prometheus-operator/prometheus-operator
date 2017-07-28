@@ -17,6 +17,8 @@ package v1alpha1
 import (
 	"encoding/json"
 
+	"github.com/pkg/errors"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,8 +28,8 @@ import (
 )
 
 const (
-	TPRServiceMonitorsKind = "ServiceMonitor"
-	TPRServiceMonitorName  = "servicemonitors"
+	ServiceMonitorsKind = "ServiceMonitor"
+	ServiceMonitorName  = "servicemonitors"
 )
 
 type ServiceMonitorsGetter interface {
@@ -54,8 +56,8 @@ func newServiceMonitors(r rest.Interface, c *dynamic.Client, namespace string) *
 		r,
 		c.Resource(
 			&metav1.APIResource{
-				Kind:       TPRServiceMonitorsKind,
-				Name:       TPRServiceMonitorName,
+				Kind:       ServiceMonitorsKind,
+				Name:       ServiceMonitorName,
 				Namespaced: true,
 			},
 			namespace,
@@ -91,6 +93,12 @@ func (s *servicemonitors) Update(o *ServiceMonitor) (*ServiceMonitor, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	curs, err := s.Get(o.Name)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get current version for update")
+	}
+	us.SetResourceVersion(curs.ObjectMeta.ResourceVersion)
 
 	us, err = s.client.Update(us)
 	if err != nil {
@@ -146,15 +154,15 @@ func ServiceMonitorFromUnstructured(r *unstructured.Unstructured) (*ServiceMonit
 	if err := json.Unmarshal(b, &s); err != nil {
 		return nil, err
 	}
-	s.TypeMeta.Kind = TPRServiceMonitorsKind
-	s.TypeMeta.APIVersion = TPRGroup + "/" + TPRVersion
+	s.TypeMeta.Kind = ServiceMonitorsKind
+	s.TypeMeta.APIVersion = Group + "/" + Version
 	return &s, nil
 }
 
 // UnstructuredFromServiceMonitor marshals a ServiceMonitor object into dynamic client's unstructured
 func UnstructuredFromServiceMonitor(s *ServiceMonitor) (*unstructured.Unstructured, error) {
-	s.TypeMeta.Kind = TPRServiceMonitorsKind
-	s.TypeMeta.APIVersion = TPRGroup + "/" + TPRVersion
+	s.TypeMeta.Kind = ServiceMonitorsKind
+	s.TypeMeta.APIVersion = Group + "/" + Version
 	b, err := json.Marshal(s)
 	if err != nil {
 		return nil, err

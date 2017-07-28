@@ -31,7 +31,13 @@ rules:
   resources:
   - thirdpartyresources
   verbs:
-  - create
+  - "*" 
+- apiGroups:
+  - apiextensions.k8s.io 
+  resources:
+  - customresourcedefinitions 
+  verbs:
+  - "*" 
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -63,6 +69,10 @@ rules:
   resources:
   - nodes
   verbs: ["list", "watch"]
+- apiGroups: [""]
+  resources:
+  - namespaces 
+  verbs: ["list"]
 ---
 apiVersion: v1
 kind: ServiceAccount

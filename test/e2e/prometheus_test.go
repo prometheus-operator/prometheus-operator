@@ -33,7 +33,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
-	testFramework "github.com/coreos/prometheus-operator/test/e2e/framework"
+	testFramework "github.com/coreos/prometheus-operator/test/framework"
 	"github.com/pkg/errors"
 )
 

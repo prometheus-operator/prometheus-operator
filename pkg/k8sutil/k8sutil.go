@@ -20,20 +20,23 @@ import (
 	"net/url"
 	"time"
 
+	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/discovery"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 )
 
-// WaitForTPRReady waits for a third party resource to be available
+// WaitForCRDReady waits for a third party resource to be available
 // for use.
-func WaitForTPRReady(restClient rest.Interface, tprGroup, tprVersion, tprName string) error {
+// TODO(gouthamve): Move to clientset.Get()
+func WaitForCRDReady(restClient rest.Interface, crdGroup, crdVersion, crdName string) error {
 	err := wait.Poll(3*time.Second, 5*time.Minute, func() (bool, error) {
-		res := restClient.Get().AbsPath("apis", tprGroup, tprVersion, tprName).Do()
+		res := restClient.Get().AbsPath("apis", crdGroup, crdVersion, crdName).Do()
 		err := res.Error()
 		if err != nil {
 			// RESTClient returns *apierrors.StatusError for any status codes < 200 or > 206
@@ -55,7 +58,7 @@ func WaitForTPRReady(restClient rest.Interface, tprGroup, tprVersion, tprName st
 		return true, nil
 	})
 
-	return errors.Wrap(err, fmt.Sprintf("timed out waiting for TPR %s", tprName))
+	return errors.Wrap(err, fmt.Sprintf("timed out waiting for TPR %s", crdName))
 }
 
 // PodRunningAndReady returns whether a pod is running and each container has
@@ -156,4 +159,19 @@ func CreateOrUpdateEndpoints(eclient clientv1.EndpointsInterface, eps *v1.Endpoi
 	}
 
 	return nil
+}
+
+// GetMinorVersion returns the minor version as an integer
+func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
+	v, err := dclient.ServerVersion()
+	if err != nil {
+		return 0, err
+	}
+
+	ver, err := version.NewVersion(v.String())
+	if err != nil {
+		return 0, err
+	}
+
+	return ver.Segments()[1], nil
 }

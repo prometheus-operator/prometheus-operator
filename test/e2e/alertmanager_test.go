@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
-	testFramework "github.com/coreos/prometheus-operator/test/e2e/framework"
+	testFramework "github.com/coreos/prometheus-operator/test/framework"
 )
 
 func TestAlertmanagerCreateDeleteCluster(t *testing.T) {
