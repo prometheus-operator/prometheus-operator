@@ -1,3 +1,8 @@
+## 0.11.1 / 2017-07-28
+
+* [ENHANCEMENT] Add profiling endpoints.
+* [BUGFIX] Adapt Alertmanager storage usage to not use deprecated storage definition.
+
 ## 0.11.0 / 2017-07-20
 
 Warning: This release deprecates the previously used storage definition in favor of upstream PersistentVolumeClaim templates. While this should not have an immediate effect on a running cluster, Prometheus object definitions that have storage configured need to be adapted. The previously existing fields are still there, but have no effect anymore.
