@@ -426,7 +426,7 @@ func (m *Migrator) restoreFromCM(tprKind, tprName, configmapName string) error {
 			},
 			item.GetNamespace(),
 		)
-		_, err = resClient.Create(item)
+		_, err = resClient.Create(&item)
 		if err != nil {
 			return errors.Wrap(err, "restoring tprdata")
 		}

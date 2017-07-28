@@ -25,7 +25,6 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 
-	"github.com/coreos/prometheus-operator/third_party/workqueue"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -44,6 +43,7 @@ import (
 	extensionsobjold "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/workqueue"
 )
 
 const (
@@ -339,7 +339,8 @@ func nodeAddress(node *v1.Node) (string, map[v1.NodeAddressType][]string, error)
 	if addresses, ok := m[v1.NodeExternalIP]; ok {
 		return addresses[0], m, nil
 	}
-	if addresses, ok := m[v1.NodeAddressType(api.NodeLegacyHostIP)]; ok {
+	// NodeLegacyHostIP support has been removed in 1.7, this is here for prolonged 1.6 support.
+	if addresses, ok := m[v1.NodeAddressType("LegacyHostIP")]; ok {
 		return addresses[0], m, nil
 	}
 	if addresses, ok := m[v1.NodeHostName]; ok {

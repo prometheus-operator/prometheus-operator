@@ -159,7 +159,7 @@ func (f *Framework) WaitForPrometheusReady(p *v1alpha1.Prometheus, timeout time.
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClient.Prometheuses(ns).Get(name)
+	_, err := f.MonClient.Prometheuses(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting Prometheus tpr %v failed", name))
 	}

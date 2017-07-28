@@ -38,7 +38,7 @@ type ServiceMonitorsGetter interface {
 
 type ServiceMonitorInterface interface {
 	Create(*ServiceMonitor) (*ServiceMonitor, error)
-	Get(name string) (*ServiceMonitor, error)
+	Get(name string, opts metav1.GetOptions) (*ServiceMonitor, error)
 	Update(*ServiceMonitor) (*ServiceMonitor, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
@@ -80,8 +80,8 @@ func (s *servicemonitors) Create(o *ServiceMonitor) (*ServiceMonitor, error) {
 	return ServiceMonitorFromUnstructured(us)
 }
 
-func (s *servicemonitors) Get(name string) (*ServiceMonitor, error) {
-	obj, err := s.client.Get(name)
+func (s *servicemonitors) Get(name string, opts metav1.GetOptions) (*ServiceMonitor, error) {
+	obj, err := s.client.Get(name, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (s *servicemonitors) Update(o *ServiceMonitor) (*ServiceMonitor, error) {
 		return nil, err
 	}
 
-	curs, err := s.Get(o.Name)
+	curs, err := s.Get(o.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get current version for update")
 	}
