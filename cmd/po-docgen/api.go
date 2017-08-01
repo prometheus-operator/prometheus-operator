@@ -21,7 +21,6 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
-	"os"
 	"reflect"
 	"strings"
 )
@@ -48,17 +47,17 @@ var (
 	selfLinks = map[string]string{}
 )
 
-func main() {
+func printAPIDocs(path string) {
 	fmt.Println(firstParagraph)
 
-	types := ParseDocumentationFrom(os.Args[1])
+	types := ParseDocumentationFrom(path)
 	for _, t := range types {
 		strukt := t[0]
 		selfLinks[strukt.Name] = "#" + strings.ToLower(strukt.Name)
 	}
 
 	// we need to parse once more to now add the self links
-	types = ParseDocumentationFrom(os.Args[1])
+	types = ParseDocumentationFrom(path)
 
 	for _, t := range types {
 		strukt := t[0]
