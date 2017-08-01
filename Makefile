@@ -49,12 +49,13 @@ promu:
 embedmd:
 	@go get github.com/campoy/embedmd
 
-apidocgen:
-	@go install github.com/coreos/prometheus-operator/cmd/apidocgen
+po-docgen:
+	@go install github.com/coreos/prometheus-operator/cmd/po-docgen
 
-docs: embedmd apidocgen
+docs: embedmd po-docgen
 	$(GOPATH)/bin/embedmd -w `find Documentation -name "*.md"`
-	$(GOPATH)/bin/apidocgen pkg/client/monitoring/v1alpha1/types.go > Documentation/api.md
+	$(GOPATH)/bin/po-docgen api pkg/client/monitoring/v1alpha1/types.go > Documentation/api.md
+	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
 generate: jsonnet-docker
 	docker run --rm -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make jsonnet generate-bundle docs
