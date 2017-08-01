@@ -62,7 +62,8 @@ spec:
 {{- end }}
 {{- if .Values.rulesSelector }}
   ruleSelector:
-{{ toYaml .Values.rulesSelector | indent 4 }}
+    matchLabels:
+{{ toYaml .Values.rulesSelector | indent 6 }}
 {{- else }}
   ruleSelector:
     matchLabels:
