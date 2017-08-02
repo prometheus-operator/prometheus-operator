@@ -29,7 +29,11 @@ To edit/create a dashboard login to Grafana and modify and save the dashboard. T
 Note: The dashboard json file to be copied in `assets/grafana/` should be suffixed with `-dashboard.json`, otherwise it won't be processed by `make generate`.
 
 Then the generated manifest can be applied against a Kubernetes cluster with something like:
-`kubectl -n monitoring apply -f manifests/grafana/grafana-dashboards.yaml`
+```
+kubectl -n monitoring apply -f manifests/grafana/grafana-dashboards.yaml
+```
 
 And to apply the changes, restart grafana:
-`kubectl -n monitoring delete pod -l app=grafana`
+```
+kubectl -n monitoring delete pod -l app=grafana
+```
