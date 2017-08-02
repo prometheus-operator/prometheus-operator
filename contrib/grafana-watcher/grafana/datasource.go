@@ -78,22 +78,18 @@ func (c *DatasourcesClient) Delete(id int) error {
 		return err
 	}
 
-	_, err = c.HTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return doRequest(c.HTTPClient, req)
 }
 
 func (c *DatasourcesClient) Create(datasourceJson io.Reader) error {
 	createUrl := makeUrl(c.BaseUrl, "/api/datasources")
-	_, err := c.HTTPClient.Post(createUrl, "application/json", datasourceJson)
+	req, err := http.NewRequest("POST", createUrl, datasourceJson)
 	if err != nil {
 		return err
 	}
+	req.Header.Add("Content-Type", "application/json")
 
-	return nil
+	return doRequest(c.HTTPClient, req)
 }
 
 func makeUrl(baseUrl *url.URL, endpoint string) string {

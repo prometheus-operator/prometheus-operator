@@ -25,10 +25,11 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
-	"github.com/coreos/prometheus-operator/third_party/workqueue"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,12 +40,13 @@ import (
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
-	extensionsobj "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	extensionsobjold "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/workqueue"
 )
 
 const (
-	tprAlertmanager = "alertmanager." + v1alpha1.TPRGroup
+	crdAlertmanager = v1alpha1.AlertmanagerName + "." + v1alpha1.Group
 
 	resyncPeriod = 5 * time.Minute
 )
@@ -52,9 +54,10 @@ const (
 // Operator manages lify cycle of Alertmanager deployments and
 // monitoring configurations.
 type Operator struct {
-	kclient *kubernetes.Clientset
-	mclient *v1alpha1.MonitoringV1alpha1Client
-	logger  log.Logger
+	kclient   *kubernetes.Clientset
+	mclient   *v1alpha1.MonitoringV1alpha1Client
+	crdclient apiextensionsclient.Interface
+	logger    log.Logger
 
 	alrtInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
@@ -76,6 +79,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
 	}
+
 	client, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
@@ -86,12 +90,18 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
 	}
 
+	crdclient, err := apiextensionsclient.NewForConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating apiextensions client failed")
+	}
+
 	o := &Operator{
-		kclient: client,
-		mclient: mclient,
-		logger:  logger,
-		queue:   workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
-		config:  Config{Host: c.Host, ConfigReloaderImage: c.ConfigReloaderImage, AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage},
+		kclient:   client,
+		mclient:   mclient,
+		crdclient: crdclient,
+		logger:    logger,
+		queue:     workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
+		config:    Config{Host: c.Host, ConfigReloaderImage: c.ConfigReloaderImage, AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage},
 	}
 
 	o.alrtInf = cache.NewSharedIndexInformer(
@@ -137,7 +147,18 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		}
 		c.logger.Log("msg", "connection established", "cluster-version", v)
 
-		if err := c.createTPRs(); err != nil {
+		mv, err := k8sutil.GetMinorVersion(c.kclient.Discovery())
+		if mv < 7 {
+			if err := c.createTPRs(); err != nil {
+				errChan <- errors.Wrap(err, "creating TPRs failed")
+				return
+			}
+
+			errChan <- nil
+			return
+		}
+
+		if err := c.createCRDs(); err != nil {
 			errChan <- err
 			return
 		}
@@ -149,7 +170,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		if err != nil {
 			return err
 		}
-		c.logger.Log("msg", "TPR API endpoints ready")
+		c.logger.Log("msg", "CRD API endpoints ready")
 	case <-stopc:
 		return nil
 	}
@@ -540,14 +561,45 @@ func (c *Operator) destroyAlertmanager(key string) error {
 	return nil
 }
 
-func (c *Operator) createTPRs() error {
-	tprs := []*extensionsobj.ThirdPartyResource{
+func (c *Operator) createCRDs() error {
+	crds := []*extensionsobj.CustomResourceDefinition{
 		{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: tprAlertmanager,
+				Name: crdAlertmanager,
 			},
-			Versions: []extensionsobj.APIVersion{
-				{Name: v1alpha1.TPRVersion},
+			Spec: extensionsobj.CustomResourceDefinitionSpec{
+				Group:   v1alpha1.Group,
+				Version: v1alpha1.Version,
+				Scope:   extensionsobj.NamespaceScoped,
+				Names: extensionsobj.CustomResourceDefinitionNames{
+					Plural: v1alpha1.AlertmanagerName,
+					Kind:   v1alpha1.AlertmanagersKind,
+				},
+			},
+		},
+	}
+
+	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()
+
+	for _, crd := range crds {
+		if _, err := crdClient.Create(crd); err != nil && !apierrors.IsAlreadyExists(err) {
+			return errors.Wrapf(err, "Creating CRD: %s", crd.Spec.Names.Kind)
+		}
+		c.logger.Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
+	}
+
+	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
+	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.AlertmanagerName)
+}
+
+func (c *Operator) createTPRs() error {
+	tprs := []*extensionsobjold.ThirdPartyResource{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "alertmanager." + v1alpha1.Group,
+			},
+			Versions: []extensionsobjold.APIVersion{
+				{Name: v1alpha1.Version},
 			},
 			Description: "Managed Alertmanager cluster",
 		},
@@ -562,5 +614,5 @@ func (c *Operator) createTPRs() error {
 	}
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	return k8sutil.WaitForTPRReady(c.kclient.CoreV1().RESTClient(), v1alpha1.TPRGroup, v1alpha1.TPRVersion, v1alpha1.TPRAlertmanagerName)
+	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.AlertmanagerName)
 }

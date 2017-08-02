@@ -1,0 +1,89 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ template "grafana.fullname" . }}
+    chart: "{{.Chart.Name}}-{{.Chart.Version}}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "grafana.server.fullname" . }}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+      {{- range $key, $value := .Values.annotations }}
+        {{ $key }}: {{ $value }}
+      {{- end }}
+      labels:
+        app: {{ template "grafana.fullname" . }}
+        release: "{{ .Release.Name }}"
+    spec:
+      containers:
+      - name: grafana
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        env:
+        - name: GF_AUTH_BASIC_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "grafana.server.fullname" . }}
+              key: user
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "grafana.server.fullname" . }}
+              key: password
+        volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/grafana-storage
+        ports:
+        - name: web
+          containerPort: 3000
+        resources:
+          requests:
+            memory: 100Mi
+            cpu: 100m
+          limits:
+            memory: 200Mi
+            cpu: 200m
+      - name: grafana-watcher
+        image: quay.io/coreos/grafana-watcher:v0.0.6
+        args:
+          - '--watch-dir=/var/grafana-dashboards'
+          - '--grafana-url=http://localhost:3000'
+        env:
+        - name: GRAFANA_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "grafana.server.fullname" . }}
+              key: user
+        - name: GRAFANA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "grafana.server.fullname" . }}
+              key: password
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "50m"
+          limits:
+            memory: "32Mi"
+            cpu: "100m"
+        volumeMounts:
+          - name: grafana-dashboards
+            mountPath: /var/grafana-dashboards
+      volumes:
+        - name: grafana-storage
+          {{- if .Values.storageSpec }}
+          persistentVolumeClaim:
+            claimName: {{ template "grafana.server.fullname" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: grafana-dashboards
+          configMap:
+            name: {{ template "grafana.server.fullname" . }}

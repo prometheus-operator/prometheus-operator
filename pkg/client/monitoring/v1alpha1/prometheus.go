@@ -17,6 +17,8 @@ package v1alpha1
 import (
 	"encoding/json"
 
+	"github.com/pkg/errors"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,8 +28,9 @@ import (
 )
 
 const (
-	TPRPrometheusesKind = "Prometheus"
-	TPRPrometheusName   = "prometheuses"
+	PrometheusesKind = "Prometheus"
+	PrometheusName   = "prometheuses"
+	PrometheusShort  = "prom"
 )
 
 type PrometheusesGetter interface {
@@ -36,7 +39,7 @@ type PrometheusesGetter interface {
 
 type PrometheusInterface interface {
 	Create(*Prometheus) (*Prometheus, error)
-	Get(name string) (*Prometheus, error)
+	Get(name string, opts metav1.GetOptions) (*Prometheus, error)
 	Update(*Prometheus) (*Prometheus, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
@@ -54,8 +57,8 @@ func newPrometheuses(r rest.Interface, c *dynamic.Client, namespace string) *pro
 		r,
 		c.Resource(
 			&metav1.APIResource{
-				Kind:       TPRPrometheusesKind,
-				Name:       TPRPrometheusName,
+				Kind:       PrometheusesKind,
+				Name:       PrometheusName,
 				Namespaced: true,
 			},
 			namespace,
@@ -78,8 +81,8 @@ func (p *prometheuses) Create(o *Prometheus) (*Prometheus, error) {
 	return PrometheusFromUnstructured(up)
 }
 
-func (p *prometheuses) Get(name string) (*Prometheus, error) {
-	obj, err := p.client.Get(name)
+func (p *prometheuses) Get(name string, opts metav1.GetOptions) (*Prometheus, error) {
+	obj, err := p.client.Get(name, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -91,6 +94,12 @@ func (p *prometheuses) Update(o *Prometheus) (*Prometheus, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	curp, err := p.Get(o.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get current version for update")
+	}
+	up.SetResourceVersion(curp.ObjectMeta.ResourceVersion)
 
 	up, err = p.client.Update(up)
 	if err != nil {
@@ -146,15 +155,15 @@ func PrometheusFromUnstructured(r *unstructured.Unstructured) (*Prometheus, erro
 	if err := json.Unmarshal(b, &p); err != nil {
 		return nil, err
 	}
-	p.TypeMeta.Kind = TPRPrometheusesKind
-	p.TypeMeta.APIVersion = TPRGroup + "/" + TPRVersion
+	p.TypeMeta.Kind = PrometheusesKind
+	p.TypeMeta.APIVersion = Group + "/" + Version
 	return &p, nil
 }
 
 // UnstructuredFromPrometheus marshals a Prometheus object into dynamic client's unstructured
 func UnstructuredFromPrometheus(p *Prometheus) (*unstructured.Unstructured, error) {
-	p.TypeMeta.Kind = TPRPrometheusesKind
-	p.TypeMeta.APIVersion = TPRGroup + "/" + TPRVersion
+	p.TypeMeta.Kind = PrometheusesKind
+	p.TypeMeta.APIVersion = Group + "/" + Version
 	b, err := json.Marshal(p)
 	if err != nil {
 		return nil, err

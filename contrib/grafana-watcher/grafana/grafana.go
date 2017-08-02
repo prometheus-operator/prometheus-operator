@@ -15,6 +15,7 @@
 package grafana
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 )
@@ -42,4 +43,16 @@ func (c *Clientset) Dashboards() DashboardsInterface {
 
 func (c *Clientset) Datasources() DatasourcesInterface {
 	return NewDatasourcesClient(c.BaseUrl, c.HTTPClient)
+}
+
+func doRequest(c *http.Client, req *http.Request) error {
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Unexpected status code returned from Grafana API (got: %d, expected: 200, msg:%s)", resp.StatusCode, resp.Status)
+	}
+	return nil
 }

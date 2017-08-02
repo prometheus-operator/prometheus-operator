@@ -8,10 +8,6 @@ set -u
 # print each command before executing it
 set -x
 
-docker run \
-       --rm \
-       -v $PWD:/go/src/github.com/coreos/prometheus-operator \
-       -w /go/src/github.com/coreos/prometheus-operator/ \
-       golang make generate
+make generate
 
 git diff --exit-code

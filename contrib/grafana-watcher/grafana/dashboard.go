@@ -76,20 +76,16 @@ func (c *DashboardsClient) Delete(slug string) error {
 		return err
 	}
 
-	_, err = c.HTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return doRequest(c.HTTPClient, req)
 }
 
 func (c *DashboardsClient) Create(dashboardJson io.Reader) error {
 	importDashboardUrl := makeUrl(c.BaseUrl, "/api/dashboards/import")
-	_, err := c.HTTPClient.Post(importDashboardUrl, "application/json", dashboardJson)
+	req, err := http.NewRequest("POST", importDashboardUrl, dashboardJson)
 	if err != nil {
 		return err
 	}
+	req.Header.Add("Content-Type", "application/json")
 
-	return nil
+	return doRequest(c.HTTPClient, req)
 }

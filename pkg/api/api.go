@@ -20,6 +20,7 @@ import (
 	"regexp"
 
 	"github.com/go-kit/kit/log"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
@@ -95,7 +96,7 @@ func parsePrometheusStatusUrl(path string) objectReference {
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 	or := parsePrometheusStatusUrl(req.URL.Path)
 
-	p, err := api.mclient.Prometheuses(or.namespace).Get(or.name)
+	p, err := api.mclient.Prometheuses(or.namespace).Get(or.name, metav1.GetOptions{})
 	if err != nil {
 		if k8sutil.IsResourceNotFoundError(err) {
 			w.WriteHeader(404)

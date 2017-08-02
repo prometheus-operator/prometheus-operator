@@ -95,14 +95,14 @@ alertmanager:
     ## Port to expose on each node
     ## Only used if service.type is 'NodePort'
     ##
-    nodePort: 39093
+    nodePort: 30903
 
     ## Service type
     ##
     type: ClusterIP
 
   ## Alertmanager StorageSpec for persistent data
-  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#storagespec
+  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
   ##
   storageSpec: {}
   #   class: default
@@ -113,7 +113,7 @@ alertmanager:
 
 prometheus:
   ## Alertmanagers to which alerts will be sent
-  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#alertmanagerendpoints
+  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#alertmanagerendpoints
   ##
   alertingEndpoints: []
   #   - name: ""
@@ -228,7 +228,7 @@ prometheus:
     ## Port to expose on each node
     ## Only used if service.type is 'NodePort'
     ##
-    nodePort: 39090
+    nodePort: 30900
 
     ## Service type
     ##
@@ -319,7 +319,7 @@ prometheus:
             # serverName: ""
 
   ## Prometheus StorageSpec for persistent data
-  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#storagespec
+  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
   ##
   storageSpec: {}
   #   class: default

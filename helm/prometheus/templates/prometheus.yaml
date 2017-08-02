@@ -21,6 +21,10 @@ spec:
         port: http
 {{- end }}
   baseImage: "{{ .Values.image.repository }}"
+{{- if .Values.externalLabels }}
+  externalLabels:
+{{ toYaml .Values.externalLabels | indent 4}}
+{{- end }}
 {{- if .Values.externalUrl }}
   externalUrl: "{{ .Values.externalUrl }}"
 {{- else if .Values.ingress.fqdn }}
@@ -39,6 +43,9 @@ spec:
   retention: "{{ .Values.retention }}"
 {{- if .Values.routePrefix }}
   routePrefix: "{{ .Values.routePrefix }}"
+{{- end }}
+{{- if .Values.rbacEnable }}
+  serviceAccountName: {{ template "fullname" . }}
 {{- end }}
 {{- if .Values.serviceMonitorsSelector }}
   serviceMonitorSelector:

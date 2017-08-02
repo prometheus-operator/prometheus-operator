@@ -27,6 +27,8 @@ kctl apply -f manifests/node-exporter
 kctl apply -f manifests/kube-state-metrics
 kctl apply -f manifests/grafana/grafana-credentials.yaml
 kctl apply -f manifests/grafana
-kctl apply -f manifests/prometheus/
+find manifests/prometheus -type f ! -name prometheus-k8s-roles.yaml ! -name prometheus-k8s-role-bindings.yaml -exec kubectl --namespace "$NAMESPACE" apply -f {} \;
+kubectl apply -f manifests/prometheus/prometheus-k8s-roles.yaml
+kubectl apply -f manifests/prometheus/prometheus-k8s-role-bindings.yaml
 kctl apply -f manifests/alertmanager/
 

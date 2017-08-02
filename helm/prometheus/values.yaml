@@ -1,5 +1,5 @@
 ## Alertmanagers to which alerts will be sent
-## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#alertmanagerendpoints
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#alertmanagerendpoints
 ##
 alertingEndpoints: []
 #   - name: ""
@@ -15,6 +15,10 @@ config:
   specifiedInValues: true
   value: {}
 
+## External labels to add to any time series or alerts when communicating with external systems
+##
+externalLabels: {}
+
 ## External URL at which Prometheus will be reachable
 ##
 externalUrl: ""
@@ -23,7 +27,7 @@ externalUrl: ""
 ##
 image:
   repository: quay.io/prometheus/prometheus
-  tag: v1.5.2
+  tag: v1.7.1
 
 ingress:
   ## If true, Prometheus Ingress will be created
@@ -54,6 +58,10 @@ nodeSelector: {}
 ## If true, the Operator won't process any Prometheus configuration changes
 ##
 paused: false
+
+## If true, create & use RBAC resources
+##
+rbacEnable: true
 
 ## Number of Prometheus replicas desired
 ##
@@ -114,7 +122,7 @@ service:
   ## Port to expose on each node
   ## Only used if service.type is 'NodePort'
   ##
-  nodePort: 39090
+  nodePort: 30900
 
   ## Service type
   ##
@@ -205,7 +213,7 @@ serviceMonitors: []
           # serverName: ""
 
 ## Prometheus StorageSpec for persistent data
-## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/prometheus.md#storagespec
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
 ##
 storageSpec: {}
 #   class: default

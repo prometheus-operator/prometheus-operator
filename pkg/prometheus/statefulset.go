@@ -37,7 +37,7 @@ import (
 
 const (
 	governingServiceName = "prometheus-operated"
-	defaultVersion       = "v1.7.0"
+	DefaultVersion       = "v1.7.1"
 	defaultRetention     = "24h"
 
 	configMapsFilename = "configmaps.json"
@@ -66,6 +66,7 @@ var (
 		"v1.7.0",
 		"v1.7.1",
 		"v2.0.0-alpha.3",
+		"v2.0.0-beta.0",
 	}
 )
 
@@ -78,7 +79,7 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 		p.Spec.BaseImage = config.PrometheusDefaultBaseImage
 	}
 	if p.Spec.Version == "" {
-		p.Spec.Version = defaultVersion
+		p.Spec.Version = DefaultVersion
 	}
 	if p.Spec.Replicas != nil && *p.Spec.Replicas < minReplicas {
 		p.Spec.Replicas = &minReplicas

@@ -6,7 +6,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 
 ## AlertingSpec
 
-AlertingSpec defines paramters for alerting configuration of Prometheus servers.
+AlertingSpec defines parameters for alerting configuration of Prometheus servers.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -138,6 +138,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/api-reference/v1.6/#localobjectreference-v1-core) | false |
 | replicas | Number of instances to deploy for a Prometheus deployment. | *int32 | false |
 | retention | Time duration Prometheus shall retain data for. | string | false |
+| evaluationInterval | Interval between consecutive evaluations. | string | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
@@ -199,7 +200,7 @@ StorageSpec defines the configured storage for a group Prometheus servers.
 | class | Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses DEPRECATED | string | true |
 | selector | A label query over volumes to consider for binding. DEPRECATED | *[metav1.LabelSelector](https://kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | true |
 | resources | Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources DEPRECATED | [v1.ResourceRequirements](https://kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | true |
-| volumeClaimTemplate | Pvc A pvc spec to be used by the Prometheus statefulsets. | v1.PersistentVolumeClaim | false |
+| volumeClaimTemplate | A PVC spec to be used by the Prometheus StatefulSets. | [v1.PersistentVolumeClaim](https://kubernetes.io/docs/api-reference/v1.6/#persistentvolumeclaim-v1-core) | false |
 
 ## TLSConfig
 

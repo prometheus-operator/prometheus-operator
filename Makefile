@@ -1,11 +1,10 @@
 REPO?=quay.io/coreos/prometheus-operator
 TAG?=$(shell git rev-parse --short HEAD)
 NAMESPACE?=po-e2e-$(shell LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
+KUBECONFIG?=$(HOME)/.kube/config
 
 PROMU := $(GOPATH)/bin/promu
 PREFIX ?= $(shell pwd)
-
-CLUSTER_IP?=$(shell kubectl config view --minify | grep server: | cut -f 3 -d ":" | tr -d "//")
 
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 
@@ -30,7 +29,8 @@ container:
 	docker build -t $(REPO):$(TAG) .
 
 e2e-test:
-	go test -timeout 20m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig "$(HOME)/.kube/config" --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE) --cluster-ip=$(CLUSTER_IP)
+	go test -timeout 20m -v ./test/migration/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE)
+	go test -timeout 20m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE)
 
 e2e-status:
 	kubectl get prometheus,alertmanager,servicemonitor,statefulsets,deploy,svc,endpoints,pods,cm,secrets,replicationcontrollers --all-namespaces
@@ -49,15 +49,26 @@ promu:
 embedmd:
 	@go get github.com/campoy/embedmd
 
-apidocgen:
-	@go install github.com/coreos/prometheus-operator/cmd/apidocgen
+po-docgen:
+	@go install github.com/coreos/prometheus-operator/cmd/po-docgen
 
-docs: embedmd apidocgen
-	embedmd -w `find Documentation -name "*.md"`
-	apidocgen pkg/client/monitoring/v1alpha1/types.go > Documentation/api.md
+docs: embedmd po-docgen
+	$(GOPATH)/bin/embedmd -w `find Documentation -name "*.md"`
+	$(GOPATH)/bin/po-docgen api pkg/client/monitoring/v1alpha1/types.go > Documentation/api.md
+	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
-generate:
-	hack/generate.sh
-	@$(MAKE) docs
+generate: jsonnet-docker
+	docker run --rm -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make jsonnet generate-bundle docs
+
+generate-bundle:
+	hack/generate-bundle.sh
+
+jsonnet:
+	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator.jsonnet | json2yaml > example/non-rbac/prometheus-operator.yaml
+	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | json2yaml > example/rbac/prometheus-operator/prometheus-operator.yaml
+	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | json2yaml > contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml
+
+jsonnet-docker:
+	docker build -f scripts/jenkins/jsonnet/Dockerfile -t po-jsonnet .
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs
