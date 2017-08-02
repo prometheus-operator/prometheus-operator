@@ -6,6 +6,8 @@ For both, the Prometheus alerting rules as well as the Grafana dashboards, there
 
 The source of truth for the alerts and dashboards are the files in the `assets/` directory. The respective files have to be changed there and then the `make generate` make target is executed to re-generate the Kubernetes manifests.
 
+Note: `make generate` should be executed from kube-prometheus base directory.
+
 ## Alerts
 
 The `ConfigMap` that is generated and holds the alerting rule files can be found in `manifests/prometheus/prometheus-k8s-rules.yaml`.
@@ -22,6 +24,12 @@ The `ConfigMap` that is generated and holds the dashboard definitions can be fou
 
 As Grafana's support for applying dashboards from files is limited a sidecar (called "grafana-watcher") was implemented. It watches the dashboard definitions provided through the `ConfigMap` and ensures that Grafana's SQLite database is in sync with the dashboard definitions.
 
-To edit/create a dashboard login to Grafana and modify and save the dashboard. Then download the dashboard definition in Grafana through `Share` -> `Export` -> `Save to file`. Move the file to `assets/grafana/` and re-generate the manifests.
+To edit/create a dashboard login to Grafana and modify and save the dashboard. Then download the dashboard definition in Grafana through `Share` -> `Export` -> `Save to file`. Move the file to `assets/grafana/` and re-generate the manifests (executing `make generate` from kube-prometheus base directory).
 
-Then the generated manifest can be applied against a Kubernetes cluster.
+Note: The dashboard json file to be copied in `assets/grafana/` should be suffixed with `-dashboard.json`, otherwise it won't be processed by `make generate`.
+
+Then the generated manifest can be applied against a Kubernetes cluster with something like:
+```
+kubectl -n monitoring apply -f manifests/grafana/grafana-dashboards.yaml
+```
+That will update the ConfigMap `grafana-dashboards`. Change should be automatically detected by grafana-watcher and dashboards reloaded.
