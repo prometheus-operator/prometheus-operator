@@ -32,8 +32,4 @@ Then the generated manifest can be applied against a Kubernetes cluster with som
 ```
 kubectl -n monitoring apply -f manifests/grafana/grafana-dashboards.yaml
 ```
-
-And to apply the changes, restart grafana:
-```
-kubectl -n monitoring delete pod -l app=grafana
-```
+That will update the ConfigMap `grafana-dashboards`. Change should be automatically detected by grafana-watcher and dashboards reloaded.
