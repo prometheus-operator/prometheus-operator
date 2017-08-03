@@ -76,8 +76,7 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 		Key: "global",
 		Value: yaml.MapSlice{
 			{Key: "evaluation_interval", Value: evaluationInterval},
-			{Key: "scrape_timeout", Value: "30s"},
-			{Key: "scrape_interval", Value: scrapeTimeout},
+			{Key: "scrape_timeout", Value: scrapeTimeout},
 			{Key: "external_labels", Value: stringMapToMapSlice(p.Spec.ExternalLabels)},
 		},
 	})
