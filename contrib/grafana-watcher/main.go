@@ -93,22 +93,50 @@ func (w *volumeWatcher) Run() {
 
 	done := make(chan bool)
 	go func() {
+		var handlersToRetry []updater.Updater
 		for {
 			select {
 			case event := <-watcher.Events:
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					if filepath.Base(event.Name) == "..data" {
 						log.Println("ConfigMap modified")
+						handlersToRetry = []updater.Updater{}
 						for _, h := range w.handlers {
 							err := h.OnModify()
 							if err != nil {
 								log.Println("error:", err)
+								handlersToRetry = append(handlersToRetry, h)
 							}
 						}
 					}
 				}
 			case err := <-watcher.Errors:
 				log.Println("error:", err)
+			default:
+				// If there are no new events from the watcher (indicating a newer version)
+				// we retry any failed handler operations until a new event comes in
+				var remainingHandlers []updater.Updater
+				for _, h := range handlersToRetry {
+					// Only retry if the watcher still cares about this handler; could have been removed
+					found := false
+					for _, h2 := range w.handlers {
+						if h == h2 {
+							found = true
+							break
+						}
+					}
+					if !found {
+						continue
+					}
+
+					if err := h.OnModify(); err != nil {
+						log.Println("error during retry attempt:", err)
+						remainingHandlers = append(remainingHandlers, h)
+					}
+				}
+				handlersToRetry = remainingHandlers
+				// don't excessively spam retries
+				time.Sleep(5 * time.Second)
 			}
 		}
 	}()
