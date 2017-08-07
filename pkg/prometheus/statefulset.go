@@ -429,6 +429,15 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		},
 	}
 
+	gid := int64(2000)
+	uid := int64(1000)
+	nr := true
+	securityContext := v1.PodSecurityContext{
+		FSGroup: &gid,
+		RunAsNonRoot: &nr,
+		RunAsUser: &uid,
+	}
+
 	return &v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    p.Spec.Replicas,
@@ -485,6 +494,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 						},
 					},
 				},
+				SecurityContext:               &securityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
