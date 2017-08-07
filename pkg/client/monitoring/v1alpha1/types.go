@@ -66,6 +66,8 @@ type PrometheusSpec struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 	// Time duration Prometheus shall retain data for.
 	Retention string `json:"retention,omitempty"`
+	// Number of seconds to wait for target to respond before erroring.
+	ScrapeTimeout string `json:"scrape_timeout,omitempty"`
 	// Interval between consecutive evaluations.
 	EvaluationInterval string `json:"evaluationInterval,omitempty"`
 	// The labels to add to any time series or alerts when communicating with
