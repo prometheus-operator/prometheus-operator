@@ -99,6 +99,11 @@ func makeStatefulSet(am *v1alpha1.Alertmanager, old *v1beta1.StatefulSet, config
 	if old != nil {
 		statefulset.Annotations = old.Annotations
 	}
+
+	if !config.StatefulSetUpdatesAvailable {
+		statefulset.Spec.UpdateStrategy = v1beta1.StatefulSetUpdateStrategy{}
+	}
+
 	return statefulset, nil
 }
 
@@ -189,6 +194,9 @@ func makeStatefulSetSpec(a *v1alpha1.Alertmanager, config Config) (*v1beta1.Stat
 	return &v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    a.Spec.Replicas,
+		UpdateStrategy: v1beta1.StatefulSetUpdateStrategy{
+			Type: v1beta1.RollingUpdateStatefulSetStrategyType,
+		},
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{

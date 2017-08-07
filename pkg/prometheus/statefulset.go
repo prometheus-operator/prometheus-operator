@@ -131,14 +131,21 @@ func makeStatefulSet(p v1alpha1.Prometheus, old *v1beta1.StatefulSet, config *Co
 
 	if old != nil {
 		statefulset.Annotations = old.Annotations
-
-		// mounted volumes are not reconciled as StatefulSets do not allow
-		// modification of the PodTemplate.
-		// TODO(brancz): remove this once StatefulSets allow modification of the
-		// PodTemplate.
-		statefulset.Spec.Template.Spec.Containers[0].VolumeMounts = old.Spec.Template.Spec.Containers[0].VolumeMounts
-		statefulset.Spec.Template.Spec.Volumes = old.Spec.Template.Spec.Volumes
 	}
+
+	if !config.StatefulSetUpdatesAvailable {
+		statefulset.Spec.UpdateStrategy = v1beta1.StatefulSetUpdateStrategy{}
+
+		if old != nil {
+			// Mounted volumes are not reconciled as StatefulSets do not allow
+			// modification of the PodTemplate.
+			//
+			// TODO(brancz): remove this when dropping 1.6 compatibility.
+			statefulset.Spec.Template.Spec.Containers[0].VolumeMounts = old.Spec.Template.Spec.Containers[0].VolumeMounts
+			statefulset.Spec.Template.Spec.Volumes = old.Spec.Template.Spec.Volumes
+		}
+	}
+
 	return statefulset, nil
 }
 
@@ -421,9 +428,13 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 			Port: intstr.FromString("web"),
 		},
 	}
+
 	return &v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    p.Spec.Replicas,
+		UpdateStrategy: v1beta1.StatefulSetUpdateStrategy{
+			Type: v1beta1.RollingUpdateStatefulSetStrategyType,
+		},
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{

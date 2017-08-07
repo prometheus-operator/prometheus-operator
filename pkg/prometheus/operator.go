@@ -84,6 +84,7 @@ type Config struct {
 	Host                         string
 	KubeletObject                string
 	TLSInsecure                  bool
+	StatefulSetUpdatesAvailable  bool
 	TLSConfig                    rest.TLSClientConfig
 	ConfigReloaderImage          string
 	PrometheusConfigReloader     string
@@ -233,6 +234,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 
 		mv, err := k8sutil.GetMinorVersion(c.kclient.Discovery())
 		if mv < 7 {
+			c.config.StatefulSetUpdatesAvailable = false
 			if err := c.createTPRs(); err != nil {
 				errChan <- errors.Wrap(err, "creating TPRs failed")
 				return
@@ -242,6 +244,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 			return
 		}
 
+		c.config.StatefulSetUpdatesAvailable = true
 		if err := c.createCRDs(); err != nil {
 			errChan <- errors.Wrap(err, "creating CRDs failed")
 			return
@@ -739,8 +742,12 @@ func ListOptions(name string) metav1.ListOptions {
 // It kills pods with the wrong version one-after-one and lets the StatefulSet controller
 // create new pods.
 //
-// TODO(fabxc): remove this once the StatefulSet controller learns how to do rolling updates.
+// TODO(brancz): remove this once the 1.6 support is removed.
 func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
+	if c.config.StatefulSetUpdatesAvailable {
+		return nil
+	}
+
 	status, oldPods, err := PrometheusStatus(c.kclient, p)
 	if err != nil {
 		return errors.Wrap(err, "retrieving Prometheus status failed")
@@ -769,6 +776,7 @@ func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
 	if err := c.kclient.Core().Pods(p.Namespace).Delete(oldPods[0].Name, nil); err != nil {
 		return err
 	}
+
 	// If there are further pods that need updating, we enqueue ourselves again.
 	if len(oldPods) > 1 {
 		return fmt.Errorf("%d out-of-date pods remaining", len(oldPods)-1)
