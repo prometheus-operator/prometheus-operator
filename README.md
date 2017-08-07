@@ -142,6 +142,7 @@ kubectl delete --ignore-not-found thirdpartyresource \
 ### Prerequisites
 
 - golang environment
+- docker (used for creating container images, etc.)
 - minikube (optional)
 
 ### Testing
