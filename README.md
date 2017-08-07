@@ -136,3 +136,18 @@ kubectl delete --ignore-not-found thirdpartyresource \
 ```
 
 **The Prometheus Operator collects anonymous usage statistics to help us learning how the software is being used and how we can improve it. To disable collection, run the Operator with the flag `-analytics=false`**
+
+## Development
+
+### Prerequisites
+
+- golang environment
+- minikube (optional)
+
+### Testing
+
+1. `make test` executes all *unit tests*.
+2. You can execute the *e2e tests* on a local minikube by compiling the static binary (which is what is used for the container images) with `make crossbuild`.
+  1. build the container image with the docker host from within minikube by running `eval $(minikube docker-env)`.
+  2. You can build the container using `make container`.
+  3. Finally run the e2e tests using `make e2e-tests`.
