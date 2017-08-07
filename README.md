@@ -147,6 +147,8 @@ kubectl delete --ignore-not-found thirdpartyresource \
 
 ### Testing
 
+1. Ensure that you're running tests in the following path: `$GOPATH/src/github.com/coreos/prometheus-operator` as tests expect paths to match.
+  1. If you're working from a fork, just add the forked repo as a remote and pull against your local coreos checkout before running tests.
 1. `make test` executes all *unit tests*.
 2. You can execute the *e2e tests* on a local minikube by compiling the static binary (which is what is used for the container images) with `make crossbuild`.
   1. build the container image with the docker host from within minikube by running `eval $(minikube docker-env)`.
