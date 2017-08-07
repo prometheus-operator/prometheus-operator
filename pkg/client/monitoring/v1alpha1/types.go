@@ -201,7 +201,7 @@ type Endpoint struct {
 	// Interval at which metrics should be scraped
 	Interval string `json:"interval,omitempty"`
 	// Timeout after which the scrape is ended
-	Timeout string `json:"timeout,omitempty"`
+	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// File to read bearer token for scraping targets.
