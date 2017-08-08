@@ -36,29 +36,34 @@ import (
 // TODO(gouthamve): Move to clientset.Get()
 func WaitForCRDReady(restClient rest.Interface, crdGroup, crdVersion, crdName string) error {
 	err := wait.Poll(3*time.Second, 5*time.Minute, func() (bool, error) {
-		res := restClient.Get().AbsPath("apis", crdGroup, crdVersion, crdName).Do()
-		err := res.Error()
-		if err != nil {
-			// RESTClient returns *apierrors.StatusError for any status codes < 200 or > 206
-			// and http.Client.Do errors are returned directly.
-			if se, ok := err.(*apierrors.StatusError); ok {
-				if se.Status().Code == http.StatusNotFound {
-					return false, nil
-				}
-			}
-			return false, err
-		}
-
-		var statusCode int
-		res.StatusCode(&statusCode)
-		if statusCode != http.StatusOK {
-			return false, fmt.Errorf("invalid status code: %d", statusCode)
-		}
-
-		return true, nil
+		return CheckCRDExistence(restClient, crdGroup, crdVersion, crdName)
 	})
 
 	return errors.Wrap(err, fmt.Sprintf("timed out waiting for TPR %s", crdName))
+}
+
+// CheckCRDExistence checks if the CRD exists.
+func CheckCRDExistence(restClient rest.Interface, crdGroup, crdVersion, crdName string) (bool, error) {
+	res := restClient.Get().AbsPath("apis", crdGroup, crdVersion, crdName).Do()
+	err := res.Error()
+	if err != nil {
+		// RESTClient returns *apierrors.StatusError for any status codes < 200 or > 206
+		// and http.Client.Do errors are returned directly.
+		if se, ok := err.(*apierrors.StatusError); ok {
+			if se.Status().Code == http.StatusNotFound {
+				return false, nil
+			}
+		}
+		return false, err
+	}
+
+	var statusCode int
+	res.StatusCode(&statusCode)
+	if statusCode != http.StatusOK {
+		return false, fmt.Errorf("invalid status code: %d", statusCode)
+	}
+
+	return true, nil
 }
 
 // PodRunningAndReady returns whether a pod is running and each container has

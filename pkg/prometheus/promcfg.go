@@ -25,7 +25,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 )
 
 var (
@@ -50,7 +50,7 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	return res
 }
 
-func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
+func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
 	versionStr := p.Spec.Version
 	if versionStr == "" {
 		versionStr = DefaultVersion
@@ -127,7 +127,7 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 	return yaml.Marshal(cfg)
 }
 
-func generateServiceMonitorConfig(version semver.Version, m *v1alpha1.ServiceMonitor, ep v1alpha1.Endpoint, i int, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
+func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, ep v1.Endpoint, i int, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -348,7 +348,7 @@ func generateServiceMonitorConfig(version semver.Version, m *v1alpha1.ServiceMon
 	return cfg
 }
 
-func k8sSDFromServiceMonitor(m *v1alpha1.ServiceMonitor) yaml.MapItem {
+func k8sSDFromServiceMonitor(m *v1.ServiceMonitor) yaml.MapItem {
 	nsel := m.Spec.NamespaceSelector
 	namespaces := []string{}
 	if !nsel.Any && len(nsel.MatchNames) == 0 {
@@ -400,7 +400,7 @@ func k8sSDAllNamespaces() yaml.MapItem {
 	}
 }
 
-func generateAlertmanagerConfig(version semver.Version, am v1alpha1.AlertmanagerEndpoints) yaml.MapSlice {
+func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoints) yaml.MapSlice {
 	if am.Scheme == "" {
 		am.Scheme = "http"
 	}

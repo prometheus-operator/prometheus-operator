@@ -25,6 +25,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
@@ -32,10 +35,12 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/api"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/migrator"
 	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/go-kit/kit/log"
+	clientGoAPI "k8s.io/client-go/pkg/api"
 )
 
 var (
@@ -127,6 +132,12 @@ func Main() int {
 			return 1
 		}
 	default:
+		conf.GroupVersion = &schema.GroupVersion{
+			Group:   v1.Group,
+			Version: v1.Version,
+		}
+		conf.APIPath = "/apis"
+		conf.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: clientGoAPI.Codecs}
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

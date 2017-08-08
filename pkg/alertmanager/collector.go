@@ -15,7 +15,7 @@
 package alertmanager
 
 import (
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"
@@ -48,11 +48,11 @@ func (c *alertmanagerCollector) Describe(ch chan<- *prometheus.Desc) {
 // Collect implements the prometheus.Collector interface.
 func (c *alertmanagerCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, p := range c.store.List() {
-		c.collectAlertmanager(ch, p.(*v1alpha1.Alertmanager))
+		c.collectAlertmanager(ch, p.(*v1.Alertmanager))
 	}
 }
 
-func (c *alertmanagerCollector) collectAlertmanager(ch chan<- prometheus.Metric, a *v1alpha1.Alertmanager) {
+func (c *alertmanagerCollector) collectAlertmanager(ch chan<- prometheus.Metric, a *v1.Alertmanager) {
 	replicas := float64(minReplicas)
 	if a.Spec.Replicas != nil {
 		replicas = float64(*a.Spec.Replicas)

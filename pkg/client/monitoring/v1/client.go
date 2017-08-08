@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,9 +23,10 @@ import (
 )
 
 const (
-	Group   = "monitoring.coreos.com"
-	Version = "v1alpha1"
+	Group = "monitoring.coreos.com"
 )
+
+var Version = "v1"
 
 type MonitoringV1alpha1Interface interface {
 	RESTClient() rest.Interface
