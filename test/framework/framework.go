@@ -27,14 +27,14 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/pkg/errors"
 )
 
 type Framework struct {
 	KubeClient     kubernetes.Interface
-	MonClient      *v1alpha1.MonitoringV1alpha1Client
+	MonClient      *monitoringv1.MonitoringV1alpha1Client
 	HTTPClient     *http.Client
 	MasterHost     string
 	Namespace      *v1.Namespace
@@ -59,7 +59,7 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 		return nil, errors.Wrap(err, "creating http-client failed")
 	}
 
-	mclient, err := v1alpha1.NewForConfig(config)
+	mclient, err := monitoringv1.NewForConfig(config)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating monitoring client failed")
 	}
@@ -137,17 +137,17 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 	f.OperatorPod = &pl.Items[0]
 
-	err = k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.PrometheusName)
+	err = k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), monitoringv1.Group, monitoringv1.Version, monitoringv1.PrometheusName)
 	if err != nil {
 		return err
 	}
 
-	err = k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.ServiceMonitorName)
+	err = k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), monitoringv1.Group, monitoringv1.Version, monitoringv1.ServiceMonitorName)
 	if err != nil {
 		return err
 	}
 
-	return k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.AlertmanagerName)
+	return k8sutil.WaitForCRDReady(f.KubeClient.Core().RESTClient(), monitoringv1.Group, monitoringv1.Version, monitoringv1.AlertmanagerName)
 }
 
 func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kubernetes.Interface) {

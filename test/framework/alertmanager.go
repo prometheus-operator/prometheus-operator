@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/pkg/errors"
 )
 
@@ -45,12 +45,12 @@ receivers:
   - url: 'http://alertmanagerwh:30500/'
 `
 
-func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *v1alpha1.Alertmanager {
-	return &v1alpha1.Alertmanager{
+func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *monitoringv1.Alertmanager {
+	return &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1alpha1.AlertmanagerSpec{
+		Spec: monitoringv1.AlertmanagerSpec{
 			Replicas: &replicas,
 		},
 	}
@@ -107,7 +107,7 @@ func (f *Framework) AlertmanagerConfigSecret(name string) (*v1.Secret, error) {
 	return s, nil
 }
 
-func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *v1alpha1.Alertmanager) error {
+func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) error {
 	amConfigSecretName := fmt.Sprintf("alertmanager-%s", a.Name)
 	s, err := f.AlertmanagerConfigSecret(amConfigSecretName)
 	if err != nil {
@@ -138,7 +138,7 @@ func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) erro
 	return errors.Wrap(err, fmt.Sprintf("failed to create an Alertmanager cluster (%s) with %d instances", name, replicas))
 }
 
-func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *v1alpha1.Alertmanager) error {
+func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) error {
 	_, err := f.MonClient.Alertmanagers(ns).Update(a)
 	if err != nil {
 		return err

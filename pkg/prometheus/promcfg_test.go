@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/pkg/api/v1"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 )
 
 func TestConfigGeneration(t *testing.T) {
@@ -49,14 +49,14 @@ func TestConfigGeneration(t *testing.T) {
 func generateTestConfig(version string) ([]byte, error) {
 	replicas := int32(1)
 	return generateConfig(
-		&v1alpha1.Prometheus{
+		&monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
 				Namespace: "default",
 			},
-			Spec: v1alpha1.PrometheusSpec{
-				Alerting: v1alpha1.AlertingSpec{
-					Alertmanagers: []v1alpha1.AlertmanagerEndpoints{
+			Spec: monitoringv1.PrometheusSpec{
+				Alerting: monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 						{
 							Name:      "alertmanager-main",
 							Namespace: "default",
@@ -89,10 +89,10 @@ func generateTestConfig(version string) ([]byte, error) {
 	)
 }
 
-func makeServiceMonitors() map[string]*v1alpha1.ServiceMonitor {
-	res := map[string]*v1alpha1.ServiceMonitor{}
+func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
+	res := map[string]*monitoringv1.ServiceMonitor{}
 
-	res["servicemonitor1"] = &v1alpha1.ServiceMonitor{
+	res["servicemonitor1"] = &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "testservicemonitor1",
 			Namespace: "default",
@@ -100,14 +100,14 @@ func makeServiceMonitors() map[string]*v1alpha1.ServiceMonitor {
 				"group": "group1",
 			},
 		},
-		Spec: v1alpha1.ServiceMonitorSpec{
+		Spec: monitoringv1.ServiceMonitorSpec{
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": "group1",
 				},
 			},
-			Endpoints: []v1alpha1.Endpoint{
-				v1alpha1.Endpoint{
+			Endpoints: []monitoringv1.Endpoint{
+				monitoringv1.Endpoint{
 					Port:     "web",
 					Interval: "30s",
 				},
@@ -115,7 +115,7 @@ func makeServiceMonitors() map[string]*v1alpha1.ServiceMonitor {
 		},
 	}
 
-	res["servicemonitor2"] = &v1alpha1.ServiceMonitor{
+	res["servicemonitor2"] = &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "testservicemonitor2",
 			Namespace: "default",
@@ -123,15 +123,15 @@ func makeServiceMonitors() map[string]*v1alpha1.ServiceMonitor {
 				"group": "group2",
 			},
 		},
-		Spec: v1alpha1.ServiceMonitorSpec{
+		Spec: monitoringv1.ServiceMonitorSpec{
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group":  "group2",
 					"group3": "group3",
 				},
 			},
-			Endpoints: []v1alpha1.Endpoint{
-				v1alpha1.Endpoint{
+			Endpoints: []monitoringv1.Endpoint{
+				monitoringv1.Endpoint{
 					Port:     "web",
 					Interval: "30s",
 				},

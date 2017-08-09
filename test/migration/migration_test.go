@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	operatorFramework "github.com/coreos/prometheus-operator/test/framework"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -57,6 +57,9 @@ func TestMigration(t *testing.T) {
 	tprClient := kclient.ExtensionsV1beta1().ThirdPartyResources()
 	crdClient := extClient.ApiextensionsV1beta1().CustomResourceDefinitions()
 
+	// This has old version.
+	monitoringv1.Version = "v1alpha1"
+
 	if framework, err = operatorFramework.New(
 		*ns,
 		*kubeconfig,
@@ -94,20 +97,20 @@ func TestMigration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	proms := obj.(*v1alpha1.PrometheusList)
+	proms := obj.(*monitoringv1.PrometheusList)
 
 	// Get the objects.
 	obj, err = framework.MonClient.Alertmanagers(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	ams := obj.(*v1alpha1.AlertmanagerList)
+	ams := obj.(*monitoringv1.AlertmanagerList)
 
 	obj, err = framework.MonClient.ServiceMonitors(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	sms := obj.(*v1alpha1.ServiceMonitorList)
+	sms := obj.(*monitoringv1.ServiceMonitorList)
 
 	// Delete and launch new operator.
 	if err := operatorFramework.DeleteDeployment(
@@ -127,6 +130,7 @@ func TestMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	monitoringv1.Version = "v1"
 	if err := framework.Setup(*opImage); err != nil {
 		t.Fatal(err)
 	}
@@ -154,12 +158,15 @@ func TestMigration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	promsNew := obj.(*v1alpha1.PrometheusList)
+	promsNew := obj.(*monitoringv1.PrometheusList)
 	if len(promsNew.Items) != len(proms.Items) {
 		t.Fatalf("expected %d prometheuses, got %d", len(proms.Items), len(promsNew.Items))
 	}
 
 	for i, prom := range proms.Items {
+		if promsNew.Items[i].GroupVersionKind().Version != monitoringv1.Version {
+			t.Fatalf("expected version %f got %f", monitoringv1.Version, promsNew.Items[i].GroupVersionKind().Version)
+		}
 		if !reflect.DeepEqual(prom.Spec, promsNew.Items[i].Spec) {
 			t.Fatalf("The prometheus object changed %d", i)
 		}
@@ -169,12 +176,15 @@ func TestMigration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	amsNew := obj.(*v1alpha1.AlertmanagerList)
+	amsNew := obj.(*monitoringv1.AlertmanagerList)
 	if len(amsNew.Items) != len(ams.Items) {
 		t.Fatalf("expected %d ams, got %d", len(ams.Items), len(amsNew.Items))
 	}
 
 	for i, am := range ams.Items {
+		if amsNew.Items[i].GroupVersionKind().Version != monitoringv1.Version {
+			t.Fatalf("expected version %f got %f", monitoringv1.Version, amsNew.Items[i].GroupVersionKind().Version)
+		}
 		if !reflect.DeepEqual(am.Spec, amsNew.Items[i].Spec) {
 			t.Fatalf("The alertmanager object changed %d", i)
 		}
@@ -184,7 +194,7 @@ func TestMigration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	smsNew := obj.(*v1alpha1.ServiceMonitorList)
+	smsNew := obj.(*monitoringv1.ServiceMonitorList)
 	if len(smsNew.Items) != len(sms.Items) {
 		t.Fatalf("expected %d ams, got %d", len(sms.Items), len(smsNew.Items))
 	}

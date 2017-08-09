@@ -23,14 +23,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 )
 
 type API struct {
 	kclient *kubernetes.Clientset
-	mclient *v1alpha1.MonitoringV1alpha1Client
+	mclient *v1.MonitoringV1alpha1Client
 	logger  log.Logger
 }
 
@@ -45,7 +45,7 @@ func New(conf prometheus.Config, l log.Logger) (*API, error) {
 		return nil, err
 	}
 
-	mclient, err := v1alpha1.NewForConfig(cfg)
+	mclient, err := v1.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func New(conf prometheus.Config, l log.Logger) (*API, error) {
 }
 
 var (
-	prometheusRoute = regexp.MustCompile("/apis/monitoring.coreos.com/v1alpha1/namespaces/(.*)/prometheuses/(.*)/status")
+	prometheusRoute = regexp.MustCompile("/apis/monitoring.coreos.com/" + v1.Version + "/namespaces/(.*)/prometheuses/(.*)/status")
 )
 
 func (api *API) Register(mux *http.ServeMux) {

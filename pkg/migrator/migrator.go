@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
@@ -19,7 +19,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -51,12 +50,14 @@ const (
 )
 
 type Migrator struct {
-	cmClient   corev1.ConfigMapInterface
-	dynClient  *dynamic.Client
-	restClient rest.Interface
-	crdClient  extensionsobjtypes.CustomResourceDefinitionInterface
-	tprClient  extensionsobjoldtypes.ThirdPartyResourceInterface
-	nsClient   corev1.NamespaceInterface
+	cmClient      corev1.ConfigMapInterface
+	dynClient     *dynamic.Client
+	dynClientTPR  *dynamic.Client
+	restClient    rest.Interface
+	restClientTPR rest.Interface
+	crdClient     extensionsobjtypes.CustomResourceDefinitionInterface
+	tprClient     extensionsobjoldtypes.ThirdPartyResourceInterface
+	nsClient      corev1.NamespaceInterface
 
 	migrated map[string]*migrationState
 
@@ -77,15 +78,15 @@ func GetMigration(cfg *rest.Config, logger log.Logger) (int, error) {
 	if mv >= 7 {
 		// See if the TPRs managed by this operator exist.
 		tprClient := client.Extensions().ThirdPartyResources()
-		_, err = tprClient.Get("prometheus."+v1alpha1.Group, metav1.GetOptions{})
+		_, err = tprClient.Get("prometheus."+monitoringv1.Group, metav1.GetOptions{})
 		if err == nil {
 			return TPR2CRD, nil
 		}
-		_, err = tprClient.Get("service-monitor."+v1alpha1.Group, metav1.GetOptions{})
+		_, err = tprClient.Get("service-monitor."+monitoringv1.Group, metav1.GetOptions{})
 		if err == nil {
 			return TPR2CRD, nil
 		}
-		_, err = tprClient.Get("alertmanager."+v1alpha1.Group, metav1.GetOptions{})
+		_, err = tprClient.Get("alertmanager."+monitoringv1.Group, metav1.GetOptions{})
 		if err == nil {
 			return TPR2CRD, nil
 		}
@@ -101,6 +102,12 @@ func NewMigrator(cfg *rest.Config, logger log.Logger) (*Migrator, error) {
 		cmSuffix: strconv.FormatInt(time.Now().Unix(), 10),
 	}
 
+	tprCfg := *cfg
+	tprCfg.GroupVersion = &schema.GroupVersion{
+		Group:   monitoringv1.Group,
+		Version: "v1alpha1",
+	}
+
 	kclient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating kubernetes client")
@@ -110,8 +117,16 @@ func NewMigrator(cfg *rest.Config, logger log.Logger) (*Migrator, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "creating rest client")
 	}
+	restClientTPR, err := rest.RESTClientFor(&tprCfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating rest client")
+	}
 	cmClient := kclient.CoreV1().ConfigMaps("default")
 	dynClient, err := dynamic.NewClient(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating a dynamic client")
+	}
+	dynClientTPR, err := dynamic.NewClient(&tprCfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating a dynamic client")
 	}
@@ -123,8 +138,10 @@ func NewMigrator(cfg *rest.Config, logger log.Logger) (*Migrator, error) {
 	tprClient := kclient.ExtensionsV1beta1().ThirdPartyResources()
 
 	m.dynClient = dynClient
+	m.dynClientTPR = dynClientTPR
 	m.crdClient = crdClient
 	m.restClient = restClient
+	m.restClientTPR = restClientTPR
 	m.tprClient = tprClient
 	m.cmClient = cmClient
 	m.nsClient = kclient.CoreV1().Namespaces()
@@ -134,8 +151,8 @@ func NewMigrator(cfg *rest.Config, logger log.Logger) (*Migrator, error) {
 
 func MigrateTPR2CRD(cfg *rest.Config, logger log.Logger) error {
 	cfg.GroupVersion = &schema.GroupVersion{
-		Group:   v1alpha1.Group,
-		Version: v1alpha1.Version,
+		Group:   monitoringv1.Group,
+		Version: monitoringv1.Version,
 	}
 	cfg.APIPath = "/apis"
 	cfg.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: api.Codecs}
@@ -145,7 +162,7 @@ func MigrateTPR2CRD(cfg *rest.Config, logger log.Logger) error {
 		return errors.Wrap(err, "creating the migrator")
 	}
 
-	_, err = m.tprClient.Get("prometheus."+v1alpha1.Group, metav1.GetOptions{})
+	_, err = m.tprClient.Get("prometheus."+monitoringv1.Group, metav1.GetOptions{})
 	if err == nil {
 		if err := m.MigratePrometheus(); err != nil {
 			logger.Log("error", err)
@@ -153,7 +170,7 @@ func MigrateTPR2CRD(cfg *rest.Config, logger log.Logger) error {
 		}
 	}
 
-	_, err = m.tprClient.Get("service-monitor."+v1alpha1.Group, metav1.GetOptions{})
+	_, err = m.tprClient.Get("service-monitor."+monitoringv1.Group, metav1.GetOptions{})
 	if err == nil {
 		if err := m.MigrateServiceMonitor(); err != nil {
 			logger.Log("error", err)
@@ -161,7 +178,7 @@ func MigrateTPR2CRD(cfg *rest.Config, logger log.Logger) error {
 		}
 	}
 
-	_, err = m.tprClient.Get("alertmanager."+v1alpha1.Group, metav1.GetOptions{})
+	_, err = m.tprClient.Get("alertmanager."+monitoringv1.Group, metav1.GetOptions{})
 	if err == nil {
 		if err := m.MigrateAlertmanager(); err != nil {
 			logger.Log("error", err)
@@ -189,7 +206,7 @@ func (m *Migrator) migrateTPR(tprKind, tprName, tprOldReg, configmap string, sho
 	}
 	m.migrated[tprKind].tprDataDel = true
 
-	err = m.deleteTPR(tprOldReg + "." + v1alpha1.Group)
+	err = m.deleteTPR(tprOldReg + "." + monitoringv1.Group)
 	if err != nil {
 		return errors.Wrapf(err, "deleting TPR registration for \"%s\"", tprKind)
 	}
@@ -197,11 +214,11 @@ func (m *Migrator) migrateTPR(tprKind, tprName, tprOldReg, configmap string, sho
 
 	crd := &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: tprName + "." + v1alpha1.Group,
+			Name: tprName + "." + monitoringv1.Group,
 		},
 		Spec: extensionsobj.CustomResourceDefinitionSpec{
-			Group:   v1alpha1.Group,
-			Version: v1alpha1.Version,
+			Group:   monitoringv1.Group,
+			Version: monitoringv1.Version,
 			Scope:   extensionsobj.NamespaceScoped,
 			Names: extensionsobj.CustomResourceDefinitionNames{
 				Plural:     tprName,
@@ -216,27 +233,7 @@ func (m *Migrator) migrateTPR(tprKind, tprName, tprOldReg, configmap string, sho
 	}
 	m.migrated[tprKind].crdCreated = true
 
-	err = wait.Poll(500*time.Millisecond, 60*time.Second, func() (bool, error) {
-		crdEst, err := m.crdClient.Get(crd.ObjectMeta.Name, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-		for _, cond := range crdEst.Status.Conditions {
-			switch cond.Type {
-			case extensionsobj.Established:
-				if cond.Status == extensionsobj.ConditionTrue {
-					return true, err
-				}
-			case extensionsobj.NamesAccepted:
-				if cond.Status == extensionsobj.ConditionFalse {
-					fmt.Printf("Name conflict: %v\n", cond.Reason)
-				}
-			}
-		}
-		return false, err
-	})
-
-	if err != nil {
+	if err := k8sutil.WaitForCRDReady(m.restClient, monitoringv1.Group, monitoringv1.Version, monitoringv1.PrometheusName); err != nil {
 		return errors.Wrapf(err, "error waiting for ready CRD registration for \"%s\"", tprKind, configmap)
 	}
 
@@ -251,28 +248,30 @@ func (m *Migrator) migrateTPR(tprKind, tprName, tprOldReg, configmap string, sho
 }
 
 func (m *Migrator) MigratePrometheus() error {
-	return m.migrateTPR(v1alpha1.PrometheusesKind, v1alpha1.PrometheusName, "prometheus", cmPrometheus, []string{v1alpha1.PrometheusShort})
+	return m.migrateTPR(monitoringv1.PrometheusesKind, monitoringv1.PrometheusName, "prometheus", cmPrometheus, []string{monitoringv1.PrometheusShort})
 }
 
 func (m *Migrator) MigrateServiceMonitor() error {
-	return m.migrateTPR(v1alpha1.ServiceMonitorsKind, v1alpha1.ServiceMonitorName, "service-monitor", cmServiceMonitor, nil)
+	return m.migrateTPR(monitoringv1.ServiceMonitorsKind, monitoringv1.ServiceMonitorName, "service-monitor", cmServiceMonitor, nil)
 }
 
 func (m *Migrator) MigrateAlertmanager() error {
-	return m.migrateTPR(v1alpha1.AlertmanagersKind, v1alpha1.AlertmanagerName, "alertmanager", cmAlertmanager, nil)
+	return m.migrateTPR(monitoringv1.AlertmanagersKind, monitoringv1.AlertmanagerName, "alertmanager", cmAlertmanager, nil)
 }
 
 func (m *Migrator) Rollback() error {
+	oldVersion := "v1alpha1"
+
 	if err := m.rollback(
-		v1alpha1.PrometheusesKind,
-		v1alpha1.PrometheusName,
+		monitoringv1.PrometheusesKind,
+		monitoringv1.PrometheusName,
 		cmPrometheus,
 		&extensionsobjold.ThirdPartyResource{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "prometheus." + v1alpha1.Group,
+				Name: "prometheus." + monitoringv1.Group,
 			},
 			Versions: []extensionsobjold.APIVersion{
-				{Name: v1alpha1.Version},
+				{Name: oldVersion},
 			},
 			Description: "Managed Prometheus server",
 		},
@@ -281,15 +280,15 @@ func (m *Migrator) Rollback() error {
 	}
 
 	if err := m.rollback(
-		v1alpha1.ServiceMonitorsKind,
-		v1alpha1.ServiceMonitorName,
+		monitoringv1.ServiceMonitorsKind,
+		monitoringv1.ServiceMonitorName,
 		cmServiceMonitor,
 		&extensionsobjold.ThirdPartyResource{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "service-monitor." + v1alpha1.Group,
+				Name: "service-monitor." + monitoringv1.Group,
 			},
 			Versions: []extensionsobjold.APIVersion{
-				{Name: v1alpha1.Version},
+				{Name: oldVersion},
 			},
 			Description: "Prometheus monitoring for a service",
 		},
@@ -298,15 +297,15 @@ func (m *Migrator) Rollback() error {
 	}
 
 	if err := m.rollback(
-		v1alpha1.AlertmanagersKind,
-		v1alpha1.AlertmanagerName,
+		monitoringv1.AlertmanagersKind,
+		monitoringv1.AlertmanagerName,
 		cmAlertmanager,
 		&extensionsobjold.ThirdPartyResource{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "alertmanager." + v1alpha1.Group,
+				Name: "alertmanager." + monitoringv1.Group,
 			},
 			Versions: []extensionsobjold.APIVersion{
-				{Name: v1alpha1.Version},
+				{Name: oldVersion},
 			},
 			Description: "Managed Alertmanager cluster",
 		},
@@ -327,7 +326,7 @@ func (m *Migrator) rollback(tprKind, tprName, configmapName string, tpr *extensi
 		}
 
 		if ms.crdCreated {
-			err := m.deleteCRD(tprName + "." + v1alpha1.Group)
+			err := m.deleteCRD(tprName + "." + monitoringv1.Group)
 			if err != nil {
 				return errors.Wrapf(err, "deleting the CRD registration for \"%s\"", tprKind)
 			}
@@ -359,7 +358,7 @@ func (m *Migrator) moveTPRDataToCM(tprName, configmapName string) error {
 		configmapName = configmapName + "-" + m.cmSuffix
 	}
 
-	req := m.restClient.Get().
+	req := m.restClientTPR.Get().
 		Namespace(api.NamespaceAll).
 		Resource(tprName).
 		FieldsSelectorParam(nil)
@@ -416,7 +415,8 @@ func (m *Migrator) restoreFromCM(tprKind, tprName, configmapName string) error {
 	}
 
 	for _, item := range us.Items {
-		item.SetResourceVersion("") // TODO(gouthamve): HACK?? Best practices
+		item.SetResourceVersion("")
+		item.SetAPIVersion(monitoringv1.Group + "/" + monitoringv1.Version)
 		// Namespace issues
 		resClient := m.dynClient.Resource(
 			&metav1.APIResource{
@@ -442,7 +442,7 @@ func (m *Migrator) deleteTPRData(tprKind, tprName string) error {
 	}
 
 	for _, ns := range nsList.Items {
-		resClient := m.dynClient.Resource(
+		resClient := m.dynClientTPR.Resource(
 			&metav1.APIResource{
 				Kind:       tprKind,
 				Name:       tprName,
