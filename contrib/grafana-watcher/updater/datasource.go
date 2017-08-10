@@ -64,7 +64,7 @@ func (u *GrafanaDatasourceUpdater) deleteAllDatasources() error {
 
 	log.Printf("Deleting %d datasources\n", len(datasources))
 	for _, d := range datasources {
-		log.Println("Deleting datasource:", d.Id)
+		log.Println("Deleting datasource:", d.Name)
 
 		err := u.client.Delete(d.Id)
 		if err != nil {
