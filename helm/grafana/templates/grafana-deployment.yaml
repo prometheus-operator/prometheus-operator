@@ -76,6 +76,10 @@ spec:
         volumeMounts:
           - name: grafana-dashboards
             mountPath: /var/grafana-dashboards
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+    {{ toYaml .Values.nodeSelector | indent 4 }}
+    {{- end }}
       volumes:
         - name: grafana-storage
           {{- if .Values.storageSpec }}
