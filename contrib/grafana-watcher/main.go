@@ -71,7 +71,7 @@ type options struct {
 
 type volumeWatcher struct {
 	watchDirs watchDirSet
-	handlers []updater.Updater
+	handlers  []updater.Updater
 }
 
 func newVolumeWatcher(watchDirs watchDirSet) *volumeWatcher {
@@ -94,6 +94,7 @@ func (w *volumeWatcher) Run() {
 	done := make(chan bool)
 	go func() {
 		var handlersToRetry []updater.Updater
+		retryTicker := time.NewTicker(10 * time.Second)
 		for {
 			select {
 			case event := <-watcher.Events:
@@ -112,9 +113,15 @@ func (w *volumeWatcher) Run() {
 				}
 			case err := <-watcher.Errors:
 				log.Println("error:", err)
-			default:
-				// If there are no new events from the watcher (indicating a newer version)
-				// we retry any failed handler operations until a new event comes in
+			case <-retryTicker.C:
+				// Retry any operations that failed during the last update attempt
+				// New events seen by the watcher will clear the retry list, though
+				// it may take several cycles through the select statement before this happens.
+				// See: https://golang.org/ref/spec#Select_statements
+				if len(handlersToRetry) < 1 {
+					break
+				}
+				log.Printf("Retrying %v previously failed operations...", len(handlersToRetry))
 				var remainingHandlers []updater.Updater
 				for _, h := range handlersToRetry {
 					// Only retry if the watcher still cares about this handler; could have been removed
@@ -135,8 +142,6 @@ func (w *volumeWatcher) Run() {
 					}
 				}
 				handlersToRetry = remainingHandlers
-				// don't excessively spam retries
-				time.Sleep(5 * time.Second)
 			}
 		}
 	}()
@@ -201,7 +206,6 @@ func main() {
 	g := grafana.New(gUrl)
 
 	for {
-		log.Println("Waiting for Grafana to be available.")
 		_, err := g.Datasources().All()
 		if err == nil {
 			break
