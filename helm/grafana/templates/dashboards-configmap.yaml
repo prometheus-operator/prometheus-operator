@@ -20,6 +20,6 @@ data:
       "basicAuth": false,
       "name": "prometheus",
       "type": "prometheus",
-      "url": "http://{{ printf "%s-%s" .Release.Name "prometheus" }}:9090"
+      "url": "http://{{ required "A valid .Values.prometheus.serviceURL entry required!" .Values.prometheus.serviceURL}}:9090"
     }
   {{- end }}

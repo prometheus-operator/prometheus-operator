@@ -43,6 +43,7 @@ Parameter | Description | Default
 `ingress.fqdn` | Grafana Ingress fully-qualified domain name | `""`
 `ingress.tls` | TLS configuration for Grafana Ingress | `[]`
 `nodeSelector` | Node labels for pod assignment | `{}`
+`prometheus.serviceURL`| Prometheus service  url. Ex. prometheus-v01.namespace.svc.cluster.local| `{}`
 `resources` | Pod resource requests & limits | `{}`
 `service.annotations` | Annotations to be added to the Grafana Service | `{}`
 `service.clusterIP` | Cluster-internal IP address for Grafana Service | `""`
