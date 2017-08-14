@@ -111,6 +111,10 @@ alertmanager:
   #       storage: 2Gi
   #   selector: {}
 
+## If true, create & use RBAC resources
+##
+rbacEnable: true
+
 prometheus:
   ## Alertmanagers to which alerts will be sent
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#alertmanagerendpoints

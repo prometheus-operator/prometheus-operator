@@ -49,3 +49,6 @@ spec:
           timeoutSeconds: 30
         resources:
 {{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.rbacEnable }}
+      serviceAccountName: {{ template "fullname" . }}
+    {{- end }}
