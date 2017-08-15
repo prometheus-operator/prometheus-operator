@@ -24,13 +24,13 @@ import (
 
 type GrafanaDatasourceUpdater struct {
 	client grafana.DatasourcesInterface
-	glob   string
+	globs  []string
 }
 
-func NewGrafanaDatasourceUpdater(c grafana.DatasourcesInterface, g string) Updater {
+func NewGrafanaDatasourceUpdater(c grafana.DatasourcesInterface, g []string) Updater {
 	return &GrafanaDatasourceUpdater{
 		client: c,
-		glob:   g,
+		globs:  g,
 	}
 }
 
@@ -64,7 +64,7 @@ func (u *GrafanaDatasourceUpdater) deleteAllDatasources() error {
 
 	log.Printf("Deleting %d datasources\n", len(datasources))
 	for _, d := range datasources {
-		log.Println("Deleting datasource:", d.Id)
+		log.Println("Deleting datasource:", d.Name)
 
 		err := u.client.Delete(d.Id)
 		if err != nil {
@@ -76,15 +76,17 @@ func (u *GrafanaDatasourceUpdater) deleteAllDatasources() error {
 }
 
 func (u *GrafanaDatasourceUpdater) createDatasourcesFromFiles() error {
-	filePaths, err := filepath.Glob(u.glob)
-	if err != nil {
-		return err
-	}
-
-	for _, fp := range filePaths {
-		err = u.createDatasourceFromFile(fp)
+	for _, glob := range u.globs {
+		filePaths, err := filepath.Glob(filepath.Join(glob, "*-datasource.json"))
 		if err != nil {
 			return err
+		}
+
+		for _, fp := range filePaths {
+			err = u.createDatasourceFromFile(fp)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

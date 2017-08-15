@@ -29,13 +29,13 @@ type Updater interface {
 
 type GrafanaDashboardUpdater struct {
 	client grafana.DashboardsInterface
-	glob   string
+	globs  []string
 }
 
-func NewGrafanaDashboardUpdater(c grafana.DashboardsInterface, g string) Updater {
+func NewGrafanaDashboardUpdater(c grafana.DashboardsInterface, g []string) Updater {
 	return &GrafanaDashboardUpdater{
 		client: c,
-		glob:   g,
+		globs:  g,
 	}
 }
 
@@ -81,15 +81,17 @@ func (u *GrafanaDashboardUpdater) deleteAllDashboards() error {
 }
 
 func (u *GrafanaDashboardUpdater) createDashboardsFromFiles() error {
-	filePaths, err := filepath.Glob(u.glob)
-	if err != nil {
-		return err
-	}
-
-	for _, fp := range filePaths {
-		u.createDashboardFromFile(fp)
+	for _, glob := range u.globs {
+		filePaths, err := filepath.Glob(filepath.Join(glob, "*-dashboard.json"))
 		if err != nil {
 			return err
+		}
+
+		for _, fp := range filePaths {
+			u.createDashboardFromFile(fp)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
