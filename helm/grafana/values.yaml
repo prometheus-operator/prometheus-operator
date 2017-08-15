@@ -38,6 +38,12 @@ service:
   ##
   type: ClusterIP
 
+## Prometheus
+##
+prometheus:
+  # Prometheus service URL. Ex. prometheus-v01.namespace.svc.cluster.local
+  serviceURL: ""
+  
 ## Grafana Docker image
 ##
 image:
