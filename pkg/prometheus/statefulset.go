@@ -277,6 +277,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 	}
 
 	var promArgs []string
+	var securityContext v1.PodSecurityContext
 
 	switch version.Major {
 	case 1:
@@ -311,6 +312,8 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 				"-storage.local.target-heap-size="+fmt.Sprintf("%d", reqMem.Value()/3*2),
 			)
 		}
+
+		securityContext = v1.PodSecurityContext{}
 	case 2:
 
 		// Prometheus 2.0 is in alpha and is highly experimental, and therefore
@@ -327,6 +330,15 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 			"-storage.tsdb.path=/var/prometheus/data",
 			"-storage.tsdb.retention="+p.Spec.Retention,
 		)
+
+		gid := int64(2000)
+		uid := int64(1000)
+		nr := true
+		securityContext = v1.PodSecurityContext{
+			FSGroup: &gid,
+			RunAsNonRoot: &nr,
+			RunAsUser: &uid,
+		}
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
@@ -427,15 +439,6 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 			Path: path.Clean(webRoutePrefix + "/status"),
 			Port: intstr.FromString("web"),
 		},
-	}
-
-	gid := int64(2000)
-	uid := int64(1000)
-	nr := true
-	securityContext := v1.PodSecurityContext{
-		FSGroup: &gid,
-		RunAsNonRoot: &nr,
-		RunAsUser: &uid,
 	}
 
 	return &v1beta1.StatefulSetSpec{
