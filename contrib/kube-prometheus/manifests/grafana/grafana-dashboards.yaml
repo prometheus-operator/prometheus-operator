@@ -3425,3 +3425,4 @@ data:
         "type": "prometheus",
         "url": "http://prometheus-k8s.monitoring.svc:9090"
     }
+---
