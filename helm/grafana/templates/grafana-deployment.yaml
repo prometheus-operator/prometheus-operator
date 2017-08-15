@@ -51,7 +51,7 @@ spec:
             memory: 200Mi
             cpu: 200m
       - name: grafana-watcher
-        image: quay.io/coreos/grafana-watcher:v0.0.6
+        image: quay.io/coreos/grafana-watcher:v0.0.7
         args:
           - '--watch-dir=/var/grafana-dashboards'
           - '--grafana-url=http://localhost:3000'
@@ -76,6 +76,10 @@ spec:
         volumeMounts:
           - name: grafana-dashboards
             mountPath: /var/grafana-dashboards
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+    {{ toYaml .Values.nodeSelector | indent 4 }}
+    {{- end }}
       volumes:
         - name: grafana-storage
           {{- if .Values.storageSpec }}

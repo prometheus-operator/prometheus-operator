@@ -8,7 +8,9 @@ metadata:
     release: "{{ .Release.Name }}"
   name: {{ template "grafana.server.fullname" . }}
 data:
+  {{- if .Values.serverDashboardFiles }}
 {{ toYaml .Values.serverDashboardFiles | indent 2 }}
+  {{- end }}
   {{- if .Values.dataSource }}
 {{ toYaml .Values.dataSource | indent 2 }}
   {{- else }}

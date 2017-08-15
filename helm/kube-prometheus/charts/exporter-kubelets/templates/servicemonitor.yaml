@@ -27,3 +27,7 @@ spec:
       # for the kubelet on API server nodes fail.
       insecureSkipVerify: true
     bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+  - port: cadvisor
+    interval: 30s
+    honorLabels: true
+        

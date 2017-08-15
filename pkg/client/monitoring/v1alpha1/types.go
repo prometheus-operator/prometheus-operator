@@ -181,7 +181,7 @@ type ServiceMonitorSpec struct {
 	// The label to use to retrieve the job name from.
 	JobLabel string `json:"jobLabel,omitempty"`
 	// A list of endpoints allowed as part of this ServiceMonitor.
-	Endpoints []Endpoint `json:"endpoints,omitempty"`
+	Endpoints []Endpoint `json:"endpoints"`
 	// Selector to select Endpoints objects.
 	Selector metav1.LabelSelector `json:"selector"`
 	// Selector to select which namespaces the Endpoints objects are discovered from.
@@ -200,6 +200,8 @@ type Endpoint struct {
 	Scheme string `json:"scheme,omitempty"`
 	// Interval at which metrics should be scraped
 	Interval string `json:"interval,omitempty"`
+	// Timeout after which the scrape is ended
+	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// File to read bearer token for scraping targets.

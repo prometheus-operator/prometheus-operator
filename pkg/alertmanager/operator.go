@@ -71,6 +71,7 @@ type Config struct {
 	Host                         string
 	ConfigReloaderImage          string
 	AlertmanagerDefaultBaseImage string
+	StatefulSetUpdatesAvailable  bool
 }
 
 // New creates a new controller.
@@ -149,6 +150,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 
 		mv, err := k8sutil.GetMinorVersion(c.kclient.Discovery())
 		if mv < 7 {
+			c.config.StatefulSetUpdatesAvailable = false
 			if err := c.createTPRs(); err != nil {
 				errChan <- errors.Wrap(err, "creating TPRs failed")
 				return
@@ -158,6 +160,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 			return
 		}
 
+		c.config.StatefulSetUpdatesAvailable = true
 		if err := c.createCRDs(); err != nil {
 			errChan <- err
 			return
@@ -431,8 +434,12 @@ func ListOptions(name string) metav1.ListOptions {
 // It kills pods with the wrong version one-after-one and lets the StatefulSet controller
 // create new pods.
 //
-// TODO(fabxc): remove this once the StatefulSet controller learns how to do rolling updates.
+// TODO(brancz): remove this once the 1.6 support is removed.
 func (c *Operator) syncVersion(a *v1alpha1.Alertmanager) error {
+	if c.config.StatefulSetUpdatesAvailable {
+		return nil
+	}
+
 	status, oldPods, err := AlertmanagerStatus(c.kclient, a)
 	if err != nil {
 		return errors.Wrap(err, "retrieving Alertmanager status failed")
