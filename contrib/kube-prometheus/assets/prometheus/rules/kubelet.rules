@@ -1,5 +1,5 @@
 ALERT K8SNodeNotReady
-  IF kube_node_status_ready{condition="true"} == 0
+  IF kube_node_status_condition{condition="Ready", status="true"} == 0
   FOR 1h
   LABELS {
     severity = "warning",
@@ -11,12 +11,12 @@ ALERT K8SNodeNotReady
 
 ALERT K8SManyNodesNotReady
   IF
-    count(kube_node_status_ready{condition="true"} == 0) > 1
+    count(kube_node_status_condition{condition="Ready", status="true"} == 0) > 1
     AND
       (
-        count(kube_node_status_ready{condition="true"} == 0)
+        count(kube_node_status_condition{condition="Ready", status="true"} == 0)
       /
-        count(kube_node_status_ready{condition="true"})
+        count(kube_node_status_condition{condition="Ready", status="true"})
       ) > 0.2
   FOR 1m
   LABELS {

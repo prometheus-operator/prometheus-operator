@@ -328,7 +328,7 @@ data:
       }
   kubelet.rules: |+
     ALERT K8SNodeNotReady
-      IF kube_node_status_ready{condition="true"} == 0
+      IF kube_node_status_condition{condition="Ready", status="true"} == 0
       FOR 1h
       LABELS {
         severity = "warning",
@@ -340,12 +340,12 @@ data:
     
     ALERT K8SManyNodesNotReady
       IF
-        count(kube_node_status_ready{condition="true"} == 0) > 1
+        count(kube_node_status_condition{condition="Ready", status="true"} == 0) > 1
         AND
           (
-            count(kube_node_status_ready{condition="true"} == 0)
+            count(kube_node_status_condition{condition="Ready", status="true"} == 0)
           /
-            count(kube_node_status_ready{condition="true"})
+            count(kube_node_status_condition{condition="Ready", status="true"})
           ) > 0.2
       FOR 1m
       LABELS {
@@ -583,7 +583,7 @@ data:
         description = "Prometheus could not scrape a node-exporter for more than 10m, or node-exporters have disappeared from discovery.",
       }
     ALERT K8SNodeOutOfDisk
-      IF kube_node_status_out_of_disk{condition="true"} == 1
+      IF kube_node_status_condition{condition="OutOfDisk",status="true"} == 1
       LABELS {
         service = "k8s",
         severity = "critical"
@@ -594,7 +594,7 @@ data:
       }
      
     ALERT K8SNodeMemoryPressure
-      IF kube_node_status_memory_pressure{condition="true"} == 1
+      IF kube_node_status_condition{condition="MemoryPressure", status="true"} == 1
       LABELS {
         service = "k8s",
         severity = "warning"
@@ -605,7 +605,7 @@ data:
       }
      
     ALERT K8SNodeDiskPressure
-      IF kube_node_status_disk_pressure{condition="true"} == 1
+      IF kube_node_status_condition{condition="DiskPressure", status="true"} == 1
       LABELS {
         service = "k8s",
         severity = "warning"

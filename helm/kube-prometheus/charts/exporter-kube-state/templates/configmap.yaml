@@ -13,7 +13,7 @@ data:
     # NOTE: These rules were kindly contributed by the SoundCloud engineering team.
 
     ALERT K8SNodeNotReady
-      IF kube_node_status_ready{condition="true"} == 0
+      IF kube_node_status_condition{condition="Ready", status="true"} == 0
       FOR 1h
       LABELS {
         service = "k8s",
@@ -26,12 +26,12 @@ data:
 
     ALERT K8SManyNodesNotReady
       IF
-        count by (cluster) (kube_node_status_ready{condition="true"} == 0) > 1
+        count by (cluster) (kube_node_status_condition{condition="Ready", status="true"} == 0) > 1
         AND
           (
-            count by (cluster) (kube_node_status_ready{condition="true"} == 0)
+            count by (cluster) (kube_node_status_condition{condition="Ready", status="true"} == 0)
           /
-            count by (cluster) (kube_node_status_ready{condition="true"})
+            count by (cluster) (kube_node_status_condition{condition="Ready", status="true"})
           ) > 0.2
       FOR 1m
       LABELS {
