@@ -96,6 +96,12 @@ rules:
   specifiedInValues: true
   value: {}
 
+## List of Secrets in the same namespace as the Prometheus
+## object, which shall be mounted into the Prometheus Pods.
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+##
+secrets: {}
+
 service:
   ## Annotations to be added to the Service
   ##
