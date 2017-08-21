@@ -20,10 +20,12 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"strconv"
+	"syscall"
 	"time"
 
 	fsnotify "gopkg.in/fsnotify.v1"
@@ -185,17 +187,21 @@ func (w *volumeWatcher) writeConfigMapFile(filename, content string) error {
 }
 
 func (w *volumeWatcher) ReloadPrometheus() error {
-	req, err := http.NewRequest("POST", w.cfg.reloadUrl, nil)
+	cmd := exec.Command("/bin/sh", "-c", "ps cax | grep '/bin/prometheus ' | grep -v grep | grep -o '^[ ]*[0-9]*'")
+	res, err := cmd.Output()
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req)
+
+	pid, err := strconv.Atoi(strings.TrimSpace(string(res)))
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Received response code %s, expected 200", resp.StatusCode)
+
+	err = syscall.Kill(pid, syscall.SIGHUP)
+	if err != nil {
+		w.logger.Log("msg", "Error sending SIGHUP to process", "err", err, "pid", pid)
+		return err
 	}
 	return nil
 }
