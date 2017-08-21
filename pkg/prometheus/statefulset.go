@@ -327,13 +327,6 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 			"-storage.tsdb.path=/var/prometheus/data",
 			"-storage.tsdb.retention="+p.Spec.Retention,
 		)
-
-		if len(version.Pre) > 0 && version.Pre[0].VersionStr == "alpha" {
-			break
-		}
-		promArgs = append(promArgs,
-			"-web.enable-lifecycle",
-		)
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
