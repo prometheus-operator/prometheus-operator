@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,39 +23,40 @@ import (
 )
 
 const (
-	Group   = "monitoring.coreos.com"
-	Version = "v1alpha1"
+	Group = "monitoring.coreos.com"
 )
 
-type MonitoringV1alpha1Interface interface {
+var Version = "v1"
+
+type MonitoringV1Interface interface {
 	RESTClient() rest.Interface
 	PrometheusesGetter
 	AlertmanagersGetter
 	ServiceMonitorsGetter
 }
 
-type MonitoringV1alpha1Client struct {
+type MonitoringV1Client struct {
 	restClient    rest.Interface
 	dynamicClient *dynamic.Client
 }
 
-func (c *MonitoringV1alpha1Client) Prometheuses(namespace string) PrometheusInterface {
+func (c *MonitoringV1Client) Prometheuses(namespace string) PrometheusInterface {
 	return newPrometheuses(c.restClient, c.dynamicClient, namespace)
 }
 
-func (c *MonitoringV1alpha1Client) Alertmanagers(namespace string) AlertmanagerInterface {
+func (c *MonitoringV1Client) Alertmanagers(namespace string) AlertmanagerInterface {
 	return newAlertmanagers(c.restClient, c.dynamicClient, namespace)
 }
 
-func (c *MonitoringV1alpha1Client) ServiceMonitors(namespace string) ServiceMonitorInterface {
+func (c *MonitoringV1Client) ServiceMonitors(namespace string) ServiceMonitorInterface {
 	return newServiceMonitors(c.restClient, c.dynamicClient, namespace)
 }
 
-func (c *MonitoringV1alpha1Client) RESTClient() rest.Interface {
+func (c *MonitoringV1Client) RESTClient() rest.Interface {
 	return c.restClient
 }
 
-func NewForConfig(c *rest.Config) (*MonitoringV1alpha1Client, error) {
+func NewForConfig(c *rest.Config) (*MonitoringV1Client, error) {
 	config := *c
 	SetConfigDefaults(&config)
 	client, err := rest.RESTClientFor(&config)
@@ -68,7 +69,7 @@ func NewForConfig(c *rest.Config) (*MonitoringV1alpha1Client, error) {
 		return nil, err
 	}
 
-	return &MonitoringV1alpha1Client{client, dynamicClient}, nil
+	return &MonitoringV1Client{client, dynamicClient}, nil
 }
 
 func SetConfigDefaults(config *rest.Config) {

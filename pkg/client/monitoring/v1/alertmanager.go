@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1
 
 import (
 	"encoding/json"
@@ -145,6 +145,7 @@ func (a *alertmanagers) Watch(opts metav1.ListOptions) (watch.Interface, error) 
 		dec:   json.NewDecoder(r),
 		close: r.Close,
 	}), nil
+
 }
 
 func (a *alertmanagers) DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error {
