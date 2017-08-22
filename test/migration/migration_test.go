@@ -1,18 +1,29 @@
 package migration
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"testing"
+	"time"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/coreos/prometheus-operator/pkg/alertmanager"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1alpha1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	operatorFramework "github.com/coreos/prometheus-operator/test/framework"
+	"github.com/pkg/errors"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	crdc "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -54,15 +65,36 @@ func TestMigration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	mclientV1alpha1, err := monitoringv1alpha1.NewForConfig(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	tprClient := kclient.ExtensionsV1beta1().ThirdPartyResources()
 	crdClient := extClient.ApiextensionsV1beta1().CustomResourceDefinitions()
 
 	if framework, err = operatorFramework.New(
 		*ns,
 		*kubeconfig,
-		"quay.io/coreos/prometheus-operator:v0.10.2",
+		"quay.io/coreos/prometheus-operator:v0.11.1",
 	); err != nil {
 		log.Printf("failed to setup framework: %v\n", err)
+		t.Fatal(err)
+	}
+
+	err = k8sutil.WaitForCRDReady(mclientV1alpha1.Prometheuses(api.NamespaceAll).List)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = k8sutil.WaitForCRDReady(mclientV1alpha1.ServiceMonitors(api.NamespaceAll).List)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = k8sutil.WaitForCRDReady(mclientV1alpha1.Alertmanagers(api.NamespaceAll).List)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -75,39 +107,56 @@ func TestMigration(t *testing.T) {
 	name := "test"
 	group := "tpr-migration-test"
 
-	prometheusTPR := framework.MakeBasicPrometheus(ns2, name, name, 1)
-	prometheusTPR.Namespace = ns2
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns2, prometheusTPR); err != nil {
-		t.Fatal(err)
+	p := framework.MakeBasicPrometheusV1alpha1(ns2, name, name, 1)
+	if _, err := mclientV1alpha1.Prometheuses(ns2).Create(p); err != nil {
+		t.Fatal("Creating Prometheus failed: ", err)
 	}
 
-	s := framework.MakeBasicServiceMonitor(group)
-	if _, err := framework.MonClient.ServiceMonitors(ns2).Create(s); err != nil {
+	if err := operatorFramework.WaitForPodsReady(kclient, ns2, time.Minute*3, 1, prometheus.ListOptions(p.Name)); err != nil {
+		t.Fatal("Waiting for Prometheus pods to be ready failed: ", err)
+	}
+
+	if _, err := mclientV1alpha1.ServiceMonitors(ns2).Create(framework.MakeBasicServiceMonitorV1alpha1(group)); err != nil {
 		t.Fatal("Creating ServiceMonitor failed: ", err)
 	}
 
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns2, framework.MakeBasicAlertmanager(name, 3)); err != nil {
-		t.Fatal(err)
+	a := framework.MakeBasicAlertmanagerV1alpha1(name, 3)
+	if _, err := mclientV1alpha1.Alertmanagers(ns2).Create(a); err != nil {
+		t.Fatal("Creating Alertmanager failed: ", err)
 	}
 
-	obj, err := framework.MonClient.Prometheuses(ns2).List(metav1.ListOptions{})
+	amConfigSecretName := fmt.Sprintf("alertmanager-%s", a.Name)
+	s, err := framework.AlertmanagerConfigSecret(amConfigSecretName)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, fmt.Sprintf("making alertmanager config secret %v failed", amConfigSecretName)))
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns2).Create(s)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, fmt.Sprintf("creating alertmanager config secret %v failed", s.Name)))
+	}
+
+	if err := operatorFramework.WaitForPodsReady(kclient, ns2, time.Minute*3, 3, alertmanager.ListOptions(a.Name)); err != nil {
+		t.Fatal("Waiting for Alertmanager pods to be ready failed: ", err)
+	}
+
+	obj, err := mclientV1alpha1.Prometheuses(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	proms := obj.(*v1alpha1.PrometheusList)
+	proms := obj.(*monitoringv1alpha1.PrometheusList)
 
 	// Get the objects.
-	obj, err = framework.MonClient.Alertmanagers(ns2).List(metav1.ListOptions{})
+	obj, err = mclientV1alpha1.Alertmanagers(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	ams := obj.(*v1alpha1.AlertmanagerList)
+	ams := obj.(*monitoringv1alpha1.AlertmanagerList)
 
-	obj, err = framework.MonClient.ServiceMonitors(ns2).List(metav1.ListOptions{})
+	obj, err = mclientV1alpha1.ServiceMonitors(ns2).List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	sms := obj.(*v1alpha1.ServiceMonitorList)
+	sms := obj.(*monitoringv1alpha1.ServiceMonitorList)
 
 	// Delete and launch new operator.
 	if err := operatorFramework.DeleteDeployment(
@@ -131,71 +180,164 @@ func TestMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Check if TPRs are deleted.
-	tprList, err := tprClient.List(metav1.ListOptions{})
+	err = wait.Poll(time.Second*20, time.Minute*10, func() (bool, error) {
+		return checkMigrationDone(ns2, framework, tprClient, crdClient, proms, sms, ams)
+	})
 	if err != nil {
-		t.Fatal(err)
+		log.Println("Waiting for the migration to succeed failed: ", err)
+		t.Fail()
 	}
-	if len(tprList.Items) != 0 {
-		t.Fatalf("expected 0 TPRs got %d", len(tprList.Items))
+
+	if err := framework.Teardown(); err != nil {
+		log.Println("Framework teardown failed: ", err)
+		t.Fail()
+	}
+}
+
+func checkMigrationDone(ns2 string, framework *operatorFramework.Framework, tprClient v1beta1.ThirdPartyResourceInterface, crdClient crdc.CustomResourceDefinitionInterface, proms *monitoringv1alpha1.PrometheusList, sms *monitoringv1alpha1.ServiceMonitorList, ams *monitoringv1alpha1.AlertmanagerList) (bool, error) {
+	// Check if TPRs are deleted.
+	_, err := tprClient.Get(k8sutil.NewPrometheusTPRDefinition().Name, metav1.GetOptions{})
+	if err == nil {
+		fmt.Println("Expected Prometheus TPR definition to be deleted, but it still exists.")
+		return false, nil
+	}
+	if err != nil && !apierrors.IsNotFound(err) {
+		return false, err
+	}
+
+	_, err = tprClient.Get(k8sutil.NewAlertmanagerTPRDefinition().Name, metav1.GetOptions{})
+	if err == nil {
+		fmt.Println("Expected Alertmanager TPR definition to be deleted, but it still exists.")
+		return false, nil
+	}
+	if err != nil && !apierrors.IsNotFound(err) {
+		return false, err
+	}
+
+	_, err = tprClient.Get(k8sutil.NewServiceMonitorTPRDefinition().Name, metav1.GetOptions{})
+	if err == nil {
+		fmt.Println("Expected ServiceMonitor TPR definition to be deleted, but it still exists.")
+		return false, nil
+	}
+	if err != nil && !apierrors.IsNotFound(err) {
+		return false, err
 	}
 
 	// Check if CRDs are created.
-	crdList, err := crdClient.List(metav1.ListOptions{})
-	if err != nil {
-		t.Fatal(err)
+	_, err = crdClient.Get(k8sutil.NewPrometheusCustomResourceDefinition().Name, metav1.GetOptions{})
+	if err != nil && apierrors.IsNotFound(err) {
+		fmt.Println("Expected Prometheus CRD definition to be created, but it does not exists.")
+		return false, nil
 	}
-	if len(crdList.Items) != 3 {
-		t.Fatalf("expected 3 CRDs got %d", len(crdList.Items))
+	if err != nil {
+		return false, err
+	}
+
+	_, err = crdClient.Get(k8sutil.NewAlertmanagerCustomResourceDefinition().Name, metav1.GetOptions{})
+	if err != nil && apierrors.IsNotFound(err) {
+		fmt.Println("Expected Alertmanager CRD definition to be created, but it does not exists.")
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	_, err = crdClient.Get(k8sutil.NewServiceMonitorCustomResourceDefinition().Name, metav1.GetOptions{})
+	if err != nil && apierrors.IsNotFound(err) {
+		fmt.Println("Expected ServiceMonitor CRD definition to be created, but it does not exists.")
+		return false, nil
+	}
+	if err != nil {
+		return false, err
 	}
 
 	// Compare old and new objects.
-	obj, err = framework.MonClient.Prometheuses(ns2).List(metav1.ListOptions{})
+	obj, err := framework.MonClient.Prometheuses(ns2).List(metav1.ListOptions{})
 	if err != nil {
-		t.Fatal(err)
+		fmt.Printf("failed to list prometheus objects: \n", err)
+		return false, nil
 	}
-	promsNew := obj.(*v1alpha1.PrometheusList)
+	promsNew := obj.(*monitoringv1.PrometheusList)
 	if len(promsNew.Items) != len(proms.Items) {
-		t.Fatalf("expected %d prometheuses, got %d", len(proms.Items), len(promsNew.Items))
+		fmt.Printf("expected %d prometheuses, got %d\n", len(proms.Items), len(promsNew.Items))
+		return false, nil
 	}
 
 	for i, prom := range proms.Items {
-		if !reflect.DeepEqual(prom.Spec, promsNew.Items[i].Spec) {
-			t.Fatalf("The prometheus object changed %d", i)
+		if promsNew.Items[i].GroupVersionKind().Version != monitoringv1.Version {
+			return false, fmt.Errorf("expected version %f got %f", monitoringv1.Version, promsNew.Items[i].GroupVersionKind().Version)
+		}
+
+		oldb, err := json.Marshal(prom.Spec)
+		if err != nil {
+			return false, err
+		}
+
+		newb, err := json.Marshal(promsNew.Items[i].Spec)
+		if err != nil {
+			return false, err
+		}
+
+		if string(oldb) != string(newb) {
+			return false, fmt.Errorf("The prometheus object changed %d", i)
 		}
 	}
 
 	obj, err = framework.MonClient.Alertmanagers(ns2).List(metav1.ListOptions{})
 	if err != nil {
-		t.Fatal(err)
+		return false, err
 	}
-	amsNew := obj.(*v1alpha1.AlertmanagerList)
+	amsNew := obj.(*monitoringv1.AlertmanagerList)
 	if len(amsNew.Items) != len(ams.Items) {
-		t.Fatalf("expected %d ams, got %d", len(ams.Items), len(amsNew.Items))
+		fmt.Printf("expected %d ams, got %d\n", len(ams.Items), len(amsNew.Items))
+		return false, nil
 	}
 
 	for i, am := range ams.Items {
-		if !reflect.DeepEqual(am.Spec, amsNew.Items[i].Spec) {
-			t.Fatalf("The alertmanager object changed %d", i)
+		if amsNew.Items[i].GroupVersionKind().Version != monitoringv1.Version {
+			return false, fmt.Errorf("expected version %f got %f", monitoringv1.Version, amsNew.Items[i].GroupVersionKind().Version)
+		}
+
+		oldb, err := json.Marshal(am.Spec)
+		if err != nil {
+			return false, err
+		}
+
+		newb, err := json.Marshal(amsNew.Items[i].Spec)
+		if err != nil {
+			return false, err
+		}
+
+		if string(oldb) != string(newb) {
+			fmt.Errorf("The alertmanager object changed %d", i)
 		}
 	}
 
 	obj, err = framework.MonClient.ServiceMonitors(ns2).List(metav1.ListOptions{})
 	if err != nil {
-		t.Fatal(err)
+		return false, err
 	}
-	smsNew := obj.(*v1alpha1.ServiceMonitorList)
+	smsNew := obj.(*monitoringv1.ServiceMonitorList)
 	if len(smsNew.Items) != len(sms.Items) {
-		t.Fatalf("expected %d ams, got %d", len(sms.Items), len(smsNew.Items))
+		fmt.Printf("expected %d ams, got %d\n", len(sms.Items), len(smsNew.Items))
+		return false, nil
 	}
 
 	for i, sm := range sms.Items {
-		if !reflect.DeepEqual(sm.Spec, smsNew.Items[i].Spec) {
-			t.Fatalf("The servicemonitor object changed %d", i)
+		oldb, err := json.Marshal(sm.Spec)
+		if err != nil {
+			return false, err
+		}
+
+		newb, err := json.Marshal(smsNew.Items[i].Spec)
+		if err != nil {
+			return false, err
+		}
+
+		if string(oldb) != string(newb) {
+			return false, fmt.Errorf("The servicemonitor object changed %d", i)
 		}
 	}
 
-	if err := framework.Teardown(); err != nil {
-		t.Fatal(err)
-	}
+	return true, nil
 }
