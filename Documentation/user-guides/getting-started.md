@@ -31,13 +31,13 @@ rules:
   resources:
   - thirdpartyresources
   verbs:
-  - "*" 
+  - "*"
 - apiGroups:
-  - apiextensions.k8s.io 
+  - apiextensions.k8s.io
   resources:
-  - customresourcedefinitions 
+  - customresourcedefinitions
   verbs:
-  - "*" 
+  - "*"
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -71,7 +71,7 @@ rules:
   verbs: ["list", "watch"]
 - apiGroups: [""]
   resources:
-  - namespaces 
+  - namespaces
   verbs: ["list"]
 ---
 apiVersion: v1
