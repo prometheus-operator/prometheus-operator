@@ -27,12 +27,42 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/pkg/api/v1"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/pkg/errors"
 )
 
-func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *v1alpha1.Prometheus {
+func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *monitoringv1.Prometheus {
+	return &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ns,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			Replicas: &replicas,
+			Version:  prometheus.DefaultVersion,
+			ServiceMonitorSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": group,
+				},
+			},
+			ServiceAccountName: "prometheus",
+			RuleSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"role": "rulefile",
+				},
+			},
+			Resources: v1.ResourceRequirements{
+				Requests: v1.ResourceList{
+					v1.ResourceMemory: resource.MustParse("400Mi"),
+				},
+			},
+		},
+	}
+}
+
+func (f *Framework) MakeBasicPrometheusV1alpha1(ns, name, group string, replicas int32) *v1alpha1.Prometheus {
 	return &v1alpha1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -61,10 +91,10 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 	}
 }
 
-func (f *Framework) AddAlertingToPrometheus(p *v1alpha1.Prometheus, ns, name string) {
-	p.Spec.Alerting = v1alpha1.AlertingSpec{
-		Alertmanagers: []v1alpha1.AlertmanagerEndpoints{
-			v1alpha1.AlertmanagerEndpoints{
+func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name string) {
+	p.Spec.Alerting = monitoringv1.AlertingSpec{
+		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+			monitoringv1.AlertmanagerEndpoints{
 				Namespace: ns,
 				Name:      fmt.Sprintf("alertmanager-%s", name),
 				Port:      intstr.FromString("web"),
@@ -73,7 +103,31 @@ func (f *Framework) AddAlertingToPrometheus(p *v1alpha1.Prometheus, ns, name str
 	}
 }
 
-func (f *Framework) MakeBasicServiceMonitor(name string) *v1alpha1.ServiceMonitor {
+func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMonitor {
+	return &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"group": name,
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": name,
+				},
+			},
+			Endpoints: []monitoringv1.Endpoint{
+				monitoringv1.Endpoint{
+					Port:     "web",
+					Interval: "30s",
+				},
+			},
+		},
+	}
+}
+
+func (f *Framework) MakeBasicServiceMonitorV1alpha1(name string) *v1alpha1.ServiceMonitor {
 	return &v1alpha1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
@@ -122,7 +176,7 @@ func (f *Framework) MakePrometheusService(name, group string, serviceType v1.Ser
 	return service
 }
 
-func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *v1alpha1.Prometheus) error {
+func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) error {
 	_, err := f.MonClient.Prometheuses(ns).Create(p)
 	if err != nil {
 		return err
@@ -135,7 +189,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *v1alpha1.Pro
 	return nil
 }
 
-func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *v1alpha1.Prometheus) error {
+func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) error {
 	_, err := f.MonClient.Prometheuses(ns).Update(p)
 	if err != nil {
 		return err
@@ -147,7 +201,7 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *v1alpha1.Pro
 	return nil
 }
 
-func (f *Framework) WaitForPrometheusReady(p *v1alpha1.Prometheus, timeout time.Duration) error {
+func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout time.Duration) error {
 	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
 		st, _, err := prometheus.PrometheusStatus(f.KubeClient, p)
 		if err != nil {
@@ -181,7 +235,7 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
 	return nil
 }
 
-func (f *Framework) WaitForPrometheusRunImageAndReady(ns string, p *v1alpha1.Prometheus) error {
+func (f *Framework) WaitForPrometheusRunImageAndReady(ns string, p *monitoringv1.Prometheus) error {
 	if err := WaitForPodsRunImage(f.KubeClient, ns, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
 		return err
 	}
