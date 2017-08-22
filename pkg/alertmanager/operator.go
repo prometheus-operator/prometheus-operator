@@ -113,7 +113,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		&v1alpha1.Alertmanager{}, resyncPeriod, cache.Indexers{},
 	)
 	o.ssetInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(o.kclient.Apps().RESTClient(), "statefulsets", api.NamespaceAll, nil),
+		cache.NewListWatchFromClient(o.kclient.AppsV1beta1().RESTClient(), "statefulsets", api.NamespaceAll, nil),
 		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
 
@@ -392,7 +392,7 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
-	ssetClient := c.kclient.Apps().StatefulSets(am.Namespace)
+	ssetClient := c.kclient.AppsV1beta1().StatefulSets(am.Namespace)
 	// Ensure we have a StatefulSet running Alertmanager deployed.
 	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(alertmanagerKeyToStatefulSetKey(key))
 	if err != nil {
@@ -482,7 +482,7 @@ func AlertmanagerStatus(kclient *kubernetes.Clientset, a *v1alpha1.Alertmanager)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.Apps().StatefulSets(a.Namespace).Get(statefulSetNameFromAlertmanagerName(a.Name), metav1.GetOptions{})
+	sset, err := kclient.AppsV1beta1().StatefulSets(a.Namespace).Get(statefulSetNameFromAlertmanagerName(a.Name), metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 	}
@@ -539,7 +539,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 	*sset.Spec.Replicas = 0
 
 	// Update the replica count to 0 and wait for all pods to be deleted.
-	ssetClient := c.kclient.Apps().StatefulSets(sset.Namespace)
+	ssetClient := c.kclient.AppsV1beta1().StatefulSets(sset.Namespace)
 
 	if _, err := ssetClient.Update(sset); err != nil {
 		return errors.Wrap(err, "updating statefulset for scale-down failed")
