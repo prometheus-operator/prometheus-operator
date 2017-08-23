@@ -310,6 +310,19 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 				"-storage.local.target-heap-size="+fmt.Sprintf("%d", reqMem.Value()/3*2),
 			)
 		}
+
+		if p.Spec.Log != nil {
+			if p.Spec.Log.Format != "" {
+				promArgs = append(promArgs,
+					"-log.format="+p.Spec.Log.Format,
+				)
+			}
+			if p.Spec.Log.Level != "" {
+				promArgs = append(promArgs,
+					"-log.level="+p.Spec.Log.Level,
+				)
+			}
+		}
 	case 2:
 
 		// Prometheus 2.0 is in alpha and is highly experimental, and therefore
@@ -327,6 +340,19 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 			"-storage.tsdb.retention="+p.Spec.Retention,
 			"-web.enable-lifecycle",
 		)
+
+		if p.Spec.Log != nil {
+			if p.Spec.Log.Format != "" {
+				promArgs = append(promArgs,
+					"-log.format="+p.Spec.Log.Format,
+				)
+			}
+			if p.Spec.Log.Level != "" {
+				promArgs = append(promArgs,
+					"-log.level="+p.Spec.Log.Level,
+				)
+			}
+		}
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}

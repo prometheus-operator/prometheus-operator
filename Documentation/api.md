@@ -98,6 +98,15 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
 
+## LogSpec
+
+LogSpec defines the configured log messages from the Prometheus logger.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| format | The log target and format. Example: \"logger:syslog?appname=bob&local=7\" or \"logger:stdout?json=true\" | string | true |
+| level | Only log messages with the given severity or above. Valid labels: [debug, info, warn, error, fatal] | string | true |
+
 ## NamespaceSelector
 
 A selector for selecting namespaces either selecting all namespaces or a list of namespaces.
@@ -140,6 +149,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | replicas | Number of instances to deploy for a Prometheus deployment. | *int32 | false |
 | retention | Time duration Prometheus shall retain data for. | string | false |
 | evaluationInterval | Interval between consecutive evaluations. | string | false |
+| log | The Prometheus logger format and level configuration. | *[LogSpec](#logspec) | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
