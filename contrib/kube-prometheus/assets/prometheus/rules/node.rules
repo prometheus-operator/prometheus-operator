@@ -9,7 +9,7 @@ ALERT NodeExporterDown
     description = "Prometheus could not scrape a node-exporter for more than 10m, or node-exporters have disappeared from discovery.",
   }
 ALERT K8SNodeOutOfDisk
-  IF kube_node_status_out_of_disk{condition="true"} == 1
+  IF kube_node_status_condition{condition"OutOfDisk", status="true"} == 1
   LABELS {
     service = "k8s",
     severity = "critical"
@@ -20,7 +20,7 @@ ALERT K8SNodeOutOfDisk
   }
  
 ALERT K8SNodeMemoryPressure
-  IF kube_node_status_memory_pressure{condition="true"} == 1
+  IF kube_node_status_condition{condition="MemoryPressure", status="true"} == 1
   LABELS {
     service = "k8s",
     severity = "warning"
@@ -31,7 +31,7 @@ ALERT K8SNodeMemoryPressure
   }
  
 ALERT K8SNodeDiskPressure
-  IF kube_node_status_disk_pressure{condition="true"} == 1
+  IF kube_node_status_condition{condition="DiskPressure", status="true"} == 1
   LABELS {
     service = "k8s",
     severity = "warning"
