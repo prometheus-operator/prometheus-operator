@@ -28,7 +28,7 @@ It is recommended to use volumes that have high I/O throughput therefore we're u
 The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource.
 
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   name: persisted
@@ -60,10 +60,10 @@ The easiest way to use a volume that cannot be automatically provisioned (for wh
 For example, using an NFS volume might be accomplished with the following specifications:
 
 ```yaml
-apiVersion: "monitoring.coreos.com/v1alpha1"
-kind: "Prometheus"
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
 metadata:
-  name: "my-example-prometheus-name"
+  name: my-example-prometheus-name
   labels:
     prometheus: example
 spec:
@@ -73,7 +73,7 @@ spec:
       spec:
         selector:
           matchLabels:
-            app: "my-example-prometheus"
+            app: my-example-prometheus
         resources:
           requests:
             storage: 50Gi
@@ -85,7 +85,7 @@ kind: PersistentVolume
 metadata:
   name: my-pv-name
   labels:
-    app: "my-example-prometheus"
+    app: my-example-prometheus
 spec:
   capacity:
     storage: 50Gi

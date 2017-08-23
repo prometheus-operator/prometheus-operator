@@ -36,7 +36,7 @@ This Service targets all pods with the label `k8s-app: kube-state-metrics`.
 ## Create a matching ServiceMonitor
 ### Generic `ServiceMonitor` example
 ```
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: k8s-apps-http

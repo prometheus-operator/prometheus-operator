@@ -16,7 +16,7 @@ Let's create an example Alertmanager cluster, with three instances.
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager-example.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: Alertmanager
 metadata:
   name: example
@@ -103,7 +103,7 @@ Now this is a fully functional highly available Alertmanager cluster, but it doe
 
 [embedmd]:# (../../example/user-guides/alerting/prometheus-example.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   name: example
