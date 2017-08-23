@@ -15,13 +15,15 @@
 package prometheus
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
-	"reflect"
-	"testing"
 )
 
 var (
@@ -49,6 +51,38 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	if !reflect.DeepEqual(labels, sset.Labels) || !reflect.DeepEqual(annotations, sset.Annotations) {
 		t.Fatal("Labels or Annotations are not properly being propagated to the StatefulSet")
+	}
+}
+
+func TestStatefulSetEnvGOMAXPROCS(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	limCPU := resource.MustParse("1500m")
+	expectGOMAXPROCS := "2"
+
+	sset, err := makeStatefulSet(v1alpha1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: v1alpha1.PrometheusSpec{
+			Resources: v1.ResourceRequirements{
+				Limits: v1.ResourceList{
+					v1.ResourceCPU: limCPU,
+				},
+			},
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+
+	require.NoError(t, err)
+	ssetEnv := sset.Spec.Template.Spec.Containers[0].Env
+	if ssetEnv[0].Name != "GOMAXPROCS" || expectGOMAXPROCS != ssetEnv[0].Value {
+		t.Fatal("Error setting GOMAXPROCS to from ResourceRequirements")
 	}
 }
 

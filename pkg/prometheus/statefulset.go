@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -359,6 +360,16 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 		}
 	}
 
+	var promEnv []v1.EnvVar
+	limCPU := p.Spec.Resources.Limits[v1.ResourceCPU]
+	if limCPU.Value() > 0 {
+		promEnv = append(promEnv,
+			v1.EnvVar{
+				Name:  "GOMAXPROCS",
+				Value: strconv.FormatInt(limCPU.Value(), 10),
+			})
+	}
+
 	localReloadURL := &url.URL{
 		Scheme: "http",
 		Host:   "localhost:9090",
@@ -467,6 +478,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 							},
 						},
 						Args:         promArgs,
+						Env:          promEnv,
 						VolumeMounts: promVolumeMounts,
 						LivenessProbe: &v1.Probe{
 							Handler: probeHandler,
