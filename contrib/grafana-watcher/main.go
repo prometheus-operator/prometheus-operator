@@ -71,7 +71,7 @@ type options struct {
 
 type volumeWatcher struct {
 	watchDirs watchDirSet
-	handlers []updater.Updater
+	handlers  []updater.Updater
 }
 
 func newVolumeWatcher(watchDirs watchDirSet) *volumeWatcher {
@@ -93,22 +93,55 @@ func (w *volumeWatcher) Run() {
 
 	done := make(chan bool)
 	go func() {
+		var handlersToRetry []updater.Updater
+		retryTicker := time.NewTicker(10 * time.Second)
 		for {
 			select {
 			case event := <-watcher.Events:
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					if filepath.Base(event.Name) == "..data" {
 						log.Println("ConfigMap modified")
+						handlersToRetry = []updater.Updater{}
 						for _, h := range w.handlers {
 							err := h.OnModify()
 							if err != nil {
 								log.Println("error:", err)
+								handlersToRetry = append(handlersToRetry, h)
 							}
 						}
 					}
 				}
 			case err := <-watcher.Errors:
 				log.Println("error:", err)
+			case <-retryTicker.C:
+				// Retry any operations that failed during the last update attempt
+				// New events seen by the watcher will clear the retry list, though
+				// it may take several cycles through the select statement before this happens.
+				// See: https://golang.org/ref/spec#Select_statements
+				if len(handlersToRetry) < 1 {
+					break
+				}
+				log.Printf("Retrying %v previously failed operations...", len(handlersToRetry))
+				var remainingHandlers []updater.Updater
+				for _, h := range handlersToRetry {
+					// Only retry if the watcher still cares about this handler; could have been removed
+					found := false
+					for _, h2 := range w.handlers {
+						if h == h2 {
+							found = true
+							break
+						}
+					}
+					if !found {
+						continue
+					}
+
+					if err := h.OnModify(); err != nil {
+						log.Println("error during retry attempt:", err)
+						remainingHandlers = append(remainingHandlers, h)
+					}
+				}
+				handlersToRetry = remainingHandlers
 			}
 		}
 	}()
@@ -173,7 +206,6 @@ func main() {
 	g := grafana.New(gUrl)
 
 	for {
-		log.Println("Waiting for Grafana to be available.")
 		_, err := g.Datasources().All()
 		if err == nil {
 			break
