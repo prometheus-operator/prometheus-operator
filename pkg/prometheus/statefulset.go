@@ -65,7 +65,6 @@ var (
 		"v1.6.3",
 		"v1.7.0",
 		"v1.7.1",
-		"v2.0.0-alpha.3",
 		"v2.0.0-beta.0",
 	}
 )
@@ -326,6 +325,7 @@ func makeStatefulSetSpec(p v1alpha1.Prometheus, c *Config, ruleConfigMaps []*v1.
 			"-config.file=/etc/prometheus/config/prometheus.yaml",
 			"-storage.tsdb.path=/var/prometheus/data",
 			"-storage.tsdb.retention="+p.Spec.Retention,
+			"-web.enable-lifecycle",
 		)
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
