@@ -127,7 +127,7 @@ func (f *Framework) recordOperatorLogs() error {
 		return fmt.Errorf("1 Prometheus Operator Pod expected, but found %d", len(list.Items))
 	}
 
-	r, err := f.KubeClient.CoreV1().Pods(f.Namespace.Name).GetLogs(list.Items[0].Name, &v1.PodLogOptions{}).Stream()
+	r, err := f.KubeClient.CoreV1().Pods(f.Namespace.Name).GetLogs(list.Items[0].Name, &v1.PodLogOptions{Follow: true}).Stream()
 	if err != nil {
 		return err
 	}
