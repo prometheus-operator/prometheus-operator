@@ -251,7 +251,7 @@ Once all the steps in the previous section have been taken there should be `Endp
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   name: k8s
@@ -288,7 +288,7 @@ The expression to match for selecting `ServiceMonitor`s here is that they must h
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-apiserver.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kube-apiserver
@@ -315,7 +315,7 @@ spec:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kubelet.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kubelet
@@ -339,7 +339,7 @@ spec:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kube-controller-manager.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kube-controller-manager
@@ -360,7 +360,7 @@ spec:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kube-scheduler.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kube-scheduler
@@ -381,7 +381,7 @@ spec:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kube-state-metrics.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kube-state-metrics
@@ -403,7 +403,7 @@ spec:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-node-exporter.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: node-exporter
@@ -426,12 +426,12 @@ And the Alertmanager:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/alertmanager/alertmanager.yaml)
 ```yaml
-apiVersion: "monitoring.coreos.com/v1alpha1"
-kind: "Alertmanager"
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
 metadata:
-  name: "main"
+  name: main
   labels:
-    alertmanager: "main"
+    alertmanager: main
 spec:
   replicas: 3
   version: v0.7.1

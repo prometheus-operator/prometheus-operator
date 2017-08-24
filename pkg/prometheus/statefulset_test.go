@@ -15,13 +15,14 @@
 package prometheus
 
 import (
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"reflect"
+	"testing"
+
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
-	"reflect"
-	"testing"
 )
 
 var (
@@ -38,7 +39,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	sset, err := makeStatefulSet(v1alpha1.Prometheus{
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -72,13 +73,13 @@ func TestStatefulSetPVC(t *testing.T) {
 		},
 	}
 
-	sset, err := makeStatefulSet(v1alpha1.Prometheus{
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
 		},
-		Spec: v1alpha1.PrometheusSpec{
-			Storage: &v1alpha1.StorageSpec{
+		Spec: monitoringv1.PrometheusSpec{
+			Storage: &monitoringv1.StorageSpec{
 				VolumeClaimTemplate: pvc,
 			},
 		},
@@ -159,8 +160,8 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		},
 	}
 
-	sset, err := makeStatefulSet(v1alpha1.Prometheus{
-		Spec: v1alpha1.PrometheusSpec{
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
 			Secrets: []string{
 				"test-secret1",
 			},
@@ -241,8 +242,8 @@ func TestStatefulSetVolumeSkip(t *testing.T) {
 		},
 	}
 
-	sset, err := makeStatefulSet(v1alpha1.Prometheus{
-		Spec: v1alpha1.PrometheusSpec{
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
 			Secrets: []string{
 				"test-secret1",
 				"test-secret2",

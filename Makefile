@@ -54,7 +54,7 @@ po-docgen:
 
 docs: embedmd po-docgen
 	$(GOPATH)/bin/embedmd -w `find Documentation -name "*.md"`
-	$(GOPATH)/bin/po-docgen api pkg/client/monitoring/v1alpha1/types.go > Documentation/api.md
+	$(GOPATH)/bin/po-docgen api pkg/client/monitoring/v1/types.go > Documentation/api.md
 	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
 generate: jsonnet-docker

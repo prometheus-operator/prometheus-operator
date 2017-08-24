@@ -1,9 +1,9 @@
-apiVersion: "monitoring.coreos.com/v1alpha1"
-kind: "Prometheus"
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
 metadata:
   name: prometheus
   labels:
-    prometheus: "prometheus"
+    prometheus: prometheus
 spec:
   replicas: 2
   version: v1.5.2

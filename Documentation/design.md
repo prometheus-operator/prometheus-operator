@@ -1,8 +1,8 @@
 # Design
 
-This document describes the design and interaction between the third party resources that the Prometheus Operator introduces.
+This document describes the design and interaction between the custom resource definitions that the Prometheus Operator introduces.
 
-The third party resources that the Prometheus Operator introduces are:
+The custom resources that the Prometheus Operator introduces are:
 
 * `Prometheus`
 * `ServiceMonitor`
@@ -10,7 +10,7 @@ The third party resources that the Prometheus Operator introduces are:
 
 ## Prometheus
 
-The `Prometheus` third party resource (TPR) declaratively defines a desired Prometheus setup to run in a Kubernetes cluster. It provides options to configure replication, persistent storage, and Alertmanagers to which the deployed Prometheus instances send alerts to.
+The `Prometheus` custom resource definition (CRD) declaratively defines a desired Prometheus setup to run in a Kubernetes cluster. It provides options to configure replication, persistent storage, and Alertmanagers to which the deployed Prometheus instances send alerts to.
 
 For each `Prometheus` TPR, the Operator deploys a properly configured `StatefulSet` in the same namespace. The Prometheus `Pod`s are configured to mount a `Secret` called `<prometheus-name>` containing the configuration for Prometheus.
 
@@ -20,7 +20,7 @@ If no selection of `ServiceMonitor`s is provided, the Operator leaves management
 
 ## ServiceMonitor
 
-The `ServiceMonitor` third party resource (TPR) allows to declaratively define how a dynamic set of services should be monitored. Which services are selected to be monitored with the desired configuration is defined using label selections. This allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new services are automatically discovered, without the need to reconfigure the system.
+The `ServiceMonitor` custom resource definition (CRD) allows to declaratively define how a dynamic set of services should be monitored. Which services are selected to be monitored with the desired configuration is defined using label selections. This allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new services are automatically discovered, without the need to reconfigure the system.
 
 For Prometheus to monitor any application within Kubernetes an `Endpoints` object needs to exist. `Endpoints` objects are essentially lists of IP addresses. Typically an `Endpoints` object is populated by a `Service` object. A `Service` object discovers `Pod`s by a label selector and adds those to the `Endpoints` object.
 
@@ -36,7 +36,7 @@ While `ServiceMonitor`s must live in the same namespace as the `Prometheus` TPR,
 
 ## Alertmanager
 
-The `Alertmanager` third party resource (TPR) declaratively defines a desired Alertmanager setup to run in a Kubernetes cluster. It provides options to configure replication and persistent storage.
+The `Alertmanager` custom resource definition (CRD) declaratively defines a desired Alertmanager setup to run in a Kubernetes cluster. It provides options to configure replication and persistent storage.
 
 For each `Alertmanager` TPR, the Operator deploys a properly configured `StatefulSet` in the same namespace. The Alertmanager pods are configured to include a `Secret` called `<alertmanager-name>` which holds the used configuration file in the key `alertmanager.yaml`.
 

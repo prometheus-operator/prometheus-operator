@@ -31,13 +31,13 @@ rules:
   resources:
   - thirdpartyresources
   verbs:
-  - "*" 
+  - "*"
 - apiGroups:
-  - apiextensions.k8s.io 
+  - apiextensions.k8s.io
   resources:
-  - customresourcedefinitions 
+  - customresourcedefinitions
   verbs:
-  - "*" 
+  - "*"
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -71,7 +71,7 @@ rules:
   verbs: ["list", "watch"]
 - apiGroups: [""]
   resources:
-  - namespaces 
+  - namespaces
   verbs: ["list"]
 ---
 apiVersion: v1
@@ -170,7 +170,7 @@ This `Service` object is discovered by a `ServiceMonitor`, which selects in the 
 
 [embedmd]:# (../../example/user-guides/getting-started/example-app-service-monitor.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: example-app
@@ -242,7 +242,7 @@ Finally, a `Prometheus` object defines the `serviceMonitorSelector` to specify w
 
 [embedmd]:# (../../example/user-guides/getting-started/prometheus.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   name: prometheus
