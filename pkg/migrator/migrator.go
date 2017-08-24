@@ -473,7 +473,7 @@ func (m *Migrator) restoreAlertmanagersFromCM(configmapName string) error {
 func (m *Migrator) deleteData(deleteFuncFactories ...func(namespace string) func(*metav1.DeleteOptions, metav1.ListOptions) error) error {
 	nsList, err := m.kclient.CoreV1().Namespaces().List(metav1.ListOptions{})
 	if err != nil {
-		return errors.Wrap(err, "failed to list namspaces")
+		return errors.Wrap(err, "failed to list namespaces")
 	}
 
 	for _, ns := range nsList.Items {
