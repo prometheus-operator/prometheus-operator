@@ -15,7 +15,12 @@ kctl() {
 kctl delete -f manifests/node-exporter
 kctl delete -f manifests/kube-state-metrics
 kctl delete -f manifests/grafana
-find manifests/prometheus -type f ! -name prometheus-k8s-roles.yaml ! -name prometheus-k8s-role-bindings.yaml -exec kubectl --namespace "$NAMESPACE" delete -f {} \;
+kctl delete -f  manifests/prometheus/prometheus-k8s-controler-service.yaml
+kctl delete -f  manifests/prometheus/prometheus-k8s-scheduler-service.yaml
+
+prometheus-k8s-controler-service.yaml
+find manifests/prometheus -type f ! prometheus-k8s-scheduler-service.yaml ! prometheus-k8s-controller-service.yaml \
+! -name prometheus-k8s-roles.yaml ! -name prometheus-k8s-role-bindings.yaml -exec kubectl --namespace "$NAMESPACE" delete -f {} \;
 kubectl delete -f manifests/prometheus/prometheus-k8s-roles.yaml
 kubectl delete -f manifests/prometheus/prometheus-k8s-role-bindings.yaml
 kctl delete -f manifests/alertmanager
