@@ -15,14 +15,13 @@
 package prometheus
 
 import (
-	"reflect"
-	"testing"
-
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
+	"reflect"
+	"testing"
 )
 
 var (
@@ -50,6 +49,31 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	if !reflect.DeepEqual(labels, sset.Labels) || !reflect.DeepEqual(annotations, sset.Annotations) {
 		t.Fatal("Labels or Annotations are not properly being propagated to the StatefulSet")
+	}
+}
+
+func TestPodLabelsAnnotations(t *testing.T) {
+	annotations := map[string]string{
+		"testannotation": "testvalue",
+	}
+	labels := map[string]string{
+		"testlabel": "testvalue",
+	}
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.PrometheusSpec{
+			PodMetadata: metav1.ObjectMeta{
+				Annotations: annotations,
+				Labels:      labels,
+			},
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+	require.NoError(t, err)
+	if _, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok {
+		t.Fatal("Pod labes are not properly propagated")
+	}
+	if !reflect.DeepEqual(annotations, sset.Spec.Template.ObjectMeta.Annotations) {
+		t.Fatal("Pod annotaitons are not properly propagated")
 	}
 }
 

@@ -39,8 +39,7 @@ const (
 	governingServiceName = "prometheus-operated"
 	DefaultVersion       = "v1.7.1"
 	defaultRetention     = "24h"
-
-	configMapsFilename = "configmaps.json"
+	configMapsFilename   = "configmaps.json"
 )
 
 var (
@@ -440,7 +439,18 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 			Port: intstr.FromString("web"),
 		},
 	}
-
+	podAnnotations := map[string]string{}
+	podLabels := map[string]string{}
+	for k, v := range p.Spec.PodMetadata.Labels {
+		// ToDo: define which labels can be set and sanitize them.
+		podLabels[k] = v
+	}
+	podLabels["app"] = "prometheus"
+	podLabels["prometheus"] = p.Name
+	for k, v := range p.Spec.PodMetadata.Annotations {
+		// ToDo: define which annotations can be set and sanitize them.
+		podAnnotations[k] = v
+	}
 	return &v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    p.Spec.Replicas,
@@ -449,10 +459,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		},
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels: map[string]string{
-					"app":        "prometheus",
-					"prometheus": p.Name,
-				},
+				Labels:      podLabels,
+				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
 				Containers: []v1.Container{
