@@ -16,7 +16,23 @@ docker tag \
        $PO_QUAY_REPO:$BUILD_ID \
        $PO_QUAY_REPO:master
 
-docker push $PO_QUAY_REPO:master
+
+# Retry pushing docker image multiple times to prevent net/http: TLS handshake
+# timeout
+
+retry=0
+maxRetries=5
+until [ ${retry} -ge ${maxRetries} ]
+do
+    docker push $PO_QUAY_REPO:master && break
+    retry=$[${retry}+1]
+done
 
 docker logout quay.io
+
+if [ ${retry} -ge ${maxRetries} ]; then
+    echo "Failed to push docker image after ${maxRetries} attempts!"
+    exit 1
+fi
+
 
