@@ -91,7 +91,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | targetPort | Name or number of the target port of the endpoint. Mutually exclusive with port. | intstr.IntOrString | false |
 | path | HTTP path to scrape for metrics. | string | false |
 | scheme | HTTP scheme to use for scraping. | string | false |
-| params | Optional HTTP URL parameters | map[string]\[]string | false |
+| params | Optional HTTP URL parameters | map[string][]string | false |
 | interval | Interval at which metrics should be scraped | string | false |
 | scrapeTimeout | Timeout after which the scrape is ended | string | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint | *[TLSConfig](#tlsconfig) | false |
