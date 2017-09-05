@@ -335,9 +335,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		uid := int64(1000)
 		nr := true
 		securityContext = v1.PodSecurityContext{
-			FSGroup: &gid,
+			FSGroup:      &gid,
 			RunAsNonRoot: &nr,
-			RunAsUser: &uid,
+			RunAsUser:    &uid,
 		}
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
@@ -491,8 +491,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 						VolumeMounts: configReloadVolumeMounts,
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse("5m"),
-								v1.ResourceMemory: resource.MustParse("10Mi"),
+								v1.ResourceCPU:    resource.MustParse("10m"),
+								v1.ResourceMemory: resource.MustParse("50Mi"),
 							},
 						},
 					},
