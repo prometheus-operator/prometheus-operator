@@ -59,6 +59,8 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | paused | If set to true all actions on the underlaying managed objects are not goint to be performed, except for delete actions. | bool | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
+| affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
+| tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
 
 ## AlertmanagerStatus
 
@@ -150,6 +152,8 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods. The Secrets are mounted into /etc/prometheus/secrets/<secret-name>. Secrets changes after initial creation of a Prometheus object are not reflected in the running Pods. To change the secrets mounted into the Prometheus Pods, the object must be deleted and recreated with the new list of secrets. | []string | false |
+| affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
+| tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
 
 ## PrometheusStatus
 
