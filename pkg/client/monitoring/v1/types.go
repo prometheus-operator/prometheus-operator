@@ -101,9 +101,10 @@ type PrometheusSpec struct {
 	// Prometheus Pods, the object must be deleted and recreated with the new list
 	// of secrets.
 	Secrets []string `json:"secrets,omitempty"`
-	// EvaluationInterval string                    `json:"evaluationInterval"`
-	// Remote          RemoteSpec                 `json:"remote"`
-	// Sharding...
+	// If specified, the pod's scheduling constraints.
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// If specified, the pod's tolerations.
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not
@@ -296,6 +297,10 @@ type AlertmanagerSpec struct {
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// Define resources requests and limits for single Pods.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+	// If specified, the pod's scheduling constraints.
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// If specified, the pod's tolerations.
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 // A list of Alertmanagers.

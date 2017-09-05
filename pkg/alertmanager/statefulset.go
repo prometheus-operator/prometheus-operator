@@ -280,6 +280,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 						},
 					},
 				},
+				Tolerations: a.Spec.Tolerations,
+				Affinity:    a.Spec.Affinity,
 			},
 		},
 	}, nil
