@@ -199,6 +199,8 @@ type Endpoint struct {
 	Path string `json:"path,omitempty"`
 	// HTTP scheme to use for scraping.
 	Scheme string `json:"scheme,omitempty"`
+	// Optional HTTP URL parameters
+	Params map[string][]string `json:"params,omitempty"`
 	// Interval at which metrics should be scraped
 	Interval string `json:"interval,omitempty"`
 	// Timeout after which the scrape is ended
