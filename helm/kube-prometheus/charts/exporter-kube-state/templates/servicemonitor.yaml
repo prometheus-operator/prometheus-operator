@@ -21,3 +21,4 @@ spec:
   endpoints:
   - port: {{ .Values.service.name }}
     interval: 15s
+    honorLabels: true
