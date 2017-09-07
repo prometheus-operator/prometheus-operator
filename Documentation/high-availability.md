@@ -1,3 +1,8 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 # High Availability
 
 High availability is not only important for customer facing software, but if the monitoring infrastructure is not highly available, then there is a risk that operations people are not notified for alerts of the customer facing software. Therefore high availability must be just as thought through for the monitoring stack, as for anything else.

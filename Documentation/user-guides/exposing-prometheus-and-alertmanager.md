@@ -1,3 +1,8 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 # Exposing Prometheus and Alertmanager
 
 The Prometheus Operator takes care of operating Prometheus and Alertmanagers clusters, however, there are many ways in Kubernetes to expose these to the outside world. This document outlines best practices and caveats to do so in various ways.
