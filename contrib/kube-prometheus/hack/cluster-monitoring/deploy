@@ -16,7 +16,7 @@ kctl() {
 
 kctl apply -f manifests/prometheus-operator
 
-# Wait for TPRs to be ready.
+# Wait for CRDs to be ready.
 printf "Waiting for Operator to register custom resource definitions..."
 until kctl get customresourcedefinitions servicemonitors.monitoring.coreos.com > /dev/null 2>&1; do sleep 1; printf "."; done
 until kctl get customresourcedefinitions prometheuses.monitoring.coreos.com > /dev/null 2>&1; do sleep 1; printf "."; done
