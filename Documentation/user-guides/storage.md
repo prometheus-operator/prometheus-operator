@@ -1,3 +1,8 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 # Storage
 
 To keep data cross deployments and version upgrades the data must be persisted to some volume other than `emptyDir`, to be able to reuse it by `Pod`s after an upgrade.

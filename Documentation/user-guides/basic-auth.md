@@ -1,7 +1,12 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 ## Basic auth for targets
 
-To authenticate a `ServiceMonitor`s over a metrics endpoint use [`basicAuth`](../api.md#basicauth) 
- 
+To authenticate a `ServiceMonitor`s over a metrics endpoint use [`basicAuth`](../api.md#basicauth)
+
 [embedmd]:# (../../contrib/kube-prometheus/manifests/examples/basic-auth/service-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
