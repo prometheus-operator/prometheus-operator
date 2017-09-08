@@ -1,6 +1,6 @@
-# How to monitor a secure external etcd service with Prometheus Operator
-This guide will help you monitor an external etcd cluster. When the etcd is not hosted inside Kubernetes.
-This is often the case with the Kubernetes setup. This has been tested with kube-aws but same principals will apply to other tools.
+# Monitoring external etcd
+This guide will help you monitor an external etcd cluster. When the etcd cluster is not hosted inside Kubernetes.
+This is often the case with Kubernetes setups. This approach has been tested with kube-aws but the same principals apply to other tools.
 
 # Step 1 - Make the etcd certificates available to Prometheus pod
 Prometheus Operator (and Prometheus) allow us to specify a tlsConfig. This is required as most likely your etcd metrics end points is secure.
@@ -45,7 +45,11 @@ If your Prometheus Operator is already in place, update it:
 # Step 2 - Create the Service, endpoints and ServiceMonitor
 
 The below manifest creates a Service to expose etcd metrics (port 2379)
-Replace IP_OF_YOUR_ETCD_NODE_[0/1/2] with the IP addresses of your etcd nodes. If you have more than one node, add them to the same list.
+
+* Replace I`P_OF_YOUR_ETCD_NODE_[0/1/2]` with the IP addresses of your etcd nodes. If you have more than one node, add them to the same list.
+* Use `#insecureSkipVerify: true` or replace `ETCD_DNS_OR_ALTERNAME_NAME` with a valid name for the certificate. 
+
+In case you have generated the etcd certificated with kube-aws, you will need to use insecureSkipVerify as the valid certificate domain will be different for each etcd node (etcd0, etcd1, etcd2). If you only have one etcd node, you can use the value from `etcd.internalDomainName` speficied in your kube-aws `cluster.yaml`
 
 In this example we use insecureSkipVerify: true as kube-aws default certiicates are not valid against the IP. They were created for the DNS. Depending on your use case, you might want to remove this flag or set it to false. (true required for kube-aws if using default certificate generators method)
 
@@ -99,7 +103,9 @@ spec:
       caFile: /etc/prometheus/secrets/etcd-certs/ca.pem
       certFile: /etc/prometheus/secrets/etcd-certs/etcd-client.pem
       keyFile: /etc/prometheus/secrets/etcd-certs/etcd-client-key.pem
-      insecureSkipVerify: true
+      #use insecureSkipVerify only if you cannot use a Subject Alternative Name
+      #insecureSkipVerify: true 
+      serverName: ETCD_DNS_OR_ALTERNAME_NAME
   selector:
     matchLabels:
       k8s-app: etcd
