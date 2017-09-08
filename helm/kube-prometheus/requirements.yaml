@@ -28,7 +28,7 @@ dependencies:
     repository: https://charts.cloudposse.com/incubator
 
   - name: exporter-kube-state
-    version: 0.1.0
+    version: 0.1.2
     repository: https://charts.cloudposse.com/incubator
 
   - name: exporter-kubelets
