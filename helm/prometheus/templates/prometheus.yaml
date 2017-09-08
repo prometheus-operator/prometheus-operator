@@ -53,8 +53,7 @@ spec:
 {{- end }}
 {{- if .Values.serviceMonitorsSelector }}
   serviceMonitorSelector:
-    matchLabels:
-{{ toYaml .Values.serviceMonitorsSelector | indent 6 }}
+{{ toYaml .Values.serviceMonitorsSelector | indent 4 }}
 {{- else }}
   serviceMonitorSelector:
     matchLabels:
