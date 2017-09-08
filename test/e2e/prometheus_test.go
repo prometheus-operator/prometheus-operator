@@ -147,18 +147,31 @@ func TestPrometheusResourceUpdate(t *testing.T) {
 			v1.ResourceMemory: resource.MustParse("200Mi"),
 		},
 	}
-	if err := framework.UpdatePrometheusAndWaitUntilReady(ns, p); err != nil {
-		t.Fatal(err)
-	}
-
-	pods, err = framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+	_, err = framework.MonClient.Prometheuses(ns).Update(p)
 	if err != nil {
 		t.Fatal(err)
 	}
-	res = pods.Items[0].Spec.Containers[0].Resources
 
-	if !reflect.DeepEqual(res, p.Spec.Resources) {
-		t.Fatalf("resources don't match. Has %q, want %q", res, p.Spec.Resources)
+	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		pods, err := framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+		if err != nil {
+			return false, err
+		}
+
+		if len(pods.Items) != 1 {
+			return false, nil
+		}
+
+		res = pods.Items[0].Spec.Containers[0].Resources
+		if !reflect.DeepEqual(res, p.Spec.Resources) {
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
