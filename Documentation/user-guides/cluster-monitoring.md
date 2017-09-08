@@ -161,6 +161,9 @@ spec:
         - name: sys
           readOnly: true
           mountPath: /host/sys
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
       volumes:
       - name: proc
         hostPath:
