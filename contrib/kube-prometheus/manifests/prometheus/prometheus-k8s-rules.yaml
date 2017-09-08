@@ -582,8 +582,9 @@ data:
         summary = "node-exporter cannot be scraped",
         description = "Prometheus could not scrape a node-exporter for more than 10m, or node-exporters have disappeared from discovery.",
       }
+    
     ALERT K8SNodeOutOfDisk
-      IF kube_node_status_condition{condition="OutOfDisk",status="true"} == 1
+      IF kube_node_status_condition{condition="OutOfDisk", status="true"} == 1
       LABELS {
         service = "k8s",
         severity = "critical"
@@ -592,7 +593,7 @@ data:
         summary = "Node ran out of disk space.",
         description = "{{ $labels.node }} has run out of disk space.",
       }
-     
+    
     ALERT K8SNodeMemoryPressure
       IF kube_node_status_condition{condition="MemoryPressure", status="true"} == 1
       LABELS {
@@ -603,7 +604,7 @@ data:
         summary = "Node is under memory pressure.",
         description = "{{ $labels.node }} is under memory pressure.",
       }
-     
+    
     ALERT K8SNodeDiskPressure
       IF kube_node_status_condition{condition="DiskPressure", status="true"} == 1
       LABELS {
