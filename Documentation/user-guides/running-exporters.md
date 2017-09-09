@@ -1,3 +1,8 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 # Running Exporters
 Running exporters and scraping them with Prometheus configured by the prometheus-operator.
 
@@ -36,7 +41,7 @@ This Service targets all pods with the label `k8s-app: kube-state-metrics`.
 ## Create a matching ServiceMonitor
 ### Generic `ServiceMonitor` example
 ```
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: k8s-apps-http

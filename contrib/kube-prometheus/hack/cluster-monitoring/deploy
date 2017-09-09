@@ -16,11 +16,14 @@ kctl() {
 
 kctl apply -f manifests/prometheus-operator
 
-# Wait for TPRs to be ready.
-printf "Waiting for Operator to register third party objects..."
-until kctl get servicemonitor > /dev/null 2>&1; do sleep 1; printf "."; done
-until kctl get prometheus > /dev/null 2>&1; do sleep 1; printf "."; done
-until kctl get alertmanager > /dev/null 2>&1; do sleep 1; printf "."; done
+# Wait for CRDs to be ready.
+printf "Waiting for Operator to register custom resource definitions..."
+until kctl get customresourcedefinitions servicemonitors.monitoring.coreos.com > /dev/null 2>&1; do sleep 1; printf "."; done
+until kctl get customresourcedefinitions prometheuses.monitoring.coreos.com > /dev/null 2>&1; do sleep 1; printf "."; done
+until kctl get customresourcedefinitions alertmanagers.monitoring.coreos.com > /dev/null 2>&1; do sleep 1; printf "."; done
+until kctl get servicemonitors.monitoring.coreos.com > /dev/null 2>&1; do sleep 1; printf "."; done
+until kctl get prometheuses.monitoring.coreos.com > /dev/null 2>&1; do sleep 1; printf "."; done
+until kctl get alertmanagers.monitoring.coreos.com > /dev/null 2>&1; do sleep 1; printf "."; done
 echo "done!"
 
 kctl apply -f manifests/node-exporter

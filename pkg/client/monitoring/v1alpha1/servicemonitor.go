@@ -36,6 +36,8 @@ type ServiceMonitorsGetter interface {
 	ServiceMonitors(namespace string) ServiceMonitorInterface
 }
 
+var _ ServiceMonitorInterface = &servicemonitors{}
+
 type ServiceMonitorInterface interface {
 	Create(*ServiceMonitor) (*ServiceMonitor, error)
 	Get(name string, opts metav1.GetOptions) (*ServiceMonitor, error)
@@ -43,6 +45,7 @@ type ServiceMonitorInterface interface {
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
 	Watch(opts metav1.ListOptions) (watch.Interface, error)
+	DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error
 }
 
 type servicemonitors struct {
@@ -142,6 +145,10 @@ func (s *servicemonitors) Watch(opts metav1.ListOptions) (watch.Interface, error
 		dec:   json.NewDecoder(r),
 		close: r.Close,
 	}), nil
+}
+
+func (s *servicemonitors) DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error {
+	return s.client.DeleteCollection(dopts, lopts)
 }
 
 // ServiceMonitorFromUnstructured unmarshals a ServiceMonitor object from dynamic client's unstructured

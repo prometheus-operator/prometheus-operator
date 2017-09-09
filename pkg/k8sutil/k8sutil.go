@@ -20,27 +20,27 @@ import (
 	"net/url"
 	"time"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
+	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/discovery"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/pkg/api/v1"
+	extensionsobjold "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 )
 
-// WaitForCRDReady waits for a third party resource to be available
-// for use.
-// TODO(gouthamve): Move to clientset.Get()
-func WaitForCRDReady(restClient rest.Interface, crdGroup, crdVersion, crdName string) error {
-	err := wait.Poll(3*time.Second, 5*time.Minute, func() (bool, error) {
-		res := restClient.Get().AbsPath("apis", crdGroup, crdVersion, crdName).Do()
-		err := res.Error()
+// WaitForCRDReady waits for a third party resource to be available for use.
+func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
+	err := wait.Poll(3*time.Second, 10*time.Minute, func() (bool, error) {
+		_, err := listFunc(metav1.ListOptions{})
 		if err != nil {
-			// RESTClient returns *apierrors.StatusError for any status codes < 200 or > 206
-			// and http.Client.Do errors are returned directly.
 			if se, ok := err.(*apierrors.StatusError); ok {
 				if se.Status().Code == http.StatusNotFound {
 					return false, nil
@@ -48,17 +48,10 @@ func WaitForCRDReady(restClient rest.Interface, crdGroup, crdVersion, crdName st
 			}
 			return false, err
 		}
-
-		var statusCode int
-		res.StatusCode(&statusCode)
-		if statusCode != http.StatusOK {
-			return false, fmt.Errorf("invalid status code: %d", statusCode)
-		}
-
 		return true, nil
 	})
 
-	return errors.Wrap(err, fmt.Sprintf("timed out waiting for TPR %s", crdName))
+	return errors.Wrap(err, fmt.Sprintf("timed out waiting for Custom Resoruce"))
 }
 
 // PodRunningAndReady returns whether a pod is running and each container has
@@ -174,4 +167,91 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	}
 
 	return ver.Segments()[1], nil
+}
+
+func NewPrometheusTPRDefinition() *extensionsobjold.ThirdPartyResource {
+	return &extensionsobjold.ThirdPartyResource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "prometheus." + v1alpha1.Group,
+		},
+		Versions: []extensionsobjold.APIVersion{
+			{Name: v1alpha1.Version},
+		},
+		Description: "Managed Prometheus server",
+	}
+}
+
+func NewServiceMonitorTPRDefinition() *extensionsobjold.ThirdPartyResource {
+	return &extensionsobjold.ThirdPartyResource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "service-monitor." + v1alpha1.Group,
+		},
+		Versions: []extensionsobjold.APIVersion{
+			{Name: v1alpha1.Version},
+		},
+		Description: "Prometheus monitoring for a service",
+	}
+}
+
+func NewAlertmanagerTPRDefinition() *extensionsobjold.ThirdPartyResource {
+	return &extensionsobjold.ThirdPartyResource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "alertmanager." + v1alpha1.Group,
+		},
+		Versions: []extensionsobjold.APIVersion{
+			{Name: v1alpha1.Version},
+		},
+		Description: "Managed Alertmanager cluster",
+	}
+}
+
+func NewPrometheusCustomResourceDefinition() *extensionsobj.CustomResourceDefinition {
+	return &extensionsobj.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: monitoringv1.PrometheusName + "." + monitoringv1.Group,
+		},
+		Spec: extensionsobj.CustomResourceDefinitionSpec{
+			Group:   monitoringv1.Group,
+			Version: monitoringv1.Version,
+			Scope:   extensionsobj.NamespaceScoped,
+			Names: extensionsobj.CustomResourceDefinitionNames{
+				Plural: monitoringv1.PrometheusName,
+				Kind:   monitoringv1.PrometheusesKind,
+			},
+		},
+	}
+}
+
+func NewServiceMonitorCustomResourceDefinition() *extensionsobj.CustomResourceDefinition {
+	return &extensionsobj.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: monitoringv1.ServiceMonitorName + "." + monitoringv1.Group,
+		},
+		Spec: extensionsobj.CustomResourceDefinitionSpec{
+			Group:   monitoringv1.Group,
+			Version: monitoringv1.Version,
+			Scope:   extensionsobj.NamespaceScoped,
+			Names: extensionsobj.CustomResourceDefinitionNames{
+				Plural: monitoringv1.ServiceMonitorName,
+				Kind:   monitoringv1.ServiceMonitorsKind,
+			},
+		},
+	}
+}
+
+func NewAlertmanagerCustomResourceDefinition() *extensionsobj.CustomResourceDefinition {
+	return &extensionsobj.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: monitoringv1.AlertmanagerName + "." + monitoringv1.Group,
+		},
+		Spec: extensionsobj.CustomResourceDefinitionSpec{
+			Group:   monitoringv1.Group,
+			Version: monitoringv1.Version,
+			Scope:   extensionsobj.NamespaceScoped,
+			Names: extensionsobj.CustomResourceDefinitionNames{
+				Plural: monitoringv1.AlertmanagerName,
+				Kind:   monitoringv1.AlertmanagersKind,
+			},
+		},
+	}
 }

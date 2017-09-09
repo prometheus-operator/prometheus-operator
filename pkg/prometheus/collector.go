@@ -15,7 +15,7 @@
 package prometheus
 
 import (
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"
@@ -48,11 +48,11 @@ func (c *prometheusCollector) Describe(ch chan<- *prometheus.Desc) {
 // Collect implements the prometheus.Collector interface.
 func (c *prometheusCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, p := range c.store.List() {
-		c.collectPrometheus(ch, p.(*v1alpha1.Prometheus))
+		c.collectPrometheus(ch, p.(*v1.Prometheus))
 	}
 }
 
-func (c *prometheusCollector) collectPrometheus(ch chan<- prometheus.Metric, p *v1alpha1.Prometheus) {
+func (c *prometheusCollector) collectPrometheus(ch chan<- prometheus.Metric, p *v1.Prometheus) {
 	replicas := float64(minReplicas)
 	if p.Spec.Replicas != nil {
 		replicas = float64(*p.Spec.Replicas)

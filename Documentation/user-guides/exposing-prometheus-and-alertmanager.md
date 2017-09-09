@@ -1,3 +1,8 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 # Exposing Prometheus and Alertmanager
 
 The Prometheus Operator takes care of operating Prometheus and Alertmanagers clusters, however, there are many ways in Kubernetes to expose these to the outside world. This document outlines best practices and caveats to do so in various ways.
@@ -9,10 +14,10 @@ The easiest way to expose Prometheus or Alertmanager is to use a `Service` of ty
 Let's create a simple `Prometheus` object with one replica.
 
 ```yaml
-apiVersion: "monitoring.coreos.com/v1alpha1"
-kind: "Prometheus"
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
 metadata:
-  name: "main"
+  name: main
 spec:
   replicas: 1
   version: v1.7.1
@@ -45,10 +50,10 @@ After creating a `Service` with the above manifest, the web UI of Prometheus wil
 Exposing the Alertmanager works in the same fashion, the only difference being, that the selector is `alertmanager: <alertmanager-name>`.
 
 ```yaml
-apiVersion: "monitoring.coreos.com/v1alpha1"
-kind: "Alertmanager"
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
 metadata:
-  name: "main"
+  name: main
 spec:
   replicas: 3
   version: v0.7.1
@@ -109,10 +114,10 @@ spec:
 A caveat about this is that Prometheus and Alertmanager need to be configured with the full URL they are going to be exposed at. Therefore the `Prometheus` manifest will need an entry for `externalUrl`:
 
 ```yaml
-apiVersion: "monitoring.coreos.com/v1alpha1"
-kind: "Prometheus"
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
 metadata:
-  name: "main"
+  name: main
 spec:
   replicas: 1
   version: v1.7.1
@@ -129,10 +134,10 @@ Once the Prometheus `Pod`s are running they are reachable under the specified `e
 The Alertmanager works with the same approach so the manifest for the `Alertmanager` object is simply the following:
 
 ```yaml
-apiVersion: "monitoring.coreos.com/v1alpha1"
-kind: "Alertmanager"
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
 metadata:
-  name: "main"
+  name: main
 spec:
   replicas: 3
   version: v0.7.1
@@ -176,7 +181,7 @@ kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/ex
 
 > It is highly recommended to compare the available ingress controllers for a production environment. The nginx ingress controller may or may not be what is suitable for your production environment. Also have a look at HA Proxy, Træfɪk, GCE, AWS, and more.
 
-> WARNING: If you ingress is exposed to the internet, everyone can have full acesss on your resources. It's strongly recommend to enable an [external authentication](https://github.com/kubernetes/ingress/blob/858e3ff2354fb0f5066a88774b904b2427fb9433/examples/external-auth/nginx/README.md) or [whitelisting ip address](https://github.com/kubernetes/ingress/blob/7ca7652ab26e1a5775f3066f53f28d5ea5eb3bb7/controllers/nginx/configuration.md#whitelist-source-range) 
+> WARNING: If you ingress is exposed to the internet, everyone can have full acesss on your resources. It's strongly recommend to enable an [external authentication](https://github.com/kubernetes/ingress/blob/858e3ff2354fb0f5066a88774b904b2427fb9433/examples/external-auth/nginx/README.md) or [whitelisting ip address](https://github.com/kubernetes/ingress/blob/7ca7652ab26e1a5775f3066f53f28d5ea5eb3bb7/controllers/nginx/configuration.md#whitelist-source-range)
 
 An `Ingress` object also requires a `Service` to be setup as the requests are simply routed from the ingress endpoint to the internal `Service`.
 
@@ -218,7 +223,7 @@ kind: Ingress
 metadata:
   name: monitoring
   annotations:
-    ingress.kubernetes.io/whitelist-source-range: 10.0.0.0/16 # change this range to admin ips  
+    ingress.kubernetes.io/whitelist-source-range: 10.0.0.0/16 # change this range to admin ips
     ingress.kubernetes.io/rewrite-target: "/"
 spec:
   rules:
@@ -237,10 +242,10 @@ spec:
 Lastly the `Prometheus` and `Alertmanager` objects need to be created with the `externalUrl` they are going to be browsed to.
 
 ```yaml
-apiVersion: "monitoring.coreos.com/v1alpha1"
-kind: "Prometheus"
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
 metadata:
-  name: "main"
+  name: main
 spec:
   replicas: 1
   version: v1.7.1
@@ -249,10 +254,10 @@ spec:
     requests:
       memory: 400Mi
 ---
-apiVersion: "monitoring.coreos.com/v1alpha1"
-kind: "Alertmanager"
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
 metadata:
-  name: "main"
+  name: main
 spec:
   replicas: 3
   version: v0.7.1

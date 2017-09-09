@@ -26,7 +26,12 @@ import (
 )
 
 const (
-	firstParagraph = `# API Docs
+	firstParagraph = `<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
+# API Docs
 
 This Document documents the types introduced by the Prometheus Operator to be consumed by users.
 
@@ -35,12 +40,12 @@ This Document documents the types introduced by the Prometheus Operator to be co
 
 var (
 	links = map[string]string{
-		"metav1.ObjectMeta":       "https://kubernetes.io/docs/api-reference/v1.6/#objectmeta-v1-meta",
-		"metav1.ListMeta":         "https://kubernetes.io/docs/api-reference/v1.6/#listmeta-v1-meta",
-		"metav1.LabelSelector":    "https://kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta",
-		"v1.ResourceRequirements": "https://kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core",
-		"v1.LocalObjectReference": "https://kubernetes.io/docs/api-reference/v1.6/#localobjectreference-v1-core",
-		"v1.SecretKeySelector":    "https://kubernetes.io/docs/api-reference/v1.6/#secretkeyselector-v1-core",
+		"metav1.ObjectMeta":        "https://kubernetes.io/docs/api-reference/v1.6/#objectmeta-v1-meta",
+		"metav1.ListMeta":          "https://kubernetes.io/docs/api-reference/v1.6/#listmeta-v1-meta",
+		"metav1.LabelSelector":     "https://kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta",
+		"v1.ResourceRequirements":  "https://kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core",
+		"v1.LocalObjectReference":  "https://kubernetes.io/docs/api-reference/v1.6/#localobjectreference-v1-core",
+		"v1.SecretKeySelector":     "https://kubernetes.io/docs/api-reference/v1.6/#secretkeyselector-v1-core",
 		"v1.PersistentVolumeClaim": "https://kubernetes.io/docs/api-reference/v1.6/#persistentvolumeclaim-v1-core",
 	}
 

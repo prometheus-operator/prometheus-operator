@@ -1,3 +1,8 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 # Compatibility
 
 The Prometheus Operator supports a number of Kubernetes and Prometheus releases.
@@ -22,5 +27,4 @@ The versions of Prometheus compatible to be run with the Prometheus Operator are
 * v1.6.3
 * v1.7.0
 * v1.7.1
-* v2.0.0-alpha.3
 * v2.0.0-beta.0

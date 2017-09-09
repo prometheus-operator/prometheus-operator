@@ -31,7 +31,7 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	testFramework "github.com/coreos/prometheus-operator/test/framework"
 	"github.com/pkg/errors"
@@ -147,18 +147,31 @@ func TestPrometheusResourceUpdate(t *testing.T) {
 			v1.ResourceMemory: resource.MustParse("200Mi"),
 		},
 	}
-	if err := framework.UpdatePrometheusAndWaitUntilReady(ns, p); err != nil {
-		t.Fatal(err)
-	}
-
-	pods, err = framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+	_, err = framework.MonClient.Prometheuses(ns).Update(p)
 	if err != nil {
 		t.Fatal(err)
 	}
-	res = pods.Items[0].Spec.Containers[0].Resources
 
-	if !reflect.DeepEqual(res, p.Spec.Resources) {
-		t.Fatalf("resources don't match. Has %q, want %q", res, p.Spec.Resources)
+	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		pods, err := framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+		if err != nil {
+			return false, err
+		}
+
+		if len(pods.Items) != 1 {
+			return false, nil
+		}
+
+		res = pods.Items[0].Spec.Containers[0].Resources
+		if !reflect.DeepEqual(res, p.Spec.Resources) {
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -170,12 +183,12 @@ func TestPrometheusReloadConfig(t *testing.T) {
 
 	name := "test"
 	replicas := int32(1)
-	p := &v1alpha1.Prometheus{
+	p := &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: ns,
 		},
-		Spec: v1alpha1.PrometheusSpec{
+		Spec: monitoringv1.PrometheusSpec{
 			Replicas: &replicas,
 			Version:  "v1.5.0",
 			Resources: v1.ResourceRequirements{
@@ -430,21 +443,21 @@ func TestPrometheusDiscoverTargetPort(t *testing.T) {
 	group := "servicediscovery-test"
 	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
 
-	if _, err := framework.MonClient.ServiceMonitors(ns).Create(&v1alpha1.ServiceMonitor{
+	if _, err := framework.MonClient.ServiceMonitors(ns).Create(&monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: prometheusName,
 			Labels: map[string]string{
 				"group": group,
 			},
 		},
-		Spec: v1alpha1.ServiceMonitorSpec{
+		Spec: monitoringv1.ServiceMonitorSpec{
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": group,
 				},
 			},
-			Endpoints: []v1alpha1.Endpoint{
-				v1alpha1.Endpoint{
+			Endpoints: []monitoringv1.Endpoint{
+				monitoringv1.Endpoint{
 					TargetPort: intstr.FromInt(9090),
 					Interval:   "30s",
 				},

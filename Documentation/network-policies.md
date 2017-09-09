@@ -1,3 +1,7 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
 
 # Network policies
 
@@ -9,9 +13,9 @@ To keep your cluster safer, it's strongly recommended to enable network policies
 In this example we are closing all the inbound communication on the namespace monitoring and just allowing the necessary traffic.
 **This example are only tested with calico provider.**
 
-Follow the steps [here](http://docs.projectcalico.org/v1.5/getting-started/kubernetes/installation/) to install calico, also dont' forget to [enable network policy](https:/kubernetes.io/docs/user-guide/networkpolicies) in you k8s cluster.
+Follow the steps [here](http://docs.projectcalico.org/v1.5/getting-started/kubernetes/installation/) to install calico, also dont' forget to [enable network policy](https://kubernetes.io/docs/user-guide/networkpolicies) in you k8s cluster.
 
-Once you've done that, you should annotate your namespace to deny all the ingress (inboud) traffic.
+Once you've done that, you should annotate your namespace to deny all the ingress (inbound) traffic.
 
 ``` 
 $ kubectl annotate ns monitoring "net.beta.kubernetes.io/network-policy={\"ingress\":{\"isolation\":\"DefaultDeny\"}}"

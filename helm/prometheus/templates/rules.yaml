@@ -8,7 +8,9 @@ metadata:
     heritage: {{ .Release.Service }}
     prometheus: {{ .Release.Name }}
     release: {{ .Release.Name }}
+    {{- if .Values.rulesSelector }}
 {{ toYaml .Values.rulesSelector | indent 4 }}
+    {{- end }}
   name: prometheus-{{ .Release.Name }}-rules
 data:
 {{ toYaml .Values.rules.value | indent 2 }}

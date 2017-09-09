@@ -96,6 +96,12 @@ rules:
   specifiedInValues: true
   value: {}
 
+## List of Secrets in the same namespace as the Prometheus
+## object, which shall be mounted into the Prometheus Pods.
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+##
+secrets: {}
+
 service:
   ## Annotations to be added to the Service
   ##
@@ -140,6 +146,10 @@ serviceMonitors: []
   ## Name of the ServiceMonitor to create
   ##
   # - name: ""
+
+    ## Labels to set used for the ServiceMonitorSelector.
+    ##
+    # serviceMonitorSelectorLabels: {}
 
     ## Service label for use in assembling a job name of the form <label value>-<port>
     ## If no label is specified, the service name is used.

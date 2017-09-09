@@ -22,7 +22,8 @@ import (
 	"time"
 
 	"github.com/coreos/prometheus-operator/pkg/analytics"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"github.com/coreos/prometheus-operator/pkg/client/monitoring"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 
 	"github.com/go-kit/kit/log"
@@ -49,17 +50,14 @@ import (
 const (
 	configFilename = "prometheus.yaml"
 
-	crdServiceMonitor = v1alpha1.ServiceMonitorName + "." + v1alpha1.Group
-	crdPrometheus     = v1alpha1.PrometheusName + "." + v1alpha1.Group
-
 	resyncPeriod = 5 * time.Minute
 )
 
 // Operator manages lify cycle of Prometheus deployments and
 // monitoring configurations.
 type Operator struct {
-	kclient   *kubernetes.Clientset
-	mclient   *v1alpha1.MonitoringV1alpha1Client
+	kclient   kubernetes.Interface
+	mclient   monitoring.Interface
 	crdclient apiextensionsclient.Interface
 	logger    log.Logger
 
@@ -108,7 +106,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		return nil, err
 	}
 
-	mclient, err := v1alpha1.NewForConfig(cfg)
+	mclient, err := monitoring.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -147,10 +145,10 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 	c.promInf = cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc:  mclient.Prometheuses(api.NamespaceAll).List,
-			WatchFunc: mclient.Prometheuses(api.NamespaceAll).Watch,
+			ListFunc:  mclient.MonitoringV1().Prometheuses(api.NamespaceAll).List,
+			WatchFunc: mclient.MonitoringV1().Prometheuses(api.NamespaceAll).Watch,
 		},
-		&v1alpha1.Prometheus{}, resyncPeriod, cache.Indexers{},
+		&monitoringv1.Prometheus{}, resyncPeriod, cache.Indexers{},
 	)
 	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleAddPrometheus,
@@ -160,10 +158,10 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 	c.smonInf = cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc:  mclient.ServiceMonitors(api.NamespaceAll).List,
-			WatchFunc: mclient.ServiceMonitors(api.NamespaceAll).Watch,
+			ListFunc:  mclient.MonitoringV1().ServiceMonitors(api.NamespaceAll).List,
+			WatchFunc: mclient.MonitoringV1().ServiceMonitors(api.NamespaceAll).Watch,
 		},
-		&v1alpha1.ServiceMonitor{}, resyncPeriod, cache.Indexers{},
+		&monitoringv1.ServiceMonitor{}, resyncPeriod, cache.Indexers{},
 	)
 	c.smonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleSmonAdd,
@@ -191,7 +189,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	})
 
 	c.ssetInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Apps().RESTClient(), "statefulsets", api.NamespaceAll, nil),
+		cache.NewListWatchFromClient(c.kclient.AppsV1beta1().RESTClient(), "statefulsets", api.NamespaceAll, nil),
 		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
 	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -235,13 +233,6 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		mv, err := k8sutil.GetMinorVersion(c.kclient.Discovery())
 		if mv < 7 {
 			c.config.StatefulSetUpdatesAvailable = false
-			if err := c.createTPRs(); err != nil {
-				errChan <- errors.Wrap(err, "creating TPRs failed")
-				return
-			}
-
-			errChan <- nil
-			return
 		}
 
 		c.config.StatefulSetUpdatesAvailable = true
@@ -527,7 +518,7 @@ func (c *Operator) enqueue(obj interface{}) {
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the given namespace.
 func (c *Operator) enqueueForNamespace(ns string) {
 	cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
-		p := obj.(*v1alpha1.Prometheus)
+		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == ns {
 			c.enqueue(p)
 		}
@@ -560,7 +551,7 @@ func (c *Operator) processNextWorkItem() bool {
 	return true
 }
 
-func (c *Operator) prometheusForStatefulSet(sset interface{}) *v1alpha1.Prometheus {
+func (c *Operator) prometheusForStatefulSet(sset interface{}) *monitoringv1.Prometheus {
 	key, ok := c.keyFunc(sset)
 	if !ok {
 		return nil
@@ -575,7 +566,7 @@ func (c *Operator) prometheusForStatefulSet(sset interface{}) *v1alpha1.Promethe
 	if !exists {
 		return nil
 	}
-	return p.(*v1alpha1.Prometheus)
+	return p.(*monitoringv1.Prometheus)
 }
 
 func prometheusNameFromStatefulSetName(name string) string {
@@ -642,7 +633,7 @@ func (c *Operator) sync(key string) error {
 		return c.destroyPrometheus(key)
 	}
 
-	p := obj.(*v1alpha1.Prometheus)
+	p := obj.(*monitoringv1.Prometheus)
 	if p.Spec.Paused {
 		return nil
 	}
@@ -678,7 +669,7 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
-	ssetClient := c.kclient.Apps().StatefulSets(p.Namespace)
+	ssetClient := c.kclient.AppsV1beta1().StatefulSets(p.Namespace)
 	// Ensure we have a StatefulSet running Prometheus deployed.
 	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(prometheusKeyToStatefulSetKey(key))
 	if err != nil {
@@ -711,7 +702,7 @@ func (c *Operator) sync(key string) error {
 	return nil
 }
 
-func (c *Operator) ruleFileConfigMaps(p *v1alpha1.Prometheus) ([]*v1.ConfigMap, error) {
+func (c *Operator) ruleFileConfigMaps(p *monitoringv1.Prometheus) ([]*v1.ConfigMap, error) {
 	res := []*v1.ConfigMap{}
 
 	ruleSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleSelector)
@@ -743,7 +734,7 @@ func ListOptions(name string) metav1.ListOptions {
 // create new pods.
 //
 // TODO(brancz): remove this once the 1.6 support is removed.
-func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
+func (c *Operator) syncVersion(key string, p *monitoringv1.Prometheus) error {
 	if c.config.StatefulSetUpdatesAvailable {
 		return nil
 	}
@@ -787,14 +778,14 @@ func (c *Operator) syncVersion(key string, p *v1alpha1.Prometheus) error {
 // PrometheusStatus evaluates the current status of a Prometheus deployment with respect
 // to its specified resource object. It return the status and a list of pods that
 // are not updated.
-func PrometheusStatus(kclient kubernetes.Interface, p *v1alpha1.Prometheus) (*v1alpha1.PrometheusStatus, []v1.Pod, error) {
-	res := &v1alpha1.PrometheusStatus{Paused: p.Spec.Paused}
+func PrometheusStatus(kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
+	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
 	pods, err := kclient.Core().Pods(p.Namespace).List(ListOptions(p.Name))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.Apps().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
+	sset, err := kclient.AppsV1beta1().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 	}
@@ -852,7 +843,7 @@ func (c *Operator) destroyPrometheus(key string) error {
 	*sset.Spec.Replicas = 0
 
 	// Update the replica count to 0 and wait for all pods to be deleted.
-	ssetClient := c.kclient.Apps().StatefulSets(sset.Namespace)
+	ssetClient := c.kclient.AppsV1beta1().StatefulSets(sset.Namespace)
 
 	if _, err := ssetClient.Update(sset); err != nil {
 		return errors.Wrap(err, "updating statefulset for scale-down failed")
@@ -901,7 +892,7 @@ func (c *Operator) destroyPrometheus(key string) error {
 	return nil
 }
 
-func (c *Operator) loadBasicAuthSecrets(mons map[string]*v1alpha1.ServiceMonitor, s *v1.SecretList) (map[string]BasicAuthCredentials, error) {
+func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, s *v1.SecretList) (map[string]BasicAuthCredentials, error) {
 
 	secrets := map[string]BasicAuthCredentials{}
 
@@ -957,7 +948,7 @@ func (c *Operator) loadBasicAuthSecrets(mons map[string]*v1alpha1.ServiceMonitor
 
 }
 
-func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1.ConfigMap) error {
+func (c *Operator) createConfig(p *monitoringv1.Prometheus, ruleFileConfigMaps []*v1.ConfigMap) error {
 	smons, err := c.selectServiceMonitors(p)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
@@ -1019,9 +1010,9 @@ func (c *Operator) createConfig(p *v1alpha1.Prometheus, ruleFileConfigMaps []*v1
 	return err
 }
 
-func (c *Operator) selectServiceMonitors(p *v1alpha1.Prometheus) (map[string]*v1alpha1.ServiceMonitor, error) {
+func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string]*monitoringv1.ServiceMonitor, error) {
 	// Selectors might overlap. Deduplicate them along the keyFunc.
-	res := make(map[string]*v1alpha1.ServiceMonitor)
+	res := make(map[string]*monitoringv1.ServiceMonitor)
 
 	selector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
 	if err != nil {
@@ -1033,7 +1024,7 @@ func (c *Operator) selectServiceMonitors(p *v1alpha1.Prometheus) (map[string]*v1
 	cache.ListAllByNamespace(c.smonInf.GetIndexer(), p.Namespace, selector, func(obj interface{}) {
 		k, ok := c.keyFunc(obj)
 		if ok {
-			res[k] = obj.(*v1alpha1.ServiceMonitor)
+			res[k] = obj.(*monitoringv1.ServiceMonitor)
 		}
 	})
 
@@ -1042,24 +1033,8 @@ func (c *Operator) selectServiceMonitors(p *v1alpha1.Prometheus) (map[string]*v1
 
 func (c *Operator) createTPRs() error {
 	tprs := []*extensionsobjold.ThirdPartyResource{
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "service-monitor." + v1alpha1.Group,
-			},
-			Versions: []extensionsobjold.APIVersion{
-				{Name: v1alpha1.Version},
-			},
-			Description: "Prometheus monitoring for a service",
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "prometheus." + v1alpha1.Group,
-			},
-			Versions: []extensionsobjold.APIVersion{
-				{Name: v1alpha1.Version},
-			},
-			Description: "Managed Prometheus server",
-		},
+		k8sutil.NewPrometheusTPRDefinition(),
+		k8sutil.NewServiceMonitorTPRDefinition(),
 	}
 	tprClient := c.kclient.Extensions().ThirdPartyResources()
 
@@ -1071,44 +1046,17 @@ func (c *Operator) createTPRs() error {
 	}
 
 	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	err := k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.PrometheusName)
+	err := k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().Prometheuses(api.NamespaceAll).List)
 	if err != nil {
 		return err
 	}
-	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.ServiceMonitorName)
+	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().ServiceMonitors(api.NamespaceAll).List)
 }
 
 func (c *Operator) createCRDs() error {
 	crds := []*extensionsobj.CustomResourceDefinition{
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: crdServiceMonitor,
-			},
-			Spec: extensionsobj.CustomResourceDefinitionSpec{
-				Group:   v1alpha1.Group,
-				Version: v1alpha1.Version,
-				Scope:   extensionsobj.NamespaceScoped,
-				Names: extensionsobj.CustomResourceDefinitionNames{
-					Plural: v1alpha1.ServiceMonitorName,
-					Kind:   v1alpha1.ServiceMonitorsKind,
-				},
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: crdPrometheus,
-			},
-			Spec: extensionsobj.CustomResourceDefinitionSpec{
-				Group:   v1alpha1.Group,
-				Version: v1alpha1.Version,
-				Scope:   extensionsobj.NamespaceScoped,
-				Names: extensionsobj.CustomResourceDefinitionNames{
-					Plural:     v1alpha1.PrometheusName,
-					Kind:       v1alpha1.PrometheusesKind,
-					ShortNames: []string{v1alpha1.PrometheusShort},
-				},
-			},
-		},
+		k8sutil.NewPrometheusCustomResourceDefinition(),
+		k8sutil.NewServiceMonitorCustomResourceDefinition(),
 	}
 
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()
@@ -1121,9 +1069,9 @@ func (c *Operator) createCRDs() error {
 	}
 
 	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
-	err := k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.PrometheusName)
+	err := k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Prometheuses(api.NamespaceAll).List)
 	if err != nil {
 		return err
 	}
-	return k8sutil.WaitForCRDReady(c.kclient.CoreV1().RESTClient(), v1alpha1.Group, v1alpha1.Version, v1alpha1.ServiceMonitorName)
+	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().ServiceMonitors(api.NamespaceAll).List)
 }

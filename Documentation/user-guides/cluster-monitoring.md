@@ -1,3 +1,8 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 # Cluster Monitoring
 
 This guide is intended to give an introduction to all the parts required to start monitoring a Kubernetes cluster with Prometheus using the Prometheus Operator.
@@ -44,7 +49,7 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        image: quay.io/coreos/prometheus-operator:v0.11.1
+        image: quay.io/coreos/prometheus-operator:v0.12.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -156,6 +161,9 @@ spec:
         - name: sys
           readOnly: true
           mountPath: /host/sys
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
       volumes:
       - name: proc
         hostPath:
@@ -207,10 +215,16 @@ spec:
       serviceAccountName: kube-state-metrics
       containers:
       - name: kube-state-metrics
-        image: quay.io/coreos/kube-state-metrics:v0.5.0
+        image: quay.io/coreos/kube-state-metrics:v1.0.1
         ports:
         - name: metrics
           containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
         resources:
           requests:
             memory: 100Mi
@@ -218,7 +232,33 @@ spec:
           limits:
             memory: 200Mi
             cpu: 200m
-
+      - name: addon-resizer
+        image: gcr.io/google_containers/addon-resizer:1.0
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 30Mi
+        env:
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: MY_POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        command:
+          - /pod_nanny
+          - --container=kube-state-metrics
+          - --cpu=100m
+          - --extra-cpu=1m
+          - --memory=100Mi
+          - --extra-memory=2Mi
+          - --threshold=5
+          - --deployment=kube-state-metrics
 ```
 
 > Make sure that the `ServiceAccount` called `kube-state-metrics` exists and if using RBAC, is bound to the correct role. See the kube-state-metrics [repository for RBAC requirements](https://github.com/kubernetes/kube-state-metrics/tree/master/kubernetes).
@@ -251,7 +291,7 @@ Once all the steps in the previous section have been taken there should be `Endp
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   name: k8s
@@ -284,11 +324,11 @@ spec:
 
 > Make sure that the `ServiceAccount` called `prometheus-k8s` exists and if using RBAC, is bound to the correct role. Read more on [RBAC when using the Prometheus Operator](../rbac.md).
 
-The expression to match for selecting `ServiceMonitor`s here is that they must have a label which has a key called `k8s-apps`. If you look closely at all the `Service` objects described above they all have a label called `k8s-app` and their component name this allows to conveniently select them with `ServiceMonitor`s.
+The expression to match for selecting `ServiceMonitor`s here is that they must have a label which has a key called `k8s-app`. If you look closely at all the `Service` objects described above they all have a label called `k8s-app` and their component name this allows to conveniently select them with `ServiceMonitor`s.
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-apiserver.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kube-apiserver
@@ -315,7 +355,7 @@ spec:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kubelet.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kubelet
@@ -339,7 +379,7 @@ spec:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kube-controller-manager.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kube-controller-manager
@@ -360,7 +400,7 @@ spec:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kube-scheduler.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kube-scheduler
@@ -381,7 +421,7 @@ spec:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kube-state-metrics.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: kube-state-metrics
@@ -403,7 +443,7 @@ spec:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-node-exporter.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: node-exporter
@@ -426,12 +466,12 @@ And the Alertmanager:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/alertmanager/alertmanager.yaml)
 ```yaml
-apiVersion: "monitoring.coreos.com/v1alpha1"
-kind: "Alertmanager"
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
 metadata:
-  name: "main"
+  name: main
   labels:
-    alertmanager: "main"
+    alertmanager: main
 spec:
   replicas: 3
   version: v0.7.1

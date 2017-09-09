@@ -1,3 +1,8 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 # Migration from TPR to CRDs
 
 ThirdPartyResources (TPRs) are now being deprecated in favor of CustomResourceDefinitions (CRDs) and the Prometheus Operator automatically migrates TPRs to CRDs when it can. If it encounters an error during the migration, it will rollback the changes done until that point. To deal with edge cases, like the operator dying in the middle of a rollback, we store the data safely so that it can always be restored manually. This doc outlines the process of migration and the manual recovery.

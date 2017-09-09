@@ -44,13 +44,16 @@ spec:
 {{- if .Values.routePrefix }}
   routePrefix: "{{ .Values.routePrefix }}"
 {{- end }}
+{{- if .Values.secrets }}
+  secrets:
+{{ toYaml .Values.secrets | indent 4 }}
+{{- end }}
 {{- if .Values.rbacEnable }}
   serviceAccountName: {{ template "fullname" . }}
 {{- end }}
 {{- if .Values.serviceMonitorsSelector }}
   serviceMonitorSelector:
-    matchLabels:
-{{ toYaml .Values.serviceMonitorsSelector | indent 6 }}
+{{ toYaml .Values.serviceMonitorsSelector | indent 4 }}
 {{- else }}
   serviceMonitorSelector:
     matchLabels:

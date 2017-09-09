@@ -1,3 +1,8 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 # Alerting
 
 This guide assumes you have a basic understanding of the `Prometheus` resource and have read the [getting started](getting-started.md).
@@ -16,7 +21,7 @@ Let's create an example Alertmanager cluster, with three instances.
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager-example.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: Alertmanager
 metadata:
   name: example
@@ -103,7 +108,7 @@ Now this is a fully functional highly available Alertmanager cluster, but it doe
 
 [embedmd]:# (../../example/user-guides/alerting/prometheus-example.yaml)
 ```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   name: example

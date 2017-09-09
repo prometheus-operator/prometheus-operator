@@ -20,6 +20,9 @@ import (
 	"os"
 	"testing"
 
+	"k8s.io/client-go/pkg/api"
+
+	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	operatorFramework "github.com/coreos/prometheus-operator/test/framework"
 )
 
@@ -41,6 +44,24 @@ func TestMain(m *testing.M) {
 
 	if framework, err = operatorFramework.New(*ns, *kubeconfig, *opImage); err != nil {
 		log.Printf("failed to setup framework: %v\n", err)
+		os.Exit(1)
+	}
+
+	err = k8sutil.WaitForCRDReady(framework.MonClient.Prometheuses(api.NamespaceAll).List)
+	if err != nil {
+		log.Printf("Prometheus CRD not ready: %v\n", err)
+		os.Exit(1)
+	}
+
+	err = k8sutil.WaitForCRDReady(framework.MonClient.ServiceMonitors(api.NamespaceAll).List)
+	if err != nil {
+		log.Printf("ServiceMonitor CRD not ready: %v\n", err)
+		os.Exit(1)
+	}
+
+	err = k8sutil.WaitForCRDReady(framework.MonClient.Alertmanagers(api.NamespaceAll).List)
+	if err != nil {
+		log.Printf("Alertmanagers CRD not ready: %v\n", err)
 		os.Exit(1)
 	}
 

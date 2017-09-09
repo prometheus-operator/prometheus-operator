@@ -1,3 +1,16 @@
+## 0.12.0 / 2017-08-24
+
+Starting with this release only Kubernetes `v1.7.x` and up is supported as CustomResourceDefinitions are a requirement for the Prometheus Operator and are only available from those versions and up.
+
+Additionally all objects have been promoted from `v1alpha1` to `v1`. On start up of this version of the Prometheus Operator the previously used `ThirdPartyResource`s and the associated `v1alpha1` objects will be automatically migrated to their `v1` equivalent `CustomResourceDefinition`.
+
+* [CHANGE] All manifests created and used by the Prometheus Operator have been promoted from `v1alpha1` to `v1`.
+* [CHANGE] Use Kubernetes `CustomResourceDefinition`s instead of `ThirdPartyResource`s.
+* [FEATURE] Add ability to set scrape timeout to `ServiceMonitor`.
+* [ENHANCEMENT] Use `StatefulSet` rolling deployments.
+* [ENHANCEMENT] Properly set `SecurityContext` for Prometheus 2.0 deployments.
+* [ENHANCEMENT] Enable web lifecycle APIs for Prometheus 2.0 deployments.
+
 ## 0.11.1 / 2017-07-28
 
 * [ENHANCEMENT] Add profiling endpoints.

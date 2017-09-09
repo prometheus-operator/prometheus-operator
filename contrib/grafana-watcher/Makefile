@@ -3,7 +3,7 @@ all: build
 FLAGS =
 ENVVAR = GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 REGISTRY = quay.io/coreos
-TAG = v0.0.7
+TAG = v0.0.8
 NAME = grafana-watcher
 
 build:

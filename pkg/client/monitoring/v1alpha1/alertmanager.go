@@ -36,6 +36,8 @@ type AlertmanagersGetter interface {
 	Alertmanagers(namespace string) AlertmanagerInterface
 }
 
+var _ AlertmanagerInterface = &alertmanagers{}
+
 type AlertmanagerInterface interface {
 	Create(*Alertmanager) (*Alertmanager, error)
 	Get(name string, opts metav1.GetOptions) (*Alertmanager, error)
@@ -43,6 +45,7 @@ type AlertmanagerInterface interface {
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
 	Watch(opts metav1.ListOptions) (watch.Interface, error)
+	DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error
 }
 
 type alertmanagers struct {
@@ -142,6 +145,10 @@ func (a *alertmanagers) Watch(opts metav1.ListOptions) (watch.Interface, error) 
 		dec:   json.NewDecoder(r),
 		close: r.Close,
 	}), nil
+}
+
+func (a *alertmanagers) DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error {
+	return a.client.DeleteCollection(dopts, lopts)
 }
 
 // AlertmanagerFromUnstructured unmarshals an Alertmanager object from dynamic client's unstructured

@@ -74,27 +74,27 @@ func Main() int {
 
 	po, err := prometheuscontroller.New(cfg, logger.With("component", "prometheusoperator"))
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		fmt.Fprint(os.Stderr, "instantiating prometheus controller failed: ", err)
 		return 1
 	}
 
 	ao, err := alertmanager.New(cfg, logger.With("component", "alertmanageroperator"))
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
 		return 1
 	}
 
 	mux := http.NewServeMux()
 	web, err := api.New(cfg, logger.With("component", "api"))
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		fmt.Fprint(os.Stderr, "instantiating api failed: ", err)
 		return 1
 	}
 
 	web.Register(mux)
 	l, err := net.Listen("tcp", ":8080")
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		fmt.Fprint(os.Stderr, "listening port 8080 failed", err)
 		return 1
 	}
 
@@ -109,24 +109,20 @@ func Main() int {
 
 	conf, err := k8sutil.NewClusterConfig(cfg.Host, cfg.TLSInsecure, &cfg.TLSConfig)
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		fmt.Fprint(os.Stderr, "failed to instantiate cluster config: ", err)
 		return 1
 	}
 
-	mg, err := migrator.GetMigration(conf, logger.With("component", "migrator"))
+	m, err := migrator.NewMigrator(conf, logger)
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		fmt.Fprint(os.Stderr, "failed to instantiate migrator: ", err)
 		return 1
 	}
 
-	switch mg {
-	case migrator.TPR2CRD:
-		err = migrator.MigrateTPR2CRD(conf, logger.With("component", "migrator"))
-		if err != nil {
-			fmt.Fprint(os.Stderr, err)
-			return 1
-		}
-	default:
+	err = m.RunMigration()
+	if err != nil {
+		fmt.Fprint(os.Stderr, "failed to run migrations: ", err)
+		return 1
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

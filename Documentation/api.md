@@ -1,3 +1,8 @@
+<br>
+<div class="alert alert-info" role="alert">
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+</div>
+
 # API Docs
 
 This Document documents the types introduced by the Prometheus Operator to be consumed by users.
@@ -59,6 +64,8 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | paused | If set to true all actions on the underlaying managed objects are not goint to be performed, except for delete actions. | bool | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
+| affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
+| tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
 
 ## AlertmanagerStatus
 
@@ -91,6 +98,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | targetPort | Name or number of the target port of the endpoint. Mutually exclusive with port. | intstr.IntOrString | false |
 | path | HTTP path to scrape for metrics. | string | false |
 | scheme | HTTP scheme to use for scraping. | string | false |
+| params | Optional HTTP URL parameters | map[string][]string | false |
 | interval | Interval at which metrics should be scraped | string | false |
 | scrapeTimeout | Timeout after which the scrape is ended | string | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint | *[TLSConfig](#tlsconfig) | false |
@@ -150,6 +158,8 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods. The Secrets are mounted into /etc/prometheus/secrets/<secret-name>. Secrets changes after initial creation of a Prometheus object are not reflected in the running Pods. To change the secrets mounted into the Prometheus Pods, the object must be deleted and recreated with the new list of secrets. | []string | false |
+| affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
+| tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
 
 ## PrometheusStatus
 

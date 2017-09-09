@@ -30,12 +30,13 @@ import (
 const (
 	PrometheusesKind = "Prometheus"
 	PrometheusName   = "prometheuses"
-	PrometheusShort  = "prom"
 )
 
 type PrometheusesGetter interface {
 	Prometheuses(namespace string) PrometheusInterface
 }
+
+var _ PrometheusInterface = &prometheuses{}
 
 type PrometheusInterface interface {
 	Create(*Prometheus) (*Prometheus, error)
@@ -44,6 +45,7 @@ type PrometheusInterface interface {
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
 	Watch(opts metav1.ListOptions) (watch.Interface, error)
+	DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error
 }
 
 type prometheuses struct {
@@ -143,6 +145,10 @@ func (p *prometheuses) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 		dec:   json.NewDecoder(r),
 		close: r.Close,
 	}), nil
+}
+
+func (p *prometheuses) DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error {
+	return p.client.DeleteCollection(dopts, lopts)
 }
 
 // PrometheusFromUnstructured unmarshals a Prometheus object from dynamic client's unstructured
