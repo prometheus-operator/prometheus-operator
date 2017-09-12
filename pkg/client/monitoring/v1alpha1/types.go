@@ -329,6 +329,38 @@ type AlertmanagerStatus struct {
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
 
+type Alertrule struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard object’s metadata. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	// Specification of the desired behavior of the Alertmanager cluster. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
+	Spec AlertruleSpec `json:"spec"`
+	// Most recent observed status of the Alertmanager cluster. Read-only. Not
+	// included when requesting from the apiserver, only from the Prometheus
+	// Operator API itself. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
+	Status *AlertruleStatus `json:"status,omitempty"`
+}
+
+type AlertruleSpec struct {
+	Definition string `json:"definition"`
+}
+
+type AlertruleStatus struct {
+
+}
+
+type AlertruleList struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard list metadata
+	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	metav1.ListMeta `json:"metadata,omitempty"`
+	// List of Alertmanagers
+	Items []Alertrule `json:"items"`
+}
+
 // A selector for selecting namespaces either selecting all namespaces or a
 // list of namespaces.
 type NamespaceSelector struct {

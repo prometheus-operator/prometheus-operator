@@ -570,6 +570,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 func (c *Operator) createCRDs() error {
 	crds := []*extensionsobj.CustomResourceDefinition{
 		k8sutil.NewAlertmanagerCustomResourceDefinition(),
+		k8sutil.NewAlertruleCustomResourceDefinition(),
 	}
 
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()

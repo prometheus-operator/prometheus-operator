@@ -255,3 +255,20 @@ func NewAlertmanagerCustomResourceDefinition() *extensionsobj.CustomResourceDefi
 		},
 	}
 }
+
+func NewAlertruleCustomResourceDefinition() *extensionsobj.CustomResourceDefinition {
+	return &extensionsobj.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: v1alpha1.AlertruleName + "." + v1alpha1.Group,
+		},
+		Spec: extensionsobj.CustomResourceDefinitionSpec{
+			Group:   v1alpha1.Group,
+			Version: v1alpha1.Version,
+			Scope:   extensionsobj.NamespaceScoped,
+			Names: extensionsobj.CustomResourceDefinitionNames{
+				Plural: v1alpha1.AlertruleName,
+				Kind:   v1alpha1.AlertrulesKind,
+			},
+		},
+	}
+}

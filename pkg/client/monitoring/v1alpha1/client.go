@@ -51,6 +51,10 @@ func (c *MonitoringV1alpha1Client) ServiceMonitors(namespace string) ServiceMoni
 	return newServiceMonitors(c.restClient, c.dynamicClient, namespace)
 }
 
+func (c *MonitoringV1alpha1Client) Alertrules(namespace string) AlertruleInterface {
+	return newAlertrules(c.restClient, c.dynamicClient, namespace)
+}
+
 func (c *MonitoringV1alpha1Client) RESTClient() rest.Interface {
 	return c.restClient
 }
