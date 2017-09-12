@@ -32,6 +32,7 @@ type MonitoringV1alpha1Interface interface {
 	PrometheusesGetter
 	AlertmanagersGetter
 	ServiceMonitorsGetter
+	AlertrulesGetter
 }
 
 type MonitoringV1alpha1Client struct {

@@ -16,6 +16,10 @@ const (
 	AlertruleName  = "alertrules"
 )
 
+type AlertrulesGetter interface {
+	Alertrules(namespace string) AlertruleInterface
+}
+
 type AlertruleInterface interface {
 	Create(*Alertrule) (*Alertrule, error)
 	Get(name string, opts metav1.GetOptions) (*Alertrule, error)
