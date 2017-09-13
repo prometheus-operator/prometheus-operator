@@ -49,7 +49,7 @@ hack/cluster-monitoring/teardown
 
 The example manifests in [/manifests/examples/example-app](/contrib/kube-prometheus/manifests/examples/example-app)
 deploy a fake service exposing Prometheus metrics. They additionally define a new Prometheus
-server and a [`ServiceMonitor`](https://github.com/coreos/prometheus-operator/blob/master/Documentation/service-monitor.md),
+server and a [`ServiceMonitor`](https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md#servicemonitor),
 which specifies how the example service should be monitored.
 The Prometheus Operator will deploy and configure the desired Prometheus instance and continiously
 manage its life cycle.
