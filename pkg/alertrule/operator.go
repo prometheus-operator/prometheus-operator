@@ -29,7 +29,6 @@ import (
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -180,20 +179,6 @@ func (c *Operator) keyFunc(obj interface{}) (string, bool) {
 		return k, false
 	}
 	return k, true
-}
-
-func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
-	ts, ok := obj.(cache.DeletedFinalStateUnknown)
-	if ok {
-		obj = ts.Obj
-	}
-
-	o, err := meta.Accessor(obj)
-	if err != nil {
-		c.logger.Log("msg", "get object failed", "err", err)
-		return nil, false
-	}
-	return o, true
 }
 
 // enqueue adds a key to the queue. If obj is a key already it gets added directly.
@@ -370,7 +355,7 @@ func (c *Operator) createCRDs() error {
 func (c *Operator) createTPRs() error {
 	fmt.Println("TPR support to come")
 	//tprs := []*extensionsobjold.ThirdPartyResource{
-	//	k8sutil.NewAlertmanagerTPRDefinition(),
+	//	k8sutil.NewAlertruleTPRDefinition(),
 	//}
 	//tprClient := c.kclient.Extensions().ThirdPartyResources()
 	//
@@ -382,18 +367,54 @@ func (c *Operator) createTPRs() error {
 	//}
 	//
 	//// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	//return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().Alertmanagers(api.NamespaceAll).List)
+	//return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().Alertrules(api.NamespaceAll).List)
 	return nil
 }
 
+func (c *Operator) alertruleForConfigMap(cfgMap interface{}) (*v1alpha1.Alertrule) {
+	key, ok := c.keyFunc(cfgMap)
+	if !ok {
+		return nil
+	}
+
+	aKey := configMapKeyToAlertruleKey(key)
+	ar, exists, err := c.alrtruleInf.GetStore().GetByKey(aKey)
+	if err != nil {
+		c.logger.Log("msg", "Alertrule lookup failed", "err", err)
+		return nil
+	}
+	if !exists {
+		return nil
+	}
+
+	return ar.(*v1alpha1.Alertrule)
+}
+
+func configMapKeyToAlertruleKey(key string) string {
+	keyParts := strings.Split(key, "/")
+	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "alertrule-")
+}
+
 func (c *Operator) handleConfigMapAdd(obj interface{}) {
-	c.logger.Log("msg", "configmap added", "obj", obj)
+	if ar := c.alertruleForConfigMap(obj); ar != nil {
+		c.enqueueObject(ar, "Alertrule sync triggered ConfigMap")
+	}
 }
 
 func (c *Operator) handleConfigMapDelete(obj interface{}) {
-	c.logger.Log("msg", "configmap deleted", "obj", obj)
+	if ar := c.alertruleForConfigMap(obj); ar != nil {
+		c.enqueueObject(ar, "Alertrule sync triggered ConfigMap")
+	}
 }
 
-func (c *Operator) handleConfigMapUpdate(old interface{}, new interface{}) {
-	c.logger.Log("msg", "configmap updated", "oldobj", old, "newobj", new)
+func (c *Operator) handleConfigMapUpdate(oldo interface{}, newo interface{}) {
+	old := oldo.(*v1.ConfigMap)
+	new := newo.(*v1.ConfigMap)
+	c.logger.Log("msg", "update handler", "old", old.ResourceVersion, "new", new.ResourceVersion)
+	if old.ResourceVersion == new.ResourceVersion {
+		return
+	}
+	if ar := c.alertruleForConfigMap(new); ar != nil {
+		c.enqueueObject(ar, "Alertrule sync triggered from ConfigMap")
+	}
 }
