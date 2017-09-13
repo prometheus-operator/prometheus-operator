@@ -86,7 +86,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		mclient:   mclient,
 		crdclient: crdclient,
 		logger:    logger,
-		queue:     workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
+		queue:     workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertrule"),
 		config:    Config{},
 	}
 
@@ -273,15 +273,6 @@ func (c *Operator) sync(key string) error {
 	return nil
 }
 
-func ListOptions(name string) metav1.ListOptions {
-	return metav1.ListOptions{
-		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app":          "alertmanager",
-			"alertmanager": name,
-		})).String(),
-	}
-}
-
 func (c *Operator) createCRDs() error {
 	crds := []*extensionsobj.CustomResourceDefinition{
 		k8sutil.NewAlertruleCustomResourceDefinition(),
@@ -297,7 +288,7 @@ func (c *Operator) createCRDs() error {
 	}
 
 	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
-	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Alertmanagers(api.NamespaceAll).List)
+	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().Alertrules(api.NamespaceAll).List)
 }
 
 func (c *Operator) createTPRs() error {
