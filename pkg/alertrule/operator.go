@@ -36,6 +36,8 @@ import (
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/client-go/pkg/api/v1"
+	"strings"
 )
 
 const (
@@ -49,6 +51,7 @@ type Operator struct {
 	logger    log.Logger
 
 	alrtruleInf cache.SharedIndexInformer
+	cmInf cache.SharedIndexInformer
 
 	queue workqueue.RateLimitingInterface
 
@@ -96,11 +99,20 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		},
 		&v1alpha1.Alertrule{}, resyncPeriod, cache.Indexers{},
 	)
+	o.cmInf = cache.NewSharedIndexInformer(
+		cache.NewListWatchFromClient(o.kclient.Apps().RESTClient(), "configmaps", api.NamespaceAll, nil),
+		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{},
+	)
 
 	o.alrtruleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    o.handleAlertruleAdd,
 		DeleteFunc: o.handleAlertruleDelete,
 		UpdateFunc: o.handleAlertruleUpdate,
+	})
+	o.cmInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: o.handleConfigMapAdd,
+		DeleteFunc: o.handleConfigMapDelete,
+		UpdateFunc: o.handleConfigMapUpdate,
 	})
 
 	return o, nil
@@ -258,7 +270,6 @@ func (c *Operator) handleAlertruleUpdate(old, cur interface{}) {
 }
 
 func (c *Operator) sync(key string) error {
-	// TODO: add handling code here
 	fmt.Printf("sync: key=%s\n", key)
 	obj, exists, err := c.alrtruleInf.GetIndexer().GetByKey(key)
 	if err != nil {
@@ -268,11 +279,44 @@ func (c *Operator) sync(key string) error {
 		fmt.Printf("Not exists: %s\n", key)
 		return nil
 	}
+	ar := obj.(*v1alpha1.Alertrule)
 
 	c.logger.Log("msg", "sync alertrule", "key", key)
-	ar := obj.(*v1alpha1.Alertrule)
-	c.kclient.Core().ConfigMaps(ar.Namespace)
+
+	cmClient := c.kclient.Core().ConfigMaps(ar.Namespace)
+
+	obj, exists, err = c.cmInf.GetIndexer().GetByKey(alertruleKeyToConfigMapKey(key))
+	if err != nil {
+		return errors.Wrap(err, "retrieving configmap failed")
+	}
+	if !exists {
+		// make configmap
+		cm, err := makeConfigMap(ar, nil, c.config)
+		if err != nil {
+			return errors.Wrap(err, "making configmap failed when create")
+		}
+		if _, err := cmClient.Create(cm); err != nil {
+			return errors.Wrap(err, "creating configmap failed")
+		}
+
+		return nil
+	}
+
+	cm, err := makeConfigMap(ar, obj.(*v1.ConfigMap), c.config)
+	if err != nil {
+		return errors.Wrap(err, "making configmap failed when update")
+	}
+	if _, err := cmClient.Update(cm); err != nil {
+		return errors.Wrap(err, "updating configmap failed")
+	}
 	return nil
+}
+func makeConfigMap(alertrule *v1alpha1.Alertrule, configMap *v1.ConfigMap, config Config) (*v1.ConfigMap, error) {
+}
+
+func alertruleKeyToConfigMapKey(key string) string {
+	keyParts := strings.Split(key, "/")
+	return keyParts[0] + "/alertrule-" + keyParts[1]
 }
 
 func (c *Operator) createCRDs() error {
@@ -310,4 +354,9 @@ func (c *Operator) createTPRs() error {
 	//// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
 	//return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().Alertmanagers(api.NamespaceAll).List)
 	return nil
+}
+
+func (c *Operator) handleConfigMapAdd(obj interface{}) {
+
+
 }
