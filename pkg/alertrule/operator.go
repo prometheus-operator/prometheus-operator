@@ -37,6 +37,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/client-go/pkg/api/v1"
 	"strings"
+	extensionsobjold "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 const (
@@ -354,21 +355,20 @@ func (c *Operator) createCRDs() error {
 
 func (c *Operator) createTPRs() error {
 	fmt.Println("TPR support to come")
-	//tprs := []*extensionsobjold.ThirdPartyResource{
-	//	k8sutil.NewAlertruleTPRDefinition(),
-	//}
-	//tprClient := c.kclient.Extensions().ThirdPartyResources()
-	//
-	//for _, tpr := range tprs {
-	//	if _, err := tprClient.Create(tpr); err != nil && !apierrors.IsAlreadyExists(err) {
-	//		return err
-	//	}
-	//	c.logger.Log("msg", "TPR created", "tpr", tpr.Name)
-	//}
-	//
-	//// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	//return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().Alertrules(api.NamespaceAll).List)
-	return nil
+	tprs := []*extensionsobjold.ThirdPartyResource{
+		k8sutil.NewAlertruleTPRDefinition(),
+	}
+	tprClient := c.kclient.Extensions().ThirdPartyResources()
+
+	for _, tpr := range tprs {
+		if _, err := tprClient.Create(tpr); err != nil && !apierrors.IsAlreadyExists(err) {
+			return err
+		}
+		c.logger.Log("msg", "TPR created", "tpr", tpr.Name)
+	}
+
+	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
+	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().Alertrules(api.NamespaceAll).List)
 }
 
 func (c *Operator) alertruleForConfigMap(cfgMap interface{}) (*v1alpha1.Alertrule) {

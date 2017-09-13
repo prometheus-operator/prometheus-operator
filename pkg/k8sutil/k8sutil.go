@@ -205,6 +205,19 @@ func NewAlertmanagerTPRDefinition() *extensionsobjold.ThirdPartyResource {
 	}
 }
 
+func NewAlertruleTPRDefinition() *extensionsobjold.ThirdPartyResource {
+	return &extensionsobjold.ThirdPartyResource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "alertrule." + v1alpha1.Group,
+		},
+		Versions: []extensionsobjold.APIVersion{
+			{Name: v1alpha1.Version},
+		},
+		Description: "Alert rules",
+	}
+
+}
+
 func NewPrometheusCustomResourceDefinition() *extensionsobj.CustomResourceDefinition {
 	return &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
