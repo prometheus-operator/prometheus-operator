@@ -100,7 +100,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		&v1alpha1.Alertrule{}, resyncPeriod, cache.Indexers{},
 	)
 	o.cmInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(o.kclient.Apps().RESTClient(), "configmaps", api.NamespaceAll, nil),
+		cache.NewListWatchFromClient(o.kclient.Core().RESTClient(), "configmaps", api.NamespaceAll, nil),
 		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{},
 	)
 
@@ -111,8 +111,8 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 	})
 	o.cmInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: o.handleConfigMapAdd,
-		//DeleteFunc: o.handleConfigMapDelete,
-		//UpdateFunc: o.handleConfigMapUpdate,
+		DeleteFunc: o.handleConfigMapDelete,
+		UpdateFunc: o.handleConfigMapUpdate,
 	})
 
 	return o, nil
@@ -167,6 +167,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.worker()
 
 	go c.alrtruleInf.Run(stopc)
+	go c.cmInf.Run(stopc)
 
 	<-stopc
 	return nil
@@ -247,7 +248,6 @@ func (c *Operator) enqueueObject(obj interface{}, message string) {
 
 	c.logger.Log("msg", message, "key", key)
 	c.enqueue(key)
-
 }
 
 func (c *Operator) handleAlertruleAdd(obj interface{}) {
@@ -263,14 +263,13 @@ func (c *Operator) handleAlertruleUpdate(old, cur interface{}) {
 }
 
 func (c *Operator) sync(key string) error {
-	fmt.Printf("sync: key=%s\n", key)
 	obj, exists, err := c.alrtruleInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		fmt.Printf("Not exists: %s\n", key)
-		return nil
+		c.logger.Log("msg", "Alertrule key Absent", "key", key)
+		return c.destroyAlertRule(key)
 	}
 	ar := obj.(*v1alpha1.Alertrule)
 
@@ -283,7 +282,6 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "retrieving configmap failed")
 	}
 	if !exists {
-		// make configmap
 		cm, err := makeConfigMap(ar, nil, c.config)
 		if err != nil {
 			return errors.Wrap(err, "making configmap failed when create")
@@ -304,23 +302,51 @@ func (c *Operator) sync(key string) error {
 	}
 	return nil
 }
+
+func (c *Operator) destroyAlertRule(key string) error {
+	cfgMapKey := alertruleKeyToConfigMapKey(key)
+	obj, exists, err := c.cmInf.GetStore().GetByKey(cfgMapKey)
+	if err != nil {
+		return errors.Wrap(err, "retrieving configmap from cache failed")
+	}
+
+	if !exists {
+		return nil
+	}
+
+	cfgMap := obj.(*v1.ConfigMap)
+	cmClient := c.kclient.Core().ConfigMaps(cfgMap.Namespace)
+	if cmClient.Delete(cfgMap.Name, nil); err != nil {
+		return errors.Wrap(err, "deleting configmap failed")
+	}
+	return nil
+}
+
 func makeConfigMap(ar *v1alpha1.Alertrule, oldCfgMap *v1.ConfigMap, config Config) (*v1.ConfigMap, error) {
 	var objectMeta metav1.ObjectMeta
 	if oldCfgMap != nil {
 		objectMeta.Annotations = oldCfgMap.ObjectMeta.Annotations
 	}
-	objectMeta.Name = "alertrule-" + ar.Name
+	objectMeta.Name = alertruleNameToConfigMapName(ar.Name)
 	objectMeta.Labels = ar.Labels
 	cm := &v1.ConfigMap{
 		ObjectMeta: objectMeta,
-		Data: map[string]string{ar.Name + ".rules": ar.Spec.Definition},
+		Data: map[string]string{alertruleNameToAlertrulePath(ar.Name): ar.Spec.Definition},
 	}
 	return cm, nil
 }
 
 func alertruleKeyToConfigMapKey(key string) string {
 	keyParts := strings.Split(key, "/")
-	return keyParts[0] + "/alertrule-" + keyParts[1]
+	return keyParts[0] + "/" + alertruleNameToConfigMapName(keyParts[1])
+}
+
+func alertruleNameToConfigMapName(name string) string {
+	return fmt.Sprintf("alertrule-%s", name)
+}
+
+func alertruleNameToAlertrulePath(name string) string {
+	return fmt.Sprintf("%s.rules", name)
 }
 
 func (c *Operator) createCRDs() error {
@@ -361,6 +387,13 @@ func (c *Operator) createTPRs() error {
 }
 
 func (c *Operator) handleConfigMapAdd(obj interface{}) {
+	c.logger.Log("msg", "configmap added", "obj", obj)
+}
 
+func (c *Operator) handleConfigMapDelete(obj interface{}) {
+	c.logger.Log("msg", "configmap deleted", "obj", obj)
+}
 
+func (c *Operator) handleConfigMapUpdate(old interface{}, new interface{}) {
+	c.logger.Log("msg", "configmap updated", "oldobj", old, "newobj", new)
 }
