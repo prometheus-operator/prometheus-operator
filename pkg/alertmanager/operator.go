@@ -23,7 +23,6 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
@@ -61,8 +60,6 @@ type Operator struct {
 
 	alrtInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
-
-	alrtruleInf cache.SharedIndexInformer  // Alertrule Informer
 
 	queue workqueue.RateLimitingInterface
 
@@ -118,13 +115,6 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		cache.NewListWatchFromClient(o.kclient.AppsV1beta1().RESTClient(), "statefulsets", api.NamespaceAll, nil),
 		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
-	o.alrtruleInf = cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc: o.mclient.MonitoringV1alpha1().Alertrules(api.NamespaceAll).List,
-			WatchFunc: o.mclient.MonitoringV1alpha1().Alertrules(api.NamespaceAll).Watch,
-		},
-		&v1alpha1.Alertrule{}, resyncPeriod, cache.Indexers{},
-	)
 
 	o.alrtInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    o.handleAlertmanagerAdd,
@@ -135,11 +125,6 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		AddFunc:    o.handleStatefulSetAdd,
 		DeleteFunc: o.handleStatefulSetDelete,
 		UpdateFunc: o.handleStatefulSetUpdate,
-	})
-	o.alrtruleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    o.handleAlertruleAdd,
-		DeleteFunc: o.handleAlertruleDelete,
-		UpdateFunc: o.handleAlertruleUpdate,
 	})
 
 	return o, nil
@@ -196,7 +181,6 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 
 	go c.alrtInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
-	go c.alrtruleInf.Run(stopc)
 
 	<-stopc
 	return nil
@@ -408,7 +392,6 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 }
 
 func (c *Operator) sync(key string) error {
-	// TODO: add handling code here
 	obj, exists, err := c.alrtInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err

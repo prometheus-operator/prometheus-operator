@@ -36,6 +36,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/migrator"
 	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/go-kit/kit/log"
+	"github.com/coreos/prometheus-operator/pkg/alertrule"
 )
 
 var (
@@ -84,6 +85,12 @@ func Main() int {
 		return 1
 	}
 
+	aro, err := alertrule.New(cfg, logger.With("component", "alertruleoperator"))
+	if err != nil {
+		fmt.Fprint(os.Stderr, "instantiating alertrule controller failed: ", err)
+		return 1
+	}
+
 	mux := http.NewServeMux()
 	web, err := api.New(cfg, logger.With("component", "api"))
 	if err != nil {
@@ -100,6 +107,8 @@ func Main() int {
 
 	po.RegisterMetrics(r)
 	ao.RegisterMetrics(r)
+	aro.RegisterMetrics(r)
+
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 	mux.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
 	mux.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
@@ -130,6 +139,7 @@ func Main() int {
 
 	wg.Go(func() error { return po.Run(ctx.Done()) })
 	wg.Go(func() error { return ao.Run(ctx.Done()) })
+	wg.Go(func() error { return aro.Run(ctx.Done() )})
 
 	srv := &http.Server{Handler: mux}
 	go srv.Serve(l)
