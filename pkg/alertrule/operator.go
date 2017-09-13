@@ -111,8 +111,8 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 	})
 	o.cmInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: o.handleConfigMapAdd,
-		DeleteFunc: o.handleConfigMapDelete,
-		UpdateFunc: o.handleConfigMapUpdate,
+		//DeleteFunc: o.handleConfigMapDelete,
+		//UpdateFunc: o.handleConfigMapUpdate,
 	})
 
 	return o, nil
@@ -311,7 +311,16 @@ func (c *Operator) sync(key string) error {
 	}
 	return nil
 }
-func makeConfigMap(alertrule *v1alpha1.Alertrule, configMap *v1.ConfigMap, config Config) (*v1.ConfigMap, error) {
+func makeConfigMap(ar *v1alpha1.Alertrule, oldCfgMap *v1.ConfigMap, config Config) (*v1.ConfigMap, error) {
+	var objectMeta metav1.ObjectMeta
+	if oldCfgMap != nil {
+		objectMeta.Annotations = oldCfgMap.ObjectMeta.Annotations
+	}
+	cm := &v1.ConfigMap{
+		ObjectMeta: objectMeta,
+		Data: map[string]string{ar.Name + ".rules": ar.Spec.Definition},
+	}
+	return cm, nil
 }
 
 func alertruleKeyToConfigMapKey(key string) string {
