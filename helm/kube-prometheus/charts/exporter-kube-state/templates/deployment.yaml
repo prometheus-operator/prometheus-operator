@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ template "fullname" . }}
   labels:
     app: {{ template "name" . }}
     component: kube-state
@@ -19,11 +19,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      app: {{ template "fullname" . }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
+        app: {{ template "fullname" . }}
         version: "{{ .Values.image.tag }}"
     spec:
       containers:
