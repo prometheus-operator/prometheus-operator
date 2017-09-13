@@ -31,7 +31,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api"
@@ -49,7 +48,7 @@ type Operator struct {
 	crdclient apiextensionsclient.Interface
 	logger    log.Logger
 
-	alrtruleInf cache.SharedIndexInformer  // Alertrule Informer
+	alrtruleInf cache.SharedIndexInformer
 
 	queue workqueue.RateLimitingInterface
 
@@ -265,11 +264,14 @@ func (c *Operator) sync(key string) error {
 	if err != nil {
 		return err
 	}
-	if exists {
-		fmt.Println(obj)
-	} else {
+	if !exists {
 		fmt.Printf("Not exists: %s\n", key)
+		return nil
 	}
+
+	c.logger.Log("msg", "sync alertrule", "key", key)
+	ar := obj.(*v1alpha1.Alertrule)
+	c.kclient.Core().ConfigMaps(ar.Namespace)
 	return nil
 }
 

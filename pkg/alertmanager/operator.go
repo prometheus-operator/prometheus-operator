@@ -331,36 +331,6 @@ func (c *Operator) handleAlertmanagerUpdate(old, cur interface{}) {
 	c.enqueue(key)
 }
 
-func (c *Operator) handleAlertruleAdd(obj interface{}) {
-	key, ok := c.keyFunc(obj)
-	if !ok {
-		return
-	}
-
-	c.logger.Log("msg", "Alertrule added", "key", key)
-	c.enqueue(key)
-}
-
-func (c *Operator) handleAlertruleDelete(obj interface{}) {
-	key, ok := c.keyFunc(obj)
-	if !ok {
-		return
-	}
-
-	c.logger.Log("msg", "Alertrule deleted", "key", key)
-	c.enqueue(key)
-}
-
-func (c *Operator) handleAlertruleUpdate(old, cur interface{}) {
-	key, ok := c.keyFunc(cur)
-	if !ok {
-		return
-	}
-
-	c.logger.Log("msg", "Alertrule updated", "key", key)
-	c.enqueue(key)
-}
-
 func (c *Operator) handleStatefulSetDelete(obj interface{}) {
 	if a := c.alertmanagerForStatefulSet(obj); a != nil {
 		c.enqueue(a)
@@ -600,7 +570,6 @@ func (c *Operator) destroyAlertmanager(key string) error {
 func (c *Operator) createCRDs() error {
 	crds := []*extensionsobj.CustomResourceDefinition{
 		k8sutil.NewAlertmanagerCustomResourceDefinition(),
-		k8sutil.NewAlertruleCustomResourceDefinition(),
 	}
 
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()
