@@ -1,4 +1,12 @@
 #!/bin/bash
+
+# exit immediately when a command fails
+set -e
+# only exit with zero if all commands of the pipeline exit successfully
+set -o pipefail
+# error on unset variables
+set -u
+
 # Author: eedugon
 
 # Description: Tool to maintain grafana dashboards configmap for a grafana deployed
@@ -124,7 +132,7 @@ addConfigMapHeader() {
   # If a parameter is provided it will be used as the configmap index.
   # If no parameter is provided, the name will be kept
   test "$#" -le 1 || { echo "# INTERNAL ERROR: Wrong call to function addConfigMapHeader"; return 1; }
-  local id="$1"
+  test "$#" -eq 1 && local id="$1" || local id=""
 
   if [ "$id" ]; then
     cat "$CONFIGMAP_HEADER" | sed "s/name: grafana-dashboards/name: grafana-dashboards-$id/"
@@ -197,20 +205,20 @@ bin-pack-files() {
     test -f "$file" || { echo "# INTERNAL ERROR: File not found: $file"; continue; }
 #    echo "debug: Processing file $(basename $file)"
 
-    file_size_bytes="$(stat -c%s "$file")"
+    file_size_bytes="$(stat -c%s "$file")" || true
 
     # If the file is bigger than the configured limit we skip it file
     if [ "$file_size_bytes" -gt "$DATA_SIZE_LIMIT" ]; then
       echo "ERROR: File $(basename $file) bigger than size limit: $DATA_SIZE_LIMIT ($file_size_bytes). Skipping"
       continue
     fi
-    (( total_files_processed++ ))
+    (( total_files_processed++ )) || true
 
     if test "$(expr "$bytes_to_process" + "$file_size_bytes")" -le "$DATA_SIZE_LIMIT"; then
       # We have room to include the file in the configmap
       # test "$to_process" && to_process="$to_process $file" || to_process="$file"
       to_process+=("$file")
-      (( bytes_to_process = bytes_to_process + file_size_bytes ))
+      (( bytes_to_process = bytes_to_process + file_size_bytes )) || true
       echo "# File $(basename $file) : added to queue"
     else
       # There's no room to add this file to the queue. so we process what we have and add the file to the queue
@@ -222,8 +230,8 @@ bin-pack-files() {
         addConfigMapHeader $n >> $OUTPUT_FILE || { echo "ERROR in call to addConfigMapHeader function"; exit 1; }
         addArrayToConfigMap >> $OUTPUT_FILE || { echo "ERROR in call to addArrayToConfigMap function"; exit 1; }
         # Initialize variables with info about file not processed
-        (( total_configmaps_created++ ))
-        (( n++ ))
+        (( total_configmaps_created++ )) || true
+        (( n++ )) || true
         # to_process="$file"
         to_process=()
         to_process+=("$file")
@@ -286,7 +294,7 @@ if [ "$to_process" ]; then
     addConfigMapHeader $n >> $OUTPUT_FILE || { echo "ERROR in call to addConfigMapHeader function"; exit 1; }
   fi
   addArrayToConfigMap >> $OUTPUT_FILE || { echo "ERROR in call to addArrayToConfigMap function"; exit 1; }
-  (( total_configmaps_created++ ))
+  (( total_configmaps_created++ )) || true
   to_process=()
 fi
 
