@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboards
+  name: grafana-dashboards-0
 data:
   deployment-dashboard.json: |+
     {
@@ -821,7 +821,7 @@ data:
       "timezone": "browser",
       "title": "Deployment",
       "version": 1
-    },
+    }    ,
       "inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -1882,7 +1882,7 @@ data:
       "timezone": "browser",
       "title": "Kubernetes Capacity Planing",
       "version": 4
-    },
+    }    ,
       "inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -2628,7 +2628,7 @@ data:
       "timezone": "",
       "title": "Kubernetes Cluster Health",
       "version": 12
-    },
+    }    ,
       "inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -3537,7 +3537,7 @@ data:
       "timezone": "",
       "title": "Kubernetes Cluster Status",
       "version": 22
-    },
+    }    ,
       "inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -4213,7 +4213,7 @@ data:
       "timezone": "",
       "title": "Kubernetes Control Plane Status",
       "version": 11
-    },
+    }    ,
       "inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -4660,7 +4660,7 @@ data:
       "timezone": "browser",
       "title": "Kubernetes Resource Requests",
       "version": 2
-    },
+    }    ,
       "inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -5565,7 +5565,7 @@ data:
       "timezone": "browser",
       "title": "Nodes",
       "version": 2
-    },
+    }    ,
       "inputs": [
         {
           "name": "DS_PROMETHEUS",
@@ -6010,7 +6010,7 @@ data:
       "timezone": "browser",
       "title": "Pods",
       "version": 1
-    },
+    }    ,
       "inputs": [
         {
           "name": "DS_PROMETHEUS",

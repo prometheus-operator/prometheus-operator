@@ -16,8 +16,12 @@ set -u
 # Based on a configurable size limit, the tool will create 1 or N configmaps
 #   to allocate the .json resources (bin packing)
 
+# Update: 20170914
+# The tool also generates a grafana deployment manifest (-g option)
+
 # parameters
 # -o, --output-file
+# -g, --grafana-manifest-file
 # -i, --input-dir
 # -s, --size-limit
 # -x, --apply-configmap : true or false (default = false)
@@ -66,15 +70,18 @@ DATE_EXEC="$(date "+%Y-%m-%d-%H%M%S")"
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TOOL_HOME="$(dirname $BIN_DIR)"
 SCRIPT_BASE=`basename $0 | sed "s/\.[Ss][Hh]//"`
+CONFIGMAP_DASHBOARD_PREFIX="grafana-dashboards"
 
 TEMPLATES_DIR="$TOOL_HOME/templates"
 DASHBOARD_HEADER_FILE="$TEMPLATES_DIR/dashboard.header"
 DASHBOARD_FOOT_FILE="$TEMPLATES_DIR/dashboard.foot"
 CONFIGMAP_HEADER="$TEMPLATES_DIR/ConfigMap.header"
+GRAFANA_DEPLOYMENT_TEMPLATE="$TEMPLATES_DIR/grafana-deployment-template.yaml"
 OUTPUT_BASE_DIR="$TOOL_HOME/output"
 
 # Some default values
 OUTPUT_FILE="$OUTPUT_BASE_DIR/grafana-dashboards-configMap-$DATE_EXEC.yaml"
+GRAFANA_OUTPUT_FILE="$OUTPUT_BASE_DIR/grafana-deployment-$DATE_EXEC.yaml"
 DASHBOARDS_DIR="$TEMPLATES_DIR/grafana-dashboards"
 
 APPLY_CONFIGMAP="false"
@@ -87,6 +94,10 @@ while (( "$#" )); do
     case "$1" in
         "-o" | "--output-file")
             OUTPUT_FILE="$2"
+            shift
+            ;;
+        "-g" | "--grafana-output-file")
+            GRAFANA_OUTPUT_FILE="$2"
             shift
             ;;
         "-i" | "--input-dir")
@@ -126,6 +137,26 @@ while (( "$#" )); do
 done
 
 #
+# Auxiliary Functions
+#
+indentMultiLineString() {
+    # Indent a given string (in one line including multiple \n)
+    test "$#" -eq 2 || { echo "INTERNAL ERROR: wrong call to function indentMultiLineString"; exit 1; }
+    local indent_number="$1"
+    local string="$2"
+
+    test "$indent_number" -ge 0 || { echo "INTERNAL ERROR: wrong indent number parameter: $indent_number"; exit 1; }
+
+    # prepare indentation text
+    local indent_string=""
+    for (( c=0; c<$indent_number; c++ )); do
+      indent_string="$indent_string "
+    done
+
+    echo "$string" | sed -e "s#^#$indent_string#" -e "s#\\\n#\\\n$indent_string#g"
+}
+
+#
 # Main Functions
 #
 addConfigMapHeader() {
@@ -135,7 +166,7 @@ addConfigMapHeader() {
   test "$#" -eq 1 && local id="$1" || local id=""
 
   if [ "$id" ]; then
-    cat "$CONFIGMAP_HEADER" | sed "s/name: grafana-dashboards/name: grafana-dashboards-$id/"
+    cat "$CONFIGMAP_HEADER" | sed "s/name: $CONFIGMAP_DASHBOARD_PREFIX/name: $CONFIGMAP_DASHBOARD_PREFIX-$id/"
   else
     cat "$CONFIGMAP_HEADER"
   fi
@@ -247,12 +278,23 @@ bin-pack-files() {
   IFS=$OLDIFS
 }
 
+# prepareGrafanaDeploymentManifest() {
+#   local num_configmaps="$1"
+#
+#   for (( i=0; i<$total_configmaps_created; i++ )); do
+#     echo "Creating deployment for $CONFIGMAP_DASHBOARD_PREFIX-$i"
+#
+#   done
+# }
+
+
 # Some variables checks...
 test ! -d "$TEMPLATES_DIR" && { echo "ERROR: missing templates directory $TEMPLATES_DIR"; exit 1; }
 
 test -f "$DASHBOARD_FOOT_FILE" || { echo "Template $DASHBOARD_FOOT_FILE not found"; exit 1; }
 test -f "$DASHBOARD_HEADER_FILE" || { echo "Template $DASHBOARD_HEADER_FILE not found"; exit 1; }
 test -f "$CONFIGMAP_HEADER" || { echo "Template $CONFIGMAP_HEADER not found"; exit 1; }
+test -f "$GRAFANA_DEPLOYMENT_TEMPLATE" || { echo "Template $GRAFANA_DEPLOYMENT_TEMPLATE not found"; exit 1; }
 
 test ! -d "$OUTPUT_BASE_DIR" && { echo "ERROR: missing directory $OUTPUT_BASE_DIR"; exit 1; }
 
@@ -260,7 +302,9 @@ test ! -d "$OUTPUT_BASE_DIR" && { echo "ERROR: missing directory $OUTPUT_BASE_DI
 test -d "$DASHBOARDS_DIR" || { echo "ERROR: Dashboards directory not found: $DASHBOARDS_DIR"; echoSyntax; exit 1; }
 
 test -f "$OUTPUT_FILE" && { echo "ERROR: Output file already exists: $OUTPUT_FILE"; exit 1; }
+test -f "$GRAFANA_OUTPUT_FILE" && { echo "ERROR: Output file already exists: $GRAFANA_OUTPUT_FILE"; exit 1; }
 touch $OUTPUT_FILE || { echo "ERROR: Unable to create or modify $OUTPUT_FILE"; exit 1; }
+touch $GRAFANA_OUTPUT_FILE || { echo "ERROR: Unable to create or modify $GRAFANA_OUTPUT_FILE"; exit 1; }
 
 # Main code start
 
@@ -269,6 +313,8 @@ echo "# Configured size limit: $DATA_SIZE_LIMIT bytes"
 echo "# Grafna input dashboards and datasources will be read from: $DASHBOARDS_DIR"
 echo "# Grafana Dashboards ConfigMap will be created into file:"
 echo "$OUTPUT_FILE"
+echo "# Grafana Deployment manifest will be created into file:"
+echo "$GRAFANA_OUTPUT_FILE"
 echo
 
 # Loop variables initialization
@@ -286,7 +332,7 @@ if [ "$to_process" ]; then
     echo
     echo "# Size limit not reached ($bytes_to_process). Adding all files into basic configmap"
     echo
-    addConfigMapHeader >> $OUTPUT_FILE || { echo "ERROR in call to addConfigMapHeader function"; exit 1; }
+    addConfigMapHeader $n >> $OUTPUT_FILE || { echo "ERROR in call to addConfigMapHeader function"; exit 1; }
   else
     echo
     echo "# Size limit not reached ($bytes_to_process). Adding remaining files into configmap with id $n"
@@ -302,24 +348,50 @@ echo "# Process completed, configmap created: $(basename $OUTPUT_FILE)"
 echo "# Summary"
 echo "# Total files processed: $total_files_processed"
 echo "# Total amount of ConfigMaps inside the manifest: $total_configmaps_created"
+echo
+# Grafana deployment Processing (for every configmap)
+#prepareGrafanaDeploymentManifest "$total_configmaps_created"
+VOLUMES=""
+VOLUME_MOUNTS=""
+WATCH_DIR=""
+for (( i=0; i<$total_configmaps_created; i++ )); do
+  configmap="$CONFIGMAP_DASHBOARD_PREFIX-$i"
+  echo "# Preparing grafana deployment to support configmap: $configmap"
+
+  test "$VOLUME_MOUNTS" && VOLUME_MOUNTS="$VOLUME_MOUNTS\n- name: $configmap\n  mountPath: /var/$configmap" || VOLUME_MOUNTS="- name: $configmap\n  mountPath: /var/$configmap"
+  test "$VOLUMES" && VOLUMES="$VOLUMES\n- name: $configmap\n  configMap:\n    name: $configmap" || VOLUMES="- name: $configmap\n  configMap:\n    name: $configmap"
+  test "$WATCH_DIR" && WATCH_DIR="$WATCH_DIR\n- '--watch-dir=/var/$configmap'" || WATCH_DIR="- '--watch-dir=/var/$configmap'"
+  # echo "DEBUG:"
+  # echo "VOLUMES: $VOLUMES"
+  # echo "VOLUME_MOUNTS: $VOLUME_MOUNTS"
+  # echo "WATCH_DIR: $WATCH_DIR"
+  echo
+done
+
+echo "# Processing grafana deployment template into $GRAFANA_OUTPUT_FILE"
+sed -e "s#XXX_VOLUMES_XXX#$(indentMultiLineString 6 "$VOLUMES")#" \
+   -e "s#XXX_VOLUME_MOUNTS_XXX#$(indentMultiLineString 8 "$VOLUME_MOUNTS")#" \
+   -e "s#XXX_WATCH_DIR_XXX#$(indentMultiLineString 10 "$WATCH_DIR")#" \
+   $GRAFANA_DEPLOYMENT_TEMPLATE > $GRAFANA_OUTPUT_FILE
 
 # If output file is empty we can delete it and exit
 test ! -s "$OUTPUT_FILE" && { echo "# Configmap empty, deleting file"; rm $OUTPUT_FILE; exit 0; }
+test ! -s "$GRAFANA_OUTPUT_FILE" && { echo "# Configmap empty, deleting file"; rm $GRAFANA_OUTPUT_FILE; exit 0; }
 
 if [ "$APPLY_CONFIGMAP" = "true" ]; then
   test -x "$(which kubectl)" || { echo "ERROR: kubectl command not available. Apply configmap not possible"; exit 1; }
-  echo
+  echo "# Applying configuration with $APPLY_TYPE method on namespace $NAMESPACE"
   if kubectl -n $NAMESPACE $APPLY_TYPE -f "$OUTPUT_FILE"; then
     echo
-    echo "# ConfigMap updated. Wait until grafana-watcher applies the changes and reloads the dashboards."
+    echo "# ConfigMap updated. Updating grafana deployment"
+    kubectl -n $NAMESPACE $APPLY_TYPE -f "$GRAFANA_OUTPUT_FILE" || { echo "Error applying Grafana deployment. Check yaml file: $GRAFANA_OUTPUT_FILE"; exit 1; }
   else
-    echo
-    echo "ERROR APPLYING CONFIGURATION. Check yaml file"
-    echo "$OUTPUT_FILE"
+    echo "Error applying Configmap. Check yaml file: $OUTPUT_FILE"
   fi
 else
   echo
   echo "# To apply the new configMap to your k8s system do something like:"
-  echo "kubectl -n monitoring $APPLY_TYPE -f $(basename $OUTPUT_FILE)"
+  echo "kubectl -n monitoring $APPLY_TYPE -f $OUTPUT_FILE"
+  echo "kubectl -n monitoring $APPLY_TYPE -f $GRAFANA_OUTPUT_FILE"
   echo
 fi

@@ -43,7 +43,7 @@ spec:
       - name: grafana-watcher
         image: quay.io/coreos/grafana-watcher:v0.0.8
         args:
-          - '--watch-dir=/var/grafana-dashboards-0'
+XXX_WATCH_DIR_XXX
           - '--grafana-url=http://localhost:3000'
         env:
         - name: GRAFANA_USER
@@ -64,11 +64,8 @@ spec:
             memory: "32Mi"
             cpu: "100m"
         volumeMounts:
-        - name: grafana-dashboards-0
-          mountPath: /var/grafana-dashboards-0
+XXX_VOLUME_MOUNTS_XXX
       volumes:
       - name: grafana-storage
         emptyDir: {}
-      - name: grafana-dashboards-0
-        configMap:
-          name: grafana-dashboards-0
+XXX_VOLUMES_XXX
