@@ -21,7 +21,7 @@ spec:
       # memory. Modify based on your target and time-series count for
       # production use. This value is mainly meant for demonstration/testing
       # purposes.
-      memory: 4Gi
+      memory: 400Mi
   alerting:
     alertmanagers:
     - namespace: monitoring
