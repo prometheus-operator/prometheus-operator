@@ -88,7 +88,7 @@ func (u *GrafanaDashboardUpdater) createDashboardsFromFiles() error {
 		}
 
 		for _, fp := range filePaths {
-			u.createDashboardFromFile(fp)
+			err = u.createDashboardFromFile(fp)
 			if err != nil {
 				return err
 			}
