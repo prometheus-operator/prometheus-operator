@@ -58,7 +58,7 @@ When now creating the `Prometheus` object a `PersistentVolumeClaim` is used for 
 
 ## Manual storage provisioning
 
-The Prometheus TPR specification allows you to support arbitrary storage, via a PersistentVolumeClaim.
+The Prometheus CRD specification allows you to support arbitrary storage, via a PersistentVolumeClaim.
 
 The easiest way to use a volume that cannot be automatically provisioned (for whatever reason) is to use a label selector alongside a manually created PersistentVolume.
 

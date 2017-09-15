@@ -67,7 +67,7 @@ This ServiceMonitor targets **all** Services with the label `k8s-app` (`spec.sel
 ### Namespace "limits"/things to keep in mind
 See the ServiceMonitor Documentation:
 > While `ServiceMonitor`s must live in the same namespace as the `Prometheus`
-TPR, discovered targets may come from any namespace. This is important to allow
+resource, discovered targets may come from any namespace. This is important to allow
 cross-namespace monitoring use cases, e.g. for meta-monitoring. Using the
 `namespaceSelector` of the `ServiceMonitorSpec`, one can restrict the
 namespaces the `Endpoints` objects are allowed to be discovered from.
