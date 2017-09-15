@@ -64,7 +64,7 @@ var (
 		"v1.6.3",
 		"v1.7.0",
 		"v1.7.1",
-		"v2.0.0-beta.0",
+		"v2.0.0-beta.4",
 	}
 )
 
@@ -78,6 +78,9 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 	}
 	if p.Spec.Version == "" {
 		p.Spec.Version = DefaultVersion
+	}
+	if p.Spec.Replicas == nil {
+		p.Spec.Replicas = &minReplicas
 	}
 	if p.Spec.Replicas != nil && *p.Spec.Replicas < minReplicas {
 		p.Spec.Replicas = &minReplicas
@@ -441,16 +444,20 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 	}
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
-	for k, v := range p.Spec.PodMetadata.Labels {
-		// ToDo: define which labels can be set and sanitize them.
-		podLabels[k] = v
+	if p.Spec.PodMetadata != nil {
+		if p.Spec.PodMetadata.Labels != nil {
+			for k, v := range p.Spec.PodMetadata.Labels {
+				podLabels[k] = v
+			}
+		}
+		if p.Spec.PodMetadata.Annotations != nil {
+			for k, v := range p.Spec.PodMetadata.Annotations {
+				podAnnotations[k] = v
+			}
+		}
 	}
 	podLabels["app"] = "prometheus"
 	podLabels["prometheus"] = p.Name
-	for k, v := range p.Spec.PodMetadata.Annotations {
-		// ToDo: define which annotations can be set and sanitize them.
-		podAnnotations[k] = v
-	}
 	return &v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    p.Spec.Replicas,

@@ -15,13 +15,14 @@
 package prometheus
 
 import (
+	"reflect"
+	"testing"
+
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
-	"reflect"
-	"testing"
 )
 
 var (
@@ -62,7 +63,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.PrometheusSpec{
-			PodMetadata: metav1.ObjectMeta{
+			PodMetadata: &metav1.ObjectMeta{
 				Annotations: annotations,
 				Labels:      labels,
 			},

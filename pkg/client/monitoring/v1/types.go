@@ -52,7 +52,7 @@ type PrometheusSpec struct {
 	// Standard object’s metadata. More info:
 	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	// Metadata Labels and Annotations gets propagated to the prometheus pods.
-	PodMetadata metav1.ObjectMeta `json:"podMetadata,omitempty"`
+	PodMetadata *metav1.ObjectMeta `json:"podMetadata,omitempty"`
 	// ServiceMonitors to be selected for target discovery.
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
 	// Version of Prometheus to be deployed.
@@ -272,6 +272,10 @@ type Alertmanager struct {
 // Specification of the desired behavior of the Alertmanager cluster. More info:
 // http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 type AlertmanagerSpec struct {
+	// Standard object’s metadata. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	// Metadata Labels and Annotations gets propagated to the prometheus pods.
+	PodMetadata *metav1.ObjectMeta `json:"podMetadata,omitempty"`
 	// Version the cluster should be on.
 	Version string `json:"version,omitempty"`
 	// Base image that is used to deploy pods.
