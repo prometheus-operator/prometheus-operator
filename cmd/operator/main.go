@@ -30,7 +30,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/api"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/migrator"
@@ -39,8 +38,7 @@ import (
 )
 
 var (
-	cfg              prometheuscontroller.Config
-	analyticsEnabled bool
+	cfg prometheuscontroller.Config
 )
 
 func init() {
@@ -52,7 +50,6 @@ func init() {
 	flagset.StringVar(&cfg.TLSConfig.CAFile, "ca-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.")
 	flagset.StringVar(&cfg.KubeletObject, "kubelet-service", "", "Service/Endpoints object to write kubelets into in format \"namespace/name\"")
 	flagset.BoolVar(&cfg.TLSInsecure, "tls-insecure", false, "- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.")
-	flagset.BoolVar(&analyticsEnabled, "analytics", true, "Send analytical event (Cluster Created/Deleted etc.) to Google Analytics")
 	flagset.StringVar(&cfg.PrometheusConfigReloader, "prometheus-config-reloader", "quay.io/coreos/prometheus-config-reloader:v0.0.2", "Config and rule reload image")
 	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", "quay.io/coreos/configmap-reload:v0.0.1", "Reload Image")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", "quay.io/prometheus/alertmanager", "Alertmanager default base image")
@@ -67,10 +64,6 @@ func Main() int {
 
 	r := prometheus.NewRegistry()
 	r.MustRegister(prometheus.NewGoCollector())
-
-	if analyticsEnabled {
-		analytics.Enable()
-	}
 
 	po, err := prometheuscontroller.New(cfg, logger.With("component", "prometheusoperator"))
 	if err != nil {

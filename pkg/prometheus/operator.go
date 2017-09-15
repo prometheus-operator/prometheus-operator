@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
@@ -284,7 +283,6 @@ func (c *Operator) handleAddPrometheus(obj interface{}) {
 		return
 	}
 
-	analytics.PrometheusCreated()
 	c.logger.Log("msg", "Prometheus added", "key", key)
 	c.enqueue(key)
 }
@@ -295,7 +293,6 @@ func (c *Operator) handleDeletePrometheus(obj interface{}) {
 		return
 	}
 
-	analytics.PrometheusDeleted()
 	c.logger.Log("msg", "Prometheus deleted", "key", key)
 	c.enqueue(key)
 }
