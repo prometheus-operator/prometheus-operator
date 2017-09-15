@@ -135,8 +135,6 @@ kubectl delete --ignore-not-found customresourcedefinitions \
   alertmanager.monitoring.coreos.com
 ```
 
-**The Prometheus Operator collects anonymous usage statistics to help us learning how the software is being used and how we can improve it. To disable collection, run the Operator with the flag `-analytics=false`**
-
 ## Development
 
 ### Prerequisites

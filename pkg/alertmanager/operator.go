@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/prometheus-operator/pkg/analytics"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
@@ -305,7 +304,6 @@ func (c *Operator) handleAlertmanagerAdd(obj interface{}) {
 		return
 	}
 
-	analytics.AlertmanagerCreated()
 	c.logger.Log("msg", "Alertmanager added", "key", key)
 	c.enqueue(key)
 }
@@ -316,7 +314,6 @@ func (c *Operator) handleAlertmanagerDelete(obj interface{}) {
 		return
 	}
 
-	analytics.AlertmanagerDeleted()
 	c.logger.Log("msg", "Alertmanager deleted", "key", key)
 	c.enqueue(key)
 }
