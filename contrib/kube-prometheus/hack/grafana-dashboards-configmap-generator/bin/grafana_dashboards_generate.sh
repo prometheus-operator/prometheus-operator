@@ -226,7 +226,7 @@ bin-pack-files() {
   # the max size of the queue is limited by DATA_SIZE_LIMIT
   # while there's room available in the queue we add files.
   # when there's no room we create a configmap with the members of the queue
-  #  before adding the file to a cleaned queue
+  # before adding the file to a cleaned queue
 
   # Counters initialization is not in the scope of this function
   local file=""
@@ -313,7 +313,7 @@ touch $GRAFANA_OUTPUT_FILE || { echo "ERROR: Unable to create or modify $GRAFANA
 
 echo "# Starting execution of $SCRIPT_BASE on $DATE_EXEC"
 echo "# Configured size limit: $DATA_SIZE_LIMIT bytes"
-echo "# Grafna input dashboards and datasources will be read from: $DASHBOARDS_DIR"
+echo "# Grafana input dashboards and datasources will be read from: $DASHBOARDS_DIR"
 echo "# Grafana Dashboards ConfigMap will be created into file:"
 echo "$OUTPUT_FILE"
 echo "# Grafana Deployment manifest will be created into file:"
