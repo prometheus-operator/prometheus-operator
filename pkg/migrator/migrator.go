@@ -104,8 +104,8 @@ func (m *Migrator) RunMigration() error {
 	case TPR2CRD:
 		err = m.migrateTPR2CRD()
 		if err != nil {
-			m.rollback()
-			return err
+			m.logger.Log("msg", "Migration errored, rolling back...", "err", err)
+			return m.rollback()
 		}
 	}
 
@@ -531,7 +531,6 @@ func (m *Migrator) rollback() error {
 		if err != nil {
 			return errors.Wrapf(err, "waiting for TPRs to be ready failed")
 		}
-
 	}
 
 	if ms.tprDataDel {
