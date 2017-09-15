@@ -32,6 +32,7 @@ type MonitoringV1alpha1Interface interface {
 	PrometheusesGetter
 	AlertmanagersGetter
 	ServiceMonitorsGetter
+	AlertrulesGetter
 }
 
 type MonitoringV1alpha1Client struct {
@@ -49,6 +50,10 @@ func (c *MonitoringV1alpha1Client) Alertmanagers(namespace string) AlertmanagerI
 
 func (c *MonitoringV1alpha1Client) ServiceMonitors(namespace string) ServiceMonitorInterface {
 	return newServiceMonitors(c.restClient, c.dynamicClient, namespace)
+}
+
+func (c *MonitoringV1alpha1Client) Alertrules(namespace string) AlertruleInterface {
+	return newAlertrules(c.restClient, c.dynamicClient, namespace)
 }
 
 func (c *MonitoringV1alpha1Client) RESTClient() rest.Interface {

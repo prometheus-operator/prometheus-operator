@@ -119,7 +119,6 @@ func (p *prometheuses) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := p.restClient.Get().
 		Namespace(p.ns).
 		Resource("prometheuses").
-		// VersionedParams(&options, v1.ParameterCodec)
 		FieldsSelectorParam(nil)
 
 	b, err := req.DoRaw()
@@ -135,7 +134,6 @@ func (p *prometheuses) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 		Prefix("watch").
 		Namespace(p.ns).
 		Resource("prometheuses").
-		// VersionedParams(&options, v1.ParameterCodec).
 		FieldsSelectorParam(nil).
 		Stream()
 	if err != nil {

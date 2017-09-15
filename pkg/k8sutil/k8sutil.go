@@ -205,6 +205,19 @@ func NewAlertmanagerTPRDefinition() *extensionsobjold.ThirdPartyResource {
 	}
 }
 
+func NewAlertruleTPRDefinition() *extensionsobjold.ThirdPartyResource {
+	return &extensionsobjold.ThirdPartyResource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "alertrule." + v1alpha1.Group,
+		},
+		Versions: []extensionsobjold.APIVersion{
+			{Name: v1alpha1.Version},
+		},
+		Description: "Alert rules",
+	}
+
+}
+
 func NewPrometheusCustomResourceDefinition() *extensionsobj.CustomResourceDefinition {
 	return &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
@@ -251,6 +264,23 @@ func NewAlertmanagerCustomResourceDefinition() *extensionsobj.CustomResourceDefi
 			Names: extensionsobj.CustomResourceDefinitionNames{
 				Plural: monitoringv1.AlertmanagerName,
 				Kind:   monitoringv1.AlertmanagersKind,
+			},
+		},
+	}
+}
+
+func NewAlertruleCustomResourceDefinition() *extensionsobj.CustomResourceDefinition {
+	return &extensionsobj.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: v1alpha1.AlertruleName + "." + v1alpha1.Group,
+		},
+		Spec: extensionsobj.CustomResourceDefinitionSpec{
+			Group:   v1alpha1.Group,
+			Version: v1alpha1.Version,
+			Scope:   extensionsobj.NamespaceScoped,
+			Names: extensionsobj.CustomResourceDefinitionNames{
+				Plural: v1alpha1.AlertruleName,
+				Kind:   v1alpha1.AlertrulesKind,
 			},
 		},
 	}
