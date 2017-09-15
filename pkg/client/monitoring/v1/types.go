@@ -49,6 +49,10 @@ type PrometheusList struct {
 // Specification of the desired behavior of the Prometheus cluster. More info:
 // http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 type PrometheusSpec struct {
+	// Standard object’s metadata. More info:
+	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	// Metadata Labels and Annotations gets propagated to the prometheus pods.
+	PodMetadata metav1.ObjectMeta `json:"podMetadata,omitempty"`
 	// ServiceMonitors to be selected for target discovery.
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
 	// Version of Prometheus to be deployed.
