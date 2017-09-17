@@ -24,10 +24,10 @@ spec:
           command:
             - ./kubectl
             - get
-            - thirdpartyresource
-            - alertmanager.monitoring.coreos.com
-            - prometheus.monitoring.coreos.com
-            - service-monitor.monitoring.coreos.com
+            - customresourcedefinitions
+            - alertmanagers.monitoring.coreos.com
+            - prometheuszs.monitoring.coreos.com
+            - servicemonitors.monitoring.coreos.com
       restartPolicy: OnFailure
     {{- if .Values.rbacEnable }}
       serviceAccountName: {{ template "fullname" . }}
