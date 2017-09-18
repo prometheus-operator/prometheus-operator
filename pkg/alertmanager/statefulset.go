@@ -52,6 +52,9 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, co
 	if am.Spec.Version == "" {
 		am.Spec.Version = defaultVersion
 	}
+	if am.Spec.Replicas == nil {
+		am.Spec.Replicas = &minReplicas
+	}
 	if am.Spec.Replicas != nil && *am.Spec.Replicas < minReplicas {
 		am.Spec.Replicas = &minReplicas
 	}
@@ -186,6 +189,23 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		},
 	}
 
+	podAnnotations := map[string]string{}
+	podLabels := map[string]string{}
+	if a.Spec.PodMetadata != nil {
+		if a.Spec.PodMetadata.Labels != nil {
+			for k, v := range a.Spec.PodMetadata.Labels {
+				podLabels[k] = v
+			}
+		}
+		if a.Spec.PodMetadata.Annotations != nil {
+			for k, v := range a.Spec.PodMetadata.Annotations {
+				podAnnotations[k] = v
+			}
+		}
+	}
+	podLabels["app"] = "alertmanager"
+	podLabels["alertmanager"] = a.Name
+
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
 		amArgs = append(amArgs, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
 	}
@@ -199,10 +219,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		},
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels: map[string]string{
-					"app":          "alertmanager",
-					"alertmanager": a.Name,
-				},
+				Labels:      podLabels,
+				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
 				NodeSelector:                  a.Spec.NodeSelector,
