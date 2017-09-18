@@ -8,14 +8,14 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "fullname" . }}-get-tprs
+  name: {{ template "fullname" . }}-get-crd
 spec:
   template:
     metadata:
       labels:
         app: {{ template "name" . }}
         release: {{ .Release.Name }}
-      name: {{ template "fullname" . }}-get-tprs
+      name: {{ template "fullname" . }}-get-crd
     spec:
       containers:
         - name: hyperkube
@@ -26,7 +26,7 @@ spec:
             - get
             - customresourcedefinitions
             - alertmanagers.monitoring.coreos.com
-            - prometheuszs.monitoring.coreos.com
+            - prometheuses.monitoring.coreos.com
             - servicemonitors.monitoring.coreos.com
       restartPolicy: OnFailure
     {{- if .Values.rbacEnable }}
