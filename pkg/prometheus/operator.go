@@ -64,7 +64,6 @@ type Operator struct {
 	cmapInf cache.SharedIndexInformer
 	secrInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
-	nodeInf cache.SharedIndexInformer
 
 	queue workqueue.RateLimitingInterface
 
@@ -189,18 +188,6 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		UpdateFunc: c.handleUpdateStatefulSet,
 	})
 
-	if kubeletSyncEnabled {
-		c.nodeInf = cache.NewSharedIndexInformer(
-			cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "nodes", api.NamespaceAll, nil),
-			&v1.Node{}, resyncPeriod, cache.Indexers{},
-		)
-		c.nodeInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-			AddFunc:    c.handleAddNode,
-			DeleteFunc: c.handleDeleteNode,
-			UpdateFunc: c.handleUpdateNode,
-		})
-	}
-
 	return c, nil
 }
 
@@ -247,7 +234,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.ssetInf.Run(stopc)
 
 	if c.kubeletSyncEnabled {
-		go c.nodeInf.Run(stopc)
+		go c.reconcileNodeEndpoints(stopc)
 	}
 
 	<-stopc
@@ -295,9 +282,19 @@ func (c *Operator) handleUpdatePrometheus(old, cur interface{}) {
 	c.enqueue(key)
 }
 
-func (c *Operator) handleAddNode(obj interface{})         { c.syncNodeEndpoints() }
-func (c *Operator) handleDeleteNode(obj interface{})      { c.syncNodeEndpoints() }
-func (c *Operator) handleUpdateNode(old, cur interface{}) { c.syncNodeEndpoints() }
+func (c *Operator) reconcileNodeEndpoints(stopc <-chan struct{}) {
+	ticker := time.NewTicker(3 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-stopc:
+			return
+		case <-ticker.C:
+			err := c.syncNodeEndpoints()
+			c.logger.Log("msg", "syncing nodes into Endpoints object failed", "err", err)
+		}
+	}
+}
 
 // nodeAddresses returns the provided node's address, based on the priority:
 // 1. NodeInternalIP
@@ -306,7 +303,7 @@ func (c *Operator) handleUpdateNode(old, cur interface{}) { c.syncNodeEndpoints(
 // 3. NodeHostName
 //
 // Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go
-func nodeAddress(node *v1.Node) (string, map[v1.NodeAddressType][]string, error) {
+func nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) {
 	m := map[v1.NodeAddressType][]string{}
 	for _, a := range node.Status.Addresses {
 		m[a.Type] = append(m[a.Type], a.Address)
@@ -327,7 +324,7 @@ func nodeAddress(node *v1.Node) (string, map[v1.NodeAddressType][]string, error)
 	return "", m, fmt.Errorf("host address unknown")
 }
 
-func (c *Operator) syncNodeEndpoints() {
+func (c *Operator) syncNodeEndpoints() error {
 	eps := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
@@ -355,12 +352,15 @@ func (c *Operator) syncNodeEndpoints() {
 		},
 	}
 
-	cache.ListAll(c.nodeInf.GetStore(), labels.Everything(), func(obj interface{}) {
-		n := obj.(*v1.Node)
+	nodes, err := c.kclient.CoreV1().Nodes().List(metav1.ListOptions{})
+	if err != nil {
+		return errors.Wrap(err, "listing nodes failed")
+	}
+
+	for _, n := range nodes.Items {
 		address, _, err := nodeAddress(n)
 		if err != nil {
-			c.logger.Log("msg", "failed to determine hostname for node", "err", err, "node", n.Name)
-			return
+			return errors.Wrapf(err, "failed to determine hostname for node (%s)", n.Name)
 		}
 		eps.Subsets[0].Addresses = append(eps.Subsets[0].Addresses, v1.EndpointAddress{
 			IP:       address,
@@ -372,7 +372,7 @@ func (c *Operator) syncNodeEndpoints() {
 				APIVersion: n.APIVersion,
 			},
 		})
-	})
+	}
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -393,15 +393,17 @@ func (c *Operator) syncNodeEndpoints() {
 		},
 	}
 
-	err := k8sutil.CreateOrUpdateService(c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
+	err = k8sutil.CreateOrUpdateService(c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
 	if err != nil {
-		c.logger.Log("msg", "synchronizing kubelet service object failed", "err", err, "namespace", c.kubeletObjectNamespace, "name", svc.Name)
+		return errors.Wrap(err, "synchronizing kubelet service object failed")
 	}
 
 	err = k8sutil.CreateOrUpdateEndpoints(c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
 	if err != nil {
-		c.logger.Log("msg", "synchronizing kubelet endpoints object failed", "err", err, "namespace", c.kubeletObjectNamespace, "name", eps.Name)
+		return errors.Wrap(err, "synchronizing kubelet endpoints object failed")
 	}
+
+	return nil
 }
 
 func (c *Operator) handleSmonAdd(obj interface{}) {
