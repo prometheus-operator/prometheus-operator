@@ -63,6 +63,11 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 
 	cfg := yaml.MapSlice{}
 
+	scrapeInterval := "30s"
+	if p.Spec.ScrapeInterval != "" {
+		scrapeInterval = p.Spec.ScrapeInterval
+	}
+
 	evaluationInterval := "30s"
 	if p.Spec.EvaluationInterval != "" {
 		evaluationInterval = p.Spec.EvaluationInterval
@@ -72,7 +77,7 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 		Key: "global",
 		Value: yaml.MapSlice{
 			{Key: "evaluation_interval", Value: evaluationInterval},
-			{Key: "scrape_interval", Value: "30s"},
+			{Key: "scrape_interval", Value: scrapeInterval},
 			{Key: "external_labels", Value: stringMapToMapSlice(p.Spec.ExternalLabels)},
 		},
 	})
