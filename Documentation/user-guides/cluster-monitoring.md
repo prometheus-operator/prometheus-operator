@@ -299,7 +299,7 @@ metadata:
     prometheus: k8s
 spec:
   replicas: 2
-  version: v1.7.0
+  version: v1.7.1
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpressions:

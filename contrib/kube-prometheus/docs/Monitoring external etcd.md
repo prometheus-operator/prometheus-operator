@@ -35,7 +35,7 @@ spec:
   replicas: 2
   secrets: 
   - etcd-certs
-  version: v1.7.0
+  version: v1.7.1
 ```
 
 If your Prometheus Operator is already in place, update it:
