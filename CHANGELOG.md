@@ -1,3 +1,7 @@
+## 0.11.2 / 2017-09-21
+
+* [BUGFIX] Fix memory leak in kubelet endpoints sync.
+
 ## 0.11.1 / 2017-07-28
 
 * [ENHANCEMENT] Add profiling endpoints.
