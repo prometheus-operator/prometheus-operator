@@ -11,6 +11,10 @@ Additionally all objects have been promoted from `v1alpha1` to `v1`. On start up
 * [ENHANCEMENT] Properly set `SecurityContext` for Prometheus 2.0 deployments.
 * [ENHANCEMENT] Enable web lifecycle APIs for Prometheus 2.0 deployments.
 
+## 0.11.2 / 2017-09-21
+
+* [BUGFIX] Fix memory leak in kubelet endpoints sync.
+
 ## 0.11.1 / 2017-07-28
 
 * [ENHANCEMENT] Add profiling endpoints.
