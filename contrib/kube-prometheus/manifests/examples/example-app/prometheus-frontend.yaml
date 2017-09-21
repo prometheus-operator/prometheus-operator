@@ -6,7 +6,7 @@ metadata:
   labels:
     prometheus: frontend
 spec:
-  version: v1.7.0
+  version: v1.7.1
   serviceMonitorSelector:
     matchLabels:
       tier: frontend

@@ -255,7 +255,7 @@ spec:
   serviceMonitorSelector:
     matchLabels:
       team: frontend
-  version: v1.7.0
+  version: v1.7.1
   resources:
     requests:
       memory: 400Mi
