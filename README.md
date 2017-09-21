@@ -2,9 +2,7 @@
 [![Build Status](https://jenkins-monitoring-public.prod.coreos.systems/buildStatus/icon?job=po-tests-master&build=1)](https://jenkins-monitoring-public.prod.coreos.systems/job/po-tests-master/1/)
 [![Go Report Card](https://goreportcard.com/badge/coreos/prometheus-operator "Go Report Card")](https://goreportcard.com/report/coreos/prometheus-operator)
 
-**Project status: *alpha*** Not all planned features are completed. The API, spec, status 
-and other user facing objects are subject to change. We do not support backward-compatibility
-for the alpha releases.
+**Project status: *beta*** Not all planned features are completed. The API, spec, status and other user facing objects may change, but in a backward compatible way.
 
 The Prometheus Operator for Kubernetes provides easy monitoring definitions for Kubernetes
 services and deployment and management of Prometheus instances.
