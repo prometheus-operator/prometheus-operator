@@ -1,3 +1,15 @@
+## 0.13.0 / 2017-09-21
+
+After a long period of not having broken any functionality in the Prometheus Operator, we have decided to promote the status of this project to beta.
+
+Compatibility guarantees and migration strategies continue to be the same as for the `v0.12.0` release.
+
+* [CHANGE] Remove analytics collection.
+* [BUGFIX] Fix memory leak in kubelet endpoints sync.
+* [FEATURE] Allow setting global default `scrape_interval`.
+* [FEATURE] Allow setting Pod objectmeta to Prometheus and Alertmanger objects.
+* [FEATURE] Allow setting tolerations and affinity for Prometheus and Alertmanager objects.
+
 ## 0.12.0 / 2017-08-24
 
 Starting with this release only Kubernetes `v1.7.x` and up is supported as CustomResourceDefinitions are a requirement for the Prometheus Operator and are only available from those versions and up.
