@@ -174,7 +174,7 @@ addConfigMapHeader() {
 
 addArrayToConfigMap() {
   # This function process the array to_process into a configmap
-
+  local file=""
   local OLDIFS=$IFS
   local IFS=$'\n'
   for file in ${to_process[@]}; do
