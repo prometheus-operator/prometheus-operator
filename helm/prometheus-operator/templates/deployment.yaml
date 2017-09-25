@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   labels:
@@ -27,7 +27,9 @@ spec:
           {{- end }}
             - --prometheus-config-reloader={{ .Values.prometheusConfigReloader.repository }}:{{ .Values.prometheusConfigReloader.tag }}
             - --config-reloader-image={{ .Values.configmapReload.repository }}:{{ .Values.configmapReload.tag }}
-            - --analytics={{ .Values.sendAnalytics }}
+          ports:
+            - containerPort: 8080
+              name: http
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- if .Values.nodeSelector }}
