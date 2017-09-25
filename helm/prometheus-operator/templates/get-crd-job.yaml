@@ -3,6 +3,7 @@ kind: Job
 metadata:
   annotations:
     helm.sh/hook: post-install
+    "helm.sh/hook-delete-policy": hook-succeeded
   labels:
     app: {{ template "name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
