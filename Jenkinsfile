@@ -2,7 +2,7 @@ job('po-tests-pr') {
     concurrentBuild()
 
     // logRotator(daysToKeep, numberToKeep)
-    logRotator(10, 10)
+    logRotator(30, 10)
 
     parameters {
         stringParam('sha1')
@@ -82,7 +82,7 @@ job('po-tests-master') {
     concurrentBuild()
 
     // logRotator(daysToKeep, numberToKeep)
-    logRotator(30, 30)
+    logRotator(30, 5)
 
     scm {
         git {
