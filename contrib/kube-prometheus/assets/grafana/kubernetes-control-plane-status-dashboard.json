@@ -333,7 +333,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "topk(1, (sum by(instance) (rate(apiserver_request_count{code!~\"2..\"}[5m])) / sum by(instance) (rate(apiserver_request_count[5m]))) * 100)",
+              "expr": "topk(1, (sum by(instance) (rate(apiserver_request_count{code=~\"5..\"}[5m])) / sum by(instance) (rate(apiserver_request_count[5m]))) * 100)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",
@@ -348,7 +348,7 @@
           "valueMaps": [
             {
               "op": "=",
-              "text": "N/A",
+              "text": "0",
               "value": "null"
             }
           ],
@@ -659,5 +659,5 @@
   },
   "timezone": "",
   "title": "Kubernetes Control Plane Status",
-  "version": 11
+  "version": 3
 }

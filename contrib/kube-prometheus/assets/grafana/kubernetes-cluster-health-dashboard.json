@@ -182,7 +182,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(ALERTS{alertstate=\"firing\"})",
+              "expr": "sum(ALERTS{alertstate=\"firing\",alertname!=\"DeadMansSwitch\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",
@@ -197,7 +197,7 @@
           "valueMaps": [
             {
               "op": "=",
-              "text": "N/A",
+              "text": "0",
               "value": "null"
             }
           ],
@@ -260,7 +260,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(ALERTS{alertstate=\"pending\"})",
+              "expr": "sum(ALERTS{alertstate=\"pending\",alertname!=\"DeadMansSwitch\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",
@@ -275,7 +275,7 @@
           "valueMaps": [
             {
               "op": "=",
-              "text": "N/A",
+              "text": "0",
               "value": "null"
             }
           ],
@@ -428,7 +428,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(kube_node_status_ready{condition!=\"true\"})",
+              "expr": "sum(kube_node_status_condition{condition=\"Ready\",status!=\"true\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",
@@ -506,7 +506,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(kube_node_status_disk_pressure{condition=\"true\"})",
+              "expr": "sum(kube_node_status_condition{condition=\"DiskPressure\",status=\"true\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",
@@ -584,7 +584,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(kube_node_status_memory_pressure{condition=\"true\"})",
+              "expr": "sum(kube_node_status_condition{condition=\"MemoryPressure\",status=\"true\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",
@@ -729,5 +729,5 @@
   },
   "timezone": "",
   "title": "Kubernetes Cluster Health",
-  "version": 12
+  "version": 9
 }

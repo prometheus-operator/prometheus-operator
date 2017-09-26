@@ -176,7 +176,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(ALERTS{alertstate=\"firing\"})",
+              "expr": "sum(ALERTS{alertstate=\"firing\",alertname!=\"DeadMansSwitch\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",
@@ -191,7 +191,7 @@
           "valueMaps": [
             {
               "op": "=",
-              "text": "N/A",
+              "text": "0",
               "value": "null"
             }
           ],
@@ -266,7 +266,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "(sum(up{job=\"apiserver\"} == 1) / sum(up{job=\"apiserver\"})) * 100",
+              "expr": "(sum(up{job=\"apiserver\"} == 1) / count(up{job=\"apiserver\"})) * 100",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -345,7 +345,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "(sum(up{job=\"kube-controller-manager\"} == 1) / sum(up{job=\"kube-controller-manager\"})) * 100",
+              "expr": "(sum(up{job=\"kube-controller-manager\"} == 1) / count(up{job=\"kube-controller-manager\"})) * 100",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -424,7 +424,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "(sum(up{job=\"kube-scheduler\"} == 1) / sum(up{job=\"kube-scheduler\"})) * 100",
+              "expr": "(sum(up{job=\"kube-scheduler\"} == 1) / count(up{job=\"kube-scheduler\"})) * 100",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -892,5 +892,5 @@
   },
   "timezone": "",
   "title": "Kubernetes Cluster Status",
-  "version": 22
+  "version": 3
 }
