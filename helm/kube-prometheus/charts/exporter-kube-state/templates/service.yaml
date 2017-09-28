@@ -16,4 +16,6 @@ spec:
     protocol: TCP
     name: {{ .Values.service.name }}
   selector:
-    app: {{ .Chart.Name }}
+    app: {{ template "fullname" . }}
+    component: kube-state
+    release: {{ .Release.Name }}
