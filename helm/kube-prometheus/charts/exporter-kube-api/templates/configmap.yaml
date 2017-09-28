@@ -15,7 +15,7 @@ data:
     ALERT K8SApiServerLatency
       IF histogram_quantile(
           0.99,
-          sum without (instance,node,resource) (apiserver_request_latencies_bucket{verb!~"CONNECT|WATCHLIST|WATCH"})
+          sum without (instance,node,resource) (apiserver_request_latencies_bucket{subresource!="log",verb!~"CONNECT|WATCHLIST|WATCH"})
         ) / 1e6 > 1.0
       FOR 10m
       LABELS {
@@ -99,4 +99,3 @@ data:
         summary = "{{`{{ $labels.job }}`}} has too many open file descriptors",
         description = "{{`{{ $labels.node }}`}} is using {{`{{ $value }}`}}% of the available file/socket descriptors.",
       }
-
