@@ -36,6 +36,9 @@ spec:
             - name: sys
               mountPath: /host/sys
               readOnly: true
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
       hostNetwork: true
       hostPID: true
       volumes:
