@@ -24,6 +24,8 @@ spec:
     metadata:
       labels:
         app: {{ template "fullname" . }}
+        component: kube-state
+        release: {{ .Release.Name }}
         version: "{{ .Values.image.tag }}"
     spec:
       containers:
