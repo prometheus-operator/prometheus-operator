@@ -2,20 +2,33 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 replicaCount: 1
-image:
-  repository: gcr.io/google_containers/kube-state-metrics
-  tag: v1.0.0
-  pullPolicy: IfNotPresent
-service:
-  name: nginx
-  type: ClusterIP
-  externalPort: 80
-  internalPort: 8080
-resources:
-  limits:
-    cpu: 100m
-    memory: 128Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
-
+rbacEnable: true
+kube_state_metrics:
+  image:
+    repository: gcr.io/google_containers/kube-state-metrics
+    tag: v1.0.1
+    pullPolicy: IfNotPresent
+  service:
+    name: kube-state-metrics
+    type: ClusterIP
+    externalPort: 80
+    internalPort: 8080
+  resources:
+    limits:
+      cpu: 100m
+      memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+addon_resizer:
+  image:
+    repository: gcr.io/google_containers/addon-resizer
+    tag: "1.0"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 100m
+      memory: 30Mi
+    requests:
+      cpu: 100m
+      memory: 30Mi
