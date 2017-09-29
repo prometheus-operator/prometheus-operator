@@ -9,12 +9,12 @@ metadata:
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.kube_state_metrics.service.type }}
   ports:
-  - port: {{ .Values.service.externalPort }}
-    targetPort: {{ .Values.service.internalPort }}
+  - port: {{ .Values.kube_state_metrics.service.externalPort }}
+    targetPort: {{ .Values.kube_state_metrics.service.internalPort }}
     protocol: TCP
-    name: {{ .Values.service.name }}
+    name: {{ .Values.kube_state_metrics.service.name }}
   selector:
     app: {{ template "fullname" . }}
     component: kube-state

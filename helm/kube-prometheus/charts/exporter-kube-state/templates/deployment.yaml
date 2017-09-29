@@ -8,7 +8,7 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    version: "{{ .Values.image.tag }}"
+    version: "{{ .Values.kube_state_metrics.image.tag }}"
 spec:
   replicas: {{ .Values.replicaCount }}
   revisionHistoryLimit: 10
@@ -26,29 +26,51 @@ spec:
         app: {{ template "fullname" . }}
         component: kube-state
         release: {{ .Release.Name }}
-        version: "{{ .Values.image.tag }}"
+        version: "{{ .Values.kube_state_metrics.image.tag }}"
     spec:
       containers:
       - name: {{ .Chart.Name }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: "{{ .Values.kube_state_metrics.image.repository }}:{{ .Values.kube_state_metrics.image.tag }}"
+        imagePullPolicy: {{ .Values.kube_state_metrics.image.pullPolicy }}
         ports:
-        - containerPort: {{ .Values.service.internalPort }}
+        - containerPort: {{ .Values.kube_state_metrics.service.internalPort }}
           protocol: TCP
         livenessProbe:
           httpGet:
             path: /
-            port: {{ .Values.service.internalPort }}
+            port: {{ .Values.kube_state_metrics.service.internalPort }}
           initialDelaySeconds: 30
           timeoutSeconds: 30
         readinessProbe:
           httpGet:
             path: /
-            port: {{ .Values.service.internalPort }}
+            port: {{ .Values.kube_state_metrics.service.internalPort }}
           initialDelaySeconds: 30
-          timeoutSeconds: 30
+          timeoutSeconds: 5
         resources:
-{{ toYaml .Values.resources | indent 12 }}
+{{ toYaml .Values.kube_state_metrics.resources | indent 12 }}
+      - name: {{ .Chart.Name }}-addon-resizer
+        image: "{{ .Values.addon_resizer.image.repository }}:{{ .Values.addon_resizer.image.tag }}"
+        env:
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: MY_POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        command:
+          - /pod_nanny
+          - --container={{ .Chart.Name }}
+          - --cpu=100m
+          - --extra-cpu=1m
+          - --memory=100Mi
+          - --extra-memory=2Mi
+          - --threshold=5
+          - --deployment={{ template "fullname" . }}
+        resources:
+{{ toYaml .Values.addon_resizer.resources | indent 12 }}
     {{- if .Values.rbacEnable }}
       serviceAccountName: {{ template "fullname" . }}
     {{- end }}

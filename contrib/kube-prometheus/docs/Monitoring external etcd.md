@@ -25,7 +25,7 @@ Edit prometheus-operator/contrib/kube-prometheus/manifests/prometheus/prometheus
 
 The manifest will look like that:
 ```
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   name: k8s
@@ -87,7 +87,7 @@ subsets:
     port: 2379
     protocol: TCP
 ---
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: etcd-k8s

@@ -1,0 +1,23 @@
+{{- if .Values.rbacEnable }}
+{{- if .Capabilities.APIVersions.Has "rbac.authorization.k8s.io/v1beta1" }}
+apiVersion: rbac.authorization.k8s.io/v1beta1
+{{- else if .Capabilities.APIVersions.Has "rbac.authorization.k8s.io/v1alpha1" }}
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+{{- end }}
+kind: Role
+metadata:
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "fullname" . }}
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get"]
+- apiGroups: ["extensions"]
+  resources: ["deployments"]
+  resourceNames: [{{ template "fullname" . }}]
+  verbs: ["get", "update"]
+{{- end }}

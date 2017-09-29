@@ -19,6 +19,6 @@ spec:
     matchNames:
       - {{ .Release.Namespace | quote }}
   endpoints:
-  - port: {{ .Values.service.name }}
+  - port: {{ .Values.kube_state_metrics.service.name }}
     interval: 15s
     honorLabels: true
