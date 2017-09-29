@@ -153,3 +153,29 @@ job('po-tests-master') {
         wsCleanup()
     }
 }
+
+job('cleanup') {
+    // logRotator(daysToKeep, numberToKeep)
+    logRotator(30, 2)
+
+    triggers {
+        cron('@weekly')
+    }
+
+    steps {
+        shell('docker system prune -a -f')
+        shell('docker system df')
+    }
+
+    publishers {
+        slackNotifier {
+            room('#team-monitoring')
+            teamDomain('coreos')
+            authTokenCredentialId('team-monitoring-slack-jenkins')
+            notifyFailure(true)
+            notifyRegression(true)
+            notifyRepeatedFailure(true)
+        }
+        wsCleanup()
+    }
+}
