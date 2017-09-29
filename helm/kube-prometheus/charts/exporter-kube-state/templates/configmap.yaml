@@ -9,36 +9,8 @@ metadata:
     release: {{ .Release.Name }}
   name: {{ template "fullname" . }}
 data:
-  kube-state.rules: |-
-    # NOTE: These rules were kindly contributed by the SoundCloud engineering team.
-
-    ALERT K8SNodeNotReady
-      IF kube_node_status_condition{condition="Ready", status="true"} == 0
-      FOR 1h
-      LABELS {
-        service = "k8s",
-        severity = "warning",
-      }
-      ANNOTATIONS {
-        summary = "Node status is NotReady",
-        description = "The Kubelet on {{`{{ $labels.node }}`}} has not checked in with the API, or has set itself to NotReady, for more than an hour",
-      }
-
-    ALERT K8SManyNodesNotReady
-      IF
-        count by (cluster) (kube_node_status_condition{condition="Ready", status="true"} == 0) > 1
-        AND
-          (
-            count by (cluster) (kube_node_status_condition{condition="Ready", status="true"} == 0)
-          /
-            count by (cluster) (kube_node_status_condition{condition="Ready", status="true"})
-          ) > 0.2
-      FOR 1m
-      LABELS {
-        service = "k8s",
-        severity = "critical",
-      }
-      ANNOTATIONS {
-        summary = "Many K8s nodes are Not Ready",
-        description = "{{`{{ $value }}`}} K8s nodes (more than 10% of cluster {{`{{ $labels.cluster }}`}}) are in the NotReady state.",
-      }
+{{- $root := . }}
+{{- range $key, $val := .Values.ruleFiles }}
+  {{ $key }}: |-
+{{ tpl $val $root | indent 4}}
+{{- end }}
