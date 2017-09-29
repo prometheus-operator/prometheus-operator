@@ -4,6 +4,7 @@ kind: Job
 metadata:
   annotations:
     helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: hook-succeeded
   labels:
      app: {{ template "name" . }}
      chart: {{ .Chart.Name }}-{{ .Chart.Version }}
@@ -25,7 +26,7 @@ spec:
         command:
           - ./kubectl
           - delete
-          - thirdpartyresource
+          - customresourcedefinitions
           - --ignore-not-found=true
           - alertmanager.monitoring.coreos.com
           - prometheus.monitoring.coreos.com
