@@ -12,6 +12,9 @@ metadata:
     heritage: {{ .Release.Service }}
     prometheus: {{ .Release.Name }}
     release: {{ .Release.Name }}
+{{- if .Values.ingress.labels }}
+{{ toYaml .Values.ingress.labels | indent 4 }}
+{{- end }}
   name: {{ template "fullname" . }}
 spec:
   rules:

@@ -7,6 +7,9 @@ metadata:
     heritage: {{ .Release.Service }}
     prometheus: {{ .Release.Name }}
     release: {{ .Release.Name }}
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 4 }}
+{{- end }}
   name: {{ .Release.Name }}
 spec:
 {{- if .Values.alertingEndpoints }}
