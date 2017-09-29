@@ -29,6 +29,10 @@ image:
   repository: quay.io/prometheus/prometheus
   tag: v1.7.1
 
+## Labels to be added to the Prometheus
+##
+labels: {}
+
 ingress:
   ## If true, Prometheus Ingress will be created
   ##
@@ -39,6 +43,10 @@ ingress:
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
+
+  ## Labels to be added to the Ingress
+  ##
+  labels: {}
 
   fqdn: ""
 
@@ -114,6 +122,10 @@ service:
   ## List of external IP addresses at which the Prometheus Service will be available
   ##
   externalIPs: []
+
+  ## Labels to be added to the Service
+  ##
+  labels: {}
 
   ## External IP address to assign to Prometheus Service
   ## Only used if service.type is 'LoadBalancer' and supported by cloud provider
