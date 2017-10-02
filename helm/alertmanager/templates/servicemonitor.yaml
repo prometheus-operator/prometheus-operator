@@ -1,0 +1,26 @@
+{{- if .Values.selfServiceMonitor }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: {{ template "name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    component: alertmanager
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+    prometheus: {{ .Release.Name }}
+  name: {{ template "fullname" . }}
+spec:
+  jobLabel: {{ template "name" . }}
+  selector:
+    matchLabels:
+      alertmanager: {{ .Release.Name }}
+      app: {{ template "name" . }}
+      chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  endpoints:
+  - port: http
+    interval: 30s
+{{- end }}

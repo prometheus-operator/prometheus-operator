@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "fullname" . }}
+data:
+  servicemonitor-operator.yaml: |-
+      apiVersion: monitoring.coreos.com/v1
+      kind: ServiceMonitor
+      metadata:
+        labels:
+          app: {{ template "name" . }}
+          chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+          heritage: "{{ .Release.Service }}"
+          release: "{{ .Release.Name }}"
+          prometheus: {{ .Release.Name }}
+        name: {{ .Values.jobLabel }}
+      spec:
+        jobLabel: {{ template "name" . }}
+        selector:
+          matchLabels:
+        selector:
+          matchLabels:
+            operated-prometheus: "true"
+        namespaceSelector:
+          matchNames:
+            - {{ .Release.Namespace | quote }}
+        endpoints:
+        - port: web
+          interval: 30s

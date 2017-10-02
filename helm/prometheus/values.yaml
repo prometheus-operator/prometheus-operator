@@ -23,6 +23,10 @@ externalLabels: {}
 ##
 externalUrl: ""
 
+## If true, create a serviceMonitor for prometheus
+##
+selfServiceMonitor: true
+
 ## Prometheus container image
 ##
 image:

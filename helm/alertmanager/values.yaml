@@ -21,6 +21,10 @@ config:
 ##
 externalUrl: ""
 
+## If true, create a serviceMonitor for alertmanager
+##
+selfServiceMonitor: true
+
 ## Alertmanager container image
 ##
 image:
