@@ -74,9 +74,9 @@ Parameter | Description | Default
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 $ helm install opsgoodness/prometheus --name my-release --set externalUrl=http://prometheus.example.com
-```
 
-Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
+
+Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example:
 
 ```console
 $ helm install opsgoodness/prometheus --name my-release -f values.yaml
