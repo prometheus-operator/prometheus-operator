@@ -1,6 +1,6 @@
 # Grafana Watcher
 
-The Grafaner Watcher is part of [the Prometheus Operator](https://github.com/coreos/prometheus-operator), however it can be used on it's own as well. It subscribes to filesystem changes in a given directory, reads files matching `*-datasource.json` and `*-dashboard.json` and imports the datasources and dashboards to a given Grafana instance via Grafana's REST API.
+The Grafaner Watcher was built for [the kube-prometheus collection](https://github.com/coreos/kube-prometheus) in order to run Grafana in an easily replicable manner without the need to run a complicated database, and rather provision dashboards from configs off of files. It subscribes to filesystem changes in a given directory, reads files matching `*-datasource.json` and `*-dashboard.json` and imports the datasources and dashboards to a given Grafana instance via Grafana's REST API.
 
 ## How to use
 
