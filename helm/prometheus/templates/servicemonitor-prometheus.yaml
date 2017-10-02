@@ -1,11 +1,10 @@
 {{- if .Values.selfServiceMonitor }}
-apiVersion: monitoring.coreos.com/v1alpha1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    app: prometheus
+    app: {{ template "name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    component: prometheus
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"
     prometheus: {{ .Release.Name }}
@@ -15,7 +14,8 @@ spec:
   selector:
     matchLabels:
       app: {{ template "name" . }}
-      prometheus: prometheus
+      prometheus: {{ .Release.Name }}
+      chart: {{ .Chart.Name }}-{{ .Chart.Version }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace | quote }}
