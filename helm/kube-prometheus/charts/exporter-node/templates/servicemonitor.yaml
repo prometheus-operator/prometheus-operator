@@ -2,7 +2,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    app: prometheus
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     component: node-exporter
     heritage: "{{ .Release.Service }}"

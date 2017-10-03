@@ -60,7 +60,6 @@ spec:
 {{- else }}
   serviceMonitorSelector:
     matchLabels:
-      app: {{ template "name" . }}
       prometheus: {{ .Release.Name }}
 {{- end }}
 {{- if .Values.rulesSelector }}
