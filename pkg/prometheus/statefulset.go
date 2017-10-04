@@ -134,19 +134,6 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 		statefulset.Annotations = old.Annotations
 	}
 
-	if !config.StatefulSetUpdatesAvailable {
-		statefulset.Spec.UpdateStrategy = v1beta1.StatefulSetUpdateStrategy{}
-
-		if old != nil {
-			// Mounted volumes are not reconciled as StatefulSets do not allow
-			// modification of the PodTemplate.
-			//
-			// TODO(brancz): remove this when dropping 1.6 compatibility.
-			statefulset.Spec.Template.Spec.Containers[0].VolumeMounts = old.Spec.Template.Spec.Containers[0].VolumeMounts
-			statefulset.Spec.Template.Spec.Volumes = old.Spec.Template.Spec.Volumes
-		}
-	}
-
 	return statefulset, nil
 }
 

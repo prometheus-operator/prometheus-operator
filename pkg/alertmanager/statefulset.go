@@ -103,10 +103,6 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, co
 		statefulset.Annotations = old.Annotations
 	}
 
-	if !config.StatefulSetUpdatesAvailable {
-		statefulset.Spec.UpdateStrategy = v1beta1.StatefulSetUpdateStrategy{}
-	}
-
 	return statefulset, nil
 }
 
