@@ -7,7 +7,7 @@ tectonic_admin_email = "monitoring@coreos.com"
 // Use the bcrypt-hash tool (https://github.com/coreos/bcrypt-tool/releases/tag/v1.0.0) to generate it.
 // 
 // Note: This field MUST be set manually prior to creating the cluster.
-tectonic_admin_password_hash = ""
+tectonic_admin_password = ""
 
 // (optional) Extra AWS tags to be applied to created autoscaling group resources.
 // This is a list of maps having the keys `key`, `value` and `propagate_at_launch`.
