@@ -459,8 +459,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 	podLabels["app"] = "prometheus"
 	podLabels["prometheus"] = p.Name
 	return &v1beta1.StatefulSetSpec{
-		ServiceName: governingServiceName,
-		Replicas:    p.Spec.Replicas,
+		ServiceName:         governingServiceName,
+		Replicas:            p.Spec.Replicas,
+		PodManagementPolicy: v1beta1.ParallelPodManagement,
 		UpdateStrategy: v1beta1.StatefulSetUpdateStrategy{
 			Type: v1beta1.RollingUpdateStatefulSetStrategyType,
 		},
