@@ -40,7 +40,6 @@ import (
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
-	extensionsobjold "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -80,7 +79,6 @@ type Config struct {
 	Host                         string
 	KubeletObject                string
 	TLSInsecure                  bool
-	StatefulSetUpdatesAvailable  bool
 	TLSConfig                    rest.TLSClientConfig
 	ConfigReloaderImage          string
 	PrometheusConfigReloader     string
@@ -216,12 +214,6 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		}
 		c.logger.Log("msg", "connection established", "cluster-version", v)
 
-		mv, err := k8sutil.GetMinorVersion(c.kclient.Discovery())
-		if mv < 7 {
-			c.config.StatefulSetUpdatesAvailable = false
-		}
-
-		c.config.StatefulSetUpdatesAvailable = true
 		if err := c.createCRDs(); err != nil {
 			errChan <- errors.Wrap(err, "creating CRDs failed")
 			return
@@ -329,10 +321,6 @@ func nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) 
 	if addresses, ok := m[v1.NodeExternalIP]; ok {
 		return addresses[0], m, nil
 	}
-	// NodeLegacyHostIP support has been removed in 1.7, this is here for prolonged 1.6 support.
-	if addresses, ok := m[v1.NodeAddressType("LegacyHostIP")]; ok {
-		return addresses[0], m, nil
-	}
 	if addresses, ok := m[v1.NodeHostName]; ok {
 		return addresses[0], m, nil
 	}
@@ -378,7 +366,7 @@ func (c *Operator) syncNodeEndpoints() error {
 			return errors.Wrapf(err, "failed to determine hostname for node (%s)", n.Name)
 		}
 		eps.Subsets[0].Addresses = append(eps.Subsets[0].Addresses, v1.EndpointAddress{
-			IP:       address,
+			IP: address,
 			TargetRef: &v1.ObjectReference{
 				Kind:       "Node",
 				Name:       n.Name,
@@ -694,11 +682,6 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "updating statefulset failed")
 	}
 
-	err = c.syncVersion(key, p)
-	if err != nil {
-		return errors.Wrap(err, "syncing version failed")
-	}
-
 	return nil
 }
 
@@ -727,52 +710,6 @@ func ListOptions(name string) metav1.ListOptions {
 			"prometheus": name,
 		})).String(),
 	}
-}
-
-// syncVersion ensures that all running pods for a Prometheus have the required version.
-// It kills pods with the wrong version one-after-one and lets the StatefulSet controller
-// create new pods.
-//
-// TODO(brancz): remove this once the 1.6 support is removed.
-func (c *Operator) syncVersion(key string, p *monitoringv1.Prometheus) error {
-	if c.config.StatefulSetUpdatesAvailable {
-		return nil
-	}
-
-	status, oldPods, err := PrometheusStatus(c.kclient, p)
-	if err != nil {
-		return errors.Wrap(err, "retrieving Prometheus status failed")
-	}
-
-	// If the StatefulSet is still busy scaling, don't interfere by killing pods.
-	// We enqueue ourselves again to until the StatefulSet is ready.
-	expectedReplicas := int32(1)
-	if p.Spec.Replicas != nil {
-		expectedReplicas = *p.Spec.Replicas
-	}
-	if status.Replicas != expectedReplicas {
-		return fmt.Errorf("scaling in progress, %d expected replicas, %d found replicas", expectedReplicas, status.Replicas)
-	}
-	if status.Replicas == 0 {
-		return nil
-	}
-	if len(oldPods) == 0 {
-		return nil
-	}
-	if status.UnavailableReplicas > 0 {
-		return fmt.Errorf("waiting for %d unavailable pods to become ready", status.UnavailableReplicas)
-	}
-
-	// TODO(fabxc): delete oldest pod first.
-	if err := c.kclient.Core().Pods(p.Namespace).Delete(oldPods[0].Name, nil); err != nil {
-		return err
-	}
-
-	// If there are further pods that need updating, we enqueue ourselves again.
-	if len(oldPods) > 1 {
-		return fmt.Errorf("%d out-of-date pods remaining", len(oldPods)-1)
-	}
-	return nil
 }
 
 // PrometheusStatus evaluates the current status of a Prometheus deployment with respect
@@ -1029,28 +966,6 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 	})
 
 	return res, nil
-}
-
-func (c *Operator) createTPRs() error {
-	tprs := []*extensionsobjold.ThirdPartyResource{
-		k8sutil.NewPrometheusTPRDefinition(),
-		k8sutil.NewServiceMonitorTPRDefinition(),
-	}
-	tprClient := c.kclient.Extensions().ThirdPartyResources()
-
-	for _, tpr := range tprs {
-		if _, err := tprClient.Create(tpr); err != nil && !apierrors.IsAlreadyExists(err) {
-			return err
-		}
-		c.logger.Log("msg", "TPR created", "tpr", tpr.Name)
-	}
-
-	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	err := k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().Prometheuses(api.NamespaceAll).List)
-	if err != nil {
-		return err
-	}
-	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().ServiceMonitors(api.NamespaceAll).List)
 }
 
 func (c *Operator) createCRDs() error {

@@ -40,7 +40,6 @@ import (
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
-	extensionsobjold "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 )
@@ -69,7 +68,6 @@ type Config struct {
 	Host                         string
 	ConfigReloaderImage          string
 	AlertmanagerDefaultBaseImage string
-	StatefulSetUpdatesAvailable  bool
 }
 
 // New creates a new controller.
@@ -146,19 +144,6 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		}
 		c.logger.Log("msg", "connection established", "cluster-version", v)
 
-		mv, err := k8sutil.GetMinorVersion(c.kclient.Discovery())
-		if mv < 7 {
-			c.config.StatefulSetUpdatesAvailable = false
-			if err := c.createTPRs(); err != nil {
-				errChan <- errors.Wrap(err, "creating TPRs failed")
-				return
-			}
-
-			errChan <- nil
-			return
-		}
-
-		c.config.StatefulSetUpdatesAvailable = true
 		if err := c.createCRDs(); err != nil {
 			errChan <- err
 			return
@@ -414,7 +399,7 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "updating statefulset failed")
 	}
 
-	return c.syncVersion(am)
+	return nil
 }
 
 func ListOptions(name string) metav1.ListOptions {
@@ -424,51 +409,6 @@ func ListOptions(name string) metav1.ListOptions {
 			"alertmanager": name,
 		})).String(),
 	}
-}
-
-// syncVersion ensures that all running pods for a Alertmanager have the required version.
-// It kills pods with the wrong version one-after-one and lets the StatefulSet controller
-// create new pods.
-//
-// TODO(brancz): remove this once the 1.6 support is removed.
-func (c *Operator) syncVersion(a *monitoringv1.Alertmanager) error {
-	if c.config.StatefulSetUpdatesAvailable {
-		return nil
-	}
-
-	status, oldPods, err := AlertmanagerStatus(c.kclient, a)
-	if err != nil {
-		return errors.Wrap(err, "retrieving Alertmanager status failed")
-	}
-
-	// If the StatefulSet is still busy scaling, don't interfere by killing pods.
-	// We enqueue ourselves again to until the StatefulSet is ready.
-	expectedReplicas := int32(1)
-	if a.Spec.Replicas != nil {
-		expectedReplicas = *a.Spec.Replicas
-	}
-	if status.Replicas != expectedReplicas {
-		return fmt.Errorf("scaling in progress, %d expected replicas, %d found replicas", expectedReplicas, status.Replicas)
-	}
-	if status.Replicas == 0 {
-		return nil
-	}
-	if len(oldPods) == 0 {
-		return nil
-	}
-	if status.UnavailableReplicas > 0 {
-		return fmt.Errorf("waiting for %d unavailable pods to become ready", status.UnavailableReplicas)
-	}
-
-	// TODO(fabxc): delete oldest pod first.
-	if err := c.kclient.Core().Pods(a.Namespace).Delete(oldPods[0].Name, nil); err != nil {
-		return err
-	}
-	// If there are further pods that need updating, we enqueue ourselves again.
-	if len(oldPods) > 1 {
-		return fmt.Errorf("%d out-of-date pods remaining", len(oldPods)-1)
-	}
-	return nil
 }
 
 func AlertmanagerStatus(kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
@@ -580,21 +520,4 @@ func (c *Operator) createCRDs() error {
 
 	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
 	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Alertmanagers(api.NamespaceAll).List)
-}
-
-func (c *Operator) createTPRs() error {
-	tprs := []*extensionsobjold.ThirdPartyResource{
-		k8sutil.NewAlertmanagerTPRDefinition(),
-	}
-	tprClient := c.kclient.Extensions().ThirdPartyResources()
-
-	for _, tpr := range tprs {
-		if _, err := tprClient.Create(tpr); err != nil && !apierrors.IsAlreadyExists(err) {
-			return err
-		}
-		c.logger.Log("msg", "TPR created", "tpr", tpr.Name)
-	}
-
-	// We have to wait for the TPRs to be ready. Otherwise the initial watch may fail.
-	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1alpha1().Alertmanagers(api.NamespaceAll).List)
 }
