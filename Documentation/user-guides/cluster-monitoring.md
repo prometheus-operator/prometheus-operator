@@ -138,10 +138,10 @@ spec:
       hostNetwork: true
       hostPID: true
       containers:
-      - image:  quay.io/prometheus/node-exporter:v0.14.0
+      - image:  quay.io/prometheus/node-exporter:v0.15.0
         args:
-        - "-collector.procfs=/host/proc"
-        - "-collector.sysfs=/host/sys"
+        - "--path.procfs=/host/proc"
+        - "--path.sysfs=/host/sys"
         name: node-exporter
         ports:
         - containerPort: 9100
@@ -299,7 +299,7 @@ metadata:
     prometheus: k8s
 spec:
   replicas: 2
-  version: v1.7.1
+  version: v1.7.2
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpressions:
@@ -474,7 +474,7 @@ metadata:
     alertmanager: main
 spec:
   replicas: 3
-  version: v0.7.1
+  version: v0.9.1
 ```
 
 Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid configuration mounted through a `Secret`. Note that the `Secret` has to be in the same namespace as the `Alertmanager` resource as well as have the name `alertmanager-<name-of-alertmanager-object` and the key of the configuration is `alertmanager.yaml`.

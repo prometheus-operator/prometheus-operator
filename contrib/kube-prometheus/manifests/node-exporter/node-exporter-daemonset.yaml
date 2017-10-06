@@ -12,10 +12,10 @@ spec:
       hostNetwork: true
       hostPID: true
       containers:
-      - image:  quay.io/prometheus/node-exporter:v0.14.0
+      - image:  quay.io/prometheus/node-exporter:v0.15.0
         args:
-        - "-collector.procfs=/host/proc"
-        - "-collector.sysfs=/host/sys"
+        - "--path.procfs=/host/proc"
+        - "--path.sysfs=/host/sys"
         name: node-exporter
         ports:
         - containerPort: 9100
