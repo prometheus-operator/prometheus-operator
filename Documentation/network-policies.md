@@ -13,14 +13,23 @@ To keep your cluster safer, it's strongly recommended to enable network policies
 In this example we are closing all the inbound communication on the namespace monitoring and just allowing the necessary traffic.
 **This example are only tested with calico provider.**
 
-Follow the steps [here](http://docs.projectcalico.org/v1.5/getting-started/kubernetes/installation/) to install calico, also dont' forget to [enable network policy](https://kubernetes.io/docs/user-guide/networkpolicies) in you k8s cluster.
+Follow the steps [here](http://docs.projectcalico.org/v1.5/getting-started/kubernetes/installation/) to install calico, also dont' forget to [enable network policy](https://kubernetes.io/docs/concepts/services-networking/network-policies/) in you k8s cluster.
 
-Once you've done that, you should annotate your namespace to deny all the ingress (inbound) traffic.
+Once you've done that, you should use the following configuration to deny all the ingress (inbound) traffic.
 
 ``` 
-$ kubectl annotate ns monitoring "net.beta.kubernetes.io/network-policy={\"ingress\":{\"isolation\":\"DefaultDeny\"}}"
-namespace "monitoring" annotated
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+name: default-deny-all
+namespace: default
+spec:
+podSelector:
+matchLabels:
 ```
+Save the config file as default-deny-all.yaml and apply the configuration to the cluster using
+
+```kubectl apply -f <path to config file>/default-deny-all.yaml```
 
 In this step you can't reach any port in your pod, so let's apply this network policies examples to allow the necessary traffic.
 
