@@ -64,6 +64,8 @@ var (
 		"v1.6.3",
 		"v1.7.0",
 		"v1.7.1",
+		"v1.7.2",
+		"v1.8.0",
 		"v2.0.0-beta.4",
 	}
 )
@@ -423,12 +425,36 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		"-rule-volume-dir=/etc/prometheus/rules",
 	}
 
-	probeHandler := v1.Handler{
-		HTTPGet: &v1.HTTPGetAction{
-			Path: path.Clean(webRoutePrefix + "/status"),
-			Port: intstr.FromString("web"),
-		},
+	var livenessProbeHandler v1.Handler
+	var readinessProbeHandler v1.Handler
+	var livenessProbeInitialDelaySeconds int32
+	if (version.Major == 1 && version.Minor >= 8) || version.Major == 2 {
+		livenessProbeHandler = v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path: path.Clean(webRoutePrefix + "/-/healthy"),
+				Port: intstr.FromString("web"),
+			},
+		}
+		readinessProbeHandler = v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path: path.Clean(webRoutePrefix + "/-/ready"),
+				Port: intstr.FromString("web"),
+			},
+		}
+		livenessProbeInitialDelaySeconds = 30
+	} else {
+		livenessProbeHandler = v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path: path.Clean(webRoutePrefix + "/status"),
+				Port: intstr.FromString("web"),
+			},
+		}
+		readinessProbeHandler = livenessProbeHandler
+		// For larger servers, restoring a checkpoint on startup may take quite a bit of time.
+		// Wait up to 5 minutes.
+		livenessProbeInitialDelaySeconds = 300
 	}
+
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	if p.Spec.PodMetadata != nil {
@@ -472,16 +498,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 						Args:         promArgs,
 						VolumeMounts: promVolumeMounts,
 						LivenessProbe: &v1.Probe{
-							Handler: probeHandler,
-							// For larger servers, restoring a checkpoint on startup may take quite a bit of time.
-							// Wait up to 5 minutes.
-							InitialDelaySeconds: 300,
+							Handler:             livenessProbeHandler,
+							InitialDelaySeconds: livenessProbeInitialDelaySeconds,
 							PeriodSeconds:       5,
 							TimeoutSeconds:      probeTimeoutSeconds,
 							FailureThreshold:    10,
 						},
 						ReadinessProbe: &v1.Probe{
-							Handler:          probeHandler,
+							Handler:          readinessProbeHandler,
 							TimeoutSeconds:   probeTimeoutSeconds,
 							PeriodSeconds:    5,
 							FailureThreshold: 6,
