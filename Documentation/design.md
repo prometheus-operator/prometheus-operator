@@ -42,8 +42,7 @@ To discover targets in all namespaces the `namespaceSelector` has to be empty:
 ```yaml
 spec:
   namespaceSelector:
-    matchNames:
-      - ""
+    any: true
 ```
 
 ## Alertmanager
