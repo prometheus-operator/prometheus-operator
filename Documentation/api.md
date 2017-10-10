@@ -149,6 +149,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods. The Secrets are mounted into /etc/prometheus/secrets/<secret-name>. Secrets changes after initial creation of a Prometheus object are not reflected in the running Pods. To change the secrets mounted into the Prometheus Pods, the object must be deleted and recreated with the new list of secrets. | []string | false |
+| prometheusArgs | PrometheusArgs is a list of arguments that should be added or overridden in the prometheus command. Each arguments must include a leading dash and appear exactly as they will on the cli (eg `-storage.local.target-heap-size=751619276` | []string | false |
 
 ## PrometheusStatus
 

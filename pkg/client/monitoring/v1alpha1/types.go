@@ -104,6 +104,10 @@ type PrometheusSpec struct {
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...
+
+	// PrometheusArgs is a string of arguments that will be passed to the Prometheus instance.
+	// Arguments specified here will be given precedence over the normally calculated arguments.
+	PrometheusArgs []string `json:"prometheusArgs,omitempty"`
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not

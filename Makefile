@@ -1,4 +1,4 @@
-REPO?=quay.io/coreos/prometheus-operator
+REPO?=opsguruhub/prometheus-operator
 TAG?=$(shell git rev-parse --short HEAD)
 NAMESPACE?=po-e2e-$(shell LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
 KUBECONFIG?=$(HOME)/.kube/config
