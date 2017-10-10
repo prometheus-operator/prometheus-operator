@@ -81,6 +81,9 @@ type PrometheusSpec struct {
 	// necessary to generate correct URLs. This is necessary if Prometheus is not
 	// served from root of a DNS name.
 	ExternalURL string `json:"externalUrl,omitempty"`
+	// PrometheusArgs is a string of arguments that will be passed to the Prometheus instance.
+	// Arguments specified here will be given precedence over the normally calculated arguments.
+	PrometheusArgs []string `json:"prometheusArgs,omitempty"`
 	// The route prefix Prometheus registers HTTP handlers for. This is useful,
 	// if using ExternalURL and a proxy is rewriting HTTP routes of a request,
 	// and the actual ExternalURL is still true, but the server serves requests
