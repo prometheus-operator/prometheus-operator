@@ -68,6 +68,8 @@ type Config struct {
 	ConfigReloaderImage          string
 	AlertmanagerDefaultBaseImage string
 	Namespace                    string
+	Labels                       prometheusoperator.Labels
+	CrdGroup                     string
 }
 
 // New creates a new controller.
@@ -103,6 +105,8 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 			ConfigReloaderImage:          c.ConfigReloaderImage,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
 			Namespace:                    c.Namespace,
+			CrdGroup:                     c.CrdGroup,
+			Labels:                       c.Labels,
 		},
 	}
 
@@ -518,7 +522,7 @@ func (c *Operator) createCRDs() error {
 	}
 
 	crds := []*extensionsobj.CustomResourceDefinition{
-		k8sutil.NewAlertmanagerCustomResourceDefinition(),
+		k8sutil.NewAlertmanagerCustomResourceDefinition(c.config.CrdGroup, c.config.Labels.LabelsMap),
 	}
 
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()

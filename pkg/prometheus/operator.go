@@ -73,6 +73,31 @@ type Operator struct {
 	config                 Config
 }
 
+type Labels struct {
+	LabelsString string
+	LabelsMap    map[string]string
+}
+
+// Implement the flag.Value interface
+func (labels *Labels) String() string {
+	return fmt.Sprintf(labels.LabelsString)
+}
+
+// Implement the flag.Set interface
+func (labels *Labels) Set(value string) error {
+	m := map[string]string{}
+	if value != "" {
+		splited := strings.Split(value, ",")
+		for _, pair := range splited {
+			sp := strings.Split(pair, "=")
+			m[sp[0]] = sp[1]
+		}
+	}
+	(*labels).LabelsMap = m
+	(*labels).LabelsString = value
+	return nil
+}
+
 // Config defines configuration parameters for the Operator.
 type Config struct {
 	Host                         string
@@ -84,6 +109,8 @@ type Config struct {
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string
 	Namespace                    string
+	Labels                       Labels
+	CrdGroup                     string
 }
 
 type BasicAuthCredentials struct {
@@ -978,8 +1005,8 @@ func (c *Operator) createCRDs() error {
 	}
 
 	crds := []*extensionsobj.CustomResourceDefinition{
-		k8sutil.NewPrometheusCustomResourceDefinition(),
-		k8sutil.NewServiceMonitorCustomResourceDefinition(),
+		k8sutil.NewPrometheusCustomResourceDefinition(c.config.CrdGroup, c.config.Labels.LabelsMap),
+		k8sutil.NewServiceMonitorCustomResourceDefinition(c.config.CrdGroup, c.config.Labels.LabelsMap),
 	}
 
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()

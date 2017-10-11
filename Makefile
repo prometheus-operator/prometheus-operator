@@ -13,6 +13,9 @@ all: check-license format build test
 build: promu
 	@$(PROMU) build --prefix $(PREFIX)
 
+short-build:
+	go install github.com/coreos/prometheus-operator/cmd/operator
+
 crossbuild: promu
 	@$(PROMU) crossbuild
 

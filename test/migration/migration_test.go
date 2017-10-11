@@ -238,7 +238,7 @@ func checkMigrationDone(ns2 string, framework *operatorFramework.Framework, tprC
 	}
 
 	// Check if CRDs are created.
-	_, err = crdClient.Get(k8sutil.NewPrometheusCustomResourceDefinition().Name, metav1.GetOptions{})
+	_, err = crdClient.Get(k8sutil.NewPrometheusCustomResourceDefinition(monitoringv1.Group, map[string]string{}).Name, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		fmt.Println("Expected Prometheus CRD definition to be created, but it does not exists.")
 		return false, nil
@@ -247,7 +247,7 @@ func checkMigrationDone(ns2 string, framework *operatorFramework.Framework, tprC
 		return false, err
 	}
 
-	_, err = crdClient.Get(k8sutil.NewAlertmanagerCustomResourceDefinition().Name, metav1.GetOptions{})
+	_, err = crdClient.Get(k8sutil.NewAlertmanagerCustomResourceDefinition(monitoringv1.Group, map[string]string{}).Name, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		fmt.Println("Expected Alertmanager CRD definition to be created, but it does not exists.")
 		return false, nil
@@ -256,7 +256,7 @@ func checkMigrationDone(ns2 string, framework *operatorFramework.Framework, tprC
 		return false, err
 	}
 
-	_, err = crdClient.Get(k8sutil.NewServiceMonitorCustomResourceDefinition().Name, metav1.GetOptions{})
+	_, err = crdClient.Get(k8sutil.NewServiceMonitorCustomResourceDefinition(monitoringv1.Group, map[string]string{}).Name, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		fmt.Println("Expected ServiceMonitor CRD definition to be created, but it does not exists.")
 		return false, nil
