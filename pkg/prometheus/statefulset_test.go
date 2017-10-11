@@ -78,6 +78,42 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	}
 }
 
+func TestPrometheusArgs(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+	promArgs := []string{"-config.file=/etc/prometheus/custom/prometheus.yaml"}
+
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			PrometheusArgs: promArgs,
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+
+	require.NoError(t, err)
+    args := sset.Spec.Template.Spec.Containers[0].Args
+
+    // We expect defaults and overridden values to be present
+    expected := promArgs
+    expected = append(expected, "-storage.local.path=/var/prometheus/data")
+Outer:
+    for _,expect := range expected {
+		for _,a := range args {
+			if a == expect {
+				continue Outer
+			}
+		}
+		t.Fatalf("PrometheusArgs are not properly being propagated to the StatefulSet. Failed to find '%s' in %v", expect, args)
+	}
+}
+
 func TestStatefulSetPVC(t *testing.T) {
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",
