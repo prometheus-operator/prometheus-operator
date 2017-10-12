@@ -378,7 +378,7 @@ func (c *Operator) sync(key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(am.Namespace)
-	if err = k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(am)); err != nil {
+	if err = k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(am, c.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 

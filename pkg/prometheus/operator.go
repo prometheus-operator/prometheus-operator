@@ -80,7 +80,21 @@ type Labels struct {
 
 // Implement the flag.Value interface
 func (labels *Labels) String() string {
-	return fmt.Sprintf(labels.LabelsString)
+	return labels.LabelsString
+}
+
+// Merge labels create a new map with labels merged.
+func (labels *Labels) Merge(otherLabels map[string]string) map[string]string {
+	mergedLabels := map[string]string{}
+
+	for key, value := range otherLabels {
+		mergedLabels[key] = value
+	}
+
+	for key, value := range labels.LabelsMap {
+		mergedLabels[key] = value
+	}
+	return mergedLabels
 }
 
 // Implement the flag.Set interface
@@ -358,9 +372,9 @@ func (c *Operator) syncNodeEndpoints() error {
 	eps := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
-			Labels: map[string]string{
+			Labels: c.config.Labels.Merge(map[string]string{
 				"k8s-app": "kubelet",
-			},
+			}),
 		},
 		Subsets: []v1.EndpointSubset{
 			{
@@ -406,9 +420,9 @@ func (c *Operator) syncNodeEndpoints() error {
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
-			Labels: map[string]string{
+			Labels: c.config.Labels.Merge(map[string]string{
 				"k8s-app": "kubelet",
-			},
+			}),
 		},
 		Spec: v1.ServiceSpec{
 			Type:      v1.ServiceTypeClusterIP,
@@ -670,7 +684,7 @@ func (c *Operator) sync(key string) error {
 	}
 
 	// Create Secret if it doesn't exist.
-	s, err := makeEmptyConfig(p.Name, ruleFileConfigMaps)
+	s, err := makeEmptyConfig(p.Name, ruleFileConfigMaps, c.config)
 	if err != nil {
 		return errors.Wrap(err, "generating empty config secret failed")
 	}
@@ -680,7 +694,7 @@ func (c *Operator) sync(key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(p.Namespace)
-	if err := k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(p)); err != nil {
+	if err := k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(p, c.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
@@ -938,7 +952,7 @@ func (c *Operator) createConfig(p *monitoringv1.Prometheus, ruleFileConfigMaps [
 		return errors.Wrap(err, "generating config failed")
 	}
 
-	s, err := makeConfigSecret(p.Name, ruleFileConfigMaps)
+	s, err := makeConfigSecret(p.Name, ruleFileConfigMaps, c.config)
 	if err != nil {
 		return errors.Wrap(err, "generating base secret failed")
 	}
