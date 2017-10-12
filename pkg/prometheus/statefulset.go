@@ -106,7 +106,7 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(p.Name),
-			Labels:      p.ObjectMeta.Labels,
+			Labels:      config.Labels.Merge(p.ObjectMeta.Labels),
 			Annotations: p.ObjectMeta.Annotations,
 		},
 		Spec: *spec,
@@ -139,8 +139,8 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 	return statefulset, nil
 }
 
-func makeEmptyConfig(name string, configMaps []*v1.ConfigMap) (*v1.Secret, error) {
-	s, err := makeConfigSecret(name, configMaps)
+func makeEmptyConfig(name string, configMaps []*v1.ConfigMap, config Config) (*v1.Secret, error) {
+	s, err := makeConfigSecret(name, configMaps, config)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func makeRuleConfigMapListFile(configMaps []*v1.ConfigMap) ([]byte, error) {
 	return json.Marshal(cml)
 }
 
-func makeConfigSecret(name string, configMaps []*v1.ConfigMap) (*v1.Secret, error) {
+func makeConfigSecret(name string, configMaps []*v1.ConfigMap, config Config) (*v1.Secret, error) {
 	b, err := makeRuleConfigMapListFile(configMaps)
 	if err != nil {
 		return nil, err
@@ -220,7 +220,7 @@ func makeConfigSecret(name string, configMaps []*v1.ConfigMap) (*v1.Secret, erro
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   configSecretName(name),
-			Labels: managedByOperatorLabels,
+			Labels: config.Labels.Merge(managedByOperatorLabels),
 		},
 		Data: map[string][]byte{
 			configFilename:     []byte{},
@@ -229,13 +229,13 @@ func makeConfigSecret(name string, configMaps []*v1.ConfigMap) (*v1.Secret, erro
 	}, nil
 }
 
-func makeStatefulSetService(p *monitoringv1.Prometheus) *v1.Service {
+func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: governingServiceName,
-			Labels: map[string]string{
+			Labels: config.Labels.Merge(map[string]string{
 				"operated-prometheus": "true",
-			},
+			}),
 		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",
@@ -480,7 +480,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		},
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels:      podLabels,
+				Labels:      c.Labels.Merge(podLabels),
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{

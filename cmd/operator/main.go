@@ -32,6 +32,7 @@ import (
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/api"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/migrator"
 	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
@@ -56,8 +57,10 @@ func init() {
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", "quay.io/prometheus/alertmanager", "Alertmanager default base image")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", "quay.io/prometheus/prometheus", "Prometheus default base image")
 	flagset.StringVar(&cfg.Namespace, "namespace", kapi.NamespaceAll, "Namespace to scope the interaction of the Prometheus Operator and the apiserver.")
-
+	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
+	flagset.StringVar(&cfg.CrdGroup, "crd-apigroup", monitoringv1.Group, "prometheus CRD  API group name")
 	flagset.Parse(os.Args[1:])
+
 }
 
 func Main() int {

@@ -205,13 +205,14 @@ func NewAlertmanagerTPRDefinition() *extensionsobjold.ThirdPartyResource {
 	}
 }
 
-func NewPrometheusCustomResourceDefinition() *extensionsobj.CustomResourceDefinition {
+func NewPrometheusCustomResourceDefinition(group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
 	return &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: monitoringv1.PrometheusName + "." + monitoringv1.Group,
+			Name:   monitoringv1.PrometheusName + "." + group,
+			Labels: labels,
 		},
 		Spec: extensionsobj.CustomResourceDefinitionSpec{
-			Group:   monitoringv1.Group,
+			Group:   group,
 			Version: monitoringv1.Version,
 			Scope:   extensionsobj.NamespaceScoped,
 			Names: extensionsobj.CustomResourceDefinitionNames{
@@ -222,13 +223,14 @@ func NewPrometheusCustomResourceDefinition() *extensionsobj.CustomResourceDefini
 	}
 }
 
-func NewServiceMonitorCustomResourceDefinition() *extensionsobj.CustomResourceDefinition {
+func NewServiceMonitorCustomResourceDefinition(group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
 	return &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: monitoringv1.ServiceMonitorName + "." + monitoringv1.Group,
+			Name:   monitoringv1.ServiceMonitorName + "." + group,
+			Labels: labels,
 		},
 		Spec: extensionsobj.CustomResourceDefinitionSpec{
-			Group:   monitoringv1.Group,
+			Group:   group,
 			Version: monitoringv1.Version,
 			Scope:   extensionsobj.NamespaceScoped,
 			Names: extensionsobj.CustomResourceDefinitionNames{
@@ -239,13 +241,14 @@ func NewServiceMonitorCustomResourceDefinition() *extensionsobj.CustomResourceDe
 	}
 }
 
-func NewAlertmanagerCustomResourceDefinition() *extensionsobj.CustomResourceDefinition {
+func NewAlertmanagerCustomResourceDefinition(group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
 	return &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: monitoringv1.AlertmanagerName + "." + monitoringv1.Group,
+			Name:   monitoringv1.AlertmanagerName + "." + group,
+			Labels: labels,
 		},
 		Spec: extensionsobj.CustomResourceDefinitionSpec{
-			Group:   monitoringv1.Group,
+			Group:   group,
 			Version: monitoringv1.Version,
 			Scope:   extensionsobj.NamespaceScoped,
 			Names: extensionsobj.CustomResourceDefinitionNames{

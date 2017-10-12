@@ -179,9 +179,9 @@ func (m *Migrator) migrateTPR2CRD() error {
 
 	m.logger.Log("msg", "Creating CRDs.")
 	err = m.createCRDs(
-		k8sutil.NewPrometheusCustomResourceDefinition(),
-		k8sutil.NewServiceMonitorCustomResourceDefinition(),
-		k8sutil.NewAlertmanagerCustomResourceDefinition(),
+		k8sutil.NewPrometheusCustomResourceDefinition(monitoringv1.Group, map[string]string{}),
+		k8sutil.NewServiceMonitorCustomResourceDefinition(monitoringv1.Group, map[string]string{}),
+		k8sutil.NewAlertmanagerCustomResourceDefinition(monitoringv1.Group, map[string]string{}),
 	)
 	if err != nil {
 		return errors.Wrap(err, "creating CRDs failed")
@@ -507,9 +507,9 @@ func (m *Migrator) rollback() error {
 	if ms.crdCreated {
 		m.logger.Log("msg", "Deleting CRDs.")
 		err := m.deleteCRDs(
-			k8sutil.NewPrometheusCustomResourceDefinition(),
-			k8sutil.NewServiceMonitorCustomResourceDefinition(),
-			k8sutil.NewAlertmanagerCustomResourceDefinition(),
+			k8sutil.NewPrometheusCustomResourceDefinition(monitoringv1.Group, map[string]string{}),
+			k8sutil.NewServiceMonitorCustomResourceDefinition(monitoringv1.Group, map[string]string{}),
+			k8sutil.NewAlertmanagerCustomResourceDefinition(monitoringv1.Group, map[string]string{}),
 		)
 		if err != nil {
 			return errors.Wrapf(err, "deleting the CRDs failed")

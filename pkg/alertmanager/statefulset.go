@@ -72,7 +72,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, co
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(am.Name),
-			Labels:      am.ObjectMeta.Labels,
+			Labels:      config.Labels.Merge(am.ObjectMeta.Labels),
 			Annotations: am.ObjectMeta.Annotations,
 		},
 		Spec: *spec,
@@ -106,13 +106,13 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, co
 	return statefulset, nil
 }
 
-func makeStatefulSetService(p *monitoringv1.Alertmanager) *v1.Service {
+func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Service {
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: governingServiceName,
-			Labels: map[string]string{
+			Labels: config.Labels.Merge(map[string]string{
 				"operated-alertmanager": "true",
-			},
+			}),
 		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",
@@ -215,7 +215,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		},
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels:      podLabels,
+				Labels:      config.Labels.Merge(podLabels),
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{

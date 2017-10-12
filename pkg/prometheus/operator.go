@@ -73,6 +73,45 @@ type Operator struct {
 	config                 Config
 }
 
+type Labels struct {
+	LabelsString string
+	LabelsMap    map[string]string
+}
+
+// Implement the flag.Value interface
+func (labels *Labels) String() string {
+	return labels.LabelsString
+}
+
+// Merge labels create a new map with labels merged.
+func (labels *Labels) Merge(otherLabels map[string]string) map[string]string {
+	mergedLabels := map[string]string{}
+
+	for key, value := range otherLabels {
+		mergedLabels[key] = value
+	}
+
+	for key, value := range labels.LabelsMap {
+		mergedLabels[key] = value
+	}
+	return mergedLabels
+}
+
+// Implement the flag.Set interface
+func (labels *Labels) Set(value string) error {
+	m := map[string]string{}
+	if value != "" {
+		splited := strings.Split(value, ",")
+		for _, pair := range splited {
+			sp := strings.Split(pair, "=")
+			m[sp[0]] = sp[1]
+		}
+	}
+	(*labels).LabelsMap = m
+	(*labels).LabelsString = value
+	return nil
+}
+
 // Config defines configuration parameters for the Operator.
 type Config struct {
 	Host                         string
@@ -84,6 +123,8 @@ type Config struct {
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string
 	Namespace                    string
+	Labels                       Labels
+	CrdGroup                     string
 }
 
 type BasicAuthCredentials struct {
@@ -331,9 +372,9 @@ func (c *Operator) syncNodeEndpoints() error {
 	eps := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
-			Labels: map[string]string{
+			Labels: c.config.Labels.Merge(map[string]string{
 				"k8s-app": "kubelet",
-			},
+			}),
 		},
 		Subsets: []v1.EndpointSubset{
 			{
@@ -379,9 +420,9 @@ func (c *Operator) syncNodeEndpoints() error {
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
-			Labels: map[string]string{
+			Labels: c.config.Labels.Merge(map[string]string{
 				"k8s-app": "kubelet",
-			},
+			}),
 		},
 		Spec: v1.ServiceSpec{
 			Type:      v1.ServiceTypeClusterIP,
@@ -643,7 +684,7 @@ func (c *Operator) sync(key string) error {
 	}
 
 	// Create Secret if it doesn't exist.
-	s, err := makeEmptyConfig(p.Name, ruleFileConfigMaps)
+	s, err := makeEmptyConfig(p.Name, ruleFileConfigMaps, c.config)
 	if err != nil {
 		return errors.Wrap(err, "generating empty config secret failed")
 	}
@@ -653,7 +694,7 @@ func (c *Operator) sync(key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(p.Namespace)
-	if err := k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(p)); err != nil {
+	if err := k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(p, c.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
@@ -911,7 +952,7 @@ func (c *Operator) createConfig(p *monitoringv1.Prometheus, ruleFileConfigMaps [
 		return errors.Wrap(err, "generating config failed")
 	}
 
-	s, err := makeConfigSecret(p.Name, ruleFileConfigMaps)
+	s, err := makeConfigSecret(p.Name, ruleFileConfigMaps, c.config)
 	if err != nil {
 		return errors.Wrap(err, "generating base secret failed")
 	}
@@ -978,8 +1019,8 @@ func (c *Operator) createCRDs() error {
 	}
 
 	crds := []*extensionsobj.CustomResourceDefinition{
-		k8sutil.NewPrometheusCustomResourceDefinition(),
-		k8sutil.NewServiceMonitorCustomResourceDefinition(),
+		k8sutil.NewPrometheusCustomResourceDefinition(c.config.CrdGroup, c.config.Labels.LabelsMap),
+		k8sutil.NewServiceMonitorCustomResourceDefinition(c.config.CrdGroup, c.config.Labels.LabelsMap),
 	}
 
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()

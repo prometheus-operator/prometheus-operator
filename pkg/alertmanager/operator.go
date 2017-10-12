@@ -68,6 +68,8 @@ type Config struct {
 	ConfigReloaderImage          string
 	AlertmanagerDefaultBaseImage string
 	Namespace                    string
+	Labels                       prometheusoperator.Labels
+	CrdGroup                     string
 }
 
 // New creates a new controller.
@@ -103,6 +105,8 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 			ConfigReloaderImage:          c.ConfigReloaderImage,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
 			Namespace:                    c.Namespace,
+			CrdGroup:                     c.CrdGroup,
+			Labels:                       c.Labels,
 		},
 	}
 
@@ -374,7 +378,7 @@ func (c *Operator) sync(key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(am.Namespace)
-	if err = k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(am)); err != nil {
+	if err = k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(am, c.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
@@ -518,7 +522,7 @@ func (c *Operator) createCRDs() error {
 	}
 
 	crds := []*extensionsobj.CustomResourceDefinition{
-		k8sutil.NewAlertmanagerCustomResourceDefinition(),
+		k8sutil.NewAlertmanagerCustomResourceDefinition(c.config.CrdGroup, c.config.Labels.LabelsMap),
 	}
 
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()
