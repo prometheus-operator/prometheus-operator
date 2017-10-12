@@ -37,7 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	"k8s.io/client-go/rest"
@@ -84,6 +83,7 @@ type Config struct {
 	PrometheusConfigReloader     string
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string
+	Namespace                    string
 }
 
 type BasicAuthCredentials struct {
@@ -141,8 +141,8 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 	c.promInf = cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc:  mclient.MonitoringV1().Prometheuses(api.NamespaceAll).List,
-			WatchFunc: mclient.MonitoringV1().Prometheuses(api.NamespaceAll).Watch,
+			ListFunc:  mclient.MonitoringV1().Prometheuses(c.config.Namespace).List,
+			WatchFunc: mclient.MonitoringV1().Prometheuses(c.config.Namespace).Watch,
 		},
 		&monitoringv1.Prometheus{}, resyncPeriod, cache.Indexers{},
 	)
@@ -154,8 +154,8 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 	c.smonInf = cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc:  mclient.MonitoringV1().ServiceMonitors(api.NamespaceAll).List,
-			WatchFunc: mclient.MonitoringV1().ServiceMonitors(api.NamespaceAll).Watch,
+			ListFunc:  mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).List,
+			WatchFunc: mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).Watch,
 		},
 		&monitoringv1.ServiceMonitor{}, resyncPeriod, cache.Indexers{},
 	)
@@ -166,7 +166,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	})
 
 	c.cmapInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", api.NamespaceAll, nil),
+		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", c.config.Namespace, nil),
 		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{},
 	)
 	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -175,7 +175,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		UpdateFunc: c.handleConfigMapUpdate,
 	})
 	c.secrInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "secrets", api.NamespaceAll, nil),
+		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "secrets", c.config.Namespace, nil),
 		&v1.Secret{}, resyncPeriod, cache.Indexers{},
 	)
 	c.secrInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -185,7 +185,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	})
 
 	c.ssetInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.AppsV1beta1().RESTClient(), "statefulsets", api.NamespaceAll, nil),
+		cache.NewListWatchFromClient(c.kclient.AppsV1beta1().RESTClient(), "statefulsets", c.config.Namespace, nil),
 		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
 	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -969,6 +969,14 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 }
 
 func (c *Operator) createCRDs() error {
+	_, pErr := c.mclient.MonitoringV1().Prometheuses(c.config.Namespace).List(metav1.ListOptions{})
+	_, sErr := c.mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).List(metav1.ListOptions{})
+	if pErr == nil && sErr == nil {
+		// If Prometheus and ServiceMonitor objects are already registered, we
+		// won't attempt to do so again.
+		return nil
+	}
+
 	crds := []*extensionsobj.CustomResourceDefinition{
 		k8sutil.NewPrometheusCustomResourceDefinition(),
 		k8sutil.NewServiceMonitorCustomResourceDefinition(),
@@ -984,9 +992,9 @@ func (c *Operator) createCRDs() error {
 	}
 
 	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
-	err := k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Prometheuses(api.NamespaceAll).List)
+	err := k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Prometheuses(c.config.Namespace).List)
 	if err != nil {
 		return err
 	}
-	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().ServiceMonitors(api.NamespaceAll).List)
+	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).List)
 }

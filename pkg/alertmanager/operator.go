@@ -37,7 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	"k8s.io/client-go/tools/cache"
@@ -68,6 +67,7 @@ type Config struct {
 	Host                         string
 	ConfigReloaderImage          string
 	AlertmanagerDefaultBaseImage string
+	Namespace                    string
 }
 
 // New creates a new controller.
@@ -98,18 +98,23 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		crdclient: crdclient,
 		logger:    logger,
 		queue:     workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
-		config:    Config{Host: c.Host, ConfigReloaderImage: c.ConfigReloaderImage, AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage},
+		config: Config{
+			Host:                         c.Host,
+			ConfigReloaderImage:          c.ConfigReloaderImage,
+			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
+			Namespace:                    c.Namespace,
+		},
 	}
 
 	o.alrtInf = cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc:  o.mclient.MonitoringV1().Alertmanagers(api.NamespaceAll).List,
-			WatchFunc: o.mclient.MonitoringV1().Alertmanagers(api.NamespaceAll).Watch,
+			ListFunc:  o.mclient.MonitoringV1().Alertmanagers(o.config.Namespace).List,
+			WatchFunc: o.mclient.MonitoringV1().Alertmanagers(o.config.Namespace).Watch,
 		},
 		&monitoringv1.Alertmanager{}, resyncPeriod, cache.Indexers{},
 	)
 	o.ssetInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(o.kclient.AppsV1beta1().RESTClient(), "statefulsets", api.NamespaceAll, nil),
+		cache.NewListWatchFromClient(o.kclient.AppsV1beta1().RESTClient(), "statefulsets", o.config.Namespace, nil),
 		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
 
@@ -505,6 +510,13 @@ func (c *Operator) destroyAlertmanager(key string) error {
 }
 
 func (c *Operator) createCRDs() error {
+	_, aErr := c.mclient.MonitoringV1().Alertmanagers(c.config.Namespace).List(metav1.ListOptions{})
+	if aErr == nil {
+		// If Alertmanager objects are already registered, we won't attempt to
+		// do so again.
+		return nil
+	}
+
 	crds := []*extensionsobj.CustomResourceDefinition{
 		k8sutil.NewAlertmanagerCustomResourceDefinition(),
 	}
@@ -519,5 +531,5 @@ func (c *Operator) createCRDs() error {
 	}
 
 	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
-	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Alertmanagers(api.NamespaceAll).List)
+	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Alertmanagers(c.config.Namespace).List)
 }
