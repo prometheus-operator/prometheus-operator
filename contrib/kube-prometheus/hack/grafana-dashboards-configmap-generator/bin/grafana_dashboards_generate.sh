@@ -236,7 +236,7 @@ bin-pack-files() {
     test -f "$file" || { echo "# INTERNAL ERROR: File not found: $file"; continue; }
 #    echo "debug: Processing file $(basename $file)"
 
-    file_size_bytes="$(stat -c%s "$file")" || true
+    file_size_bytes="$(ls -nl "$file" | awk '{print $5}')" || true
 
     # If the file is bigger than the configured limit we skip it file
     if [ "$file_size_bytes" -gt "$DATA_SIZE_LIMIT" ]; then
