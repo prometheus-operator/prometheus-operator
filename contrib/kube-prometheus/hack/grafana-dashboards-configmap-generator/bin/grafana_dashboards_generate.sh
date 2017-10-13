@@ -199,6 +199,7 @@ addArrayToConfigMap() {
 
     # Dashboard foot
     test "$type" = "dashboard" && cat $DASHBOARD_FOOT_FILE
+    [ "$(tail -c 1 "$file")" ] && echo
   done
   echo "---"
 
