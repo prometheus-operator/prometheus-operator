@@ -18,7 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
-	rbacv1alpha1 "k8s.io/client-go/pkg/apis/rbac/v1alpha1"
+	rbacv1beta1 "k8s.io/client-go/pkg/apis/rbac/v1beta1"
 )
 
 func CreateClusterRole(kubeClient kubernetes.Interface, relativePath string) error {
@@ -27,18 +27,18 @@ func CreateClusterRole(kubeClient kubernetes.Interface, relativePath string) err
 		return err
 	}
 
-	_, err = kubeClient.RbacV1alpha1().ClusterRoles().Get(clusterRole.Name, metav1.GetOptions{})
+	_, err = kubeClient.RbacV1beta1().ClusterRoles().Get(clusterRole.Name, metav1.GetOptions{})
 
 	if err == nil {
 		// ClusterRole already exists -> Update
-		_, err = kubeClient.RbacV1alpha1().ClusterRoles().Update(clusterRole)
+		_, err = kubeClient.RbacV1beta1().ClusterRoles().Update(clusterRole)
 		if err != nil {
 			return err
 		}
 
 	} else {
 		// ClusterRole doesn't exists -> Create
-		_, err = kubeClient.RbacV1alpha1().ClusterRoles().Create(clusterRole)
+		_, err = kubeClient.RbacV1beta1().ClusterRoles().Create(clusterRole)
 		if err != nil {
 			return err
 		}
@@ -53,20 +53,20 @@ func DeleteClusterRole(kubeClient kubernetes.Interface, relativePath string) err
 		return err
 	}
 
-	if err := kubeClient.RbacV1alpha1().ClusterRoles().Delete(clusterRole.Name, &metav1.DeleteOptions{}); err != nil {
+	if err := kubeClient.RbacV1beta1().ClusterRoles().Delete(clusterRole.Name, &metav1.DeleteOptions{}); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func parseClusterRoleYaml(relativePath string) (*rbacv1alpha1.ClusterRole, error) {
+func parseClusterRoleYaml(relativePath string) (*rbacv1beta1.ClusterRole, error) {
 	manifest, err := PathToOSFile(relativePath)
 	if err != nil {
 		return nil, err
 	}
 
-	clusterRole := rbacv1alpha1.ClusterRole{}
+	clusterRole := rbacv1beta1.ClusterRole{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&clusterRole); err != nil {
 		return nil, err
 	}
