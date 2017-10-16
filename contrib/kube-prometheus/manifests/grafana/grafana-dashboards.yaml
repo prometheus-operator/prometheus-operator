@@ -3886,7 +3886,7 @@ data:
               "tableColumn": "",
               "targets": [
                 {
-                  "expr": "topk(1, (sum by(instance) (rate(apiserver_request_count{code=~\"5..\"}[5m])) / sum by(instance) (rate(apiserver_request_count[5m]))) * 100)",
+                  "expr": "max(sum by(instance) (rate(apiserver_request_count{code=~\"5..\"}[5m])) / sum by(instance) (rate(apiserver_request_count[5m]))) * 100",
                   "format": "time_series",
                   "intervalFactor": 2,
                   "legendFormat": "",
