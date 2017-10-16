@@ -103,11 +103,22 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
 
+	boolTrue := true
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(p.Name),
 			Labels:      config.Labels.Merge(p.ObjectMeta.Labels),
 			Annotations: p.ObjectMeta.Annotations,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         p.APIVersion,
+					BlockOwnerDeletion: &boolTrue,
+					Controller:         &boolTrue,
+					Kind:               p.Kind,
+					Name:               p.Name,
+					UID:                p.UID,
+				},
+			},
 		},
 		Spec: *spec,
 	}
@@ -139,8 +150,8 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 	return statefulset, nil
 }
 
-func makeEmptyConfig(name string, configMaps []*v1.ConfigMap, config Config) (*v1.Secret, error) {
-	s, err := makeConfigSecret(name, configMaps, config)
+func makeEmptyConfig(p *monitoringv1.Prometheus, configMaps []*v1.ConfigMap, config Config) (*v1.Secret, error) {
+	s, err := makeConfigSecret(p, configMaps, config)
 	if err != nil {
 		return nil, err
 	}
@@ -211,16 +222,27 @@ func makeRuleConfigMapListFile(configMaps []*v1.ConfigMap) ([]byte, error) {
 	return json.Marshal(cml)
 }
 
-func makeConfigSecret(name string, configMaps []*v1.ConfigMap, config Config) (*v1.Secret, error) {
+func makeConfigSecret(p *monitoringv1.Prometheus, configMaps []*v1.ConfigMap, config Config) (*v1.Secret, error) {
 	b, err := makeRuleConfigMapListFile(configMaps)
 	if err != nil {
 		return nil, err
 	}
 
+	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   configSecretName(name),
+			Name:   configSecretName(p.Name),
 			Labels: config.Labels.Merge(managedByOperatorLabels),
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         p.APIVersion,
+					BlockOwnerDeletion: &boolTrue,
+					Controller:         &boolTrue,
+					Kind:               p.Kind,
+					Name:               p.Name,
+					UID:                p.UID,
+				},
+			},
 		},
 		Data: map[string][]byte{
 			configFilename:     []byte{},

@@ -69,11 +69,23 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, co
 	if err != nil {
 		return nil, err
 	}
+
+	boolTrue := true
 	statefulset := &v1beta1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(am.Name),
 			Labels:      config.Labels.Merge(am.ObjectMeta.Labels),
 			Annotations: am.ObjectMeta.Annotations,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         am.APIVersion,
+					BlockOwnerDeletion: &boolTrue,
+					Controller:         &boolTrue,
+					Kind:               am.Kind,
+					Name:               am.Name,
+					UID:                am.UID,
+				},
+			},
 		},
 		Spec: *spec,
 	}

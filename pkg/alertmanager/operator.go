@@ -471,6 +471,8 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	return false
 }
 
+// TODO(brancz): Remove this function once Kubernetes 1.7 compatibility is dropped.
+// Starting with Kubernetes 1.8 OwnerReferences are properly handled for CRDs.
 func (c *Operator) destroyAlertmanager(key string) error {
 	ssetKey := alertmanagerKeyToStatefulSetKey(key)
 	obj, exists, err := c.ssetInf.GetStore().GetByKey(ssetKey)
