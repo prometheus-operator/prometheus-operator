@@ -684,7 +684,7 @@ func (c *Operator) sync(key string) error {
 	}
 
 	// Create Secret if it doesn't exist.
-	s, err := makeEmptyConfig(p.Name, ruleFileConfigMaps, c.config)
+	s, err := makeEmptyConfig(p, ruleFileConfigMaps, c.config)
 	if err != nil {
 		return errors.Wrap(err, "generating empty config secret failed")
 	}
@@ -808,6 +808,8 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	return false
 }
 
+// TODO(brancz): Remove this function once Kubernetes 1.7 compatibility is dropped.
+// Starting with Kubernetes 1.8 OwnerReferences are properly handled for CRDs.
 func (c *Operator) destroyPrometheus(key string) error {
 	ssetKey := prometheusKeyToStatefulSetKey(key)
 	obj, exists, err := c.ssetInf.GetStore().GetByKey(ssetKey)
@@ -952,7 +954,7 @@ func (c *Operator) createConfig(p *monitoringv1.Prometheus, ruleFileConfigMaps [
 		return errors.Wrap(err, "generating config failed")
 	}
 
-	s, err := makeConfigSecret(p.Name, ruleFileConfigMaps, c.config)
+	s, err := makeConfigSecret(p, ruleFileConfigMaps, c.config)
 	if err != nil {
 		return errors.Wrap(err, "generating base secret failed")
 	}
