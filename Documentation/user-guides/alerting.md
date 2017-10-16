@@ -147,9 +147,12 @@ metadata:
     role: prometheus-rulefiles
     prometheus: example
 data:
-  example.rules: |
-    ALERT ExampleAlert
-    IF vector(1)
+  example.rules.yaml: |+
+    groups:
+    - name: ./example.rules
+      rules:
+      - alert: ExampleAlert
+        expr: vector(1)
 ```
 
 That example `ConfigMap` always immediately triggers an alert, which is only for demonstration purposes. To validate that everything is working properly have a look at each of the Prometheus web UIs.

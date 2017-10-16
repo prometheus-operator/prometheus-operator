@@ -6,6 +6,9 @@ metadata:
     role: prometheus-rulefiles
     prometheus: example
 data:
-  example.rules: |
-    ALERT ExampleAlert
-    IF vector(1)
+  example.rules.yaml: |+
+    groups:
+    - name: ./example.rules
+      rules:
+      - alert: ExampleAlert
+        expr: vector(1)

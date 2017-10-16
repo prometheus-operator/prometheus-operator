@@ -1,0 +1,12 @@
+groups:
+- name: ./prometheus.rules
+  rules:
+  - alert: FailedReload
+    expr: prometheus_config_last_reload_successful == 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: Reloading Prometheus' configuration has failed for {{ $labels.namespace
+        }}/{{ $labels.pod}}.
+      summary: Prometheus configuration reload has failed

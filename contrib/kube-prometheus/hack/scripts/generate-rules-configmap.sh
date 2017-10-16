@@ -11,7 +11,7 @@ metadata:
 data:
 EOF
 
-for f in assets/prometheus/rules/*.rules
+for f in assets/prometheus/rules/*.rules.yaml
 do
   echo "  $(basename $f): |+"
   cat $f | sed "s/^/    /g"
