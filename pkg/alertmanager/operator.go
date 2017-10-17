@@ -84,7 +84,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
-	mclient, err := monitoring.NewForConfig(cfg)
+	mclient, err := monitoring.NewForConfig(c.CrdGroup, cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
 	}

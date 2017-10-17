@@ -118,7 +118,7 @@ func NewMigrator(cfg *rest.Config, logger log.Logger) (*Migrator, error) {
 		return nil, errors.Wrap(err, "creating kubernetes client")
 	}
 
-	mclient, err := monitoring.NewForConfig(cfg)
+	mclient, err := monitoring.NewForConfig(monitoringv1.Group, cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating monitoring client")
 	}

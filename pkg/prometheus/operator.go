@@ -143,7 +143,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		return nil, err
 	}
 
-	mclient, err := monitoring.NewForConfig(cfg)
+	mclient, err := monitoring.NewForConfig(conf.CrdGroup, cfg)
 	if err != nil {
 		return nil, err
 	}

@@ -56,9 +56,9 @@ func (c *MonitoringV1Client) RESTClient() rest.Interface {
 	return c.restClient
 }
 
-func NewForConfig(c *rest.Config) (*MonitoringV1Client, error) {
+func NewForConfig(apiGroup string, c *rest.Config) (*MonitoringV1Client, error) {
 	config := *c
-	SetConfigDefaults(&config)
+	SetConfigDefaults(apiGroup, &config)
 	client, err := rest.RESTClientFor(&config)
 	if err != nil {
 		return nil, err
@@ -72,9 +72,9 @@ func NewForConfig(c *rest.Config) (*MonitoringV1Client, error) {
 	return &MonitoringV1Client{client, dynamicClient}, nil
 }
 
-func SetConfigDefaults(config *rest.Config) {
+func SetConfigDefaults(apiGroup string, config *rest.Config) {
 	config.GroupVersion = &schema.GroupVersion{
-		Group:   Group,
+		Group:   apiGroup,
 		Version: Version,
 	}
 	config.APIPath = "/apis"
