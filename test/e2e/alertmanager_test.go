@@ -354,8 +354,11 @@ inhibit_rules:
 		},
 		Data: map[string]string{
 			"alerting.rules": `
-ALERT Test
-  IF vector(1)
+groups:
+- name: ./alerting.rules
+  rules:
+  - alert: ExampleAlert
+    expr: vector(1)
 `,
 		},
 	}
