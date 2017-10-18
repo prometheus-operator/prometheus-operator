@@ -33,7 +33,7 @@ import (
 
 const (
 	governingServiceName = "alertmanager-operated"
-	defaultVersion       = "v0.7.1"
+	defaultVersion       = "v0.9.1"
 )
 
 var (
