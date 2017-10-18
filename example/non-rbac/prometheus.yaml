@@ -6,7 +6,6 @@ metadata:
     prometheus: main
 spec:
   replicas: 2
-  version: v1.5.2
   serviceMonitorSelector:
     matchExpressions:
     - {key: app, operator: In, values: [node-exporter, example-app]}

@@ -85,7 +85,7 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 	if ruleConfigMaps > 0 {
 		configMaps := make([]string, ruleConfigMaps)
 		for i := 0; i < ruleConfigMaps; i++ {
-			configMaps[i] = configMapRuleFileFolder(i) + "*.rules"
+			configMaps[i] = configMapRuleFileFolder(i) + "*"
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "rule_files",

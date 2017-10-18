@@ -15,9 +15,6 @@
 package framework
 
 import (
-	"bytes"
-	"fmt"
-	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -43,7 +40,6 @@ type Framework struct {
 	Namespace      *v1.Namespace
 	OperatorPod    *v1.Pod
 	DefaultTimeout time.Duration
-	operatorLogs   *bytes.Buffer
 }
 
 // Setup setups a test framework and returns it.
@@ -80,7 +76,6 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 		HTTPClient:     httpc,
 		Namespace:      namespace,
 		DefaultTimeout: time.Minute,
-		operatorLogs:   bytes.NewBuffer(nil),
 	}
 
 	err = f.Setup(opImage)
@@ -94,48 +89,6 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 func (f *Framework) Setup(opImage string) error {
 	if err := f.setupPrometheusOperator(opImage); err != nil {
 		return errors.Wrap(err, "setup prometheus operator failed")
-	}
-
-	go f.retryOperatorLogs()
-
-	return nil
-}
-
-func (f *Framework) retryOperatorLogs() {
-	for {
-		err := f.recordOperatorLogs()
-		if err != nil {
-			errtxt := fmt.Sprintf("\n--- There was an error capturing logs (%s), retrying... ---\n", err)
-			f.operatorLogs.Write([]byte(errtxt))
-			time.Sleep(time.Second)
-		}
-	}
-}
-
-func (f *Framework) recordOperatorLogs() error {
-	deploy, err := f.KubeClient.AppsV1beta1().Deployments(f.Namespace.Name).Get("prometheus-operator", metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
-	list, err := f.KubeClient.CoreV1().Pods(f.Namespace.Name).List(opts)
-	if err != nil {
-		return err
-	}
-
-	if len(list.Items) != 1 {
-		return fmt.Errorf("1 Prometheus Operator Pod expected, but found %d", len(list.Items))
-	}
-
-	r, err := f.KubeClient.CoreV1().Pods(f.Namespace.Name).GetLogs(list.Items[0].Name, &v1.PodLogOptions{Follow: true}).Stream()
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-
-	_, err = io.Copy(f.operatorLogs, r)
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -204,8 +157,6 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 
 // Teardown tears down a previously initialized test environment.
 func (f *Framework) Teardown() error {
-	fmt.Println("Prometheus Operator Logs Captured: \n\n", f.operatorLogs.String())
-
 	if err := f.KubeClient.Core().Services(f.Namespace.Name).Delete("prometheus-operated", nil); err != nil && !k8sutil.IsResourceNotFoundError(err) {
 		return err
 	}

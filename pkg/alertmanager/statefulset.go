@@ -33,7 +33,7 @@ import (
 
 const (
 	governingServiceName = "alertmanager-operated"
-	defaultVersion       = "v0.7.1"
+	defaultVersion       = "v0.9.1"
 )
 
 var (
@@ -55,8 +55,9 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, co
 	if am.Spec.Replicas == nil {
 		am.Spec.Replicas = &minReplicas
 	}
-	if am.Spec.Replicas != nil && *am.Spec.Replicas < minReplicas {
-		am.Spec.Replicas = &minReplicas
+	intZero := int32(0)
+	if am.Spec.Replicas != nil && *am.Spec.Replicas < 0 {
+		am.Spec.Replicas = &intZero
 	}
 	if am.Spec.Resources.Requests == nil {
 		am.Spec.Resources.Requests = v1.ResourceList{}
