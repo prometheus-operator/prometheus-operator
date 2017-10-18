@@ -84,8 +84,9 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 	if p.Spec.Replicas == nil {
 		p.Spec.Replicas = &minReplicas
 	}
-	if p.Spec.Replicas != nil && *p.Spec.Replicas < minReplicas {
-		p.Spec.Replicas = &minReplicas
+	intZero := int32(0)
+	if p.Spec.Replicas != nil && *p.Spec.Replicas < 0 {
+		p.Spec.Replicas = &intZero
 	}
 	if p.Spec.Retention == "" {
 		p.Spec.Retention = defaultRetention
