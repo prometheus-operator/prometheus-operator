@@ -1,3 +1,15 @@
+## 0.14.0 / 2017-10-19
+
+* [CHANGE] Default Prometheus version v2.0.0-rc.1.
+* [CHANGE] Default Alertmanager version v0.9.1.
+* [BUGFIX] Set StatefulSet replicas to 0 if 0 is specified in Alertmanager/Prometheus object.
+* [BUGFIX] Glob for all files in a ConfigMap as rule files.
+* [FEATURE] Add ability to run Prometheus Operator for a single namespace.
+* [FEATURE] Add ability to specify CRD api group.
+* [FEATURE] Use readiness and health endpoints of Prometheus 1.8+.
+* [ENHANCEMENT] Add OwnerReferences to managed objects.
+* [ENHANCEMENT] Use parallel pod creation strategy for Prometheus StatefulSets.
+
 ## 0.13.0 / 2017-09-21
 
 After a long period of not having broken any functionality in the Prometheus Operator, we have decided to promote the status of this project to beta.
