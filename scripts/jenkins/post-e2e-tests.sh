@@ -28,6 +28,6 @@ docker run \
        -e TF_VAR_tectonic_cluster_name=${TF_VAR_tectonic_cluster_name} \
        -e TF_VAR_tectonic_dns_name=${TF_VAR_tectonic_dns_name} \
        quay.io/coreos/tectonic-installer:master \
-       /bin/bash -c "make destroy || make destroy || make destroy"
+       /bin/bash -c "make destroy || make destroy || make destroy && rm -rf build .build"
 
 docker rmi quay.io/coreos/prometheus-operator-dev:$BUILD_ID
