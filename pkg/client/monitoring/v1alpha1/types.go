@@ -108,6 +108,17 @@ type PrometheusSpec struct {
 	// PrometheusArgs is a string of arguments that will be passed to the Prometheus instance.
 	// Arguments specified here will be given precedence over the normally calculated arguments.
 	PrometheusArgs []string `json:"prometheusArgs,omitempty"`
+
+	RemoteWriteEndpoints []RemoteWriteEndpoints `json:"remoteWrite,omitempty"`
+	RemoteReadEndpoints  []RemoteReadEndpoints  `json:"remoteRead,omitempty"`
+}
+
+type RemoteReadEndpoints struct {
+	URL string `json:"url"`
+}
+
+type RemoteWriteEndpoints struct {
+	URL string `json:"url"`
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not
