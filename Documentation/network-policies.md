@@ -16,16 +16,15 @@ In this example we are closing all the inbound communication on the namespace mo
 Follow the steps [here](http://docs.projectcalico.org/v1.5/getting-started/kubernetes/installation/) to install calico, also dont' forget to [enable network policy](https://kubernetes.io/docs/concepts/services-networking/network-policies/) in you k8s cluster.
 
 Once you've done that, you should use the following configuration to deny all the ingress (inbound) traffic.
-
 ``` 
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-name: default-deny-all
-namespace: default
-spec:
-podSelector:
-matchLabels:
+ kind: NetworkPolicy
+ apiVersion: networking.k8s.io/v1
+ metadata:
+ name: default-deny-all
+ namespace: default
+ spec:
+ podSelector:
+ matchLabels:
 ```
 Save the config file as default-deny-all.yaml and apply the configuration to the cluster using
 
