@@ -197,9 +197,11 @@ addArrayToConfigMap() {
     # File content: Indent 4
     cat $file | sed "s/^/    /"
 
+    # If source file was not ended properly we add newline character
+    [ "$(tail -c 1 "$file")" ] && echo
+
     # Dashboard foot
     test "$type" = "dashboard" && cat $DASHBOARD_FOOT_FILE
-    [ "$(tail -c 1 "$file")" ] && echo
   done
   echo "---"
 
