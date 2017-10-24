@@ -15,6 +15,7 @@ TF_VAR_tectonic_cluster_name="${CLUSTER}"
 TF_VAR_tectonic_dns_name="${CLUSTER}"
 TECTONIC_INSTALLER_DIR=/go/src/github.com/coreos/tectonic-installer
 
+# Destroy cluster
 docker run \
        --rm \
        -v $PWD/build/:$TECTONIC_INSTALLER_DIR/build/ \
@@ -29,5 +30,8 @@ docker run \
        -e TF_VAR_tectonic_dns_name=${TF_VAR_tectonic_dns_name} \
        quay.io/coreos/tectonic-installer:master \
        /bin/bash -c "make destroy || make destroy || make destroy"
+
+# Cleanup folders created by docker (root)
+sudo rm -rf build .build
 
 docker rmi quay.io/coreos/prometheus-operator-dev:$BUILD_ID
