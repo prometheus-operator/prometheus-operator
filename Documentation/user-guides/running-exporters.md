@@ -60,7 +60,7 @@ spec:
   - port: http-metrics
     interval: 15s
 ```
-(A better example for monitoring Kubernetes cluster components can be found [User Guide "Cluster Monitoring"](user-guides/cluster-monitoring.md))
+(A better example for monitoring Kubernetes cluster components can be found [User Guide "Cluster Monitoring"](cluster-monitoring.md))
 This ServiceMonitor targets **all** Services with the label `k8s-app` (`spec.selector`) any value, in the namespaces `kube-system` and `monitoring` (`spec.namespaceSelector`).
 
 ## Troubleshooting
