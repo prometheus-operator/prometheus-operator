@@ -51,7 +51,7 @@ Parameter | Description | Default
 `service.externalIPs` | List of external IP addresses at which the Grafana Service will be available | `[]`
 `service.loadBalancerIP` | External IP address to assign to Grafana Service | `""`
 `service.loadBalancerSourceRanges` | List of client IPs allowed to access Grafana Service | `[]`
-`service.nodePort` | Port to expose Grafana Service on each node | `39093`
+`service.nodePort` | Port to expose Grafana Service on each node | `30902`
 `service.type` | Grafana Service type | `ClusterIP`
 `storageSpec` | Grafana StorageSpec for persistent data | `{}`
 
