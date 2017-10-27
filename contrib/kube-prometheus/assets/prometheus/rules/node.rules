@@ -9,7 +9,7 @@ ALERT NodeExporterDown
     description = "Prometheus could not scrape a node-exporter for more than 10m, or node-exporters have disappeared from discovery.",
   }
 ALERT K8SNodeOutOfDisk
-  IF kube_node_status_condition{condition"OutOfDisk", status="true"} == 1
+  IF kube_node_status_condition{condition="OutOfDisk", status="true"} == 1
   LABELS {
     service = "k8s",
     severity = "critical"
