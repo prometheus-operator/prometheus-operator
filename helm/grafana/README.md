@@ -38,8 +38,8 @@ Parameter | Description | Default
 `adminPassword` | Grafana admin user password | `admin`
 `image.repository` | Image | `grafana/grafana`
 `image.tag` | Image tag | `4.4.1`
-`grafana_watcher.repository` | Image | `quay.io/coreos/grafana-watcher`
-`grafana_watcher.tag` | Image tag | `v0.0.8`
+`grafanaWatcher.repository` | Image | `quay.io/coreos/grafana-watcher`
+`grafanaWatcher.tag` | Image tag | `v0.0.8`
 `ingress.enabled` | If true, Grafana Ingress will be created | `false`
 `ingress.annotations` | Annotations for Grafana Ingress | `{}`
 `ingress.fqdn` | Grafana Ingress fully-qualified domain name | `""`
