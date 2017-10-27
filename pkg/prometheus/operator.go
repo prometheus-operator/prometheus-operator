@@ -291,7 +291,9 @@ func (c *Operator) reconcileNodeEndpoints(stopc <-chan struct{}) {
 			return
 		case <-ticker.C:
 			err := c.syncNodeEndpoints()
-			c.logger.Log("msg", "syncing nodes into Endpoints object failed", "err", err)
+			if err != nil {
+				c.logger.Log("msg", "syncing nodes into Endpoints object failed", "err", err)
+			}
 		}
 	}
 }
@@ -364,7 +366,6 @@ func (c *Operator) syncNodeEndpoints() error {
 		}
 		eps.Subsets[0].Addresses = append(eps.Subsets[0].Addresses, v1.EndpointAddress{
 			IP:       address,
-			NodeName: &n.Name,
 			TargetRef: &v1.ObjectReference{
 				Kind:       "Node",
 				Name:       n.Name,

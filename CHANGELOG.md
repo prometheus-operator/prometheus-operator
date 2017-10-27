@@ -1,3 +1,7 @@
+## 0.11.3 / 2017-10-27
+
+* [BUGFIX] Fix kubelet endpoints not updated causing old servers to be falsely configured.
+
 ## 0.11.2 / 2017-09-21
 
 * [BUGFIX] Fix memory leak in kubelet endpoints sync.
