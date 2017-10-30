@@ -47,8 +47,6 @@ spec:
             port: {{ .Values.kube_state_metrics.service.internalPort }}
           initialDelaySeconds: 30
           timeoutSeconds: 5
-        resources:
-{{ toYaml .Values.kube_state_metrics.resources | indent 12 }}
       - name: {{ .Chart.Name }}-addon-resizer
         image: "{{ .Values.addon_resizer.image.repository }}:{{ .Values.addon_resizer.image.tag }}"
         env:
