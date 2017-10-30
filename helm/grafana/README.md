@@ -38,6 +38,8 @@ Parameter | Description | Default
 `adminPassword` | Grafana admin user password | `admin`
 `image.repository` | Image | `grafana/grafana`
 `image.tag` | Image tag | `4.4.1`
+`grafanaWatcher.repository` | Image | `quay.io/coreos/grafana-watcher`
+`grafanaWatcher.tag` | Image tag | `v0.0.8`
 `ingress.enabled` | If true, Grafana Ingress will be created | `false`
 `ingress.annotations` | Annotations for Grafana Ingress | `{}`
 `ingress.fqdn` | Grafana Ingress fully-qualified domain name | `""`
@@ -49,7 +51,7 @@ Parameter | Description | Default
 `service.externalIPs` | List of external IP addresses at which the Grafana Service will be available | `[]`
 `service.loadBalancerIP` | External IP address to assign to Grafana Service | `""`
 `service.loadBalancerSourceRanges` | List of client IPs allowed to access Grafana Service | `[]`
-`service.nodePort` | Port to expose Grafana Service on each node | `39093`
+`service.nodePort` | Port to expose Grafana Service on each node | `30902`
 `service.type` | Grafana Service type | `ClusterIP`
 `storageSpec` | Grafana StorageSpec for persistent data | `{}`
 

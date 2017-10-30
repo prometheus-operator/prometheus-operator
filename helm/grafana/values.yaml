@@ -44,6 +44,10 @@ image:
   repository: grafana/grafana
   tag: 4.4.1
 
+grafanaWatcher:
+  repository: quay.io/coreos/grafana-watcher
+  tag: v0.0.8
+
 storageSpec: {}
 #   class: default
 #   accessMode:
