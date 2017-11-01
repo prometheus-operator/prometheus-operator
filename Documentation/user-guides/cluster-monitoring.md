@@ -49,7 +49,7 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        image: quay.io/coreos/prometheus-operator:v0.14.0
+        image: quay.io/coreos/prometheus-operator:v0.14.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -225,13 +225,6 @@ spec:
             port: 8080
           initialDelaySeconds: 5
           timeoutSeconds: 5
-        resources:
-          requests:
-            memory: 100Mi
-            cpu: 100m
-          limits:
-            memory: 200Mi
-            cpu: 200m
       - name: addon-resizer
         image: gcr.io/google_containers/addon-resizer:1.0
         resources:
