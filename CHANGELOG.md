@@ -1,3 +1,7 @@
+## 0.14.1 / 2017-11-01
+
+* [BUGFIX] Ignore illegal change of PodManagementPolicy to StatefulSet.
+
 ## 0.14.0 / 2017-10-19
 
 * [CHANGE] Default Prometheus version v2.0.0-rc.1.
