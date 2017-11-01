@@ -13,13 +13,6 @@ kube_state_metrics:
     type: ClusterIP
     externalPort: 80
     internalPort: 8080
-  resources:
-    limits:
-      cpu: 100m
-      memory: 200Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
 addon_resizer:
   image:
     repository: gcr.io/google_containers/addon-resizer
