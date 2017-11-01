@@ -146,6 +146,9 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 
 	if old != nil {
 		statefulset.Annotations = old.Annotations
+
+		// Updates to statefulset spec for fields other than 'replicas', 'template', and 'updateStrategy' are forbidden.
+		statefulset.Spec.PodManagementPolicy = old.Spec.PodManagementPolicy
 	}
 
 	return statefulset, nil
