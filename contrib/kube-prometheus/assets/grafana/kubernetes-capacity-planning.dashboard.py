@@ -3,7 +3,7 @@ from grafanalib.core import *
 
 dashboard = Dashboard(
     title='Kubernetes Capacity Planning',
-    version=4,
+    version=5,
     gnetId=22,
     graphTooltip=0,
     refresh=False,
