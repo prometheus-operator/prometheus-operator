@@ -2,7 +2,7 @@ from grafanalib.core import *
 
 dashboard = Dashboard(
     title='Kubernetes Control Plane Status',
-    version=3,
+    version=4,
     graphTooltip=0,
     schemaVersion=14,
     time=Time(start='now-6h'),
