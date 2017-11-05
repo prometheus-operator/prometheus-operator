@@ -245,11 +245,11 @@ dashboard = Dashboard(
                     ),
                     targets=[
                         {
-                            'expr': 'sum by(verb) (rate(apiserver_latency_'
-                            'seconds:quantile[5m]) >= 0)',
+                            'expr': 'sum by(verb) (rate(cluster_resource_verb:'
+                            'apiserver_latency:quantile_seconds[5m]) >= 0)',
                             'format': 'time_series',
                             'intervalFactor': 2,
-                            'legendFormat': '',
+                            'legendFormat': '{{verb}}',
                             'refId': 'A',
                             'step': 30,
                         }
