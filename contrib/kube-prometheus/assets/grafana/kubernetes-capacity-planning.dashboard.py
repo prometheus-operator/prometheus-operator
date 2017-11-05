@@ -44,7 +44,7 @@ dashboard = Dashboard(
                             '* 100',
                             'hide': False,
                             'intervalFactor': 10,
-                            'legendFormat': '',
+                            'legendFormat': 'idle',
                             'refId': 'A',
                             'step': 50,
                         },
