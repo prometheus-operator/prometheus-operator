@@ -281,11 +281,30 @@ dashboard = Dashboard(
                     ),
                     targets=[
                         {
-                            'expr': 'cluster:scheduler_e2e_scheduling_'
-                            'latency_seconds:quantile',
+                            'expr': 'cluster:scheduler_e2e_scheduling_latency'
+                            ':quantile_seconds{quantile="0.5"}',
                             'format': 'time_series',
                             'intervalFactor': 2,
+                            'legendFormat': '50th percentile',
                             'refId': 'A',
+                            'step': 60,
+                        },
+                        {
+                            'expr': 'cluster:scheduler_e2e_scheduling_latency'
+                            ':quantile_seconds{quantile="0.9"}',
+                            'format': 'time_series',
+                            'intervalFactor': 2,
+                            'legendFormat': '90th percentile',
+                            'refId': 'B',
+                            'step': 60,
+                        },
+                        {
+                            'expr': 'cluster:scheduler_e2e_scheduling_latency'
+                            ':quantile_seconds{quantile="0.99"}',
+                            'format': 'time_series',
+                            'intervalFactor': 2,
+                            'legendFormat': '99th percentile',
+                            'refId': 'C',
                             'step': 60,
                         }
                     ],
