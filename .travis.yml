@@ -7,7 +7,7 @@ services:
 jobs:
   include:
   - stage: Check generated contents are up to date and code is formatted.
-    script: ./scripts/jenkins/check-make-generate.sh
+    script: ./scripts/check-make-generate.sh
   - stage: Unit tests
     script: make test
   - stage: E2e tests
