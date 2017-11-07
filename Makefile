@@ -75,6 +75,6 @@ jsonnet:
 	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | json2yaml > contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml
 
 jsonnet-docker:
-	docker build -f scripts/jenkins/jsonnet/Dockerfile -t po-jsonnet .
+	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs

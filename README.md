@@ -1,5 +1,5 @@
 # Prometheus Operator
-[![Build Status](https://jenkins-monitoring.prod.coreos.systems/buildStatus/icon?job=po-tests-master)](https://jenkins-monitoring.prod.coreos.systems/job/po-tests-master/)
+[![Build Status](https://travis-ci.org/coreos/prometheus-operator.svg?branch=master)](https://travis-ci.org/coreos/prometheus-operator)
 [![Go Report Card](https://goreportcard.com/badge/coreos/prometheus-operator "Go Report Card")](https://goreportcard.com/report/coreos/prometheus-operator)
 
 **Project status: *beta*** Not all planned features are completed. The API, spec, status and other user facing objects may change, but in a backward compatible way.

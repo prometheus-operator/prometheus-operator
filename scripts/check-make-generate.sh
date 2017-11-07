@@ -8,6 +8,8 @@ set -u
 # print each command before executing it
 set -x
 
+make check-license
+make format
 make generate
 
 git diff --exit-code
