@@ -59,6 +59,7 @@ func init() {
 	flagset.StringVar(&cfg.Namespace, "namespace", kapi.NamespaceAll, "Namespace to scope the interaction of the Prometheus Operator and the apiserver.")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
 	flagset.StringVar(&cfg.CrdGroup, "crd-apigroup", monitoringv1.Group, "prometheus CRD  API group name")
+	flagset.Var(&cfg.CrdKinds, "crd-kinds", " - EXPERIMENTAL (could be removed in future releases) - customize CRD kind names")
 	flagset.Parse(os.Args[1:])
 
 }

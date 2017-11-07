@@ -54,13 +54,13 @@ type prometheuses struct {
 	ns         string
 }
 
-func newPrometheuses(r rest.Interface, c *dynamic.Client, namespace string) *prometheuses {
+func newPrometheuses(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *prometheuses {
 	return &prometheuses{
 		r,
 		c.Resource(
 			&metav1.APIResource{
-				Kind:       PrometheusesKind,
-				Name:       PrometheusName,
+				Kind:       crdKind.Kind,
+				Name:       crdKind.Plural,
 				Namespaced: true,
 			},
 			namespace,
