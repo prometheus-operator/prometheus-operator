@@ -37,7 +37,7 @@ import (
 
 const (
 	governingServiceName = "prometheus-operated"
-	DefaultVersion       = "v2.0.0-rc.1"
+	DefaultVersion       = "v2.0.0"
 	defaultRetention     = "24h"
 	configMapsFilename   = "configmaps.json"
 )
@@ -66,7 +66,7 @@ var (
 		"v1.7.1",
 		"v1.7.2",
 		"v1.8.0",
-		"v2.0.0-rc.1",
+		"v2.0.0",
 	}
 )
 
