@@ -5,7 +5,7 @@ from _grafanalib import *
 
 
 dashboard = Dashboard(
-    title='Stateful Set',
+    title='StatefulSet',
     version=1,
     graphTooltip=1,
     time=Time(start='now-6h'),
@@ -37,7 +37,7 @@ dashboard = Dashboard(
             'datasource': '${DS_PROMETHEUS}',
             'hide': 0,
             'includeAll': False,
-            'label': 'Stateful Set',
+            'label': 'StatefulSet',
             'multi': False,
             'name': 'statefulset_name',
             'options': [],
