@@ -14,8 +14,7 @@ Example:
 ```bash
 git clone -b master https://github.com/coreos/prometheus-operator.git prometheus-operator-temp;
 cd prometheus-operator-temp/contrib/kube-prometheus
-./hack/cluster-monitoring/deploy
-kubectl -n kube-system create -f manifests/k8s/self-hosted/
+./hack/cluster-monitoring/self-hosted-deploy
 cd -
 rm -rf prometheus-operator-temp
 ```
