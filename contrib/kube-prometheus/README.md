@@ -87,7 +87,9 @@ As such, in order to make changes to the dashboard bundle, you need to change th
 files in assets/grafana, eventually add your own, and then run `make generate` in the
 kube-prometheus root directory.
  
-To read more in depth about developing dashboards, read the [Developing alerts and dashboards](docs/developing-alerts-and-dashboards.md) documentation.
+To read more in depth about developing dashboards, read the
+[Developing Prometheus Rules and Grafana Dashboards](docs/developing-alerts-and-dashboards.md)
+documentation.
 
 ### Reloading of dashboards
 
