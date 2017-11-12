@@ -5,8 +5,8 @@ Installs [prometheus-operator](https://github.com/coreos/prometheus-operator) to
 ## TL;DR;
 
 ```console
-$ helm repo add opsgoodness http://charts.opsgoodness.com
-$ helm install opsgoodness/prometheus-operator
+$ helm repo add coreos https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+$ helm install coreos/prometheus-operator
 ```
 
 ## Introduction
@@ -56,7 +56,7 @@ $ helm init --service-account tiller
 To install the chart with the release name `my-release`:
 
 ```console
-$ helm install --name my-release opsgoodness/prometheus-operator
+$ helm install --name my-release coreos/prometheus-operator
 ```
 
 The command deploys prometheus-operator on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -97,13 +97,13 @@ Parameter | Description | Default
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```console
-$ helm install --name my-release opsgoodness/prometheus-operator --set sendAnalytics=true
+$ helm install --name my-release coreos/prometheus-operator --set sendAnalytics=true
 ```
 
 Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
 
 ```console
-$ helm install --name my-release opsgoodness/prometheus-operator -f values.yaml
+$ helm install --name my-release coreos/prometheus-operator -f values.yaml
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
