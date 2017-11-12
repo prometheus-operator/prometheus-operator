@@ -5,7 +5,8 @@ Installs a [Prometheus](https://prometheus.io) Alertmanager instance using the C
 ## TL;DR;
 
 ```console
-$ helm install opsgoodness/alertmanager
+$ helm repo add coreos https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+$ helm install coreos/alertmanager
 ```
 
 ## Introduction
@@ -21,7 +22,7 @@ This chart bootstraps an [Alertmanager](https://github.com/prometheus/alertmanag
 To install the chart with the release name `my-release`:
 
 ```console
-$ helm install opsgoodness/alertmanager --name my-release
+$ helm install coreos/alertmanager --name my-release
 ```
 
 The command deploys Alertmanager  on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -64,13 +65,13 @@ Parameter | Description | Default
 `storageSpec` | Alertmanager StorageSpec for persistent data | `{}`
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
-$ helm install opsgoodness/alertmanager --name my-release --set externalUrl=http://alertmanager.example.com
+$ helm install coreos/alertmanager --name my-release --set externalUrl=http://alertmanager.example.com
 ```
 
 Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
 
 ```console
-$ helm install opsgoodness/alertmanager --name my-release -f values.yaml
+$ helm install coreos/alertmanager --name my-release -f values.yaml
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
