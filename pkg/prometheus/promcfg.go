@@ -42,9 +42,15 @@ func configMapRuleFileFolder(configMapNumber int) string {
 
 func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	res := yaml.MapSlice{}
+	ks := make([]string, 0)
 
-	for k, v := range m {
-		res = append(res, yaml.MapItem{Key: k, Value: v})
+	for k, _ := range m {
+		ks = append(ks, k)
+	}
+	sort.Strings(ks)
+
+	for _, k := range ks {
+		res = append(res, yaml.MapItem{Key: k, Value: m[k]})
 	}
 
 	return res

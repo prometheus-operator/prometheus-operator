@@ -64,6 +64,10 @@ func generateTestConfig(version string) ([]byte, error) {
 						},
 					},
 				},
+				ExternalLabels: map[string]string{
+					"label1": "value1",
+					"label2": "value2",
+				},
 				Version:  version,
 				Replicas: &replicas,
 				ServiceMonitorSelector: &metav1.LabelSelector{
