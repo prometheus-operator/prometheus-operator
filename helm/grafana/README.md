@@ -5,7 +5,8 @@
 ## TL;DR;
 
 ```console
-$ helm install opsgoodness/grafana
+$ helm repo add coreos https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+$ helm install coreos/grafana
 ```
 ## Introduction
 
@@ -16,7 +17,7 @@ This chart bootstraps an [Grafana](http://grafana.org) deployment on a [Kubernet
 To install the chart with the release name `my-release`:
 
 ```console
-$ helm install --name my-release opsgoodness/grafana
+$ helm install --name my-release coreos/grafana
 ```
 
 ## Uninstalling the Chart
@@ -56,13 +57,13 @@ Parameter | Description | Default
 `storageSpec` | Grafana StorageSpec for persistent data | `{}`
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
-$ helm install opsgoodness/grafana --name my-release --set adminUser=bob
+$ helm install coreos/grafana --name my-release --set adminUser=bob
 ```
 
 Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
 
 ```console
-$ helm install opsgoodness/grafana --name my-release -f values.yaml
+$ helm install coreos/grafana --name my-release -f values.yaml
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)

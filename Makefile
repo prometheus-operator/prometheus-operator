@@ -7,6 +7,8 @@ PROMU := $(GOPATH)/bin/promu
 PREFIX ?= $(shell pwd)
 
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
+HELM_BUCKET_NAME=coreos-charts
+HELM_PACKAGES=$(shell ls helm)
 
 all: check-license format build test
 
@@ -76,5 +78,14 @@ jsonnet:
 
 jsonnet-docker:
 	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .
+
+helm-package:
+	mkdir -p /tmp/helm
+	(cd $(CURDIR)/helm && helm package $(HELM_PACKAGES)  -d /tmp/helm && cd -)
+	helm repo index /tmp/helm --url https://s3-eu-west-1.amazonaws.com/$(HELM_BUCKET_NAME)/stable/ --debug
+	aws s3 sync --acl public-read /tmp/helm/ s3://$(HELM_BUCKET_NAME)/stable/
+
+helm-init-repo:
+	make helm-package HELM_PACKAGES=exporter-*
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs
