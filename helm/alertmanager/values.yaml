@@ -17,6 +17,10 @@ config:
     receiver: webhook
     repeat_interval: 12h
 
+## Alertmanager template files to include
+#
+templateFiles: {}
+
 ## External URL at which Alertmanager will be reachable
 ##
 externalUrl: ""
