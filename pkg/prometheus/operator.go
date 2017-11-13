@@ -125,6 +125,7 @@ type Config struct {
 	Namespace                    string
 	Labels                       Labels
 	CrdGroup                     string
+	CrdKinds                     monitoringv1.CrdKinds
 }
 
 type BasicAuthCredentials struct {
@@ -143,7 +144,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		return nil, err
 	}
 
-	mclient, err := monitoring.NewForConfig(conf.CrdGroup, cfg)
+	mclient, err := monitoring.NewForConfig(&conf.CrdKinds, conf.CrdGroup, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -1021,8 +1022,8 @@ func (c *Operator) createCRDs() error {
 	}
 
 	crds := []*extensionsobj.CustomResourceDefinition{
-		k8sutil.NewPrometheusCustomResourceDefinition(c.config.CrdGroup, c.config.Labels.LabelsMap),
-		k8sutil.NewServiceMonitorCustomResourceDefinition(c.config.CrdGroup, c.config.Labels.LabelsMap),
+		k8sutil.NewPrometheusCustomResourceDefinition(c.config.CrdKinds.Prometheus, c.config.CrdGroup, c.config.Labels.LabelsMap),
+		k8sutil.NewServiceMonitorCustomResourceDefinition(c.config.CrdKinds.ServiceMonitor, c.config.CrdGroup, c.config.Labels.LabelsMap),
 	}
 
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()

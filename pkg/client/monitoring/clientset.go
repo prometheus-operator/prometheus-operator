@@ -48,7 +48,7 @@ func (c *Clientset) MonitoringV1() v1.MonitoringV1Interface {
 	return c.MonitoringV1Client
 }
 
-func NewForConfig(apiGroup string, c *rest.Config) (*Clientset, error) {
+func NewForConfig(crdKinds *v1.CrdKinds, apiGroup string, c *rest.Config) (*Clientset, error) {
 	configShallowCopy := *c
 	if configShallowCopy.RateLimiter == nil && configShallowCopy.QPS > 0 {
 		configShallowCopy.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(configShallowCopy.QPS, configShallowCopy.Burst)
@@ -61,7 +61,7 @@ func NewForConfig(apiGroup string, c *rest.Config) (*Clientset, error) {
 		return nil, err
 	}
 
-	cs.MonitoringV1Client, err = v1.NewForConfig(apiGroup, &configShallowCopy)
+	cs.MonitoringV1Client, err = v1.NewForConfig(crdKinds, apiGroup, &configShallowCopy)
 	if err != nil {
 		return nil, err
 	}

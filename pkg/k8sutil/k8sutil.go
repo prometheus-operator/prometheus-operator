@@ -205,10 +205,10 @@ func NewAlertmanagerTPRDefinition() *extensionsobjold.ThirdPartyResource {
 	}
 }
 
-func NewPrometheusCustomResourceDefinition(group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
+func NewPrometheusCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
 	return &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   monitoringv1.PrometheusName + "." + group,
+			Name:   crdkind.Plural + "." + group,
 			Labels: labels,
 		},
 		Spec: extensionsobj.CustomResourceDefinitionSpec{
@@ -216,35 +216,36 @@ func NewPrometheusCustomResourceDefinition(group string, labels map[string]strin
 			Version: monitoringv1.Version,
 			Scope:   extensionsobj.NamespaceScoped,
 			Names: extensionsobj.CustomResourceDefinitionNames{
-				Plural: monitoringv1.PrometheusName,
-				Kind:   monitoringv1.PrometheusesKind,
+				Plural: crdkind.Plural,
+				Kind:   crdkind.Kind,
 			},
 		},
 	}
 }
 
-func NewServiceMonitorCustomResourceDefinition(group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
+func NewServiceMonitorCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
 	return &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   monitoringv1.ServiceMonitorName + "." + group,
+			Name:   crdkind.Plural + "." + group,
 			Labels: labels,
 		},
+
 		Spec: extensionsobj.CustomResourceDefinitionSpec{
 			Group:   group,
 			Version: monitoringv1.Version,
 			Scope:   extensionsobj.NamespaceScoped,
 			Names: extensionsobj.CustomResourceDefinitionNames{
-				Plural: monitoringv1.ServiceMonitorName,
-				Kind:   monitoringv1.ServiceMonitorsKind,
+				Plural: crdkind.Plural,
+				Kind:   crdkind.Kind,
 			},
 		},
 	}
 }
 
-func NewAlertmanagerCustomResourceDefinition(group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
+func NewAlertmanagerCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
 	return &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   monitoringv1.AlertmanagerName + "." + group,
+			Name:   crdkind.Plural + "." + group,
 			Labels: labels,
 		},
 		Spec: extensionsobj.CustomResourceDefinitionSpec{
@@ -252,8 +253,8 @@ func NewAlertmanagerCustomResourceDefinition(group string, labels map[string]str
 			Version: monitoringv1.Version,
 			Scope:   extensionsobj.NamespaceScoped,
 			Names: extensionsobj.CustomResourceDefinitionNames{
-				Plural: monitoringv1.AlertmanagerName,
-				Kind:   monitoringv1.AlertmanagersKind,
+				Plural: crdkind.Plural,
+				Kind:   crdkind.Kind,
 			},
 		},
 	}

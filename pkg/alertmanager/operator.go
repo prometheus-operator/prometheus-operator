@@ -69,6 +69,7 @@ type Config struct {
 	AlertmanagerDefaultBaseImage string
 	Namespace                    string
 	Labels                       prometheusoperator.Labels
+	CrdKinds                     monitoringv1.CrdKinds
 	CrdGroup                     string
 }
 
@@ -84,7 +85,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
-	mclient, err := monitoring.NewForConfig(c.CrdGroup, cfg)
+	mclient, err := monitoring.NewForConfig(&c.CrdKinds, c.CrdGroup, cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
 	}
@@ -106,6 +107,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
 			Namespace:                    c.Namespace,
 			CrdGroup:                     c.CrdGroup,
+			CrdKinds:                     c.CrdKinds,
 			Labels:                       c.Labels,
 		},
 	}
@@ -524,7 +526,7 @@ func (c *Operator) createCRDs() error {
 	}
 
 	crds := []*extensionsobj.CustomResourceDefinition{
-		k8sutil.NewAlertmanagerCustomResourceDefinition(c.config.CrdGroup, c.config.Labels.LabelsMap),
+		k8sutil.NewAlertmanagerCustomResourceDefinition(c.config.CrdKinds.Alertmanager, c.config.CrdGroup, c.config.Labels.LabelsMap),
 	}
 
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()

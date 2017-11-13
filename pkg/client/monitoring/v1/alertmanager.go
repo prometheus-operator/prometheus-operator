@@ -54,13 +54,13 @@ type alertmanagers struct {
 	ns         string
 }
 
-func newAlertmanagers(r rest.Interface, c *dynamic.Client, namespace string) *alertmanagers {
+func newAlertmanagers(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *alertmanagers {
 	return &alertmanagers{
 		r,
 		c.Resource(
 			&metav1.APIResource{
-				Kind:       AlertmanagersKind,
-				Name:       AlertmanagerName,
+				Kind:       crdKind.Kind,
+				Name:       crdKind.Plural,
 				Namespaced: true,
 			},
 			namespace,

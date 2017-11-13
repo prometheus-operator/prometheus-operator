@@ -59,7 +59,7 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 		return nil, errors.Wrap(err, "creating http-client failed")
 	}
 
-	mclient, err := monitoringv1.NewForConfig(monitoringv1.Group, config)
+	mclient, err := monitoringv1.NewForConfig(&monitoringv1.DefaultCrdKinds, monitoringv1.Group, config)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating monitoring client failed")
 	}

@@ -54,13 +54,13 @@ type servicemonitors struct {
 	ns         string
 }
 
-func newServiceMonitors(r rest.Interface, c *dynamic.Client, namespace string) *servicemonitors {
+func newServiceMonitors(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *servicemonitors {
 	return &servicemonitors{
 		r,
 		c.Resource(
 			&metav1.APIResource{
-				Kind:       ServiceMonitorsKind,
-				Name:       ServiceMonitorName,
+				Kind:       crdKind.Kind,
+				Name:       crdKind.Plural,
 				Namespaced: true,
 			},
 			namespace,

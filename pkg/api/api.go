@@ -45,7 +45,7 @@ func New(conf prometheus.Config, l log.Logger) (*API, error) {
 		return nil, err
 	}
 
-	mclient, err := v1.NewForConfig(conf.CrdGroup, cfg)
+	mclient, err := v1.NewForConfig(&conf.CrdKinds, conf.CrdGroup, cfg)
 	if err != nil {
 		return nil, err
 	}
