@@ -42,3 +42,4 @@ dependencies:
   - name: exporter-node
     version: 0.1.0
     repository: https://charts.cloudposse.com/incubator
+    condition: deployExporterNode

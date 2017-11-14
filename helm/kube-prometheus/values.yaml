@@ -1,3 +1,6 @@
+# exporter-node configuration
+deployExporterNode: True
+
 alertmanager:
   ## Alertmanager configuration directives
   ## Ref: https://prometheus.io/docs/alerting/configuration/
