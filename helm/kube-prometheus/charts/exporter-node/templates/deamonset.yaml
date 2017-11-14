@@ -28,10 +28,11 @@ spec:
             - --path.procfs=/host/proc
             - --path.sysfs=/host/sys
           {{ end }}
+            - --web.listen-address=0.0.0.0:{{ .Values.service.containerPort }}
           ports:
             - name: metrics
-              containerPort: 9100
-              hostPort: 9100
+              containerPort: {{ .Values.service.containerPort }}
+              hostPort: {{ .Values.service.containerPort }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
           volumeMounts:
