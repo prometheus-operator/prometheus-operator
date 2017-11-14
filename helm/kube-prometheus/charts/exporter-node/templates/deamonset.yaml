@@ -21,8 +21,13 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           args:
+          {{ if lt .Values.image.tag "0.15.0" }}
             - --collector.procfs=/host/proc
             - --collector.sysfs=/host/sys
+          {{ else }}
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+          {{ end }}
           ports:
             - name: metrics
               containerPort: 9100
