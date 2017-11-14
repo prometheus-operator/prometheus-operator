@@ -8,6 +8,7 @@ image:
 service:
   type: ClusterIP
   externalPort: 9100
+  containerPort: 9100
 resources:
   limits:
     cpu: 200m

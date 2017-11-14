@@ -13,6 +13,7 @@ spec:
   ports:
   - name: metrics
     port: {{ .Values.service.externalPort }}
+    targetPort: metrics
     protocol: TCP
   selector:
     app: {{ template "fullname" . }}
