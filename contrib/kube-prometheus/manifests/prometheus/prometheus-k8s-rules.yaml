@@ -314,6 +314,33 @@ data:
           description: Kubelet {{$labels.instance}} is running {{$value}} pods, close
             to the limit of 110
           summary: Kubelet is close to pod limit
+      - alert: K8SDaemonSetsNotScheduled
+        expr: kube_daemonset_status_desired_number_scheduled - kube_daemonset_status_current_number_scheduled
+          > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          description: A number of daemonsets are not scheduled.
+          summary: Daemonsets are not scheduled correctly
+      - alert: K8SDaemonSetsNotRunning
+        expr: kube_daemonset_status_desired_number_scheduled - kube_daemonset_status_number_ready
+          > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          description: A number of daemonsets are not ready.
+          summary: Daemonsets are not ready
+      - alert: K8SDaemonSetsMissScheduled
+        expr: kube_daemonset_status_number_misscheduled > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          description: A number of daemonsets are running where they are not supposed
+            to run.
+          summary: Daemonsets are not scheduled correctly
   kubernetes.rules.yaml: |+
     groups:
     - name: ./kubernetes.rules
