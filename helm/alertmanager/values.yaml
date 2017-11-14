@@ -17,6 +17,26 @@ config:
     receiver: webhook
     repeat_interval: 12h
 
+## Alertmanager template files to include
+#
+templateFiles: {}
+#
+# An example template:
+#   template_1.tmpl: |-
+#       {{ define "cluster" }}{{ .ExternalURL | reReplaceAll ".*alertmanager\\.(.*)" "$1" }}{{ end }}
+#
+#       {{ define "slack.myorg.text" }}
+#       {{- $root := . -}}
+#       {{ range .Alerts }}
+#         *Alert:* {{ .Annotations.summary }} - `{{ .Labels.severity }}`
+#         *Cluster:*  {{ template "cluster" $root }}
+#         *Description:* {{ .Annotations.description }}
+#         *Graph:* <{{ .GeneratorURL }}|:chart_with_upwards_trend:>
+#         *Runbook:* <{{ .Annotations.runbook }}|:spiral_note_pad:>
+#         *Details:*
+#           {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+#           {{ end }}
+
 ## External URL at which Alertmanager will be reachable
 ##
 externalUrl: ""
