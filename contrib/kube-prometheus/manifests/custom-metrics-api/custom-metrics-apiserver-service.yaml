@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: custom-metrics-apiserver
+spec:
+  ports:
+  - port: 443
+    targetPort: 6443
+  selector:
+    app: custom-metrics-apiserver
