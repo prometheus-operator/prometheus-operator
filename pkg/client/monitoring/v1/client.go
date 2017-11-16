@@ -27,7 +27,7 @@ import (
 const (
 	Group                 = "monitoring.coreos.com"
 	PrometheusKindKey     = "prometheus"
-	AlertManagerKindKey   = "alermanager"
+	AlertManagerKindKey   = "alertmanager"
 	ServiceMonitorKindKey = "servicemonitor"
 )
 
@@ -43,6 +43,13 @@ type CrdKinds struct {
 	ServiceMonitor CrdKind
 }
 
+var DefaultCrdKinds CrdKinds = CrdKinds{
+	KindsString:    "",
+	Prometheus:     CrdKind{Plural: PrometheusName, Kind: PrometheusesKind},
+	ServiceMonitor: CrdKind{Plural: ServiceMonitorName, Kind: ServiceMonitorsKind},
+	Alertmanager:   CrdKind{Plural: AlertmanagerName, Kind: AlertmanagersKind},
+}
+
 // Implement the flag.Value interface
 func (crdkinds *CrdKinds) String() string {
 	return crdkinds.KindsString
@@ -50,6 +57,7 @@ func (crdkinds *CrdKinds) String() string {
 
 // Set Implement the flag.Set interface
 func (crdkinds *CrdKinds) Set(value string) error {
+	*crdkinds = DefaultCrdKinds
 	if value == "" {
 		value = fmt.Sprintf("%s=%s:%s,%s=%s:%s,%s=%s:%s",
 			PrometheusKindKey, PrometheusesKind, PrometheusName,
@@ -75,13 +83,6 @@ func (crdkinds *CrdKinds) Set(value string) error {
 	}
 	(*crdkinds).KindsString = value
 	return nil
-}
-
-var DefaultCrdKinds CrdKinds = CrdKinds{
-	KindsString:    "",
-	Prometheus:     CrdKind{Plural: PrometheusName, Kind: PrometheusesKind},
-	ServiceMonitor: CrdKind{Plural: ServiceMonitorName, Kind: ServiceMonitorsKind},
-	Alertmanager:   CrdKind{Plural: AlertmanagerName, Kind: AlertmanagersKind},
 }
 
 var Version = "v1"
