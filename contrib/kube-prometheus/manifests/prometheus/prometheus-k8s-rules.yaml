@@ -227,8 +227,8 @@ data:
             disappeared from service discovery.
           summary: API server unreachable
       - alert: K8SApiServerLatency
-        expr: histogram_quantile(0.99, sum(apiserver_request_latencies_bucket{subresource!="log",verb!~"^(?:CONNECT|WATCHLIST|WATCH|PROXY)$"})
-          WITHOUT (instance, resource)) / 1e+06 > 1
+        expr: histogram_quantile(0.99, sum(rate(apiserver_request_latencies_bucket{subresource!="log",verb!~"^(?:CONNECT|WATCHLIST|WATCH|PROXY)$"}[10m]))
+           by (le)) / 1e+06 > 1
         for: 10m
         labels:
           severity: warning
