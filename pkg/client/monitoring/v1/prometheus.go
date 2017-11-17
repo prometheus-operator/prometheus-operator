@@ -51,13 +51,14 @@ type PrometheusInterface interface {
 type prometheuses struct {
 	restClient rest.Interface
 	client     *dynamic.ResourceClient
+	crdKind    CrdKind
 	ns         string
 }
 
 func newPrometheuses(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *prometheuses {
 	return &prometheuses{
-		r,
-		c.Resource(
+		restClient: r,
+		client: c.Resource(
 			&metav1.APIResource{
 				Kind:       crdKind.Kind,
 				Name:       crdKind.Plural,
@@ -65,7 +66,8 @@ func newPrometheuses(r rest.Interface, c *dynamic.Client, crdKind CrdKind, names
 			},
 			namespace,
 		),
-		namespace,
+		crdKind: crdKind,
+		ns:      namespace,
 	}
 }
 
@@ -118,7 +120,7 @@ func (p *prometheuses) Delete(name string, options *metav1.DeleteOptions) error 
 func (p *prometheuses) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := p.restClient.Get().
 		Namespace(p.ns).
-		Resource("prometheuses").
+		Resource(p.crdKind.Plural).
 		// VersionedParams(&options, v1.ParameterCodec)
 		FieldsSelectorParam(nil)
 
@@ -134,7 +136,7 @@ func (p *prometheuses) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	r, err := p.restClient.Get().
 		Prefix("watch").
 		Namespace(p.ns).
-		Resource("prometheuses").
+		Resource(p.crdKind.Plural).
 		// VersionedParams(&options, v1.ParameterCodec).
 		FieldsSelectorParam(nil).
 		Stream()
