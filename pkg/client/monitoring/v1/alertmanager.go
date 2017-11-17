@@ -51,13 +51,14 @@ type AlertmanagerInterface interface {
 type alertmanagers struct {
 	restClient rest.Interface
 	client     *dynamic.ResourceClient
+	crdKind    CrdKind
 	ns         string
 }
 
 func newAlertmanagers(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *alertmanagers {
 	return &alertmanagers{
-		r,
-		c.Resource(
+		restClient: r,
+		client: c.Resource(
 			&metav1.APIResource{
 				Kind:       crdKind.Kind,
 				Name:       crdKind.Plural,
@@ -65,7 +66,8 @@ func newAlertmanagers(r rest.Interface, c *dynamic.Client, crdKind CrdKind, name
 			},
 			namespace,
 		),
-		namespace,
+		crdKind: crdKind,
+		ns:      namespace,
 	}
 }
 
@@ -118,7 +120,7 @@ func (a *alertmanagers) Delete(name string, options *metav1.DeleteOptions) error
 func (a *alertmanagers) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := a.restClient.Get().
 		Namespace(a.ns).
-		Resource("alertmanagers").
+		Resource(a.crdKind.Plural).
 		// VersionedParams(&options, api.ParameterCodec)
 		FieldsSelectorParam(nil)
 
@@ -134,7 +136,7 @@ func (a *alertmanagers) Watch(opts metav1.ListOptions) (watch.Interface, error) 
 	r, err := a.restClient.Get().
 		Prefix("watch").
 		Namespace(a.ns).
-		Resource("alertmanagers").
+		Resource(a.crdKind.Plural).
 		// VersionedParams(&options, api.ParameterCodec).
 		FieldsSelectorParam(nil).
 		Stream()

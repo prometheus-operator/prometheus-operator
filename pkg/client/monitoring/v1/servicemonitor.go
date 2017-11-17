@@ -51,13 +51,14 @@ type ServiceMonitorInterface interface {
 type servicemonitors struct {
 	restClient rest.Interface
 	client     *dynamic.ResourceClient
+	crdKind    CrdKind
 	ns         string
 }
 
 func newServiceMonitors(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *servicemonitors {
 	return &servicemonitors{
-		r,
-		c.Resource(
+		restClient: r,
+		client: c.Resource(
 			&metav1.APIResource{
 				Kind:       crdKind.Kind,
 				Name:       crdKind.Plural,
@@ -65,7 +66,8 @@ func newServiceMonitors(r rest.Interface, c *dynamic.Client, crdKind CrdKind, na
 			},
 			namespace,
 		),
-		namespace,
+		crdKind: crdKind,
+		ns:      namespace,
 	}
 }
 
@@ -118,7 +120,7 @@ func (s *servicemonitors) Delete(name string, options *metav1.DeleteOptions) err
 func (s *servicemonitors) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := s.restClient.Get().
 		Namespace(s.ns).
-		Resource("servicemonitors").
+		Resource(s.crdKind.Plural).
 		// VersionedParams(&options, v1.ParameterCodec)
 		FieldsSelectorParam(nil)
 
@@ -134,7 +136,7 @@ func (s *servicemonitors) Watch(opts metav1.ListOptions) (watch.Interface, error
 	r, err := s.restClient.Get().
 		Prefix("watch").
 		Namespace(s.ns).
-		Resource("servicemonitors").
+		Resource(s.crdKind.Plural).
 		// VersionedParams(&options, v1.ParameterCodec).
 		FieldsSelectorParam(nil).
 		Stream()
