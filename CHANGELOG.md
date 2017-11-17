@@ -1,3 +1,9 @@
+## 0.15.0 / 2017-11-17
+
+* [CHANGE] Default Prometheus version v2.0.0
+* [BUGFIX] Generate ExternalLabels deterministically
+* [EXPERIMENTAL] Add ability to specify CRD Kind name
+
 ## 0.14.1 / 2017-11-01
 
 * [BUGFIX] Ignore illegal change of PodManagementPolicy to StatefulSet.
@@ -207,4 +213,3 @@ with the operator.
 
 * [CHANGE] Use StatefulSet instead of PetSet
 * [BUGFIX] Fix Prometheus config generation for labels containing "-"
-
