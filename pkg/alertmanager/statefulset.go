@@ -164,7 +164,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		fmt.Sprintf("-config.file=%s", "/etc/alertmanager/config/alertmanager.yaml"),
 		fmt.Sprintf("-web.listen-address=:%d", 9093),
 		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
-		fmt.Sprintf("-storage.path=%s", "/etc/alertmanager/data"),
+		fmt.Sprintf("-storage.path=%s", "/var/alertmanager/data"),
 	}
 
 	if a.Spec.ExternalURL != "" {
