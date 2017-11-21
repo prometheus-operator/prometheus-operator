@@ -35,7 +35,8 @@ Simply run:
 
 ```bash
 export KUBECONFIG=<path> # defaults to "~/.kube/config"
-prometheus-operator/contrib/kube-prometheus/hack/cluster-monitoring/deploy
+cd contrib/kube-prometheus/
+hack/cluster-monitoring/deploy
 ```
 
 After all pods are ready, you can reach:
