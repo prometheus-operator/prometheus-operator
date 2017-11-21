@@ -1,5 +1,5 @@
 groups:
-- name: ./alertmanager.rules
+- name: alertmanager.rules
   rules:
   - alert: AlertmanagerConfigInconsistent
     expr: count_values("config_hash", alertmanager_config_hash) BY (service) / ON(service)
@@ -11,7 +11,6 @@ groups:
     annotations:
       description: The configuration of the instances of the Alertmanager cluster
         `{{$labels.service}}` are out of sync.
-      summary: Alertmanager configurations are inconsistent
   - alert: AlertmanagerDownOrMissing
     expr: label_replace(prometheus_operator_alertmanager_spec_replicas, "job", "alertmanager-$1",
       "alertmanager", "(.*)") / ON(job) GROUP_RIGHT() sum(up) BY (job) != 1
@@ -21,8 +20,7 @@ groups:
     annotations:
       description: An unexpected number of Alertmanagers are scraped or Alertmanagers
         disappeared from discovery.
-      summary: Alertmanager down or not discovered
-  - alert: FailedReload
+  - alert: AlertmanagerFailedReload
     expr: alertmanager_config_last_reload_successful == 0
     for: 10m
     labels:
@@ -30,4 +28,3 @@ groups:
     annotations:
       description: Reloading Alertmanager's configuration has failed for {{ $labels.namespace
         }}/{{ $labels.pod}}.
-      summary: Alertmanager configuration reload has failed
