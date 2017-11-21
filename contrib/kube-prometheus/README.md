@@ -35,6 +35,7 @@ Simply run:
 
 ```bash
 export KUBECONFIG=<path> # defaults to "~/.kube/config"
+cd contrib/kube-prometheus/
 hack/cluster-monitoring/deploy
 ```
 
