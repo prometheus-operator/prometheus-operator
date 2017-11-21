@@ -15,13 +15,13 @@
 package alertmanager
 
 import (
-	"reflect"
-	"testing"
-
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
+	"reflect"
+	"strings"
+	"testing"
 )
 
 var (
@@ -50,6 +50,36 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	if !reflect.DeepEqual(labels, sset.Labels) || !reflect.DeepEqual(annotations, sset.Annotations) {
 		t.Fatal("Labels or Annotations are not properly being propagated to the StatefulSet")
 	}
+}
+
+func TestStatefulSetStoragePath(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+	}, nil, defaultTestConfig)
+
+	require.NoError(t, err)
+
+	reg := strings.Join(sset.Spec.Template.Spec.Containers[0].Args, " ")
+	for _, k := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if k.Name == "config-volume" {
+			if !strings.Contains(reg, k.MountPath) {
+				t.Fatal("config-volume Path not configured correctly")
+			} else {
+				return
+			}
+
+		}
+	}
+	t.Fatal("config-volume not set")
 }
 
 func TestPodLabelsAnnotations(t *testing.T) {
