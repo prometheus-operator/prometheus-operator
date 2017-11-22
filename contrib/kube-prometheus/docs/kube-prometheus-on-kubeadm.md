@@ -7,7 +7,7 @@
 
 The [kubeadm](https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/) tool is linked by Kubernetes as the offical way to deploy and manage self-hosted clusters. Kubeadm does a lot of heavy lifting by automatically configuring your Kubernetes cluster with some common options. This guide is intended to show you how to deploy Prometheus, Prometheus Operator and Kube Prometheus to get you started monitoring your cluster that was deployed with Kubeadm.
 
-This guide assumes you have a basic understanding of how to use the functionality the Prometheus Operator implements. If you haven't yet, we recommend reading through the [getting started guide](getting-started.md) as well as the [alerting guide](alerting.md).
+This guide assumes you have a basic understanding of how to use the functionality the Prometheus Operator implements. If you haven't yet, we recommend reading through the [getting started guide](getting-started.md) as well as the [alerting guide](../../../Documentation/user-guides/alerting.md).
 
 ## Kubeadm Pre-requisites
 
@@ -78,7 +78,7 @@ Once you complete this guide you will monitor the following:
 
 ## Getting Up and Running Fast with Kube-Prometheus
 
-To help get started more quickly with monitoring Kubernetes clusters, [kube-prometheus](https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus) was created. It is a collection of manifests including dashboards and alerting rules that can easily be deployed. It utilizes the Prometheus Operator and all the manifests demonstrated in [this guide](cluster-monitoring.md).
+To help get started more quickly with monitoring Kubernetes clusters, [kube-prometheus](https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus) was created. It is a collection of manifests including dashboards and alerting rules that can easily be deployed. It utilizes the Prometheus Operator and all the manifests demonstrated in [this guide](../../../Documentation/user-guides/cluster-monitoring.md).
 
 This section represent a quick installation and is not intended to teach you about all the components. The easiest way to get started is to clone this repository and use the `kube-prometheus` section of the code.
 
@@ -133,7 +133,7 @@ kubectl apply -f manifests/prometheus/prometheus-k8s-roles.yaml
 kubectl apply -f manifests/prometheus/prometheus-k8s-role-bindings.yaml
 ```
 
-Finally, install the [AlertManager](alerting.md)
+Finally, install the [AlertManager](../../../Documentation/user-guides/alerting.md)
 
 ```
 kubectl --namespace="$NAMESPACE" apply -f manifests/AlertManager
@@ -145,4 +145,4 @@ Now you should have a working cluster. After all the pods are ready, you should 
 * Alertmanager UI on node port `30903`
 * Grafana on node port `30902`
 
-These can of course be changed via the Service definitions. It is recommended to look at the [Exposing Prometheus and Alert Manager](exposing-prometheus-and-alertmanager.md) documentation for more detailed information on how to expose these services.
+These can of course be changed via the Service definitions. It is recommended to look at the [Exposing Prometheus and Alert Manager](../../../Documentation/user-guides/exposing-prometheus-and-alertmanager.md) documentation for more detailed information on how to expose these services.
