@@ -32,8 +32,11 @@ import (
 )
 
 const (
-	governingServiceName = "alertmanager-operated"
-	defaultVersion       = "v0.9.1"
+	governingServiceName   = "alertmanager-operated"
+	defaultVersion         = "v0.9.1"
+	alertmanagerConfDir    = "/etc/alertmanager/config"
+	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
+	alertmanagerStorageDir = "/var/alertmanager/data"
 )
 
 var (
@@ -161,10 +164,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 	}
 
 	amArgs := []string{
-		fmt.Sprintf("-config.file=%s", "/etc/alertmanager/config/alertmanager.yaml"),
+		fmt.Sprintf("-config.file=%s", alertmanagerConfFile),
 		fmt.Sprintf("-web.listen-address=:%d", 9093),
 		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
-		fmt.Sprintf("-storage.path=%s", "/etc/alertmanager/data"),
+		fmt.Sprintf("-storage.path=%s", alertmanagerStorageDir),
 	}
 
 	if a.Spec.ExternalURL != "" {
@@ -254,11 +257,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config-volume",
-								MountPath: "/etc/alertmanager/config",
+								MountPath: alertmanagerConfDir,
 							},
 							{
 								Name:      volumeName(a.Name),
-								MountPath: "/var/alertmanager/data",
+								MountPath: alertmanagerStorageDir,
 								SubPath:   subPathForStorage(a.Spec.Storage),
 							},
 						},
@@ -280,13 +283,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 						Image: config.ConfigReloaderImage,
 						Args: []string{
 							fmt.Sprintf("-webhook-url=%s", localReloadURL),
-							"-volume-dir=/etc/alertmanager/config",
+							fmt.Sprintf("-volume-dir=%s", alertmanagerConfDir),
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config-volume",
 								ReadOnly:  true,
-								MountPath: "/etc/alertmanager/config",
+								MountPath: alertmanagerConfDir,
 							},
 						},
 						Resources: v1.ResourceRequirements{
