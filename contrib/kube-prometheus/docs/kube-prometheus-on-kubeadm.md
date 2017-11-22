@@ -113,7 +113,7 @@ kubectl --namespace="$NAMESPACE" apply -f manifests/node-exporter
 kubectl --namespace="$NAMESPACE" apply -f manifests/kube-state-metrics
 ```
 
-Then, we can deploy the grafana credentials. By default, the username/password will be `admin/admin`, you can feel free to change these for your production clusters.
+Then, we can deploy the grafana credentials. By default, the username/password will be `admin/admin`, you should change these for your production clusters.
 
 ```
 kubectl --namespace="$NAMESPACE" apply -f manifests/grafana/grafana-credentials.yaml
@@ -133,10 +133,10 @@ kubectl apply -f manifests/prometheus/prometheus-k8s-roles.yaml
 kubectl apply -f manifests/prometheus/prometheus-k8s-role-bindings.yaml
 ```
 
-Finally, install the [AlertManager](../../../Documentation/user-guides/alerting.md)
+Finally, install the [Alertmanager](../../../Documentation/user-guides/alerting.md)
 
 ```
-kubectl --namespace="$NAMESPACE" apply -f manifests/AlertManager
+kubectl --namespace="$NAMESPACE" apply -f manifests/alertmanager
 ```
 
 Now you should have a working cluster. After all the pods are ready, you should be able to reach:
