@@ -1,115 +1,86 @@
 groups:
-- name: ./kubernetes.rules
+- name: kubernetes.rules
   rules:
-  - record: cluster_namespace_controller_pod_container:spec_memory_limit_bytes
-    expr: sum(label_replace(container_spec_memory_limit_bytes{container_name!=""},
-      "controller", "$1", "pod_name", "^(.*)-[a-z0-9]+")) BY (cluster, namespace,
-      controller, pod_name, container_name)
-  - record: cluster_namespace_controller_pod_container:spec_cpu_shares
-    expr: sum(label_replace(container_spec_cpu_shares{container_name!=""}, "controller",
-      "$1", "pod_name", "^(.*)-[a-z0-9]+")) BY (cluster, namespace, controller, pod_name,
-      container_name)
-  - record: cluster_namespace_controller_pod_container:cpu_usage:rate
-    expr: sum(label_replace(irate(container_cpu_usage_seconds_total{container_name!=""}[5m]),
-      "controller", "$1", "pod_name", "^(.*)-[a-z0-9]+")) BY (cluster, namespace,
-      controller, pod_name, container_name)
-  - record: cluster_namespace_controller_pod_container:memory_usage:bytes
-    expr: sum(label_replace(container_memory_usage_bytes{container_name!=""}, "controller",
-      "$1", "pod_name", "^(.*)-[a-z0-9]+")) BY (cluster, namespace, controller, pod_name,
-      container_name)
-  - record: cluster_namespace_controller_pod_container:memory_working_set:bytes
-    expr: sum(label_replace(container_memory_working_set_bytes{container_name!=""},
-      "controller", "$1", "pod_name", "^(.*)-[a-z0-9]+")) BY (cluster, namespace,
-      controller, pod_name, container_name)
-  - record: cluster_namespace_controller_pod_container:memory_rss:bytes
-    expr: sum(label_replace(container_memory_rss{container_name!=""}, "controller",
-      "$1", "pod_name", "^(.*)-[a-z0-9]+")) BY (cluster, namespace, controller, pod_name,
-      container_name)
-  - record: cluster_namespace_controller_pod_container:memory_cache:bytes
-    expr: sum(label_replace(container_memory_cache{container_name!=""}, "controller",
-      "$1", "pod_name", "^(.*)-[a-z0-9]+")) BY (cluster, namespace, controller, pod_name,
-      container_name)
-  - record: cluster_namespace_controller_pod_container:disk_usage:bytes
-    expr: sum(label_replace(container_disk_usage_bytes{container_name!=""}, "controller",
-      "$1", "pod_name", "^(.*)-[a-z0-9]+")) BY (cluster, namespace, controller, pod_name,
-      container_name)
-  - record: cluster_namespace_controller_pod_container:memory_pagefaults:rate
-    expr: sum(label_replace(irate(container_memory_failures_total{container_name!=""}[5m]),
-      "controller", "$1", "pod_name", "^(.*)-[a-z0-9]+")) BY (cluster, namespace,
-      controller, pod_name, container_name, scope, type)
-  - record: cluster_namespace_controller_pod_container:memory_oom:rate
-    expr: sum(label_replace(irate(container_memory_failcnt{container_name!=""}[5m]),
-      "controller", "$1", "pod_name", "^(.*)-[a-z0-9]+")) BY (cluster, namespace,
-      controller, pod_name, container_name, scope, type)
-  - record: cluster:memory_allocation:percent
-    expr: 100 * sum(container_spec_memory_limit_bytes{pod_name!=""}) BY (cluster)
-      / sum(machine_memory_bytes) BY (cluster)
-  - record: cluster:memory_used:percent
-    expr: 100 * sum(container_memory_usage_bytes{pod_name!=""}) BY (cluster) / sum(machine_memory_bytes)
-      BY (cluster)
-  - record: cluster:cpu_allocation:percent
-    expr: 100 * sum(container_spec_cpu_shares{pod_name!=""}) BY (cluster) / sum(container_spec_cpu_shares{id="/"}
-      * ON(cluster, instance) machine_cpu_cores) BY (cluster)
-  - record: cluster:node_cpu_use:percent
-    expr: 100 * sum(rate(node_cpu{mode!="idle"}[5m])) BY (cluster) / sum(machine_cpu_cores)
-      BY (cluster)
-  - record: cluster_resource_verb:apiserver_latency:quantile_seconds
-    expr: histogram_quantile(0.99, sum(apiserver_request_latencies_bucket) BY (le,
-      cluster, job, resource, verb)) / 1e+06
+  - record: pod_name:container_memory_usage_bytes:sum
+    expr: sum(container_memory_usage_bytes{container_name!="POD",pod_name!=""}) BY
+      (pod_name)
+  - record: pod_name:container_spec_cpu_shares:sum
+    expr: sum(container_spec_cpu_shares{container_name!="POD",pod_name!=""}) BY (pod_name)
+  - record: pod_name:container_cpu_usage:sum
+    expr: sum(rate(container_cpu_usage_seconds_total{container_name!="POD",pod_name!=""}[5m]))
+      BY (pod_name)
+  - record: pod_name:container_fs_usage_bytes:sum
+    expr: sum(container_fs_usage_bytes{container_name!="POD",pod_name!=""}) BY (pod_name)
+  - record: namespace:container_memory_usage_bytes:sum
+    expr: sum(container_memory_usage_bytes{container_name!=""}) BY (namespace)
+  - record: namespace:container_spec_cpu_shares:sum
+    expr: sum(container_spec_cpu_shares{container_name!=""}) BY (namespace)
+  - record: namespace:container_cpu_usage:sum
+    expr: sum(rate(container_cpu_usage_seconds_total{container_name!="POD"}[5m]))
+      BY (namespace)
+  - record: cluster:memory_usage:ratio
+    expr: sum(container_memory_usage_bytes{container_name!="POD",pod_name!=""}) BY
+      (cluster) / sum(machine_memory_bytes) BY (cluster)
+  - record: cluster:container_spec_cpu_shares:ratio
+    expr: sum(container_spec_cpu_shares{container_name!="POD",pod_name!=""}) / 1000
+      / sum(machine_cpu_cores)
+  - record: cluster:container_cpu_usage:ratio
+    expr: rate(container_cpu_usage_seconds_total{container_name!="POD",pod_name!=""}[5m])
+      / sum(machine_cpu_cores)
+  - record: apiserver_latency_seconds:quantile
+    expr: histogram_quantile(0.99, rate(apiserver_request_latencies_bucket[5m])) /
+      1e+06
     labels:
       quantile: "0.99"
-  - record: cluster_resource_verb:apiserver_latency:quantile_seconds
-    expr: histogram_quantile(0.9, sum(apiserver_request_latencies_bucket) BY (le,
-      cluster, job, resource, verb)) / 1e+06
+  - record: apiserver_latency:quantile_seconds
+    expr: histogram_quantile(0.9, rate(apiserver_request_latencies_bucket[5m])) /
+      1e+06
     labels:
       quantile: "0.9"
-  - record: cluster_resource_verb:apiserver_latency:quantile_seconds
-    expr: histogram_quantile(0.5, sum(apiserver_request_latencies_bucket) BY (le,
-      cluster, job, resource, verb)) / 1e+06
+  - record: apiserver_latency_seconds:quantile
+    expr: histogram_quantile(0.5, rate(apiserver_request_latencies_bucket[5m])) /
+      1e+06
     labels:
       quantile: "0.5"
-  - record: cluster:scheduler_e2e_scheduling_latency:quantile_seconds
-    expr: histogram_quantile(0.99, sum(scheduler_e2e_scheduling_latency_microseconds_bucket)
-      BY (le, cluster)) / 1e+06
+  - alert: APIServerLatencyHigh
+    expr: apiserver_latency_seconds:quantile{quantile="0.99",subresource!="log",verb!~"^(?:WATCH|WATCHLIST|PROXY|CONNECT)$"}
+      > 1
+    for: 10m
     labels:
-      quantile: "0.99"
-  - record: cluster:scheduler_e2e_scheduling_latency:quantile_seconds
-    expr: histogram_quantile(0.9, sum(scheduler_e2e_scheduling_latency_microseconds_bucket)
-      BY (le, cluster)) / 1e+06
+      severity: warning
+    annotations:
+      description: the API server has a 99th percentile latency of {{ $value }} seconds
+        for {{$labels.verb}} {{$labels.resource}}
+  - alert: APIServerLatencyHigh
+    expr: apiserver_latency_seconds:quantile{quantile="0.99",subresource!="log",verb!~"^(?:WATCH|WATCHLIST|PROXY|CONNECT)$"}
+      > 4
+    for: 10m
     labels:
-      quantile: "0.9"
-  - record: cluster:scheduler_e2e_scheduling_latency:quantile_seconds
-    expr: histogram_quantile(0.5, sum(scheduler_e2e_scheduling_latency_microseconds_bucket)
-      BY (le, cluster)) / 1e+06
+      severity: critical
+    annotations:
+      description: the API server has a 99th percentile latency of {{ $value }} seconds
+        for {{$labels.verb}} {{$labels.resource}}
+  - alert: APIServerErrorsHigh
+    expr: rate(apiserver_request_count{code=~"^(?:5..)$"}[5m]) / rate(apiserver_request_count[5m])
+      * 100 > 2
+    for: 10m
     labels:
-      quantile: "0.5"
-  - record: cluster:scheduler_scheduling_algorithm_latency:quantile_seconds
-    expr: histogram_quantile(0.99, sum(scheduler_scheduling_algorithm_latency_microseconds_bucket)
-      BY (le, cluster)) / 1e+06
+      severity: warning
+    annotations:
+      description: API server returns errors for {{ $value }}% of requests
+  - alert: APIServerErrorsHigh
+    expr: rate(apiserver_request_count{code=~"^(?:5..)$"}[5m]) / rate(apiserver_request_count[5m])
+      * 100 > 5
+    for: 10m
     labels:
-      quantile: "0.99"
-  - record: cluster:scheduler_scheduling_algorithm_latency:quantile_seconds
-    expr: histogram_quantile(0.9, sum(scheduler_scheduling_algorithm_latency_microseconds_bucket)
-      BY (le, cluster)) / 1e+06
+      severity: critical
+    annotations:
+      description: API server returns errors for {{ $value }}% of requests
+  - alert: K8SApiserverDown
+    expr: absent(up{job="apiserver"} == 1)
+    for: 20m
     labels:
-      quantile: "0.9"
-  - record: cluster:scheduler_scheduling_algorithm_latency:quantile_seconds
-    expr: histogram_quantile(0.5, sum(scheduler_scheduling_algorithm_latency_microseconds_bucket)
-      BY (le, cluster)) / 1e+06
-    labels:
-      quantile: "0.5"
-  - record: cluster:scheduler_binding_latency:quantile_seconds
-    expr: histogram_quantile(0.99, sum(scheduler_binding_latency_microseconds_bucket)
-      BY (le, cluster)) / 1e+06
-    labels:
-      quantile: "0.99"
-  - record: cluster:scheduler_binding_latency:quantile_seconds
-    expr: histogram_quantile(0.9, sum(scheduler_binding_latency_microseconds_bucket)
-      BY (le, cluster)) / 1e+06
-    labels:
-      quantile: "0.9"
-  - record: cluster:scheduler_binding_latency:quantile_seconds
-    expr: histogram_quantile(0.5, sum(scheduler_binding_latency_microseconds_bucket)
-      BY (le, cluster)) / 1e+06
-    labels:
-      quantile: "0.5"
+      severity: critical
+    annotations:
+      description: No API servers are reachable or all have disappeared from service
+        discovery
