@@ -1,7 +1,8 @@
-## 0.15.0 / 2017-11-17
+## 0.15.0 / 2017-11-22
 
 * [CHANGE] Default Prometheus version v2.0.0
 * [BUGFIX] Generate ExternalLabels deterministically
+* [BUGFIX] Fix incorrect mount path of Alertmanager data volume
 * [EXPERIMENTAL] Add ability to specify CRD Kind name
 
 ## 0.14.1 / 2017-11-01
