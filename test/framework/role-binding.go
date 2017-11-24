@@ -15,10 +15,10 @@
 package framework
 
 import (
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
-	rbacv1alpha1 "k8s.io/client-go/pkg/apis/rbac/v1alpha1"
 )
 
 func CreateRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) (finalizerFn, error) {
@@ -28,7 +28,7 @@ func CreateRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath 
 		return finalizerFn, err
 	}
 
-	_, err = kubeClient.RbacV1alpha1().RoleBindings(ns).Create(roleBinding)
+	_, err = kubeClient.RbacV1().RoleBindings(ns).Create(roleBinding)
 	return finalizerFn, err
 }
 
@@ -38,20 +38,20 @@ func DeleteRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath 
 		return err
 	}
 
-	if err := kubeClient.RbacV1alpha1().RoleBindings(ns).Delete(roleBinding.Name, &metav1.DeleteOptions{}); err != nil {
+	if err := kubeClient.RbacV1().RoleBindings(ns).Delete(roleBinding.Name, &metav1.DeleteOptions{}); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func parseRoleBindingYaml(relativePath string) (*rbacv1alpha1.RoleBinding, error) {
+func parseRoleBindingYaml(relativePath string) (*rbacv1.RoleBinding, error) {
 	manifest, err := PathToOSFile(relativePath)
 	if err != nil {
 		return nil, err
 	}
 
-	roleBinding := rbacv1alpha1.RoleBinding{}
+	roleBinding := rbacv1.RoleBinding{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&roleBinding); err != nil {
 		return nil, err
 	}

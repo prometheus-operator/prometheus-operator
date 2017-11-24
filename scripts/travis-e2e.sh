@@ -8,7 +8,7 @@ set -u
 # print each command before executing it
 set -x
 
-export KUBERNETES_VERSION=v1.7.5
+export KUBERNETES_VERSION=v1.8.0
 
 curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && \
     chmod +x kubectl &&  \
@@ -26,7 +26,7 @@ touch $HOME/.kube/config
 
 export KUBECONFIG=$HOME/.kube/config
 minikube version
-sudo minikube start --vm-driver=none --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.Authorization.Mode=RBAC
+sudo minikube start --vm-driver=none --memory=4096 --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.Authorization.Mode=RBAC
 
 minikube update-context
 

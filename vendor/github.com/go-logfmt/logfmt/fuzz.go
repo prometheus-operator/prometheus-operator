@@ -12,21 +12,22 @@ import (
 	kr "github.com/kr/logfmt"
 )
 
+// Fuzz checks reserialized data matches
 func Fuzz(data []byte) int {
 	parsed, err := parse(data)
 	if err != nil {
 		return 0
 	}
 	var w1 bytes.Buffer
-	if err := write(parsed, &w1); err != nil {
+	if err = write(parsed, &w1); err != nil {
 		panic(err)
 	}
-	parsed, err = parse(data)
+	parsed, err = parse(w1.Bytes())
 	if err != nil {
 		panic(err)
 	}
 	var w2 bytes.Buffer
-	if err := write(parsed, &w2); err != nil {
+	if err = write(parsed, &w2); err != nil {
 		panic(err)
 	}
 	if !bytes.Equal(w1.Bytes(), w2.Bytes()) {
@@ -35,6 +36,7 @@ func Fuzz(data []byte) int {
 	return 1
 }
 
+// FuzzVsKR checks go-logfmt/logfmt against kr/logfmt
 func FuzzVsKR(data []byte) int {
 	parsed, err := parse(data)
 	parsedKR, errKR := parseKR(data)
@@ -71,7 +73,6 @@ func parse(data []byte) ([][]kv, error) {
 			kvs = append(kvs, kv{dec.Key(), dec.Value()})
 		}
 		got = append(got, kvs)
-		kvs = nil
 	}
 	return got, dec.Err()
 }
