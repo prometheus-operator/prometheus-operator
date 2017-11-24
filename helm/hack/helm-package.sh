@@ -37,3 +37,4 @@ do
 done
 
 helm repo index ${HELM_CHARTS_PACKAGED_DIR} --url https://s3-eu-west-1.amazonaws.com/${HELM_BUCKET_NAME}/stable/ --debug
+

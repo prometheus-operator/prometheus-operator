@@ -7,7 +7,6 @@ PROMU := $(GOPATH)/bin/promu
 PREFIX ?= $(shell pwd)
 
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
-HELM_BUCKET_NAME=coreos-charts
 
 all: check-license format build test
 
@@ -77,16 +76,14 @@ jsonnet:
 jsonnet-docker:
 	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .
 
-helm-package:
-	mkdir -p /tmp/helm
-	(cd $(CURDIR)/helm && helm package $(HELM_PACKAGES)  -d /tmp/helm && cd -)
-	helm repo index /tmp/helm --url https://s3-eu-west-1.amazonaws.com/$(HELM_BUCKET_NAME)/stable/ --debug
-	aws s3 sync --acl public-read /tmp/helm/ s3://$(HELM_BUCKET_NAME)/stable/
 
 helm-packages:
-	make helm-package HELM_PACKAGES=exporter-*
-	make helm-package HELM_PACKAGES="alertmanager grafana prometheus prometheus-operator"
-	(cd $(CURDIR)/helm/'kube-prometheus' && helm dep update && cd -)
-	make helm-package HELM_PACKAGES='kube-prometheus'
+
+	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-api \
+		exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node \
+		exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes"
+	helm/hack/sync-repo.sh
+	helm/hack/helm-package.sh kube-prometheus
+	helm/hack/sync-repo.sh
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs
