@@ -201,6 +201,18 @@ type ServiceMonitorSpec struct {
 	Selector metav1.LabelSelector `json:"selector"`
 	// Selector to select which namespaces the Endpoints objects are discovered from.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
+
+	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelConfigs,omitempty"`
+}
+
+type RelabelConfig struct {
+	SourceLabels []string `json:"sourceLabels,omitempty"`
+	Separator string `json:"separator,omitempty"`
+	TargetLabel string `json:"targetLabel,omitempty"`
+	Regex string `json:"regex,omitempty"`
+	Modulus string `json:"modulus,omitempty"`
+	Replacement string `json:"replacement,omitempty"`
+	Action string `json:"action,omitempty"`
 }
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.
