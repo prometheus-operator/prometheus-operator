@@ -13,6 +13,6 @@ EOF
 
 for f in assets/prometheus/rules/*.rules.y*ml
 do
-  echo "  $(basename $f): |+"
+  echo "  $(basename $f | sed s/\.yml//): |+"
   cat $f | sed "s/^/    /g"
 done
