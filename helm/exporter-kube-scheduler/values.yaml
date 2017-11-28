@@ -1,40 +1,63 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+# WARNING: Don't change this file after this lines, it's automatically appended by helm/hack/sync_kube_prometheus.py
 ruleFiles:
-  kube-controller-manager.rules: |-
-    # NOTE: These rules were kindly contributed by the SoundCloud engineering team.
-
-    ### Scheduling latency ###
-
-    cluster:scheduler_e2e_scheduling_latency:quantile_seconds{quantile="0.99"} =
-      histogram_quantile(0.99,sum by (le,cluster) (scheduler_e2e_scheduling_latency_microseconds_bucket)) / 1e6
-    cluster:scheduler_e2e_scheduling_latency:quantile_seconds{quantile="0.9"} =
-      histogram_quantile(0.9,sum by (le,cluster) (scheduler_e2e_scheduling_latency_microseconds_bucket)) / 1e6
-    cluster:scheduler_e2e_scheduling_latency:quantile_seconds{quantile="0.5"} =
-      histogram_quantile(0.5,sum by (le,cluster) (scheduler_e2e_scheduling_latency_microseconds_bucket)) / 1e6
-
-    cluster:scheduler_scheduling_algorithm_latency:quantile_seconds{quantile="0.99"} =
-      histogram_quantile(0.99,sum by (le,cluster) (scheduler_scheduling_algorithm_latency_microseconds_bucket)) / 1e6
-    cluster:scheduler_scheduling_algorithm_latency:quantile_seconds{quantile="0.9"} =
-      histogram_quantile(0.9,sum by (le,cluster) (scheduler_scheduling_algorithm_latency_microseconds_bucket)) / 1e6
-    cluster:scheduler_scheduling_algorithm_latency:quantile_seconds{quantile="0.5"} =
-      histogram_quantile(0.5,sum by (le,cluster) (scheduler_scheduling_algorithm_latency_microseconds_bucket)) / 1e6
-
-    cluster:scheduler_binding_latency:quantile_seconds{quantile="0.99"} =
-      histogram_quantile(0.99,sum by (le,cluster) (scheduler_binding_latency_microseconds_bucket)) / 1e6
-    cluster:scheduler_binding_latency:quantile_seconds{quantile="0.9"} =
-      histogram_quantile(0.9,sum by (le,cluster) (scheduler_binding_latency_microseconds_bucket)) / 1e6
-    cluster:scheduler_binding_latency:quantile_seconds{quantile="0.5"} =
-      histogram_quantile(0.5,sum by (le,cluster) (scheduler_binding_latency_microseconds_bucket)) / 1e6
-
-    ALERT K8SSchedulerDown
-      IF absent(up{job="{{ template "fullname" . }}"}) or (count by(cluster) (up{job="{{ template "fullname" . }}"} == 1) == 0)
-      FOR 5m
-      LABELS {
-        service = "k8s",
-        severity = "critical",
-      }
-      ANNOTATIONS {
-        summary = "Scheduler is down",
-        description = "There is no running K8S scheduler. New pods are not being assigned to nodes.",
-      }
+  kube-scheduler.rules: |-
+    groups:
+    - name: kube-scheduler.rules
+      rules:
+      - record: cluster:scheduler_e2e_scheduling_latency_seconds:quantile
+        expr: histogram_quantile(0.99, sum(scheduler_e2e_scheduling_latency_microseconds_bucket)
+          BY (le, cluster)) / 1e+06
+        labels:
+          quantile: "0.99"
+      - record: cluster:scheduler_e2e_scheduling_latency_seconds:quantile
+        expr: histogram_quantile(0.9, sum(scheduler_e2e_scheduling_latency_microseconds_bucket)
+          BY (le, cluster)) / 1e+06
+        labels:
+          quantile: "0.9"
+      - record: cluster:scheduler_e2e_scheduling_latency_seconds:quantile
+        expr: histogram_quantile(0.5, sum(scheduler_e2e_scheduling_latency_microseconds_bucket)
+          BY (le, cluster)) / 1e+06
+        labels:
+          quantile: "0.5"
+      - record: cluster:scheduler_scheduling_algorithm_latency_seconds:quantile
+        expr: histogram_quantile(0.99, sum(scheduler_scheduling_algorithm_latency_microseconds_bucket)
+          BY (le, cluster)) / 1e+06
+        labels:
+          quantile: "0.99"
+      - record: cluster:scheduler_scheduling_algorithm_latency_seconds:quantile
+        expr: histogram_quantile(0.9, sum(scheduler_scheduling_algorithm_latency_microseconds_bucket)
+          BY (le, cluster)) / 1e+06
+        labels:
+          quantile: "0.9"
+      - record: cluster:scheduler_scheduling_algorithm_latency_seconds:quantile
+        expr: histogram_quantile(0.5, sum(scheduler_scheduling_algorithm_latency_microseconds_bucket)
+          BY (le, cluster)) / 1e+06
+        labels:
+          quantile: "0.5"
+      - record: cluster:scheduler_binding_latency_seconds:quantile
+        expr: histogram_quantile(0.99, sum(scheduler_binding_latency_microseconds_bucket)
+          BY (le, cluster)) / 1e+06
+        labels:
+          quantile: "0.99"
+      - record: cluster:scheduler_binding_latency_seconds:quantile
+        expr: histogram_quantile(0.9, sum(scheduler_binding_latency_microseconds_bucket)
+          BY (le, cluster)) / 1e+06
+        labels:
+          quantile: "0.9"
+      - record: cluster:scheduler_binding_latency_seconds:quantile
+        expr: histogram_quantile(0.5, sum(scheduler_binding_latency_microseconds_bucket)
+          BY (le, cluster)) / 1e+06
+        labels:
+          quantile: "0.5"
+      - alert: K8SSchedulerDown
+        expr: absent(up{job="kube-scheduler"} == 1)
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          description: There is no running K8S scheduler. New pods are not being assigned
+            to nodes.
+          runbook: https://coreos.com/tectonic/docs/latest/troubleshooting/controller-recovery.html#recovering-a-scheduler
+          summary: Scheduler is down

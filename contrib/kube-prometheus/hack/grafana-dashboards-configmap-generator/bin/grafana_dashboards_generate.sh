@@ -203,7 +203,7 @@ addArrayToConfigMap() {
     # Dashboard foot
     test "$type" = "dashboard" && cat $DASHBOARD_FOOT_FILE
   done
-  echo "---"
+  #echo "---"
 
   IFS=$OLDIFS
   return 0

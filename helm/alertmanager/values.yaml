@@ -4,18 +4,18 @@
 config:
   global:
     resolve_timeout: 5m
-
-  receivers:
-    - name: webhook
-      webhook_configs:
-        - url: 'http://alertmanagerwh:30500/'
-
   route:
     group_by: ['job']
-    group_interval: 5m
     group_wait: 30s
-    receiver: webhook
+    group_interval: 5m
     repeat_interval: 12h
+    receiver: 'null'
+    routes:
+    - match:
+        alertname: DeadMansSwitch
+      receiver: 'null'
+  receivers:
+  - name: 'null'
 
 ## Alertmanager template files to include
 #
@@ -49,7 +49,7 @@ selfServiceMonitor: true
 ##
 image:
   repository: quay.io/prometheus/alertmanager
-  tag: v0.7.1
+  tag: v0.9.1
 
 ## Labels to be added to the Alertmanager
 ##
@@ -150,3 +150,36 @@ storageSpec: {}
 #         requests:
 #           storage: 50Gi
 #   selector: {}
+# WARNING: Don't change this file after this lines, it's automatically appended by helm/hack/sync_kube_prometheus.py
+ruleFiles:
+  alertmanager.rules: |-
+    groups:
+    - name: alertmanager.rules
+      rules:
+      - alert: AlertmanagerConfigInconsistent
+        expr: count_values("config_hash", alertmanager_config_hash) BY (service) / ON(service)
+          GROUP_LEFT() label_replace(prometheus_operator_alertmanager_spec_replicas, "service",
+          "alertmanager-$1", "alertmanager", "(.*)") != 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          description: The configuration of the instances of the Alertmanager cluster
+            `{{$labels.service}}` are out of sync.
+      - alert: AlertmanagerDownOrMissing
+        expr: label_replace(prometheus_operator_alertmanager_spec_replicas, "job", "alertmanager-$1",
+          "alertmanager", "(.*)") / ON(job) GROUP_RIGHT() sum(up) BY (job) != 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          description: An unexpected number of Alertmanagers are scraped or Alertmanagers
+            disappeared from discovery.
+      - alert: AlertmanagerFailedReload
+        expr: alertmanager_config_last_reload_successful == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          description: Reloading Alertmanager's configuration has failed for {{ $labels.namespace
+            }}/{{ $labels.pod}}.

@@ -3,7 +3,7 @@
 replicaCount: 1
 image:
   repository: quay.io/prometheus/node-exporter
-  tag: v0.14.0
+  tag: v0.15.1
   pullPolicy: IfNotPresent
 service:
   type: ClusterIP
@@ -16,94 +16,50 @@ resources:
   requests:
     cpu: 100m
     memory: 30Mi
+# WARNING: Don't change this file after this lines, it's automatically appended by helm/hack/sync_kube_prometheus.py
 ruleFiles:
   node.rules: |-
-    # NOTE: These rules were kindly contributed by the SoundCloud engineering team.
-
-    cluster:node_cpu_use:percent =
-      100 * sum by (cluster) (
-        rate(node_cpu{mode!="idle"}[5m])
-      ) / sum by (cluster) (
-        machine_cpu_cores
-      )
-
-    ALERT K8SKubeletNodeExporterDown
-      IF up{job="{{ template "fullname" . }}"} == 0
-      FOR 15m
-      LABELS {
-        service = "k8s",
-        severity = "warning"
-      }
-      ANNOTATIONS {
-        summary = "Kubelet node_exporter cannot be scraped",
-        description = "Prometheus could not scrape a {{`{{ $labels.job }}`}} for more than one hour.",
-      }
-
-    ALERT K8SConntrackTableFull
-      IF 100*node_nf_conntrack_entries / node_nf_conntrack_entries_limit > 50
-      FOR 10m
-      LABELS {
-        service = "k8s",
-        severity = "warning"
-      }
-      ANNOTATIONS {
-        summary = "Number of tracked connections is near the limit",
-        description = "The nf_conntrack table is {{`{{ $value }}`}}% full.",
-      }
-
-    ALERT K8SConntrackTableFull
-      IF 100*node_nf_conntrack_entries / node_nf_conntrack_entries_limit > 90
-      LABELS {
-        service = "k8s",
-        severity = "critical"
-      }
-      ANNOTATIONS {
-        summary = "Number of tracked connections is near the limit",
-        description = "The nf_conntrack table is {{`{{ $value }}`}}% full.",
-      }
-
-    # To catch the conntrack sysctl de-tuning when it happens
-    ALERT K8SConntrackTuningMissing
-      IF node_nf_conntrack_udp_timeout > 10
-      FOR 10m
-      LABELS {
-        service = "k8s",
-        severity = "warning",
-      }
-      ANNOTATIONS {
-        summary = "Node does not have the correct conntrack tunings",
-        description = "Nodes keep un-setting the correct tunings, investigate when it happens.",
-      }
-
-    ALERT K8SNodeOutOfDisk
-      IF kube_node_status_condition{condition="OutOfDisk", status="true"} == 1
-      LABELS {
-        service = "k8s",
-        severity = "critical"
-      }
-      ANNOTATIONS {
-        summary = "Node ran out of disk space.",
-        description = "{{`{{ $labels.node }}`}} has run out of disk space.",
-      }
-
-    ALERT K8SNodeMemoryPressure
-      IF kube_node_status_condition{condition="MemoryPressure", status="true"} == 1
-      LABELS {
-        service = "k8s",
-        severity = "warning"
-      }
-      ANNOTATIONS {
-        summary = "Node is under memory pressure.",
-        description = "{{`{{ $labels.node }}`}} is under memory pressure.",
-      }
-
-    ALERT K8SNodeDiskPressure
-      IF kube_node_status_condition{condition="DiskPressure", status="true"} == 1
-      LABELS {
-        service = "k8s",
-        severity = "warning"
-      }
-      ANNOTATIONS {
-        summary = "Node is under disk pressure.",
-        description = "{{`{{ $labels.node }}`}} is under disk pressure.",
-      }
+    groups:
+    - name: node.rules
+      rules:
+      - record: instance:node_cpu:rate:sum
+        expr: sum(rate(node_cpu{mode!="idle",mode!="iowait",mode!~"^(?:guest.*)$"}[3m]))
+          BY (instance)
+      - record: instance:node_filesystem_usage:sum
+        expr: sum((node_filesystem_size{mountpoint="/"} - node_filesystem_free{mountpoint="/"}))
+          BY (instance)
+      - record: instance:node_network_receive_bytes:rate:sum
+        expr: sum(rate(node_network_receive_bytes[3m])) BY (instance)
+      - record: instance:node_network_transmit_bytes:rate:sum
+        expr: sum(rate(node_network_transmit_bytes[3m])) BY (instance)
+      - record: instance:node_cpu:ratio
+        expr: sum(rate(node_cpu{mode!="idle"}[5m])) WITHOUT (cpu, mode) / ON(instance)
+          GROUP_LEFT() count(sum(node_cpu) BY (instance, cpu)) BY (instance)
+      - record: cluster:node_cpu:sum_rate5m
+        expr: sum(rate(node_cpu{mode!="idle"}[5m]))
+      - record: cluster:node_cpu:ratio
+        expr: cluster:node_cpu:rate5m / count(sum(node_cpu) BY (instance, cpu))
+      - alert: NodeExporterDown
+        expr: absent(up{job="node-exporter"} == 1)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          description: Prometheus could not scrape a node-exporter for more than 10m,
+            or node-exporters have disappeared from discovery
+      - alert: NodeDiskRunningFull
+        expr: predict_linear(node_filesystem_free[6h], 3600 * 24) < 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          description: device {{$labels.device}} on node {{$labels.instance}} is running
+            full within the next 24 hours (mounted at {{$labels.mountpoint}})
+      - alert: NodeDiskRunningFull
+        expr: predict_linear(node_filesystem_free[30m], 3600 * 2) < 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          description: device {{$labels.device}} on node {{$labels.instance}} is running
+            full within the next 2 hours (mounted at {{$labels.mountpoint}})

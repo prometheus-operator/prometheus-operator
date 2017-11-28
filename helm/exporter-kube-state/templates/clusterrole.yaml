@@ -15,6 +15,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources:
+  - namespaces
   - nodes
   - pods
   - services

@@ -12,5 +12,5 @@ data:
 {{- $root := . }}
 {{- range $key, $val := .Values.ruleFiles }}
   {{ $key }}: |-
-{{ tpl $val $root | indent 4}}
+{{ $val | indent 4}}
 {{- end }}

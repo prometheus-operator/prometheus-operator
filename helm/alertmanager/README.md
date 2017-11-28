@@ -46,7 +46,7 @@ Parameter | Description | Default
 `config` | Alertmanager configuration directives | `{}`
 `externalUrl` | External URL at which Alertmanager will be reachable | `""`
 `image.repository` | Image | `quay.io/prometheus/alertmanager`
-`image.tag` | Image tag | `v0.5.1`
+`image.tag` | Image tag | `v0.9.1`
 `ingress.enabled` | If true, Alertmanager Ingress will be created | `false`
 `ingress.annotations` | Annotations for Alertmanager Ingress` | `{}`
 `ingress.fqdn` | Alertmanager Ingress fully-qualified domain name | `""`
