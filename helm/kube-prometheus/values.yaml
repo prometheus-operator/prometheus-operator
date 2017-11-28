@@ -1,6 +1,9 @@
 # exporter-node configuration
 deployExporterNode: True
 
+# Grafana
+deployGrafana: True
+
 alertmanager:
   ## Alertmanager configuration directives
   ## Ref: https://prometheus.io/docs/alerting/configuration/
