@@ -21,7 +21,8 @@ if [ "$#" -ne 1 ]; then
 fi
 
 dashboardjson=$1
-
+sed -i -e 's/^/    /' $dashboardjson
+sed -i '0,/"id":.*,/s//"id": null,/' $dashboardjson
 cat <<EOF
 {
   "dashboard":
