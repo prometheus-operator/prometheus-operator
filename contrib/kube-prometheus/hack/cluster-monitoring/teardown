@@ -4,6 +4,9 @@ if [ -z "${KUBECONFIG}" ]; then
     export KUBECONFIG=~/.kube/config
 fi
 
+# CAUTION - NAMESPACE must match its value when deploy script was run.
+# Some resources are always deployed to the monitoring namespace. 
+
 if [ -z "${NAMESPACE}" ]; then
     NAMESPACE=monitoring
 fi
