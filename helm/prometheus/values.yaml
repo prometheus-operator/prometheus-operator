@@ -242,8 +242,9 @@ serviceMonitors: []
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
 ##
 storageSpec: {}
-#   class: default
-#   resources:
-#     requests:
-#       storage: 16Gi
+#   volumeClaimTemplate:
+#     spec:
+#       resources:
+#         requests:
+#           storage: 50Gi
 #   selector: {}
