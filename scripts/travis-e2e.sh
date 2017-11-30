@@ -8,12 +8,13 @@ set -u
 # print each command before executing it
 set -x
 
+export MINIKUBE_VERSION=v0.23.0
 export KUBERNETES_VERSION=v1.8.0
 
 curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && \
     chmod +x kubectl &&  \
     sudo mv kubectl /usr/local/bin/
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64 && \
     chmod +x minikube && \
     sudo mv minikube /usr/local/bin/
 
