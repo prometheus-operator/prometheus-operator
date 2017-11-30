@@ -8,6 +8,8 @@ jobs:
   include:
   - stage: Check generated contents are up to date and code is formatted.
     script: ./scripts/check-make-generate.sh
+  - stage: Build Prometheus config reloader
+    script: cd contrib/prometheus-config-reloader && make build
   - stage: Ensure vendor folder matches vendor.json
     script: ./scripts/govendor-ensure.sh
   - stage: Unit tests
