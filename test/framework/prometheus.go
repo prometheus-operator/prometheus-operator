@@ -15,9 +15,9 @@
 package framework
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"time"
 
@@ -280,10 +280,10 @@ func (f *Framework) WaitForTargets(ns, svcName string, amount int) error {
 	return nil
 }
 
-func (f *Framework) QueryPrometheusSVC(ns, svcName, endpoint string, query map[string]string) (io.ReadCloser, error) {
+func (f *Framework) QueryPrometheusSVC(ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := ProxyGet("", svcName, "web", endpoint, query)
-	return request.Stream()
+	return request.DoRaw()
 }
 
 func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
@@ -293,7 +293,7 @@ func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
 	}
 
 	rt := prometheusTargetAPIResponse{}
-	if err := json.NewDecoder(response).Decode(&rt); err != nil {
+	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&rt); err != nil {
 		return nil, err
 	}
 

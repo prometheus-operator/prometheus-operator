@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -549,7 +550,7 @@ func basicQueryWorking(ns, svcName string) (bool, error) {
 	}
 
 	rq := prometheusQueryAPIResponse{}
-	if err := json.NewDecoder(response).Decode(&rq); err != nil {
+	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&rq); err != nil {
 		return false, err
 	}
 
@@ -581,7 +582,7 @@ func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) fu
 		}
 
 		ra := prometheusAlertmanagerAPIResponse{}
-		if err := json.NewDecoder(response).Decode(&ra); err != nil {
+		if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&ra); err != nil {
 			return false, err
 		}
 
