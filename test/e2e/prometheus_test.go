@@ -248,8 +248,13 @@ scrape_configs:
     static_configs:
       - targets:
         - 111.111.111.111:9090
-        - 111.111.111.112:9090 
+        - 111.111.111.112:9090
 `
+
+	cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Get(cfg.Name, metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "could not retrieve previous secret"))
+	}
 
 	cfg.Data["prometheus.yaml"] = []byte(secondConfig)
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(cfg); err != nil {
