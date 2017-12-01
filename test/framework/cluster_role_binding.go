@@ -15,10 +15,10 @@
 package framework
 
 import (
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
-	rbacv1beta1 "k8s.io/client-go/pkg/apis/rbac/v1beta1"
 )
 
 func CreateClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) (finalizerFn, error) {
@@ -30,17 +30,17 @@ func CreateClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relati
 
 	clusterRoleBinding.Subjects[0].Namespace = ns
 
-	_, err = kubeClient.RbacV1beta1().ClusterRoleBindings().Get(clusterRoleBinding.Name, metav1.GetOptions{})
+	_, err = kubeClient.RbacV1().ClusterRoleBindings().Get(clusterRoleBinding.Name, metav1.GetOptions{})
 
 	if err == nil {
 		// ClusterRoleBinding already exists -> Update
-		_, err = kubeClient.RbacV1beta1().ClusterRoleBindings().Update(clusterRoleBinding)
+		_, err = kubeClient.RbacV1().ClusterRoleBindings().Update(clusterRoleBinding)
 		if err != nil {
 			return finalizerFn, err
 		}
 	} else {
 		// ClusterRoleBinding doesn't exists -> Create
-		_, err = kubeClient.RbacV1beta1().ClusterRoleBindings().Create(clusterRoleBinding)
+		_, err = kubeClient.RbacV1().ClusterRoleBindings().Create(clusterRoleBinding)
 		if err != nil {
 			return finalizerFn, err
 		}
@@ -55,20 +55,20 @@ func DeleteClusterRoleBinding(kubeClient kubernetes.Interface, relativePath stri
 		return err
 	}
 
-	if err := kubeClient.RbacV1beta1().ClusterRoleBindings().Delete(clusterRoleBinding.Name, &metav1.DeleteOptions{}); err != nil {
+	if err := kubeClient.RbacV1().ClusterRoleBindings().Delete(clusterRoleBinding.Name, &metav1.DeleteOptions{}); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func parseClusterRoleBindingYaml(relativePath string) (*rbacv1beta1.ClusterRoleBinding, error) {
+func parseClusterRoleBindingYaml(relativePath string) (*rbacv1.ClusterRoleBinding, error) {
 	manifest, err := PathToOSFile(relativePath)
 	if err != nil {
 		return nil, err
 	}
 
-	clusterRoleBinding := rbacv1beta1.ClusterRoleBinding{}
+	clusterRoleBinding := rbacv1.ClusterRoleBinding{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&clusterRoleBinding); err != nil {
 		return nil, err
 	}

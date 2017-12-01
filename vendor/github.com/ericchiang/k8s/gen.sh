@@ -6,7 +6,7 @@ set -ex
 rm -rf assets/k8s.io
 mkdir -p assets/k8s.io/kubernetes
 
-VERSIONS=( "1.4.7" "1.5.1" )
+VERSIONS=( "1.4.7" "1.5.1" "1.6.0-rc.1" )
 
 for VERSION in ${VERSIONS[@]}; do
     if [ ! -f assets/v${VERSION}.zip ]; then
@@ -14,9 +14,17 @@ for VERSION in ${VERSIONS[@]}; do
     fi
 
     # Copy source tree to assets/k8s.io/kubernetes. Newer versions overwrite existing ones.
-    unzip assets/v${VERSION}.zip -d assets/
+    unzip -q assets/v${VERSION}.zip -d assets/
     cp -r assets/kubernetes-${VERSION}/* assets/k8s.io/kubernetes
     rm -rf assets/kubernetes-${VERSION}
+done
+
+# Rewrite API machinery files to their equivalent.
+apimachinery=assets/k8s.io/kubernetes/staging/src/k8s.io/apimachinery/
+for file in $( find $apimachinery -type f -name '*.proto' ); do
+	path=assets/k8s.io/kubernetes/${file#$apimachinery}
+    mkdir -p $(dirname $path)
+    mv $file $path
 done
 
 # Remove any existing generated code.
@@ -27,6 +35,15 @@ PKG=$PWD
 cd assets
 
 protobuf=$( find k8s.io/kubernetes/pkg/{api,apis,util,runtime,watch} -name '*.proto' )
+
+# Remote this ununused import:
+# https://github.com/kubernetes/kubernetes/blob/v1.6.0-rc.1/pkg/api/v1/generated.proto#L29
+sed -i '/"k8s\.io\/apiserver\/pkg\/apis\/example\/v1\/generated.proto"/d' $protobuf
+
+# Rewrite all of the API machineary out of staging.
+sed -i 's|"k8s.io/apimachinery/|"k8s.io/kubernetes/|g' $protobuf
+sed -i 's/k8s\.io.apimachinery/k8s\.io.kubernetes/g' $protobuf
+
 for file in $protobuf; do
     echo $file
     # Generate protoc definitions at the base of this repo.
@@ -89,3 +106,5 @@ func (t *Time) UnmarshalJSON(p []byte) error {
 }
 EOF
 gofmt -w api/unversioned/time.go
+cp api/unversioned/time.go apis/meta/v1
+sed -i 's|package unversioned|package v1|g' apis/meta/v1/time.go

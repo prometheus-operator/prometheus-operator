@@ -15,17 +15,17 @@
 package framework
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"time"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/pkg/api/v1"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
@@ -179,11 +179,11 @@ func (f *Framework) MakePrometheusService(name, group string, serviceType v1.Ser
 func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) error {
 	_, err := f.MonClient.Prometheuses(ns).Create(p)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating %d Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
 	if err := f.WaitForPrometheusReady(p, 5*time.Minute); err != nil {
-		return fmt.Errorf("failed to create %d Prometheus instances (%v): %v", p.Spec.Replicas, p.Name, err)
+		return fmt.Errorf("waiting for %d Prometheus instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
 	return nil
@@ -208,7 +208,13 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 			log.Print(err)
 			return false, nil
 		}
-		return st.UpdatedReplicas == *p.Spec.Replicas, nil
+		if st.UpdatedReplicas == *p.Spec.Replicas {
+			return true, nil
+		} else {
+			log.Printf("expected %v Prometheus instances, got %v", st.UpdatedReplicas, *p.Spec.Replicas)
+			log.Print(st)
+			return false, nil
+		}
 	})
 }
 
@@ -274,10 +280,10 @@ func (f *Framework) WaitForTargets(ns, svcName string, amount int) error {
 	return nil
 }
 
-func (f *Framework) QueryPrometheusSVC(ns, svcName, endpoint string, query map[string]string) (io.ReadCloser, error) {
+func (f *Framework) QueryPrometheusSVC(ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := ProxyGet("", svcName, "web", endpoint, query)
-	return request.Stream()
+	return request.DoRaw()
 }
 
 func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
@@ -287,7 +293,7 @@ func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
 	}
 
 	rt := prometheusTargetAPIResponse{}
-	if err := json.NewDecoder(response).Decode(&rt); err != nil {
+	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&rt); err != nil {
 		return nil, err
 	}
 

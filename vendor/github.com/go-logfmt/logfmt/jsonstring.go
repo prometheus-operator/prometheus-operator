@@ -71,7 +71,7 @@ func writeQuotedString(w io.Writer, s string) (int, error) {
 			continue
 		}
 		c, size := utf8.DecodeRuneInString(s[i:])
-		if c == utf8.RuneError && size == 1 {
+		if c == utf8.RuneError {
 			if start < i {
 				buf.WriteString(s[start:i])
 			}
@@ -129,7 +129,7 @@ func writeQuotedBytes(w io.Writer, s []byte) (int, error) {
 			continue
 		}
 		c, size := utf8.DecodeRune(s[i:])
-		if c == utf8.RuneError && size == 1 {
+		if c == utf8.RuneError {
 			if start < i {
 				buf.Write(s[start:i])
 			}
@@ -182,7 +182,7 @@ func unquoteBytes(s []byte) (t []byte, ok bool) {
 			continue
 		}
 		rr, size := utf8.DecodeRune(s[r:])
-		if rr == utf8.RuneError && size == 1 {
+		if rr == utf8.RuneError {
 			break
 		}
 		r += size

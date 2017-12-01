@@ -7,17 +7,24 @@ import (
 	apiv1 "github.com/ericchiang/k8s/api/v1"
 	appsv1alpha1 "github.com/ericchiang/k8s/apis/apps/v1alpha1"
 	appsv1beta1 "github.com/ericchiang/k8s/apis/apps/v1beta1"
+	authenticationv1 "github.com/ericchiang/k8s/apis/authentication/v1"
 	authenticationv1beta1 "github.com/ericchiang/k8s/apis/authentication/v1beta1"
+	authorizationv1 "github.com/ericchiang/k8s/apis/authorization/v1"
 	authorizationv1beta1 "github.com/ericchiang/k8s/apis/authorization/v1beta1"
 	autoscalingv1 "github.com/ericchiang/k8s/apis/autoscaling/v1"
+	autoscalingv2alpha1 "github.com/ericchiang/k8s/apis/autoscaling/v2alpha1"
 	batchv1 "github.com/ericchiang/k8s/apis/batch/v1"
 	batchv2alpha1 "github.com/ericchiang/k8s/apis/batch/v2alpha1"
 	certificatesv1alpha1 "github.com/ericchiang/k8s/apis/certificates/v1alpha1"
+	certificatesv1beta1 "github.com/ericchiang/k8s/apis/certificates/v1beta1"
 	extensionsv1beta1 "github.com/ericchiang/k8s/apis/extensions/v1beta1"
 	imagepolicyv1alpha1 "github.com/ericchiang/k8s/apis/imagepolicy/v1alpha1"
 	policyv1alpha1 "github.com/ericchiang/k8s/apis/policy/v1alpha1"
 	policyv1beta1 "github.com/ericchiang/k8s/apis/policy/v1beta1"
 	rbacv1alpha1 "github.com/ericchiang/k8s/apis/rbac/v1alpha1"
+	rbacv1beta1 "github.com/ericchiang/k8s/apis/rbac/v1beta1"
+	settingsv1alpha1 "github.com/ericchiang/k8s/apis/settings/v1alpha1"
+	storagev1 "github.com/ericchiang/k8s/apis/storage/v1"
 	storagev1beta1 "github.com/ericchiang/k8s/apis/storage/v1beta1"
 	"github.com/ericchiang/k8s/watch/versioned"
 	"github.com/golang/protobuf/proto"
@@ -2339,6 +2346,200 @@ type AppsV1Beta1 struct {
 	client *Client
 }
 
+func (c *AppsV1Beta1) CreateDeployment(ctx context.Context, obj *appsv1beta1.Deployment) (*appsv1beta1.Deployment, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("apps", "v1beta1", ns, "deployments", "")
+	resp := new(appsv1beta1.Deployment)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AppsV1Beta1) UpdateDeployment(ctx context.Context, obj *appsv1beta1.Deployment) (*appsv1beta1.Deployment, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("apps", "v1beta1", *md.Namespace, "deployments", *md.Name)
+	resp := new(appsv1beta1.Deployment)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AppsV1Beta1) DeleteDeployment(ctx context.Context, name string, namespace string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("apps", "v1beta1", namespace, "deployments", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *AppsV1Beta1) GetDeployment(ctx context.Context, name, namespace string) (*appsv1beta1.Deployment, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("apps", "v1beta1", namespace, "deployments", name)
+	resp := new(appsv1beta1.Deployment)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+type AppsV1Beta1DeploymentWatcher struct {
+	watcher *watcher
+}
+
+func (w *AppsV1Beta1DeploymentWatcher) Next() (*versioned.Event, *appsv1beta1.Deployment, error) {
+	event, unknown, err := w.watcher.next()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(appsv1beta1.Deployment)
+	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
+		return nil, nil, err
+	}
+	return event, resp, nil
+}
+
+func (w *AppsV1Beta1DeploymentWatcher) Close() error {
+	return w.watcher.Close()
+}
+
+func (c *AppsV1Beta1) WatchDeployments(ctx context.Context, namespace string, options ...Option) (*AppsV1Beta1DeploymentWatcher, error) {
+	url := c.client.urlFor("apps", "v1beta1", namespace, "deployments", "", options...)
+	watcher, err := c.client.watch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &AppsV1Beta1DeploymentWatcher{watcher}, nil
+}
+
+func (c *AppsV1Beta1) ListDeployments(ctx context.Context, namespace string, options ...Option) (*appsv1beta1.DeploymentList, error) {
+	url := c.client.urlFor("apps", "v1beta1", namespace, "deployments", "", options...)
+	resp := new(appsv1beta1.DeploymentList)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AppsV1Beta1) CreateScale(ctx context.Context, obj *appsv1beta1.Scale) (*appsv1beta1.Scale, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("apps", "v1beta1", ns, "scales", "")
+	resp := new(appsv1beta1.Scale)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AppsV1Beta1) UpdateScale(ctx context.Context, obj *appsv1beta1.Scale) (*appsv1beta1.Scale, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("apps", "v1beta1", *md.Namespace, "scales", *md.Name)
+	resp := new(appsv1beta1.Scale)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AppsV1Beta1) DeleteScale(ctx context.Context, name string, namespace string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("apps", "v1beta1", namespace, "scales", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *AppsV1Beta1) GetScale(ctx context.Context, name, namespace string) (*appsv1beta1.Scale, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("apps", "v1beta1", namespace, "scales", name)
+	resp := new(appsv1beta1.Scale)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 func (c *AppsV1Beta1) CreateStatefulSet(ctx context.Context, obj *appsv1beta1.StatefulSet) (*appsv1beta1.StatefulSet, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
@@ -2456,6 +2657,95 @@ func (c *AppsV1Beta1) ListStatefulSets(ctx context.Context, namespace string, op
 }
 
 
+// AuthenticationV1 returns a client for interacting with the authentication.k8s.io/v1 API group.
+func (c *Client) AuthenticationV1() *AuthenticationV1 {
+	return &AuthenticationV1{c}
+}
+
+// AuthenticationV1 is a client for interacting with the authentication.k8s.io/v1 API group.
+type AuthenticationV1 struct {
+	client *Client
+}
+
+func (c *AuthenticationV1) CreateTokenReview(ctx context.Context, obj *authenticationv1.TokenReview) (*authenticationv1.TokenReview, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("authentication.k8s.io", "v1", ns, "tokenreviews", "")
+	resp := new(authenticationv1.TokenReview)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AuthenticationV1) UpdateTokenReview(ctx context.Context, obj *authenticationv1.TokenReview) (*authenticationv1.TokenReview, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("authentication.k8s.io", "v1", *md.Namespace, "tokenreviews", *md.Name)
+	resp := new(authenticationv1.TokenReview)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AuthenticationV1) DeleteTokenReview(ctx context.Context, name string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("authentication.k8s.io", "v1", AllNamespaces, "tokenreviews", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *AuthenticationV1) GetTokenReview(ctx context.Context, name string) (*authenticationv1.TokenReview, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("authentication.k8s.io", "v1", AllNamespaces, "tokenreviews", name)
+	resp := new(authenticationv1.TokenReview)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+
 // AuthenticationV1Beta1 returns a client for interacting with the authentication.k8s.io/v1beta1 API group.
 func (c *Client) AuthenticationV1Beta1() *AuthenticationV1Beta1 {
 	return &AuthenticationV1Beta1{c}
@@ -2538,6 +2828,251 @@ func (c *AuthenticationV1Beta1) GetTokenReview(ctx context.Context, name string)
 	}
 	url := c.client.urlFor("authentication.k8s.io", "v1beta1", AllNamespaces, "tokenreviews", name)
 	resp := new(authenticationv1beta1.TokenReview)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+
+// AuthorizationV1 returns a client for interacting with the authorization.k8s.io/v1 API group.
+func (c *Client) AuthorizationV1() *AuthorizationV1 {
+	return &AuthorizationV1{c}
+}
+
+// AuthorizationV1 is a client for interacting with the authorization.k8s.io/v1 API group.
+type AuthorizationV1 struct {
+	client *Client
+}
+
+func (c *AuthorizationV1) CreateLocalSubjectAccessReview(ctx context.Context, obj *authorizationv1.LocalSubjectAccessReview) (*authorizationv1.LocalSubjectAccessReview, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", ns, "localsubjectaccessreviews", "")
+	resp := new(authorizationv1.LocalSubjectAccessReview)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AuthorizationV1) UpdateLocalSubjectAccessReview(ctx context.Context, obj *authorizationv1.LocalSubjectAccessReview) (*authorizationv1.LocalSubjectAccessReview, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", *md.Namespace, "localsubjectaccessreviews", *md.Name)
+	resp := new(authorizationv1.LocalSubjectAccessReview)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AuthorizationV1) DeleteLocalSubjectAccessReview(ctx context.Context, name string, namespace string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", namespace, "localsubjectaccessreviews", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *AuthorizationV1) GetLocalSubjectAccessReview(ctx context.Context, name, namespace string) (*authorizationv1.LocalSubjectAccessReview, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", namespace, "localsubjectaccessreviews", name)
+	resp := new(authorizationv1.LocalSubjectAccessReview)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AuthorizationV1) CreateSelfSubjectAccessReview(ctx context.Context, obj *authorizationv1.SelfSubjectAccessReview) (*authorizationv1.SelfSubjectAccessReview, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", ns, "selfsubjectaccessreviews", "")
+	resp := new(authorizationv1.SelfSubjectAccessReview)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AuthorizationV1) UpdateSelfSubjectAccessReview(ctx context.Context, obj *authorizationv1.SelfSubjectAccessReview) (*authorizationv1.SelfSubjectAccessReview, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", *md.Namespace, "selfsubjectaccessreviews", *md.Name)
+	resp := new(authorizationv1.SelfSubjectAccessReview)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AuthorizationV1) DeleteSelfSubjectAccessReview(ctx context.Context, name string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", AllNamespaces, "selfsubjectaccessreviews", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *AuthorizationV1) GetSelfSubjectAccessReview(ctx context.Context, name string) (*authorizationv1.SelfSubjectAccessReview, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", AllNamespaces, "selfsubjectaccessreviews", name)
+	resp := new(authorizationv1.SelfSubjectAccessReview)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AuthorizationV1) CreateSubjectAccessReview(ctx context.Context, obj *authorizationv1.SubjectAccessReview) (*authorizationv1.SubjectAccessReview, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", ns, "subjectaccessreviews", "")
+	resp := new(authorizationv1.SubjectAccessReview)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AuthorizationV1) UpdateSubjectAccessReview(ctx context.Context, obj *authorizationv1.SubjectAccessReview) (*authorizationv1.SubjectAccessReview, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", *md.Namespace, "subjectaccessreviews", *md.Name)
+	resp := new(authorizationv1.SubjectAccessReview)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AuthorizationV1) DeleteSubjectAccessReview(ctx context.Context, name string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", AllNamespaces, "subjectaccessreviews", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *AuthorizationV1) GetSubjectAccessReview(ctx context.Context, name string) (*authorizationv1.SubjectAccessReview, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("authorization.k8s.io", "v1", AllNamespaces, "subjectaccessreviews", name)
+	resp := new(authorizationv1.SubjectAccessReview)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -2995,6 +3530,133 @@ func (c *AutoscalingV1) GetScale(ctx context.Context, name, namespace string) (*
 }
 
 
+// AutoscalingV2Alpha1 returns a client for interacting with the autoscaling/v2alpha1 API group.
+func (c *Client) AutoscalingV2Alpha1() *AutoscalingV2Alpha1 {
+	return &AutoscalingV2Alpha1{c}
+}
+
+// AutoscalingV2Alpha1 is a client for interacting with the autoscaling/v2alpha1 API group.
+type AutoscalingV2Alpha1 struct {
+	client *Client
+}
+
+func (c *AutoscalingV2Alpha1) CreateHorizontalPodAutoscaler(ctx context.Context, obj *autoscalingv2alpha1.HorizontalPodAutoscaler) (*autoscalingv2alpha1.HorizontalPodAutoscaler, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("autoscaling", "v2alpha1", ns, "horizontalpodautoscalers", "")
+	resp := new(autoscalingv2alpha1.HorizontalPodAutoscaler)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AutoscalingV2Alpha1) UpdateHorizontalPodAutoscaler(ctx context.Context, obj *autoscalingv2alpha1.HorizontalPodAutoscaler) (*autoscalingv2alpha1.HorizontalPodAutoscaler, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("autoscaling", "v2alpha1", *md.Namespace, "horizontalpodautoscalers", *md.Name)
+	resp := new(autoscalingv2alpha1.HorizontalPodAutoscaler)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *AutoscalingV2Alpha1) DeleteHorizontalPodAutoscaler(ctx context.Context, name string, namespace string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("autoscaling", "v2alpha1", namespace, "horizontalpodautoscalers", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *AutoscalingV2Alpha1) GetHorizontalPodAutoscaler(ctx context.Context, name, namespace string) (*autoscalingv2alpha1.HorizontalPodAutoscaler, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("autoscaling", "v2alpha1", namespace, "horizontalpodautoscalers", name)
+	resp := new(autoscalingv2alpha1.HorizontalPodAutoscaler)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+type AutoscalingV2Alpha1HorizontalPodAutoscalerWatcher struct {
+	watcher *watcher
+}
+
+func (w *AutoscalingV2Alpha1HorizontalPodAutoscalerWatcher) Next() (*versioned.Event, *autoscalingv2alpha1.HorizontalPodAutoscaler, error) {
+	event, unknown, err := w.watcher.next()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(autoscalingv2alpha1.HorizontalPodAutoscaler)
+	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
+		return nil, nil, err
+	}
+	return event, resp, nil
+}
+
+func (w *AutoscalingV2Alpha1HorizontalPodAutoscalerWatcher) Close() error {
+	return w.watcher.Close()
+}
+
+func (c *AutoscalingV2Alpha1) WatchHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*AutoscalingV2Alpha1HorizontalPodAutoscalerWatcher, error) {
+	url := c.client.urlFor("autoscaling", "v2alpha1", namespace, "horizontalpodautoscalers", "", options...)
+	watcher, err := c.client.watch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &AutoscalingV2Alpha1HorizontalPodAutoscalerWatcher{watcher}, nil
+}
+
+func (c *AutoscalingV2Alpha1) ListHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*autoscalingv2alpha1.HorizontalPodAutoscalerList, error) {
+	url := c.client.urlFor("autoscaling", "v2alpha1", namespace, "horizontalpodautoscalers", "", options...)
+	resp := new(autoscalingv2alpha1.HorizontalPodAutoscalerList)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+
 // BatchV1 returns a client for interacting with the batch/v1 API group.
 func (c *Client) BatchV1() *BatchV1 {
 	return &BatchV1{c}
@@ -3248,122 +3910,6 @@ func (c *BatchV2Alpha1) ListCronJobs(ctx context.Context, namespace string, opti
 	return resp, nil
 }
 
-func (c *BatchV2Alpha1) CreateJob(ctx context.Context, obj *batchv2alpha1.Job) (*batchv2alpha1.Job, error) {
-	md := obj.GetMetadata()
-	if md.Name != nil && *md.Name == "" {
-		return nil, fmt.Errorf("no name for given object")
-	}
-
-	ns := ""
-	if md.Namespace != nil {
-		ns = *md.Namespace
-	}
-	if !true && ns != ""{
-		return nil, fmt.Errorf("resource isn't namespaced")
-	}
-
-	if true {
-		if ns == "" {
-			return nil, fmt.Errorf("no resource namespace provided")
-		}
-		md.Namespace = &ns
-	}
-	url := c.client.urlFor("batch", "v2alpha1", ns, "jobs", "")
-	resp := new(batchv2alpha1.Job)
-	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (c *BatchV2Alpha1) UpdateJob(ctx context.Context, obj *batchv2alpha1.Job) (*batchv2alpha1.Job, error) {
-	md := obj.GetMetadata()
-	if md.Name != nil && *md.Name == "" {
-		return nil, fmt.Errorf("no name for given object")
-	}
-
-	ns := ""
-	if md.Namespace != nil {
-		ns = *md.Namespace
-	}
-	if !true && ns != "" {
-		return nil, fmt.Errorf("resource isn't namespaced")
-	}
-
-	if true {
-		if ns == "" {
-			return nil, fmt.Errorf("no resource namespace provided")
-		}
-		md.Namespace = &ns
-	}
-	url := c.client.urlFor("batch", "v2alpha1", *md.Namespace, "jobs", *md.Name)
-	resp := new(batchv2alpha1.Job)
-	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (c *BatchV2Alpha1) DeleteJob(ctx context.Context, name string, namespace string) error {
-	if name == "" {
-		return fmt.Errorf("create: no name for given object")
-	}
-	url := c.client.urlFor("batch", "v2alpha1", namespace, "jobs", name)
-	return c.client.delete(ctx, pbCodec, url)
-}
-
-func (c *BatchV2Alpha1) GetJob(ctx context.Context, name, namespace string) (*batchv2alpha1.Job, error) {
-	if name == "" {
-		return nil, fmt.Errorf("create: no name for given object")
-	}
-	url := c.client.urlFor("batch", "v2alpha1", namespace, "jobs", name)
-	resp := new(batchv2alpha1.Job)
-	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
-type BatchV2Alpha1JobWatcher struct {
-	watcher *watcher
-}
-
-func (w *BatchV2Alpha1JobWatcher) Next() (*versioned.Event, *batchv2alpha1.Job, error) {
-	event, unknown, err := w.watcher.next()
-	if err != nil {
-		return nil, nil, err
-	}
-	resp := new(batchv2alpha1.Job)
-	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
-		return nil, nil, err
-	}
-	return event, resp, nil
-}
-
-func (w *BatchV2Alpha1JobWatcher) Close() error {
-	return w.watcher.Close()
-}
-
-func (c *BatchV2Alpha1) WatchJobs(ctx context.Context, namespace string, options ...Option) (*BatchV2Alpha1JobWatcher, error) {
-	url := c.client.urlFor("batch", "v2alpha1", namespace, "jobs", "", options...)
-	watcher, err := c.client.watch(ctx, url)
-	if err != nil {
-		return nil, err
-	}
-	return &BatchV2Alpha1JobWatcher{watcher}, nil
-}
-
-func (c *BatchV2Alpha1) ListJobs(ctx context.Context, namespace string, options ...Option) (*batchv2alpha1.JobList, error) {
-	url := c.client.urlFor("batch", "v2alpha1", namespace, "jobs", "", options...)
-	resp := new(batchv2alpha1.JobList)
-	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
 func (c *BatchV2Alpha1) CreateJobTemplate(ctx context.Context, obj *batchv2alpha1.JobTemplate) (*batchv2alpha1.JobTemplate, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
@@ -3563,6 +4109,133 @@ func (c *CertificatesV1Alpha1) WatchCertificateSigningRequests(ctx context.Conte
 func (c *CertificatesV1Alpha1) ListCertificateSigningRequests(ctx context.Context, options ...Option) (*certificatesv1alpha1.CertificateSigningRequestList, error) {
 	url := c.client.urlFor("certificates.k8s.io", "v1alpha1", AllNamespaces, "certificatesigningrequests", "", options...)
 	resp := new(certificatesv1alpha1.CertificateSigningRequestList)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+
+// CertificatesV1Beta1 returns a client for interacting with the certificates.k8s.io/v1beta1 API group.
+func (c *Client) CertificatesV1Beta1() *CertificatesV1Beta1 {
+	return &CertificatesV1Beta1{c}
+}
+
+// CertificatesV1Beta1 is a client for interacting with the certificates.k8s.io/v1beta1 API group.
+type CertificatesV1Beta1 struct {
+	client *Client
+}
+
+func (c *CertificatesV1Beta1) CreateCertificateSigningRequest(ctx context.Context, obj *certificatesv1beta1.CertificateSigningRequest) (*certificatesv1beta1.CertificateSigningRequest, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("certificates.k8s.io", "v1beta1", ns, "certificatesigningrequests", "")
+	resp := new(certificatesv1beta1.CertificateSigningRequest)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *CertificatesV1Beta1) UpdateCertificateSigningRequest(ctx context.Context, obj *certificatesv1beta1.CertificateSigningRequest) (*certificatesv1beta1.CertificateSigningRequest, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("certificates.k8s.io", "v1beta1", *md.Namespace, "certificatesigningrequests", *md.Name)
+	resp := new(certificatesv1beta1.CertificateSigningRequest)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *CertificatesV1Beta1) DeleteCertificateSigningRequest(ctx context.Context, name string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("certificates.k8s.io", "v1beta1", AllNamespaces, "certificatesigningrequests", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *CertificatesV1Beta1) GetCertificateSigningRequest(ctx context.Context, name string) (*certificatesv1beta1.CertificateSigningRequest, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("certificates.k8s.io", "v1beta1", AllNamespaces, "certificatesigningrequests", name)
+	resp := new(certificatesv1beta1.CertificateSigningRequest)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+type CertificatesV1Beta1CertificateSigningRequestWatcher struct {
+	watcher *watcher
+}
+
+func (w *CertificatesV1Beta1CertificateSigningRequestWatcher) Next() (*versioned.Event, *certificatesv1beta1.CertificateSigningRequest, error) {
+	event, unknown, err := w.watcher.next()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(certificatesv1beta1.CertificateSigningRequest)
+	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
+		return nil, nil, err
+	}
+	return event, resp, nil
+}
+
+func (w *CertificatesV1Beta1CertificateSigningRequestWatcher) Close() error {
+	return w.watcher.Close()
+}
+
+func (c *CertificatesV1Beta1) WatchCertificateSigningRequests(ctx context.Context, options ...Option) (*CertificatesV1Beta1CertificateSigningRequestWatcher, error) {
+	url := c.client.urlFor("certificates.k8s.io", "v1beta1", AllNamespaces, "certificatesigningrequests", "", options...)
+	watcher, err := c.client.watch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &CertificatesV1Beta1CertificateSigningRequestWatcher{watcher}, nil
+}
+
+func (c *CertificatesV1Beta1) ListCertificateSigningRequests(ctx context.Context, options ...Option) (*certificatesv1beta1.CertificateSigningRequestList, error) {
+	url := c.client.urlFor("certificates.k8s.io", "v1beta1", AllNamespaces, "certificatesigningrequests", "", options...)
+	resp := new(certificatesv1beta1.CertificateSigningRequestList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -3812,122 +4485,6 @@ func (c *ExtensionsV1Beta1) ListDeployments(ctx context.Context, namespace strin
 	return resp, nil
 }
 
-func (c *ExtensionsV1Beta1) CreateHorizontalPodAutoscaler(ctx context.Context, obj *extensionsv1beta1.HorizontalPodAutoscaler) (*extensionsv1beta1.HorizontalPodAutoscaler, error) {
-	md := obj.GetMetadata()
-	if md.Name != nil && *md.Name == "" {
-		return nil, fmt.Errorf("no name for given object")
-	}
-
-	ns := ""
-	if md.Namespace != nil {
-		ns = *md.Namespace
-	}
-	if !true && ns != ""{
-		return nil, fmt.Errorf("resource isn't namespaced")
-	}
-
-	if true {
-		if ns == "" {
-			return nil, fmt.Errorf("no resource namespace provided")
-		}
-		md.Namespace = &ns
-	}
-	url := c.client.urlFor("extensions", "v1beta1", ns, "horizontalpodautoscalers", "")
-	resp := new(extensionsv1beta1.HorizontalPodAutoscaler)
-	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (c *ExtensionsV1Beta1) UpdateHorizontalPodAutoscaler(ctx context.Context, obj *extensionsv1beta1.HorizontalPodAutoscaler) (*extensionsv1beta1.HorizontalPodAutoscaler, error) {
-	md := obj.GetMetadata()
-	if md.Name != nil && *md.Name == "" {
-		return nil, fmt.Errorf("no name for given object")
-	}
-
-	ns := ""
-	if md.Namespace != nil {
-		ns = *md.Namespace
-	}
-	if !true && ns != "" {
-		return nil, fmt.Errorf("resource isn't namespaced")
-	}
-
-	if true {
-		if ns == "" {
-			return nil, fmt.Errorf("no resource namespace provided")
-		}
-		md.Namespace = &ns
-	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "horizontalpodautoscalers", *md.Name)
-	resp := new(extensionsv1beta1.HorizontalPodAutoscaler)
-	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (c *ExtensionsV1Beta1) DeleteHorizontalPodAutoscaler(ctx context.Context, name string, namespace string) error {
-	if name == "" {
-		return fmt.Errorf("create: no name for given object")
-	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "horizontalpodautoscalers", name)
-	return c.client.delete(ctx, pbCodec, url)
-}
-
-func (c *ExtensionsV1Beta1) GetHorizontalPodAutoscaler(ctx context.Context, name, namespace string) (*extensionsv1beta1.HorizontalPodAutoscaler, error) {
-	if name == "" {
-		return nil, fmt.Errorf("create: no name for given object")
-	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "horizontalpodautoscalers", name)
-	resp := new(extensionsv1beta1.HorizontalPodAutoscaler)
-	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
-type ExtensionsV1Beta1HorizontalPodAutoscalerWatcher struct {
-	watcher *watcher
-}
-
-func (w *ExtensionsV1Beta1HorizontalPodAutoscalerWatcher) Next() (*versioned.Event, *extensionsv1beta1.HorizontalPodAutoscaler, error) {
-	event, unknown, err := w.watcher.next()
-	if err != nil {
-		return nil, nil, err
-	}
-	resp := new(extensionsv1beta1.HorizontalPodAutoscaler)
-	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
-		return nil, nil, err
-	}
-	return event, resp, nil
-}
-
-func (w *ExtensionsV1Beta1HorizontalPodAutoscalerWatcher) Close() error {
-	return w.watcher.Close()
-}
-
-func (c *ExtensionsV1Beta1) WatchHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1HorizontalPodAutoscalerWatcher, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "horizontalpodautoscalers", "", options...)
-	watcher, err := c.client.watch(ctx, url)
-	if err != nil {
-		return nil, err
-	}
-	return &ExtensionsV1Beta1HorizontalPodAutoscalerWatcher{watcher}, nil
-}
-
-func (c *ExtensionsV1Beta1) ListHorizontalPodAutoscalers(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.HorizontalPodAutoscalerList, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "horizontalpodautoscalers", "", options...)
-	resp := new(extensionsv1beta1.HorizontalPodAutoscalerList)
-	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
 func (c *ExtensionsV1Beta1) CreateIngress(ctx context.Context, obj *extensionsv1beta1.Ingress) (*extensionsv1beta1.Ingress, error) {
 	md := obj.GetMetadata()
 	if md.Name != nil && *md.Name == "" {
@@ -4038,122 +4595,6 @@ func (c *ExtensionsV1Beta1) WatchIngresses(ctx context.Context, namespace string
 func (c *ExtensionsV1Beta1) ListIngresses(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.IngressList, error) {
 	url := c.client.urlFor("extensions", "v1beta1", namespace, "ingresses", "", options...)
 	resp := new(extensionsv1beta1.IngressList)
-	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (c *ExtensionsV1Beta1) CreateJob(ctx context.Context, obj *extensionsv1beta1.Job) (*extensionsv1beta1.Job, error) {
-	md := obj.GetMetadata()
-	if md.Name != nil && *md.Name == "" {
-		return nil, fmt.Errorf("no name for given object")
-	}
-
-	ns := ""
-	if md.Namespace != nil {
-		ns = *md.Namespace
-	}
-	if !true && ns != ""{
-		return nil, fmt.Errorf("resource isn't namespaced")
-	}
-
-	if true {
-		if ns == "" {
-			return nil, fmt.Errorf("no resource namespace provided")
-		}
-		md.Namespace = &ns
-	}
-	url := c.client.urlFor("extensions", "v1beta1", ns, "jobs", "")
-	resp := new(extensionsv1beta1.Job)
-	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (c *ExtensionsV1Beta1) UpdateJob(ctx context.Context, obj *extensionsv1beta1.Job) (*extensionsv1beta1.Job, error) {
-	md := obj.GetMetadata()
-	if md.Name != nil && *md.Name == "" {
-		return nil, fmt.Errorf("no name for given object")
-	}
-
-	ns := ""
-	if md.Namespace != nil {
-		ns = *md.Namespace
-	}
-	if !true && ns != "" {
-		return nil, fmt.Errorf("resource isn't namespaced")
-	}
-
-	if true {
-		if ns == "" {
-			return nil, fmt.Errorf("no resource namespace provided")
-		}
-		md.Namespace = &ns
-	}
-	url := c.client.urlFor("extensions", "v1beta1", *md.Namespace, "jobs", *md.Name)
-	resp := new(extensionsv1beta1.Job)
-	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (c *ExtensionsV1Beta1) DeleteJob(ctx context.Context, name string, namespace string) error {
-	if name == "" {
-		return fmt.Errorf("create: no name for given object")
-	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "jobs", name)
-	return c.client.delete(ctx, pbCodec, url)
-}
-
-func (c *ExtensionsV1Beta1) GetJob(ctx context.Context, name, namespace string) (*extensionsv1beta1.Job, error) {
-	if name == "" {
-		return nil, fmt.Errorf("create: no name for given object")
-	}
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "jobs", name)
-	resp := new(extensionsv1beta1.Job)
-	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
-type ExtensionsV1Beta1JobWatcher struct {
-	watcher *watcher
-}
-
-func (w *ExtensionsV1Beta1JobWatcher) Next() (*versioned.Event, *extensionsv1beta1.Job, error) {
-	event, unknown, err := w.watcher.next()
-	if err != nil {
-		return nil, nil, err
-	}
-	resp := new(extensionsv1beta1.Job)
-	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
-		return nil, nil, err
-	}
-	return event, resp, nil
-}
-
-func (w *ExtensionsV1Beta1JobWatcher) Close() error {
-	return w.watcher.Close()
-}
-
-func (c *ExtensionsV1Beta1) WatchJobs(ctx context.Context, namespace string, options ...Option) (*ExtensionsV1Beta1JobWatcher, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "jobs", "", options...)
-	watcher, err := c.client.watch(ctx, url)
-	if err != nil {
-		return nil, err
-	}
-	return &ExtensionsV1Beta1JobWatcher{watcher}, nil
-}
-
-func (c *ExtensionsV1Beta1) ListJobs(ctx context.Context, namespace string, options ...Option) (*extensionsv1beta1.JobList, error) {
-	url := c.client.urlFor("extensions", "v1beta1", namespace, "jobs", "", options...)
-	resp := new(extensionsv1beta1.JobList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}
@@ -5786,6 +6227,735 @@ func (c *RBACV1Alpha1) WatchRoleBindings(ctx context.Context, namespace string, 
 func (c *RBACV1Alpha1) ListRoleBindings(ctx context.Context, namespace string, options ...Option) (*rbacv1alpha1.RoleBindingList, error) {
 	url := c.client.urlFor("rbac.authorization.k8s.io", "v1alpha1", namespace, "rolebindings", "", options...)
 	resp := new(rbacv1alpha1.RoleBindingList)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+
+// RBACV1Beta1 returns a client for interacting with the rbac.authorization.k8s.io/v1beta1 API group.
+func (c *Client) RBACV1Beta1() *RBACV1Beta1 {
+	return &RBACV1Beta1{c}
+}
+
+// RBACV1Beta1 is a client for interacting with the rbac.authorization.k8s.io/v1beta1 API group.
+type RBACV1Beta1 struct {
+	client *Client
+}
+
+func (c *RBACV1Beta1) CreateClusterRole(ctx context.Context, obj *rbacv1beta1.ClusterRole) (*rbacv1beta1.ClusterRole, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", ns, "clusterroles", "")
+	resp := new(rbacv1beta1.ClusterRole)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) UpdateClusterRole(ctx context.Context, obj *rbacv1beta1.ClusterRole) (*rbacv1beta1.ClusterRole, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", *md.Namespace, "clusterroles", *md.Name)
+	resp := new(rbacv1beta1.ClusterRole)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) DeleteClusterRole(ctx context.Context, name string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", AllNamespaces, "clusterroles", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *RBACV1Beta1) GetClusterRole(ctx context.Context, name string) (*rbacv1beta1.ClusterRole, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", AllNamespaces, "clusterroles", name)
+	resp := new(rbacv1beta1.ClusterRole)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+type RBACV1Beta1ClusterRoleWatcher struct {
+	watcher *watcher
+}
+
+func (w *RBACV1Beta1ClusterRoleWatcher) Next() (*versioned.Event, *rbacv1beta1.ClusterRole, error) {
+	event, unknown, err := w.watcher.next()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(rbacv1beta1.ClusterRole)
+	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
+		return nil, nil, err
+	}
+	return event, resp, nil
+}
+
+func (w *RBACV1Beta1ClusterRoleWatcher) Close() error {
+	return w.watcher.Close()
+}
+
+func (c *RBACV1Beta1) WatchClusterRoles(ctx context.Context, options ...Option) (*RBACV1Beta1ClusterRoleWatcher, error) {
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", AllNamespaces, "clusterroles", "", options...)
+	watcher, err := c.client.watch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &RBACV1Beta1ClusterRoleWatcher{watcher}, nil
+}
+
+func (c *RBACV1Beta1) ListClusterRoles(ctx context.Context, options ...Option) (*rbacv1beta1.ClusterRoleList, error) {
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", AllNamespaces, "clusterroles", "", options...)
+	resp := new(rbacv1beta1.ClusterRoleList)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) CreateClusterRoleBinding(ctx context.Context, obj *rbacv1beta1.ClusterRoleBinding) (*rbacv1beta1.ClusterRoleBinding, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", ns, "clusterrolebindings", "")
+	resp := new(rbacv1beta1.ClusterRoleBinding)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) UpdateClusterRoleBinding(ctx context.Context, obj *rbacv1beta1.ClusterRoleBinding) (*rbacv1beta1.ClusterRoleBinding, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", *md.Namespace, "clusterrolebindings", *md.Name)
+	resp := new(rbacv1beta1.ClusterRoleBinding)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) DeleteClusterRoleBinding(ctx context.Context, name string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", AllNamespaces, "clusterrolebindings", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *RBACV1Beta1) GetClusterRoleBinding(ctx context.Context, name string) (*rbacv1beta1.ClusterRoleBinding, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", AllNamespaces, "clusterrolebindings", name)
+	resp := new(rbacv1beta1.ClusterRoleBinding)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+type RBACV1Beta1ClusterRoleBindingWatcher struct {
+	watcher *watcher
+}
+
+func (w *RBACV1Beta1ClusterRoleBindingWatcher) Next() (*versioned.Event, *rbacv1beta1.ClusterRoleBinding, error) {
+	event, unknown, err := w.watcher.next()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(rbacv1beta1.ClusterRoleBinding)
+	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
+		return nil, nil, err
+	}
+	return event, resp, nil
+}
+
+func (w *RBACV1Beta1ClusterRoleBindingWatcher) Close() error {
+	return w.watcher.Close()
+}
+
+func (c *RBACV1Beta1) WatchClusterRoleBindings(ctx context.Context, options ...Option) (*RBACV1Beta1ClusterRoleBindingWatcher, error) {
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", AllNamespaces, "clusterrolebindings", "", options...)
+	watcher, err := c.client.watch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &RBACV1Beta1ClusterRoleBindingWatcher{watcher}, nil
+}
+
+func (c *RBACV1Beta1) ListClusterRoleBindings(ctx context.Context, options ...Option) (*rbacv1beta1.ClusterRoleBindingList, error) {
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", AllNamespaces, "clusterrolebindings", "", options...)
+	resp := new(rbacv1beta1.ClusterRoleBindingList)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) CreateRole(ctx context.Context, obj *rbacv1beta1.Role) (*rbacv1beta1.Role, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", ns, "roles", "")
+	resp := new(rbacv1beta1.Role)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) UpdateRole(ctx context.Context, obj *rbacv1beta1.Role) (*rbacv1beta1.Role, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", *md.Namespace, "roles", *md.Name)
+	resp := new(rbacv1beta1.Role)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) DeleteRole(ctx context.Context, name string, namespace string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", namespace, "roles", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *RBACV1Beta1) GetRole(ctx context.Context, name, namespace string) (*rbacv1beta1.Role, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", namespace, "roles", name)
+	resp := new(rbacv1beta1.Role)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+type RBACV1Beta1RoleWatcher struct {
+	watcher *watcher
+}
+
+func (w *RBACV1Beta1RoleWatcher) Next() (*versioned.Event, *rbacv1beta1.Role, error) {
+	event, unknown, err := w.watcher.next()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(rbacv1beta1.Role)
+	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
+		return nil, nil, err
+	}
+	return event, resp, nil
+}
+
+func (w *RBACV1Beta1RoleWatcher) Close() error {
+	return w.watcher.Close()
+}
+
+func (c *RBACV1Beta1) WatchRoles(ctx context.Context, namespace string, options ...Option) (*RBACV1Beta1RoleWatcher, error) {
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", namespace, "roles", "", options...)
+	watcher, err := c.client.watch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &RBACV1Beta1RoleWatcher{watcher}, nil
+}
+
+func (c *RBACV1Beta1) ListRoles(ctx context.Context, namespace string, options ...Option) (*rbacv1beta1.RoleList, error) {
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", namespace, "roles", "", options...)
+	resp := new(rbacv1beta1.RoleList)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) CreateRoleBinding(ctx context.Context, obj *rbacv1beta1.RoleBinding) (*rbacv1beta1.RoleBinding, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", ns, "rolebindings", "")
+	resp := new(rbacv1beta1.RoleBinding)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) UpdateRoleBinding(ctx context.Context, obj *rbacv1beta1.RoleBinding) (*rbacv1beta1.RoleBinding, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", *md.Namespace, "rolebindings", *md.Name)
+	resp := new(rbacv1beta1.RoleBinding)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *RBACV1Beta1) DeleteRoleBinding(ctx context.Context, name string, namespace string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", namespace, "rolebindings", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *RBACV1Beta1) GetRoleBinding(ctx context.Context, name, namespace string) (*rbacv1beta1.RoleBinding, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", namespace, "rolebindings", name)
+	resp := new(rbacv1beta1.RoleBinding)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+type RBACV1Beta1RoleBindingWatcher struct {
+	watcher *watcher
+}
+
+func (w *RBACV1Beta1RoleBindingWatcher) Next() (*versioned.Event, *rbacv1beta1.RoleBinding, error) {
+	event, unknown, err := w.watcher.next()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(rbacv1beta1.RoleBinding)
+	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
+		return nil, nil, err
+	}
+	return event, resp, nil
+}
+
+func (w *RBACV1Beta1RoleBindingWatcher) Close() error {
+	return w.watcher.Close()
+}
+
+func (c *RBACV1Beta1) WatchRoleBindings(ctx context.Context, namespace string, options ...Option) (*RBACV1Beta1RoleBindingWatcher, error) {
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", namespace, "rolebindings", "", options...)
+	watcher, err := c.client.watch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &RBACV1Beta1RoleBindingWatcher{watcher}, nil
+}
+
+func (c *RBACV1Beta1) ListRoleBindings(ctx context.Context, namespace string, options ...Option) (*rbacv1beta1.RoleBindingList, error) {
+	url := c.client.urlFor("rbac.authorization.k8s.io", "v1beta1", namespace, "rolebindings", "", options...)
+	resp := new(rbacv1beta1.RoleBindingList)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+
+// SettingsV1Alpha1 returns a client for interacting with the settings/v1alpha1 API group.
+func (c *Client) SettingsV1Alpha1() *SettingsV1Alpha1 {
+	return &SettingsV1Alpha1{c}
+}
+
+// SettingsV1Alpha1 is a client for interacting with the settings/v1alpha1 API group.
+type SettingsV1Alpha1 struct {
+	client *Client
+}
+
+func (c *SettingsV1Alpha1) CreatePodPreset(ctx context.Context, obj *settingsv1alpha1.PodPreset) (*settingsv1alpha1.PodPreset, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("settings", "v1alpha1", ns, "podpresets", "")
+	resp := new(settingsv1alpha1.PodPreset)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *SettingsV1Alpha1) UpdatePodPreset(ctx context.Context, obj *settingsv1alpha1.PodPreset) (*settingsv1alpha1.PodPreset, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !true && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if true {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("settings", "v1alpha1", *md.Namespace, "podpresets", *md.Name)
+	resp := new(settingsv1alpha1.PodPreset)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *SettingsV1Alpha1) DeletePodPreset(ctx context.Context, name string, namespace string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("settings", "v1alpha1", namespace, "podpresets", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *SettingsV1Alpha1) GetPodPreset(ctx context.Context, name, namespace string) (*settingsv1alpha1.PodPreset, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("settings", "v1alpha1", namespace, "podpresets", name)
+	resp := new(settingsv1alpha1.PodPreset)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+type SettingsV1Alpha1PodPresetWatcher struct {
+	watcher *watcher
+}
+
+func (w *SettingsV1Alpha1PodPresetWatcher) Next() (*versioned.Event, *settingsv1alpha1.PodPreset, error) {
+	event, unknown, err := w.watcher.next()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(settingsv1alpha1.PodPreset)
+	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
+		return nil, nil, err
+	}
+	return event, resp, nil
+}
+
+func (w *SettingsV1Alpha1PodPresetWatcher) Close() error {
+	return w.watcher.Close()
+}
+
+func (c *SettingsV1Alpha1) WatchPodPresets(ctx context.Context, namespace string, options ...Option) (*SettingsV1Alpha1PodPresetWatcher, error) {
+	url := c.client.urlFor("settings", "v1alpha1", namespace, "podpresets", "", options...)
+	watcher, err := c.client.watch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &SettingsV1Alpha1PodPresetWatcher{watcher}, nil
+}
+
+func (c *SettingsV1Alpha1) ListPodPresets(ctx context.Context, namespace string, options ...Option) (*settingsv1alpha1.PodPresetList, error) {
+	url := c.client.urlFor("settings", "v1alpha1", namespace, "podpresets", "", options...)
+	resp := new(settingsv1alpha1.PodPresetList)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+
+// StorageV1 returns a client for interacting with the storage.k8s.io/v1 API group.
+func (c *Client) StorageV1() *StorageV1 {
+	return &StorageV1{c}
+}
+
+// StorageV1 is a client for interacting with the storage.k8s.io/v1 API group.
+type StorageV1 struct {
+	client *Client
+}
+
+func (c *StorageV1) CreateStorageClass(ctx context.Context, obj *storagev1.StorageClass) (*storagev1.StorageClass, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != ""{
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("storage.k8s.io", "v1", ns, "storageclasses", "")
+	resp := new(storagev1.StorageClass)
+	err := c.client.create(ctx, pbCodec, "POST", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *StorageV1) UpdateStorageClass(ctx context.Context, obj *storagev1.StorageClass) (*storagev1.StorageClass, error) {
+	md := obj.GetMetadata()
+	if md.Name != nil && *md.Name == "" {
+		return nil, fmt.Errorf("no name for given object")
+	}
+
+	ns := ""
+	if md.Namespace != nil {
+		ns = *md.Namespace
+	}
+	if !false && ns != "" {
+		return nil, fmt.Errorf("resource isn't namespaced")
+	}
+
+	if false {
+		if ns == "" {
+			return nil, fmt.Errorf("no resource namespace provided")
+		}
+		md.Namespace = &ns
+	}
+	url := c.client.urlFor("storage.k8s.io", "v1", *md.Namespace, "storageclasses", *md.Name)
+	resp := new(storagev1.StorageClass)
+	err := c.client.create(ctx, pbCodec, "PUT", url, obj, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *StorageV1) DeleteStorageClass(ctx context.Context, name string) error {
+	if name == "" {
+		return fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("storage.k8s.io", "v1", AllNamespaces, "storageclasses", name)
+	return c.client.delete(ctx, pbCodec, url)
+}
+
+func (c *StorageV1) GetStorageClass(ctx context.Context, name string) (*storagev1.StorageClass, error) {
+	if name == "" {
+		return nil, fmt.Errorf("create: no name for given object")
+	}
+	url := c.client.urlFor("storage.k8s.io", "v1", AllNamespaces, "storageclasses", name)
+	resp := new(storagev1.StorageClass)
+	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+type StorageV1StorageClassWatcher struct {
+	watcher *watcher
+}
+
+func (w *StorageV1StorageClassWatcher) Next() (*versioned.Event, *storagev1.StorageClass, error) {
+	event, unknown, err := w.watcher.next()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(storagev1.StorageClass)
+	if err := proto.Unmarshal(unknown.Raw, resp); err != nil {
+		return nil, nil, err
+	}
+	return event, resp, nil
+}
+
+func (w *StorageV1StorageClassWatcher) Close() error {
+	return w.watcher.Close()
+}
+
+func (c *StorageV1) WatchStorageClasses(ctx context.Context, options ...Option) (*StorageV1StorageClassWatcher, error) {
+	url := c.client.urlFor("storage.k8s.io", "v1", AllNamespaces, "storageclasses", "", options...)
+	watcher, err := c.client.watch(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &StorageV1StorageClassWatcher{watcher}, nil
+}
+
+func (c *StorageV1) ListStorageClasses(ctx context.Context, options ...Option) (*storagev1.StorageClassList, error) {
+	url := c.client.urlFor("storage.k8s.io", "v1", AllNamespaces, "storageclasses", "", options...)
+	resp := new(storagev1.StorageClassList)
 	if err := c.client.get(ctx, pbCodec, url, resp); err != nil {
 		return nil, err
 	}

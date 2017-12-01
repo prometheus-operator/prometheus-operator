@@ -68,10 +68,13 @@ const (
 //
 func String(s string) *string { return &s }
 
-// Int is a convinence for converting an int literal to a pointer to an int.
+// Int is a convenience for converting an int literal to a pointer to an int.
 func Int(i int) *int { return &i }
 
-// Bool is a convinence for converting a bool literal to a pointer to a bool.
+// Int32 is a convenience for converting an int32 literal to a pointer to an int32.
+func Int32(i int32) *int32 { return &i }
+
+// Bool is a convenience for converting a bool literal to a pointer to a bool.
 func Bool(b bool) *bool { return &b }
 
 const (
@@ -107,7 +110,7 @@ type Client struct {
 	Client *http.Client
 }
 
-func (c *Client) newRequest(verb, url string, body io.Reader) (*http.Request, error) {
+func (c *Client) newRequest(ctx context.Context, verb, url string, body io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(verb, url, body)
 	if err != nil {
 		return nil, err
@@ -117,12 +120,29 @@ func (c *Client) newRequest(verb, url string, body io.Reader) (*http.Request, er
 			return nil, err
 		}
 	}
-	return req, nil
+	return req.WithContext(ctx), nil
 }
 
 // Option represents optional call parameters, such as label selectors.
 type Option interface {
 	queryParam() (key, val string)
+}
+
+type queryParam struct {
+	paramName  string
+	paramValue string
+}
+
+func (o queryParam) queryParam() (string, string) {
+	return o.paramName, o.paramValue
+}
+
+// QueryParam can be used to manually set a URL query parameter by name.
+func QueryParam(name, value string) Option {
+	return queryParam{
+		paramName:  name,
+		paramValue: value,
+	}
 }
 
 type resourceVersionOption string
@@ -275,7 +295,10 @@ func newClient(cluster Cluster, user AuthInfo, namespace string) (*Client, error
 	}
 
 	// See https://github.com/gtank/cryptopasta
-	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
+	tlsConfig := &tls.Config{
+		MinVersion:         tls.VersionTLS12,
+		InsecureSkipVerify: cluster.InsecureSkipTLSVerify,
+	}
 
 	if len(ca) != 0 {
 		tlsConfig.RootCAs = x509.NewCertPool()
@@ -372,7 +395,7 @@ func checkStatusCode(c *codec, statusCode int, body []byte) error {
 func newAPIError(c *codec, statusCode int, body []byte) error {
 	status := new(unversioned.Status)
 	if err := c.unmarshal(body, status); err != nil {
-		return fmt.Errorf("decode error status: %v", err)
+		return fmt.Errorf("decode error status %d: %v", statusCode, err)
 	}
 	return &APIError{status, statusCode}
 }
@@ -438,7 +461,7 @@ func (c *Client) create(ctx context.Context, codec *codec, verb, url string, req
 		return err
 	}
 
-	r, err := c.newRequest(verb, url, bytes.NewReader(body))
+	r, err := c.newRequest(ctx, verb, url, bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
@@ -463,7 +486,7 @@ func (c *Client) create(ctx context.Context, codec *codec, verb, url string, req
 }
 
 func (c *Client) delete(ctx context.Context, codec *codec, url string) error {
-	r, err := c.newRequest("DELETE", url, nil)
+	r, err := c.newRequest(ctx, "DELETE", url, nil)
 	if err != nil {
 		return err
 	}
@@ -488,7 +511,7 @@ func (c *Client) delete(ctx context.Context, codec *codec, url string) error {
 
 // get can be used to either get or list a given resource.
 func (c *Client) get(ctx context.Context, codec *codec, url string, resp interface{}) error {
-	r, err := c.newRequest("GET", url, nil)
+	r, err := c.newRequest(ctx, "GET", url, nil)
 	if err != nil {
 		return err
 	}
@@ -574,7 +597,7 @@ func (c *Client) watch(ctx context.Context, url string) (*watcher, error) {
 	} else {
 		url = url + "?watch=true"
 	}
-	r, err := c.newRequest("GET", url, nil)
+	r, err := c.newRequest(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
 	}

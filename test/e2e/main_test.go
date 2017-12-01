@@ -20,7 +20,7 @@ import (
 	"os"
 	"testing"
 
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/api/core/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	operatorFramework "github.com/coreos/prometheus-operator/test/framework"
@@ -47,19 +47,19 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	err = k8sutil.WaitForCRDReady(framework.MonClient.Prometheuses(api.NamespaceAll).List)
+	err = k8sutil.WaitForCRDReady(framework.MonClient.Prometheuses(v1.NamespaceAll).List)
 	if err != nil {
 		log.Printf("Prometheus CRD not ready: %v\n", err)
 		os.Exit(1)
 	}
 
-	err = k8sutil.WaitForCRDReady(framework.MonClient.ServiceMonitors(api.NamespaceAll).List)
+	err = k8sutil.WaitForCRDReady(framework.MonClient.ServiceMonitors(v1.NamespaceAll).List)
 	if err != nil {
 		log.Printf("ServiceMonitor CRD not ready: %v\n", err)
 		os.Exit(1)
 	}
 
-	err = k8sutil.WaitForCRDReady(framework.MonClient.Alertmanagers(api.NamespaceAll).List)
+	err = k8sutil.WaitForCRDReady(framework.MonClient.Alertmanagers(v1.NamespaceAll).List)
 	if err != nil {
 		log.Printf("Alertmanagers CRD not ready: %v\n", err)
 		os.Exit(1)

@@ -252,8 +252,9 @@ func (w *volumeWatcher) Run() {
 }
 
 func main() {
-	logger := log.NewContext(log.NewLogfmtLogger(os.Stdout)).
-		With("ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
+	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
+	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
+	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	cfg := config{}
 	flags := flag.NewFlagSet("prometheus-config-reloader", flag.ExitOnError)
@@ -286,5 +287,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	newVolumeWatcher(client, cfg, logger.With("component", "volume-watcher")).Run()
+	newVolumeWatcher(client, cfg, log.With(logger, "component", "volume-watcher")).Run()
 }

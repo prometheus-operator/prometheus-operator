@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -24,11 +25,11 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
@@ -248,8 +249,13 @@ scrape_configs:
     static_configs:
       - targets:
         - 111.111.111.111:9090
-        - 111.111.111.112:9090 
+        - 111.111.111.112:9090
 `
+
+	cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Get(cfg.Name, metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "could not retrieve previous secret"))
+	}
 
 	cfg.Data["prometheus.yaml"] = []byte(secondConfig)
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(cfg); err != nil {
@@ -544,7 +550,7 @@ func basicQueryWorking(ns, svcName string) (bool, error) {
 	}
 
 	rq := prometheusQueryAPIResponse{}
-	if err := json.NewDecoder(response).Decode(&rq); err != nil {
+	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&rq); err != nil {
 		return false, err
 	}
 
@@ -576,7 +582,7 @@ func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) fu
 		}
 
 		ra := prometheusAlertmanagerAPIResponse{}
-		if err := json.NewDecoder(response).Decode(&ra); err != nil {
+		if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&ra); err != nil {
 			return false, err
 		}
 

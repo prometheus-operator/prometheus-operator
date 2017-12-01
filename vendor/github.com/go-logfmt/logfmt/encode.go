@@ -8,6 +8,7 @@ import (
 	"io"
 	"reflect"
 	"strings"
+	"unicode/utf8"
 )
 
 // MarshalKeyvals returns the logfmt encoding of keyvals, a variadic sequence
@@ -165,11 +166,19 @@ func writeKey(w io.Writer, key interface{}) error {
 }
 
 func invalidKeyRune(r rune) bool {
-	return r <= ' ' || r == '=' || r == '"'
+	return r <= ' ' || r == '=' || r == '"' || r == utf8.RuneError
+}
+
+func invalidKeyString(key string) bool {
+	return len(key) == 0 || strings.IndexFunc(key, invalidKeyRune) != -1
+}
+
+func invalidKey(key []byte) bool {
+	return len(key) == 0 || bytes.IndexFunc(key, invalidKeyRune) != -1
 }
 
 func writeStringKey(w io.Writer, key string) error {
-	if len(key) == 0 || strings.IndexFunc(key, invalidKeyRune) != -1 {
+	if invalidKeyString(key) {
 		return ErrInvalidKey
 	}
 	_, err := io.WriteString(w, key)
@@ -177,7 +186,7 @@ func writeStringKey(w io.Writer, key string) error {
 }
 
 func writeBytesKey(w io.Writer, key []byte) error {
-	if len(key) == 0 || bytes.IndexFunc(key, invalidKeyRune) != -1 {
+	if invalidKey(key) {
 		return ErrInvalidKey
 	}
 	_, err := w.Write(key)
@@ -223,7 +232,7 @@ func writeValue(w io.Writer, value interface{}) error {
 }
 
 func needsQuotedValueRune(r rune) bool {
-	return r <= ' ' || r == '=' || r == '"'
+	return r <= ' ' || r == '=' || r == '"' || r == utf8.RuneError
 }
 
 func writeStringValue(w io.Writer, value string, ok bool) error {
@@ -240,7 +249,7 @@ func writeStringValue(w io.Writer, value string, ok bool) error {
 
 func writeBytesValue(w io.Writer, value []byte) error {
 	var err error
-	if bytes.IndexFunc(value, needsQuotedValueRune) >= 0 {
+	if bytes.IndexFunc(value, needsQuotedValueRune) != -1 {
 		_, err = writeQuotedBytes(w, value)
 	} else {
 		_, err = w.Write(value)
