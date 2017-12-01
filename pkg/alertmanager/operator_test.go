@@ -22,6 +22,6 @@ func TestListOptions(t *testing.T) {
 	expected := "app=alertmanager,alertmanager=test"
 	o := ListOptions("test")
 	if o.LabelSelector != expected {
-		t.Fatal("LabelSelector not computed correctly")
+		t.Fatalf("LabelSelector not computed correctly\n\nExpected: %#+v\n\nGot:      %#+v", expected, o.LabelSelector)
 	}
 }
