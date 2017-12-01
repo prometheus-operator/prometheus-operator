@@ -27,7 +27,7 @@ touch $HOME/.kube/config
 
 export KUBECONFIG=$HOME/.kube/config
 minikube version
-sudo minikube start --vm-driver=none --memory=4096 --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.Authorization.Mode=RBAC
+sudo minikube start --vm-driver=none --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.Authorization.Mode=RBAC
 
 minikube update-context
 
