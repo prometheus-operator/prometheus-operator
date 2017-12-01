@@ -15,4 +15,4 @@ jobs:
   - stage: Unit tests
     script: make test
   - stage: E2e tests
-    script: travis_wait 60 ./scripts/travis-e2e.sh
+    script: ./scripts/travis-e2e.sh
