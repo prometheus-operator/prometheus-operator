@@ -6,9 +6,7 @@ services:
 - docker
 jobs:
   include:
-  - stage: Check generated contents are up to date and code is formatted.
+  - stage: test
     script: ./scripts/check-make-generate.sh
-  - stage: Unit tests
-    script: make test
-  - stage: E2e tests
-    script: travis_wait 30 ./scripts/travis-e2e.sh
+  - script: make test
+  - script: travis_wait 30 ./scripts/travis-e2e.sh
