@@ -16,3 +16,5 @@ jobs:
     script: make test
   - stage: E2e tests
     script: ./scripts/travis-e2e.sh
+  - stage: E2e helm
+    script: ./scripts/travis-e2e-helm.sh

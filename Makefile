@@ -42,6 +42,9 @@ e2e:
 	$(MAKE) container
 	$(MAKE) e2e-test
 
+e2e-helm:
+	./helm/hack/e2e-test.sh
+
 clean-e2e:
 	kubectl -n $(NAMESPACE) delete prometheus,alertmanager,servicemonitor,statefulsets,deploy,svc,endpoints,pods,cm,secrets,replicationcontrollers --all
 	kubectl delete namespace $(NAMESPACE)
