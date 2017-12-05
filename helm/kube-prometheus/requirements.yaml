@@ -6,10 +6,12 @@ dependencies:
 
   - name: prometheus-operator
     version: 0.0.7
+    #e2e-repository: file://../prometheus-operator
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
     
   - name: grafana
     version: 0.0.4
+    #e2e-repository: file://../grafana
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
     
   - name: prometheus

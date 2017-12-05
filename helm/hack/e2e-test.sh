@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+#// TODO move this test and dependencies to a docker container
 set -o errexit
 set -o nounset
 set -o pipefail
