@@ -21,5 +21,14 @@ jobs:
     script: ./scripts/travis-e2e.sh
   - stage: E2e helm
     script: ./scripts/travis-e2e-helm.sh
-  - stage: helm update
-    script: 'if [ "$TRAVIS_BRANCH" == "master" ]; then make helm-packages; fi'
+
+deploy:
+  provider: script
+  script: helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-api \
+                exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node \
+                exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes" && \
+        helm/hack/sync-repo.sh && \
+        helm/hack/helm-package.sh kube-prometheus && \
+        helm/hack/sync-repo.sh
+  on:
+    branch: master
