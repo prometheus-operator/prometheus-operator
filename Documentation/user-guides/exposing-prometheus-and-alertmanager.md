@@ -5,13 +5,13 @@
 
 # Exposing Prometheus and Alertmanager
 
-The Prometheus Operator takes care of operating Prometheus and Alertmanagers clusters, however, there are many ways in Kubernetes to expose these to the outside world. This document outlines best practices and caveats to do so in various ways.
+The Prometheus Operator takes care of operating Prometheus and Alertmanagers clusters. Kubernetes provides several ways to expose these clusters to the outside world. This document outlines best practices and caveats for exposing Prometheus and Alertmanager clusters.
 
 ## NodePort
 
-The easiest way to expose Prometheus or Alertmanager is to use a `Service` of type `NodePort`.
+The easiest way to expose Prometheus or Alertmanager is to use a Service of type `NodePort`.
 
-Let's create a simple `Prometheus` object with one replica.
+Create a simple Prometheus object with one replica:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -26,7 +26,7 @@ spec:
       memory: 400Mi
 ```
 
-All Prometheus `Pod`s are labeled with `prometheus: <prometheus-name>`, as the Prometheus object's name is `main`, the selector ends up being `prometheus: main`. Meaning, the respective manifest for the `Service` needs the selector to be `prometheus: main`.
+All Prometheus Pods are labeled with `prometheus: <prometheus-name>`. If the Prometheus object's name is `main`, the selector is `prometheus: main`. This means that the respective manifest for the `Service` must define the selector as `prometheus: main`.
 
 ```yaml
 apiVersion: v1
@@ -45,9 +45,9 @@ spec:
     prometheus: main
 ```
 
-After creating a `Service` with the above manifest, the web UI of Prometheus will be accessible by browsing to any of the worker nodes using `http://<node-ip>:30900/`.
+After creating a Service with the above manifest, the web UI of Prometheus will be accessible by browsing to any of the worker nodes using `http://<node-ip>:30900/`.
 
-Exposing the Alertmanager works in the same fashion, the only difference being, that the selector is `alertmanager: <alertmanager-name>`.
+Exposing the Alertmanager works in the same fashion, with the selector `alertmanager: <alertmanager-name>`.
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -81,19 +81,19 @@ spec:
     alertmanager: main
 ```
 
-And the Alertmanager web UI will be available at `http://<node-ip>:30903/`.
+The Alertmanager web UI will be available at `http://<node-ip>:30903/`.
 
 ## Kubernetes API
 
-The Kubernetes API has a feature of forwarding requests from the API to a cluster internal `Service`. The general URL scheme to access these is:
+The Kubernetes API has a feature of forwarding requests from the API to a cluster internal Service. The general URL scheme to access these is:
 
 ```
 http(s)://master-host/api/v1/proxy/namespaces/<namespace>/services/<service-name>:<port-name-or-number>/
 ```
 
-> Note for ease of use, you can use `kubectl proxy`, it proxies requests from a local address to the Kubernetes API server and handles authentication for you.
+> For ease of use, use `kubectl proxy`. It proxies requests from a local address to the Kubernetes API server and handles authentication.
 
-To be able to do so, create a `Service` of type `ClusterIP`:
+To be able to do so, create a Service of type `ClusterIP`:
 
 ```yaml
 apiVersion: v1
@@ -111,7 +111,7 @@ spec:
     prometheus: main
 ```
 
-A caveat about this is that Prometheus and Alertmanager need to be configured with the full URL they are going to be exposed at. Therefore the `Prometheus` manifest will need an entry for `externalUrl`:
+Prometheus and Alertmanager must be configured with the full URL at which they will be exposed. Therefore the Prometheus manifest requires an entry for `externalUrl`:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -127,11 +127,11 @@ spec:
       memory: 400Mi
 ```
 
-> Note the `externalUrl` used there uses the host `127.0.0.1:8001`, which is how `kubectl proxy` exposes the Kubernetes API by default.
+> Note the `externalUrl` uses the host `127.0.0.1:8001`, which is how `kubectl proxy` exposes the Kubernetes API by default.
 
-Once the Prometheus `Pod`s are running they are reachable under the specified `externalUrl`.
+Once the Prometheus Pods are running they are reachable under the specified `externalUrl`.
 
-The Alertmanager works with the same approach so the manifest for the `Alertmanager` object is simply the following:
+The Alertmanager object's manifest follows the same rules:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -147,7 +147,7 @@ spec:
       memory: 400Mi
 ```
 
-And the respective `Service`:
+And the respective Service:
 
 ```yaml
 apiVersion: v1
@@ -167,23 +167,23 @@ spec:
 
 Then it will be available under http://127.0.0.1:8001/api/v1/proxy/namespaces/default/services/alertmanager-main:web/.
 
-> Note the URL used there uses the host `127.0.0.1:8001`, which is how `kubectl proxy` exposes the Kubernetes API by default.
+> Note the URL for the Service uses the host `127.0.0.1:8001`, which is how `kubectl proxy` exposes the Kubernetes API by default.
 
 ## Ingress
 
-Exposing the Prometheus or Alertmanager web UI via an `Ingress` object is requires a running ingress controller. If you are unfamiliar with Ingress, have a look at the [documentation](https://kubernetes.io/docs/user-guide/ingress/).
+Exposing the Prometheus or Alertmanager web UI through an Ingress object requires a running Ingress controller. For more information, see the Kubernetes documentation on [Ingress][ingress-doc].
 
-This example was tested with the [nginx ingress controller](https://github.com/kubernetes/ingress/tree/master/controllers/nginx).  For a quick-start for running the nginx ingress controller run:
+This example was tested with the [NGINX Ingress Controller][nginx-ingress]. For a quick-start for running the NGINX Ingress Controller run:
 
 ```
 kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/deployment/nginx/nginx-ingress-controller.yaml
 ```
 
-> It is highly recommended to compare the available ingress controllers for a production environment. The nginx ingress controller may or may not be what is suitable for your production environment. Also have a look at HA Proxy, Træfɪk, GCE, AWS, and more.
+> Be certain to evaluate available Ingress controllers for the specifics of your  production environment. The NGINX Ingress Controller may or may not be suitable. Consider other solutions, like HA Proxy, Træfɪk, GCE, or AWS.
 
-> WARNING: If you ingress is exposed to the internet, everyone can have full acesss on your resources. It's strongly recommend to enable an [external authentication](https://github.com/kubernetes/ingress/blob/858e3ff2354fb0f5066a88774b904b2427fb9433/examples/external-auth/nginx/README.md) or [whitelisting ip address](https://github.com/kubernetes/ingress/blob/7ca7652ab26e1a5775f3066f53f28d5ea5eb3bb7/controllers/nginx/configuration.md#whitelist-source-range)
+> WARNING: If your Ingress is exposed to the internet, everyone can have full access on your resources. It's strongly recommend to enable an [external authentication][external-auth] or [whitelisting IP address][whitelist-ip].
 
-An `Ingress` object also requires a `Service` to be setup as the requests are simply routed from the ingress endpoint to the internal `Service`.
+An Ingress object also requires a Service to be set up, as the requests are routed from the Ingress endpoint to the internal Service.
 
 ```yaml
 apiVersion: v1
@@ -215,7 +215,7 @@ spec:
     alertmanager: main
 ```
 
-Then a corresponding `Ingress` object would be as follows.
+A corresponding Ingress object would be:
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -223,7 +223,7 @@ kind: Ingress
 metadata:
   name: monitoring
   annotations:
-    ingress.kubernetes.io/whitelist-source-range: 10.0.0.0/16 # change this range to admin ips
+    ingress.kubernetes.io/whitelist-source-range: 10.0.0.0/16 # change this range to admin IPs
     ingress.kubernetes.io/rewrite-target: "/"
 spec:
   rules:
@@ -239,7 +239,7 @@ spec:
         path: /alertmanager
 ```
 
-Lastly the `Prometheus` and `Alertmanager` objects need to be created with the `externalUrl` they are going to be browsed to.
+Finally, the Prometheus and `Alertmanager` objects must be created, specifying the `externalUrl` at which they will be found.
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -267,4 +267,10 @@ spec:
       memory: 400Mi
 ```
 
-> Note that there is the path `/prometheus` at the end of the `externalUrl`, as that is what was specified in the `Ingress` object.
+> Note the path `/prometheus` at the end of the `externalUrl`, as specified in the `Ingress` object.
+
+
+[ingress-doc]: https://kubernetes.io/docs/user-guide/ingress/
+[nginx-ingress]: https://github.com/kubernetes/ingress/tree/master/controllers/nginx
+[external-auth]: https://github.com/kubernetes/ingress/blob/858e3ff2354fb0f5066a88774b904b2427fb9433/examples/external-auth/nginx/README.md
+[whitelist-ip]: https://github.com/kubernetes/ingress/blob/7ca7652ab26e1a5775f3066f53f28d5ea5eb3bb7/controllers/nginx/configuration.md#whitelist-source-range
