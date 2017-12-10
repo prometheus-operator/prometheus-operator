@@ -19,9 +19,10 @@ import (
 )
 
 func TestListOptions(t *testing.T) {
-	expected := "app=prometheus,prometheus=test"
-	o := ListOptions("test")
-	if o.LabelSelector != expected {
-		t.Fatalf("LabelSelector not computed correctly\n\nExpected: %#+v\n\nGot:      %#+v", expected, o.LabelSelector)
+	for i := 0; i < 1000; i++ {
+		o := ListOptions("test")
+		if o.LabelSelector != "app=prometheus,prometheus=test" && o.LabelSelector != "prometheus=test,app=prometheus" {
+			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app=prometheus,prometheus=test\"\n\nGot:      %#+v", o.LabelSelector)
+		}
 	}
 }
