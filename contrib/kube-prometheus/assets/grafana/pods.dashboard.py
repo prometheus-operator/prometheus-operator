@@ -132,6 +132,18 @@ dashboard = Dashboard(
                             'refId': 'B',
                             'step': 20,
                         },
+                        {
+                            'expr': 'kube_pod_container_resource_limits_'
+                            'memory_bytes{pod="$pod", container=~'
+                            '"$container"}',
+                            'interval': '10s',
+                            'intervalFactor': 2,
+                            'legendFormat': 'Limit: {{ container }}',
+                            'metric': 'kube_pod_container_resource_'
+                            'limits_memory_bytes',
+                            'refId': 'C',
+                            'step': 20,
+                        },
                     ],
                 ),
             ],
@@ -169,6 +181,30 @@ dashboard = Dashboard(
                             'legendFormat': '{{ container_name }}',
                             'refId': 'A',
                             'step': 30
+                        },
+                        {
+                            'expr': 'kube_pod_container_resource_requests_'
+                            'cpu_cores{pod="$pod", container=~'
+                            '"$container"}',
+                            'interval': '10s',
+                            'intervalFactor': 2,
+                            'legendFormat': 'Requested: {{ container }}',
+                            'metric': 'kube_pod_container_resource_'
+                            'requests_cpu_cores',
+                            'refId': 'B',
+                            'step': 20,
+                        },
+                        {
+                            'expr': 'kube_pod_container_resource_limits_'
+                            'cpu_cores{pod="$pod", container=~'
+                            '"$container"}',
+                            'interval': '10s',
+                            'intervalFactor': 2,
+                            'legendFormat': 'Limit: {{ container }}',
+                            'metric': 'kube_pod_container_resource_'
+                            'limits_memory_bytes',
+                            'refId': 'C',
+                            'step': 20,
                         },
                     ],
                 ),

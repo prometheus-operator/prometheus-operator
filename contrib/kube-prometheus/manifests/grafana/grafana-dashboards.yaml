@@ -5241,6 +5241,15 @@ data:
                   "metric": "kube_pod_container_resource_requests_memory_bytes",
                   "refId": "B",
                   "step": 20
+                },
+                {
+                  "expr": "kube_pod_container_resource_limits_memory_bytes{pod=\"$pod\", container=~\"$container\"}",
+                  "interval": "10s",
+                  "intervalFactor": 2,
+                  "legendFormat": "Limit: {{ container }}",
+                  "metric": "kube_pod_container_resource_limits_memory_bytes",
+                  "refId": "C",
+                  "step": 20
                 }
               ],
               "title": "Memory Usage",
@@ -5327,6 +5336,24 @@ data:
                   "legendFormat": "{{ container_name }}",
                   "refId": "A",
                   "step": 30
+                },
+                {
+                  "expr": "kube_pod_container_resource_requests_cpu_cores{pod=\"$pod\", container=~\"$container\"}",
+                  "interval": "10s",
+                  "intervalFactor": 2,
+                  "legendFormat": "Requested: {{ container }}",
+                  "metric": "kube_pod_container_resource_requests_cpu_cores",
+                  "refId": "B",
+                  "step": 20
+                },
+                {
+                  "expr": "kube_pod_container_resource_limits_cpu_cores{pod=\"$pod\", container=~\"$container\"}",
+                  "interval": "10s",
+                  "intervalFactor": 2,
+                  "legendFormat": "Limit: {{ container }}",
+                  "metric": "kube_pod_container_resource_limits_memory_bytes",
+                  "refId": "C",
+                  "step": 20
                 }
               ],
               "title": "CPU Usage",
