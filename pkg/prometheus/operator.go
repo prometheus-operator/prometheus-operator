@@ -1000,9 +1000,8 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 		return nil, err
 	}
 
-	// Only service monitors within the same namespace as the Prometheus
-	// object can belong to it.
-	cache.ListAllByNamespace(c.smonInf.GetIndexer(), p.Namespace, selector, func(obj interface{}) {
+	// Use specified namespace for ServiceMonitor scope (default v1.NamespaceAll)
+	cache.ListAllByNamespace(c.smonInf.GetIndexer(), c.config.Namespace, selector, func(obj interface{}) {
 		k, ok := c.keyFunc(obj)
 		if ok {
 			res[k] = obj.(*monitoringv1.ServiceMonitor)
