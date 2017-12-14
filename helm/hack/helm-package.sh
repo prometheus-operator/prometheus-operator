@@ -15,13 +15,14 @@ HELM_CHARTS_PACKAGED_DIR=${3:-"/tmp/helm-packaged"}
 
 wget -q ${HELM_URL}/${HELM_TARBALL}
 tar xzfv ${HELM_TARBALL}
-export PATH=${PATH}:$(pwd)/linux-amd64/helm
+export PATH=${PATH}:$(pwd)/linux-amd64/
 
 # Clean up tarball
 rm -f ${HELM_TARBALL}
 
 # Package helm and dependencies
 mkdir -p ${HELM_CHARTS_PACKAGED_DIR}
+helm init --client-only
 
 # check if charts has dependencies,
 for chart in ${HELM_PACKAGES}
@@ -37,3 +38,4 @@ do
 done
 
 helm repo index ${HELM_CHARTS_PACKAGED_DIR} --url https://s3-eu-west-1.amazonaws.com/${HELM_BUCKET_NAME}/stable/ --debug
+
