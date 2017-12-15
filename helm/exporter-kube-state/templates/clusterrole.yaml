@@ -7,11 +7,11 @@ apiVersion: rbac.authorization.k8s.io/v1alpha1
 kind: ClusterRole
 metadata:
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "exporter-kube-state.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "fullname" . }}
+  name: {{ template "exporter-kube-state.fullname" . }}
 rules:
 - apiGroups: [""]
   resources:

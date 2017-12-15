@@ -1,4 +1,4 @@
-{{- $app := include "name" . -}}
+{{- $app := include "prometheus.name" . -}}
 {{- $releaseName := .Release.Name -}}
 {{- $chartName := .Chart.Name -}}
 {{- $chartVersion := .Chart.Version -}}

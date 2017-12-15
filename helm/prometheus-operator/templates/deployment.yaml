@@ -2,23 +2,23 @@ apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "prometheus-operator.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     operator: prometheus
     release: {{ .Release.Name }}
-  name: {{ template "fullname" . }}
+  name: {{ template "prometheus-operator.fullname" . }}
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: {{ template "name" . }}
+        app: {{ template "prometheus-operator.name" . }}
         operator: prometheus
         release: {{ .Release.Name }}
     spec:
       containers:
-        - name: {{ template "name" . }}
+        - name: {{ template "prometheus-operator.name" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           args:
@@ -27,6 +27,9 @@ spec:
           {{- end }}
             - --prometheus-config-reloader={{ .Values.prometheusConfigReloader.repository }}:{{ .Values.prometheusConfigReloader.tag }}
             - --config-reloader-image={{ .Values.configmapReload.repository }}:{{ .Values.configmapReload.tag }}
+          {{- if lt .Values.image.tag "v0.13.0" }}
+            - --analytics=false
+          {{- end }}
           ports:
             - containerPort: 8080
               name: http
@@ -37,5 +40,5 @@ spec:
 {{ toYaml .Values.nodeSelector | indent 8 }}
     {{- end }}
     {{- if .Values.rbacEnable }}
-      serviceAccountName: {{ template "fullname" . }}
+      serviceAccountName: {{ template "prometheus-operator.fullname" . }}
     {{- end }}

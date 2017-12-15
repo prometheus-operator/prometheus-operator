@@ -7,17 +7,17 @@ apiVersion: rbac.authorization.k8s.io/v1alpha1
 kind: Role
 metadata:
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "exporter-kube-state.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "fullname" . }}
+  name: {{ template "exporter-kube-state.fullname" . }}
 rules:
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get"]
 - apiGroups: ["extensions"]
   resources: ["deployments"]
-  resourceNames: [{{ template "fullname" . }}]
+  resourceNames: [{{ template "exporter-kube-state.fullname" . }}]
   verbs: ["get", "update"]
 {{- end }}

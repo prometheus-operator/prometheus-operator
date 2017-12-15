@@ -14,21 +14,21 @@ def get_header(file_name):
 ####
 charts = [
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/alertmanager.rules.yaml',
-'destination': 'helm/alertmanager/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+'destination': 'helm/alertmanager/', 'job_replace_by': '{{ template \"alertmanager.fullname\" .  }}'},
 {'source': 'contrib/kube-prometheus/assets/prometheus/rules/kube-controller-manager.rules.yaml',
-'destination': 'helm/exporter-kube-controller-manager/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+'destination': 'helm/exporter-kube-controller-manager/', 'job_replace_by': '{{ template \"exporter-kube-controller-manager.fullname\" .  }}'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/kube-scheduler.rules.yaml',
-'destination': 'helm/exporter-kube-scheduler/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+'destination': 'helm/exporter-kube-scheduler/', 'job_replace_by': '{{ template \"exporter-kube-scheduler.fullname\" .  }}'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/kube-state-metrics.rules.yaml',
-'destination': 'helm/exporter-kube-state/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+'destination': 'helm/exporter-kube-state/', 'job_replace_by': '{{ template \"exporter-kube-state.fullname\" .  }}'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/node.rules.yaml',
-'destination': 'helm/exporter-node/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+'destination': 'helm/exporter-node/', 'job_replace_by': '{{ template \"exporter-node.fullname\" .  }}'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/prometheus.rules.yaml', 
-'destination': 'helm/prometheus/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+'destination': 'helm/prometheus/', 'job_replace_by': '{{ template \"prometheus.fullname\" .  }}'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/etcd3.rules.yaml', 
-'destination': 'helm/exporter-kube-etcd/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+'destination': 'helm/exporter-kube-etcd/', 'job_replace_by': '{{ template \"exporter-kube-etcd.fullname\" .  }}'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/general.rules.yaml', 
-'destination': 'helm/kube-prometheus/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+'destination': 'helm/kube-prometheus/', 'job_replace_by': '{{ template \"kube-prometheus.fullname\" .  }}'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/kubelet.rules.yaml', 
 'destination': 'helm/exporter-kubelets/', 'job_replace_by': 'kubelet'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/kubernetes.rules.yaml', 
@@ -65,7 +65,7 @@ with open('contrib/kube-prometheus/manifests/grafana/grafana-dashboards.yaml', '
 # prometheus datasource it's not required now 
 del data['prometheus-datasource.json']
 
-data_s = get_header("grafana-dashboards.yaml.tpl")
+data_s = get_header("grafana-dashboards.yaml")
 data_s += escape(yaml.dump(data, Dumper=yaml.RoundTripDumper))
 data_s += "{{ end }}" # footer
 
