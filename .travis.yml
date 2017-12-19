@@ -26,4 +26,4 @@ deploy:
   provider: script
   script: make helm-sync-s3
   on:
-    branch: master
+    branch: master 

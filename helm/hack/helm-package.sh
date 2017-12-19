@@ -12,6 +12,7 @@ HELM_PACKAGES=${1}
 HELM_BUCKET_NAME="coreos-charts"
 HELM_CHARTS_DIRECTORY=${2:-"$(pwd)/helm"}
 HELM_CHARTS_PACKAGED_DIR=${3:-"/tmp/helm-packaged"}
+HELM_REPO_URL=https://s3-eu-west-1.amazonaws.com/${HELM_BUCKET_NAME}/stable/
 
 wget -q ${HELM_URL}/${HELM_TARBALL}
 tar xzfv ${HELM_TARBALL}
@@ -23,6 +24,7 @@ rm -f ${HELM_TARBALL}
 # Package helm and dependencies
 mkdir -p ${HELM_CHARTS_PACKAGED_DIR}
 helm init --client-only
+helm repo add ${HELM_BUCKET_NAME} ${HELM_REPO_URL} 
 
 # check if charts has dependencies,
 for chart in ${HELM_PACKAGES}
@@ -37,5 +39,5 @@ do
     # done
 done
 
-helm repo index ${HELM_CHARTS_PACKAGED_DIR} --url https://s3-eu-west-1.amazonaws.com/${HELM_BUCKET_NAME}/stable/ --debug
+helm repo index ${HELM_CHARTS_PACKAGED_DIR} --url ${HELM_REPO_URL} --debug
 
