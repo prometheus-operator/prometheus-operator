@@ -555,3 +555,30 @@ data:
         annotations:
           description: Prometheus {{ $labels.namespace }}/{{ $labels.pod}} is not connected
             to any Alertmanagers
+      - alert: PrometheusTSDBReloadsFailing
+        expr: increase(prometheus_tsdb_reloads_failures_total[2h]) > 0
+        for: 12h
+        labels:
+          severity: warning
+        annotations:
+          description: '{{$labels.job}} at {{$labels.instance}} had {{$value | humanize}}
+            reload failures over the last four hours.'
+          summary: Prometheus has issues reloading data blocks from disk
+      - alert: PrometheusTSDBCompactionsFailing
+        expr: increase(prometheus_tsdb_compactions_failed_total[2h]) > 0
+        for: 12h
+        labels:
+          severity: warning
+        annotations:
+          description: '{{$labels.job}} at {{$labels.instance}} had {{$value | humanize}}
+            compaction failures over the last four hours.'
+          summary: Prometheus has issues compacting sample blocks
+      - alert: PrometheusTSDBWALCorruptions
+        expr: tsdb_wal_corruptions_total > 0
+        for: 4h
+        labels:
+          severity: warning
+        annotations:
+          description: '{{$labels.job}} at {{$labels.instance}} has a corrupted write-ahead
+            log (WAL).'
+          summary: Prometheus write-ahead log is corrupted
