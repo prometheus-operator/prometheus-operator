@@ -114,6 +114,10 @@ type PrometheusSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// If specified, the pod's tolerations.
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// SecurityContext holds pod-level security attributes and common container settings.
+	// This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and
+	// default PodSecurityContext for other versions.
+	SecurityContext *v1.PodSecurityContext
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not
