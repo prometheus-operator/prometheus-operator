@@ -374,6 +374,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 	}
 	promArgs = append(promArgs, "-web.route-prefix="+webRoutePrefix)
 
+	if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
+		promArgs = append(promArgs, fmt.Sprintf("-log.level=%s", p.Spec.LogLevel))
+	}
+
 	if version.Major == 2 {
 		for i, a := range promArgs {
 			promArgs[i] = "-" + a
