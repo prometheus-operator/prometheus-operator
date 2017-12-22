@@ -1,11 +1,11 @@
 .PHONY: image
-	
-IMAGE := coreos/generate-prometheus-operator-manifests
 
-image: Dockerfile
-	docker build -t $(IMAGE) .
+image:
+	docker build -f ../../scripts/jsonnet/Dockerfile -t po-jsonnet ../../
 
-BUILDER := docker run --rm -it --workdir /data -v ${PWD}:/data $(IMAGE) ./hack/scripts/generate-manifests.sh
 generate: image
 	@echo ">> Compiling assets and generating Kubernetes manifests"
-	$(BUILDER)
+	docker run --rm -v `pwd`:/go/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus --workdir /go/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus po-jsonnet make generate-raw
+
+generate-raw:
+	./hack/scripts/generate-manifests.sh
