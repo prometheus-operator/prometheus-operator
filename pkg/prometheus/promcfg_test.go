@@ -169,5 +169,39 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 		},
 	}
 
+	res["servicemonitor4"] = &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testservicemonitor4",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group6",
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group":  "group6",
+					"group3": "group7",
+				},
+			},
+			Endpoints: []monitoringv1.Endpoint{
+				monitoringv1.Endpoint{
+					Port:     "web",
+					Interval: "30s",
+					SkipMetrics: []*monitoringv1.SkipMetricConfig{
+						&monitoringv1.SkipMetricConfig{
+							Source: []string{"pod_name"},
+							Match: "my-job-pod-.+",
+						},
+						&monitoringv1.SkipMetricConfig{
+							Source: []string{"namespace"},
+							Match: "test",
+						},
+					},
+				},
+			},
+		},
+	}
+
 	return res
 }
