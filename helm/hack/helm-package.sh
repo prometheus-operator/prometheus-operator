@@ -13,8 +13,9 @@ HELM_BUCKET_NAME="coreos-charts"
 HELM_CHARTS_DIRECTORY=${2:-"$(pwd)/helm"}
 HELM_CHARTS_PACKAGED_DIR=${3:-"/tmp/helm-packaged"}
 HELM_REPO_URL=https://s3-eu-west-1.amazonaws.com/${HELM_BUCKET_NAME}/stable/
+HELM_INDEX="${HELM_CHARTS_PACKAGED_DIR}/index.yaml"
 
-wget -q ${HELM_URL}/${HELM_TARBALL}
+wget ${HELM_URL}/${HELM_TARBALL}
 tar xzfv ${HELM_TARBALL}
 export PATH=${PATH}:$(pwd)/linux-amd64/
 
@@ -39,5 +40,9 @@ do
     # done
 done
 
-helm repo index ${HELM_CHARTS_PACKAGED_DIR} --url ${HELM_REPO_URL} --debug
+# donwload the current remote index.yaml 
+if [ ! -f "${HELM_INDEX}" ]; then
+    wget ${HELM_REPO_URL}index.yaml -O "${HELM_INDEX}"
+fi
 
+helm repo index ${HELM_CHARTS_PACKAGED_DIR} --url ${HELM_REPO_URL} --debug --merge ${HELM_INDEX}
