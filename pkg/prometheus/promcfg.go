@@ -362,6 +362,22 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
+	if ep.SkipMetrics != nil {
+		var metricRelabelings []yaml.MapSlice
+		for _, t := range ep.SkipMetrics {
+			sources := make([]string, 0)
+			for _, s := range t.Source {
+				sources = append(sources, sanitizeLabelName(s))
+			}
+			metricRelabelings = append(metricRelabelings, yaml.MapSlice{
+				{Key: "source_labels", Value: sources},
+				{Key: "regex", Value: t.Match},
+				{Key: "action", Value: "drop"},
+			})
+		}
+		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: metricRelabelings})
+	}
+
 	return cfg
 }
 
