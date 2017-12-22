@@ -16,12 +16,13 @@ package v1
 
 import (
 	"fmt"
+	"strings"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"strings"
 )
 
 const (
@@ -94,6 +95,7 @@ type MonitoringV1Interface interface {
 	ServiceMonitorsGetter
 }
 
+// +k8s:deepcopy-gen=false
 type MonitoringV1Client struct {
 	restClient    rest.Interface
 	dynamicClient *dynamic.Client

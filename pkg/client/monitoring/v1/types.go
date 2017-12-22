@@ -368,25 +368,25 @@ type NamespaceSelector struct {
 }
 
 func (l *Alertmanager) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for Alertmanager")
+	return l.DeepCopy()
 }
 
 func (l *AlertmanagerList) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for AlertmanagerList")
+	return l.DeepCopy()
 }
 
 func (l *Prometheus) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for Prometheus")
+	return l.DeepCopy()
 }
 
 func (l *PrometheusList) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for PrometheusList")
+	return l.DeepCopy()
 }
 
 func (l *ServiceMonitor) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for ServiceMonitor")
+	return l.DeepCopy()
 }
 
 func (l *ServiceMonitorList) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for ServiceMonitorList")
+	return l.DeepCopy()
 }
