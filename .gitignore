@@ -8,3 +8,4 @@ requirements.lock
 .DS_Store
 __pycache__
 .env/
+.history/

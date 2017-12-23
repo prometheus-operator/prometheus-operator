@@ -1,63 +1,73 @@
 #!/usr/bin/env python
+import os
+import re
+from ruamel import yaml 
+  
+def escape(s):
+  return s.replace("{{","{{`{{").replace("}}","}}`}}")
+  
+def get_header(file_name):
+  return "{{ define \"" + file_name + ".tpl\" }}\n" 
+
 #####
-## This script read the kube-prometheus rules and convert into helm charts format
+## Step 1 - Sync prometheus alert rules, create template file
 ####
-### ----------------------------
-###  Sync all prometheus rules
-###
-charts = [{'file_name': 'alertmanager', 'search_var': 'ruleFiles',
-'source':'contrib/kube-prometheus/assets/prometheus/rules/alertmanager.rules.yaml',
-'destination': 'helm/alertmanager/values.yaml'},
-{'file_name': 'kube-controller-manager', 'search_var': 'ruleFiles', 'source':'contrib/kube-prometheus/assets/prometheus/rules/kube-controller-manager.rules.yaml',
-'destination': 'helm/exporter-kube-controller-manager/values.yaml'},
-{'file_name': 'kube-scheduler', 'search_var': 'ruleFiles', 'source':'contrib/kube-prometheus/assets/prometheus/rules/kube-scheduler.rules.yaml',
-'destination': 'helm/exporter-kube-scheduler/values.yaml'},
-{'file_name': 'kube-state-metrics',  'search_var': 'ruleFiles', 'source':'contrib/kube-prometheus/assets/prometheus/rules/kube-state-metrics.rules.yaml',
-'destination': 'helm/exporter-kube-state/values.yaml'},
-{'file_name': 'node',  'search_var': 'ruleFiles', 'source':'contrib/kube-prometheus/assets/prometheus/rules/node.rules.yaml',
-'destination': 'helm/exporter-node/values.yaml'},
-{'file_name': 'prometheus',  'search_var': 'ruleFiles', 'source':'contrib/kube-prometheus/assets/prometheus/rules/prometheus.rules.yaml', 
-'destination': 'helm/prometheus/values.yaml'},
-{'file_name': 'etcd3',  'search_var': 'ruleFiles', 'source':'contrib/kube-prometheus/assets/prometheus/rules/etcd3.rules.yaml', 
-'destination': 'helm/exporter-kube-etcd/values.yaml'},
-# //TODO add {'file_name': 'general',  'search_var': 'ruleFiles', 'source':'contrib/kube-prometheus/assets/prometheus/rules/general.rules.yaml', 
-# 'destination': 'helm/kube-prometheus/general_rules.yaml'},
-{'file_name': 'kubelet',  'search_var': 'ruleFiles', 'source':'contrib/kube-prometheus/assets/prometheus/rules/kubelet.rules.yaml', 
-'destination': 'helm/exporter-kubelets/values.yaml'},
-{'file_name': 'kubernetes',  'search_var': 'ruleFiles', 'source':'contrib/kube-prometheus/assets/prometheus/rules/kubernetes.rules.yaml', 
-'destination': 'helm/exporter-kubernetes/values.yaml'},
-### 
-###  Sync grafana dashboards
-###
-{'file_name': 'grafana-dashboards-0', 'search_var': 'serverDashboardFiles', 'source':'contrib/kube-prometheus/manifests/grafana/grafana-dashboards.yaml', 
-'destination': 'helm/grafana/values.yaml'},
+charts = [
+{'source':'contrib/kube-prometheus/assets/prometheus/rules/alertmanager.rules.yaml',
+'destination': 'helm/alertmanager/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+{'source': 'contrib/kube-prometheus/assets/prometheus/rules/kube-controller-manager.rules.yaml',
+'destination': 'helm/exporter-kube-controller-manager/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+{'source':'contrib/kube-prometheus/assets/prometheus/rules/kube-scheduler.rules.yaml',
+'destination': 'helm/exporter-kube-scheduler/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+{'source':'contrib/kube-prometheus/assets/prometheus/rules/kube-state-metrics.rules.yaml',
+'destination': 'helm/exporter-kube-state/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+{'source':'contrib/kube-prometheus/assets/prometheus/rules/node.rules.yaml',
+'destination': 'helm/exporter-node/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+{'source':'contrib/kube-prometheus/assets/prometheus/rules/prometheus.rules.yaml', 
+'destination': 'helm/prometheus/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+{'source':'contrib/kube-prometheus/assets/prometheus/rules/etcd3.rules.yaml', 
+'destination': 'helm/exporter-kube-etcd/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+{'source':'contrib/kube-prometheus/assets/prometheus/rules/general.rules.yaml', 
+'destination': 'helm/kube-prometheus/', 'job_replace_by': '{{ template \"fullname\" .  }}'},
+{'source':'contrib/kube-prometheus/assets/prometheus/rules/kubelet.rules.yaml', 
+'destination': 'helm/exporter-kubelets/', 'job_replace_by': 'kubelet'},
+{'source':'contrib/kube-prometheus/assets/prometheus/rules/kubernetes.rules.yaml', 
+'destination': 'helm/exporter-kubernetes/', 'job_replace_by': 'kubernetes'},
 ]
 
+# read the rules, create a new template file
 for chart in charts:
-  lines = ""
-  ## parse current values.yaml file
-  f = open(chart['destination'], 'r')
-  for l in f.readlines():
 
-    # stop reading file after the rule
-    if "{}:".format(chart['search_var']) in l:
-        break
-    lines+= l
+  _, name = os.path.split(chart['source'])
+  lines = get_header(name)
 
-  lines+= "{}:\n".format(chart['search_var'])
-  lines+= "  {}.rules: |-\n".format(chart['file_name'])
-
-
-  ## parse kube-prometheus rule
-  f =  open(chart['source'])
-  for l in f.readlines():
-    lines += "    {}".format(l)
+  f = open(chart['source'], 'r')
+  lines += escape(f.read())
+  lines = re.sub("job=\"(.*?)\"", "job=\"" + chart['job_replace_by'] + "\"", lines) #replace the job name by chart variable
+ 
+  lines += "{{ end }}" # footer
+  
+  new_f = "{}/templates/{}".format(chart['destination'], name)
 
   # recreate the file  
-  with open(chart['destination'], 'w') as f:
+  with open(new_f, 'w') as f:
       f.write(lines)
 
+  print "Generated {}".format(new_f)
 
-### ----------------------------
-### 2 
-###
+######
+## Step 2 - Parse grafana dashboards, create a template file
+######
+
+with open('contrib/kube-prometheus/manifests/grafana/grafana-dashboards.yaml', 'r') as s:
+  data = yaml.load(s, Loader=yaml.RoundTripLoader)['data']
+
+# prometheus datasource it's not required now 
+del data['prometheus-datasource.json']
+
+data_s = get_header("grafana-dashboards.yaml.tpl")
+data_s += escape(yaml.dump(data, Dumper=yaml.RoundTripDumper))
+data_s += "{{ end }}" # footer
+
+with open('helm/grafana/templates/grafana-dashboards.yaml', 'w') as f:
+  f.write(data_s)

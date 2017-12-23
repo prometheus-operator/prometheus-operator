@@ -16,6 +16,6 @@ data:
 {{ $val | indent 4}}
 {{- end }}
 {{ else }}
-  node.rules: |-
-    {{- include "node.rules.yaml.tpl" . | indent 4}}
+  general.rules: |-
+    {{- include "general.rules.yaml.tpl" . | indent 4}}
 {{ end }}

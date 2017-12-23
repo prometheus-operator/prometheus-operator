@@ -4,6 +4,8 @@ engine: gotpl
 maintainers:
   - name: Michael Goodness
     email: mgoodness@gmail.com
+  - name: Giancarlo Rubio
+    email: gianrubio@gmail.com
 name: alertmanager
 sources:
   - https://github.com/coreos/prometheus-operator

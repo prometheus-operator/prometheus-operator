@@ -4,6 +4,9 @@ deployExporterNode: True
 # Grafana
 deployGrafana: True
 
+# Prometheus operator
+deployPrometheusOperator: False
+
 alertmanager:
   ## Alertmanager configuration directives
   ## Ref: https://prometheus.io/docs/alerting/configuration/
@@ -23,7 +26,6 @@ alertmanager:
         receiver: 'null'
     receivers:
     - name: 'null'
-
 
   ## External URL at which Alertmanager will be reachable
   ##
@@ -338,3 +340,6 @@ prometheus:
   #     requests:
   #       storage: 16Gi
   #   selector: {}
+
+# default rules are in templates/general.rules.yaml
+# prometheusRules: {}
