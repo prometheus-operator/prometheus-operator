@@ -4,9 +4,6 @@ deployExporterNode: True
 # Grafana
 deployGrafana: True
 
-# Prometheus operator
-deployPrometheusOperator: False
-
 alertmanager:
   ## Alertmanager configuration directives
   ## Ref: https://prometheus.io/docs/alerting/configuration/
