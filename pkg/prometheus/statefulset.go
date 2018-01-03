@@ -298,7 +298,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 	}
 
 	var promArgs []string
-	var securityContext v1.PodSecurityContext
+	var securityContext *v1.PodSecurityContext
 
 	switch version.Major {
 	case 1:
@@ -333,7 +333,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 			)
 		}
 
-		securityContext = v1.PodSecurityContext{}
+		securityContext = &v1.PodSecurityContext{}
 	case 2:
 
 		// Prometheus 2.0 is in alpha and is highly experimental, and therefore
@@ -355,13 +355,17 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		gid := int64(2000)
 		uid := int64(1000)
 		nr := true
-		securityContext = v1.PodSecurityContext{
+		securityContext = &v1.PodSecurityContext{
 			FSGroup:      &gid,
 			RunAsNonRoot: &nr,
 			RunAsUser:    &uid,
 		}
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
+	}
+
+	if p.Spec.SecurityContext != nil {
+		securityContext = p.Spec.SecurityContext
 	}
 
 	if p.Spec.ExternalURL != "" {
@@ -373,6 +377,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		webRoutePrefix = p.Spec.RoutePrefix
 	}
 	promArgs = append(promArgs, "-web.route-prefix="+webRoutePrefix)
+
+	if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
+		promArgs = append(promArgs, fmt.Sprintf("-log.level=%s", p.Spec.LogLevel))
+	}
 
 	if version.Major == 2 {
 		for i, a := range promArgs {
@@ -554,7 +562,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 						},
 					},
 				},
-				SecurityContext:               &securityContext,
+				SecurityContext:               securityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,

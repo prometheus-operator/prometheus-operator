@@ -1,8 +1,8 @@
-FROM golang:1.8-stretch
+FROM golang:1.9-stretch
 
 ENV JSONNET_VERSION 0.9.4
 
-RUN apt-get update -y && apt-get install -y g++ make git python-pip
+RUN apt-get update -y && apt-get install -y g++ make git python-pip python-virtualenv
 RUN cd /tmp && wget https://github.com/google/jsonnet/archive/v${JSONNET_VERSION}.tar.gz && \
     tar xvfz v${JSONNET_VERSION}.tar.gz && \
     cd jsonnet-${JSONNET_VERSION} && \

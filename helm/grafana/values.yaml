@@ -42,7 +42,7 @@ service:
 ##
 image:
   repository: grafana/grafana
-  tag: 4.4.1
+  tag: 4.6.3
 
 grafanaWatcher:
   repository: quay.io/coreos/grafana-watcher

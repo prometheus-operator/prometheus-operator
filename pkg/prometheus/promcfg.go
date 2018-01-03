@@ -135,6 +135,14 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 		},
 	})
 
+	if len(p.Spec.RemoteWrite) > 0 && version.Major >= 2 {
+		cfg = append(cfg, generateRemoteWriteConfig(version, p.Spec.RemoteWrite))
+	}
+
+	if len(p.Spec.RemoteRead) > 0 && version.Major >= 2 {
+		cfg = append(cfg, generateRemoteReadConfig(version, p.Spec.RemoteRead))
+	}
+
 	return yaml.Marshal(cfg)
 }
 
@@ -475,4 +483,165 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	return cfg
+}
+
+func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec) yaml.MapItem {
+
+	cfgs := []yaml.MapSlice{}
+
+	for _, spec := range specs {
+		//defaults
+		if spec.RemoteTimeout == "" {
+			spec.RemoteTimeout = "30s"
+		}
+
+		cfg := yaml.MapSlice{
+			{Key: "url", Value: spec.URL},
+			{Key: "remote_timeout", Value: spec.RemoteTimeout},
+		}
+
+		if spec.BasicAuth != nil {
+			cfg = append(cfg, yaml.MapItem{
+				Key: "basic_auth", Value: yaml.MapSlice{
+					{Key: "username", Value: spec.BasicAuth.Username},
+					{Key: "password", Value: spec.BasicAuth.Password},
+				},
+			})
+		}
+
+		if spec.BearerTokenFile != "" {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
+		}
+
+		if spec.TLSConfig != nil {
+			tlsConfig := yaml.MapSlice{
+				{Key: "insecure_skip_verify", Value: spec.TLSConfig.InsecureSkipVerify},
+			}
+			if spec.TLSConfig.CAFile != "" {
+				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: spec.TLSConfig.CAFile})
+			}
+			if spec.TLSConfig.CertFile != "" {
+				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: spec.TLSConfig.CertFile})
+			}
+			if spec.TLSConfig.KeyFile != "" {
+				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: spec.TLSConfig.KeyFile})
+			}
+			if spec.TLSConfig.ServerName != "" {
+				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: spec.TLSConfig.ServerName})
+			}
+			cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
+		}
+
+		if spec.ProxyURL != "" {
+			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
+		}
+
+		cfgs = append(cfgs, cfg)
+	}
+
+	return yaml.MapItem{
+		Key:   "remote_read",
+		Value: cfgs,
+	}
+}
+
+func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpec) yaml.MapItem {
+
+	cfgs := []yaml.MapSlice{}
+
+	for _, spec := range specs {
+		//defaults
+		if spec.RemoteTimeout == "" {
+			spec.RemoteTimeout = "30s"
+		}
+
+		cfg := yaml.MapSlice{
+			{Key: "url", Value: spec.URL},
+			{Key: "remote_timeout", Value: spec.RemoteTimeout},
+		}
+
+		if spec.WriteRelabelConfigs != nil {
+			relabelings := []yaml.MapSlice{}
+			for _, c := range spec.WriteRelabelConfigs {
+				relabeling := yaml.MapSlice{
+					{Key: "source_labels", Value: c.SourceLabels},
+				}
+
+				if c.Separator != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: c.Separator})
+				}
+
+				if c.TargetLabel != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
+				}
+
+				if c.Regex != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
+				}
+
+				if c.Modulus != uint64(0) {
+					relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
+				}
+
+				if c.Replacement != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "replacememt", Value: c.Replacement})
+				}
+
+				if c.Action != "" {
+					relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.TargetLabel})
+				}
+				relabelings = append(relabelings, relabeling)
+			}
+
+			cfg = append(cfg, yaml.MapItem{Key: "write_relabel_configs", Value: relabelings})
+
+		}
+
+		if spec.BasicAuth != nil {
+			cfg = append(cfg, yaml.MapItem{
+				Key: "basic_auth", Value: yaml.MapSlice{
+					{Key: "username", Value: spec.BasicAuth.Username},
+					{Key: "password", Value: spec.BasicAuth.Password},
+				},
+			})
+		}
+
+		if spec.BearerToken != "" {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
+		}
+
+		if spec.BearerTokenFile != "" {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
+		}
+
+		if spec.TLSConfig != nil {
+			tlsConfig := yaml.MapSlice{
+				{Key: "insecure_skip_verify", Value: spec.TLSConfig.InsecureSkipVerify},
+			}
+			if spec.TLSConfig.CAFile != "" {
+				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: spec.TLSConfig.CAFile})
+			}
+			if spec.TLSConfig.CertFile != "" {
+				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: spec.TLSConfig.CertFile})
+			}
+			if spec.TLSConfig.KeyFile != "" {
+				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: spec.TLSConfig.KeyFile})
+			}
+			if spec.TLSConfig.ServerName != "" {
+				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: spec.TLSConfig.ServerName})
+			}
+			cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
+		}
+
+		if spec.ProxyURL != "" {
+			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
+		}
+
+		cfgs = append(cfgs, cfg)
+	}
+
+	return yaml.MapItem{
+		Key:   "remote_write",
+		Value: cfgs,
+	}
 }

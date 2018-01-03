@@ -5,19 +5,19 @@
 
 # Alerting
 
-This guide assumes you have a basic understanding of the `Prometheus` resource and have read the [getting started](getting-started.md).
+This guide assumes you have a basic understanding of the `Prometheus` resource and have read the [getting started guide][getting-started].
 
-Besides the `Prometheus` and `ServiceMonitor` resource the Prometheus Operator also introduces the `Alertmanager`. It allows declaratively describing an Alertmanager cluster. Before diving into deploying an Alertmanager cluster, it is important to understand the contract between Prometheus and Alertmanager.
+The Prometheus Operator introduces an Alertmanager resource, which allows users to declaratively describe an Alertmanager cluster. To successfully deploy an Alertmanager cluster, it is important to understand the contract between Prometheus and Alertmanager.
 
-The Alertmanager's features include:
+The Alertmanager may be used to:
 
-* Deduplicating alerts fired by Prometheus
-* Silencing alerts
+* Deduplicate alerts fired by Prometheus
+* Silence alerts
 * Route and send grouped notifications via providers (PagerDuty, OpsGenie, ...)
 
-Prometheus' configuration includes so called rule files, which contain the [alerting rules](https://prometheus.io/docs/alerting/rules/). When an alerting rule triggers it fires that alert against *all* Alertmanager instances, on *every* rule evaluation interval. The Alertmanager instances communicate to each other which notifications have already been sent out. You can read more about why these systems have been designed this way in the [High Availability scheme description](../high-availability.md).
+Prometheus' configuration also includes "rule files", which contain the [alerting rules][alerting-rules]. When an alerting rule triggers it fires that alert against *all* Alertmanager instances, on *every* rule evaluation interval. The Alertmanager instances communicate to each other which notifications have already been sent out. For more information on this system design, see the [High Availability scheme description][ha-scheme].
 
-Let's create an example Alertmanager cluster, with three instances.
+First, create an example Alertmanager cluster, with three instances.
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager-example.yaml)
 ```yaml
@@ -29,7 +29,8 @@ spec:
   replicas: 3
 ```
 
-The Alertmanager instances will not be able to start up, unless a valid configuration is given. This is an example configuration, that does not actually do anything as it sends notifications against a non existent `webhook`, but will allow the Alertmanager to start up. Read more about how to configure the Alertmanager on the [upstream documentation](https://prometheus.io/docs/alerting/configuration/).
+The Alertmanager instances will not be able to start up, unless a valid configuration is given. The following example configuration sends notifications against a non-existent `webhook`, allowing the Alertmanager to start up, without issuing any notifications.
+For more information on configuring Alertmanager, see the Prometheus [Alerting Configuration document][alerting-config].
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager.yaml)
 ```yaml
@@ -47,18 +48,16 @@ receivers:
   - url: 'http://alertmanagerwh:30500/'
 ```
 
-Save the above alertmanager config in a file called `alertmanager.yaml` and create a secret from it using `kubectl`.
+Save the above Alertmanager config in a file called `alertmanager.yaml` and create a secret from it using `kubectl`.
 
-The Alertmanager instance needs an special naming on the secret resource in order to be able to grab it. It looks for
-`alertmanager-{ALERTMANAGER_NAME}` pattern, in this example the name of the Alertmanager is `example` so the secret name
-should be `alertmanager-example` and the name of the config file `alertmanager.yaml` 
+Alertmanager instances require the secret resource naming for follow the format
+`alertmanager-{ALERTMANAGER_NAME}`. In the previous example, the name of the Alertmanager is `example`, so the secret name must be `alertmanager-example`, and the name of the config file `alertmanager.yaml`
 
 ```bash
 $ kubectl create secret generic alertmanager-example --from-file=alertmanager.yaml
 ```
 
-Note that altermanagers configurations can use templates(`.tmpl` files), these can be added on the secret along with the
-`alertmanager.yaml` config file, for example:
+Note that Altermanager configurations can use templates (`.tmpl` files), which can be added on the secret along with the `alertmanager.yaml` config file. For example:
 
 ```yaml
 apiVersion: v1
@@ -72,17 +71,16 @@ data:
   ...
 ```
 
-Templates will be placed on the same path as the configuration, in order to be able to load the templates, the configuration (`alertmanager.yaml`)
-should point to them:
+Templates will be placed on the same path as the configuration. To load the templates, the configuration (`alertmanager.yaml`) should point to them:
 
 ```yaml
 templates:
 - '*.tmpl'
 ```
 
-Once created this `Secret` is mounted by Alertmanager `Pod`s created through the `Alertmanager` object.
+Once created this Secret is mounted by Alertmanager Pods created through the Alertmanager object.
 
-To be able to view the web UI, expose it via a `Service`. A simple way to do this is to use a `Service` of type `NodePort`.
+To be able to view the web UI, expose it through a Service. A simple way to do this is to use a Service of type `NodePort`.
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager-example-service.yaml)
 ```yaml
@@ -102,9 +100,9 @@ spec:
     alertmanager: example
 ```
 
-Once created it allows the web UI to be accessible via a node's IP and the port `30903`.
+Once created it allows the web UI to be accessible via a Node's IP and the port `30903`.
 
-Now this is a fully functional highly available Alertmanager cluster, but it does not get any alerts fired against it. Let's setup Prometheus instances that will actually fire alerts to our alertmanagers.
+This Alertmanager cluster is now fully functional and highly available, but no alerts are fired against it. Create  Prometheus instances to fire alerts to the Alertmanagers.
 
 [embedmd]:# (../../example/user-guides/alerting/prometheus-example.yaml)
 ```yaml
@@ -131,9 +129,9 @@ spec:
       prometheus: example
 ```
 
-The above configuration specifies a `Prometheus` that finds all of the alertmanagers behind the `Service` we just created. The `name` and `port` fields under alertmanagers, should match those of our `Service` to allow this to occur.
+The above configuration specifies a `Prometheus` that finds all of the Alertmanagers behind the `Service` created with `alertmanager-example-service.yaml`. The `alertmanagers` `name` and `port` fields should match those of the `Service` to allow this to occur.
 
-Prometheus rule files are held in `ConfigMap`s. The `ConfigMap`s to mount rule files from are selected with a label selector field called `ruleSelector` in the Prometheus object, as seen above. All top level files that end with the `.rules` extension will be loaded.
+Prometheus rule files are held in ConfigMaps. Use the label selector field `ruleSelector` in the Prometheus object to define the ConfigMaps from which rule files will be mounted. All top level files that end with the `.rules` extension will be loaded.
 
 The best practice is to label the `ConfigMap`s containing rule files with `role: prometheus-rulefiles` as well as the name of the Prometheus object, `prometheus: example` in this case.
 
@@ -157,7 +155,7 @@ data:
 
 That example `ConfigMap` always immediately triggers an alert, which is only for demonstration purposes. To validate that everything is working properly have a look at each of the Prometheus web UIs.
 
-To be able to view the web UI without a `Service`, `kubectl`'s proxy functionality can be used.
+Use kubectl's proxy functionality to view the web UI without a Service.
 
 Run:
 
@@ -177,4 +175,10 @@ Looking at the status page for "Runtime & Build Information" on the Prometheus w
 
 These show three discovered Alertmanagers.
 
-Heading to the Alertmanager web UI now shows one active alert, although all Prometheus instances are firing it. [Configuring the Alertmanager](https://prometheus.io/docs/alerting/configuration/) further allows custom alert routing, grouping and notification mechanisms.
+Heading to the Alertmanager web UI now shows one active alert, although all Prometheus instances are firing it. [Configuring the Alertmanager][alerting-config] further allows custom alert routing, grouping and notification mechanisms.
+
+
+[alerting-config]: https://prometheus.io/docs/alerting/configuration/
+[alerting-rules]: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
+[ha-scheme]: ../high-availability.md
+[getting-started]: getting-started.md

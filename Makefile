@@ -7,7 +7,6 @@ PROMU := $(GOPATH)/bin/promu
 PREFIX ?= $(shell pwd)
 
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
-HELM_BUCKET_NAME=coreos-charts
 
 all: check-license format build test
 
@@ -64,10 +63,22 @@ docs: embedmd po-docgen
 	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
 generate: jsonnet-docker
-	docker run --rm -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make jsonnet generate-bundle docs
+	docker run --rm -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy jsonnet generate-bundle docs generate-kube-prometheus
+
+deepcopy-gen:
+	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.8
+	go install k8s.io/code-generator/cmd/deepcopy-gen
+
+generate-deepcopy: deepcopy-gen
+	deepcopy-gen -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" --output-file-base zz_generated.deepcopy
+	deepcopy-gen -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" --output-file-base zz_generated.deepcopy
 
 generate-bundle:
 	hack/generate-bundle.sh
+
+generate-kube-prometheus:
+	cd contrib/kube-prometheus; $(MAKE) generate-raw
 
 jsonnet:
 	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator.jsonnet | json2yaml > example/non-rbac/prometheus-operator.yaml
@@ -77,16 +88,10 @@ jsonnet:
 jsonnet-docker:
 	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .
 
-helm-package:
-	mkdir -p /tmp/helm
-	(cd $(CURDIR)/helm && helm package $(HELM_PACKAGES)  -d /tmp/helm && cd -)
-	helm repo index /tmp/helm --url https://s3-eu-west-1.amazonaws.com/$(HELM_BUCKET_NAME)/stable/ --debug
-	aws s3 sync --acl public-read /tmp/helm/ s3://$(HELM_BUCKET_NAME)/stable/
-
-helm-packages:
-	make helm-package HELM_PACKAGES=exporter-*
-	make helm-package HELM_PACKAGES="alertmanager grafana prometheus prometheus-operator"
-	(cd $(CURDIR)/helm/'kube-prometheus' && helm dep update && cd -)
-	make helm-package HELM_PACKAGES='kube-prometheus'
+helm-sync-s3:
+	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes"
+	helm/hack/sync-repo.sh
+	helm/hack/helm-package.sh kube-prometheus
+	helm/hack/sync-repo.sh
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs

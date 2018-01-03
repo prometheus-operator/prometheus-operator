@@ -4,6 +4,9 @@ go:
 - 1.9
 services:
 - docker
+before_install:
+  - pip install --user awscli
+  - export PATH=$PATH:$HOME/.local/bin
 jobs:
   include:
   - stage: Check generated contents are up to date and code is formatted.
@@ -18,3 +21,10 @@ jobs:
     script: ./scripts/travis-e2e.sh
   - stage: E2e helm
     script: ./scripts/travis-e2e-helm.sh
+  - stage: deploy
+    script: skip
+    deploy:
+      provider: script
+      script: make helm-sync-s3
+      on:
+        branch: master
