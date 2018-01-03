@@ -16,6 +16,6 @@ data:
 {{ $val | indent 4}}
 {{- end }}
 {{ else }}
-  node.rules: |-
-    {{- include "node.rules.yaml.tpl" . | indent 4}}
+  prometheus.rules: |-
+    {{- include "prometheus.rules.yaml.tpl" . | indent 4}}
 {{ end }}

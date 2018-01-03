@@ -11,7 +11,7 @@ metadata:
     prometheus: {{ .Release.Name }}
   name: {{ template "fullname" . }}
 spec:
-  jobLabel: {{ template "name" . }}
+  jobLabel: {{ template "fullname" . }}
   selector:
     matchLabels:
       alertmanager: {{ .Release.Name }}

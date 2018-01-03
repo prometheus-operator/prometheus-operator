@@ -31,7 +31,7 @@ selfServiceMonitor: true
 ##
 image:
   repository: quay.io/prometheus/prometheus
-  tag: v1.7.1
+  tag: v2.0.0
 
 ## Labels to be added to the Prometheus
 ##
@@ -248,3 +248,6 @@ storageSpec: {}
 #         requests:
 #           storage: 50Gi
 #   selector: {}
+
+# default rules are in templates/prometheus.rules.yaml
+# prometheusRules: {}
