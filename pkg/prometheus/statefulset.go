@@ -335,21 +335,12 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 
 		securityContext = &v1.PodSecurityContext{}
 	case 2:
-
-		// Prometheus 2.0 is in alpha and is highly experimental, and therefore
-		// flags and other things may change for the final release of 2.0. This
-		// section is also regarded as experimental until a Prometheus 2.0 stable
-		// has been released. These flags will be updated to work with every new
-		// 2.0 release until a stable release. These flags are taregeted at version
-		// v2.0.0-alpha.3, there is no guarantee that these flags will continue to
-		// work for any further version, this feature is experimental and developed
-		// on a best effort basis.
-
 		promArgs = append(promArgs,
 			fmt.Sprintf("-config.file=%s", prometheusConfFile),
 			fmt.Sprintf("-storage.tsdb.path=%s", prometheusStorageDir),
 			"-storage.tsdb.retention="+p.Spec.Retention,
 			"-web.enable-lifecycle",
+			"-storage.tsdb.no-lockfile",
 		)
 
 		gid := int64(2000)
