@@ -106,6 +106,14 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, co
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
 		})
+	} else if storageSpec.EmptyDir != nil {
+		emptyDir := storageSpec.EmptyDir
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: volumeName(am.Name),
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: emptyDir,
+			},
+		})
 	} else {
 		pvcTemplate := storageSpec.VolumeClaimTemplate
 		pvcTemplate.Name = volumeName(am.Name)
