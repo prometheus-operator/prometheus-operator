@@ -85,6 +85,12 @@ func generateTestConfig(version string) ([]byte, error) {
 						v1.ResourceMemory: resource.MustParse("400Mi"),
 					},
 				},
+				RemoteRead: []monitoringv1.RemoteReadSpec{{
+					URL: "https://example.com/remote_read",
+				}},
+				RemoteWrite: []monitoringv1.RemoteWriteSpec{{
+					URL: "https://example.com/remote_write",
+				}},
 			},
 		},
 		makeServiceMonitors(),

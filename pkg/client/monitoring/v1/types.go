@@ -114,6 +114,10 @@ type PrometheusSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// If specified, the pod's tolerations.
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way.
+	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
+	// If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way.
+	RemoteRead []RemoteReadSpec `json:"remoteRead,omitempty"`
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and
 	// default PodSecurityContext for other versions.
@@ -162,6 +166,66 @@ type StorageSpec struct {
 	Resources v1.ResourceRequirements `json:"resources"`
 	// A PVC spec to be used by the Prometheus StatefulSets.
 	VolumeClaimTemplate v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+}
+
+// RemoteWriteSpec defines the remote_write configuration for prometheus.
+type RemoteWriteSpec struct {
+	//The URL of the endpoint to send samples to.
+	URL string `json:"url"`
+	//Timeout for requests to the remote write endpoint.
+	RemoteTimeout string `json:"remoteTimeout,omitempty"`
+	//The list of remote write relabel configurations.
+	WriteRelabelConfigs []RelabelConfig `json:"writeRelabelConfigs,omitempty"`
+	//BasicAuth for the URL.
+	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
+	// File to read bearer token for remote write.
+	BearerToken string `json:"bearerToken,omitempty"`
+	// File to read bearer token for remote write.
+	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
+	// TLS Config to use for remote write.
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+	//Optional ProxyURL
+	ProxyURL string `json:"proxy_url,omitempty"`
+}
+
+// RemoteReadSpec defines the remote_read configuration for prometheus.
+type RemoteReadSpec struct {
+	//The URL of the endpoint to send samples to.
+	URL string `json:"url"`
+	//Timeout for requests to the remote write endpoint.
+	RemoteTimeout string `json:"remoteTimeout,omitempty"`
+	//BasicAuth for the URL.
+	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
+	// bearer token for remote write.
+	BearerToken string `json:"bearerToken,omitempty"`
+	// File to read bearer token for remote write.
+	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
+	// TLS Config to use for remote write.
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+	//Optional ProxyURL
+	ProxyURL string `json:"proxy_url,omitempty"`
+}
+
+// RelabelConfig allows dynamic rewriting of the label set.
+type RelabelConfig struct {
+	//The source labels select values from existing labels. Their content is concatenated
+	//using the configured separator and matched against the configured regular expression
+	//for the replace, keep, and drop actions.
+	SourceLabels []string `json:"sourceLabels"`
+	//Separator placed between concatenated source label values. default is ';'.
+	Separator string `json:"separator,omitempty"`
+	//Label to which the resulting value is written in a replace action.
+	//It is mandatory for replace actions. Regex capture groups are available.
+	TargetLabel string `json:"targetLabel,omitempty"`
+	//Regular expression against which the extracted value is matched. defailt is '(.*)'
+	Regex string `json:"regex,omitempty"`
+	// Modulus to take of the hash of the source label values.
+	Modulus uint64 `json:"modulus,omitempty"`
+	//Replacement value against which a regex replace is performed if the
+	//regular expression matches. Regex capture groups are available. Default is '$1'
+	Replacement string `json:"replacement"`
+	// Action to perform based on regex matching. Default is 'replace'
+	Action string `json:"action,omitempty"`
 }
 
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
@@ -377,25 +441,25 @@ type NamespaceSelector struct {
 }
 
 func (l *Alertmanager) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for Alertmanager")
+	return l.DeepCopy()
 }
 
 func (l *AlertmanagerList) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for AlertmanagerList")
+	return l.DeepCopy()
 }
 
 func (l *Prometheus) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for Prometheus")
+	return l.DeepCopy()
 }
 
 func (l *PrometheusList) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for PrometheusList")
+	return l.DeepCopy()
 }
 
 func (l *ServiceMonitor) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for ServiceMonitor")
+	return l.DeepCopy()
 }
 
 func (l *ServiceMonitorList) DeepCopyObject() runtime.Object {
-	panic("DeepCopyObject not implemented for ServiceMonitorList")
+	return l.DeepCopy()
 }

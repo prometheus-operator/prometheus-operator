@@ -46,13 +46,14 @@ Parameter | Description | Default
 `config` | Alertmanager configuration directives | `{}`
 `externalUrl` | External URL at which Alertmanager will be reachable | `""`
 `image.repository` | Image | `quay.io/prometheus/alertmanager`
-`image.tag` | Image tag | `v0.5.1`
+`image.tag` | Image tag | `v0.12.0`
 `ingress.enabled` | If true, Alertmanager Ingress will be created | `false`
 `ingress.annotations` | Annotations for Alertmanager Ingress` | `{}`
 `ingress.fqdn` | Alertmanager Ingress fully-qualified domain name | `""`
 `ingress.tls` | TLS configuration for Alertmanager Ingress | `[]`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `paused` | If true, the Operator won't process any Alertmanager configuration changes | `false`
+`prometheusRules` | Prometheus rules | `[templates/alertmanager.rules.yaml](templates/alertmanager.rules.yaml)`
 `replicaCount` | Number of Alertmanager replicas desired | `1`
 `resources` | Pod resource requests & limits | `{}`
 `service.annotations` | Annotations to be added to the Alertmanager Service | `{}`

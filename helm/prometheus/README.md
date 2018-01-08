@@ -55,6 +55,7 @@ Parameter | Description | Default
 `ingress.tls` | TLS configuration for Prometheus Ingress | `[]`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `paused` | If true, the Operator won't process any Prometheus configuration changes | `false`
+`prometheusRules` | Prometheus rules | `[templates/prometheus.rules.yaml](templates/prometheus.rules.yaml)`
 `replicaCount` | Number of Prometheus replicas desired | `1`
 `resources` | Pod resource requests & limits | `{}`
 `retention` | How long to retain metrics | `24h`

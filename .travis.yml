@@ -21,9 +21,10 @@ jobs:
     script: ./scripts/travis-e2e.sh
   - stage: E2e helm
     script: ./scripts/travis-e2e-helm.sh
-
-deploy:
-  provider: script
-  script: make helm-sync-s3
-  on:
-    branch: master 
+  - stage: deploy
+    script: skip
+    deploy:
+      provider: script
+      script: make helm-sync-s3
+      on:
+        branch: master
