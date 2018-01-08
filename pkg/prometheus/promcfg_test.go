@@ -191,11 +191,11 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 					SkipMetrics: []*monitoringv1.SkipMetricConfig{
 						&monitoringv1.SkipMetricConfig{
 							Source: []string{"pod_name"},
-							Match: "my-job-pod-.+",
+							Match:  "my-job-pod-.+",
 						},
 						&monitoringv1.SkipMetricConfig{
 							Source: []string{"namespace"},
-							Match: "test",
+							Match:  "test",
 						},
 					},
 				},
