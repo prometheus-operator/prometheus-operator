@@ -30,6 +30,13 @@ Once you complete this guide you will monitor the following:
 
 The manifests used here use the [Prometheus Operator](https://github.com/coreos/prometheus-operator), which manages Prometheus servers and their configuration in a cluster. Prometheus discovers targets through `Endpoints` objects, which means all targets that are running as `Pod`s in the Kubernetes cluster are easily monitored. Many Kubernetes components can be [self-hosted](https://coreos.com/blog/self-hosted-kubernetes.html) today. The kubelet, however, is not. Therefore the Prometheus Operator implements a functionality to synchronize the kubelets into an `Endpoints` object. To make use of that functionality the `--kubelet-service` argument must be passed to the Prometheus Operator when running it.
 
+
+> We assume that the kubelet uses token authN and authZ, as otherwise Prometheus needs a client certificate, which gives it full access to the kubelet, rather than just the metrics. Token authN and authZ allows more fine grained and easier access control. Simply start minikube with the following command (you can of course adapt the version and memory to your needs):
+>
+> $ minikube delete && minikube start --kubernetes-version=v1.9.1 --memory=4096 --bootstrapper=kubeadm --extra-config=kubelet.authentication-token-webhook=true --extra-config=kubelet.authorization-mode=Webhook --extra-config=scheduler.address=0.0.0.0 --extra-config=controller-manager.address=0.0.0.0
+>
+> In future versions of minikube and kubeadm this will be the default, but for the time being, we will have to configure it ourselves.
+
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml)
 ```yaml
 apiVersion: extensions/v1beta1
@@ -406,11 +413,20 @@ metadata:
 spec:
   jobLabel: k8s-app
   endpoints:
-  - port: http-metrics
+  - port: https-metrics
+    scheme: https
     interval: 30s
-  - port: cadvisor
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+  - port: https-metrics
+    scheme: https
+    path: /metrics/cadvisor
     interval: 30s
     honorLabels: true
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
   selector:
     matchLabels:
       k8s-app: kubelet
