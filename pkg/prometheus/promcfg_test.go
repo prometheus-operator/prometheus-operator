@@ -194,14 +194,16 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				monitoringv1.Endpoint{
 					Port:     "web",
 					Interval: "30s",
-					SkipMetrics: []*monitoringv1.SkipMetricConfig{
-						&monitoringv1.SkipMetricConfig{
-							Source: []string{"pod_name"},
-							Match:  "my-job-pod-.+",
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						&monitoringv1.RelabelConfig{
+							Action:       "drop",
+							Regex:        "my-job-pod-.+",
+							SourceLabels: []string{"pod_name"},
 						},
-						&monitoringv1.SkipMetricConfig{
-							Source: []string{"namespace"},
-							Match:  "test",
+						&monitoringv1.RelabelConfig{
+							Action:       "drop",
+							Regex:        "test",
+							SourceLabels: []string{"namespace"},
 						},
 					},
 				},

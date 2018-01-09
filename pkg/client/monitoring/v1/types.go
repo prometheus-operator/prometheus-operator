@@ -291,15 +291,8 @@ type Endpoint struct {
 	// BasicAuth allow an endpoint to authenticate over basic authentication
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// SkipMetrics allow selected time series to be omitted from ingestion.
-	SkipMetrics []*SkipMetricConfig `json:"skipMetrics,omitempty"`
-}
-
-type SkipMetricConfig struct {
-	// The search pattern to match against label values
-	Match string `json:"match"`
-	// The source labels to search for matches to the search pattern
-	Source []string `json:"source"`
+	// MetricRelabelConfigs to apply to samples before ingestion.
+	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
 }
 
 // BasicAuth allow an endpoint to authenticate over basic authentication
