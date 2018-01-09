@@ -69,7 +69,7 @@ spec:
 {{- else }}
   ruleSelector:
     matchLabels:
-      app: {{ template "prometheus.name" . }}
+      role: alert-rules
       prometheus: {{ .Release.Name }}
 {{- end }}
 {{- if .Values.storageSpec }}
