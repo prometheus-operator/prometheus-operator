@@ -29,7 +29,6 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
-* [SkipMetricConfig](#skipmetricconfig)
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
 
@@ -144,7 +143,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | bearerTokenFile | File to read bearer token for scraping targets. | string | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
-| skipMetrics | SkipMetrics allow selected time series to be omitted from ingestion. | []*[SkipMetricConfig](#skipmetricconfig) | false |
+| metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -312,17 +311,6 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 | endpoints | A list of endpoints allowed as part of this ServiceMonitor. | [][Endpoint](#endpoint) | true |
 | selector | Selector to select Endpoints objects. | [metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | true |
 | namespaceSelector | Selector to select which namespaces the Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
-
-[Back to TOC](#table-of-contents)
-
-## SkipMetricConfig
-
-
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| match | The search pattern to match against label values | string | true |
-| source | The source labels to search for matches to the search pattern | []string | true |
 
 [Back to TOC](#table-of-contents)
 
