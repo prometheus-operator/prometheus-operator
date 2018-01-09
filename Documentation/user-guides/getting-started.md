@@ -146,7 +146,7 @@ spec:
         app: example-app
     spec:
       containers:
-      - name: example-app 
+      - name: example-app
         image: fabxc/instrumented_app
         ports:
         - name: web
@@ -259,7 +259,7 @@ spec:
     requests:
       memory: 400Mi
 ```
-> If you have RBAC authorization activated, use the RBAC aware [*Prometheus* manifest](../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml) instead.
+> If you have RBAC authorization activated, use the RBAC aware [*Prometheus* manifest](../../example/rbac/prometheus/) instead.
 
 
 This way the frontend team can create new `ServiceMonitor`s and `Service`s resulting in `Prometheus` to be dynamically reconfigured.
