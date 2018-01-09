@@ -620,11 +620,11 @@ func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpe
 				}
 
 				if c.Replacement != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "replacememt", Value: c.Replacement})
+					relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
 				}
 
 				if c.Action != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.TargetLabel})
+					relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.Action})
 				}
 				relabelings = append(relabelings, relabeling)
 			}
