@@ -1,8 +1,8 @@
-apiVersion: monitoring.coreos.com/v1
+apiVersion: {{ template "prometheus-operator.apiVersion" . }}
 kind: Prometheus
 metadata:
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "prometheus.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     prometheus: {{ .Release.Name }}
@@ -33,7 +33,7 @@ spec:
 {{- else if .Values.ingress.fqdn }}
   externalUrl: http://{{ .Values.ingress.fqdn }}{{ .Values.routePrefix }}
 {{- else }}
-  externalUrl: http://{{ template "fullname" . }}.{{ .Release.Namespace }}:9090
+  externalUrl: http://{{ template "prometheus.fullname" . }}.{{ .Release.Namespace }}:9090
 {{- end }}
 {{- if .Values.nodeSelector }}
   nodeSelector:
@@ -52,7 +52,7 @@ spec:
 {{ toYaml .Values.secrets | indent 4 }}
 {{- end }}
 {{- if .Values.rbacEnable }}
-  serviceAccountName: {{ template "fullname" . }}
+  serviceAccountName: {{ template "prometheus.fullname" . }}
 {{- end }}
 {{- if .Values.serviceMonitorsSelector }}
   serviceMonitorSelector:
@@ -69,7 +69,7 @@ spec:
 {{- else }}
   ruleSelector:
     matchLabels:
-      app: {{ template "name" . }}
+      role: alert-rules
       prometheus: {{ .Release.Name }}
 {{- end }}
 {{- if .Values.storageSpec }}

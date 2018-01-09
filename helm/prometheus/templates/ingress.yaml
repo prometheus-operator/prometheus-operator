@@ -7,7 +7,7 @@ metadata:
 {{ toYaml .Values.ingress.annotations | indent 4 }}
 {{- end }}
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "prometheus.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     prometheus: {{ .Release.Name }}
@@ -15,7 +15,7 @@ metadata:
 {{- if .Values.ingress.labels }}
 {{ toYaml .Values.ingress.labels | indent 4 }}
 {{- end }}
-  name: {{ template "fullname" . }}
+  name: {{ template "prometheus.fullname" . }}
 spec:
   rules:
     - host: "{{ .Values.ingress.fqdn }}"
@@ -23,7 +23,7 @@ spec:
         paths:
           - path: "{{ .Values.routePrefix }}"
             backend:
-              serviceName: {{ template "fullname" . }}
+              serviceName: {{ template "prometheus.fullname" . }}
               servicePort: 9090
 {{- if .Values.ingress.tls }}
   tls:
