@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set +x
 
 cat <<-EOF
 apiVersion: v1
@@ -9,23 +10,42 @@ metadata:
 data:
 EOF
 
+for f in assets/grafana/generated/*-dashboard.json
+do
+    rm -rf $f
+done
+
+for f in assets/grafana/generated/*-datasource.json
+do
+    rm -rf $f
+done
+
 virtualenv -p python3 .env
 source .env/bin/activate
 pip install -Ur requirements.txt
 for f in assets/grafana/*.dashboard.py
 do
-  JSON_FILENAME="$(pwd)/${f%%.*}-dashboard.json"
+  basefilename=$(basename $f)
+  JSON_FILENAME="assets/grafana/generated/${basefilename%%.*}-dashboard.json"
   generate-dashboard $f -o $JSON_FILENAME 2>&1 > /dev/null
 done
 
-for f in assets/grafana/*-dashboard.json
+cp assets/grafana/raw-json-dashboards/*-dashboard.json assets/grafana/generated/
+
+for f in assets/grafana/generated/*-dashboard.json
 do
-  echo "  $(basename $f): |+"
-  hack/scripts/wrap-dashboard.sh $f | sed "s/^/    /g"
+  basefilename=$(basename $f)
+  echo "  $basefilename: |+"
+  if [ "$basefilename" -eq "etcd-dashboard.json" ]; then
+    hack/scripts/wrap-dashboard.sh $f prometheus-etcd | sed "s/^/    /g"
+  else
+    hack/scripts/wrap-dashboard.sh $f prometheus-k8s | sed "s/^/    /g"
+  fi
 done
 
 for f in assets/grafana/*-datasource.json
 do
+  cp $f assets/grafana/generated/
   echo "  $(basename $f): |+"
   cat $f | sed "s/^/    /g"
 done

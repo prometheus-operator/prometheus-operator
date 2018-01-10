@@ -47,6 +47,7 @@ var (
 		"v1.LocalObjectReference":  "https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#localobjectreference-v1-core",
 		"v1.SecretKeySelector":     "https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#secretkeyselector-v1-core",
 		"v1.PersistentVolumeClaim": "https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#persistentvolumeclaim-v1-core",
+		"v1.EmptyDirVolumeSource":  "https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#emptydirvolumesource-v1-core",
 	}
 
 	selfLinks = map[string]string{}

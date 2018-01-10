@@ -157,6 +157,9 @@ type StorageSpec struct {
 	// info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
 	// DEPRECATED
 	Class string `json:"class"`
+	// EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More
+	// info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
+	EmptyDir *v1.EmptyDirVolumeSource `json:"emptyDir,omitempty"`
 	// A label query over volumes to consider for binding.
 	// DEPRECATED
 	Selector *metav1.LabelSelector `json:"selector"`

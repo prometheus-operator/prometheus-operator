@@ -117,6 +117,37 @@ func TestStatefulSetPVC(t *testing.T) {
 
 }
 
+func TestStatefulSetEmptyDir(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	emptyDir := v1.EmptyDirVolumeSource{
+		Medium: v1.StorageMediumMemory,
+	}
+
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			Storage: &monitoringv1.StorageSpec{
+				EmptyDir: &emptyDir,
+			},
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+
+	require.NoError(t, err)
+	ssetVolumes := sset.Spec.Template.Spec.Volumes
+	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir != nil && !reflect.DeepEqual(emptyDir.Medium, ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir.Medium) {
+		t.Fatal("Error adding EmptyDir Spec to StatefulSetSpec")
+	}
+}
+
 func TestStatefulSetVolumeInitial(t *testing.T) {
 	expected := &v1beta1.StatefulSet{
 		Spec: v1beta1.StatefulSetSpec{
