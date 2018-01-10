@@ -12,10 +12,12 @@ metadata:
 spec:
   clusterIP: None
   ports:
-    - name: http-metrics
-      port: 4001
+    - name: {{ .Values.scheme }}-metrics
+      port: {{ .Values.etcdPort }}
       protocol: TCP
-      targetPort: 4001
+      targetPort: {{ .Values.etcdPort }}
+{{- if .Values.endpoints }}{{- else }}
   selector:
     k8s-app: etcd-server
+{{- end }}
   type: ClusterIP
