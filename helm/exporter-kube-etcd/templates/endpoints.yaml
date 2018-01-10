@@ -1,5 +1,6 @@
+{{- if .Values.endpoints }}
 apiVersion: v1
-kind: Service
+kind: Endpoints
 metadata:
   labels:
     app: {{ template "exporter-kube-etcd.name" . }}
@@ -9,15 +10,13 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   name: {{ template "exporter-kube-etcd.fullname" . }}
   namespace: kube-system
-spec:
-  clusterIP: None
-  ports:
-    - name: {{ .Values.scheme }}-metrics
-      port: {{ .Values.etcdPort }}
-      protocol: TCP
-      targetPort: {{ .Values.etcdPort }}
-{{- if .Values.endpoints }}{{- else }}
-  selector:
-    k8s-app: etcd-server
+subsets:
+  - addresses:
+      {{- range .Values.endpoints }}
+      - ip: {{ . }}
+      {{- end }}
+    ports:
+      - name: {{ .Values.scheme }}-metrics
+        port: {{ .Values.etcdPort }}
+        protocol: TCP
 {{- end }}
-  type: ClusterIP
