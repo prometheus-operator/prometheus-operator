@@ -2,7 +2,7 @@ from grafanalib.core import *
 
 dashboard = Dashboard(
     title='Kubernetes Control Plane Status',
-    version=3,
+    version=4,
     graphTooltip=0,
     schemaVersion=14,
     time=Time(start='now-6h'),
@@ -245,11 +245,11 @@ dashboard = Dashboard(
                     ),
                     targets=[
                         {
-                            'expr': 'sum by(verb) (rate(apiserver_latency_'
-                            'seconds:quantile[5m]) >= 0)',
+                            'expr': 'sum by(verb) (rate(cluster_resource_verb:'
+                            'apiserver_latency:quantile_seconds[5m]) >= 0)',
                             'format': 'time_series',
                             'intervalFactor': 2,
-                            'legendFormat': '',
+                            'legendFormat': '{{verb}}',
                             'refId': 'A',
                             'step': 30,
                         }
@@ -281,11 +281,30 @@ dashboard = Dashboard(
                     ),
                     targets=[
                         {
-                            'expr': 'cluster:scheduler_e2e_scheduling_'
-                            'latency_seconds:quantile',
+                            'expr': 'cluster:scheduler_e2e_scheduling_latency'
+                            ':quantile_seconds{quantile="0.5"}',
                             'format': 'time_series',
                             'intervalFactor': 2,
+                            'legendFormat': '50th percentile',
                             'refId': 'A',
+                            'step': 60,
+                        },
+                        {
+                            'expr': 'cluster:scheduler_e2e_scheduling_latency'
+                            ':quantile_seconds{quantile="0.9"}',
+                            'format': 'time_series',
+                            'intervalFactor': 2,
+                            'legendFormat': '90th percentile',
+                            'refId': 'B',
+                            'step': 60,
+                        },
+                        {
+                            'expr': 'cluster:scheduler_e2e_scheduling_latency'
+                            ':quantile_seconds{quantile="0.99"}',
+                            'format': 'time_series',
+                            'intervalFactor': 2,
+                            'legendFormat': '99th percentile',
+                            'refId': 'C',
                             'step': 60,
                         }
                     ],
@@ -315,7 +334,7 @@ dashboard = Dashboard(
                             'request_count{code!~\"2..\"}[5m]))',
                             'format': 'time_series',
                             'intervalFactor': 2,
-                            'legendFormat': 'Error Rate',
+                            'legendFormat': '{{ instance }} Error Rate',
                             'refId': 'A',
                             'step': 60,
                         },
@@ -324,7 +343,7 @@ dashboard = Dashboard(
                             'request_count[5m]))',
                             'format': 'time_series',
                             'intervalFactor': 2,
-                            'legendFormat': 'Request Rate',
+                            'legendFormat': '{{ instance }} Request Rate',
                             'refId': 'B',
                             'step': 60,
                         },

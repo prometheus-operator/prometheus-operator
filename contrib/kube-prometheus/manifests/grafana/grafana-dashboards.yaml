@@ -818,7 +818,7 @@ data:
                   "expr": "sum(rate(node_cpu{mode=\"idle\"}[2m])) * 100",
                   "hide": false,
                   "intervalFactor": 10,
-                  "legendFormat": "",
+                  "legendFormat": "idle",
                   "refId": "A",
                   "step": 50
                 }
@@ -1391,7 +1391,7 @@ data:
                   "expr": "sum(rate(node_network_receive_bytes{device!~\"lo\"}[5m]))",
                   "hide": false,
                   "intervalFactor": 2,
-                  "legendFormat": "",
+                  "legendFormat": "received bytes",
                   "refId": "A",
                   "step": 10,
                   "target": ""
@@ -1473,7 +1473,7 @@ data:
                   "expr": "sum(rate(node_network_transmit_bytes{device!~\"lo\"}[5m]))",
                   "hide": false,
                   "intervalFactor": 2,
-                  "legendFormat": "",
+                  "legendFormat": "transmitted bytes",
                   "refId": "B",
                   "step": 10,
                   "target": ""
@@ -1719,7 +1719,7 @@ data:
       },
       "timezone": "browser",
       "title": "Kubernetes Capacity Planning",
-      "version": 4
+      "version": 5
     }
     ,
       "inputs": [
@@ -3641,10 +3641,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum by(verb) (rate(apiserver_latency_seconds:quantile[5m]) >= 0)",
+                  "expr": "sum by(verb) (rate(cluster_resource_verb:apiserver_latency:quantile_seconds[5m]) >= 0)",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "",
+                  "legendFormat": "{{verb}}",
                   "refId": "A",
                   "step": 30
                 }
@@ -3727,10 +3727,27 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "cluster:scheduler_e2e_scheduling_latency_seconds:quantile",
+                  "expr": "cluster:scheduler_e2e_scheduling_latency:quantile_seconds{quantile=\"0.5\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
+                  "legendFormat": "50th percentile",
                   "refId": "A",
+                  "step": 60
+                },
+                {
+                  "expr": "cluster:scheduler_e2e_scheduling_latency:quantile_seconds{quantile=\"0.9\"}",
+                  "format": "time_series",
+                  "intervalFactor": 2,
+                  "legendFormat": "90th percentile",
+                  "refId": "B",
+                  "step": 60
+                },
+                {
+                  "expr": "cluster:scheduler_e2e_scheduling_latency:quantile_seconds{quantile=\"0.99\"}",
+                  "format": "time_series",
+                  "intervalFactor": 2,
+                  "legendFormat": "99th percentile",
+                  "refId": "C",
                   "step": 60
                 }
               ],
@@ -3805,7 +3822,7 @@ data:
                   "expr": "sum by(instance) (rate(apiserver_request_count{code!~\"2..\"}[5m]))",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "Error Rate",
+                  "legendFormat": "{{ instance }} Error Rate",
                   "refId": "A",
                   "step": 60
                 },
@@ -3813,7 +3830,7 @@ data:
                   "expr": "sum by(instance) (rate(apiserver_request_count[5m]))",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "Request Rate",
+                  "legendFormat": "{{ instance }} Request Rate",
                   "refId": "B",
                   "step": 60
                 }
@@ -3888,7 +3905,7 @@ data:
       },
       "timezone": "browser",
       "title": "Kubernetes Control Plane Status",
-      "version": 3
+      "version": 4
     }
     ,
       "inputs": [
