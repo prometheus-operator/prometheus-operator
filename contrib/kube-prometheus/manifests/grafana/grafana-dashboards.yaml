@@ -20,13 +20,14 @@ data:
       "annotations": {
         "list": []
       },
-      "editable": true,
+      "editable": false,
       "graphTooltip": 1,
       "hideControls": false,
       "links": [],
       "rows": [
         {
           "collapse": false,
+          "editable": false,
           "height": "200px",
           "panels": [
             {
@@ -38,7 +39,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -109,7 +110,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -180,7 +181,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "Bps",
               "gauge": {
                 "maxValue": 100,
@@ -249,6 +250,7 @@ data:
         },
         {
           "collapse": false,
+          "editable": false,
           "height": "100px",
           "panels": [
             {
@@ -260,7 +262,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -331,7 +333,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -401,7 +403,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -471,7 +473,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -539,6 +541,7 @@ data:
         },
         {
           "collapse": false,
+          "editable": false,
           "height": "350px",
           "panels": [
             {
@@ -547,7 +550,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -788,7 +791,7 @@ data:
         "list": []
       },
       "description": "etcd sample Grafana dashboard with Prometheus",
-      "editable": true,
+      "editable": false,
       "gnetId": null,
       "graphTooltip": 0,
       "hideControls": false,
@@ -810,7 +813,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "format": "none",
               "gauge": {
@@ -886,7 +889,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 0,
               "id": 23,
@@ -975,7 +978,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 0,
               "id": 41,
@@ -1077,7 +1080,7 @@ data:
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
               "decimals": null,
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 0,
               "grid": {},
@@ -1158,7 +1161,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 0,
               "grid": {},
@@ -1247,7 +1250,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 0,
               "id": 29,
@@ -1339,7 +1342,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 5,
               "id": 22,
@@ -1419,7 +1422,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 5,
               "id": 21,
@@ -1499,7 +1502,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 0,
               "id": 20,
@@ -1580,7 +1583,7 @@ data:
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
               "decimals": null,
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 0,
               "grid": {},
@@ -1673,7 +1676,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 0,
               "id": 40,
@@ -1780,7 +1783,7 @@ data:
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
               "decimals": 0,
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 0,
               "id": 19,
@@ -1933,7 +1936,7 @@ data:
       "annotations": {
         "list": []
       },
-      "editable": true,
+      "editable": false,
       "gnetId": 22,
       "graphTooltip": 0,
       "hideControls": false,
@@ -1942,7 +1945,7 @@ data:
       "rows": [
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -1951,7 +1954,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -2029,7 +2032,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -2122,7 +2125,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -2131,7 +2134,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -2247,7 +2250,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -2321,7 +2324,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "246px",
           "panels": [
             {
@@ -2330,7 +2333,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -2437,7 +2440,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percentunit",
               "gauge": {
                 "maxValue": 1,
@@ -2510,7 +2513,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -2519,7 +2522,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -2601,7 +2604,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -2684,7 +2687,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "276px",
           "panels": [
             {
@@ -2692,7 +2695,7 @@ data:
               "bars": false,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -2779,7 +2782,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -2921,7 +2924,7 @@ data:
       "annotations": {
         "list": []
       },
-      "editable": true,
+      "editable": false,
       "graphTooltip": 0,
       "hideControls": false,
       "links": [],
@@ -2929,7 +2932,7 @@ data:
       "rows": [
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "254px",
           "panels": [
             {
@@ -2941,7 +2944,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -3022,7 +3025,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -3098,7 +3101,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -3174,7 +3177,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -3248,7 +3251,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -3260,7 +3263,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -3336,7 +3339,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -3412,7 +3415,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -3488,7 +3491,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -3629,13 +3632,14 @@ data:
       "annotations": {
         "list": []
       },
-      "editable": true,
+      "editable": false,
       "graphTooltip": 0,
       "hideControls": false,
       "links": [],
       "rows": [
         {
           "collapse": false,
+          "editable": false,
           "height": "129px",
           "panels": [
             {
@@ -3647,7 +3651,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -3719,7 +3723,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -3789,6 +3793,7 @@ data:
         },
         {
           "collapse": false,
+          "editable": false,
           "height": "168px",
           "panels": [
             {
@@ -3800,7 +3805,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -3872,7 +3877,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -3944,7 +3949,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -4016,7 +4021,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -4086,6 +4091,7 @@ data:
         },
         {
           "collapse": false,
+          "editable": false,
           "height": "158px",
           "panels": [
             {
@@ -4097,7 +4103,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -4169,7 +4175,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -4241,7 +4247,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -4313,7 +4319,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -4450,14 +4456,14 @@ data:
       "annotations": {
         "list": []
       },
-      "editable": true,
+      "editable": false,
       "graphTooltip": 0,
       "hideControls": false,
       "links": [],
       "rows": [
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -4469,7 +4475,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -4544,7 +4550,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -4619,7 +4625,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -4694,7 +4700,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -4768,7 +4774,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -4777,7 +4783,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -4854,7 +4860,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -4863,7 +4869,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -4938,7 +4944,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -5090,7 +5096,7 @@ data:
       "annotations": {
         "list": []
       },
-      "editable": true,
+      "editable": false,
       "graphTooltip": 0,
       "hideControls": false,
       "links": [],
@@ -5098,7 +5104,7 @@ data:
       "rows": [
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "300px",
           "panels": [
             {
@@ -5108,7 +5114,7 @@ data:
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
               "description": "This represents the total [CPU resource requests](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu) in the cluster.\nFor comparison the total [allocatable CPU cores](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node-allocatable.md) is also shown.",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -5196,7 +5202,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -5269,7 +5275,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "300px",
           "panels": [
             {
@@ -5279,7 +5285,7 @@ data:
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
               "description": "This represents the total [memory resource requests](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory) in the cluster.\nFor comparison the total [allocatable memory](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node-allocatable.md) is also shown.",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -5367,7 +5373,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -5508,7 +5514,7 @@ data:
         "list": []
       },
       "description": "Dashboard to get an overview of one server",
-      "editable": true,
+      "editable": false,
       "gnetId": 22,
       "graphTooltip": 0,
       "hideControls": false,
@@ -5517,7 +5523,7 @@ data:
       "rows": [
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -5526,7 +5532,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -5605,7 +5611,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -5698,7 +5704,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -5707,7 +5713,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -5819,7 +5825,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percent",
               "gauge": {
                 "maxValue": 100,
@@ -5892,7 +5898,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -5901,7 +5907,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -6008,7 +6014,7 @@ data:
                 "rgba(245, 54, 54, 0.9)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "percentunit",
               "gauge": {
                 "maxValue": 1,
@@ -6081,7 +6087,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -6090,7 +6096,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -6172,7 +6178,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -6343,7 +6349,7 @@ data:
       "annotations": {
         "list": []
       },
-      "editable": true,
+      "editable": false,
       "graphTooltip": 1,
       "hideControls": false,
       "links": [],
@@ -6351,7 +6357,7 @@ data:
       "rows": [
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -6360,7 +6366,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -6457,7 +6463,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -6466,7 +6472,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -6561,7 +6567,7 @@ data:
         },
         {
           "collapse": false,
-          "editable": true,
+          "editable": false,
           "height": "250px",
           "panels": [
             {
@@ -6570,7 +6576,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {
@@ -6775,13 +6781,14 @@ data:
       "annotations": {
         "list": []
       },
-      "editable": true,
+      "editable": false,
       "graphTooltip": 1,
       "hideControls": false,
       "links": [],
       "rows": [
         {
           "collapse": false,
+          "editable": false,
           "height": "200px",
           "panels": [
             {
@@ -6793,7 +6800,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -6864,7 +6871,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -6935,7 +6942,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "Bps",
               "gauge": {
                 "maxValue": 100,
@@ -7004,6 +7011,7 @@ data:
         },
         {
           "collapse": false,
+          "editable": false,
           "height": "100px",
           "panels": [
             {
@@ -7015,7 +7023,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -7086,7 +7094,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -7156,7 +7164,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -7226,7 +7234,7 @@ data:
                 "rgba(50, 172, 45, 0.97)"
               ],
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "format": "none",
               "gauge": {
                 "maxValue": 100,
@@ -7294,6 +7302,7 @@ data:
         },
         {
           "collapse": false,
+          "editable": false,
           "height": "350px",
           "panels": [
             {
@@ -7302,7 +7311,7 @@ data:
               "dashLength": 10,
               "dashes": false,
               "datasource": "${DS_PROMETHEUS}",
-              "editable": true,
+              "editable": false,
               "error": false,
               "fill": 1,
               "grid": {

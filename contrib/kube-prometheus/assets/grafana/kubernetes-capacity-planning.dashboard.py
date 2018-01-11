@@ -7,6 +7,7 @@ dashboard = Dashboard(
     gnetId=22,
     graphTooltip=0,
     refresh=False,
+    editable=False,
     schemaVersion=14,
     time=Time(start='now-1h'),
     timezone='browser',
@@ -22,7 +23,7 @@ dashboard = Dashboard(
     ],
     rows=[
         Row(
-            height=250, title='New Row', showTitle=False,
+            height=250, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Idle CPU',
@@ -31,6 +32,7 @@ dashboard = Dashboard(
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     tooltip=Tooltip(msResolution=False),
@@ -57,6 +59,7 @@ dashboard = Dashboard(
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     tooltip=Tooltip(msResolution=False),
@@ -94,7 +97,7 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=250, title='New Row', showTitle=False,
+            height=250, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Memory Usage',
@@ -103,6 +106,7 @@ dashboard = Dashboard(
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=9,
                     stack=True,
@@ -171,6 +175,7 @@ dashboard = Dashboard(
                     format='percent',
                     span=3,
                     gauge=Gauge(show=True),
+                    editable=False,
                     thresholds='80, 90',
                     valueMaps=[
                         {
@@ -203,7 +208,7 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=246, title='New Row', showTitle=False,
+            height=246, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Disk I/O',
@@ -212,6 +217,7 @@ dashboard = Dashboard(
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=9,
                     tooltip=Tooltip(msResolution=False),
@@ -264,6 +270,7 @@ dashboard = Dashboard(
                     dataSource='${DS_PROMETHEUS}',
                     id=12,
                     span=3,
+                    editable=False,
                     format='percentunit',
                     valueName='current',
                     gauge=Gauge(
@@ -301,7 +308,7 @@ dashboard = Dashboard(
             ]
         ),
         Row(
-            height=250, title='New Row', showTitle=False,
+            height=250, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Network Received',
@@ -310,6 +317,7 @@ dashboard = Dashboard(
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     tooltip=Tooltip(msResolution=False),
@@ -343,6 +351,7 @@ dashboard = Dashboard(
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     tooltip=Tooltip(msResolution=False),
@@ -372,7 +381,7 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=276, title='New Row', showTitle=False,
+            height=276, title='New Row', showTitle=False, editable=False,
             titleSize='h6',
             panels=[
                 Graph(
@@ -381,6 +390,7 @@ dashboard = Dashboard(
                     id=11,
                     span=9,
                     dashes=False,
+                    editable=False,
                     spaceLength=11,
                     tooltip=Tooltip(
                         msResolution=False,
@@ -413,6 +423,7 @@ dashboard = Dashboard(
                     title='Pod Utilization',
                     dataSource='${DS_PROMETHEUS}',
                     id=7,
+                    editable=False,
                     span=3,
                     format='percent',
                     rangeMaps=[
