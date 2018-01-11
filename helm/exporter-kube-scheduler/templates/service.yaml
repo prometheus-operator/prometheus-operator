@@ -18,6 +18,6 @@ spec:
       targetPort: {{ .Values.schedulerPort}}
 {{- if not .Values.endpoints }}
   selector:
-    {{ .Values.global.k8sComponentLabelKey }}: kube-scheduler
+    {{ .Values.serviceSelectorLabelKey }}: kube-scheduler
 {{- end }}
   type: ClusterIP

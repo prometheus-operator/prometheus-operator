@@ -18,6 +18,6 @@ spec:
       targetPort: {{ .Values.controllerManagerPort}}
 {{- if not .Values.endpoints }}
   selector:
-    {{ .Values.global.k8sComponentLabelKey }}: kube-controller-manager
+    {{ .Values.serviceSelectorLabelKey }}: kube-controller-manager
 {{- end }}
   type: ClusterIP
