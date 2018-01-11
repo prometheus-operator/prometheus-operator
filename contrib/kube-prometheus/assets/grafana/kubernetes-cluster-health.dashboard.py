@@ -6,6 +6,7 @@ dashboard = Dashboard(
     version=9,
     graphTooltip=0,
     schemaVersion=14,
+    editable=False,
     time=Time(start='now-6h'),
     timezone='browser',
     inputs=[
@@ -20,7 +21,7 @@ dashboard = Dashboard(
     ],
     rows=[
         Row(
-            height=254, title='Row', showTitle=False,
+            height=254, title='Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 SingleStat(
                     title='Control Plane Components Down',
@@ -30,6 +31,7 @@ dashboard = Dashboard(
                     span=3,
                     thresholds='1, 3',
                     colorValue=True,
+                    editable=False,
                     rangeMaps=[
                         {
                             'from': 'null',
@@ -77,6 +79,7 @@ dashboard = Dashboard(
                     dataSource='${DS_PROMETHEUS}',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',
@@ -122,6 +125,7 @@ dashboard = Dashboard(
                     dataSource='${DS_PROMETHEUS}',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='3, 5',
@@ -167,6 +171,7 @@ dashboard = Dashboard(
                     dataSource='${DS_PROMETHEUS}',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',
@@ -209,7 +214,7 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=250, title='Row', showTitle=False,
+            height=250, title='Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 SingleStat(
                     title='Node Not Ready',
@@ -217,6 +222,7 @@ dashboard = Dashboard(
                     dataSource='${DS_PROMETHEUS}',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',
@@ -262,6 +268,7 @@ dashboard = Dashboard(
                     dataSource='${DS_PROMETHEUS}',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',
@@ -307,6 +314,7 @@ dashboard = Dashboard(
                     dataSource='${DS_PROMETHEUS}',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',
@@ -352,6 +360,7 @@ dashboard = Dashboard(
                     dataSource='${DS_PROMETHEUS}',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',

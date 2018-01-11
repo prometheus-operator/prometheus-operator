@@ -8,6 +8,7 @@ dashboard = Dashboard(
     gnetId=22,
     graphTooltip=0,
     refresh=False,
+    editable=False,
     schemaVersion=14,
     time=Time(start='now-1h'),
     timezone='browser',
@@ -45,13 +46,14 @@ dashboard = Dashboard(
     ]),
     rows=[
         Row(
-            height=250, title='New Row', showTitle=False,
+            height=250, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Idle CPU',
                     dataSource='${DS_PROMETHEUS}',
                     id=3,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     dashLength=10,
@@ -83,6 +85,7 @@ dashboard = Dashboard(
                     dataSource='${DS_PROMETHEUS}',
                     id=9,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     dashLength=10,
@@ -122,13 +125,14 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=250, title='New Row', showTitle=False,
+            height=250, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Memory Usage',
                     dataSource='${DS_PROMETHEUS}',
                     id=4,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=9,
                     stack=True,
@@ -198,6 +202,7 @@ dashboard = Dashboard(
                     id=5,
                     format='percent',
                     gauge=Gauge(show=True),
+                    editable=False,
                     span=3,
                     rangeMaps=[
                         {
@@ -232,7 +237,7 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=250, titleSize='h6', title='New Row',
+            height=250, titleSize='h6', title='New Row', editable=False,
             showTitle=False, panels=[
                 Graph(
                     title='Disk I/O',
@@ -240,6 +245,7 @@ dashboard = Dashboard(
                     id=6,
                     dashLength=10,
                     dashes=False,
+                    editable=False,
                     spaceLength=10,
                     span=9,
                     tooltip=Tooltip(msResolution=False),
@@ -301,6 +307,7 @@ dashboard = Dashboard(
                     dataSource='${DS_PROMETHEUS}',
                     id=7,
                     thresholds='0.75, 0.9',
+                    editable=False,
                     valueName='current',
                     format='percentunit',
                     span=3,
@@ -340,7 +347,7 @@ dashboard = Dashboard(
         ),
         Row(
             height=250, title='New Row', titleSize='h6',
-            showTitle=False,
+            showTitle=False, editable=False,
             panels=[
                 Graph(
                     title='Network Received',
@@ -349,6 +356,7 @@ dashboard = Dashboard(
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     tooltip=Tooltip(msResolution=False),
@@ -382,6 +390,7 @@ dashboard = Dashboard(
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     tooltip=Tooltip(msResolution=False),

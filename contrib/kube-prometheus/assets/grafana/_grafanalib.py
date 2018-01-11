@@ -20,18 +20,17 @@ def Dashboard(
                 'pluginId': 'prometheus',
                 'pluginName': 'Prometheus'
             },
-        ], rows=rows, graphTooltip=graphTooltip, **optional_args,
+        ], rows=rows, graphTooltip=graphTooltip, editable=False, **optional_args,
     )
 
 
 def Row(
-    panels, height=None, title='Dashboard Row', showTitle=False,
-    editable=None
+    panels, height=None, title='Dashboard Row', showTitle=False
 ):
     assert isinstance(height, (type(None), int))
     return core.Row(
         panels=panels, height=height, title=title, showTitle=showTitle,
-        titleSize='h6', editable=editable,
+        titleSize='h6', editable=False,
     )
 
 
@@ -61,7 +60,7 @@ def SingleStat(
         mappingTypes=mappingTypes, targets=targets,
         mappingType=mappingType, format=format, colors=colors, span=span,
         postfix=postfix, sparkline=sparkline, prefixFontSize=prefixFontSize,
-        hideTimeOverride=None, transparent=transparent,
+        hideTimeOverride=None, transparent=transparent, editable=False,
     )
 
 
@@ -82,7 +81,7 @@ def Graph(
     return core.Graph(
         id=id, title=title, dashLength=dashLength, dashes=dashes,
         spaceLength=spaceLength, targets=targets, xAxis=xAxis, yAxes=yAxes,
-        dataSource='${DS_PROMETHEUS}', nullPointMode=nullPointMode,
+        dataSource='${DS_PROMETHEUS}', nullPointMode=nullPointMode, editable=False,
     )
 
 
