@@ -100,8 +100,19 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 	if p.Spec.Resources.Requests == nil {
 		p.Spec.Resources.Requests = v1.ResourceList{}
 	}
-	if _, ok := p.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
-		p.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("2Gi")
+	_, memoryRequestFound := p.Spec.Resources.Requests[v1.ResourceMemory]
+	memoryLimit, memoryLimitFound := p.Spec.Resources.Limits[v1.ResourceMemory]
+	if !memoryRequestFound {
+		defaultMemoryRequest := resource.MustParse("2Gi")
+		compareResult := memoryLimit.Cmp(defaultMemoryRequest)
+		// If limit is given and smaller or equal to 2Gi, then set memory
+		// request to the given limit. This is necessary as if limit < request,
+		// then a Pod is not schedulable.
+		if memoryLimitFound && compareResult <= 0 {
+			p.Spec.Resources.Requests[v1.ResourceMemory] = memoryLimit
+		} else {
+			p.Spec.Resources.Requests[v1.ResourceMemory] = defaultMemoryRequest
+		}
 	}
 
 	spec, err := makeStatefulSetSpec(p, config, ruleConfigMaps)
