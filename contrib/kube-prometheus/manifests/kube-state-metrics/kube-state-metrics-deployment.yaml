@@ -11,17 +11,43 @@ spec:
     spec:
       serviceAccountName: kube-state-metrics
       containers:
-      - name: kube-state-metrics
-        image: quay.io/coreos/kube-state-metrics:v1.0.1
+      - name: kube-rbac-proxy-main
+        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        args:
+        - "--secure-listen-address=:8443"
+        - "--upstream=http://127.0.0.1:8081/"
         ports:
-        - name: metrics
-          containerPort: 8080
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-          initialDelaySeconds: 5
-          timeoutSeconds: 5
+        - name: https-main
+          containerPort: 8443
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+          limits:
+            memory: 40Mi
+            cpu: 20m
+      - name: kube-rbac-proxy-self
+        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        args:
+        - "--secure-listen-address=:9443"
+        - "--upstream=http://127.0.0.1:8082/"
+        ports:
+        - name: https-self
+          containerPort: 9443
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+          limits:
+            memory: 40Mi
+            cpu: 20m
+      - name: kube-state-metrics
+        image: quay.io/coreos/kube-state-metrics:v1.2.0-rc.0
+        args:
+        - "--host=127.0.0.1"
+        - "--port=8081"
+        - "--telemetry-host=127.0.0.1"
+        - "--telemetry-port=8082"
       - name: addon-resizer
         image: gcr.io/google_containers/addon-resizer:1.0
         resources:

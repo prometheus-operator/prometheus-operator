@@ -3,24 +3,26 @@ kind: DaemonSet
 metadata:
   name: node-exporter
 spec:
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
       labels:
         app: node-exporter
       name: node-exporter
     spec:
+      serviceAccountName: node-exporter
       hostNetwork: true
       hostPID: true
       containers:
       - image: quay.io/prometheus/node-exporter:v0.15.0
         args:
+        - "--web.listen-address=127.0.0.1:9101"
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
         name: node-exporter
-        ports:
-        - containerPort: 9100
-          hostPort: 9100
-          name: scrape
         resources:
           requests:
             memory: 30Mi
@@ -35,6 +37,22 @@ spec:
         - name: sys
           readOnly: true
           mountPath: /host/sys
+      - name: kube-rbac-proxy
+        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        args:
+        - "--secure-listen-address=:9100"
+        - "--upstream=http://127.0.0.1:9101/"
+        ports:
+        - containerPort: 9100
+          hostPort: 9100
+          name: https
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+          limits:
+            memory: 40Mi
+            cpu: 20m
       tolerations:
         - effect: NoSchedule
           operator: Exists

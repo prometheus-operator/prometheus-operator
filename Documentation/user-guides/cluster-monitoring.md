@@ -129,24 +129,26 @@ kind: DaemonSet
 metadata:
   name: node-exporter
 spec:
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
       labels:
         app: node-exporter
       name: node-exporter
     spec:
+      serviceAccountName: node-exporter
       hostNetwork: true
       hostPID: true
       containers:
       - image: quay.io/prometheus/node-exporter:v0.15.0
         args:
+        - "--web.listen-address=127.0.0.1:9101"
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
         name: node-exporter
-        ports:
-        - containerPort: 9100
-          hostPort: 9100
-          name: scrape
         resources:
           requests:
             memory: 30Mi
@@ -161,6 +163,22 @@ spec:
         - name: sys
           readOnly: true
           mountPath: /host/sys
+      - name: kube-rbac-proxy
+        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        args:
+        - "--secure-listen-address=:9100"
+        - "--upstream=http://127.0.0.1:9101/"
+        ports:
+        - containerPort: 9100
+          hostPort: 9100
+          name: https
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+          limits:
+            memory: 40Mi
+            cpu: 20m
       tolerations:
         - effect: NoSchedule
           operator: Exists
@@ -189,7 +207,7 @@ spec:
   type: ClusterIP
   clusterIP: None
   ports:
-  - name: http-metrics
+  - name: https
     port: 9100
     protocol: TCP
   selector:
@@ -214,17 +232,43 @@ spec:
     spec:
       serviceAccountName: kube-state-metrics
       containers:
-      - name: kube-state-metrics
-        image: quay.io/coreos/kube-state-metrics:v1.0.1
+      - name: kube-rbac-proxy-main
+        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        args:
+        - "--secure-listen-address=:8443"
+        - "--upstream=http://127.0.0.1:8081/"
         ports:
-        - name: metrics
-          containerPort: 8080
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-          initialDelaySeconds: 5
-          timeoutSeconds: 5
+        - name: https-main
+          containerPort: 8443
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+          limits:
+            memory: 40Mi
+            cpu: 20m
+      - name: kube-rbac-proxy-self
+        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        args:
+        - "--secure-listen-address=:9443"
+        - "--upstream=http://127.0.0.1:8082/"
+        ports:
+        - name: https-self
+          containerPort: 9443
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+          limits:
+            memory: 40Mi
+            cpu: 20m
+      - name: kube-state-metrics
+        image: quay.io/coreos/kube-state-metrics:v1.2.0-rc.0
+        args:
+        - "--host=127.0.0.1"
+        - "--port=8081"
+        - "--telemetry-host=127.0.0.1"
+        - "--telemetry-port=8082"
       - name: addon-resizer
         image: gcr.io/google_containers/addon-resizer:1.0
         resources:
@@ -268,10 +312,15 @@ metadata:
     k8s-app: kube-state-metrics
   name: kube-state-metrics
 spec:
+  clusterIP: None
   ports:
-  - name: http-metrics
-    port: 8080
-    targetPort: metrics
+  - name: https-main
+    port: 8443
+    targetPort: https-main
+    protocol: TCP
+  - name: https-self
+    port: 9443
+    targetPort: https-self
     protocol: TCP
   selector:
     app: kube-state-metrics
@@ -429,9 +478,19 @@ spec:
     matchNames:
     - monitoring
   endpoints:
-  - port: http-metrics
+  - port: https-main
+    scheme: https
     interval: 30s
     honorLabels: true
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tlsConfig:
+      insecureSkipVerify: true
+  - port: https-self
+    scheme: https
+    interval: 30s
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tlsConfig:
+      insecureSkipVerify: true
 ```
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-node-exporter.yaml)
@@ -451,8 +510,12 @@ spec:
     matchNames:
     - monitoring
   endpoints:
-  - port: http-metrics
+  - port: https
+    scheme: https
     interval: 30s
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tlsConfig:
+      insecureSkipVerify: true
 ```
 
 And the Alertmanager:

@@ -9,7 +9,7 @@ spec:
   type: ClusterIP
   clusterIP: None
   ports:
-  - name: http-metrics
+  - name: https
     port: 9100
     protocol: TCP
   selector:
