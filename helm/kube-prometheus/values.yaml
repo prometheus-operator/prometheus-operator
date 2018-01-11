@@ -1,3 +1,7 @@
+global:
+  # service selector label key to target k8s component pods
+  k8sComponentLabelKey: component
+
 # exporter-node configuration
 deployExporterNode: True
 
