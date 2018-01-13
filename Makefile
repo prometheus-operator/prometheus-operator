@@ -43,6 +43,10 @@ e2e:
 
 e2e-helm:
 	./helm/hack/e2e-test.sh
+	$(MAKE) helm-package-deps
+	$(MAKE) helm-package-kube-prometheus
+	./helm/hack/validate-bump-version.sh
+
 
 clean-e2e:
 	kubectl -n $(NAMESPACE) delete prometheus,alertmanager,servicemonitor,statefulsets,deploy,svc,endpoints,pods,cm,secrets,replicationcontrollers --all
@@ -88,10 +92,16 @@ jsonnet:
 jsonnet-docker:
 	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .
 
-helm-sync-s3:
+helm-package-deps:
 	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes"
-	helm/hack/sync-repo.sh
+
+helm-package-kube-prometheus:
 	helm/hack/helm-package.sh kube-prometheus
+
+helm-sync-s3: 
+	$(MAKE) helm-package-deps
+	helm/hack/sync-repo.sh
+	 $(MAKE) helm-package-kube-prometheus
 	helm/hack/sync-repo.sh
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs
