@@ -54,7 +54,8 @@ spec:
 {{- if .Values.rbacEnable }}
   serviceAccountName: {{ template "prometheus.fullname" . }}
 {{- end }}
-{{- if .Values.serviceMonitorsSelector }}
+{{ if and .Values.config.specifiedInValues .Values.config.value }}
+{{- else if .Values.serviceMonitorsSelector }}
   serviceMonitorSelector:
 {{ toYaml .Values.serviceMonitorsSelector | indent 4 }}
 {{- else }}
