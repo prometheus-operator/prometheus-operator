@@ -1,11 +1,11 @@
 dependencies:
   - name: alertmanager
-    version: 0.0.7
+    version: 0.0.8
     #e2e-repository: file://../alertmanager
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
   
   - name: prometheus
-    version: 0.0.10
+    version: 0.0.11
     #e2e-repository: file://../prometheus
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
  

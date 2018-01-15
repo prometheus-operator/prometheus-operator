@@ -78,3 +78,24 @@ spec:
 {{ toYaml .Values.storageSpec | indent 4 }}
 {{- end }}
   version: "{{ .Values.image.tag }}"
+{{- if eq .Values.podAntiAffinity "hard" }}
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchLabels:
+            app: {{ template "prometheus.name" . }}
+            prometheus: {{ .Release.Name }}
+{{- else if eq .Values.podAntiAffinity "soft" }}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app: {{ template "prometheus.name" . }}
+              prometheus: {{ .Release.Name }}
+{{- end }}
