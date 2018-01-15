@@ -444,6 +444,27 @@ Overrides:
 		},
 	}
 
+	livenessProbe := &v1.Probe{
+		Handler: probeHandler,
+		// For larger servers, restoring a checkpoint on startup may take quite a bit of time.
+		// Wait up to 5 minutes.
+		InitialDelaySeconds: 300,
+		PeriodSeconds:       5,
+		TimeoutSeconds:      probeTimeoutSeconds,
+		FailureThreshold:    10,
+	}
+	overrideProbeDefaults(p.Spec.LivenessProbe, livenessProbe)
+
+	readinessProbe := &v1.Probe{
+		Handler:          probeHandler,
+		TimeoutSeconds:   probeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+	overrideProbeDefaults(p.Spec.ReadinessProbe, readinessProbe)
+
+
+
 	return &v1beta1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    p.Spec.Replicas,
@@ -468,21 +489,8 @@ Overrides:
 						},
 						Args:         promArgs,
 						VolumeMounts: promVolumeMounts,
-						LivenessProbe: &v1.Probe{
-							Handler: probeHandler,
-							// For larger servers, restoring a checkpoint on startup may take quite a bit of time.
-							// Wait up to 5 minutes.
-							InitialDelaySeconds: 300,
-							PeriodSeconds:       5,
-							TimeoutSeconds:      probeTimeoutSeconds,
-							FailureThreshold:    10,
-						},
-						ReadinessProbe: &v1.Probe{
-							Handler:          probeHandler,
-							TimeoutSeconds:   probeTimeoutSeconds,
-							PeriodSeconds:    5,
-							FailureThreshold: 6,
-						},
+						LivenessProbe: livenessProbe,
+						ReadinessProbe: readinessProbe,
 						Resources: p.Spec.Resources,
 					}, {
 						Name:         "prometheus-config-reloader",
@@ -504,6 +512,29 @@ Overrides:
 			},
 		},
 	}, nil
+}
+
+func overrideProbeDefaults(src *v1alpha1.Probe, dst *v1.Probe) {
+
+	if src == nil {
+		return
+	}
+
+	if src.InitialDelaySeconds != nil {
+		dst.InitialDelaySeconds = *src.InitialDelaySeconds
+	}
+	if src.TimeoutSeconds != nil {
+		dst.TimeoutSeconds = *src.TimeoutSeconds
+	}
+	if src.PeriodSeconds != nil {
+		dst.PeriodSeconds = *src.PeriodSeconds
+	}
+	if src.SuccessThreshold != nil {
+		dst.SuccessThreshold = *src.SuccessThreshold
+	}
+	if src.FailureThreshold != nil {
+		dst.FailureThreshold = *src.FailureThreshold
+	}
 }
 
 func configSecretName(name string) string {
