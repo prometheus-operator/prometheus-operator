@@ -639,6 +639,7 @@ data:
                   "format": "none",
                   "label": "",
                   "logBase": 1,
+                  "decimals":0,
                   "show": true
                 },
                 {
@@ -7379,6 +7380,7 @@ data:
                   "format": "none",
                   "label": "",
                   "logBase": 1,
+                  "decimals":0,
                   "show": true
                 },
                 {
