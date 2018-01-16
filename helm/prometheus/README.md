@@ -114,6 +114,8 @@ serviceMonitors:
       any: true
 ```
 
+Make sure that `labels` matches the `serviceMonitorSelector` on the Prometheus deployment. You can find the current `serviceMonitorSelector` for Prometheus by running `kubectl get prometheus -o yaml --all-namespaces -o jsonpath='{.items[*].spec.serviceMonitorSelector.matchLabels}'`. 
+If the `label` added to the `serviceMonitor` don't match the `serviceMonitorSelector`, the Service Monitor will not be added to Prometheus.
 
 ### Third-party Resource Documentation
 - [Alertmanager](/Documentation/design.md#alertmanager)
