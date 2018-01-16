@@ -1,3 +1,8 @@
+## 0.16.1 / 2018-01-16
+
+* [CHANGE] Default to Alertmanager v0.13.0.
+* [BUGFIX] Alertmanager flags must be double dashed starting v0.13.0.
+
 ## 0.16.0 / 2018-01-11
 
 * [FEATURE] Add support for specifying remote storage configurations.
