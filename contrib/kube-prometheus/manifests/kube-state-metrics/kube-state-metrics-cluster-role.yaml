@@ -12,6 +12,9 @@ rules:
   - replicationcontrollers
   - limitranges
   - persistentvolumeclaims
+  - persistentvolumes
+  - namespaces
+  - endpoints
   verbs: ["list", "watch"]
 - apiGroups: ["extensions"]
   resources:
@@ -27,6 +30,10 @@ rules:
   resources:
   - cronjobs
   - jobs
+  verbs: ["list", "watch"]
+- apiGroups: ["autoscaling"]
+  resources:
+  - horizontalpodautoscalers
   verbs: ["list", "watch"]
 - apiGroups: ["authentication.k8s.io"]
   resources:
