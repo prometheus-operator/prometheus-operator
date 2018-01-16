@@ -143,7 +143,7 @@ spec:
       hostNetwork: true
       hostPID: true
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.15.0
+      - image: quay.io/prometheus/node-exporter:v0.15.2
         args:
         - "--web.listen-address=127.0.0.1:9101"
         - "--path.procfs=/host/proc"
@@ -263,7 +263,7 @@ spec:
             memory: 40Mi
             cpu: 20m
       - name: kube-state-metrics
-        image: quay.io/coreos/kube-state-metrics:v1.2.0-rc.0
+        image: quay.io/coreos/kube-state-metrics:v1.2.0
         args:
         - "--host=127.0.0.1"
         - "--port=8081"
@@ -530,7 +530,7 @@ metadata:
     alertmanager: main
 spec:
   replicas: 3
-  version: v0.9.1
+  version: v0.13.0
 ```
 
 Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid configuration mounted through a `Secret`. Note that the `Secret` has to be in the same namespace as the `Alertmanager` resource as well as have the name `alertmanager-<name-of-alertmanager-object` and the key of the configuration is `alertmanager.yaml`.

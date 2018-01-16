@@ -17,7 +17,7 @@ spec:
       hostNetwork: true
       hostPID: true
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.15.0
+      - image: quay.io/prometheus/node-exporter:v0.15.2
         args:
         - "--web.listen-address=127.0.0.1:9101"
         - "--path.procfs=/host/proc"

@@ -33,7 +33,7 @@ import (
 
 const (
 	governingServiceName   = "alertmanager-operated"
-	defaultVersion         = "v0.9.1"
+	defaultVersion         = "v0.13.0"
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
 	alertmanagerStorageDir = "/var/alertmanager/data"
@@ -187,15 +187,6 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		webRoutePrefix = a.Spec.RoutePrefix
 	}
 
-	switch version.Major {
-	case 0:
-		if version.Minor >= 7 {
-			amArgs = append(amArgs, "-web.route-prefix="+webRoutePrefix)
-		}
-	default:
-		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
-	}
-
 	localReloadURL := &url.URL{
 		Scheme: "http",
 		Host:   "localhost:9093",
@@ -228,6 +219,21 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
 		amArgs = append(amArgs, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
+	}
+
+	switch version.Major {
+	case 0:
+		if version.Minor >= 7 {
+			amArgs = append(amArgs, "-web.route-prefix="+webRoutePrefix)
+		}
+		if version.Minor >= 13 {
+			for i := range amArgs {
+				// starting with v0.13.0 of Alertmanager all flags are with double dashes.
+				amArgs[i] = "-" + amArgs[i]
+			}
+		}
+	default:
+		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
 	}
 
 	terminationGracePeriod := int64(0)
