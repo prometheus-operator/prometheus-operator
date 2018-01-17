@@ -24,6 +24,10 @@ rules:
   resources:
   - configmaps
   verbs: ["get"]
+- apiGroups: [""]
+  resources:
+  - nodes/metrics
+  verbs: ["get"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 {{- end }}
