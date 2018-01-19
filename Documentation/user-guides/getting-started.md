@@ -113,6 +113,9 @@ spec:
           requests:
             cpu: 100m
             memory: 50Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       serviceAccountName: prometheus-operator
 ```
 

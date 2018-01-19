@@ -68,6 +68,9 @@ spec:
           requests:
             cpu: 100m
             memory: 50Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       serviceAccountName: prometheus-operator
 ```
 
@@ -238,6 +241,9 @@ spec:
         app: kube-state-metrics
     spec:
       serviceAccountName: kube-state-metrics
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       containers:
       - name: kube-rbac-proxy-main
         image: quay.io/brancz/kube-rbac-proxy:v0.2.0
@@ -298,9 +304,9 @@ spec:
           - /pod_nanny
           - --container=kube-state-metrics
           - --cpu=100m
-          - --extra-cpu=1m
-          - --memory=100Mi
-          - --extra-memory=2Mi
+          - --extra-cpu=2m
+          - --memory=150Mi
+          - --extra-memory=30Mi
           - --threshold=5
           - --deployment=kube-state-metrics
 ```
@@ -348,7 +354,7 @@ metadata:
     prometheus: k8s
 spec:
   replicas: 2
-  version: v2.0.0
+  version: v2.1.0
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpressions:
