@@ -5,7 +5,7 @@ dependencies:
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
   
   - name: prometheus
-    version: 0.0.11
+    version: 0.0.12
     #e2e-repository: file://../prometheus
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
  
@@ -30,7 +30,7 @@ dependencies:
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-kube-state
-    version: 0.1.6
+    version: 0.1.7
     #e2e-repository: file://../exporter-kube-state
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
