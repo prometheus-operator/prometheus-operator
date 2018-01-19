@@ -17,10 +17,9 @@ jobs:
     script: ./scripts/govendor-ensure.sh
   - stage: Unit tests
     script: make test
-  - stage: E2e tests
+  - stage: E2e
     script: ./scripts/travis-e2e.sh
-  - stage: E2e helm
-    script: ./scripts/travis-e2e-helm.sh
+  - script: ./scripts/travis-e2e-helm.sh
   - stage: deploy
     script: skip
     deploy:
