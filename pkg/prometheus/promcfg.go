@@ -331,6 +331,10 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 			{Key: "target_label", Value: "pod"},
 		},
 		yaml.MapSlice{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_node_name"}},
+			{Key: "target_label", Value: "node"},
+		},
+		yaml.MapSlice{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
 			{Key: "target_label", Value: "service"},
 		},
