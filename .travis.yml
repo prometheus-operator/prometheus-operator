@@ -9,14 +9,15 @@ before_install:
   - export PATH=$PATH:$HOME/.local/bin
 jobs:
   include:
-  - stage: Check generated contents are up to date and code is formatted.
+  # Check generated contents are up to date and code is formatted.
+  - stage: Sanity check and unit tests 
     script: ./scripts/check-make-generate.sh
-  - stage: Build Prometheus config reloader
-    script: cd contrib/prometheus-config-reloader && make build
-  - stage: Ensure vendor folder matches vendor.json
-    script: ./scripts/govendor-ensure.sh
-  - stage: Unit tests
-    script: make test
+  # Build Prometheus config reloader
+  - script: cd contrib/prometheus-config-reloader && make build
+  # Ensure vendor folder matches vendor.json
+  - script: ./scripts/govendor-ensure.sh
+  # Unit tests
+  - script: make test
   - stage: E2e
     script: ./scripts/travis-e2e.sh
   - script: ./scripts/travis-e2e-helm.sh
