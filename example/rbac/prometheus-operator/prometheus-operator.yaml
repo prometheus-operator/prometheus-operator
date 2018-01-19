@@ -23,8 +23,11 @@ spec:
         resources:
           limits:
             cpu: 200m
-            memory: 100Mi
+            memory: 300Mi
           requests:
             cpu: 100m
             memory: 50Mi
       serviceAccountName: prometheus-operator
+       securityContext:
+         runAsNonRoot: true
+         runAsUser: 65534
