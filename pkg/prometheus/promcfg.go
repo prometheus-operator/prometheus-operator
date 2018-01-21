@@ -370,6 +370,42 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
+	if ep.MetricRelabelConfigs != nil {
+		var metricRelabelings []yaml.MapSlice
+		for _, c := range ep.MetricRelabelConfigs {
+			relabeling := yaml.MapSlice{
+				{Key: "source_labels", Value: c.SourceLabels},
+			}
+
+			if c.Separator != "" {
+				relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: c.Separator})
+			}
+
+			if c.TargetLabel != "" {
+				relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
+			}
+
+			if c.Regex != "" {
+				relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
+			}
+
+			if c.Modulus != uint64(0) {
+				relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
+			}
+
+			if c.Replacement != "" {
+				relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
+			}
+
+			if c.Action != "" {
+				relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.Action})
+			}
+
+			metricRelabelings = append(metricRelabelings, relabeling)
+		}
+		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: metricRelabelings})
+	}
+
 	return cfg
 }
 
@@ -584,11 +620,11 @@ func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpe
 				}
 
 				if c.Replacement != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "replacememt", Value: c.Replacement})
+					relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
 				}
 
 				if c.Action != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.TargetLabel})
+					relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: c.Action})
 				}
 				relabelings = append(relabelings, relabeling)
 			}

@@ -391,6 +391,18 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
+	if in.MetricRelabelConfigs != nil {
+		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
+		*out = make([]*RelabelConfig, len(*in))
+		for i := range *in {
+			if (*in)[i] == nil {
+				(*out)[i] = nil
+			} else {
+				(*out)[i] = new(RelabelConfig)
+				(*in)[i].DeepCopyInto((*out)[i])
+			}
+		}
+	}
 	return
 }
 

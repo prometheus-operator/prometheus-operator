@@ -53,6 +53,7 @@ Parameter | Description | Default
 `ingress.tls` | TLS configuration for Alertmanager Ingress | `[]`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `paused` | If true, the Operator won't process any Alertmanager configuration changes | `false`
+`podAntiAffinity` | If "soft", the scheduler attempts to place Alertmanager replicas on different nodes. If "hard" the scheduler is required to place them on different nodes. If "" (empty) then no anti-affinity rules will be configured. | `soft`
 `prometheusRules` | Prometheus rules | `[templates/alertmanager.rules.yaml](templates/alertmanager.rules.yaml)`
 `replicaCount` | Number of Alertmanager replicas desired | `1`
 `resources` | Pod resource requests & limits | `{}`

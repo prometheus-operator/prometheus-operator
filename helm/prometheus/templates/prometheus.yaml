@@ -54,7 +54,8 @@ spec:
 {{- if .Values.rbacEnable }}
   serviceAccountName: {{ template "prometheus.fullname" . }}
 {{- end }}
-{{- if .Values.serviceMonitorsSelector }}
+{{ if and .Values.config.specifiedInValues .Values.config.value }}
+{{- else if .Values.serviceMonitorsSelector }}
   serviceMonitorSelector:
 {{ toYaml .Values.serviceMonitorsSelector | indent 4 }}
 {{- else }}
@@ -77,3 +78,24 @@ spec:
 {{ toYaml .Values.storageSpec | indent 4 }}
 {{- end }}
   version: "{{ .Values.image.tag }}"
+{{- if eq .Values.podAntiAffinity "hard" }}
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchLabels:
+            app: {{ template "prometheus.name" . }}
+            prometheus: {{ .Release.Name }}
+{{- else if eq .Values.podAntiAffinity "soft" }}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app: {{ template "prometheus.name" . }}
+              prometheus: {{ .Release.Name }}
+{{- end }}

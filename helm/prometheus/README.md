@@ -55,6 +55,7 @@ Parameter | Description | Default
 `ingress.tls` | TLS configuration for Prometheus Ingress | `[]`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `paused` | If true, the Operator won't process any Prometheus configuration changes | `false`
+`podAntiAffinity` | If "soft", the scheduler attempts to place Prometheus replicas on different nodes. If "hard" the scheduler is required to place them on different nodes. If "" (empty) then no anti-affinity rules will be configured. | `soft`
 `prometheusRules` | Prometheus rules | `[templates/prometheus.rules.yaml](templates/prometheus.rules.yaml)`
 `replicaCount` | Number of Prometheus replicas desired | `1`
 `resources` | Pod resource requests & limits | `{}`
@@ -85,6 +86,36 @@ $ helm install coreos/prometheus --name my-release -f values.yaml
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
+
+
+### Service Monitors
+
+Custom service monitors can be added in values.yaml in the `serviceMonitors` section. Please refere to `values.yaml` for all available parameters.
+
+
+#### Example service monitor
+
+
+This example Service Monitor will monitor applications matching `app: nginx-ingress`. The port `metrics` will be scraped with the path `/merics`. The endpoint will be scraped every 30 seconds.
+
+```
+serviceMonitors:
+  - name: kube-prometheus-nginx-ingress
+    labels:
+      prometheus: kube-prometheus
+    selector:
+      matchLabels:
+        app: nginx-ingress
+    endpoints:
+      - port: metrics
+        interval: 30s
+        path: /metrics
+    namespaceSelector:
+      any: true
+```
+
+Make sure that `labels` matches the `serviceMonitorSelector` on the Prometheus deployment. You can find the current `serviceMonitorSelector` for Prometheus by running `kubectl get prometheus -o yaml --all-namespaces -o jsonpath='{.items[*].spec.serviceMonitorSelector.matchLabels}'`. 
+If the `label` added to the `serviceMonitor` don't match the `serviceMonitorSelector`, the Service Monitor will not be added to Prometheus.
 
 ### Third-party Resource Documentation
 - [Alertmanager](/Documentation/design.md#alertmanager)

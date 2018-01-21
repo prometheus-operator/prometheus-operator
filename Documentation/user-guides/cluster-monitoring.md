@@ -30,6 +30,13 @@ Once you complete this guide you will monitor the following:
 
 The manifests used here use the [Prometheus Operator](https://github.com/coreos/prometheus-operator), which manages Prometheus servers and their configuration in a cluster. Prometheus discovers targets through `Endpoints` objects, which means all targets that are running as `Pod`s in the Kubernetes cluster are easily monitored. Many Kubernetes components can be [self-hosted](https://coreos.com/blog/self-hosted-kubernetes.html) today. The kubelet, however, is not. Therefore the Prometheus Operator implements a functionality to synchronize the kubelets into an `Endpoints` object. To make use of that functionality the `--kubelet-service` argument must be passed to the Prometheus Operator when running it.
 
+
+> We assume that the kubelet uses token authN and authZ, as otherwise Prometheus needs a client certificate, which gives it full access to the kubelet, rather than just the metrics. Token authN and authZ allows more fine grained and easier access control. Simply start minikube with the following command (you can of course adapt the version and memory to your needs):
+>
+> $ minikube delete && minikube start --kubernetes-version=v1.9.1 --memory=4096 --bootstrapper=kubeadm --extra-config=kubelet.authentication-token-webhook=true --extra-config=kubelet.authorization-mode=Webhook --extra-config=scheduler.address=0.0.0.0 --extra-config=controller-manager.address=0.0.0.0
+>
+> In future versions of minikube and kubeadm this will be the default, but for the time being, we will have to configure it ourselves.
+
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml)
 ```yaml
 apiVersion: extensions/v1beta1
@@ -49,7 +56,7 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        image: quay.io/coreos/prometheus-operator:v0.15.0
+        image: quay.io/coreos/prometheus-operator:v0.16.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -61,6 +68,9 @@ spec:
           requests:
             cpu: 100m
             memory: 50Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       serviceAccountName: prometheus-operator
 ```
 
@@ -129,24 +139,26 @@ kind: DaemonSet
 metadata:
   name: node-exporter
 spec:
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
       labels:
         app: node-exporter
       name: node-exporter
     spec:
+      serviceAccountName: node-exporter
       hostNetwork: true
       hostPID: true
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.15.0
+      - image: quay.io/prometheus/node-exporter:v0.15.2
         args:
+        - "--web.listen-address=127.0.0.1:9101"
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
         name: node-exporter
-        ports:
-        - containerPort: 9100
-          hostPort: 9100
-          name: scrape
         resources:
           requests:
             memory: 30Mi
@@ -161,6 +173,22 @@ spec:
         - name: sys
           readOnly: true
           mountPath: /host/sys
+      - name: kube-rbac-proxy
+        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        args:
+        - "--secure-listen-address=:9100"
+        - "--upstream=http://127.0.0.1:9101/"
+        ports:
+        - containerPort: 9100
+          hostPort: 9100
+          name: https
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+          limits:
+            memory: 40Mi
+            cpu: 20m
       tolerations:
         - effect: NoSchedule
           operator: Exists
@@ -189,7 +217,7 @@ spec:
   type: ClusterIP
   clusterIP: None
   ports:
-  - name: http-metrics
+  - name: https
     port: 9100
     protocol: TCP
   selector:
@@ -213,18 +241,47 @@ spec:
         app: kube-state-metrics
     spec:
       serviceAccountName: kube-state-metrics
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       containers:
-      - name: kube-state-metrics
-        image: quay.io/coreos/kube-state-metrics:v1.0.1
+      - name: kube-rbac-proxy-main
+        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        args:
+        - "--secure-listen-address=:8443"
+        - "--upstream=http://127.0.0.1:8081/"
         ports:
-        - name: metrics
-          containerPort: 8080
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-          initialDelaySeconds: 5
-          timeoutSeconds: 5
+        - name: https-main
+          containerPort: 8443
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+          limits:
+            memory: 40Mi
+            cpu: 20m
+      - name: kube-rbac-proxy-self
+        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        args:
+        - "--secure-listen-address=:9443"
+        - "--upstream=http://127.0.0.1:8082/"
+        ports:
+        - name: https-self
+          containerPort: 9443
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+          limits:
+            memory: 40Mi
+            cpu: 20m
+      - name: kube-state-metrics
+        image: quay.io/coreos/kube-state-metrics:v1.2.0
+        args:
+        - "--host=127.0.0.1"
+        - "--port=8081"
+        - "--telemetry-host=127.0.0.1"
+        - "--telemetry-port=8082"
       - name: addon-resizer
         image: gcr.io/google_containers/addon-resizer:1.0
         resources:
@@ -247,9 +304,9 @@ spec:
           - /pod_nanny
           - --container=kube-state-metrics
           - --cpu=100m
-          - --extra-cpu=1m
-          - --memory=100Mi
-          - --extra-memory=2Mi
+          - --extra-cpu=2m
+          - --memory=150Mi
+          - --extra-memory=30Mi
           - --threshold=5
           - --deployment=kube-state-metrics
 ```
@@ -268,10 +325,15 @@ metadata:
     k8s-app: kube-state-metrics
   name: kube-state-metrics
 spec:
+  clusterIP: None
   ports:
-  - name: http-metrics
-    port: 8080
-    targetPort: metrics
+  - name: https-main
+    port: 8443
+    targetPort: https-main
+    protocol: TCP
+  - name: https-self
+    port: 9443
+    targetPort: https-self
     protocol: TCP
   selector:
     app: kube-state-metrics
@@ -292,7 +354,7 @@ metadata:
     prometheus: k8s
 spec:
   replicas: 2
-  version: v2.0.0
+  version: v2.1.0
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpressions:
@@ -357,11 +419,20 @@ metadata:
 spec:
   jobLabel: k8s-app
   endpoints:
-  - port: http-metrics
+  - port: https-metrics
+    scheme: https
     interval: 30s
-  - port: cadvisor
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+  - port: https-metrics
+    scheme: https
+    path: /metrics/cadvisor
     interval: 30s
     honorLabels: true
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
   selector:
     matchLabels:
       k8s-app: kubelet
@@ -429,9 +500,19 @@ spec:
     matchNames:
     - monitoring
   endpoints:
-  - port: http-metrics
+  - port: https-main
+    scheme: https
     interval: 30s
     honorLabels: true
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tlsConfig:
+      insecureSkipVerify: true
+  - port: https-self
+    scheme: https
+    interval: 30s
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tlsConfig:
+      insecureSkipVerify: true
 ```
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-node-exporter.yaml)
@@ -451,8 +532,12 @@ spec:
     matchNames:
     - monitoring
   endpoints:
-  - port: http-metrics
+  - port: https
+    scheme: https
     interval: 30s
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tlsConfig:
+      insecureSkipVerify: true
 ```
 
 And the Alertmanager:
@@ -467,7 +552,7 @@ metadata:
     alertmanager: main
 spec:
   replicas: 3
-  version: v0.9.1
+  version: v0.13.0
 ```
 
 Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid configuration mounted through a `Secret`. Note that the `Secret` has to be in the same namespace as the `Alertmanager` resource as well as have the name `alertmanager-<name-of-alertmanager-object` and the key of the configuration is `alertmanager.yaml`.

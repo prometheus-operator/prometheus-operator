@@ -16,6 +16,18 @@ CoreOS' Tectonic technology. Otherwise, you can simply make use of
 repository are adapted to work with a [multi-node setup](https://github.com/kubernetes-incubator/bootkube/tree/master/hack/multi-node)
 using [bootkube](https://github.com/kubernetes-incubator/bootkube).
 
+
+> We assume that the kubelet uses token authN and authZ, as otherwise
+> Prometheus needs a client certificate, which gives it full access to the
+> kubelet, rather than just the metrics. Token authN and authZ allows more fine
+> grained and easier access control. Simply start minikube with the following
+> command (you can of course adapt the version and memory to your needs):
+>
+> $ minikube delete && minikube start --kubernetes-version=v1.9.1 --memory=4096 --bootstrapper=kubeadm --extra-config=kubelet.authentication-token-webhook=true --extra-config=kubelet.authorization-mode=Webhook --extra-config=scheduler.address=0.0.0.0 --extra-config=controller-manager.address=0.0.0.0
+>
+> In future versions of minikube and kubeadm this will be the default, but for
+> the time being, we will have to configure it ourselves.
+
 ## Monitoring Kubernetes
 
 The manifests here use the [Prometheus Operator](https://github.com/coreos/prometheus-operator),

@@ -54,7 +54,7 @@ spec:
         image: {{ .Values.grafanaWatcher.repository }}:{{ .Values.grafanaWatcher.tag }}
         args:
           - '--watch-dir=/var/grafana-dashboards'
-          - '--grafana-url=http://localhost:3000'
+          - '--grafana-url=http://127.0.0.1:3000'
         env:
         - name: GRAFANA_USER
           valueFrom:
