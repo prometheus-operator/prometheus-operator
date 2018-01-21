@@ -17,8 +17,9 @@ spec:
     matchNames:
       - "kube-system"
   endpoints:
-  - port: https-metrics
-    interval: 15s
+  - interval: 15s
+    {{- if .Values.https }}
+    port: https-metrics
     scheme: https
     tlsConfig:
       caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -26,6 +27,9 @@ spec:
       # for the kubelet on API server nodes fail.
       insecureSkipVerify: true
     bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    {{- else }}
+    port: http-metrics
+    {{- end }}
   - port: cadvisor
     interval: 30s
     honorLabels: true
