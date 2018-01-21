@@ -1,5 +1,6 @@
+{{- if .Values.endpoints }}
 apiVersion: v1
-kind: Service
+kind: Endpoints
 metadata:
   labels:
     app: {{ template "exporter-kube-controller-manager.name" . }}
@@ -9,15 +10,13 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   name: {{ template "exporter-kube-controller-manager.fullname" . }}
   namespace: kube-system
-spec:
-  clusterIP: None
-  ports:
-    - name: http-metrics
-      port: {{ .Values.controllerManagerPort}}
-      protocol: TCP
-      targetPort: {{ .Values.controllerManagerPort}}
-{{- if not .Values.endpoints }}
-  selector:
-    {{ .Values.serviceSelectorLabelKey }}: kube-controller-manager
+subsets:
+  - addresses:
+      {{- range .Values.endpoints }}
+      - ip: {{ . }}
+      {{- end }}
+    ports:
+      - name: {{ .Values.scheme }}-metrics
+        port: {{ .Values.controllerManagerPort }}
+        protocol: TCP
 {{- end }}
-  type: ClusterIP
