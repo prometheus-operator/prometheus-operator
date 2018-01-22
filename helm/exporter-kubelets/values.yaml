@@ -1,2 +1,5 @@
+# Set to false for GKE
+https: true
+
 # default rules are in templates/kubelet.rules.yaml
 # prometheusRules: {}
