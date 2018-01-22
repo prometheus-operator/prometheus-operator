@@ -221,6 +221,18 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		amArgs = append(amArgs, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
 	}
 
+	gid := int64(2000)
+	uid := int64(1000)
+	nr := true
+	securityContext := &v1.PodSecurityContext{
+		FSGroup:      &gid,
+		RunAsNonRoot: &nr,
+		RunAsUser:    &uid,
+	}
+	if a.Spec.SecurityContext != nil {
+		securityContext = a.Spec.SecurityContext
+	}
+
 	switch version.Major {
 	case 0:
 		if version.Minor >= 7 {
@@ -324,8 +336,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 						},
 					},
 				},
-				Tolerations: a.Spec.Tolerations,
-				Affinity:    a.Spec.Affinity,
+				ServiceAccountName: a.Spec.ServiceAccountName,
+				SecurityContext:    securityContext,
+				Tolerations:        a.Spec.Tolerations,
+				Affinity:           a.Spec.Affinity,
 			},
 		},
 	}, nil

@@ -389,6 +389,12 @@ type AlertmanagerSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// If specified, the pod's tolerations.
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// SecurityContext holds pod-level security attributes and common container settings.
+	// This defaults to non root user with uid 1000 and gid 2000.
+	SecurityContext *v1.PodSecurityContext
+	// ServiceAccountName is the name of the ServiceAccount to use to run the
+	// Prometheus Pods.
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
 
 // A list of Alertmanagers.
