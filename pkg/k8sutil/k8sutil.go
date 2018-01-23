@@ -36,6 +36,12 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// CustomResourceDefinitionTypeMeta set the default kind/apiversion of CRD
+var CustomResourceDefinitionTypeMeta metav1.TypeMeta = metav1.TypeMeta{
+	Kind:       "CustomResourceDefinition",
+	APIVersion: "apiextensions.k8s.io/v1beta1",
+}
+
 // WaitForCRDReady waits for a third party resource to be available for use.
 func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	err := wait.Poll(3*time.Second, 10*time.Minute, func() (bool, error) {
@@ -211,6 +217,7 @@ func NewPrometheusCustomResourceDefinition(crdkind monitoringv1.CrdKind, group s
 			Name:   crdkind.Plural + "." + group,
 			Labels: labels,
 		},
+		TypeMeta: CustomResourceDefinitionTypeMeta,
 		Spec: extensionsobj.CustomResourceDefinitionSpec{
 			Group:   group,
 			Version: monitoringv1.Version,
@@ -229,7 +236,7 @@ func NewServiceMonitorCustomResourceDefinition(crdkind monitoringv1.CrdKind, gro
 			Name:   crdkind.Plural + "." + group,
 			Labels: labels,
 		},
-
+		TypeMeta: CustomResourceDefinitionTypeMeta,
 		Spec: extensionsobj.CustomResourceDefinitionSpec{
 			Group:   group,
 			Version: monitoringv1.Version,
@@ -248,6 +255,7 @@ func NewAlertmanagerCustomResourceDefinition(crdkind monitoringv1.CrdKind, group
 			Name:   crdkind.Plural + "." + group,
 			Labels: labels,
 		},
+		TypeMeta: CustomResourceDefinitionTypeMeta,
 		Spec: extensionsobj.CustomResourceDefinitionSpec{
 			Group:   group,
 			Version: monitoringv1.Version,

@@ -16,6 +16,9 @@ build: promu
 short-build:
 	go install github.com/coreos/prometheus-operator/cmd/operator
 
+crdgen:
+	go install github.com/coreos/prometheus-operator/cmd/po-crdgen
+
 crossbuild: promu
 	@$(PROMU) crossbuild
 
