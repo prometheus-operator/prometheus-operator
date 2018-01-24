@@ -35,6 +35,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 Parameter | Description | Default
 --- | --- | ---
+`auth.anonymous.enabled` | If true, enable anonymous authentication | `true`
 `adminUser` | Grafana admin user name | `admin`
 `adminPassword` | Grafana admin user password | `admin`
 `image.repository` | Image | `grafana/grafana`

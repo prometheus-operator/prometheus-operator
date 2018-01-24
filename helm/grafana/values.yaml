@@ -87,3 +87,7 @@ ingress:
 dataSource: {}
 
 serverDashboardFiles: {}
+
+auth:
+  anonymous:
+    enabled: true
