@@ -26,7 +26,7 @@ spec:
         - name: GF_AUTH_BASIC_ENABLED
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ENABLED
-          value: {{ .Values.auth.anonymous.enabled }}
+          value: "{{ .Values.auth.anonymous.enabled }}"
         - name: GF_SECURITY_ADMIN_USER
           valueFrom:
             secretKeyRef:
