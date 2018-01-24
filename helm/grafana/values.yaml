@@ -90,4 +90,4 @@ serverDashboardFiles: {}
 
 auth:
   anonymous:
-    enabled: true
+    enabled: "true"
