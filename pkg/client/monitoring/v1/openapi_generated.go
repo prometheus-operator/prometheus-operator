@@ -72,12 +72,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
-						"metadata": {
-							SchemaProps: spec.SchemaProps{
-								Description: "Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata",
-								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-							},
-						},
 						"spec": {
 							SchemaProps: spec.SchemaProps{
 								Description: "Specification of the desired behavior of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
@@ -95,7 +89,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 				},
 			},
 			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerStatus"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerEndpoints": {
 			Schema: spec.Schema{
@@ -137,7 +131,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 							},
 						},
 					},
-					Required: []string{"namespace", "name", "port", "scheme", "pathPrefix"},
+					Required: []string{"namespace", "name", "port"},
 				},
 			},
 			Dependencies: []string{
@@ -536,12 +530,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
-						"metadata": {
-							SchemaProps: spec.SchemaProps{
-								Description: "Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata",
-								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-							},
-						},
 						"spec": {
 							SchemaProps: spec.SchemaProps{
 								Description: "Specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
@@ -559,7 +547,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 				},
 			},
 			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusStatus"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusList": {
 			Schema: spec.Schema{
@@ -824,14 +812,13 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								},
 							},
 						},
-						"SecurityContext": {
+						"securityContext": {
 							SchemaProps: spec.SchemaProps{
 								Description: "SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and default PodSecurityContext for other versions.",
 								Ref:         ref("k8s.io/api/core/v1.PodSecurityContext"),
 							},
 						},
 					},
-					Required: []string{"SecurityContext"},
 				},
 			},
 			Dependencies: []string{
@@ -1100,12 +1087,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
-						"metadata": {
-							SchemaProps: spec.SchemaProps{
-								Description: "Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata",
-								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-							},
-						},
 						"spec": {
 							SchemaProps: spec.SchemaProps{
 								Description: "Specification of desired Service selection for target discrovery by Prometheus.",
@@ -1117,7 +1098,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 				},
 			},
 			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ServiceMonitorSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ServiceMonitorSpec"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ServiceMonitorList": {
 			Schema: spec.Schema{

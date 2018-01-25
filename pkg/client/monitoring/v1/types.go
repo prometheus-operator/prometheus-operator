@@ -15,18 +15,11 @@
 package v1
 
 import (
-	spec "github.com/go-openapi/spec"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
-
-// CustomResourceValidation is a list of validation methods for CustomResources.
-type CustomResourceValidation struct {
-	// OpenAPIV3Schema is the OpenAPI v3 schema to be validated against.
-	OpenAPIV3Schema *spec.Schema `json:"openAPIV3Schema,omitempty" protobuf:"bytes,1,opt,name=openAPIV3Schema"`
-}
 
 // Prometheus defines a Prometheus deployment.
 // +k8s:openapi-gen=true
@@ -34,6 +27,7 @@ type Prometheus struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// +k8s:openapi-gen=false
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Prometheus cluster. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
@@ -131,7 +125,7 @@ type PrometheusSpec struct {
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and
 	// default PodSecurityContext for other versions.
-	SecurityContext *v1.PodSecurityContext
+	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not
@@ -258,9 +252,9 @@ type AlertmanagerEndpoints struct {
 	// Port the Alertmanager API is exposed on.
 	Port intstr.IntOrString `json:"port"`
 	// Scheme to use when firing alerts.
-	Scheme string `json:"scheme"`
+	Scheme string `json:"scheme,omitempty"`
 	// Prefix for the HTTP path alerts are pushed to.
-	PathPrefix string `json:"pathPrefix"`
+	PathPrefix string `json:"pathPrefix,omitempty"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.
@@ -269,6 +263,7 @@ type ServiceMonitor struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// +k8s:openapi-gen=false
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired Service selection for target discrovery by
 	// Prometheus.
@@ -360,6 +355,7 @@ type Alertmanager struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// +k8s:openapi-gen=false
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Alertmanager cluster. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
