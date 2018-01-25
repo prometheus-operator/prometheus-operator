@@ -185,19 +185,18 @@ func TestHostNetwork(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
 		},
-		Spec: monitoringv1.PrometheusSpec{
+		Spec: monitoringv1.AlertmanagerSpec{
 			HostNetwork: true,
 		},
-	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+	}, nil, defaultTestConfig)
 
 	require.NoError(t, err)
-
 	if sset.Spec.Template.Spec.HostNetwork != true || sset.Spec.Template.Spec.DNSPolicy != v1.DNSClusterFirstWithHostNet {
-		t.Fatal("HostNetwork is not set correctlly for prometheus statefulset")
+		t.Fatal("HostNetwork is not set correctlly for alertamanager statefulset")
 	}
 }
