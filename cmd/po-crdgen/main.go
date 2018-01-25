@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright 2018 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package main
 import (
 	"flag"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"k8s.io/api/core/v1"
 
 	"os"
 )
@@ -32,8 +31,8 @@ func init() {
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
 	flagset.BoolVar(&cfg.EnableValidation, "with-validation", false, "Include the validation spec")
 	flagset.StringVar(&cfg.CrdGroup, "crd-apigroup", monitoringv1.Group, "prometheus CRD  API group name")
+	flagset.StringVar(&cfg.OutputFormat, "output", "yaml", "output format: json|yaml")
 	flagset.Var(&cfg.CrdKinds, "crd-kinds", "customize CRD kind names")
-	flagset.StringVar(&cfg.Namespace, "namespace", v1.NamespaceAll, "Namespace to scope the interaction of the Prometheus Operator and the apiserver.")
 	flagset.Parse(os.Args[1:])
 }
 

@@ -211,8 +211,8 @@ func NewAlertmanagerTPRDefinition() *extensionsobjold.ThirdPartyResource {
 	}
 }
 
-func NewPrometheusCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
-	return &extensionsobj.CustomResourceDefinition{
+func NewPrometheusCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string, validation bool) *extensionsobj.CustomResourceDefinition {
+	crd := &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   crdkind.Plural + "." + group,
 			Labels: labels,
@@ -227,11 +227,23 @@ func NewPrometheusCustomResourceDefinition(crdkind monitoringv1.CrdKind, group s
 				Kind:   crdkind.Kind,
 			},
 		},
+	}
+
+	if validation {
+		addValidationSpec(crd, "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Prometheus")
+	}
+	return crd
+}
+
+func addValidationSpec(crd *extensionsobj.CustomResourceDefinition, specDefinitionName string) {
+	schema := monitoringv1.GetOpenAPIDefinitions(OpenAPIRefCallBack)[specDefinitionName].Schema
+	crd.Spec.Validation = &extensionsobj.CustomResourceValidation{
+		OpenAPIV3Schema: SchemaPropsToJsonProps(&schema),
 	}
 }
 
-func NewServiceMonitorCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
-	return &extensionsobj.CustomResourceDefinition{
+func NewServiceMonitorCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string, validation bool) *extensionsobj.CustomResourceDefinition {
+	crd := &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   crdkind.Plural + "." + group,
 			Labels: labels,
@@ -247,10 +259,16 @@ func NewServiceMonitorCustomResourceDefinition(crdkind monitoringv1.CrdKind, gro
 			},
 		},
 	}
+
+	if validation {
+		addValidationSpec(crd, "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ServiceMonitor")
+	}
+
+	return crd
 }
 
-func NewAlertmanagerCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
-	return &extensionsobj.CustomResourceDefinition{
+func NewAlertmanagerCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string, validation bool) *extensionsobj.CustomResourceDefinition {
+	crd := &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   crdkind.Plural + "." + group,
 			Labels: labels,
@@ -266,4 +284,10 @@ func NewAlertmanagerCustomResourceDefinition(crdkind monitoringv1.CrdKind, group
 			},
 		},
 	}
+
+	if validation {
+		addValidationSpec(crd, "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerSpec")
+	}
+
+	return crd
 }

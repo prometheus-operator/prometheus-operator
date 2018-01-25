@@ -16,7 +16,7 @@ build: promu
 short-build:
 	go install github.com/coreos/prometheus-operator/cmd/operator
 
-crdgen:
+po-crdgen:
 	go install github.com/coreos/prometheus-operator/cmd/po-crdgen
 
 crossbuild: promu
@@ -76,6 +76,14 @@ deepcopy-gen:
 generate-deepcopy: deepcopy-gen
 	deepcopy-gen -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" --output-file-base zz_generated.deepcopy
 	deepcopy-gen -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" --output-file-base zz_generated.deepcopy
+
+openapi-gen:
+	go get -u -v -d k8s.io/code-generator/cmd/openapi-gen
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.8
+	go install k8s.io/code-generator/cmd/openapi-gen
+
+generate-openapi: openapi-gen
+	openapi-gen  -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1  -p github.com/coreos/prometheus-operator/pkg/client/monitoring/v1
 
 generate-bundle:
 	hack/generate-bundle.sh

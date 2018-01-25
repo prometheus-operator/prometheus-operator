@@ -16,13 +16,12 @@ package v1
 
 import (
 	"fmt"
-	"strings"
-
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"strings"
 )
 
 const (
