@@ -98,6 +98,7 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
 | affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
+| hostNetwork | If specified, the pod's hostNetwork will be true | bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -213,6 +214,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | remoteWrite | If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteWriteSpec](#remotewritespec) | false |
 | remoteRead | If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteReadSpec](#remotereadspec) | false |
 | SecurityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and default PodSecurityContext for other versions. | *v1.PodSecurityContext | false |
+| hostNetwork | If specified, the pod hostNetwork is enabled | bool | false |
 
 [Back to TOC](#table-of-contents)
 
