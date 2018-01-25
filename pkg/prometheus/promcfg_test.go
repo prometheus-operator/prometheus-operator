@@ -211,5 +211,43 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 		},
 	}
 
+	res["servicemonitor5"] = &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testservicemonitor5",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group8",
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group":  "group8",
+					"group3": "group9",
+				},
+			},
+			Endpoints: []monitoringv1.Endpoint{
+				monitoringv1.Endpoint{
+					Port:     "web",
+					Interval: "60s",
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						&monitoringv1.RelabelConfig{
+							SourceLabels: []string{"__address__"},
+							TargetLabel:  "__param_target",
+						},
+						&monitoringv1.RelabelConfig{
+							SourceLabels: []string{"__param_target"},
+							TargetLabel:  "instance",
+						},
+						&monitoringv1.RelabelConfig{
+							TargetLabel: "__address__",
+							Replacement: "127.0.0.1:9115",
+						},
+					},
+				},
+			},
+		},
+	}
+
 	return res
 }
