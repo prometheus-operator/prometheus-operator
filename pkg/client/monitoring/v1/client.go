@@ -16,6 +16,8 @@ package v1
 
 import (
 	"fmt"
+	crdutils "github.com/coreos/prometheus-operator/pkg/k8sutil/crdvalidation"
+	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/dynamic"
@@ -49,6 +51,8 @@ var DefaultCrdKinds CrdKinds = CrdKinds{
 	ServiceMonitor: CrdKind{Plural: ServiceMonitorName, Kind: ServiceMonitorsKind},
 	Alertmanager:   CrdKind{Plural: AlertmanagerName, Kind: AlertmanagersKind},
 }
+
+var CrdValidationDefinitions map[string]*extensionsobj.JSONSchemaProps = crdutils.GetOpenAPICrdDefinitions(GetOpenAPIDefinitions)
 
 // Implement the flag.Value interface
 func (crdkinds *CrdKinds) String() string {

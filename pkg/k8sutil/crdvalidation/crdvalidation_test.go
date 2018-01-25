@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package k8sutil
+package crdvalidation
 
 import (
 	"encoding/json"
@@ -21,8 +21,7 @@ import (
 
 	spec "github.com/go-openapi/spec"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	// common "k8s.io/kube-openapi/pkg/common"
-	//"strings"
+	common "k8s.io/kube-openapi/pkg/common"
 	"testing"
 )
 
@@ -41,7 +40,9 @@ func TestConvertSchematoJsonProp(t *testing.T) {
 		Description: "Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata",
 		Ref:         ref,
 	}
-	props := SchemaPropsToJsonProps(&schema)
+	var def map[string]common.OpenAPIDefinition
+	props := SchemaPropsToJsonProps(&schema, def, false)
+
 	if props.Description != expected.Description {
 		t.Errorf("Description: expected %s, got %s", schema.Description, expected.Description)
 	}
@@ -84,8 +85,8 @@ func TestConvertFullSchematoJsonProp(t *testing.T) {
 		},
 	},
 	}
-
-	props := SchemaPropsToJsonProps(&schema)
+	var def map[string]common.OpenAPIDefinition
+	props := SchemaPropsToJsonProps(&schema, def, false)
 	jsonBytes, err := json.MarshalIndent(props, "", "  ")
 	if err != nil {
 		fmt.Println("error:", err)

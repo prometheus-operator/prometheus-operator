@@ -236,9 +236,8 @@ func NewPrometheusCustomResourceDefinition(crdkind monitoringv1.CrdKind, group s
 }
 
 func addValidationSpec(crd *extensionsobj.CustomResourceDefinition, specDefinitionName string) {
-	schema := monitoringv1.GetOpenAPIDefinitions(OpenAPIRefCallBack)[specDefinitionName].Schema
 	crd.Spec.Validation = &extensionsobj.CustomResourceValidation{
-		OpenAPIV3Schema: SchemaPropsToJsonProps(&schema),
+		OpenAPIV3Schema: monitoringv1.CrdValidationDefinitions[specDefinitionName],
 	}
 }
 

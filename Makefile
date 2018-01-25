@@ -82,7 +82,7 @@ openapi-gen:
 	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.8
 	go install k8s.io/code-generator/cmd/openapi-gen
 
-generate-openapi: openapi-gen
+generate-openapi:
 	openapi-gen  -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1  -p github.com/coreos/prometheus-operator/pkg/client/monitoring/v1
 
 generate-bundle:
