@@ -69,6 +69,6 @@ spec:
           - --deployment={{ template "exporter-kube-state.fullname" . }}
         resources:
 {{ toYaml .Values.addon_resizer.resources | indent 12 }}
-    {{- if .Values.rbacEnable }}
+    {{- if .Values.global.rbacEnable }}
       serviceAccountName: {{ template "exporter-kube-state.fullname" . }}
     {{- end }}

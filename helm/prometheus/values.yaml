@@ -73,7 +73,8 @@ paused: false
 
 ## If true, create & use RBAC resources
 ##
-rbacEnable: true
+global:
+  rbacEnable: true
 
 ## Number of Prometheus replicas desired
 ##
