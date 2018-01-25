@@ -176,3 +176,28 @@ func TestStatefulEmptyDir(t *testing.T) {
 		t.Fatal("Error adding EmptyDir Spec to StatefulSetSpec")
 	}
 }
+
+func TestHostNetwork(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			HostNetwork: true,
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+
+	require.NoError(t, err)
+
+	if sset.Spec.Template.Spec.HostNetwork != true || sset.Spec.Template.Spec.DNSPolicy != v1.DNSClusterFirstWithHostNet {
+		t.Fatal("HostNetwork is not set correctlly for prometheus statefulset")
+	}
+}

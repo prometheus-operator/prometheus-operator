@@ -200,13 +200,14 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		},
 	}
 
-	// If hostNetwork is true, then set podSpec.HostNetwork: true, and podSpec.DnsPolicy to
 	var hostNetwork bool
 	var dnsPolicy v1.DNSPolicy
 	hostNetwork = a.Spec.HostNetwork
 	if hostNetwork {
+		// If hostNetwork is true, set DNSPolicy to `v1.DNSClusterFirstWithHostNet`.
 		dnsPolicy = v1.DNSClusterFirstWithHostNet
 	} else {
+		// Otherwise, use default value.
 		dnsPolicy = v1.DNSClusterFirst
 	}
 

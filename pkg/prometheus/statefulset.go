@@ -503,13 +503,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		livenessProbeInitialDelaySeconds = 300
 	}
 
-	// If hostNetwork is true, then set podSpec.HostNetwork: true, and podSpec.DnsPolicy to
 	var hostNetwork bool
 	var dnsPolicy v1.DNSPolicy
 	hostNetwork = p.Spec.HostNetwork
 	if hostNetwork {
+		// If hostNetwork is true, set DNSPolicy to `v1.DNSClusterFirstWithHostNet`.
 		dnsPolicy = v1.DNSClusterFirstWithHostNet
 	} else {
+		// Otherwise, use default value.
 		dnsPolicy = v1.DNSClusterFirst
 	}
 

@@ -122,7 +122,7 @@ type PrometheusSpec struct {
 	// This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and
 	// default PodSecurityContext for other versions.
 	SecurityContext *v1.PodSecurityContext
-	// If specified, the pod hostNetwork is enabled
+	// If set to true, the pod's hostNetwork will be enabled.
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 }
 
@@ -391,7 +391,7 @@ type AlertmanagerSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// If specified, the pod's tolerations.
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
-	// If specified, the pod's hostNetwork will be true
+	// If set to true, the pod's hostNetwork will be enabled.
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 }
 
