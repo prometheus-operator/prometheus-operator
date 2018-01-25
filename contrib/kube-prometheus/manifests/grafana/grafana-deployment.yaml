@@ -9,9 +9,12 @@ spec:
       labels:
         app: grafana
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       containers:
       - name: grafana
-        image: grafana/grafana:4.6.3
+        image: quay.io/coreos/monitoring-grafana:4.6.3-non-root
         env:
         - name: GF_AUTH_BASIC_ENABLED
           value: "true"
@@ -29,7 +32,7 @@ spec:
               key: password
         volumeMounts:
         - name: grafana-storage
-          mountPath: /var/grafana-storage
+          mountPath: /data
         ports:
         - name: web
           containerPort: 3000

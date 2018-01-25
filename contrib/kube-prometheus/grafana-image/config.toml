@@ -1,0 +1,2 @@
+[database]
+path = /data/grafana.db

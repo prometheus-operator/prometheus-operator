@@ -150,6 +150,9 @@ spec:
       name: node-exporter
     spec:
       serviceAccountName: node-exporter
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       hostNetwork: true
       hostPID: true
       containers:
