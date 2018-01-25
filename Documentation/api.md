@@ -145,6 +145,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | bearerTokenFile | File to read bearer token for scraping targets. | string | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
+| relabelings | RelabelConfigs to apply before scraping. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<relabel_config> | []*[RelabelConfig](#relabelconfig) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 
 [Back to TOC](#table-of-contents)
