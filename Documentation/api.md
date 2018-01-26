@@ -63,8 +63,8 @@ AlertmanagerEndpoints defines a selection of a single Endpoints object containin
 | namespace | Namespace of Endpoints object. | string | true |
 | name | Name of Endpoints object in Namespace. | string | true |
 | port | Port the Alertmanager API is exposed on. | intstr.IntOrString | true |
-| scheme | Scheme to use when firing alerts. | string | true |
-| pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | true |
+| scheme | Scheme to use when firing alerts. | string | false |
+| pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -214,7 +214,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
 | remoteWrite | If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteWriteSpec](#remotewritespec) | false |
 | remoteRead | If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteReadSpec](#remotereadspec) | false |
-| SecurityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and default PodSecurityContext for other versions. | *v1.PodSecurityContext | false |
+| securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and default PodSecurityContext for other versions. | *v1.PodSecurityContext | false |
 
 [Back to TOC](#table-of-contents)
 
