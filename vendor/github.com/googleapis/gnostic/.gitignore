@@ -1,0 +1,17 @@
+# IntelliJ IDEA
+.idea
+# Eclipse
+.checkstyle
+.project
+.settings
+# Swift
+.build
+Packages
+# vi
+*.swp
+# vscode
+.vscode
+.DS_Store
+*~
+Package.resolved
+extensions/sample/generated
