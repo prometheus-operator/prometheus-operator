@@ -36,7 +36,7 @@ for f in assets/grafana/generated/*-dashboard.json
 do
   basefilename=$(basename $f)
   echo "  $basefilename: |+"
-  if [ "$basefilename" -eq "etcd-dashboard.json" ]; then
+  if [ "$basefilename" = "etcd-dashboard.json" ]; then
     hack/scripts/wrap-dashboard.sh $f prometheus-etcd | sed "s/^/    /g"
   else
     hack/scripts/wrap-dashboard.sh $f prometheus-k8s | sed "s/^/    /g"
