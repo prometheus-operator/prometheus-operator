@@ -24,7 +24,7 @@ dashboardjson=$1
 datasource_name=$2
 inputname="DS_PROMETHEUS"
 
-if [ "$datasource_name" -eq "prometheus-etcd" ]; then
+if [ "$datasource_name" = "prometheus-etcd" ]; then
   $inputname="DS_PROMETHEUS-ETCD"
 fi
 
