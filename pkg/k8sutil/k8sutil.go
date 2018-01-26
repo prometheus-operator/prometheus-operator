@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"time"
 
+	crdutils "github.com/ant31/crd-validation/pkg"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	version "github.com/hashicorp/go-version"
@@ -236,11 +237,11 @@ func NewPrometheusCustomResourceDefinition(crdkind monitoringv1.CrdKind, group s
 }
 
 func addValidationSpec(crd *extensionsobj.CustomResourceDefinition, specDefinitionName string) {
-	crd.Spec.Validation = &extensionsobj.CustomResourceValidation{
-		OpenAPIV3Schema: monitoringv1.CrdValidationDefinitions[specDefinitionName],
-	}
+	crd.Spec.Validation = crdutils.GetCustomResourceValidation(specDefinitionName, monitoringv1.GetOpenAPIDefinitions)
+
 }
 
+// NewServiceMonitorCustomResourceDefinition creates the ServiceMonitor CRD API resource
 func NewServiceMonitorCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string, validation bool) *extensionsobj.CustomResourceDefinition {
 	crd := &extensionsobj.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
