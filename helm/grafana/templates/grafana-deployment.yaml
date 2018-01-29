@@ -43,6 +43,14 @@ spec:
         ports:
         - name: web
           containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 3000
+          periodSeconds: 1
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 10             
         resources:
           requests:
             memory: 100Mi
