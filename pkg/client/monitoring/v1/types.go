@@ -122,6 +122,9 @@ type PrometheusSpec struct {
 	// This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and
 	// default PodSecurityContext for other versions.
 	SecurityContext *v1.PodSecurityContext
+	// If specified, set target-heap-size = requests.memory * targetHeapSizeRate, else set the rate to 1/2
+	// The valid value is in range (0, 1)
+	TargetHeapSizeRate string `json:"targetHeapSizeRate,omitempty"`
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not
