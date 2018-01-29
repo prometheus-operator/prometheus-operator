@@ -117,11 +117,12 @@ alertmanager:
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
   ##
   storageSpec: {}
-  #   class: default
-  #   resources:
-  #     requests:
-  #       storage: 2Gi
-  #   selector: {}
+  #  volumeClaimTemplate:
+  #    spec:
+  #      resources:
+  #        requests:
+  #          storage: 50Gi
+  #  selector: {}
 
 ## If true, create & use RBAC resources
 ##
@@ -344,11 +345,12 @@ prometheus:
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
   ##
   storageSpec: {}
-  #   class: default
-  #   resources:
-  #     requests:
-  #       storage: 16Gi
-  #   selector: {}
+  #  volumeClaimTemplate:
+  #    spec:
+  #      resources:
+  #        requests:
+  #          storage: 50Gi
+  #  selector: {}
 
 # default rules are in templates/general.rules.yaml
 # prometheusRules: {}
