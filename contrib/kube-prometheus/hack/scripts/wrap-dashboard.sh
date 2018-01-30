@@ -25,7 +25,7 @@ datasource_name=$2
 inputname="DS_PROMETHEUS"
 
 if [ "$datasource_name" = "prometheus-etcd" ]; then
-  $inputname="DS_PROMETHEUS-ETCD"
+  inputname="DS_PROMETHEUS-ETCD"
 fi
 
 cat <<EOF
