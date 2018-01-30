@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/ericchiang/k8s"
+	corev1 "github.com/ericchiang/k8s/apis/core/v1"
 )
 
 func listNodes() {
@@ -16,8 +17,8 @@ func listNodes() {
 		log.Fatal(err)
 	}
 
-	nodes, err := client.CoreV1().ListNodes(context.Background())
-	if err != nil {
+	var nodes corev1.NodeList
+	if err := client.List(context.Background(), "", &nodes); err != nil {
 		log.Fatal(err)
 	}
 	for _, node := range nodes.Items {

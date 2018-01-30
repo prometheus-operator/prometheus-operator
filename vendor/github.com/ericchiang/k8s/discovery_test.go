@@ -1,12 +1,14 @@
-package k8s
+package k8s_test
 
 import (
 	"context"
 	"testing"
+
+	"github.com/ericchiang/k8s"
 )
 
 func TestDiscovery(t *testing.T) {
-	client := newTestClient(t).Discovery()
+	client := k8s.NewDiscoveryClient(newTestClient(t))
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
 	"testing"
@@ -135,4 +136,65 @@ func Test_valid(t *testing.T) {
 	should := require.New(t)
 	should.True(Valid([]byte(`{}`)))
 	should.False(Valid([]byte(`{`)))
+}
+
+func Test_nil_pointer(t *testing.T) {
+	should := require.New(t)
+	data := []byte(`{"A":0}`)
+	type T struct {
+		X int
+	}
+	var obj *T
+	err := Unmarshal(data, obj)
+	should.NotNil(err)
+}
+
+func Test_func_pointer_type(t *testing.T) {
+	type TestObject2 struct {
+		F func()
+	}
+	type TestObject1 struct {
+		Obj *TestObject2
+	}
+	t.Run("encode null is valid", func(t *testing.T) {
+		should := require.New(t)
+		output, err := json.Marshal(TestObject1{})
+		should.Nil(err)
+		should.Equal(`{"Obj":null}`, string(output))
+		output, err = Marshal(TestObject1{})
+		should.Nil(err)
+		should.Equal(`{"Obj":null}`, string(output))
+	})
+	t.Run("encode not null is invalid", func(t *testing.T) {
+		should := require.New(t)
+		_, err := json.Marshal(TestObject1{Obj: &TestObject2{}})
+		should.NotNil(err)
+		_, err = Marshal(TestObject1{Obj: &TestObject2{}})
+		should.NotNil(err)
+	})
+	t.Run("decode null is valid", func(t *testing.T) {
+		should := require.New(t)
+		var obj TestObject1
+		should.Nil(json.Unmarshal([]byte(`{"Obj":{"F": null}}`), &obj))
+		should.Nil(Unmarshal([]byte(`{"Obj":{"F": null}}`), &obj))
+	})
+	t.Run("decode not null is invalid", func(t *testing.T) {
+		should := require.New(t)
+		var obj TestObject1
+		should.NotNil(json.Unmarshal([]byte(`{"Obj":{"F": "hello"}}`), &obj))
+		should.NotNil(Unmarshal([]byte(`{"Obj":{"F": "hello"}}`), &obj))
+	})
+}
+
+func TestEOF(t *testing.T) {
+	var s string
+	err := ConfigCompatibleWithStandardLibrary.NewDecoder(&bytes.Buffer{}).Decode(&s)
+	assert.Equal(t, io.EOF, err)
+}
+
+func TestDecodeErrorType(t *testing.T) {
+	should := require.New(t)
+	var err error
+	should.Nil(Unmarshal([]byte("null"), &err))
+	should.NotNil(Unmarshal([]byte("123"), &err))
 }

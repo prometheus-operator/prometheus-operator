@@ -8,8 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/time/rate"
-
+	jujuratelimit "github.com/juju/ratelimit"
 	"github.com/sony/gobreaker"
 
 	"github.com/go-kit/kit/circuitbreaker"
@@ -48,7 +47,7 @@ func proxyingMiddleware(ctx context.Context, instances string, logger log.Logger
 		var e endpoint.Endpoint
 		e = makeUppercaseProxy(ctx, instance)
 		e = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(e)
-		e = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), qps))(e)
+		e = ratelimit.NewTokenBucketLimiter(jujuratelimit.NewBucketWithRate(float64(qps), int64(qps)))(e)
 		endpointer = append(endpointer, e)
 	}
 

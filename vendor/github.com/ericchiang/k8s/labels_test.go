@@ -44,7 +44,7 @@ func TestLabelSelector(t *testing.T) {
 	for i, test := range tests {
 		l := new(LabelSelector)
 		test.f(l)
-		got := l.encode()
+		got := l.String()
 		if test.want != got {
 			t.Errorf("case %d: want=%q, got=%q", i, test.want, got)
 		}

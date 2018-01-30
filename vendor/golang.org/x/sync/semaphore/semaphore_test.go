@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package semaphore
+package semaphore_test
 
 import (
 	"math/rand"
@@ -13,11 +13,12 @@ import (
 
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/semaphore"
 )
 
 const maxSleep = 1 * time.Millisecond
 
-func HammerWeighted(sem *Weighted, n int64, loops int) {
+func HammerWeighted(sem *semaphore.Weighted, n int64, loops int) {
 	for i := 0; i < loops; i++ {
 		sem.Acquire(context.Background(), n)
 		time.Sleep(time.Duration(rand.Int63n(int64(maxSleep/time.Nanosecond))) * time.Nanosecond)
@@ -29,13 +30,15 @@ func TestWeighted(t *testing.T) {
 	t.Parallel()
 
 	n := runtime.GOMAXPROCS(0)
-	sem := NewWeighted(int64(n))
+	loops := 10000 / n
+	sem := semaphore.NewWeighted(int64(n))
 	var wg sync.WaitGroup
 	wg.Add(n)
 	for i := 0; i < n; i++ {
+		i := i
 		go func() {
 			defer wg.Done()
-			HammerWeighted(sem, int64(i), 1000)
+			HammerWeighted(sem, int64(i), loops)
 		}()
 	}
 	wg.Wait()
@@ -49,7 +52,7 @@ func TestWeightedPanic(t *testing.T) {
 			t.Fatal("release of an unacquired weighted semaphore did not panic")
 		}
 	}()
-	w := NewWeighted(1)
+	w := semaphore.NewWeighted(1)
 	w.Release(1)
 }
 
@@ -57,7 +60,7 @@ func TestWeightedTryAcquire(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	sem := NewWeighted(2)
+	sem := semaphore.NewWeighted(2)
 	tries := []bool{}
 	sem.Acquire(ctx, 1)
 	tries = append(tries, sem.TryAcquire(1))
@@ -81,7 +84,7 @@ func TestWeightedAcquire(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	sem := NewWeighted(2)
+	sem := semaphore.NewWeighted(2)
 	tryAcquire := func(n int64) bool {
 		ctx, cancel := context.WithTimeout(ctx, 10*time.Millisecond)
 		defer cancel()
@@ -111,7 +114,7 @@ func TestWeightedDoesntBlockIfTooBig(t *testing.T) {
 	t.Parallel()
 
 	const n = 2
-	sem := NewWeighted(n)
+	sem := semaphore.NewWeighted(n)
 	{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -130,7 +133,7 @@ func TestWeightedDoesntBlockIfTooBig(t *testing.T) {
 		})
 	}
 	if err := g.Wait(); err != nil {
-		t.Errorf("NewWeighted(%v) failed to AcquireCtx(_, 1) with AcquireCtx(_, %v) pending", n, n+1)
+		t.Errorf("semaphore.NewWeighted(%v) failed to AcquireCtx(_, 1) with AcquireCtx(_, %v) pending", n, n+1)
 	}
 }
 
@@ -141,7 +144,7 @@ func TestLargeAcquireDoesntStarve(t *testing.T) {
 
 	ctx := context.Background()
 	n := int64(runtime.GOMAXPROCS(0))
-	sem := NewWeighted(n)
+	sem := semaphore.NewWeighted(n)
 	running := true
 
 	var wg sync.WaitGroup

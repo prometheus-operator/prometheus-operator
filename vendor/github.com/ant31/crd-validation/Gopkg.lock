@@ -23,6 +23,12 @@
   version = "v2.5.0"
 
 [[projects]]
+  name = "github.com/ghodss/yaml"
+  packages = ["."]
+  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/go-openapi/jsonpointer"
   packages = ["."]
@@ -130,6 +136,12 @@
 
 [[projects]]
   branch = "master"
+  name = "k8s.io/api"
+  packages = ["core/v1"]
+  revision = "dc0dd48d5a5cae9f8736bb0643cfe6052e450f1b"
+
+[[projects]]
+  branch = "master"
   name = "k8s.io/apiextensions-apiserver"
   packages = [
     "pkg/apis/apiextensions",
@@ -174,6 +186,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "37341e137ec368d61d67caa4ed875f7308ed6754e4d1a96c06461fbe77e0bdd4"
+  inputs-digest = "9af3a0bdc9fb071b8a24e4c2320f53398bf7db3bd96b1933811a214e5be8ca3d"
   solver-name = "gps-cdcl"
   solver-version = 1

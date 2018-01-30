@@ -14,7 +14,6 @@
 package prometheus
 
 import (
-	"fmt"
 	"math"
 	"testing"
 
@@ -56,59 +55,4 @@ func decreaseCounter(c *counter) (err error) {
 	}()
 	c.Add(-1)
 	return nil
-}
-
-func TestCounterVecGetMetricWithInvalidLabelValues(t *testing.T) {
-	testCases := []struct {
-		desc   string
-		labels Labels
-	}{
-		{
-			desc:   "non utf8 label value",
-			labels: Labels{"a": "\xFF"},
-		},
-		{
-			desc:   "not enough label values",
-			labels: Labels{},
-		},
-		{
-			desc:   "too many label values",
-			labels: Labels{"a": "1", "b": "2"},
-		},
-	}
-
-	for _, test := range testCases {
-		counterVec := NewCounterVec(CounterOpts{
-			Name: "test",
-		}, []string{"a"})
-
-		labelValues := make([]string, len(test.labels))
-		for _, val := range test.labels {
-			labelValues = append(labelValues, val)
-		}
-
-		expectPanic(t, func() {
-			counterVec.WithLabelValues(labelValues...)
-		}, fmt.Sprintf("WithLabelValues: expected panic because: %s", test.desc))
-		expectPanic(t, func() {
-			counterVec.With(test.labels)
-		}, fmt.Sprintf("WithLabelValues: expected panic because: %s", test.desc))
-
-		if _, err := counterVec.GetMetricWithLabelValues(labelValues...); err == nil {
-			t.Errorf("GetMetricWithLabelValues: expected error because: %s", test.desc)
-		}
-		if _, err := counterVec.GetMetricWith(test.labels); err == nil {
-			t.Errorf("GetMetricWith: expected error because: %s", test.desc)
-		}
-	}
-}
-
-func expectPanic(t *testing.T, op func(), errorMsg string) {
-	defer func() {
-		if err := recover(); err == nil {
-			t.Error(errorMsg)
-		}
-	}()
-
-	op()
 }

@@ -16,683 +16,676 @@ type testCase struct {
 
 var (
 	cases = [...]*testCase{
-		{
+		&testCase{
 			"LowerScheme",
 			"HTTP://www.SRC.ca",
 			FlagLowercaseScheme,
 			"http://www.SRC.ca",
 			false,
 		},
-		{
+		&testCase{
 			"LowerScheme2",
 			"http://www.SRC.ca",
 			FlagLowercaseScheme,
 			"http://www.SRC.ca",
 			false,
 		},
-		{
+		&testCase{
 			"LowerHost",
 			"HTTP://www.SRC.ca/",
 			FlagLowercaseHost,
 			"http://www.src.ca/", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"UpperEscapes",
 			`http://www.whatever.com/Some%aa%20Special%8Ecases/`,
 			FlagUppercaseEscapes,
 			"http://www.whatever.com/Some%AA%20Special%8Ecases/",
 			false,
 		},
-		{
+		&testCase{
 			"UnnecessaryEscapes",
 			`http://www.toto.com/%41%42%2E%44/%32%33%52%2D/%5f%7E`,
 			FlagDecodeUnnecessaryEscapes,
 			"http://www.toto.com/AB.D/23R-/_~",
 			false,
 		},
-		{
+		&testCase{
 			"RemoveDefaultPort",
 			"HTTP://www.SRC.ca:80/",
 			FlagRemoveDefaultPort,
 			"http://www.SRC.ca/", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"RemoveDefaultPort2",
 			"HTTP://www.SRC.ca:80",
 			FlagRemoveDefaultPort,
 			"http://www.SRC.ca", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"RemoveDefaultPort3",
 			"HTTP://www.SRC.ca:8080",
 			FlagRemoveDefaultPort,
 			"http://www.SRC.ca:8080", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"Safe",
 			"HTTP://www.SRC.ca:80/to%1ato%8b%ee/OKnow%41%42%43%7e",
 			FlagsSafe,
 			"http://www.src.ca/to%1Ato%8B%EE/OKnowABC~",
 			false,
 		},
-		{
+		&testCase{
 			"BothLower",
 			"HTTP://www.SRC.ca:80/to%1ato%8b%ee/OKnow%41%42%43%7e",
 			FlagLowercaseHost | FlagLowercaseScheme,
 			"http://www.src.ca:80/to%1Ato%8B%EE/OKnowABC~",
 			false,
 		},
-		{
+		&testCase{
 			"RemoveTrailingSlash",
 			"HTTP://www.SRC.ca:80/",
 			FlagRemoveTrailingSlash,
 			"http://www.SRC.ca:80", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"RemoveTrailingSlash2",
 			"HTTP://www.SRC.ca:80/toto/titi/",
 			FlagRemoveTrailingSlash,
 			"http://www.SRC.ca:80/toto/titi", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"RemoveTrailingSlash3",
 			"HTTP://www.SRC.ca:80/toto/titi/fin/?a=1",
 			FlagRemoveTrailingSlash,
 			"http://www.SRC.ca:80/toto/titi/fin?a=1", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"AddTrailingSlash",
 			"HTTP://www.SRC.ca:80",
 			FlagAddTrailingSlash,
 			"http://www.SRC.ca:80/", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"AddTrailingSlash2",
 			"HTTP://www.SRC.ca:80/toto/titi.html",
 			FlagAddTrailingSlash,
 			"http://www.SRC.ca:80/toto/titi.html/", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"AddTrailingSlash3",
 			"HTTP://www.SRC.ca:80/toto/titi/fin?a=1",
 			FlagAddTrailingSlash,
 			"http://www.SRC.ca:80/toto/titi/fin/?a=1", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"RemoveDotSegments",
 			"HTTP://root/a/b/./../../c/",
 			FlagRemoveDotSegments,
 			"http://root/c/", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"RemoveDotSegments2",
 			"HTTP://root/../a/b/./../c/../d",
 			FlagRemoveDotSegments,
 			"http://root/a/d", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"UsuallySafe",
 			"HTTP://www.SRC.ca:80/to%1ato%8b%ee/./c/d/../OKnow%41%42%43%7e/?a=b#test",
 			FlagsUsuallySafeGreedy,
 			"http://www.src.ca/to%1Ato%8B%EE/c/OKnowABC~?a=b#test",
 			false,
 		},
-		{
+		&testCase{
 			"RemoveDirectoryIndex",
 			"HTTP://root/a/b/c/default.aspx",
 			FlagRemoveDirectoryIndex,
 			"http://root/a/b/c/", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"RemoveDirectoryIndex2",
 			"HTTP://root/a/b/c/default#a=b",
 			FlagRemoveDirectoryIndex,
 			"http://root/a/b/c/default#a=b", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"RemoveFragment",
 			"HTTP://root/a/b/c/default#toto=tata",
 			FlagRemoveFragment,
 			"http://root/a/b/c/default", // Since Go1.1, scheme is automatically lowercased
 			false,
 		},
-		{
+		&testCase{
 			"ForceHTTP",
 			"https://root/a/b/c/default#toto=tata",
 			FlagForceHTTP,
 			"http://root/a/b/c/default#toto=tata",
 			false,
 		},
-		{
+		&testCase{
 			"RemoveDuplicateSlashes",
 			"https://root/a//b///c////default#toto=tata",
 			FlagRemoveDuplicateSlashes,
 			"https://root/a/b/c/default#toto=tata",
 			false,
 		},
-		{
+		&testCase{
 			"RemoveDuplicateSlashes2",
 			"https://root//a//b///c////default#toto=tata",
 			FlagRemoveDuplicateSlashes,
 			"https://root/a/b/c/default#toto=tata",
 			false,
 		},
-		{
+		&testCase{
 			"RemoveWWW",
 			"https://www.root/a/b/c/",
 			FlagRemoveWWW,
 			"https://root/a/b/c/",
 			false,
 		},
-		{
+		&testCase{
 			"RemoveWWW2",
 			"https://WwW.Root/a/b/c/",
 			FlagRemoveWWW,
 			"https://Root/a/b/c/",
 			false,
 		},
-		{
+		&testCase{
 			"AddWWW",
 			"https://Root/a/b/c/",
 			FlagAddWWW,
 			"https://www.Root/a/b/c/",
 			false,
 		},
-		{
+		&testCase{
 			"SortQuery",
 			"http://root/toto/?b=4&a=1&c=3&b=2&a=5",
 			FlagSortQuery,
 			"http://root/toto/?a=1&a=5&b=2&b=4&c=3",
 			false,
 		},
-		{
+		&testCase{
 			"RemoveEmptyQuerySeparator",
 			"http://root/toto/?",
 			FlagRemoveEmptyQuerySeparator,
 			"http://root/toto/",
 			false,
 		},
-		{
+		&testCase{
 			"Unsafe",
 			"HTTPS://www.RooT.com/toto/t%45%1f///a/./b/../c/?z=3&w=2&a=4&w=1#invalid",
 			FlagsUnsafeGreedy,
 			"http://root.com/toto/tE%1F/a/c?a=4&w=1&w=2&z=3",
 			false,
 		},
-		{
+		&testCase{
 			"Safe2",
 			"HTTPS://www.RooT.com/toto/t%45%1f///a/./b/../c/?z=3&w=2&a=4&w=1#invalid",
 			FlagsSafe,
 			"https://www.root.com/toto/tE%1F///a/./b/../c/?z=3&w=2&a=4&w=1#invalid",
 			false,
 		},
-		{
+		&testCase{
 			"UsuallySafe2",
 			"HTTPS://www.RooT.com/toto/t%45%1f///a/./b/../c/?z=3&w=2&a=4&w=1#invalid",
 			FlagsUsuallySafeGreedy,
 			"https://www.root.com/toto/tE%1F///a/c?z=3&w=2&a=4&w=1#invalid",
 			false,
 		},
-		{
+		&testCase{
 			"AddTrailingSlashBug",
 			"http://src.ca/",
 			FlagsAllNonGreedy,
 			"http://www.src.ca/",
 			false,
 		},
-		{
+		&testCase{
 			"SourceModified",
 			"HTTPS://www.RooT.com/toto/t%45%1f///a/./b/../c/?z=3&w=2&a=4&w=1#invalid",
 			FlagsUnsafeGreedy,
 			"http://root.com/toto/tE%1F/a/c?a=4&w=1&w=2&z=3",
 			true,
 		},
-		{
+		&testCase{
 			"IPv6-1",
 			"http://[2001:db8:1f70::999:de8:7648:6e8]/test",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://[2001:db8:1f70::999:de8:7648:6e8]/test",
 			false,
 		},
-		{
+		&testCase{
 			"IPv6-2",
 			"http://[::ffff:192.168.1.1]/test",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://[::ffff:192.168.1.1]/test",
 			false,
 		},
-		{
+		&testCase{
 			"IPv6-3",
 			"http://[::ffff:192.168.1.1]:80/test",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://[::ffff:192.168.1.1]/test",
 			false,
 		},
-		{
+		&testCase{
 			"IPv6-4",
 			"htTps://[::fFff:192.168.1.1]:443/test",
 			FlagsSafe | FlagRemoveDotSegments,
 			"https://[::ffff:192.168.1.1]/test",
 			false,
 		},
-		{
+		&testCase{
 			"FTP",
 			"ftp://user:pass@ftp.foo.net/foo/bar",
 			FlagsSafe | FlagRemoveDotSegments,
 			"ftp://user:pass@ftp.foo.net/foo/bar",
 			false,
 		},
-		{
+		&testCase{
 			"Standard-1",
 			"http://www.foo.com:80/foo",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://www.foo.com/foo",
 			false,
 		},
-		{
+		&testCase{
 			"Standard-2",
 			"http://www.foo.com:8000/foo",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://www.foo.com:8000/foo",
 			false,
 		},
-		{
+		&testCase{
 			"Standard-3",
 			"http://www.foo.com/%7ebar",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://www.foo.com/~bar",
 			false,
 		},
-		{
+		&testCase{
 			"Standard-4",
 			"http://www.foo.com/%7Ebar",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://www.foo.com/~bar",
 			false,
 		},
-		{
+		&testCase{
 			"Standard-5",
 			"http://USER:pass@www.Example.COM/foo/bar",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://USER:pass@www.example.com/foo/bar",
 			false,
 		},
-		{
+		&testCase{
 			"Standard-6",
 			"http://test.example/?a=%26&b=1",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://test.example/?a=%26&b=1",
 			false,
 		},
-		{
+		&testCase{
 			"Standard-7",
 			"http://test.example/%25/?p=%20val%20%25",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://test.example/%25/?p=%20val%20%25",
 			false,
 		},
-		{
+		&testCase{
 			"Standard-8",
 			"http://test.example/path/with a%20space+/",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://test.example/path/with%20a%20space+/",
 			false,
 		},
-		{
+		&testCase{
 			"Standard-9",
 			"http://test.example/?",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://test.example/",
 			false,
 		},
-		{
+		&testCase{
 			"Standard-10",
 			"http://a.COM/path/?b&a",
 			FlagsSafe | FlagRemoveDotSegments,
 			"http://a.com/path/?b&a",
 			false,
 		},
-		{
+		&testCase{
 			"StandardCasesAddTrailingSlash",
 			"http://test.example?",
 			FlagsSafe | FlagAddTrailingSlash,
 			"http://test.example/",
 			false,
 		},
-		{
+		&testCase{
 			"OctalIP-1",
 			"http://0123.011.0.4/",
 			FlagsSafe | FlagDecodeOctalHost,
 			"http://0123.011.0.4/",
 			false,
 		},
-		{
+		&testCase{
 			"OctalIP-2",
 			"http://0102.0146.07.0223/",
 			FlagsSafe | FlagDecodeOctalHost,
 			"http://66.102.7.147/",
 			false,
 		},
-		{
+		&testCase{
 			"OctalIP-3",
 			"http://0102.0146.07.0223.:23/",
 			FlagsSafe | FlagDecodeOctalHost,
 			"http://66.102.7.147.:23/",
 			false,
 		},
-		{
+		&testCase{
 			"OctalIP-4",
 			"http://USER:pass@0102.0146.07.0223../",
 			FlagsSafe | FlagDecodeOctalHost,
 			"http://USER:pass@66.102.7.147../",
 			false,
 		},
-		{
+		&testCase{
 			"DWORDIP-1",
 			"http://123.1113982867/",
 			FlagsSafe | FlagDecodeDWORDHost,
 			"http://123.1113982867/",
 			false,
 		},
-		{
+		&testCase{
 			"DWORDIP-2",
 			"http://1113982867/",
 			FlagsSafe | FlagDecodeDWORDHost,
 			"http://66.102.7.147/",
 			false,
 		},
-		{
+		&testCase{
 			"DWORDIP-3",
 			"http://1113982867.:23/",
 			FlagsSafe | FlagDecodeDWORDHost,
 			"http://66.102.7.147.:23/",
 			false,
 		},
-		{
+		&testCase{
 			"DWORDIP-4",
 			"http://USER:pass@1113982867../",
 			FlagsSafe | FlagDecodeDWORDHost,
 			"http://USER:pass@66.102.7.147../",
 			false,
 		},
-		{
+		&testCase{
 			"HexIP-1",
 			"http://0x123.1113982867/",
 			FlagsSafe | FlagDecodeHexHost,
 			"http://0x123.1113982867/",
 			false,
 		},
-		{
+		&testCase{
 			"HexIP-2",
 			"http://0x42660793/",
 			FlagsSafe | FlagDecodeHexHost,
 			"http://66.102.7.147/",
 			false,
 		},
-		{
+		&testCase{
 			"HexIP-3",
 			"http://0x42660793.:23/",
 			FlagsSafe | FlagDecodeHexHost,
 			"http://66.102.7.147.:23/",
 			false,
 		},
-		{
+		&testCase{
 			"HexIP-4",
 			"http://USER:pass@0x42660793../",
 			FlagsSafe | FlagDecodeHexHost,
 			"http://USER:pass@66.102.7.147../",
 			false,
 		},
-		{
+		&testCase{
 			"UnnecessaryHostDots-1",
 			"http://.www.foo.com../foo/bar.html",
 			FlagsSafe | FlagRemoveUnnecessaryHostDots,
 			"http://www.foo.com/foo/bar.html",
 			false,
 		},
-		{
+		&testCase{
 			"UnnecessaryHostDots-2",
 			"http://www.foo.com./foo/bar.html",
 			FlagsSafe | FlagRemoveUnnecessaryHostDots,
 			"http://www.foo.com/foo/bar.html",
 			false,
 		},
-		{
+		&testCase{
 			"UnnecessaryHostDots-3",
 			"http://www.foo.com.:81/foo",
 			FlagsSafe | FlagRemoveUnnecessaryHostDots,
 			"http://www.foo.com:81/foo",
 			false,
 		},
-		{
+		&testCase{
 			"UnnecessaryHostDots-4",
 			"http://www.example.com./",
 			FlagsSafe | FlagRemoveUnnecessaryHostDots,
 			"http://www.example.com/",
 			false,
 		},
-		{
+		&testCase{
 			"EmptyPort-1",
 			"http://www.thedraymin.co.uk:/main/?p=308",
 			FlagsSafe | FlagRemoveEmptyPortSeparator,
 			"http://www.thedraymin.co.uk/main/?p=308",
 			false,
 		},
-		{
+		&testCase{
 			"EmptyPort-2",
 			"http://www.src.ca:",
 			FlagsSafe | FlagRemoveEmptyPortSeparator,
 			"http://www.src.ca",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-1",
 			"http://test.example/foo/bar/.",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo/bar/",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-2",
 			"http://test.example/foo/bar/./",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo/bar/",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-3",
 			"http://test.example/foo/bar/..",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo/",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-4",
 			"http://test.example/foo/bar/../",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo/",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-5",
 			"http://test.example/foo/bar/../baz",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo/baz",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-6",
 			"http://test.example/foo/bar/../..",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-7",
 			"http://test.example/foo/bar/../../",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-8",
 			"http://test.example/foo/bar/../../baz",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/baz",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-9",
 			"http://test.example/foo/bar/../../../baz",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/baz",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-10",
 			"http://test.example/foo/bar/../../../../baz",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/baz",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-11",
 			"http://test.example/./foo",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-12",
 			"http://test.example/../foo",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-13",
 			"http://test.example/foo.",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo.",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-14",
 			"http://test.example/.foo",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/.foo",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-15",
 			"http://test.example/foo..",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo..",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-16",
 			"http://test.example/..foo",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/..foo",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-17",
 			"http://test.example/./../foo",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-18",
 			"http://test.example/./foo/.",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo/",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-19",
 			"http://test.example/foo/./bar",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo/bar",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-20",
 			"http://test.example/foo/../bar",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/bar",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-21",
 			"http://test.example/foo//",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo/",
 			false,
 		},
-		{
+		&testCase{
 			"Slashes-22",
 			"http://test.example/foo///bar//",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"http://test.example/foo/bar/",
 			false,
 		},
-		{
+		&testCase{
 			"Relative",
 			"foo/bar",
 			FlagsAllGreedy,
 			"foo/bar",
 			false,
 		},
-		{
+		&testCase{
 			"Relative-1",
 			"./../foo",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"foo",
 			false,
 		},
-		{
+		&testCase{
 			"Relative-2",
 			"./foo/bar/../baz/../bang/..",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"foo/",
 			false,
 		},
-		{
+		&testCase{
 			"Relative-3",
 			"foo///bar//",
 			FlagsSafe | FlagRemoveDotSegments | FlagRemoveDuplicateSlashes,
 			"foo/bar/",
 			false,
 		},
-		{
+		&testCase{
 			"Relative-4",
 			"www.youtube.com",
 			FlagsUsuallySafeGreedy,
 			"www.youtube.com",
-			false,
-		},
-		{
-			"Issue-#24",
-			"///foo///bar///",
-			FlagRemoveDuplicateSlashes | FlagRemoveTrailingSlash,
-			"/foo/bar",
 			false,
 		},
 		/*&testCase{

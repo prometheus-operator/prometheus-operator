@@ -102,12 +102,10 @@
           "type": "string"
         },
         "url": {
-          "type": "string",
-          "format": "uri"
+          "type": "string"
         },
         "email": {
-          "type": "string",
-          "format": "email"
+          "type": "string"
         }
       }
     },

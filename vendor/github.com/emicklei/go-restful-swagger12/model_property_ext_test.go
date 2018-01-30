@@ -17,7 +17,6 @@ func TestThatExtraTagsAreReadIntoModel(t *testing.T) {
 		FakeInt   fakeint   `type:"integer"`
 		FakeArray fakearray `type:"[]string"`
 		IP        net.IP    `type:"string"`
-                Custom    string    `type:"string" format:"custom"`
 		Password  string
 	}
 	m := modelsFromStruct(Anything{})
@@ -64,13 +63,6 @@ func TestThatExtraTagsAreReadIntoModel(t *testing.T) {
 	if got, want := *p8.Type, "string"; got != want {
 		t.Errorf("got %v want %v", got, want)
 	}
-        p9, _ := props.Properties.At("Custom")
-        if got, want := *p9.Type, "string"; got != want {
-                t.Errorf("got %v want %v", got, want)
-        }
-        if got, want := p9.Format, "custom"; got != want {
-                t.Errorf("got %v want %v", got, want)
-        }
 
 	if got, want := props.Description, "a test\nmore description"; got != want {
 		t.Errorf("got %v want %v", got, want)

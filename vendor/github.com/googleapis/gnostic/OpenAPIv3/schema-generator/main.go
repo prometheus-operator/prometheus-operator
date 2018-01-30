@@ -837,19 +837,6 @@ func main() {
 		*(contentObject.PatternProperties) = append(*(contentObject.PatternProperties), namedSchema)
 	}
 
-	// fix the contact object
-	contactObject := schema.DefinitionWithName("contact")
-	if contactObject != nil {
-		emailProperty := contactObject.PropertyWithName("email")
-		if emailProperty != nil {
-			emailProperty.Format = stringptr("email");
-		}
-		urlProperty := contactObject.PropertyWithName("url")
-		if urlProperty != nil {
-			urlProperty.Format = stringptr("uri");
-		}
-	}
-
 	// write the updated schema
 	output := schema.JSONString()
 	err = ioutil.WriteFile("schema.json", []byte(output), 0644)

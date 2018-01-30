@@ -1,5 +1,3 @@
-# IntelliJ IDEA
-.idea
 # Eclipse
 .checkstyle
 .project
@@ -14,4 +12,3 @@ Packages
 .DS_Store
 *~
 Package.resolved
-extensions/sample/generated

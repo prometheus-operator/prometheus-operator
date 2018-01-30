@@ -36,7 +36,10 @@ type dummyFmtState struct {
 }
 
 func (dfs *dummyFmtState) Flag(f int) bool {
-	return f == int('+')
+	if f == int('+') {
+		return true
+	}
+	return false
 }
 
 func (dfs *dummyFmtState) Precision() (int, bool) {

@@ -13,7 +13,6 @@ import (
 
 	openapiv2 "github.com/googleapis/gnostic/OpenAPIv2"
 	openapiv3 "github.com/googleapis/gnostic/OpenAPIv3"
-	surface "github.com/googleapis/gnostic/surface"
 )
 
 // Environment contains the environment of a plugin call.
@@ -100,17 +99,17 @@ When the -plugin option is specified, these flags are ignored.`)
 		err = proto.Unmarshal(apiData, documentv2)
 		if err == nil {
 			env.Request.Openapi2 = documentv2
-			env.Request.Surface, err = surface.NewModelFromOpenAPI2(documentv2)
 		} else {
-			// ignore deserialization errors and try to unmarshal OpenAPI v3.
-			documentv3 := &openapiv3.Document{}
-			err = proto.Unmarshal(apiData, documentv3)
-			if err == nil {
-				env.Request.Openapi3 = documentv3
-				env.Request.Surface, err = surface.NewModelFromOpenAPI3(documentv3)
-			} else {
-				// ignore deserialization errors
-			}
+			// ignore deserialization errors
+		}
+
+		// Then try to unmarshal OpenAPI v3.
+		documentv3 := &openapiv3.Document{}
+		err = proto.Unmarshal(apiData, documentv3)
+		if err == nil {
+			env.Request.Openapi3 = documentv3
+		} else {
+			// ignore deserialization errors
 		}
 
 	}

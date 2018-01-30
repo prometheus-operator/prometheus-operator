@@ -20,7 +20,7 @@ func Test_write_empty_interface_via_placeholder(t *testing.T) {
 		cacheKey: reflect.TypeOf(m).Elem(),
 	}
 	stream := ConfigFastest.BorrowStream(nil)
-	encoderOfType(ConfigFastest.(*frozenConfig), reflect.TypeOf(m).Elem())
+	encoderOfType(ConfigFastest.(*frozenConfig), "", reflect.TypeOf(m).Elem())
 	encoder.EncodeInterface(inf, stream)
 	should.Equal(`"hello"`, string(stream.Buffer()))
 }
@@ -408,7 +408,7 @@ func Test_omitempty_nil_nonempty_interface(t *testing.T) {
 	obj.Field = MyString("hello")
 	err = UnmarshalFromString(`{"field":null}`, &obj)
 	should.NoError(err)
-	should.Equal(nil, obj.Field)
+	should.Nil(obj.Field)
 }
 
 func Test_marshal_nil_marshaler_interface(t *testing.T) {

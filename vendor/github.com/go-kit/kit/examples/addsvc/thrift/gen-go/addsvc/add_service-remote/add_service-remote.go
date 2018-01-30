@@ -111,9 +111,7 @@ func main() {
     Usage()
     os.Exit(1)
   }
-  iprot := protocolFactory.GetProtocol(trans)
-  oprot := protocolFactory.GetProtocol(trans)
-  client := addsvc.NewAddServiceClient(thrift.NewTStandardClient(iprot, oprot))
+  client := addsvc.NewAddServiceClientFactory(trans, protocolFactory)
   if err := trans.Open(); err != nil {
     fmt.Fprintln(os.Stderr, "Error opening socket to ", host, ":", port, " ", err)
     os.Exit(1)

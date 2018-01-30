@@ -146,21 +146,3 @@ func TestIndexKeysEmptyFrom(t *testing.T) {
 		t.Errorf("want %v, have %v", want, have)
 	}
 }
-
-func TestBadKeys(t *testing.T) {
-	d := New(Options{
-		BasePath:     "index-test",
-		Transform:    func(string) []string { return []string{} },
-		CacheSizeMax: 1024,
-		Index:        &BTreeIndex{},
-		IndexLess:    strLess,
-	})
-	defer d.EraseAll()
-
-	for _, k := range []string{"a/a"} {
-		err := d.Write(k, []byte("1"))
-		if err != errBadKey {
-			t.Errorf("Expected bad key error, got: %v", err)
-		}
-	}
-}
