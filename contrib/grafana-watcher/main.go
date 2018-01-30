@@ -233,8 +233,16 @@ func main() {
 		log.Fatal(err)
 	}
 
+	au := updater.NewGrafanaAlertNotificationUpdater(g.AlertNotifications(), dirs)
+	log.Println("Initializing alertnotifications.")
+	err = au.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	w := newVolumeWatcher(watchDirs)
 
+	w.AddEventHandler(au)
 	w.AddEventHandler(du)
 	w.AddEventHandler(su)
 

@@ -23,6 +23,7 @@ import (
 type Interface interface {
 	Dashboards() DashboardsInterface
 	Datasources() DatasourcesInterface
+	AlertNotifications() AlertNotificationsInterface
 }
 
 type Clientset struct {
@@ -43,6 +44,10 @@ func (c *Clientset) Dashboards() DashboardsInterface {
 
 func (c *Clientset) Datasources() DatasourcesInterface {
 	return NewDatasourcesClient(c.BaseUrl, c.HTTPClient)
+}
+
+func (c *Clientset) AlertNotifications() AlertNotificationsInterface {
+	return NewAlertNotificationsClient(c.BaseUrl, c.HTTPClient)
 }
 
 func doRequest(c *http.Client, req *http.Request) error {
