@@ -16,27 +16,59 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	crdutils "github.com/ant31/crd-validation/pkg"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-
+	k8sutil "github.com/coreos/prometheus-operator/pkg/k8sutil"
+	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"os"
 )
 
 var (
-	cfg Config
+	cfg crdutils.Config
 )
 
-func init() {
-	cfg.CrdKinds = monitoringv1.DefaultCrdKinds
-	flagset := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
-	flagset.BoolVar(&cfg.EnableValidation, "with-validation", false, "Include the validation spec")
-	flagset.StringVar(&cfg.CrdGroup, "crd-apigroup", monitoringv1.Group, "prometheus CRD  API group name")
+func initFlags(crdkind monitoringv1.CrdKind, flagset *flag.FlagSet) *flag.FlagSet {
+	flagset.Var(&cfg.Labels, "labels", "Labels")
+	flagset.Var(&cfg.Annotations, "annotations", "Annotations")
+	flagset.BoolVar(&cfg.EnableValidation, "with-validation", true, "Add CRD validation field, default: true")
+	flagset.StringVar(&cfg.Group, "apigroup", monitoringv1.Group, "CRD api group")
+	flagset.StringVar(&cfg.SpecDefinitionName, "spec-name", crdkind.SpecName, "CRD spec definition name")
 	flagset.StringVar(&cfg.OutputFormat, "output", "yaml", "output format: json|yaml")
-	flagset.Var(&cfg.CrdKinds, "crd-kinds", "customize CRD kind names")
-	flagset.Parse(os.Args[1:])
+	flagset.StringVar(&cfg.Kind, "kind", crdkind.Kind, "CRD Kind")
+	flagset.StringVar(&cfg.ResourceScope, "scope", string(extensionsobj.NamespaceScoped), "CRD scope: 'Namespaced' | 'Cluster'.  Default: Namespaced")
+	flagset.StringVar(&cfg.Version, "version", monitoringv1.Version, "CRD version, default: 'v1'")
+	flagset.StringVar(&cfg.Plural, "plural", crdkind.Plural, "CRD plural name")
+	return flagset
+}
+
+func init() {
+	var command *flag.FlagSet
+	if len(os.Args) == 1 {
+		fmt.Println("usage: po-crdgen [prometheus | alertmanager | servicemonitor] [<options>]")
+		os.Exit(1)
+	}
+	switch os.Args[1] {
+	case "prometheus":
+		command = initFlags(monitoringv1.DefaultCrdKinds.Prometheus, flag.NewFlagSet("prometheus", flag.ExitOnError))
+	case "servicemonitor":
+		command = initFlags(monitoringv1.DefaultCrdKinds.ServiceMonitor, flag.NewFlagSet("servicemonitor", flag.ExitOnError))
+	case "alertmanager":
+		command = initFlags(monitoringv1.DefaultCrdKinds.Alertmanager, flag.NewFlagSet("alertmanager", flag.ExitOnError))
+	default:
+		fmt.Printf("%q is not valid command.\n choices: [prometheus, alertmanager, servicemonitor]", os.Args[1])
+		os.Exit(2)
+	}
+	command.Parse(os.Args[2:])
 }
 
 func main() {
-	PrintCrd(cfg)
+	crd := k8sutil.NewCustomResourceDefinition(
+		monitoringv1.CrdKind{Plural: cfg.Plural,
+			Kind:     cfg.Kind,
+			SpecName: cfg.SpecDefinitionName},
+		cfg.Group, cfg.Labels.LabelsMap, cfg.EnableValidation)
+
+	crdutils.MarshallCrd(crd, cfg.OutputFormat)
 	os.Exit(0)
 }
