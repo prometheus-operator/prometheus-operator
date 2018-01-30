@@ -112,7 +112,7 @@ helm-sync-s3:
 	helm/hack/helm-package.sh kube-prometheus
 	helm/hack/sync-repo.sh
 
-generate-crd: openapi-gen po-crdgen
+generate-crd: generate-openapi po-crdgen
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
 	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
 	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml

@@ -291,11 +291,24 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								},
 							},
 						},
+						"securityContext": {
+							SchemaProps: spec.SchemaProps{
+								Description: "SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000.",
+								Ref:         ref("k8s.io/api/core/v1.PodSecurityContext"),
+							},
+						},
+						"serviceAccountName": {
+							SchemaProps: spec.SchemaProps{
+								Description: "ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
 					},
 				},
 			},
 			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerStatus": {
 			Schema: spec.Schema{

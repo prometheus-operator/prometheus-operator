@@ -412,7 +412,7 @@ type AlertmanagerSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to non root user with uid 1000 and gid 2000.
-	SecurityContext *v1.PodSecurityContext
+	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
