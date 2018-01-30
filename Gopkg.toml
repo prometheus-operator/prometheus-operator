@@ -29,10 +29,6 @@
   version = "3.5.1"
 
 [[constraint]]
-  name = "github.com/ghodss/yaml"
-  version = "1.0.0"
-
-[[constraint]]
   branch = "master"
   name = "github.com/go-openapi/spec"
 
