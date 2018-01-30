@@ -5,7 +5,9 @@ KUBECONFIG?=$(HOME)/.kube/config
 
 PROMU := $(GOPATH)/bin/promu
 PREFIX ?= $(shell pwd)
-
+ifeq ($(GOBIN),)
+GOBIN :=${GOPATH}/bin
+endif
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 
 all: check-license format build test
@@ -68,22 +70,27 @@ docs: embedmd po-docgen
 generate: jsonnet-docker
 	docker run --rm -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy generate-openapi jsonnet generate-bundle docs generate-kube-prometheus
 
-deepcopy-gen:
-	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.8
-	go install k8s.io/code-generator/cmd/deepcopy-gen
 
-generate-deepcopy: deepcopy-gen
-	deepcopy-gen -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" --output-file-base zz_generated.deepcopy
-	deepcopy-gen -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" --output-file-base zz_generated.deepcopy
-
-openapi-gen:
+$(GOBIN)/openapi-gen:
 	go get -u -v -d k8s.io/code-generator/cmd/openapi-gen
 	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.8
 	go install k8s.io/code-generator/cmd/openapi-gen
 
+$(GOBIN)/deepcopy-gen:
+	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.8
+	go install k8s.io/code-generator/cmd/deepcopy-gen
+
+openapi-gen: $(GOBIN)/openapi-gen
+
+deepcopy-gen: $(GOBIN)/deepcopy-gen
+
+generate-deepcopy: deepcopy-gen
+	$(GOBIN)/deepcopy-gen -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" --output-file-base zz_generated.deepcopy
+	$(GOBIN)/deepcopy-gen -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" --output-file-base zz_generated.deepcopy
+
 generate-openapi: openapi-gen
-	openapi-gen  -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1  -p github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header"
+	$(GOBIN)/openapi-gen  -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1  -p github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header"
 
 generate-bundle:
 	hack/generate-bundle.sh
