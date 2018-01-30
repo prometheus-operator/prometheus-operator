@@ -62,14 +62,38 @@
   name = "github.com/ericchiang/k8s"
   packages = [
     ".",
+    "api/resource",
+    "api/unversioned",
+    "api/v1",
+    "apis/apps/v1alpha1",
+    "apis/apps/v1beta1",
+    "apis/authentication/v1",
+    "apis/authentication/v1beta1",
+    "apis/authorization/v1",
+    "apis/authorization/v1beta1",
+    "apis/autoscaling/v1",
+    "apis/autoscaling/v2alpha1",
+    "apis/batch/v1",
+    "apis/batch/v2alpha1",
+    "apis/certificates/v1alpha1",
+    "apis/certificates/v1beta1",
+    "apis/extensions/v1beta1",
+    "apis/imagepolicy/v1alpha1",
     "apis/meta/v1",
+    "apis/policy/v1alpha1",
+    "apis/policy/v1beta1",
+    "apis/rbac/v1alpha1",
+    "apis/rbac/v1beta1",
+    "apis/settings/v1alpha1",
+    "apis/storage/v1",
+    "apis/storage/v1beta1",
     "runtime",
     "runtime/schema",
     "util/intstr",
     "watch/versioned"
   ]
-  revision = "5912993f00cb7c971aaa54529a06bd3eecd6c3d4"
-  version = "v1.0.0"
+  revision = "68b0248f880c5967d1ba7166486cb216af849b15"
+  version = "v0.4.0"
 
 [[projects]]
   name = "github.com/ghodss/yaml"
@@ -369,6 +393,16 @@
   revision = "e19ae1496984b1c655b8044a65c0300a3c878dd3"
 
 [[projects]]
+  branch = "master"
+  name = "golang.org/x/tools"
+  packages = [
+    "go/ast/astutil",
+    "go/buildutil",
+    "go/loader"
+  ]
+  revision = "25101aadb97aa42907eee6a238d6d26a6cb3c756"
+
+[[projects]]
   name = "gopkg.in/fsnotify.v1"
   packages = ["."]
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
@@ -538,6 +572,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d82f2d75b6ebb8f00722a53e7f387f069195bfada3eb93336cfba52a2973db08"
+  inputs-digest = "9065e1f67bda37fcf8a1e870ad445c8a1eb23e2cc44d3a59f09ae7f7e1d69907"
   solver-name = "gps-cdcl"
   solver-version = 1

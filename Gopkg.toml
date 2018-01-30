@@ -59,3 +59,7 @@
 [[constraint]]
   branch = "master"
   name = "k8s.io/kube-openapi"
+
+[[override]]
+  name = "github.com/ericchiang/k8s"
+  version = "v0.4.0"

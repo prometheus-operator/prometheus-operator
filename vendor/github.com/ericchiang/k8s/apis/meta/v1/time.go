@@ -7,6 +7,7 @@ import (
 
 // JSON marshaling logic for the Time type. Need to make
 // third party resources JSON work.
+
 func (t Time) MarshalJSON() ([]byte, error) {
 	var seconds, nanos int64
 	if t.Seconds != nil {
