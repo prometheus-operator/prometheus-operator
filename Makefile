@@ -68,7 +68,7 @@ docs: embedmd po-docgen
 	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
 generate: jsonnet-docker
-	docker run --rm -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy generate-openapi jsonnet generate-bundle docs generate-kube-prometheus
+	docker run --rm -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy generate-openapi jsonnet generate-bundle docs generate-kube-prometheus generate-crd
 
 
 $(GOBIN)/openapi-gen:
