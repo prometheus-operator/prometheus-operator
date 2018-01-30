@@ -112,4 +112,9 @@ helm-sync-s3:
 	helm/hack/helm-package.sh kube-prometheus
 	helm/hack/sync-repo.sh
 
-.PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs
+generate-crd: openapi-gen po-crdgen
+	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
+	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
+	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
+
+.PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs generate-crd
