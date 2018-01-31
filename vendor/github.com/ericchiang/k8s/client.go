@@ -68,13 +68,10 @@ const (
 //
 func String(s string) *string { return &s }
 
-// Int is a convenience for converting an int literal to a pointer to an int.
+// Int is a convinence for converting an int literal to a pointer to an int.
 func Int(i int) *int { return &i }
 
-// Int32 is a convenience for converting an int32 literal to a pointer to an int32.
-func Int32(i int32) *int32 { return &i }
-
-// Bool is a convenience for converting a bool literal to a pointer to a bool.
+// Bool is a convinence for converting a bool literal to a pointer to a bool.
 func Bool(b bool) *bool { return &b }
 
 const (
@@ -126,23 +123,6 @@ func (c *Client) newRequest(ctx context.Context, verb, url string, body io.Reade
 // Option represents optional call parameters, such as label selectors.
 type Option interface {
 	queryParam() (key, val string)
-}
-
-type queryParam struct {
-	paramName  string
-	paramValue string
-}
-
-func (o queryParam) queryParam() (string, string) {
-	return o.paramName, o.paramValue
-}
-
-// QueryParam can be used to manually set a URL query parameter by name.
-func QueryParam(name, value string) Option {
-	return queryParam{
-		paramName:  name,
-		paramValue: value,
-	}
 }
 
 type resourceVersionOption string
@@ -295,10 +275,7 @@ func newClient(cluster Cluster, user AuthInfo, namespace string) (*Client, error
 	}
 
 	// See https://github.com/gtank/cryptopasta
-	tlsConfig := &tls.Config{
-		MinVersion:         tls.VersionTLS12,
-		InsecureSkipVerify: cluster.InsecureSkipTLSVerify,
-	}
+	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
 
 	if len(ca) != 0 {
 		tlsConfig.RootCAs = x509.NewCertPool()
@@ -395,7 +372,7 @@ func checkStatusCode(c *codec, statusCode int, body []byte) error {
 func newAPIError(c *codec, statusCode int, body []byte) error {
 	status := new(unversioned.Status)
 	if err := c.unmarshal(body, status); err != nil {
-		return fmt.Errorf("decode error status %d: %v", statusCode, err)
+		return fmt.Errorf("decode error status: %v", err)
 	}
 	return &APIError{status, statusCode}
 }

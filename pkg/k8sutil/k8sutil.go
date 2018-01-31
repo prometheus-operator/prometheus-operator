@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"time"
 
+	crdutils "github.com/ant31/crd-validation/pkg"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	version "github.com/hashicorp/go-version"
@@ -35,6 +36,12 @@ import (
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 )
+
+// CustomResourceDefinitionTypeMeta set the default kind/apiversion of CRD
+var CustomResourceDefinitionTypeMeta metav1.TypeMeta = metav1.TypeMeta{
+	Kind:       "CustomResourceDefinition",
+	APIVersion: "apiextensions.k8s.io/v1beta1",
+}
 
 // WaitForCRDReady waits for a third party resource to be available for use.
 func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
@@ -205,57 +212,16 @@ func NewAlertmanagerTPRDefinition() *extensionsobjold.ThirdPartyResource {
 	}
 }
 
-func NewPrometheusCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
-	return &extensionsobj.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   crdkind.Plural + "." + group,
-			Labels: labels,
-		},
-		Spec: extensionsobj.CustomResourceDefinitionSpec{
-			Group:   group,
-			Version: monitoringv1.Version,
-			Scope:   extensionsobj.NamespaceScoped,
-			Names: extensionsobj.CustomResourceDefinitionNames{
-				Plural: crdkind.Plural,
-				Kind:   crdkind.Kind,
-			},
-		},
-	}
-}
-
-func NewServiceMonitorCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
-	return &extensionsobj.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   crdkind.Plural + "." + group,
-			Labels: labels,
-		},
-
-		Spec: extensionsobj.CustomResourceDefinitionSpec{
-			Group:   group,
-			Version: monitoringv1.Version,
-			Scope:   extensionsobj.NamespaceScoped,
-			Names: extensionsobj.CustomResourceDefinitionNames{
-				Plural: crdkind.Plural,
-				Kind:   crdkind.Kind,
-			},
-		},
-	}
-}
-
-func NewAlertmanagerCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
-	return &extensionsobj.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   crdkind.Plural + "." + group,
-			Labels: labels,
-		},
-		Spec: extensionsobj.CustomResourceDefinitionSpec{
-			Group:   group,
-			Version: monitoringv1.Version,
-			Scope:   extensionsobj.NamespaceScoped,
-			Names: extensionsobj.CustomResourceDefinitionNames{
-				Plural: crdkind.Plural,
-				Kind:   crdkind.Kind,
-			},
-		},
-	}
+func NewCustomResourceDefinition(crdKind monitoringv1.CrdKind, group string, labels map[string]string, validation bool) *extensionsobj.CustomResourceDefinition {
+	return crdutils.NewCustomResourceDefinition(crdutils.Config{
+		SpecDefinitionName:    crdKind.SpecName,
+		EnableValidation:      validation,
+		Labels:                crdutils.Labels{LabelsMap: labels},
+		ResourceScope:         string(extensionsobj.NamespaceScoped),
+		Group:                 group,
+		Kind:                  crdKind.Kind,
+		Version:               monitoringv1.Version,
+		Plural:                crdKind.Plural,
+		GetOpenAPIDefinitions: monitoringv1.GetOpenAPIDefinitions,
+	})
 }

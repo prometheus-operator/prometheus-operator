@@ -22,10 +22,12 @@ import (
 )
 
 // Prometheus defines a Prometheus deployment.
+// +k8s:openapi-gen=true
 type Prometheus struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// +k8s:openapi-gen=false
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Prometheus cluster. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
@@ -38,6 +40,7 @@ type Prometheus struct {
 }
 
 // PrometheusList is a list of Prometheuses.
+// +k8s:openapi-gen=true
 type PrometheusList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
@@ -49,6 +52,7 @@ type PrometheusList struct {
 
 // Specification of the desired behavior of the Prometheus cluster. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+// +k8s:openapi-gen=true
 type PrometheusSpec struct {
 	// Standard object’s metadata. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
@@ -121,13 +125,14 @@ type PrometheusSpec struct {
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and
 	// default PodSecurityContext for other versions.
-	SecurityContext *v1.PodSecurityContext
+	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not
 // included when requesting from the apiserver, only from the Prometheus
 // Operator API itself. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+// +k8s:openapi-gen=true
 type PrometheusStatus struct {
 	// Represents whether any actions on the underlaying managed objects are
 	// being performed. Only delete actions will be performed.
@@ -146,12 +151,14 @@ type PrometheusStatus struct {
 }
 
 // AlertingSpec defines parameters for alerting configuration of Prometheus servers.
+// +k8s:openapi-gen=true
 type AlertingSpec struct {
 	// AlertmanagerEndpoints Prometheus should fire alerts against.
 	Alertmanagers []AlertmanagerEndpoints `json:"alertmanagers"`
 }
 
 // StorageSpec defines the configured storage for a group Prometheus servers.
+// +k8s:openapi-gen=true
 type StorageSpec struct {
 	// Name of the StorageClass to use when requesting storage provisioning. More
 	// info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
@@ -172,6 +179,7 @@ type StorageSpec struct {
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.
+// +k8s:openapi-gen=true
 type RemoteWriteSpec struct {
 	//The URL of the endpoint to send samples to.
 	URL string `json:"url"`
@@ -192,6 +200,7 @@ type RemoteWriteSpec struct {
 }
 
 // RemoteReadSpec defines the remote_read configuration for prometheus.
+// +k8s:openapi-gen=true
 type RemoteReadSpec struct {
 	//The URL of the endpoint to send samples to.
 	URL string `json:"url"`
@@ -210,6 +219,7 @@ type RemoteReadSpec struct {
 }
 
 // RelabelConfig allows dynamic rewriting of the label set.
+// +k8s:openapi-gen=true
 type RelabelConfig struct {
 	//The source labels select values from existing labels. Their content is concatenated
 	//using the configured separator and matched against the configured regular expression
@@ -233,6 +243,7 @@ type RelabelConfig struct {
 
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
 // containing alertmanager IPs to fire alerts against.
+// +k8s:openapi-gen=true
 type AlertmanagerEndpoints struct {
 	// Namespace of Endpoints object.
 	Namespace string `json:"namespace"`
@@ -241,16 +252,18 @@ type AlertmanagerEndpoints struct {
 	// Port the Alertmanager API is exposed on.
 	Port intstr.IntOrString `json:"port"`
 	// Scheme to use when firing alerts.
-	Scheme string `json:"scheme"`
+	Scheme string `json:"scheme,omitempty"`
 	// Prefix for the HTTP path alerts are pushed to.
-	PathPrefix string `json:"pathPrefix"`
+	PathPrefix string `json:"pathPrefix,omitempty"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.
+// +k8s:openapi-gen=true
 type ServiceMonitor struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// +k8s:openapi-gen=false
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired Service selection for target discrovery by
 	// Prometheus.
@@ -258,6 +271,7 @@ type ServiceMonitor struct {
 }
 
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
+// +k8s:openapi-gen=true
 type ServiceMonitorSpec struct {
 	// The label to use to retrieve the job name from.
 	JobLabel string `json:"jobLabel,omitempty"`
@@ -270,6 +284,7 @@ type ServiceMonitorSpec struct {
 }
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.
+// +k8s:openapi-gen=true
 type Endpoint struct {
 	// Name of the service port this endpoint refers to. Mutually exclusive with targetPort.
 	Port string `json:"port,omitempty"`
@@ -300,6 +315,7 @@ type Endpoint struct {
 
 // BasicAuth allow an endpoint to authenticate over basic authentication
 // More info: https://prometheus.io/docs/operating/configuration/#endpoints
+// +k8s:openapi-gen=true
 type BasicAuth struct {
 	// The secret that contains the username for authenticate
 	Username v1.SecretKeySelector `json:"username,omitempty"`
@@ -308,6 +324,7 @@ type BasicAuth struct {
 }
 
 // TLSConfig specifies TLS configuration parameters.
+// +k8s:openapi-gen=true
 type TLSConfig struct {
 	// The CA cert to use for the targets.
 	CAFile string `json:"caFile,omitempty"`
@@ -322,6 +339,7 @@ type TLSConfig struct {
 }
 
 // A list of ServiceMonitors.
+// +k8s:openapi-gen=true
 type ServiceMonitorList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
@@ -332,10 +350,12 @@ type ServiceMonitorList struct {
 }
 
 // Describes an Alertmanager cluster.
+// +k8s:openapi-gen=true
 type Alertmanager struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// +k8s:openapi-gen=false
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Alertmanager cluster. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
@@ -349,6 +369,7 @@ type Alertmanager struct {
 
 // Specification of the desired behavior of the Alertmanager cluster. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+// +k8s:openapi-gen=true
 type AlertmanagerSpec struct {
 	// Standard object’s metadata. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
@@ -391,13 +412,14 @@ type AlertmanagerSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to non root user with uid 1000 and gid 2000.
-	SecurityContext *v1.PodSecurityContext
+	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
 
 // A list of Alertmanagers.
+// +k8s:openapi-gen=true
 type AlertmanagerList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
@@ -411,6 +433,7 @@ type AlertmanagerList struct {
 // included when requesting from the apiserver, only from the Prometheus
 // Operator API itself. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+// +k8s:openapi-gen=true
 type AlertmanagerStatus struct {
 	// Represents whether any actions on the underlaying managed objects are
 	// being performed. Only delete actions will be performed.
@@ -430,6 +453,7 @@ type AlertmanagerStatus struct {
 
 // A selector for selecting namespaces either selecting all namespaces or a
 // list of namespaces.
+// +k8s:openapi-gen=true
 type NamespaceSelector struct {
 	// Boolean describing whether all namespaces are selected in contrast to a
 	// list restricting them.

@@ -52,12 +52,6 @@ func (prop *ModelProperty) setType(field reflect.StructField) {
 	}
 }
 
-func (prop *ModelProperty) setFormat(field reflect.StructField) {
-	if tag := field.Tag.Get("format"); tag != "" {
-		prop.Format = tag
-	}
-}
-
 func (prop *ModelProperty) setMinimum(field reflect.StructField) {
 	if tag := field.Tag.Get("minimum"); tag != "" {
 		prop.Minimum = tag
@@ -84,5 +78,4 @@ func (prop *ModelProperty) setPropertyMetadata(field reflect.StructField) {
 	prop.setUniqueItems(field)
 	prop.setDefaultValue(field)
 	prop.setType(field)
-	prop.setFormat(field)
 }
