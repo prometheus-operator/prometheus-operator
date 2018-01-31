@@ -45,7 +45,7 @@ spec:
           containerPort: 3000
         readinessProbe:
           httpGet:
-            path: /metrics
+            path: /api/health
             port: 3000
           periodSeconds: 1
           timeoutSeconds: 1
