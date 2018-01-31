@@ -68,3 +68,5 @@ $ helm install coreos/grafana --name my-release -f values.yaml
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
+
+> **Tip**: On GCE If you want to  use  `Ingress.enabled=true`, you must put `service.type=NodePort`
