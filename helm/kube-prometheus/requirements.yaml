@@ -20,7 +20,7 @@ dependencies:
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-kube-etcd
-    version: 0.1.5
+    version: 0.1.6
     #e2e-repository: file://../exporter-kube-etcd
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
