@@ -15,14 +15,9 @@ do
     rm -rf $f
 done
 
-for f in assets/grafana/generated/*-datasource.json
-do
-    rm -rf $f
-done
-
-virtualenv -p python3 .env
-source .env/bin/activate
-pip install -Ur requirements.txt
+virtualenv -p python3 .env 2>&1 > /dev/null
+source .env/bin/activate 2>&1 > /dev/null
+pip install -Ur requirements.txt 2>&1 > /dev/null
 for f in assets/grafana/*.dashboard.py
 do
   basefilename=$(basename $f)
