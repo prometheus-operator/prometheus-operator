@@ -121,6 +121,9 @@ rules:
 secrets: {}
 
 service:
+  ## Maintains session affinity.  Should be set to ClientIP for HA setup
+  ## Only options are ClientIP and None.  Do not leave blank.
+  sessionAffinity: ClientIP
   ## Annotations to be added to the Service
   ##
   annotations: {}

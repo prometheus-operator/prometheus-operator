@@ -16,6 +16,7 @@ metadata:
 {{- end }}
   name: {{ template "prometheus.fullname" . }}
 spec:
+  sessionAffinity: "{{ .Values.service.sessionAffinity }}"
   clusterIP: "{{ .Values.service.clusterIP }}"
 {{- if .Values.service.externalIPs }}
   externalIPs:
