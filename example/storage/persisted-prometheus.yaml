@@ -5,9 +5,8 @@ metadata:
 spec:
   storage:
     volumeClaimTemplate:
-      metadata:
-        volume.beta.kubernetes.io/storage-class: ssd
       spec:
+        storageClassName: ssd
         resources:
           requests:
             storage: 40Gi
