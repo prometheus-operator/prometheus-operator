@@ -6,11 +6,11 @@ helm install coreos/prometheus-operator --name prometheus-operator --namespace m
 helm install coreos/kube-prometheus --name kube-prometheus --set rbacEnable=true --namespace monitoring
 ````
 
-# How to contribue? 
+# How to contribue?
 
 1. Fork the project
 2. Make	 the changes in the helm charts
-3. Bump the version in Chart.yaml for each modified chart 
+3. Bump the version in Chart.yaml for each modified chart
 4. Update [kube-prometheus/requirements.yaml](kube-prometheus/requirements.yaml) file with the dependencies
 5. Bump the [kube-prometheus/Chart.yaml](kube-prometheus/Chart.yaml)
 6. [Test locally](#how-to-test)
@@ -22,7 +22,7 @@ helm install coreos/kube-prometheus --name kube-prometheus --set rbacEnable=true
 ```
 helm install helm/prometheus-operator --name prometheus-operator --namespace monitoring
 mkdir -p helm/kube-prometheus/charts
-helm package -d helm/kube-prometheus/charts helm/alertmanager helm/grafana helm/prometheus helm/prometheus-operator helm/exporter-kube-dns helm/exporter-kube-scheduler helm/exporter-kubelets helm/exporter-node helm/exporter-kube-controller-manager helm/exporter-kube-etcd helm/exporter-kube-state helm/exporter-kubernetes
+helm package -d helm/kube-prometheus/charts helm/alertmanager helm/grafana helm/prometheus  helm/exporter-kube-dns helm/exporter-kube-scheduler helm/exporter-kubelets helm/exporter-node helm/exporter-kube-controller-manager helm/exporter-kube-etcd helm/exporter-kube-state helm/exporter-kubernetes
 helm install helm/kube-prometheus --name kube-prometheus --namespace monitoring
 
 ```
