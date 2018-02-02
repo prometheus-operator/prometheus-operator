@@ -18,8 +18,7 @@ spec:
     - host: {{ .Values.ingress.fqdn }}
       http:
         paths:
-          - path: /
-            backend:
+          - backend:
               serviceName: {{ printf "%s-%s" $releaseName "grafana" | trunc 63 }}
               servicePort: 80
   {{- if .Values.ingress.tls }}
