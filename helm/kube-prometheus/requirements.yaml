@@ -3,12 +3,12 @@ dependencies:
     version: 0.0.8
     #e2e-repository: file://../alertmanager
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
-  
+
   - name: prometheus
-    version: 0.0.12
+    version: 0.0.13
     #e2e-repository: file://../prometheus
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
- 
+
   - name: exporter-kube-controller-manager
     version: 0.1.4
     #e2e-repository: file://../exporter-kube-controller-manager
