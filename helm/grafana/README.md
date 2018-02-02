@@ -40,6 +40,7 @@ Parameter | Description | Default
 `adminPassword` | Grafana admin user password | `admin`
 `image.repository` | Image | `grafana/grafana`
 `image.tag` | Image tag | `4.4.1`
+`extraVars` | Pass extra environment variables to the Grafana container. | `{}`
 `grafanaWatcher.repository` | Image | `quay.io/coreos/grafana-watcher`
 `grafanaWatcher.tag` | Image tag | `v0.0.8`
 `ingress.enabled` | If true, Grafana Ingress will be created | `false`
