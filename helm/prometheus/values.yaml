@@ -79,6 +79,10 @@ rbacEnable: true
 ##
 replicaCount: 1
 
+## Log level for Prometheus be configured in
+##
+logLevel: info
+
 ## Pod anti-affinity can prevent the scheduler from placing Prometheus replicas on the same node.
 ## The default value "soft" means that the scheduler should *prefer* to not schedule two replica pods onto the same node but no guarantee is provided.
 ## The value "hard" means that the scheduler is *required* to not schedule two replica pods onto the same node.

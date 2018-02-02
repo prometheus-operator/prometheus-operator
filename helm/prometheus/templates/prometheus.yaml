@@ -41,6 +41,7 @@ spec:
 {{- end }}
   paused: {{ .Values.paused }}
   replicas: {{ .Values.replicaCount }}
+  logLevel:  {{ .Values.logLevel }}
   resources:
 {{ toYaml .Values.resources | indent 4 }}
   retention: "{{ .Values.retention }}"
