@@ -37,6 +37,9 @@ spec:
             secretKeyRef:
               name: {{ template "grafana.server.fullname" . }}
               key: password
+{{- if .Values.extraVars }}
+{{ toYaml .Values.extraVars | indent 8 }}
+{{- end }} 
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/grafana-storage
