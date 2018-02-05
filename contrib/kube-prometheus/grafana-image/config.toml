@@ -1,2 +1,7 @@
 [database]
 path = /data/grafana.db
+
+[paths]
+data = /data
+logs = /data/log
+plugins = /data/plugins

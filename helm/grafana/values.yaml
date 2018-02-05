@@ -2,6 +2,15 @@ nodeSelector: {}
 
 annotations: {}
 
+## Pass extra environment variables to the Grafana container.
+##
+# extraVars:
+# - name: EXTRA_VAR_1
+#   value: extra-var-value-1
+# - name: EXTRA_VAR_2
+#   value: extra-var-value-2
+extraVars:
+
 adminUser: "admin"
 adminPassword: "admin"
 
