@@ -13,7 +13,7 @@ dashboard = Dashboard(
     timezone='browser',
     inputs=[
         {
-            'name': 'DS_PROMETHEUS',
+            'name': 'prometheus',
             'label': 'prometheus',
             'description': '',
             'type': 'datasource',
@@ -28,7 +28,7 @@ dashboard = Dashboard(
                 Graph(
                     title='Idle CPU',
                     id=3,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     dashLength=10,
                     dashes=False,
                     isNew=False,
@@ -55,7 +55,7 @@ dashboard = Dashboard(
                 Graph(
                     title='System Load',
                     id=9,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     dashLength=10,
                     dashes=False,
                     isNew=False,
@@ -102,7 +102,7 @@ dashboard = Dashboard(
                 Graph(
                     title='Memory Usage',
                     id=4,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     dashLength=10,
                     dashes=False,
                     isNew=False,
@@ -170,7 +170,7 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='Memory Usage',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=5,
                     format='percent',
                     span=3,
@@ -212,7 +212,7 @@ dashboard = Dashboard(
             titleSize='h6', panels=[
                 Graph(
                     title='Disk I/O',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=6,
                     dashLength=10,
                     dashes=False,
@@ -267,7 +267,7 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='Disk Space Usage',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=12,
                     span=3,
                     editable=False,
@@ -312,7 +312,7 @@ dashboard = Dashboard(
             titleSize='h6', panels=[
                 Graph(
                     title='Network Received',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=8,
                     dashLength=10,
                     dashes=False,
@@ -346,7 +346,7 @@ dashboard = Dashboard(
                 ),
                 Graph(
                     title='Network Transmitted',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=10,
                     dashLength=10,
                     dashes=False,
@@ -386,7 +386,7 @@ dashboard = Dashboard(
             panels=[
                 Graph(
                     title='Cluster Pod Utilization',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=11,
                     span=9,
                     dashes=False,
@@ -421,7 +421,7 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='Pod Utilization',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=7,
                     editable=False,
                     span=3,

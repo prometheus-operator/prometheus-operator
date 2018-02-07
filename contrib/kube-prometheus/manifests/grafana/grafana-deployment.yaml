@@ -14,25 +14,16 @@ spec:
         runAsUser: 65534
       containers:
       - name: grafana
-        image: quay.io/coreos/monitoring-grafana:4.6.3-non-root.1
-        env:
-        - name: GF_AUTH_BASIC_ENABLED
-          value: "true"
-        - name: GF_AUTH_ANONYMOUS_ENABLED
-          value: "true"
-        - name: GF_SECURITY_ADMIN_USER
-          valueFrom:
-            secretKeyRef:
-              name: grafana-credentials
-              key: user
-        - name: GF_SECURITY_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: grafana-credentials
-              key: password
+        image: quay.io/coreos/monitoring-grafana:5.0.0-beta1
         volumeMounts:
         - name: grafana-storage
           mountPath: /data
+        - name: grafana-datasources
+          mountPath: /grafana/conf/provisioning/datasources
+        - name: grafana-dashboards
+          mountPath: /grafana/conf/provisioning/dashboards
+        - name: grafana-dashboard-definitions-0
+          mountPath: /grafana-dashboard-definitions/0
         ports:
         - name: web
           containerPort: 3000
@@ -43,35 +34,15 @@ spec:
           limits:
             memory: 200Mi
             cpu: 200m
-      - name: grafana-watcher
-        image: quay.io/coreos/grafana-watcher:v0.0.8
-        args:
-          - '--watch-dir=/var/grafana-dashboards-0'
-          - '--grafana-url=http://localhost:3000'
-        env:
-        - name: GRAFANA_USER
-          valueFrom:
-            secretKeyRef:
-              name: grafana-credentials
-              key: user
-        - name: GRAFANA_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: grafana-credentials
-              key: password
-        resources:
-          requests:
-            memory: "16Mi"
-            cpu: "50m"
-          limits:
-            memory: "32Mi"
-            cpu: "100m"
-        volumeMounts:
-        - name: grafana-dashboards-0
-          mountPath: /var/grafana-dashboards-0
       volumes:
       - name: grafana-storage
         emptyDir: {}
-      - name: grafana-dashboards-0
+      - name: grafana-datasources
         configMap:
-          name: grafana-dashboards-0
+          name: grafana-datasources
+      - name: grafana-dashboards
+        configMap:
+          name: grafana-dashboards
+      - name: grafana-dashboard-definitions-0
+        configMap:
+          name: grafana-dashboard-definitions-0
