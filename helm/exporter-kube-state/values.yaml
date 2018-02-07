@@ -2,7 +2,12 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 replicaCount: 1
-rbacEnable: true
+
+## If true, create & use RBAC resources
+##
+global:
+  rbacEnable: true
+
 kube_state_metrics:
   image:
     repository: gcr.io/google_containers/kube-state-metrics

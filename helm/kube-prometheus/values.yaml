@@ -4,6 +4,11 @@ deployExporterNode: True
 # Grafana
 deployGrafana: True
 
+## If true, create & use RBAC resources
+##
+global:
+  rbacEnable: true
+
 alertmanager:
   ## Alertmanager configuration directives
   ## Ref: https://prometheus.io/docs/alerting/configuration/
@@ -122,10 +127,6 @@ alertmanager:
   #     requests:
   #       storage: 2Gi
   #   selector: {}
-
-## If true, create & use RBAC resources
-##
-rbacEnable: true
 
 prometheus:
   ## Alertmanagers to which alerts will be sent

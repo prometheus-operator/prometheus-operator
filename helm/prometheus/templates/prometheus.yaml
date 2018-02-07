@@ -52,7 +52,7 @@ spec:
   secrets:
 {{ toYaml .Values.secrets | indent 4 }}
 {{- end }}
-{{- if .Values.rbacEnable }}
+{{- if .Values.global.rbacEnable }}
   serviceAccountName: {{ template "prometheus.fullname" . }}
 {{- end }}
 {{ if and .Values.config.specifiedInValues .Values.config.value }}
