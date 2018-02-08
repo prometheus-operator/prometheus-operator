@@ -78,7 +78,7 @@ groups:
     annotations:
       description: API server returns errors for {{`{{ $value }}`}}% of requests
   - alert: K8SApiserverDown
-    expr: absent(up{job="kubernetes"} == 1)
+    expr: absent(up{job="apiserver"} == 1)
     for: 20m
     labels:
       severity: critical
