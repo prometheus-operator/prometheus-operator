@@ -60,7 +60,8 @@ for chart in charts:
 ######
 
 with open('contrib/kube-prometheus/manifests/grafana/grafana-dashboards.yaml', 'r') as s:
-  data = yaml.load(s, Loader=yaml.RoundTripLoader)['data']
+  config_map = yaml.load_all(s, Loader=yaml.RoundTripLoader).next()
+  data = config_map['data']
 
 # prometheus datasource it's not required now 
 del data['prometheus-datasource.json']
