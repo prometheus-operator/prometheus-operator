@@ -1,7 +1,7 @@
 # Set to false for GKE
 https: true
 
-insecureSkipVerify: false
+insecureSkipVerify: true
 
 # default rules are in templates/kubelet.rules.yaml
 # prometheusRules: {}
