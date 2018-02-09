@@ -48,6 +48,7 @@ rules:
   resources:
   - alertmanagers
   - prometheuses
+  - prometheuses/finalizers
   - servicemonitors
   verbs:
   - "*"
