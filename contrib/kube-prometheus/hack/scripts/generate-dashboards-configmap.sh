@@ -34,7 +34,7 @@ do
   if [ "$basefilename" = "etcd-dashboard.json" ]; then
     hack/scripts/wrap-dashboard.sh $f prometheus-etcd | sed "s/^/    /g"
   else
-    hack/scripts/wrap-dashboard.sh $f prometheus-k8s | sed "s/^/    /g"
+    hack/scripts/wrap-dashboard.sh $f prometheus | sed "s/^/    /g"
   fi
 done
 
