@@ -4,8 +4,8 @@
 #  * Edit dashboard in Grafana (you need to login first with admin/admin
 #    login/password).
 #  * Save dashboard in Grafana to check is specification is correct.
-#    Looks like this is the only way to check is dashboard specification
-#    has error.
+#    Looks like this is the only way to check if dashboard specification
+#    has errors.
 #  * Download dashboard specification as JSON file in Grafana:
 #    Share -> Export -> Save to file.
 #  * Drop dashboard specification in assets folder:
