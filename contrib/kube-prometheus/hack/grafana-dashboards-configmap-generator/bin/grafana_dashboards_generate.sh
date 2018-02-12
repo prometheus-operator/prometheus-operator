@@ -70,7 +70,7 @@ DATE_EXEC="$(date "+%Y-%m-%d-%H%M%S")"
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TOOL_HOME="$(dirname $BIN_DIR)"
 SCRIPT_BASE=`basename $0 | sed "s/\.[Ss][Hh]//"`
-CONFIGMAP_DASHBOARD_PREFIX="grafana-dashboards"
+CONFIGMAP_DASHBOARD_PREFIX="grafana-dashboard-definitions"
 
 TEMPLATES_DIR="$TOOL_HOME/templates"
 DASHBOARD_HEADER_FILE="$TEMPLATES_DIR/dashboard.header"
@@ -327,7 +327,10 @@ initialize-bin-pack
 bin-pack-files "$(find $DASHBOARDS_DIR -maxdepth 1 -type f -name "*-dashboard.json" | sort)"
 
 # Continue processing datasources (maintaining the same queue)
-bin-pack-files "$(find $DASHBOARDS_DIR -maxdepth 1 -type f -name "*-datasource.json" | sort )"
+#
+# Commented out, as datasources are provisionable by Grafana by default in Grafana v5, but from a separate directory, meaning a separate ConfigMap for us.
+#
+# bin-pack-files "$(find $DASHBOARDS_DIR -maxdepth 1 -type f -name "*-datasource.json" | sort )"
 
 # Processing remaining data in the queue (or unique)
 if [ "$to_process" ]; then
@@ -361,7 +364,7 @@ for (( i=0; i<$total_configmaps_created; i++ )); do
   configmap="$CONFIGMAP_DASHBOARD_PREFIX-$i"
   echo "# Preparing grafana deployment to support configmap: $configmap"
 
-  test "$VOLUME_MOUNTS" && VOLUME_MOUNTS="$VOLUME_MOUNTS\n- name: $configmap\n  mountPath: /var/$configmap" || VOLUME_MOUNTS="- name: $configmap\n  mountPath: /var/$configmap"
+  test "$VOLUME_MOUNTS" && VOLUME_MOUNTS="$VOLUME_MOUNTS\n- name: $configmap\n  mountPath: /grafana-dashboard-definitions/$i" || VOLUME_MOUNTS="- name: $configmap\n  mountPath: /grafana-dashboard-definitions/$i"
   test "$VOLUMES" && VOLUMES="$VOLUMES\n- name: $configmap\n  configMap:\n    name: $configmap" || VOLUMES="- name: $configmap\n  configMap:\n    name: $configmap"
   test "$WATCH_DIR" && WATCH_DIR="$WATCH_DIR\n- '--watch-dir=/var/$configmap'" || WATCH_DIR="- '--watch-dir=/var/$configmap'"
   # echo "DEBUG:"

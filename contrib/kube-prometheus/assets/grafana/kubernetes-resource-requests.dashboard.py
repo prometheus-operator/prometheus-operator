@@ -12,7 +12,7 @@ dashboard = Dashboard(
     timezone='browser',
     inputs=[
         {
-            'name': 'DS_PROMETHEUS',
+            'name': 'prometheus',
             'label': 'prometheus',
             'description': '',
             'type': 'datasource',
@@ -34,7 +34,7 @@ dashboard = Dashboard(
                     'community/blob/master/contributors/design-proposals/'
                     'node-allocatable.md) is also shown.',
                     id=1,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     dashLength=10,
                     dashes=False,
                     isNew=False,
@@ -73,7 +73,7 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='CPU Cores',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=2,
                     format='percent',
                     editable=False,
@@ -117,7 +117,7 @@ dashboard = Dashboard(
                 Graph(
                     title='Memory',
                     id=3,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     description='This represents the total [memory resource '
                     'requests](https://kubernetes.io/docs/concepts/'
                     'configuration/manage-compute-resources-container/'
@@ -163,7 +163,7 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='Memory',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=4,
                     format='percent',
                     span=3,

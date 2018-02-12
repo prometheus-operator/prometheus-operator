@@ -13,7 +13,7 @@ dashboard = Dashboard(
         {
             'allValue': '.*',
             'current': {},
-            'datasource': '${DS_PROMETHEUS}',
+            'datasource': 'prometheus',
             'hide': 0,
             'includeAll': False,
             'label': 'Namespace',
@@ -34,7 +34,7 @@ dashboard = Dashboard(
         {
             'allValue': None,
             'current': {},
-            'datasource': '${DS_PROMETHEUS}',
+            'datasource': 'prometheus',
             'hide': 0,
             'includeAll': False,
             'label': 'Deployment',
