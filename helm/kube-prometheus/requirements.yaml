@@ -5,7 +5,7 @@ dependencies:
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: prometheus
-    version: 0.0.14
+    version: 0.0.15
     #e2e-repository: file://../prometheus
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
