@@ -4,7 +4,9 @@ metadata:
   name: persisted
 spec:
   storage:
-    class: ssd
-    resources:
-      requests:
-        storage: 40Gi
+    volumeClaimTemplate:
+      spec:
+        storageClassName: ssd
+        resources:
+          requests:
+            storage: 40Gi

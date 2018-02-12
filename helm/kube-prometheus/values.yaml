@@ -122,11 +122,12 @@ alertmanager:
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
   ##
   storageSpec: {}
-  #   class: default
-  #   resources:
-  #     requests:
-  #       storage: 2Gi
-  #   selector: {}
+  #  volumeClaimTemplate:
+  #    spec:
+  #      resources:
+  #        requests:
+  #          storage: 50Gi
+  #  selector: {}
 
 prometheus:
   ## Alertmanagers to which alerts will be sent
@@ -345,11 +346,12 @@ prometheus:
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
   ##
   storageSpec: {}
-  #   class: default
-  #   resources:
-  #     requests:
-  #       storage: 16Gi
-  #   selector: {}
+  #  volumeClaimTemplate:
+  #    spec:
+  #      resources:
+  #        requests:
+  #          storage: 50Gi
+  #  selector: {}
 
 # default rules are in templates/general.rules.yaml
 # prometheusRules: {}
