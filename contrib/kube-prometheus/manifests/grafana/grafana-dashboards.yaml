@@ -4,7 +4,7 @@ metadata:
   name: grafana-dashboards
 data:
   dashboards.yaml: |+
-    - name: 'default'
+    - name: '0'
       org_id: 1
       folder: ''
       type: file
