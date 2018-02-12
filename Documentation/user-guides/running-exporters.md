@@ -76,7 +76,7 @@ spec:
 
 See the ServiceMonitor Documentation:
 
-> While `ServiceMonitors must live in the same namespace as the Prometheus
+> While `ServiceMonitors` must live in the same namespace as the Prometheus
 resource, discovered targets may come from any namespace. This allows
 cross-namespace monitoring use cases, for example, for meta-monitoring. Use the
 `namespaceSelector` of the `ServiceMonitorSpec` to restrict the
