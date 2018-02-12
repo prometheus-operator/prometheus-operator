@@ -13,9 +13,10 @@ hack/scripts/generate-dashboards-configmap.sh > manifests/grafana/grafana-dashbo
 # Input dir: assets/grafana
 # output file: manifests/grafana/grafana-dashboards.yaml
 # grafana deployment output file: manifests/grafana/grafana-deployment.yaml
-test -f manifests/grafana/grafana-dashboards.yaml && rm -f manifests/grafana/grafana-dashboard-definitions.yaml
+test -f manifests/grafana/grafana-dashboard-definitions.yaml && rm -f manifests/grafana/grafana-dashboard-definitions.yaml
 test -f manifests/grafana/grafana-deployment.yaml && rm -f manifests/grafana/grafana-deployment.yaml
-hack/grafana-dashboards-configmap-generator/bin/grafana_dashboards_generate.sh -s 240000 -i assets/grafana/generated -o manifests/grafana/grafana-dashboard-definitions.yaml -g manifests/grafana/grafana-deployment.yaml
+test -f manifests/grafana/grafana-dashboards.yaml && rm -f manifests/grafana/grafana-dashboards.yaml
+hack/grafana-dashboards-configmap-generator/bin/grafana_dashboards_generate.sh -s 240000 -i assets/grafana/generated -o manifests/grafana/grafana-dashboard-definitions.yaml -g manifests/grafana/grafana-deployment.yaml -d manifests/grafana/grafana-dashboards.yaml
 
 # Generate Grafana Credentials Secret
 hack/scripts/generate-grafana-credentials-secret.sh admin admin > manifests/grafana/grafana-credentials.yaml
