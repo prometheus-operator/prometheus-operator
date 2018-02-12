@@ -85,6 +85,12 @@ func generateTestConfig(version string) ([]byte, error) {
 						v1.ResourceMemory: resource.MustParse("400Mi"),
 					},
 				},
+				RemoteRead: []monitoringv1.RemoteReadSpec{{
+					URL: "https://example.com/remote_read",
+				}},
+				RemoteWrite: []monitoringv1.RemoteWriteSpec{{
+					URL: "https://example.com/remote_write",
+				}},
 			},
 		},
 		makeServiceMonitors(),
@@ -164,6 +170,42 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 					Interval: "30s",
 					Path:     "/federate",
 					Params:   map[string][]string{"metrics[]": []string{"{__name__=~\"job:.*\"}"}},
+				},
+			},
+		},
+	}
+
+	res["servicemonitor4"] = &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testservicemonitor4",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group6",
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group":  "group6",
+					"group3": "group7",
+				},
+			},
+			Endpoints: []monitoringv1.Endpoint{
+				monitoringv1.Endpoint{
+					Port:     "web",
+					Interval: "30s",
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						&monitoringv1.RelabelConfig{
+							Action:       "drop",
+							Regex:        "my-job-pod-.+",
+							SourceLabels: []string{"pod_name"},
+						},
+						&monitoringv1.RelabelConfig{
+							Action:       "drop",
+							Regex:        "test",
+							SourceLabels: []string{"namespace"},
+						},
+					},
 				},
 			},
 		},

@@ -6,11 +6,12 @@ dashboard = Dashboard(
     version=9,
     graphTooltip=0,
     schemaVersion=14,
+    editable=False,
     time=Time(start='now-6h'),
     timezone='browser',
     inputs=[
         {
-            'name': 'DS_PROMETHEUS',
+            'name': 'prometheus',
             'label': 'prometheus',
             'description': '',
             'type': 'datasource',
@@ -20,16 +21,17 @@ dashboard = Dashboard(
     ],
     rows=[
         Row(
-            height=254, title='Row', showTitle=False,
+            height=254, title='Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 SingleStat(
                     title='Control Plane Components Down',
                     id=1,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     gauge=Gauge(),
                     span=3,
                     thresholds='1, 3',
                     colorValue=True,
+                    editable=False,
                     rangeMaps=[
                         {
                             'from': 'null',
@@ -74,9 +76,10 @@ dashboard = Dashboard(
                 SingleStat(
                     title='Alerts Firing',
                     id=2,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',
@@ -119,9 +122,10 @@ dashboard = Dashboard(
                 SingleStat(
                     title='Alerts Pending',
                     id=3,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='3, 5',
@@ -164,9 +168,10 @@ dashboard = Dashboard(
                 SingleStat(
                     title='Crashlooping Pods',
                     id=4,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',
@@ -209,14 +214,15 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=250, title='Row', showTitle=False,
+            height=250, title='Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 SingleStat(
                     title='Node Not Ready',
                     id=5,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',
@@ -259,9 +265,10 @@ dashboard = Dashboard(
                 SingleStat(
                     title='Node Disk Pressure',
                     id=6,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',
@@ -304,9 +311,10 @@ dashboard = Dashboard(
                 SingleStat(
                     title='Node Memory Pressure',
                     id=7,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',
@@ -349,9 +357,10 @@ dashboard = Dashboard(
                 SingleStat(
                     title='Nodes Unschedulable',
                     id=8,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     gauge=Gauge(),
                     colorValue=True,
+                    editable=False,
                     span=3,
                     valueName='current',
                     thresholds='1, 3',

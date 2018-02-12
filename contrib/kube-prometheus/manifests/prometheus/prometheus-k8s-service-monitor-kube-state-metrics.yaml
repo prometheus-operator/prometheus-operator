@@ -13,6 +13,16 @@ spec:
     matchNames:
     - monitoring
   endpoints:
-  - port: http-metrics
+  - port: https-main
+    scheme: https
     interval: 30s
     honorLabels: true
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tlsConfig:
+      insecureSkipVerify: true
+  - port: https-self
+    scheme: https
+    interval: 30s
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tlsConfig:
+      insecureSkipVerify: true

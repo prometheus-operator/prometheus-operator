@@ -1,6 +1,7 @@
 <br>
 <div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.<br><br>
+This documentation is for an alpha feature. For questions and feedback on the Prometheus OCS Alpha program, email <a href="mailto:tectonic-alpha-feedback@coreos.com">tectonic-alpha-feedback@coreos.com</a>.
 </div>
 
 # Prometheus Operator
@@ -50,6 +51,7 @@ rules:
   resources:
   - alertmanagers
   - prometheuses
+  - prometheuses/finalizers
   - servicemonitors
   verbs:
   - "*"
@@ -103,7 +105,7 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        image: quay.io/coreos/prometheus-operator:v0.15.0
+        image: quay.io/coreos/prometheus-operator:v0.16.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -115,6 +117,9 @@ spec:
           requests:
             cpu: 100m
             memory: 50Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       serviceAccountName: prometheus-operator
 ```
 

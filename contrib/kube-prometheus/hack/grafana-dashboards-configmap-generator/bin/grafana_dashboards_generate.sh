@@ -70,18 +70,20 @@ DATE_EXEC="$(date "+%Y-%m-%d-%H%M%S")"
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TOOL_HOME="$(dirname $BIN_DIR)"
 SCRIPT_BASE=`basename $0 | sed "s/\.[Ss][Hh]//"`
-CONFIGMAP_DASHBOARD_PREFIX="grafana-dashboards"
+CONFIGMAP_DASHBOARD_PREFIX="grafana-dashboard-definitions"
 
 TEMPLATES_DIR="$TOOL_HOME/templates"
 DASHBOARD_HEADER_FILE="$TEMPLATES_DIR/dashboard.header"
 DASHBOARD_FOOT_FILE="$TEMPLATES_DIR/dashboard.foot"
 CONFIGMAP_HEADER="$TEMPLATES_DIR/ConfigMap.header"
 GRAFANA_DEPLOYMENT_TEMPLATE="$TEMPLATES_DIR/grafana-deployment-template.yaml"
+GRAFANA_DASHBOARDS_TEMPLATE="$TEMPLATES_DIR/grafana-dashboards-template.yaml"
 OUTPUT_BASE_DIR="$TOOL_HOME/output"
 
 # Some default values
 OUTPUT_FILE="$OUTPUT_BASE_DIR/grafana-dashboards-configMap-$DATE_EXEC.yaml"
 GRAFANA_OUTPUT_FILE="$OUTPUT_BASE_DIR/grafana-deployment-$DATE_EXEC.yaml"
+GRAFANA_DASHBOARD_OUTPUT_FILE="$OUTPUT_BASE_DIR/grafana-dashboards-$DATE_EXEC.yaml"
 DASHBOARDS_DIR="$TEMPLATES_DIR/grafana-dashboards"
 
 APPLY_CONFIGMAP="false"
@@ -98,6 +100,10 @@ while (( "$#" )); do
             ;;
         "-g" | "--grafana-output-file")
             GRAFANA_OUTPUT_FILE="$2"
+            shift
+            ;;
+        "-d" | "--grafana-dashboard-output-file")
+            GRAFANA_DASHBOARD_OUTPUT_FILE="$2"
             shift
             ;;
         "-i" | "--input-dir")
@@ -298,6 +304,7 @@ test -f "$DASHBOARD_FOOT_FILE" || { echo "Template $DASHBOARD_FOOT_FILE not foun
 test -f "$DASHBOARD_HEADER_FILE" || { echo "Template $DASHBOARD_HEADER_FILE not found"; exit 1; }
 test -f "$CONFIGMAP_HEADER" || { echo "Template $CONFIGMAP_HEADER not found"; exit 1; }
 test -f "$GRAFANA_DEPLOYMENT_TEMPLATE" || { echo "Template $GRAFANA_DEPLOYMENT_TEMPLATE not found"; exit 1; }
+test -f "$GRAFANA_DASHBOARDS_TEMPLATE" || { echo "Template $GRAFANA_DEPLOYMENT_TEMPLATE not found"; exit 1; }
 
 test ! -d "$OUTPUT_BASE_DIR" && { echo "ERROR: missing directory $OUTPUT_BASE_DIR"; exit 1; }
 
@@ -306,6 +313,7 @@ test -d "$DASHBOARDS_DIR" || { echo "ERROR: Dashboards directory not found: $DAS
 
 test -f "$OUTPUT_FILE" && { echo "ERROR: Output file already exists: $OUTPUT_FILE"; exit 1; }
 test -f "$GRAFANA_OUTPUT_FILE" && { echo "ERROR: Output file already exists: $GRAFANA_OUTPUT_FILE"; exit 1; }
+test -f "$GRAFANA_DASHBOARD_OUTPUT_FILE" && { echo "ERROR: Output file already exists: $GRAFANA_DASHBOARD_OUTPUT_FILE"; exit 1; }
 touch $OUTPUT_FILE || { echo "ERROR: Unable to create or modify $OUTPUT_FILE"; exit 1; }
 touch $GRAFANA_OUTPUT_FILE || { echo "ERROR: Unable to create or modify $GRAFANA_OUTPUT_FILE"; exit 1; }
 
@@ -327,7 +335,10 @@ initialize-bin-pack
 bin-pack-files "$(find $DASHBOARDS_DIR -maxdepth 1 -type f -name "*-dashboard.json" | sort)"
 
 # Continue processing datasources (maintaining the same queue)
-bin-pack-files "$(find $DASHBOARDS_DIR -maxdepth 1 -type f -name "*-datasource.json" | sort )"
+#
+# Commented out, as datasources are provisionable by Grafana by default in Grafana v5, but from a separate directory, meaning a separate ConfigMap for us.
+#
+# bin-pack-files "$(find $DASHBOARDS_DIR -maxdepth 1 -type f -name "*-datasource.json" | sort )"
 
 # Processing remaining data in the queue (or unique)
 if [ "$to_process" ]; then
@@ -361,7 +372,7 @@ for (( i=0; i<$total_configmaps_created; i++ )); do
   configmap="$CONFIGMAP_DASHBOARD_PREFIX-$i"
   echo "# Preparing grafana deployment to support configmap: $configmap"
 
-  test "$VOLUME_MOUNTS" && VOLUME_MOUNTS="$VOLUME_MOUNTS\n- name: $configmap\n  mountPath: /var/$configmap" || VOLUME_MOUNTS="- name: $configmap\n  mountPath: /var/$configmap"
+  test "$VOLUME_MOUNTS" && VOLUME_MOUNTS="$VOLUME_MOUNTS\n- name: $configmap\n  mountPath: /grafana-dashboard-definitions/$i" || VOLUME_MOUNTS="- name: $configmap\n  mountPath: /grafana-dashboard-definitions/$i"
   test "$VOLUMES" && VOLUMES="$VOLUMES\n- name: $configmap\n  configMap:\n    name: $configmap" || VOLUMES="- name: $configmap\n  configMap:\n    name: $configmap"
   test "$WATCH_DIR" && WATCH_DIR="$WATCH_DIR\n- '--watch-dir=/var/$configmap'" || WATCH_DIR="- '--watch-dir=/var/$configmap'"
   # echo "DEBUG:"
@@ -376,6 +387,22 @@ sed -e "s#XXX_VOLUMES_XXX#$(indentMultiLineString 6 "$VOLUMES")#" \
    -e "s#XXX_VOLUME_MOUNTS_XXX#$(indentMultiLineString 8 "$VOLUME_MOUNTS")#" \
    -e "s#XXX_WATCH_DIR_XXX#$(indentMultiLineString 10 "$WATCH_DIR")#" \
    $GRAFANA_DEPLOYMENT_TEMPLATE > $GRAFANA_OUTPUT_FILE
+
+echo
+echo "# Generating Grafana dashboard sources file for $total_configmaps_created directories"
+DASHBOARD_SOURCES=""
+for (( j=0; j<$total_configmaps_created; j++ )); do
+  echo "# Preparing grafana dashboards sources to support configmap: /grafana-dashboard-definitions/$j"
+  test "$DASHBOARD_SOURCES" && DASHBOARD_SOURCES="$DASHBOARD_SOURCES\n- name: '$j'\n  org_id: 1\n  folder: ''\n  type: file\n  options:\n    folder: /grafana-dashboard-definitions/$j" || DASHBOARD_SOURCES="- name: '$j'\n  org_id: 1\n  folder: ''\n  type: file\n  options:\n    folder: /grafana-dashboard-definitions/$j"
+
+  # echo "DEBUG:"
+  # echo "DASHBOARD_SOURCES: $DASHBOARD_SOURCES"
+  echo
+done
+
+echo "# Processing grafana dashboards template into $GRAFANA_DASHBOARD_OUTPUT_FILE"
+sed -e "s#XXX_DASHBOARDS_XXX#$(indentMultiLineString 4 "$DASHBOARD_SOURCES")#" \
+   $GRAFANA_DASHBOARDS_TEMPLATE > $GRAFANA_DASHBOARD_OUTPUT_FILE
 
 # If output file is empty we can delete it and exit
 test ! -s "$OUTPUT_FILE" && { echo "# Configmap empty, deleting file"; rm $OUTPUT_FILE; exit 0; }

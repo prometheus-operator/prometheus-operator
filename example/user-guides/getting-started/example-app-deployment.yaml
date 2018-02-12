@@ -10,7 +10,7 @@ spec:
         app: example-app
     spec:
       containers:
-      - name: example-app 
+      - name: example-app
         image: fabxc/instrumented_app
         ports:
         - name: web

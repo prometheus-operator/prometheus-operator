@@ -4,8 +4,8 @@
 #  * Edit dashboard in Grafana (you need to login first with admin/admin
 #    login/password).
 #  * Save dashboard in Grafana to check is specification is correct.
-#    Looks like this is the only way to check is dashboard specification
-#    has error.
+#    Looks like this is the only way to check if dashboard specification
+#    has errors.
 #  * Download dashboard specification as JSON file in Grafana:
 #    Share -> Export -> Save to file.
 #  * Drop dashboard specification in assets folder:
@@ -15,12 +15,18 @@
 #  * Apply new configmap:
 #      kubectl -n monitoring apply -f manifests/grafana/grafana-cm.yaml
 
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 path-to-dashboard.json"
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 path-to-dashboard.json grafana-prometheus-datasource-name"
     exit 1
 fi
 
 dashboardjson=$1
+datasource_name=$2
+inputname="DS_PROMETHEUS"
+
+if [ "$datasource_name" = "prometheus-etcd" ]; then
+  inputname="DS_PROMETHEUS-ETCD"
+fi
 
 cat <<EOF
 {
@@ -33,10 +39,10 @@ cat <<EOF
 ,
   "inputs": [
     {
-      "name": "DS_PROMETHEUS",
+      "name": "$inputname",
       "pluginId": "prometheus",
       "type": "datasource",
-      "value": "prometheus"
+      "value": "$datasource_name"
     }
   ],
   "overwrite": true

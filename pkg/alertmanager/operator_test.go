@@ -19,9 +19,10 @@ import (
 )
 
 func TestListOptions(t *testing.T) {
-	expected := "app=alertmanager,alertmanager=test"
-	o := ListOptions("test")
-	if o.LabelSelector != expected {
-		t.Fatalf("LabelSelector not computed correctly\n\nExpected: %#+v\n\nGot:      %#+v", expected, o.LabelSelector)
+	for i := 0; i < 1000; i++ {
+		o := ListOptions("test")
+		if o.LabelSelector != "app=alertmanager,alertmanager=test" && o.LabelSelector != "alertmanager=test,app=alertmanager" {
+			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app=alertmanager,alertmanager=test\"\n\nGot:      %#+v", o.LabelSelector)
+		}
 	}
 }

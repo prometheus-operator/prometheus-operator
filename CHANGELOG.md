@@ -1,3 +1,18 @@
+## 0.16.1 / 2018-01-16
+
+* [CHANGE] Default to Alertmanager v0.13.0.
+* [BUGFIX] Alertmanager flags must be double dashed starting v0.13.0.
+
+## 0.16.0 / 2018-01-11
+
+* [FEATURE] Add support for specifying remote storage configurations.
+* [FEATURE] Add ability to specify log level.
+* [FEATURE] Add support for dropping metrics at scrape time.
+* [ENHANCEMENT] Ensure that resource limit can't make Pods unschedulable.
+* [ENHANCEMENT] Allow configuring emtpyDir volumess
+* [BUGFIX] Use `--storage.tsdb.no-lockfile` for Prometheus 2.0.
+* [BUGFIX] Fix Alertmanager default storage.path.
+
 ## 0.15.0 / 2017-11-22
 
 * [CHANGE] Default Prometheus version v2.0.0

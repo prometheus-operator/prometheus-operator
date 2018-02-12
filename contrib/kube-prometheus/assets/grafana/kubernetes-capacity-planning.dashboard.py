@@ -7,12 +7,13 @@ dashboard = Dashboard(
     gnetId=22,
     graphTooltip=0,
     refresh=False,
+    editable=False,
     schemaVersion=14,
     time=Time(start='now-1h'),
     timezone='browser',
     inputs=[
         {
-            'name': 'DS_PROMETHEUS',
+            'name': 'prometheus',
             'label': 'prometheus',
             'description': '',
             'type': 'datasource',
@@ -22,15 +23,16 @@ dashboard = Dashboard(
     ],
     rows=[
         Row(
-            height=250, title='New Row', showTitle=False,
+            height=250, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Idle CPU',
                     id=3,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     tooltip=Tooltip(msResolution=False),
@@ -53,10 +55,11 @@ dashboard = Dashboard(
                 Graph(
                     title='System Load',
                     id=9,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     tooltip=Tooltip(msResolution=False),
@@ -94,15 +97,16 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=250, title='New Row', showTitle=False,
+            height=250, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Memory Usage',
                     id=4,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=9,
                     stack=True,
@@ -166,11 +170,12 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='Memory Usage',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=5,
                     format='percent',
                     span=3,
                     gauge=Gauge(show=True),
+                    editable=False,
                     thresholds='80, 90',
                     valueMaps=[
                         {
@@ -203,15 +208,16 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=246, title='New Row', showTitle=False,
+            height=246, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Disk I/O',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=6,
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=9,
                     tooltip=Tooltip(msResolution=False),
@@ -261,9 +267,10 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='Disk Space Usage',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=12,
                     span=3,
+                    editable=False,
                     format='percentunit',
                     valueName='current',
                     gauge=Gauge(
@@ -301,15 +308,16 @@ dashboard = Dashboard(
             ]
         ),
         Row(
-            height=250, title='New Row', showTitle=False,
+            height=250, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Network Received',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=8,
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     tooltip=Tooltip(msResolution=False),
@@ -338,11 +346,12 @@ dashboard = Dashboard(
                 ),
                 Graph(
                     title='Network Transmitted',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=10,
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=6,
                     tooltip=Tooltip(msResolution=False),
@@ -372,15 +381,16 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=276, title='New Row', showTitle=False,
+            height=276, title='New Row', showTitle=False, editable=False,
             titleSize='h6',
             panels=[
                 Graph(
                     title='Cluster Pod Utilization',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=11,
                     span=9,
                     dashes=False,
+                    editable=False,
                     spaceLength=11,
                     tooltip=Tooltip(
                         msResolution=False,
@@ -411,8 +421,9 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='Pod Utilization',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=7,
+                    editable=False,
                     span=3,
                     format='percent',
                     rangeMaps=[

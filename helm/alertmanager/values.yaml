@@ -4,18 +4,18 @@
 config:
   global:
     resolve_timeout: 5m
-
-  receivers:
-    - name: webhook
-      webhook_configs:
-        - url: 'http://alertmanagerwh:30500/'
-
   route:
     group_by: ['job']
-    group_interval: 5m
     group_wait: 30s
-    receiver: webhook
+    group_interval: 5m
     repeat_interval: 12h
+    receiver: 'null'
+    routes:
+    - match:
+        alertname: DeadMansSwitch
+      receiver: 'null'
+  receivers:
+  - name: 'null'
 
 ## Alertmanager template files to include
 #
@@ -49,7 +49,7 @@ selfServiceMonitor: true
 ##
 image:
   repository: quay.io/prometheus/alertmanager
-  tag: v0.7.1
+  tag: v0.12.0
 
 ## Labels to be added to the Alertmanager
 ##
@@ -92,6 +92,12 @@ paused: false
 ## Number of Alertmanager replicas desired
 ##
 replicaCount: 1
+
+## Pod anti-affinity can prevent the scheduler from placing Alertmanager replicas on the same node.
+## The default value "soft" means that the scheduler should *prefer* to not schedule two replica pods onto the same node but no guarantee is provided.
+## The value "hard" means that the scheduler is *required* to not schedule two replica pods onto the same node.
+## The value "" will disable pod anti-affinity so that no anti-affinity rules will be configured.
+podAntiAffinity: "soft"
 
 ## Resource limits & requests
 ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -150,3 +156,6 @@ storageSpec: {}
 #         requests:
 #           storage: 50Gi
 #   selector: {}
+
+# default rules are in templates/alertmanager.rules.yaml
+# prometheusRules: {}

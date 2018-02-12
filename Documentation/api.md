@@ -23,6 +23,9 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [PrometheusList](#prometheuslist)
 * [PrometheusSpec](#prometheusspec)
 * [PrometheusStatus](#prometheusstatus)
+* [RelabelConfig](#relabelconfig)
+* [RemoteReadSpec](#remotereadspec)
+* [RemoteWriteSpec](#remotewritespec)
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
@@ -60,8 +63,8 @@ AlertmanagerEndpoints defines a selection of a single Endpoints object containin
 | namespace | Namespace of Endpoints object. | string | true |
 | name | Name of Endpoints object in Namespace. | string | true |
 | port | Port the Alertmanager API is exposed on. | intstr.IntOrString | true |
-| scheme | Scheme to use when firing alerts. | string | true |
-| pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | true |
+| scheme | Scheme to use when firing alerts. | string | false |
+| pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -95,6 +98,8 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
 | affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
+| securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000. | *v1.PodSecurityContext | false |
+| serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -140,6 +145,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | bearerTokenFile | File to read bearer token for scraping targets. | string | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
+| metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -191,6 +197,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#localobjectreference-v1-core) | false |
 | replicas | Number of instances to deploy for a Prometheus deployment. | *int32 | false |
 | retention | Time duration Prometheus shall retain data for. | string | false |
+| logLevel | Log level for Prometheus be configured in. | string | false |
 | scrapeInterval | Interval between consecutive scrapes. | string | false |
 | evaluationInterval | Interval between consecutive evaluations. | string | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
@@ -205,6 +212,9 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | secrets | Secrets is a list of Secrets in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods. The Secrets are mounted into /etc/prometheus/secrets/<secret-name>. Secrets changes after initial creation of a Prometheus object are not reflected in the running Pods. To change the secrets mounted into the Prometheus Pods, the object must be deleted and recreated with the new list of secrets. | []string | false |
 | affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
+| remoteWrite | If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteWriteSpec](#remotewritespec) | false |
+| remoteRead | If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteReadSpec](#remotereadspec) | false |
+| securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and default PodSecurityContext for other versions. | *v1.PodSecurityContext | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -219,6 +229,55 @@ Most recent observed status of the Prometheus cluster. Read-only. Not included w
 | updatedReplicas | Total number of non-terminated pods targeted by this Prometheus deployment that have the desired version spec. | int32 | true |
 | availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this Prometheus deployment. | int32 | true |
 | unavailableReplicas | Total number of unavailable pods targeted by this Prometheus deployment. | int32 | true |
+
+[Back to TOC](#table-of-contents)
+
+## RelabelConfig
+
+RelabelConfig allows dynamic rewriting of the label set.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sourceLabels | The source labels select values from existing labels. Their content is concatenated using the configured separator and matched against the configured regular expression for the replace, keep, and drop actions. | []string | true |
+| separator | Separator placed between concatenated source label values. default is ';'. | string | false |
+| targetLabel | Label to which the resulting value is written in a replace action. It is mandatory for replace actions. Regex capture groups are available. | string | false |
+| regex | Regular expression against which the extracted value is matched. defailt is '(.*)' | string | false |
+| modulus | Modulus to take of the hash of the source label values. | uint64 | false |
+| replacement | Replacement value against which a regex replace is performed if the regular expression matches. Regex capture groups are available. Default is '$1' | string | true |
+| action | Action to perform based on regex matching. Default is 'replace' | string | false |
+
+[Back to TOC](#table-of-contents)
+
+## RemoteReadSpec
+
+RemoteReadSpec defines the remote_read configuration for prometheus.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| url | The URL of the endpoint to send samples to. | string | true |
+| remoteTimeout | Timeout for requests to the remote write endpoint. | string | false |
+| basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
+| bearerToken | bearer token for remote write. | string | false |
+| bearerTokenFile | File to read bearer token for remote write. | string | false |
+| tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
+| proxy_url | Optional ProxyURL | string | false |
+
+[Back to TOC](#table-of-contents)
+
+## RemoteWriteSpec
+
+RemoteWriteSpec defines the remote_write configuration for prometheus.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| url | The URL of the endpoint to send samples to. | string | true |
+| remoteTimeout | Timeout for requests to the remote write endpoint. | string | false |
+| writeRelabelConfigs | The list of remote write relabel configurations. | [][RelabelConfig](#relabelconfig) | false |
+| basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
+| bearerToken | File to read bearer token for remote write. | string | false |
+| bearerTokenFile | File to read bearer token for remote write. | string | false |
+| tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
+| proxy_url | Optional ProxyURL | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -264,6 +323,7 @@ StorageSpec defines the configured storage for a group Prometheus servers.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | class | Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses DEPRECATED | string | true |
+| emptyDir | EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir | *[v1.EmptyDirVolumeSource](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#emptydirvolumesource-v1-core) | false |
 | selector | A label query over volumes to consider for binding. DEPRECATED | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | true |
 | resources | Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources DEPRECATED | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | true |
 | volumeClaimTemplate | A PVC spec to be used by the Prometheus StatefulSets. | [v1.PersistentVolumeClaim](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#persistentvolumeclaim-v1-core) | false |

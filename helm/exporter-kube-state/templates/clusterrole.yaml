@@ -1,4 +1,4 @@
-{{- if .Values.rbacEnable }}
+{{- if .Values.global.rbacEnable }}
 {{- if .Capabilities.APIVersions.Has "rbac.authorization.k8s.io/v1beta1" }}
 apiVersion: rbac.authorization.k8s.io/v1beta1
 {{- else if .Capabilities.APIVersions.Has "rbac.authorization.k8s.io/v1alpha1" }}
@@ -7,14 +7,15 @@ apiVersion: rbac.authorization.k8s.io/v1alpha1
 kind: ClusterRole
 metadata:
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "exporter-kube-state.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
-  name: {{ template "fullname" . }}
+  name: {{ template "exporter-kube-state.fullname" . }}
 rules:
 - apiGroups: [""]
   resources:
+  - namespaces
   - nodes
   - pods
   - services
@@ -22,6 +23,8 @@ rules:
   - replicationcontrollers
   - limitranges
   - persistentvolumeclaims
+  - persistentvolumes
+  - endpoints
   verbs: ["list", "watch"]
 - apiGroups: ["extensions"]
   resources:
@@ -37,5 +40,9 @@ rules:
   resources:
   - cronjobs
   - jobs
+  verbs: ["list", "watch"]
+- apiGroups: ["autoscaling"]
+  resources:
+  - horizontalpodautoscalers
   verbs: ["list", "watch"]
 {{- end }}

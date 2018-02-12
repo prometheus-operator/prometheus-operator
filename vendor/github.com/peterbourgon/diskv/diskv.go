@@ -102,7 +102,7 @@ func New(o Options) *Diskv {
 // available for reads. Write relies on the filesystem to perform an eventual
 // sync to physical media. If you need stronger guarantees, see WriteStream.
 func (d *Diskv) Write(key string, val []byte) error {
-	return d.WriteStream(key, bytes.NewReader(val), false)
+	return d.WriteStream(key, bytes.NewBuffer(val), false)
 }
 
 // WriteStream writes the data represented by the io.Reader to the disk, under
@@ -113,11 +113,6 @@ func (d *Diskv) Write(key string, val []byte) error {
 func (d *Diskv) WriteStream(key string, r io.Reader, sync bool) error {
 	if len(key) <= 0 {
 		return errEmptyKey
-	}
-
-	// Ensure keys cannot evaluate to paths that would not exist
-	if strings.ContainsRune(key, os.PathSeparator) {
-		return errBadKey
 	}
 
 	d.mu.Lock()
@@ -287,7 +282,7 @@ func (d *Diskv) ReadStream(key string, direct bool) (io.ReadCloser, error) {
 
 	if val, ok := d.cache[key]; ok {
 		if !direct {
-			buf := bytes.NewReader(val)
+			buf := bytes.NewBuffer(val)
 			if d.Compression != nil {
 				return d.Compression.Reader(buf)
 			}

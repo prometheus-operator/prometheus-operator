@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 
+# We assume that the kubelet uses token authN and authZ, as otherwise
+# Prometheus needs a client certificate, which gives it full access to the
+# kubelet, rather than just the metrics. Token authN and authZ allows more fine
+# grained and easier access control. Simply start minikube with the following
+# command (you can of course adapt the version and memory to your needs):
+#
+# $ minikube delete && minikube start --kubernetes-version=v1.9.1 --memory=4096 --bootstrapper=kubeadm --extra-config=kubelet.authentication-token-webhook=true --extra-config=kubelet.authorization-mode=Webhook --extra-config=scheduler.address=0.0.0.0 --extra-config=controller-manager.address=0.0.0.0
+#
+# In future versions of minikube and kubeadm this will be the default, but for
+# the time being, we will have to configure it ourselves.
+
 hack/cluster-monitoring/deploy
 
-awk 'FNR==1{print "---"}1' manifests/k8s/minikube/*.yaml | sed s/MINIKUBE_IP/`minikube ip`/g | kubectl --namespace=kube-system apply -f - 
+kubectl --namespace=kube-system apply -f manifests/k8s/kubeadm/
 

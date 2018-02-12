@@ -31,7 +31,7 @@ selfServiceMonitor: true
 ##
 image:
   repository: quay.io/prometheus/prometheus
-  tag: v1.7.1
+  tag: v2.0.0
 
 ## Labels to be added to the Prometheus
 ##
@@ -73,11 +73,22 @@ paused: false
 
 ## If true, create & use RBAC resources
 ##
-rbacEnable: true
+global:
+  rbacEnable: true
 
 ## Number of Prometheus replicas desired
 ##
 replicaCount: 1
+
+## Log level for Prometheus be configured in
+##
+logLevel: info
+
+## Pod anti-affinity can prevent the scheduler from placing Prometheus replicas on the same node.
+## The default value "soft" means that the scheduler should *prefer* to not schedule two replica pods onto the same node but no guarantee is provided.
+## The value "hard" means that the scheduler is *required* to not schedule two replica pods onto the same node.
+## The value "" will disable pod anti-affinity so that no anti-affinity rules will be configured.
+podAntiAffinity: "soft"
 
 ## Resource limits & requests
 ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -115,6 +126,9 @@ rules:
 secrets: {}
 
 service:
+  ## Maintains session affinity.  Should be set to ClientIP for HA setup
+  ## Only options are ClientIP and None.  Do not leave blank.
+  sessionAffinity: None
   ## Annotations to be added to the Service
   ##
   annotations: {}
@@ -248,3 +262,6 @@ storageSpec: {}
 #         requests:
 #           storage: 50Gi
 #   selector: {}
+
+# default rules are in templates/prometheus.rules.yaml
+# prometheusRules: {}

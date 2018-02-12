@@ -1,9 +1,9 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ template "fullname" . }}
+  name: {{ template "exporter-kube-state.fullname" . }}
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "exporter-kube-state.name" . }}
     component: kube-state
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
@@ -19,11 +19,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: {{ template "fullname" . }}
+      app: {{ template "exporter-kube-state.fullname" . }}
   template:
     metadata:
       labels:
-        app: {{ template "fullname" . }}
+        app: {{ template "exporter-kube-state.fullname" . }}
         component: kube-state
         release: {{ .Release.Name }}
         version: "{{ .Values.kube_state_metrics.image.tag }}"
@@ -66,9 +66,9 @@ spec:
           - --memory=100Mi
           - --extra-memory=2Mi
           - --threshold=5
-          - --deployment={{ template "fullname" . }}
+          - --deployment={{ template "exporter-kube-state.fullname" . }}
         resources:
 {{ toYaml .Values.addon_resizer.resources | indent 12 }}
-    {{- if .Values.rbacEnable }}
-      serviceAccountName: {{ template "fullname" . }}
+    {{- if .Values.global.rbacEnable }}
+      serviceAccountName: {{ template "exporter-kube-state.fullname" . }}
     {{- end }}

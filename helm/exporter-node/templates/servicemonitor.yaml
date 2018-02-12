@@ -1,4 +1,4 @@
-apiVersion: monitoring.coreos.com/v1
+apiVersion: {{ template "prometheus-operator.apiVersion" . }}
 kind: ServiceMonitor
 metadata:
   labels:
@@ -7,12 +7,12 @@ metadata:
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"
     prometheus: {{ .Release.Name }}
-  name: {{ template "fullname" . }}
+  name: {{ template "exporter-node.fullname" . }}
 spec:
-  jobLabel: {{ template "name" . }}
+  jobLabel: {{ template "exporter-node.fullname" . }}
   selector:
     matchLabels:
-      app: {{ template "name" . }}
+      app: {{ template "exporter-node.name" . }}
       component: node-exporter
   namespaceSelector:
     matchNames:

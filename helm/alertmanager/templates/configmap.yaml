@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: "alertmanager"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    prometheus: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+    role: alert-rules
+  name: {{ template "alertmanager.fullname" . }}
+data:
+{{- if .Values.prometheusRules }}
+{{- $root := . }}
+{{- range $key, $val := .Values.prometheusRules }}
+  {{ $key }}: |-
+{{ $val | indent 4}}
+{{- end }}
+{{ else }}
+  alertmanager.rules: |-
+    {{- include "alertmanager.rules.yaml.tpl" . | indent 4}}
+{{ end }}

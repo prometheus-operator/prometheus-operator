@@ -8,12 +8,9 @@ set -u
 # print each command before executing it
 set -x
 
-go get -v github.com/kardianos/govendor
+go get -u github.com/golang/dep/cmd/dep
 
-cd vendor
-rm -r $(ls -I "vendor.json" )
-cd ..
+dep ensure
 
-govendor sync
 
 git diff --exit-code

@@ -33,7 +33,7 @@ import (
 
 const (
 	governingServiceName   = "alertmanager-operated"
-	defaultVersion         = "v0.9.1"
+	defaultVersion         = "v0.13.0"
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
 	alertmanagerStorageDir = "/var/alertmanager/data"
@@ -104,6 +104,14 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, co
 			Name: volumeName(am.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		})
+	} else if storageSpec.EmptyDir != nil {
+		emptyDir := storageSpec.EmptyDir
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: volumeName(am.Name),
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: emptyDir,
 			},
 		})
 	} else {
@@ -179,15 +187,6 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		webRoutePrefix = a.Spec.RoutePrefix
 	}
 
-	switch version.Major {
-	case 0:
-		if version.Minor >= 7 {
-			amArgs = append(amArgs, "-web.route-prefix="+webRoutePrefix)
-		}
-	default:
-		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
-	}
-
 	localReloadURL := &url.URL{
 		Scheme: "http",
 		Host:   "localhost:9093",
@@ -220,6 +219,33 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
 		amArgs = append(amArgs, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
+	}
+
+	gid := int64(2000)
+	uid := int64(1000)
+	nr := true
+	securityContext := &v1.PodSecurityContext{
+		FSGroup:      &gid,
+		RunAsNonRoot: &nr,
+		RunAsUser:    &uid,
+	}
+	if a.Spec.SecurityContext != nil {
+		securityContext = a.Spec.SecurityContext
+	}
+
+	switch version.Major {
+	case 0:
+		if version.Minor >= 7 {
+			amArgs = append(amArgs, "-web.route-prefix="+webRoutePrefix)
+		}
+		if version.Minor >= 13 {
+			for i := range amArgs {
+				// starting with v0.13.0 of Alertmanager all flags are with double dashes.
+				amArgs[i] = "-" + amArgs[i]
+			}
+		}
+	default:
+		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
 	}
 
 	terminationGracePeriod := int64(0)
@@ -310,8 +336,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 						},
 					},
 				},
-				Tolerations: a.Spec.Tolerations,
-				Affinity:    a.Spec.Affinity,
+				ServiceAccountName: a.Spec.ServiceAccountName,
+				SecurityContext:    securityContext,
+				Tolerations:        a.Spec.Tolerations,
+				Affinity:           a.Spec.Affinity,
 			},
 		},
 	}, nil

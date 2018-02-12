@@ -17,6 +17,7 @@ package framework
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -227,7 +228,7 @@ func (f *Framework) GetAlertmanagerConfig(ns, n string) (alertmanagerStatus, err
 }
 
 func (f *Framework) WaitForSpecificAlertmanagerConfig(ns, amName string, expectedConfig string) error {
-	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	return wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
 		config, err := f.GetAlertmanagerConfig(ns, "alertmanager-"+amName+"-0")
 		if err != nil {
 			return false, err
@@ -236,6 +237,8 @@ func (f *Framework) WaitForSpecificAlertmanagerConfig(ns, amName string, expecte
 		if config.Data.ConfigYAML == expectedConfig {
 			return true, nil
 		}
+
+		log.Printf("\n\nFound:\n\n%#+v\n\nExpected:\n\n%#+v\n\n", config.Data.ConfigYAML, expectedConfig)
 
 		return false, nil
 	})

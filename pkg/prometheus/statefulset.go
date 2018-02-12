@@ -100,8 +100,19 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 	if p.Spec.Resources.Requests == nil {
 		p.Spec.Resources.Requests = v1.ResourceList{}
 	}
-	if _, ok := p.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
-		p.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("2Gi")
+	_, memoryRequestFound := p.Spec.Resources.Requests[v1.ResourceMemory]
+	memoryLimit, memoryLimitFound := p.Spec.Resources.Limits[v1.ResourceMemory]
+	if !memoryRequestFound {
+		defaultMemoryRequest := resource.MustParse("2Gi")
+		compareResult := memoryLimit.Cmp(defaultMemoryRequest)
+		// If limit is given and smaller or equal to 2Gi, then set memory
+		// request to the given limit. This is necessary as if limit < request,
+		// then a Pod is not schedulable.
+		if memoryLimitFound && compareResult <= 0 {
+			p.Spec.Resources.Requests[v1.ResourceMemory] = memoryLimit
+		} else {
+			p.Spec.Resources.Requests[v1.ResourceMemory] = defaultMemoryRequest
+		}
 	}
 
 	spec, err := makeStatefulSetSpec(p, config, ruleConfigMaps)
@@ -138,6 +149,14 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *v1beta1.StatefulSet, config
 			Name: volumeName(p.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		})
+	} else if storageSpec.EmptyDir != nil {
+		emptyDir := storageSpec.EmptyDir
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: volumeName(p.Name),
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: emptyDir,
 			},
 		})
 	} else {
@@ -298,7 +317,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 	}
 
 	var promArgs []string
-	var securityContext v1.PodSecurityContext
+	var securityContext *v1.PodSecurityContext
 
 	switch version.Major {
 	case 1:
@@ -333,35 +352,30 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 			)
 		}
 
-		securityContext = v1.PodSecurityContext{}
+		securityContext = &v1.PodSecurityContext{}
 	case 2:
-
-		// Prometheus 2.0 is in alpha and is highly experimental, and therefore
-		// flags and other things may change for the final release of 2.0. This
-		// section is also regarded as experimental until a Prometheus 2.0 stable
-		// has been released. These flags will be updated to work with every new
-		// 2.0 release until a stable release. These flags are taregeted at version
-		// v2.0.0-alpha.3, there is no guarantee that these flags will continue to
-		// work for any further version, this feature is experimental and developed
-		// on a best effort basis.
-
 		promArgs = append(promArgs,
 			fmt.Sprintf("-config.file=%s", prometheusConfFile),
 			fmt.Sprintf("-storage.tsdb.path=%s", prometheusStorageDir),
 			"-storage.tsdb.retention="+p.Spec.Retention,
 			"-web.enable-lifecycle",
+			"-storage.tsdb.no-lockfile",
 		)
 
 		gid := int64(2000)
 		uid := int64(1000)
 		nr := true
-		securityContext = v1.PodSecurityContext{
+		securityContext = &v1.PodSecurityContext{
 			FSGroup:      &gid,
 			RunAsNonRoot: &nr,
 			RunAsUser:    &uid,
 		}
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
+	}
+
+	if p.Spec.SecurityContext != nil {
+		securityContext = p.Spec.SecurityContext
 	}
 
 	if p.Spec.ExternalURL != "" {
@@ -373,6 +387,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		webRoutePrefix = p.Spec.RoutePrefix
 	}
 	promArgs = append(promArgs, "-web.route-prefix="+webRoutePrefix)
+
+	if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
+		promArgs = append(promArgs, fmt.Sprintf("-log.level=%s", p.Spec.LogLevel))
+	}
 
 	if version.Major == 2 {
 		for i, a := range promArgs {
@@ -554,7 +572,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 						},
 					},
 				},
-				SecurityContext:               &securityContext,
+				SecurityContext:               securityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,

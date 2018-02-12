@@ -2,21 +2,22 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "exporter-kube-scheduler.name" . }}
     component: kube-scheduler
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-  name: {{ template "fullname" . }}
+  name: {{ template "exporter-kube-scheduler.fullname" . }}
   namespace: kube-system
 spec:
   clusterIP: None
   ports:
     - name: http-metrics
-      port: 10251
+      port: {{ .Values.schedulerPort}}
       protocol: TCP
-      targetPort: 10251
+      targetPort: {{ .Values.schedulerPort}}
+{{- if not .Values.endpoints }}
   selector:
-    k8s-app: kube-scheduler
+    {{ .Values.serviceSelectorLabelKey }}: kube-scheduler
+{{- end }}
   type: ClusterIP
-
