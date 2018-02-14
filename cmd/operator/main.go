@@ -58,7 +58,7 @@ func init() {
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
 	flagset.StringVar(&cfg.CrdGroup, "crd-apigroup", monitoringv1.Group, "prometheus CRD  API group name")
 	flagset.Var(&cfg.CrdKinds, "crd-kinds", " - EXPERIMENTAL (could be removed in future releases) - customize CRD kind names")
-	flagset.BoolVar(&cfg.EnableValidation, "with-validation", false, "Include the validation spec")
+	flagset.BoolVar(&cfg.EnableValidation, "with-validation", true, "Include the validation spec in the CRD")
 	flagset.Parse(os.Args[1:])
 
 }
