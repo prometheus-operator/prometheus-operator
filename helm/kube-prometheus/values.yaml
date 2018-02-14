@@ -127,10 +127,12 @@ alertmanager:
   storageSpec: {}
   #  volumeClaimTemplate:
   #    spec:
+  #      storageClassName: gluster
+  #      accessModes: ["ReadWriteOnce"]
   #      resources:
   #        requests:
   #          storage: 50Gi
-  #  selector: {}
+  #    selector: {}
 
 prometheus:
   ## Alertmanagers to which alerts will be sent
@@ -351,10 +353,12 @@ prometheus:
   storageSpec: {}
   #  volumeClaimTemplate:
   #    spec:
+  #      storageClassName: gluster
+  #      accessModes: ["ReadWriteOnce"]
   #      resources:
   #        requests:
   #          storage: 50Gi
-  #  selector: {}
+  #    selector: {}
 
 # default rules are in templates/general.rules.yaml
 # prometheusRules: {}
