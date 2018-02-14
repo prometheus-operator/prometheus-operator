@@ -9,6 +9,9 @@ deployGrafana: True
 global:
   rbacEnable: true
 
+# AlertManager
+deployAlertManager: True
+
 alertmanager:
   ## Alertmanager configuration directives
   ## Ref: https://prometheus.io/docs/alerting/configuration/
