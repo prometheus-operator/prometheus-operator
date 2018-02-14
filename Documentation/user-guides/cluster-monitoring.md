@@ -357,7 +357,7 @@ metadata:
     prometheus: k8s
 spec:
   replicas: 2
-  version: v2.1.0
+  version: v2.2.0-rc.0
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpressions:
@@ -555,7 +555,7 @@ metadata:
     alertmanager: main
 spec:
   replicas: 3
-  version: v0.13.0
+  version: v0.14.0
 ```
 
 Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid configuration mounted through a `Secret`. Note that the `Secret` has to be in the same namespace as the `Alertmanager` resource as well as have the name `alertmanager-<name-of-alertmanager-object` and the key of the configuration is `alertmanager.yaml`.

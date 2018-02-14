@@ -37,7 +37,7 @@ import (
 
 const (
 	governingServiceName = "prometheus-operated"
-	DefaultVersion       = "v2.0.0"
+	DefaultVersion       = "v2.2.0-rc.0"
 	defaultRetention     = "24h"
 	configMapsFilename   = "configmaps.json"
 	prometheusConfDir    = "/etc/prometheus/config"
