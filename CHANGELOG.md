@@ -1,3 +1,14 @@
+## 0.17.0 / 2018-02-15
+
+This release adds validations as a beta feature. It will only be installed on new clusters, existing CRD definitions will not be updated, this will be done in a future release. Please try out this feature and give us feedback!
+
+* [CHANGE] Default Prometheus version v2.2.0-rc.0.
+* [CHANGE] Default Alertmanager version v0.14.0.
+* [FEATURE] Generate and add CRD validations.
+* [FEATURE] Add ability to set `serviceAccountName` for Alertmanager Pods.
+* [FEATURE] Add ability to specify custom `securityContext` for Alertmanager Pods.
+* [ENHANCEMENT] Default to non-root security context for Alertmanager Pods.
+
 ## 0.16.1 / 2018-01-16
 
 * [CHANGE] Default to Alertmanager v0.13.0.
