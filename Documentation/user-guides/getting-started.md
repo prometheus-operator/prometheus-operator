@@ -52,6 +52,7 @@ rules:
   - alertmanagers
   - prometheuses
   - prometheuses/finalizers
+  - alertmanagers/finalizers
   - servicemonitors
   verbs:
   - "*"
