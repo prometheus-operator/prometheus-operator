@@ -24,8 +24,8 @@ crossbuild:
         #- netbsd/amd64
         #- netbsd/386
         #- dragonfly/amd64
-        #- linux/arm
-        #- linux/arm64
+        - linux/arm
+        - linux/arm64
         #- freebsd/arm
         #- openbsd/arm
         #- linux/mips64

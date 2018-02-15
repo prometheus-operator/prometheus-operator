@@ -8,6 +8,7 @@ PREFIX ?= $(shell pwd)
 ifeq ($(GOBIN),)
 GOBIN :=${GOPATH}/bin
 endif
+ARCH?=amd64
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 
 all: check-license format build test
@@ -34,7 +35,7 @@ check-license:
 	./scripts/check_license.sh
 
 container:
-	docker build -t $(REPO):$(TAG) .
+	docker build -f Dockerfile.$(ARCH) -t $(REPO):$(TAG) .
 
 e2e-test:
 	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE)

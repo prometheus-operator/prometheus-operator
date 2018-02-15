@@ -1,0 +1,5 @@
+FROM arm32v6/alpine
+
+ADD .build/linux-armv7/operator /bin/operator
+
+ENTRYPOINT ["/bin/operator"]

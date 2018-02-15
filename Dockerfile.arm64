@@ -1,0 +1,5 @@
+FROM arm64v8/alpine
+
+ADD .build/linux-arm64/operator /bin/operator
+
+ENTRYPOINT ["/bin/operator"]
