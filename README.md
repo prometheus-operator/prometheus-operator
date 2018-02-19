@@ -150,3 +150,20 @@ kubectl delete --ignore-not-found customresourcedefinitions \
   1. build the container image with the docker host from within minikube by running `eval $(minikube docker-env)`.
   2. You can build the container using `make container`.
   3. Finally run the e2e tests using `make e2e-test`.
+
+
+### Building
+
+We use [promu](https://github.com/prometheus/promu) to build cross-compatible docker images.
+
+1. Build the `operator` binary for all platforms
+
+```
+make crossbuild
+```
+
+2. Build the container for the platform you wish to use
+
+```
+ARCH=amd64 make container
+```
