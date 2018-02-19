@@ -1,6 +1,6 @@
 dependencies:
   - name: alertmanager
-    version: 0.0.8
+    version: 0.0.9
     #e2e-repository: file://../alertmanager
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
     condition: deployAlertManager
