@@ -1,3 +1,0 @@
-{{ define "grafana-dashboards.yaml.tpl" }}
-{{ (.Files.Glob "dashboards/*.json").AsConfig | indent 2 }}
-{{ end }}
