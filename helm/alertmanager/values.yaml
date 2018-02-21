@@ -93,6 +93,12 @@ paused: false
 ##
 replicaCount: 1
 
+## Pod anti-affinity can prevent the scheduler from placing Alertmanager replicas on the same node.
+## The default value "soft" means that the scheduler should *prefer* to not schedule two replica pods onto the same node but no guarantee is provided.
+## The value "hard" means that the scheduler is *required* to not schedule two replica pods onto the same node.
+## The value "" will disable pod anti-affinity so that no anti-affinity rules will be configured.
+podAntiAffinity: "soft"
+
 ## Resource limits & requests
 ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
 ##
@@ -144,12 +150,14 @@ rbacEnable: true
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
 ##
 storageSpec: {}
-#   volumeClaimTemplate:
-#     spec:
-#       resources:
-#         requests:
-#           storage: 50Gi
-#   selector: {}
+#  volumeClaimTemplate:
+#    spec:
+#      storageClassName: gluster
+#      accessModes: ["ReadWriteOnce"]
+#      resources:
+#        requests:
+#          storage: 50Gi
+#    selector: {}
 
 # default rules are in templates/alertmanager.rules.yaml
 # prometheusRules: {}

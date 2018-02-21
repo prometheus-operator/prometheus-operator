@@ -8,9 +8,10 @@ dashboard = Dashboard(
     time=Time(start='now-6h'),
     timezone='browser',
     refresh=None,
+    editable=False,
     inputs=[
         {
-            'name': 'DS_PROMETHEUS',
+            'name': 'prometheus',
             'label': 'prometheus',
             'description': '',
             'type': 'datasource',
@@ -20,12 +21,13 @@ dashboard = Dashboard(
     ],
     rows=[
         Row(
-            title='Dashboard Row', showTitle=False, titleSize='h6',
+            title='Dashboard Row', showTitle=False, titleSize='h6', editable=False,
             panels=[
                 SingleStat(
                     title='API Servers UP',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     format='percent',
+                    editable=False,
                     gauge=Gauge(
                         show=True,
                     ),
@@ -74,8 +76,9 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='Controller Managers UP',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     format='percent',
+                    editable=False,
                     gauge=Gauge(
                         show=True,
                     ),
@@ -125,8 +128,9 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='Schedulers UP',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     format='percent',
+                    editable=False,
                     gauge=Gauge(
                         show=True,
                     ),
@@ -175,8 +179,9 @@ dashboard = Dashboard(
                 ),
                 SingleStat(
                     title='API Server Request Error Rate',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     format='percent',
+                    editable=False,
                     gauge=Gauge(
                         show=True,
                     ),
@@ -224,15 +229,16 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            title='Dashboard Row', showTitle=False, titleSize='h6',
+            title='Dashboard Row', showTitle=False, titleSize='h6', editable=False,
             panels=[
                 Graph(
                     title='API Server Request Latency',
                     id=7,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     dashLength=10,
                     dashes=False,
                     isNew=False,
+                    editable=False,
                     lineWidth=1,
                     nullPointMode='null',
                     tooltip=Tooltip(
@@ -258,13 +264,14 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            title='Dashboard Row', showTitle=False, titleSize='h6',
+            title='Dashboard Row', showTitle=False, titleSize='h6', editable=False,
             panels=[
                 Graph(
                     title='End to End Scheduling Latency',
                     id=5,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     isNew=False,
+                    editable=False,
                     dashLength=10,
                     lineWidth=1,
                     nullPointMode="null",
@@ -293,8 +300,9 @@ dashboard = Dashboard(
                 Graph(
                     title='API Server Request Rates',
                     id=6,
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     isNew=False,
+                    editable=False,
                     dashLength=10,
                     lineWidth=1,
                     nullPointMode="null",

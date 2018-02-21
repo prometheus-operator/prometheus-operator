@@ -1,15 +1,18 @@
 <br>
 <div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.<br><br>
+This documentation is for an alpha feature. For questions and feedback on the Prometheus OCS Alpha program, email <a href="mailto:tectonic-alpha-feedback@coreos.com">tectonic-alpha-feedback@coreos.com</a>.
 </div>
 
 # Prometheus Operator
 
-Operators were introduced by CoreOS as a class of software that operates other software, putting operational knowledge collected by humans into software. Read more in the [original blog post](https://coreos.com/blog/introducing-operators.html).
+Operators were introduced by CoreOS as a class of software that operates other software, putting operational knowledge collected by humans into software. Read more in the original blog post, [Introducing Operators][introducing-operators].
 
-The mission of the Prometheus Operator is to make running Prometheus on top of Kubernetes as easy as possible, while preserving configurability as well as making the configuration Kubernetes native.
+The Prometheus Operator serves to make running Prometheus on top of Kubernetes as easy as possible, while preserving Kubernetes-native configuration options.
 
-To follow this getting started you will need a Kubernetes cluster you have access to. Let's give the Prometheus Operator a spin:
+## Example Prometheus Operator manifest
+
+To follow this getting started you will need a Kubernetes cluster you have access to. This example describes a Prometheus Operator Deployment, and its required ClusterRole, ClusterRoleBinding, and Service Account.
 
 [embedmd]:# (../../bundle.yaml)
 ```yaml
@@ -48,6 +51,8 @@ rules:
   resources:
   - alertmanagers
   - prometheuses
+  - prometheuses/finalizers
+  - alertmanagers/finalizers
   - servicemonitors
   verbs:
   - "*"
@@ -101,7 +106,7 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        image: quay.io/coreos/prometheus-operator:v0.15.0
+        image: quay.io/coreos/prometheus-operator:v0.17.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -113,22 +118,27 @@ spec:
           requests:
             cpu: 100m
             memory: 50Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       serviceAccountName: prometheus-operator
 ```
 
-The Prometheus Operator introduces third party resources in Kubernetes to declare the desired state of a Prometheus and Alertmanager cluster as well as the Prometheus configuration. The resources it introduces are:
+## Related resources
+
+The Prometheus Operator introduces additional resources in Kubernetes to declare the desired state of a Prometheus and Alertmanager cluster as well as the Prometheus configuration. The resources it introduces are:
 
 * `Prometheus`
 * `Alertmanager`
 * `ServiceMonitor`
 
-> Important for this guide are the `Prometheus` and `ServiceMonitor` resources. Have a look at the [alerting guide](alerting.md) for more information about the `Alertmanager` resource or the [design doc](../design.md) for an overview of all resources introduced by the Prometheus Operator.
+> See the [Alerting guide][alerting-guide] for more information about the `Alertmanager` resource, or the [Design document][design-doc] for an overview of all resources introduced by the Prometheus Operator.
 
-The `Prometheus` resource declaratively describes the desired state of a Prometheus deployment, while a `ServiceMonitor` describes the set of targets to be monitored by Prometheus.
+The Prometheus resource declaratively describes the desired state of a Prometheus deployment, while a ServiceMonitor describes the set of targets to be monitored by Prometheus.
 
 ![Prometheus Operator Architecture](images/architecture.png "Prometheus Operator Architecture")
 
-The `Prometheus` resource includes a selection of `ServiceMonitors` to be used, this field is called the `serviceMonitorSelector`.
+The Prometheus resource includes a field called `serviceMonitorSelector`, which defines a selection of ServiceMonitors to be used.
 
 First, deploy three instances of a simple example application, which listens and exposes metrics on port `8080`.
 
@@ -146,14 +156,14 @@ spec:
         app: example-app
     spec:
       containers:
-      - name: example-app 
+      - name: example-app
         image: fabxc/instrumented_app
         ports:
         - name: web
           containerPort: 8080
 ```
 
-The `ServiceMonitor` has a label selector to select `Service`s and the underlying `Endpoints` objects. The `Service` object for the example application selects the `Pod`s by the `app` label having the `example-app` value. In addition to that the `Service` object specifies the port the metrics are exposed on.
+The ServiceMonitor has a label selector to select Services and their underlying Endpoint objects. The Service object for the example application selects the Pods by the `app` label having the `example-app` value. The Service object also specifies the port on which the metrics are exposed.
 
 [embedmd]:# (../../example/user-guides/getting-started/example-app-service.yaml)
 ```yaml
@@ -171,7 +181,7 @@ spec:
     port: 8080
 ```
 
-This `Service` object is discovered by a `ServiceMonitor`, which selects in the same way. The `app` label must have the value `example-app`.
+This Service object is discovered by a ServiceMonitor, which selects in the same way. The `app` label must have the value `example-app`.
 
 [embedmd]:# (../../example/user-guides/getting-started/example-app-service-monitor.yaml)
 ```yaml
@@ -189,9 +199,11 @@ spec:
   - port: web
 ```
 
----
+## Enable RBAC rules for Prometheus pods
 
->**Important**: If you have [RBAC](https://kubernetes.io/docs/admin/authorization/) authorization activated you need to create RBAC rules for both *Prometheus* and *Prometheus Operator*. We already created a `ClusterRole` and a `ClusterRoleBinding` for the *Prometheus Operator* in the first step. The same has to be done for the *Prometheus* Pods:
+If [RBAC][rbac-auth] authorization is activated, you must create RBAC rules for both Prometheus *and* Prometheus Operator. A ClusterRole and a ClusterRoleBinding for the Prometheus Operator were created in the example Prometheus Operator manifest above. The same must be done for the Prometheus Pods.
+
+Create a ClusterRole and ClusterRoleBinding for the Prometheus Pods:
 
 [embedmd]:# (../../example/rbac/prometheus/prometheus-service-account.yaml)
 ```yaml
@@ -239,11 +251,11 @@ subjects:
   namespace: default
 ```
 
-You can find further details in the [*Prometheus Operator RBAC* guide](../rbac.md).
+For more information, see the [Prometheus Operator RBAC guide][prom-rbac].
 
----
+## Include ServiceMonitors
 
-Finally, a `Prometheus` object defines the `serviceMonitorSelector` to specify which `ServiceMonitor`s should be included. Above the label `team: frontend` was specified, so that's what the `Prometheus` object selects by.
+Finally, a Prometheus object defines the `serviceMonitorSelector` to specify which ServiceMonitors should be included. Above the label `team: frontend` was specified, so that's what the Prometheus object selects by.
 
 [embedmd]:# (../../example/user-guides/getting-started/prometheus.yaml)
 ```yaml
@@ -259,12 +271,14 @@ spec:
     requests:
       memory: 400Mi
 ```
-> If you have RBAC authorization activated, use the RBAC aware [*Prometheus* manifest](../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml) instead.
 
+> If you have RBAC authorization activated, use the RBAC aware [Prometheus manifest][prometheus-manifest] instead.
 
-This way the frontend team can create new `ServiceMonitor`s and `Service`s resulting in `Prometheus` to be dynamically reconfigured.
+This enables the frontend team to create new ServiceMonitors and Services which allow Prometheus to be dynamically reconfigured.
 
-To be able to access the Prometheus instance it will have to be exposed to the outside somehow. For demonstration purpose it will be exposed via a `Service` of type `NodePort`.
+## Expose the Prometheus instance
+
+To access the Prometheus instance it must be exposed to the outside. This example exposes the instance using a Service of type `NodePort`.
 
 [embedmd]:# (../../example/user-guides/getting-started/prometheus-service.yaml)
 ```yaml
@@ -284,12 +298,22 @@ spec:
     prometheus: prometheus
 ```
 
-Once this `Service` is created the Prometheus web UI is available under the node's IP address on port `30900`. The targets page in the web UI now shows that the instances of the example application have successfully been discovered.
+Once this Service is created the Prometheus web UI is available under the node's IP address on port `30900`. The targets page in the web UI now shows that the instances of the example application have successfully been discovered.
 
-> Exposing the Prometheus web UI may not be an applicable solution. Read more about the possibilities of exposing it in the [exposing Prometheus and Alertmanager guide](exposing-prometheus-and-alertmanager.md).
+> Exposing the Prometheus web UI may not be an applicable solution. Read more about the possibilities of exposing it in the [exposing Prometheus and Alertmanager guide][exposing-prom].
 
 Further reading:
 
-* In addition to managing Prometheus deployments the Prometheus Operator can also manage Alertmanager clusters. Learn more in the [alerting guide](alerting.md).
+* [Alerting][alerting-guide] describes using the Prometheus Operator go manage Alertmanager clusters.
 
-* Monitoring the Kubernetes cluster itself. Learn more in the [Cluster Monitoring guide](cluster-monitoring.md).
+* [Cluster Monitoring ][cluster-monitoring] describes using the Prometheus Operator to monitor the Kubernetes cluster itself.
+
+
+[alerting-guide]: alerting.md
+[cluster-monitoring]: cluster-monitoring.md
+[design-doc]: ../design.md
+[exposing-prom]: exposing-prometheus-and-alertmanager.md
+[introducing-operators]: https://coreos.com/blog/introducing-operators.html
+[prom-rbac]: ../rbac.md
+[prometheus-manifest]: ../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml
+[rbac-auth]: https://kubernetes.io/docs/admin/authorization/

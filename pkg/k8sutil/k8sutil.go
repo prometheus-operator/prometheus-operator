@@ -20,12 +20,11 @@ import (
 	"net/url"
 	"time"
 
+	crdutils "github.com/ant31/crd-validation/pkg"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
-	extensionsobjold "k8s.io/api/extensions/v1beta1"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,6 +34,12 @@ import (
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 )
+
+// CustomResourceDefinitionTypeMeta set the default kind/apiversion of CRD
+var CustomResourceDefinitionTypeMeta metav1.TypeMeta = metav1.TypeMeta{
+	Kind:       "CustomResourceDefinition",
+	APIVersion: "apiextensions.k8s.io/v1beta1",
+}
 
 // WaitForCRDReady waits for a third party resource to be available for use.
 func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
@@ -169,93 +174,16 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	return ver.Segments()[1], nil
 }
 
-func NewPrometheusTPRDefinition() *extensionsobjold.ThirdPartyResource {
-	return &extensionsobjold.ThirdPartyResource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "prometheus." + v1alpha1.Group,
-		},
-		Versions: []extensionsobjold.APIVersion{
-			{Name: v1alpha1.Version},
-		},
-		Description: "Managed Prometheus server",
-	}
-}
-
-func NewServiceMonitorTPRDefinition() *extensionsobjold.ThirdPartyResource {
-	return &extensionsobjold.ThirdPartyResource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "service-monitor." + v1alpha1.Group,
-		},
-		Versions: []extensionsobjold.APIVersion{
-			{Name: v1alpha1.Version},
-		},
-		Description: "Prometheus monitoring for a service",
-	}
-}
-
-func NewAlertmanagerTPRDefinition() *extensionsobjold.ThirdPartyResource {
-	return &extensionsobjold.ThirdPartyResource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "alertmanager." + v1alpha1.Group,
-		},
-		Versions: []extensionsobjold.APIVersion{
-			{Name: v1alpha1.Version},
-		},
-		Description: "Managed Alertmanager cluster",
-	}
-}
-
-func NewPrometheusCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
-	return &extensionsobj.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   crdkind.Plural + "." + group,
-			Labels: labels,
-		},
-		Spec: extensionsobj.CustomResourceDefinitionSpec{
-			Group:   group,
-			Version: monitoringv1.Version,
-			Scope:   extensionsobj.NamespaceScoped,
-			Names: extensionsobj.CustomResourceDefinitionNames{
-				Plural: crdkind.Plural,
-				Kind:   crdkind.Kind,
-			},
-		},
-	}
-}
-
-func NewServiceMonitorCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
-	return &extensionsobj.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   crdkind.Plural + "." + group,
-			Labels: labels,
-		},
-
-		Spec: extensionsobj.CustomResourceDefinitionSpec{
-			Group:   group,
-			Version: monitoringv1.Version,
-			Scope:   extensionsobj.NamespaceScoped,
-			Names: extensionsobj.CustomResourceDefinitionNames{
-				Plural: crdkind.Plural,
-				Kind:   crdkind.Kind,
-			},
-		},
-	}
-}
-
-func NewAlertmanagerCustomResourceDefinition(crdkind monitoringv1.CrdKind, group string, labels map[string]string) *extensionsobj.CustomResourceDefinition {
-	return &extensionsobj.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   crdkind.Plural + "." + group,
-			Labels: labels,
-		},
-		Spec: extensionsobj.CustomResourceDefinitionSpec{
-			Group:   group,
-			Version: monitoringv1.Version,
-			Scope:   extensionsobj.NamespaceScoped,
-			Names: extensionsobj.CustomResourceDefinitionNames{
-				Plural: crdkind.Plural,
-				Kind:   crdkind.Kind,
-			},
-		},
-	}
+func NewCustomResourceDefinition(crdKind monitoringv1.CrdKind, group string, labels map[string]string, validation bool) *extensionsobj.CustomResourceDefinition {
+	return crdutils.NewCustomResourceDefinition(crdutils.Config{
+		SpecDefinitionName:    crdKind.SpecName,
+		EnableValidation:      validation,
+		Labels:                crdutils.Labels{LabelsMap: labels},
+		ResourceScope:         string(extensionsobj.NamespaceScoped),
+		Group:                 group,
+		Kind:                  crdKind.Kind,
+		Version:               monitoringv1.Version,
+		Plural:                crdKind.Plural,
+		GetOpenAPIDefinitions: monitoringv1.GetOpenAPIDefinitions,
+	})
 }

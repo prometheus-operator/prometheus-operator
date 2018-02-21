@@ -6,7 +6,7 @@ metadata:
 {{ toYaml .Values.service.annotations | indent 4 }}
 {{- end }}
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "prometheus.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     prometheus: {{ .Release.Name }}
@@ -14,8 +14,9 @@ metadata:
 {{- if .Values.service.labels }}
 {{ toYaml .Values.service.labels | indent 4 }}
 {{- end }}
-  name: {{ template "fullname" . }}
+  name: {{ template "prometheus.fullname" . }}
 spec:
+  sessionAffinity: "{{ .Values.service.sessionAffinity }}"
   clusterIP: "{{ .Values.service.clusterIP }}"
 {{- if .Values.service.externalIPs }}
   externalIPs:
@@ -37,6 +38,6 @@ spec:
       targetPort: 9090
       protocol: TCP
   selector:
-    app: {{ template "name" . }}
+    app: {{ template "prometheus.name" . }}
     prometheus: {{ .Release.Name }}
   type: "{{ .Values.service.type }}"

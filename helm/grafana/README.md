@@ -35,10 +35,12 @@ The command removes all the Kubernetes components associated with the chart and 
 
 Parameter | Description | Default
 --- | --- | ---
+`auth.anonymous.enabled` | If true, enable anonymous authentication | `true`
 `adminUser` | Grafana admin user name | `admin`
 `adminPassword` | Grafana admin user password | `admin`
 `image.repository` | Image | `grafana/grafana`
 `image.tag` | Image tag | `4.4.1`
+`extraVars` | Pass extra environment variables to the Grafana container. | `{}`
 `grafanaWatcher.repository` | Image | `quay.io/coreos/grafana-watcher`
 `grafanaWatcher.tag` | Image tag | `v0.0.8`
 `ingress.enabled` | If true, Grafana Ingress will be created | `false`
@@ -67,3 +69,5 @@ $ helm install coreos/grafana --name my-release -f values.yaml
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
+
+> **Tip**: On GCE If you want to  use  `Ingress.enabled=true`, you must put `service.type=NodePort`

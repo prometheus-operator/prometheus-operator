@@ -7,7 +7,8 @@ metadata:
     heritage: {{ .Release.Service }}
     prometheus: {{ .Release.Name }}
     release: {{ .Release.Name }}
-  name: {{ template "fullname" . }}
+    role: alert-rules
+  name: {{ template "prometheus.fullname" . }}
 data:
 {{- if .Values.prometheusRules }}
 {{- $root := . }}

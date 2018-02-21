@@ -63,8 +63,8 @@ AlertmanagerEndpoints defines a selection of a single Endpoints object containin
 | namespace | Namespace of Endpoints object. | string | true |
 | name | Name of Endpoints object in Namespace. | string | true |
 | port | Port the Alertmanager API is exposed on. | intstr.IntOrString | true |
-| scheme | Scheme to use when firing alerts. | string | true |
-| pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | true |
+| scheme | Scheme to use when firing alerts. | string | false |
+| pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -98,6 +98,8 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
 | affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
+| securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000. | *v1.PodSecurityContext | false |
+| serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -143,6 +145,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | bearerTokenFile | File to read bearer token for scraping targets. | string | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
+| metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -211,7 +214,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
 | remoteWrite | If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteWriteSpec](#remotewritespec) | false |
 | remoteRead | If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteReadSpec](#remotereadspec) | false |
-| SecurityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and default PodSecurityContext for other versions. | *v1.PodSecurityContext | false |
+| securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and default PodSecurityContext for other versions. | *v1.PodSecurityContext | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -319,9 +322,10 @@ StorageSpec defines the configured storage for a group Prometheus servers.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| class | Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses DEPRECATED | string | true |
-| selector | A label query over volumes to consider for binding. DEPRECATED | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | true |
-| resources | Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources DEPRECATED | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | true |
+| class | Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses DEPRECATED | string | false |
+| emptyDir | EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir | *[v1.EmptyDirVolumeSource](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#emptydirvolumesource-v1-core) | false |
+| selector | A label query over volumes to consider for binding. DEPRECATED | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
+| resources | Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources DEPRECATED | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
 | volumeClaimTemplate | A PVC spec to be used by the Prometheus StatefulSets. | [v1.PersistentVolumeClaim](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#persistentvolumeclaim-v1-core) | false |
 
 [Back to TOC](#table-of-contents)

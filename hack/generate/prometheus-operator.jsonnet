@@ -20,6 +20,8 @@ local operatorContainer =
   container.mixin.resources.limits({cpu: "200m", memory: "100Mi"});
 
 local operatorDeployment = deployment.new("prometheus-operator", 1, operatorContainer, podLabels) +
-  deployment.mixin.metadata.labels(podLabels);
+  deployment.mixin.metadata.labels(podLabels) +
+  deployment.mixin.spec.template.spec.securityContext.runAsNonRoot(true) +
+  deployment.mixin.spec.template.spec.securityContext.runAsUser(65534);
 
 operatorDeployment

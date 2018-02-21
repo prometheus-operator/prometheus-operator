@@ -26,7 +26,7 @@ spec:
         - name: GF_AUTH_BASIC_ENABLED
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ENABLED
-          value: "true"
+          value: "{{ .Values.auth.anonymous.enabled }}"
         - name: GF_SECURITY_ADMIN_USER
           valueFrom:
             secretKeyRef:
@@ -37,12 +37,23 @@ spec:
             secretKeyRef:
               name: {{ template "grafana.server.fullname" . }}
               key: password
+{{- if .Values.extraVars }}
+{{ toYaml .Values.extraVars | indent 8 }}
+{{- end }} 
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/grafana-storage
         ports:
         - name: web
           containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          periodSeconds: 1
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 10             
         resources:
           requests:
             memory: 100Mi
@@ -54,7 +65,7 @@ spec:
         image: {{ .Values.grafanaWatcher.repository }}:{{ .Values.grafanaWatcher.tag }}
         args:
           - '--watch-dir=/var/grafana-dashboards'
-          - '--grafana-url=http://localhost:3000'
+          - '--grafana-url=http://127.0.0.1:3000'
         env:
         - name: GRAFANA_USER
           valueFrom:

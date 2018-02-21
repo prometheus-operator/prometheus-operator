@@ -1,8 +1,8 @@
-apiVersion: monitoring.coreos.com/v1
+apiVersion: {{ template "prometheus-operator.apiVersion" . }}
 kind: Prometheus
 metadata:
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "prometheus.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     prometheus: {{ .Release.Name }}
@@ -33,7 +33,7 @@ spec:
 {{- else if .Values.ingress.fqdn }}
   externalUrl: http://{{ .Values.ingress.fqdn }}{{ .Values.routePrefix }}
 {{- else }}
-  externalUrl: http://{{ template "fullname" . }}.{{ .Release.Namespace }}:9090
+  externalUrl: http://{{ template "prometheus.fullname" . }}.{{ .Release.Namespace }}:9090
 {{- end }}
 {{- if .Values.nodeSelector }}
   nodeSelector:
@@ -41,6 +41,7 @@ spec:
 {{- end }}
   paused: {{ .Values.paused }}
   replicas: {{ .Values.replicaCount }}
+  logLevel:  {{ .Values.logLevel }}
   resources:
 {{ toYaml .Values.resources | indent 4 }}
   retention: "{{ .Values.retention }}"
@@ -51,10 +52,11 @@ spec:
   secrets:
 {{ toYaml .Values.secrets | indent 4 }}
 {{- end }}
-{{- if .Values.rbacEnable }}
-  serviceAccountName: {{ template "fullname" . }}
+{{- if .Values.global.rbacEnable }}
+  serviceAccountName: {{ template "prometheus.fullname" . }}
 {{- end }}
-{{- if .Values.serviceMonitorsSelector }}
+{{ if and .Values.config.specifiedInValues .Values.config.value }}
+{{- else if .Values.serviceMonitorsSelector }}
   serviceMonitorSelector:
 {{ toYaml .Values.serviceMonitorsSelector | indent 4 }}
 {{- else }}
@@ -69,7 +71,7 @@ spec:
 {{- else }}
   ruleSelector:
     matchLabels:
-      app: {{ template "name" . }}
+      role: alert-rules
       prometheus: {{ .Release.Name }}
 {{- end }}
 {{- if .Values.storageSpec }}
@@ -77,3 +79,24 @@ spec:
 {{ toYaml .Values.storageSpec | indent 4 }}
 {{- end }}
   version: "{{ .Values.image.tag }}"
+{{- if eq .Values.podAntiAffinity "hard" }}
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchLabels:
+            app: {{ template "prometheus.name" . }}
+            prometheus: {{ .Release.Name }}
+{{- else if eq .Values.podAntiAffinity "soft" }}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app: {{ template "prometheus.name" . }}
+              prometheus: {{ .Release.Name }}
+{{- end }}

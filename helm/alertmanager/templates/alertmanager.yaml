@@ -1,9 +1,9 @@
-apiVersion: monitoring.coreos.com/v1
+apiVersion: {{ template "prometheus-operator.apiVersion" . }}
 kind: Alertmanager
 metadata:
   labels:
     alertmanager: {{ .Release.Name }}
-    app: {{ template "name" . }}
+    app: {{ template "alertmanager.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
@@ -18,7 +18,7 @@ spec:
 {{- else if .Values.ingress.fqdn }}
   externalUrl: http://{{ .Values.ingress.fqdn }}{{ .Values.routePrefix }}
 {{- else }}
-  externalUrl: http://{{ template "fullname" . }}.{{ .Release.Namespace }}:9093
+  externalUrl: http://{{ template "alertmanager.fullname" . }}.{{ .Release.Namespace }}:9093
 {{- end }}
 {{- if .Values.nodeSelector }}
   nodeSelector:
@@ -33,3 +33,24 @@ spec:
 {{ toYaml .Values.storageSpec | indent 4 }}
 {{- end }}
   version: "{{ .Values.image.tag }}"
+{{- if eq .Values.podAntiAffinity "hard" }}
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchLabels:
+            app: {{ template "alertmanager.name" . }}
+            alertmanager: {{ .Release.Name }}
+{{- else if eq .Values.podAntiAffinity "soft" }}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app: {{ template "alertmanager.name" . }}
+              alertmanager: {{ .Release.Name }}
+{{- end }}

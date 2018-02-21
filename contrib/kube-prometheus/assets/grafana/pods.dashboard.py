@@ -6,12 +6,13 @@ dashboard = Dashboard(
     version=1,
     graphTooltip=1,
     refresh=False,
+    editable=False,
     schemaVersion=14,
     time=Time(start='now-6h'),
     timezone='browser',
     inputs=[
         {
-            'name': 'DS_PROMETHEUS',
+            'name': 'prometheus',
             'label': 'prometheus',
             'description': '',
             'type': 'datasource',
@@ -23,7 +24,7 @@ dashboard = Dashboard(
         {
             'allValue': '.*',
             'current': {},
-            'datasource': '${DS_PROMETHEUS}',
+            'datasource': 'prometheus',
             'hide': 0,
             'includeAll': True,
             'label': 'Namespace',
@@ -43,7 +44,7 @@ dashboard = Dashboard(
         {
             'allValue': None,
             'current': {},
-            'datasource': '${DS_PROMETHEUS}',
+            'datasource': 'prometheus',
             'hide': 0,
             'includeAll': False,
             'label': 'Pod',
@@ -64,7 +65,7 @@ dashboard = Dashboard(
         {
             'allValue': '.*',
             'current': {},
-            'datasource': '${DS_PROMETHEUS}',
+            'datasource': 'prometheus',
             'hide': 0,
             'includeAll': True,
             'label': 'Container',
@@ -85,13 +86,14 @@ dashboard = Dashboard(
     ]),
     rows=[
         Row(
-            height=250, title='Row', showTitle=False,
+            height=250, title='Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Memory Usage',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=1,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=12,
                     dashLength=10,
@@ -149,13 +151,14 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=250, title='Row', showTitle=False,
+            height=250, title='Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='CPU Usage',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=2,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=12,
                     dashLength=10,
@@ -211,13 +214,14 @@ dashboard = Dashboard(
             ],
         ),
         Row(
-            height=250, title='New Row', showTitle=False,
+            height=250, title='New Row', showTitle=False, editable=False,
             titleSize='h6', panels=[
                 Graph(
                     title='Network I/O',
-                    dataSource='${DS_PROMETHEUS}',
+                    dataSource='prometheus',
                     id=3,
                     isNew=False,
+                    editable=False,
                     spaceLength=10,
                     span=12,
                     dashLength=10,

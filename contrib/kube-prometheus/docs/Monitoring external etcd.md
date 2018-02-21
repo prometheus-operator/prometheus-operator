@@ -13,7 +13,7 @@ Prometheus Operator allows us to mount secrets in the pod. By loading the secret
 where CREDENTIAL_PATH is the path to your etcd client credentials on your work machine. 
 (Kube-aws stores them inside the credential folder).
 
-## b - Get Promnetheus Operator to load the secret
+## b - Get Prometheus Operator to load the secret
 In the previous step we have named the secret 'etcd-certs'.
 
 Edit prometheus-operator/contrib/kube-prometheus/manifests/prometheus/prometheus-k8s.yaml and add the secret under the spec of the Prometheus object manifest:
