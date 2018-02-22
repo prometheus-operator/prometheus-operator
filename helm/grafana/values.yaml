@@ -97,6 +97,12 @@ dataSource: {}
 
 serverDashboardFiles: {}
 
+## Keep the Dashboards that are defined in this HELM chart
+keepOriginalDashboards: true
+
+## Keep the Datasources that are defined in this HELM chart
+keepOriginalDatasources: true
+
 auth:
   anonymous:
     enabled: "true"
