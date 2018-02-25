@@ -20,7 +20,7 @@ groups:
   - record: cluster:node_cpu:ratio
     expr: cluster:node_cpu:rate5m / count(sum(node_cpu) BY (instance, cpu))
   - alert: NodeExporterDown
-    expr: absent(up{job="{{ template "exporter-node.fullname" .  }}"} == 1)
+    expr: absent(up{job="node-exporter"} == 1)
     for: 10m
     labels:
       severity: warning
