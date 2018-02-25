@@ -1,0 +1,9 @@
+{{ define "grafana-dashboards.yaml.tpl" }}
+dashboards.yaml: |
+  - name: '0'
+    org_id: 1
+    folder: ''
+    type: file
+    options:
+      folder: /grafana-dashboard-definitions/0
+{{ end }}
