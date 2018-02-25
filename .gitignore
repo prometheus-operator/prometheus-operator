@@ -9,4 +9,8 @@ requirements.lock
 __pycache__
 .env/
 .history/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
