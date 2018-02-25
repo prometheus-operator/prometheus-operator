@@ -22,11 +22,9 @@ import (
 
 	crdutils "github.com/ant31/crd-validation/pkg"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
-	extensionsobjold "k8s.io/api/extensions/v1beta1"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -174,42 +172,6 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	}
 
 	return ver.Segments()[1], nil
-}
-
-func NewPrometheusTPRDefinition() *extensionsobjold.ThirdPartyResource {
-	return &extensionsobjold.ThirdPartyResource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "prometheus." + v1alpha1.Group,
-		},
-		Versions: []extensionsobjold.APIVersion{
-			{Name: v1alpha1.Version},
-		},
-		Description: "Managed Prometheus server",
-	}
-}
-
-func NewServiceMonitorTPRDefinition() *extensionsobjold.ThirdPartyResource {
-	return &extensionsobjold.ThirdPartyResource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "service-monitor." + v1alpha1.Group,
-		},
-		Versions: []extensionsobjold.APIVersion{
-			{Name: v1alpha1.Version},
-		},
-		Description: "Prometheus monitoring for a service",
-	}
-}
-
-func NewAlertmanagerTPRDefinition() *extensionsobjold.ThirdPartyResource {
-	return &extensionsobjold.ThirdPartyResource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "alertmanager." + v1alpha1.Group,
-		},
-		Versions: []extensionsobjold.APIVersion{
-			{Name: v1alpha1.Version},
-		},
-		Description: "Managed Alertmanager cluster",
-	}
 }
 
 func NewCustomResourceDefinition(crdKind monitoringv1.CrdKind, group string, labels map[string]string, validation bool) *extensionsobj.CustomResourceDefinition {

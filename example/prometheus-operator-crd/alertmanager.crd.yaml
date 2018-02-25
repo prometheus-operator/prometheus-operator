@@ -1440,10 +1440,6 @@ spec:
                         phase:
                           description: Phase represents the current phase of PersistentVolumeClaim.
                           type: string
-              required:
-              - class
-              - selector
-              - resources
             tolerations:
               description: If specified, the pod's tolerations.
               items:

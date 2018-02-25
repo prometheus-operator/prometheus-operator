@@ -13,7 +13,7 @@ def Dashboard(
         title=title, refresh=None, schemaVersion=14,
         version=version, time=time, timezone='browser', inputs=[
             {
-                'name': 'DS_PROMETHEUS',
+                'name': 'prometheus',
                 'label': 'prometheus',
                 'description': '',
                 'type': 'datasource',
@@ -54,7 +54,7 @@ def SingleStat(
 
     return core.SingleStat(
         title=title, id=id, colorValue=colorValue,
-        dataSource='${DS_PROMETHEUS}', gauge=gauge,
+        dataSource='prometheus', gauge=gauge,
         valueFontSize=valueFontSize, thresholds=thresholds,
         valueName=valueName, valueMaps=valueMaps, rangeMaps=rangeMaps,
         mappingTypes=mappingTypes, targets=targets,
@@ -81,7 +81,7 @@ def Graph(
     return core.Graph(
         id=id, title=title, dashLength=dashLength, dashes=dashes,
         spaceLength=spaceLength, targets=targets, xAxis=xAxis, yAxes=yAxes,
-        dataSource='${DS_PROMETHEUS}', nullPointMode=nullPointMode, editable=False,
+        dataSource='prometheus', nullPointMode=nullPointMode, editable=False,
     )
 
 

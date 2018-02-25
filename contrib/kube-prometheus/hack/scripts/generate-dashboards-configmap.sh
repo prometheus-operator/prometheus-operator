@@ -6,7 +6,7 @@ cat <<-EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboards-0
+  name: grafana-dashboard-definitions-0
 data:
 EOF
 
@@ -34,13 +34,6 @@ do
   if [ "$basefilename" = "etcd-dashboard.json" ]; then
     hack/scripts/wrap-dashboard.sh $f prometheus-etcd | sed "s/^/    /g"
   else
-    hack/scripts/wrap-dashboard.sh $f prometheus-k8s | sed "s/^/    /g"
+    hack/scripts/wrap-dashboard.sh $f prometheus | sed "s/^/    /g"
   fi
-done
-
-for f in assets/grafana/*-datasource.json
-do
-  cp $f assets/grafana/generated/
-  echo "  $(basename $f): |+"
-  cat $f | sed "s/^/    /g"
 done

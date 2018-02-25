@@ -1,2 +1,5 @@
+VERSION=5.0.0-beta1
+IMAGE_TAG=$(VERSION)
+
 container:
-	docker build . -t quay.io/coreos/monitoring-grafana:4.6.3-non-root.1
+	docker build --build-arg GRAFANA_VERSION=$(VERSION) -t quay.io/coreos/monitoring-grafana:$(IMAGE_TAG) .
