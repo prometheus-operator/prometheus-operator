@@ -9,7 +9,7 @@ metadata:
   name: {{ template "grafana.server.fullname" . }}
 data:
   {{- if .Values.serverDashboardFiles }}
-  {{ toYaml .Values.serverDashboardFiles | indent 2 }}
+{{ toYaml .Values.serverDashboardFiles | indent 2 }}
   {{ else }}
 {{ (.Files.Glob "dashboards/*.json").AsConfig | indent 2 }}
   {{- end }}

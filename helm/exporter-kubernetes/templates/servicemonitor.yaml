@@ -9,7 +9,7 @@ metadata:
     prometheus: {{ .Release.Name }}
   name: {{ template "exporter-kubernetes.fullname" . }}
 spec:
-  jobLabel: {{ template "exporter-kubernetes.fullname" . }}
+  jobLabel: component
   selector:
     matchLabels:
       component: apiserver
