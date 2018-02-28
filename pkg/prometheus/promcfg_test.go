@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"testing"
 
+	yaml "gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,6 +44,42 @@ func TestConfigGeneration(t *testing.T) {
 				t.Fatalf("Config generation is not deterministic.\n\n\nFirst generation: \n\n%s\n\nDifferent generation: \n\n%s\n\n", string(cfg), string(testcfg))
 			}
 		}
+	}
+}
+
+func TestNamespaceSetCorrectly(t *testing.T) {
+	sm := &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testservicemonitor1",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			NamespaceSelector: monitoringv1.NamespaceSelector{
+				MatchNames: []string{"test"},
+			},
+		},
+	}
+
+	c := k8sSDFromServiceMonitor(sm)
+	s, err := yaml.Marshal(yaml.MapSlice{c})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `kubernetes_sd_configs:
+- role: endpoints
+  namespaces:
+    names:
+    - test
+`
+
+	result := string(s)
+
+	if expected != result {
+		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
 	}
 }
 
