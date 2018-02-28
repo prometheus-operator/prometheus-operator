@@ -91,6 +91,10 @@ spec:
       nodeSelector:
     {{ toYaml .Values.nodeSelector | indent 4 }}
     {{- end }}
+    {{- if .Values.tolerations }}
+      tolerations:
+    {{ toYaml .Values.tolerations | indent 4 }}
+    {{- end }}
       volumes:
         - name: grafana-storage
           {{- if .Values.storageSpec }}

@@ -42,3 +42,7 @@ spec:
     {{- if .Values.rbacEnable }}
       serviceAccountName: {{ template "prometheus-operator.fullname" . }}
     {{- end }}
+    {{- if .Values.tolerations }}
+      tolerations:
+    {{ toYaml .Values.tolerations | indent 4 }}
+    {{- end }}
