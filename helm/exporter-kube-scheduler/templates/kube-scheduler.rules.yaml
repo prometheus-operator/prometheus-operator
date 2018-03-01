@@ -48,7 +48,7 @@ groups:
     labels:
       quantile: "0.5"
   - alert: K8SSchedulerDown
-    expr: absent(up{job="{{ template "exporter-kube-scheduler.fullname" .  }}"} == 1)
+    expr: absent(up{job="kube-scheduler"} == 1)
     for: 5m
     labels:
       severity: critical

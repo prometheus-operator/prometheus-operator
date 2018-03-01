@@ -14,25 +14,25 @@ def get_header(file_name):
 ####
 charts = [
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/alertmanager.rules.yaml',
-'destination': 'helm/alertmanager/', 'job_replace_by': '{{ template \"alertmanager.fullname\" .  }}'},
+'destination': 'helm/alertmanager/'},
 {'source': 'contrib/kube-prometheus/assets/prometheus/rules/kube-controller-manager.rules.yaml',
-'destination': 'helm/exporter-kube-controller-manager/', 'job_replace_by': '{{ template \"exporter-kube-controller-manager.fullname\" .  }}'},
+'destination': 'helm/exporter-kube-controller-manager/'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/kube-scheduler.rules.yaml',
-'destination': 'helm/exporter-kube-scheduler/', 'job_replace_by': '{{ template \"exporter-kube-scheduler.fullname\" .  }}'},
+'destination': 'helm/exporter-kube-scheduler/'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/kube-state-metrics.rules.yaml',
-'destination': 'helm/exporter-kube-state/', 'job_replace_by': '{{ template \"exporter-kube-state.fullname\" .  }}'},
+'destination': 'helm/exporter-kube-state/'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/node.rules.yaml',
-'destination': 'helm/exporter-node/', 'job_replace_by': '{{ template \"exporter-node.fullname\" .  }}'},
+'destination': 'helm/exporter-node/'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/prometheus.rules.yaml', 
-'destination': 'helm/prometheus/', 'job_replace_by': '{{ template \"prometheus.fullname\" .  }}'},
+'destination': 'helm/prometheus/'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/etcd3.rules.yaml', 
-'destination': 'helm/exporter-kube-etcd/', 'job_replace_by': '{{ template \"exporter-kube-etcd.fullname\" .  }}'},
+'destination': 'helm/exporter-kube-etcd/'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/general.rules.yaml', 
-'destination': 'helm/kube-prometheus/', 'job_replace_by': '{{ template \"kube-prometheus.fullname\" .  }}'},
+'destination': 'helm/kube-prometheus/'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/kubelet.rules.yaml', 
-'destination': 'helm/exporter-kubelets/', 'job_replace_by': 'kubelet'},
+'destination': 'helm/exporter-kubelets/'},
 {'source':'contrib/kube-prometheus/assets/prometheus/rules/kubernetes.rules.yaml', 
-'destination': 'helm/exporter-kubernetes/', 'job_replace_by': 'kubernetes'},
+'destination': 'helm/exporter-kubernetes/'},
 ]
 
 # read the rules, create a new template file
@@ -43,7 +43,6 @@ for chart in charts:
 
   f = open(chart['source'], 'r')
   lines += escape(f.read())
-  lines = re.sub("job=\"(.*?)\"", "job=\"" + chart['job_replace_by'] + "\"", lines) #replace the job name by chart variable
  
   lines += "{{ end }}" # footer
   
@@ -60,7 +59,8 @@ for chart in charts:
 ######
 
 with open('contrib/kube-prometheus/manifests/grafana/grafana-dashboards.yaml', 'r') as s:
-  data = yaml.load(s, Loader=yaml.RoundTripLoader)['data']
+  config_map = yaml.load_all(s, Loader=yaml.RoundTripLoader).next()
+  data = config_map['data']
 
 # prometheus datasource it's not required now 
 del data['prometheus-datasource.json']

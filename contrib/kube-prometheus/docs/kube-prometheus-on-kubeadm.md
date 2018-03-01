@@ -48,12 +48,20 @@ In addition, we will be using `node-exporter` to monitor the `cAdvisor` service 
 
 > The kubeadm deb package ships with configuration for how the kubelet should be run. Note that the `kubeadm` CLI command will never touch this drop-in file. This drop-in file belongs to the kubeadm deb/rpm package.
 
-Again, we need to expose the `cadvisor` that is installed and managed by the `kubelet` daemon. To do so, we do the following on all the masters and nodes:
+Again, we need to expose the `cadvisor` that is installed and managed by the `kubelet` daemon and allow webhook token authentication. To do so, we do the following on all the masters and nodes:
 
 ```
 sed -e "/cadvisor-port=0/d" -i /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+sed -e "s/--authorization-mode=Webhook/--authentication-token-webhook=true --authorization-mode=Webhook/"
 systemctl daemon-reload
 systemctl restart kubelet
+```
+
+In case you already have a Kubernetes deployed with kubeadm, change the address kube-controller-manager and kube-scheduler listens in addition to previous kubelet change:
+
+```
+sed -e "s/- --address=127.0.0.1/- --address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-controller-manager.yaml
+sed -e "s/- --address=127.0.0.1/- --address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-scheduler.yaml
 ```
 
 With these changes, your Kubernetes cluster is ready.

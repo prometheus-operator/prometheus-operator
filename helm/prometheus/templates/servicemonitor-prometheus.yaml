@@ -10,7 +10,7 @@ metadata:
     prometheus: {{ .Release.Name }}
   name: {{ template "prometheus.fullname" . }}
 spec:
-  jobLabel: {{ template "prometheus.fullname" . }}
+  jobLabel: app
   selector:
     matchLabels:
       app: {{ template "prometheus.name" . }}

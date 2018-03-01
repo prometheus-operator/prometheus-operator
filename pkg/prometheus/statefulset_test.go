@@ -269,10 +269,10 @@ func TestMemoryRequestNotAdjustedWhenLimitLarger2Gi(t *testing.T) {
 	resourceLimit := sset.Spec.Template.Spec.Containers[0].Resources.Limits[v1.ResourceMemory]
 	limitString := resourceLimit.String()
 	if requestString != "2Gi" {
-		t.Fatalf("Resource request is expected to be 1Gi, instead found %s", resourceRequest)
+		t.Fatalf("Resource request is expected to be 1Gi, instead found %s", requestString)
 	}
 	if limitString != "3Gi" {
-		t.Fatalf("Resource limit is expected to be 1Gi, instead found %s", resourceLimit)
+		t.Fatalf("Resource limit is expected to be 1Gi, instead found %s", limitString)
 	}
 }
 
@@ -295,10 +295,10 @@ func TestMemoryRequestAdjustedWhenOnlyLimitGiven(t *testing.T) {
 	resourceLimit := sset.Spec.Template.Spec.Containers[0].Resources.Limits[v1.ResourceMemory]
 	limitString := resourceLimit.String()
 	if requestString != "1Gi" {
-		t.Fatalf("Resource request is expected to be 1Gi, instead found %s", resourceRequest)
+		t.Fatalf("Resource request is expected to be 1Gi, instead found %s", requestString)
 	}
 	if limitString != "1Gi" {
-		t.Fatalf("Resource limit is expected to be 1Gi, instead found %s", resourceLimit)
+		t.Fatalf("Resource limit is expected to be 1Gi, instead found %s", limitString)
 	}
 }
 

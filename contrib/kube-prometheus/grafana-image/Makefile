@@ -1,4 +1,4 @@
-VERSION=5.0.0-beta1
+VERSION=5.0.0-beta5
 IMAGE_TAG=$(VERSION)
 
 container:

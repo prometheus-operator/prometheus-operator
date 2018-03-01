@@ -37,7 +37,7 @@ import (
 
 const (
 	governingServiceName = "prometheus-operated"
-	DefaultVersion       = "v2.2.0-rc.0"
+	DefaultVersion       = "v2.2.0-rc.1"
 	defaultRetention     = "24h"
 	configMapsFilename   = "configmaps.json"
 	prometheusConfDir    = "/etc/prometheus/config"
@@ -368,7 +368,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		securityContext = &v1.PodSecurityContext{
 			FSGroup:      &gid,
 			RunAsNonRoot: &nr,
-			RunAsUser:    &uid,
+		}
+		if !c.DisableRunAsUser {
+			securityContext.RunAsUser = &uid
 		}
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
