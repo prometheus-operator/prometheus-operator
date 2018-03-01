@@ -365,7 +365,7 @@ data:
           description: Prometheus failed to scrape {{ $value }}% of kubelets.
       - alert: K8SKubeletDown
         expr: (absent(up{job="kubelet"} == 1) or count(up{job="kubelet"} == 0) / count(up{job="kubelet"}))
-          * 100 > 1
+          * 100 > 10
         for: 1h
         labels:
           severity: critical
