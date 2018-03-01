@@ -72,6 +72,7 @@ type Config struct {
 	CrdKinds                     monitoringv1.CrdKinds
 	CrdGroup                     string
 	EnableValidation             bool
+	DisableRunAsUser             bool
 }
 
 // New creates a new controller.

@@ -127,6 +127,7 @@ type Config struct {
 	CrdGroup                     string
 	CrdKinds                     monitoringv1.CrdKinds
 	EnableValidation             bool
+	DisableRunAsUser             bool
 }
 
 type BasicAuthCredentials struct {

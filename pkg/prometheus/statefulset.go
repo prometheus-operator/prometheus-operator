@@ -368,7 +368,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		securityContext = &v1.PodSecurityContext{
 			FSGroup:      &gid,
 			RunAsNonRoot: &nr,
-			RunAsUser:    &uid,
+		}
+		if !c.DisableRunAsUser {
+			securityContext.RunAsUser = &uid
 		}
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
