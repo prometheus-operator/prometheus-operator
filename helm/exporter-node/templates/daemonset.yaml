@@ -44,7 +44,7 @@ spec:
               readOnly: true
     {{- if .Values.tolerations }}
       tolerations:
-    {{ toYaml .Values.tolerations | indent 4 }}
+{{ toYaml .Values.tolerations | indent 8 }}
     {{- end }}
       hostNetwork: true
       hostPID: true
@@ -55,3 +55,6 @@ spec:
         - name: sys
           hostPath:
             path: /sys
+      tolerations: |
+        - effect: NoSchedule
+      operator: Exists

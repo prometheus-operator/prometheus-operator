@@ -15,7 +15,7 @@ tar xzfv ${HELM_TARBALL}
 
 # # Clean up tarball
 rm -f ${HELM_TARBALL}
-sudo mv linux-amd64/helm /usr/local/bin
+#sudo mv linux-amd64/helm /usr/local/bin
 # setup tiller
 kubectl -n kube-system create sa tiller
 kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller

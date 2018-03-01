@@ -93,7 +93,7 @@ spec:
     {{- end }}
     {{- if .Values.tolerations }}
       tolerations:
-    {{ toYaml .Values.tolerations | indent 4 }}
+{{ toYaml .Values.tolerations | indent 8 }}
     {{- end }}
       volumes:
         - name: grafana-storage
