@@ -55,6 +55,3 @@ spec:
         - name: sys
           hostPath:
             path: /sys
-      tolerations: |
-        - effect: NoSchedule
-      operator: Exists
