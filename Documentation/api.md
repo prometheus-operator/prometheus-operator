@@ -234,7 +234,7 @@ Most recent observed status of the Prometheus cluster. Read-only. Not included w
 
 ## RelabelConfig
 
-RelabelConfig allows dynamic rewriting of the label set.
+RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
