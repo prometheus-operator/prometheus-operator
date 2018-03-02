@@ -12,6 +12,7 @@ groups:
     annotations:
       description: The configuration of the instances of the Alertmanager cluster
         `{{`{{$labels.service}}`}}` are out of sync.
+      summary: Configuration out of sync
   - alert: AlertmanagerDownOrMissing
     expr: label_replace(prometheus_operator_alertmanager_spec_replicas, "job", "alertmanager-$1",
       "alertmanager", "(.*)") / ON(job) GROUP_RIGHT() sum(up) BY (job) != 1
@@ -21,6 +22,7 @@ groups:
     annotations:
       description: An unexpected number of Alertmanagers are scraped or Alertmanagers
         disappeared from discovery.
+      summary: Alertmanager down or missing
   - alert: AlertmanagerFailedReload
     expr: alertmanager_config_last_reload_successful == 0
     for: 10m
@@ -29,4 +31,5 @@ groups:
     annotations:
       description: Reloading Alertmanager's configuration has failed for {{`{{ $labels.namespace
         }}`}}/{{`{{ $labels.pod}}`}}.
+      summary: Alertmanager's configuration reload failed
 {{ end }}
