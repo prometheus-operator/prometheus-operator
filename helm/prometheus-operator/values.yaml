@@ -36,6 +36,11 @@ kubeletService:
 ##
 nodeSelector: {}
 
+## Tolerations for use with node taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: {}
+
 ## If true, create & use RBAC resources
 ##
 rbacEnable: true
