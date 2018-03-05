@@ -51,6 +51,7 @@ groups:
     annotations:
       description: the API server has a 99th percentile latency of {{ $value }} seconds
         for {{$labels.verb}} {{$labels.resource}}
+      summary: API server high latency
   - alert: APIServerLatencyHigh
     expr: apiserver_latency_seconds:quantile{quantile="0.99",subresource!="log",verb!~"^(?:WATCH|WATCHLIST|PROXY|CONNECT)$"}
       > 4
@@ -60,6 +61,7 @@ groups:
     annotations:
       description: the API server has a 99th percentile latency of {{ $value }} seconds
         for {{$labels.verb}} {{$labels.resource}}
+      summary: API server high latency
   - alert: APIServerErrorsHigh
     expr: rate(apiserver_request_count{code=~"^(?:5..)$"}[5m]) / rate(apiserver_request_count[5m])
       * 100 > 2
@@ -68,6 +70,7 @@ groups:
       severity: warning
     annotations:
       description: API server returns errors for {{ $value }}% of requests
+      summary: API server request errors
   - alert: APIServerErrorsHigh
     expr: rate(apiserver_request_count{code=~"^(?:5..)$"}[5m]) / rate(apiserver_request_count[5m])
       * 100 > 5
@@ -84,12 +87,14 @@ groups:
     annotations:
       description: No API servers are reachable or all have disappeared from service
         discovery
+      summary: No API servers are reachable
 
   - alert: K8sCertificateExpirationNotice
     labels:
       severity: warning
     annotations:
       description: Kubernetes API Certificate is expiring soon (less than 7 days)
+      summary: Kubernetes API Certificate is expiering soon
     expr: sum(apiserver_client_certificate_expiration_seconds_bucket{le="604800"}) > 0
 
   - alert: K8sCertificateExpirationNotice
@@ -97,4 +102,5 @@ groups:
       severity: critical
     annotations:
       description: Kubernetes API Certificate is expiring in less than 1 day
+      summary: Kubernetes API Certificate is expiering
     expr: sum(apiserver_client_certificate_expiration_seconds_bucket{le="86400"}) > 0

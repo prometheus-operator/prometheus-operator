@@ -8,6 +8,7 @@ groups:
       severity: warning
     annotations:
       description: Reloading Prometheus' configuration has failed for {{$labels.namespace}}/{{$labels.pod}}
+      summary: Reloading Promehteus' configuration failed
 
   - alert: PrometheusNotificationQueueRunningFull
     expr: predict_linear(prometheus_notifications_queue_length[5m], 60 * 30) > prometheus_notifications_queue_capacity
@@ -17,6 +18,7 @@ groups:
     annotations:
       description: Prometheus' alert notification queue is running full for {{$labels.namespace}}/{{
         $labels.pod}}
+      summary: Prometheus' alert notification queue is running full  
 
   - alert: PrometheusErrorSendingAlerts
     expr: rate(prometheus_notifications_errors_total[5m]) / rate(prometheus_notifications_sent_total[5m])
@@ -27,6 +29,7 @@ groups:
     annotations:
       description: Errors while sending alerts from Prometheus {{$labels.namespace}}/{{
         $labels.pod}} to Alertmanager {{$labels.Alertmanager}}
+      summary: Errors while sending alert from Prometheus
 
   - alert: PrometheusErrorSendingAlerts
     expr: rate(prometheus_notifications_errors_total[5m]) / rate(prometheus_notifications_sent_total[5m])
@@ -37,6 +40,7 @@ groups:
     annotations:
       description: Errors while sending alerts from Prometheus {{$labels.namespace}}/{{
         $labels.pod}} to Alertmanager {{$labels.Alertmanager}}
+      summary: Errors while sending alerts from Prometheus
 
   - alert: PrometheusNotConnectedToAlertmanagers
     expr: prometheus_notifications_alertmanagers_discovered < 1
@@ -46,6 +50,7 @@ groups:
     annotations:
       description: Prometheus {{ $labels.namespace }}/{{ $labels.pod}} is not connected
         to any Alertmanagers
+      summary: Prometheus is not connected to any Alertmanagers
 
   - alert: PrometheusTSDBReloadsFailing
     expr: increase(prometheus_tsdb_reloads_failures_total[2h]) > 0
