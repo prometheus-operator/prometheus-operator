@@ -686,14 +686,19 @@ func (c *Operator) sync(key string) error {
 		}
 	}
 
-	// Create Secret if it doesn't exist.
-	s, err := makeEmptyConfig(p, ruleFileConfigMaps, c.config)
-	if err != nil {
-		return errors.Wrap(err, "generating empty config secret failed")
-	}
-	if _, err := c.kclient.Core().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "creating empty config file failed")
-	}
+    // Create Secret if it doesn't exist.
+    s, err := makeEmptyConfig(p, ruleFileConfigMaps, c.config)
+    if err != nil {
+        return errors.Wrap(err, "generating empty config secret failed")
+    }
+    sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+    _, err = sClient.Get(s.Name, metav1.GetOptions{})
+    if apierrors.IsNotFound(err) {
+        if _, err := c.kclient.Core().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
+            return errors.Wrap(err, "creating empty config file failed")
+        }
+        return err
+    }
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(p.Namespace)
