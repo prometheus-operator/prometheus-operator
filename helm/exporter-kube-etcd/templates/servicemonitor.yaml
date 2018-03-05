@@ -9,7 +9,7 @@ metadata:
     prometheus: {{ .Release.Name }}
   name: {{ template "exporter-kube-etcd.fullname" . }}
 spec:
-  jobLabel: {{ template "exporter-kube-etcd.fullname" . }}
+  jobLabel: component
   selector:
     matchLabels:
       app: {{ template "exporter-kube-etcd.name" . }}

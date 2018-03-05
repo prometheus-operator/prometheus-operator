@@ -31,7 +31,7 @@ selfServiceMonitor: true
 ##
 image:
   repository: quay.io/prometheus/prometheus
-  tag: v2.0.0
+  tag: v2.1.0
 
 ## Labels to be added to the Prometheus
 ##
@@ -66,6 +66,16 @@ ingress:
 ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
 ##
 nodeSelector: {}
+
+## Tolerations for use with node taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: {}
+  #  - key: "key"
+  #    operator: "Equal"
+  #    value: "value"
+  #    effect: "NoSchedule"
+
 
 ## If true, the Operator won't process any Prometheus configuration changes
 ##

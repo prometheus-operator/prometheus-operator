@@ -26,6 +26,7 @@ groups:
     annotations:
       description: Prometheus could not scrape a node-exporter for more than 10m,
         or node-exporters have disappeared from discovery
+      summary: Prometheus could not scrape a node-exporter
   - alert: NodeDiskRunningFull
     expr: predict_linear(node_filesystem_free[6h], 3600 * 24) < 0
     for: 30m
@@ -42,3 +43,4 @@ groups:
     annotations:
       description: device {{$labels.device}} on node {{$labels.instance}} is running
         full within the next 2 hours (mounted at {{$labels.mountpoint}})
+      summary: Node disk is running full
