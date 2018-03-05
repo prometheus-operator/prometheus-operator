@@ -1,12 +1,12 @@
 dependencies:
   - name: alertmanager
-    version: 0.0.11
+    version: 0.0.12
     #e2e-repository: file://../alertmanager
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
     condition: deployAlertManager
 
   - name: prometheus
-    version: 0.0.17
+    version: 0.0.18
     #e2e-repository: file://../prometheus
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
@@ -36,7 +36,7 @@ dependencies:
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-kubelets
-    version: 0.2.4
+    version: 0.2.5
     #e2e-repository: file://../exporter-kubelets
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
@@ -46,7 +46,7 @@ dependencies:
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-node
-    version: 0.1.6
+    version: 0.1.7
     #e2e-repository: file://../exporter-node
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
     condition: deployExporterNode
