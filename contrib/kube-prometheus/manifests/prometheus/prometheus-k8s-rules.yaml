@@ -20,6 +20,7 @@ data:
         annotations:
           description: The configuration of the instances of the Alertmanager cluster
             `{{$labels.service}}` are out of sync.
+          summary: Configuration out of sync
       - alert: AlertmanagerDownOrMissing
         expr: label_replace(prometheus_operator_alertmanager_spec_replicas, "job", "alertmanager-$1",
           "alertmanager", "(.*)") / ON(job) GROUP_RIGHT() sum(up) BY (job) != 1
@@ -29,6 +30,7 @@ data:
         annotations:
           description: An unexpected number of Alertmanagers are scraped or Alertmanagers
             disappeared from discovery.
+          summary: Alertmanager down or missing
       - alert: AlertmanagerFailedReload
         expr: alertmanager_config_last_reload_successful == 0
         for: 10m
@@ -37,6 +39,7 @@ data:
         annotations:
           description: Reloading Alertmanager's configuration has failed for {{ $labels.namespace
             }}/{{ $labels.pod}}.
+          summary: Alertmanager's configuration reload failed
   etcd3.rules.yaml: |+
     groups:
     - name: ./etcd3.rules
@@ -363,6 +366,7 @@ data:
           severity: warning
         annotations:
           description: Prometheus failed to scrape {{ $value }}% of kubelets.
+          summary: Prometheus failed to scrape
       - alert: K8SKubeletDown
         expr: (absent(up{job="kubelet"} == 1) or count(up{job="kubelet"} == 0) / count(up{job="kubelet"}))
           * 100 > 10
@@ -436,6 +440,7 @@ data:
         annotations:
           description: the API server has a 99th percentile latency of {{ $value }} seconds
             for {{$labels.verb}} {{$labels.resource}}
+          summary: API server high latency
       - alert: APIServerLatencyHigh
         expr: apiserver_latency_seconds:quantile{quantile="0.99",subresource!="log",verb!~"^(?:WATCH|WATCHLIST|PROXY|CONNECT)$"}
           > 4
@@ -445,6 +450,7 @@ data:
         annotations:
           description: the API server has a 99th percentile latency of {{ $value }} seconds
             for {{$labels.verb}} {{$labels.resource}}
+          summary: API server high latency
       - alert: APIServerErrorsHigh
         expr: rate(apiserver_request_count{code=~"^(?:5..)$"}[5m]) / rate(apiserver_request_count[5m])
           * 100 > 2
@@ -453,6 +459,7 @@ data:
           severity: warning
         annotations:
           description: API server returns errors for {{ $value }}% of requests
+          summary: API server request errors
       - alert: APIServerErrorsHigh
         expr: rate(apiserver_request_count{code=~"^(?:5..)$"}[5m]) / rate(apiserver_request_count[5m])
           * 100 > 5
@@ -469,12 +476,14 @@ data:
         annotations:
           description: No API servers are reachable or all have disappeared from service
             discovery
+          summary: No API servers are reachable
     
       - alert: K8sCertificateExpirationNotice
         labels:
           severity: warning
         annotations:
           description: Kubernetes API Certificate is expiring soon (less than 7 days)
+          summary: Kubernetes API Certificate is expiering soon
         expr: sum(apiserver_client_certificate_expiration_seconds_bucket{le="604800"}) > 0
     
       - alert: K8sCertificateExpirationNotice
@@ -482,6 +491,7 @@ data:
           severity: critical
         annotations:
           description: Kubernetes API Certificate is expiring in less than 1 day
+          summary: Kubernetes API Certificate is expiering
         expr: sum(apiserver_client_certificate_expiration_seconds_bucket{le="86400"}) > 0
   node.rules.yaml: |+
     groups:
@@ -512,6 +522,7 @@ data:
         annotations:
           description: Prometheus could not scrape a node-exporter for more than 10m,
             or node-exporters have disappeared from discovery
+          summary: Prometheus could not scrape a node-exporter
       - alert: NodeDiskRunningFull
         expr: predict_linear(node_filesystem_free[6h], 3600 * 24) < 0
         for: 30m
@@ -528,6 +539,7 @@ data:
         annotations:
           description: device {{$labels.device}} on node {{$labels.instance}} is running
             full within the next 2 hours (mounted at {{$labels.mountpoint}})
+          summary: Node disk is running full
   prometheus.rules.yaml: |+
     groups:
     - name: prometheus.rules
@@ -539,6 +551,7 @@ data:
           severity: warning
         annotations:
           description: Reloading Prometheus' configuration has failed for {{$labels.namespace}}/{{$labels.pod}}
+          summary: Reloading Promehteus' configuration failed
     
       - alert: PrometheusNotificationQueueRunningFull
         expr: predict_linear(prometheus_notifications_queue_length[5m], 60 * 30) > prometheus_notifications_queue_capacity
@@ -548,6 +561,7 @@ data:
         annotations:
           description: Prometheus' alert notification queue is running full for {{$labels.namespace}}/{{
             $labels.pod}}
+          summary: Prometheus' alert notification queue is running full  
     
       - alert: PrometheusErrorSendingAlerts
         expr: rate(prometheus_notifications_errors_total[5m]) / rate(prometheus_notifications_sent_total[5m])
@@ -558,6 +572,7 @@ data:
         annotations:
           description: Errors while sending alerts from Prometheus {{$labels.namespace}}/{{
             $labels.pod}} to Alertmanager {{$labels.Alertmanager}}
+          summary: Errors while sending alert from Prometheus
     
       - alert: PrometheusErrorSendingAlerts
         expr: rate(prometheus_notifications_errors_total[5m]) / rate(prometheus_notifications_sent_total[5m])
@@ -568,6 +583,7 @@ data:
         annotations:
           description: Errors while sending alerts from Prometheus {{$labels.namespace}}/{{
             $labels.pod}} to Alertmanager {{$labels.Alertmanager}}
+          summary: Errors while sending alerts from Prometheus
     
       - alert: PrometheusNotConnectedToAlertmanagers
         expr: prometheus_notifications_alertmanagers_discovered < 1
@@ -577,6 +593,7 @@ data:
         annotations:
           description: Prometheus {{ $labels.namespace }}/{{ $labels.pod}} is not connected
             to any Alertmanagers
+          summary: Prometheus is not connected to any Alertmanagers
     
       - alert: PrometheusTSDBReloadsFailing
         expr: increase(prometheus_tsdb_reloads_failures_total[2h]) > 0

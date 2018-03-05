@@ -127,7 +127,7 @@ type Config struct {
 	CrdGroup                     string
 	CrdKinds                     monitoringv1.CrdKinds
 	EnableValidation             bool
-	DisableRunAsUser             bool
+	DisableAutoUserGroup         bool
 }
 
 type BasicAuthCredentials struct {
@@ -691,8 +691,13 @@ func (c *Operator) sync(key string) error {
 	if err != nil {
 		return errors.Wrap(err, "generating empty config secret failed")
 	}
-	if _, err := c.kclient.Core().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "creating empty config file failed")
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	_, err = sClient.Get(s.Name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		if _, err := c.kclient.Core().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
+			return errors.Wrap(err, "creating empty config file failed")
+		}
+		return err
 	}
 
 	// Create governing service if it doesn't exist.

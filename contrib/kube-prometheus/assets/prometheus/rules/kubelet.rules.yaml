@@ -26,6 +26,7 @@ groups:
       severity: warning
     annotations:
       description: Prometheus failed to scrape {{ $value }}% of kubelets.
+      summary: Prometheus failed to scrape
   - alert: K8SKubeletDown
     expr: (absent(up{job="kubelet"} == 1) or count(up{job="kubelet"} == 0) / count(up{job="kubelet"}))
       * 100 > 10

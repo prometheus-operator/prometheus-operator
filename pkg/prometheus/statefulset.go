@@ -366,10 +366,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		uid := int64(1000)
 		nr := true
 		securityContext = &v1.PodSecurityContext{
-			FSGroup:      &gid,
 			RunAsNonRoot: &nr,
 		}
-		if !c.DisableRunAsUser {
+		if !c.DisableAutoUserGroup {
+			securityContext.FSGroup = &gid
 			securityContext.RunAsUser = &uid
 		}
 	default:
