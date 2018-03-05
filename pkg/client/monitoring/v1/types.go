@@ -218,7 +218,9 @@ type RemoteReadSpec struct {
 	ProxyURL string `json:"proxy_url,omitempty"`
 }
 
-// RelabelConfig allows dynamic rewriting of the label set.
+// RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion.
+// It defines `<metric_relabel_configs>`-section of Prometheus configuration.
+// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
 // +k8s:openapi-gen=true
 type RelabelConfig struct {
 	//The source labels select values from existing labels. Their content is concatenated

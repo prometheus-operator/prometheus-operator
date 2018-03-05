@@ -49,7 +49,7 @@ selfServiceMonitor: true
 ##
 image:
   repository: quay.io/prometheus/alertmanager
-  tag: v0.12.0
+  tag: v0.14.0
 
 ## Labels to be added to the Alertmanager
 ##
@@ -84,6 +84,17 @@ ingress:
 ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
 ##
 nodeSelector: {}
+
+## Tolerations for use with node taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: {}
+  #  - key: "key"
+  #    operator: "Equal"
+  #    value: "value"
+  #    effect: "NoSchedule"
+
+
 
 ## If true, the Operator won't process any Alertmanager configuration changes
 ##

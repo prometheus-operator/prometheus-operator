@@ -884,7 +884,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RelabelConfig": {
 			Schema: spec.Schema{
 				SchemaProps: spec.SchemaProps{
-					Description: "RelabelConfig allows dynamic rewriting of the label set.",
+					Description: "RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs",
 					Properties: map[string]spec.Schema{
 						"sourceLabels": {
 							SchemaProps: spec.SchemaProps{
