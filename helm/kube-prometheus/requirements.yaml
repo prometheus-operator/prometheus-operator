@@ -11,7 +11,7 @@ dependencies:
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-kube-controller-manager
-    version: 0.1.5
+    version: 0.1.6
     #e2e-repository: file://../exporter-kube-controller-manager
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
