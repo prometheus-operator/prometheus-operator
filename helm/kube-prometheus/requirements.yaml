@@ -31,17 +31,17 @@ dependencies:
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-kube-state
-    version: 0.1.10
+    version: 0.1.11
     #e2e-repository: file://../exporter-kube-state
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-kubelets
-    version: 0.2.5
+    version: 0.2.6
     #e2e-repository: file://../exporter-kubelets
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-kubernetes
-    version: 0.1.4
+    version: 0.1.5
     #e2e-repository: file://../exporter-kubernetes
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
