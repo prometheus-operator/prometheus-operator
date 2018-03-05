@@ -80,7 +80,6 @@ groups:
       severity: critical
     annotations:
       description: API server returns errors for {{`{{ $value }}`}}% of requests
-      summary: API server request errors
   - alert: K8SApiserverDown
     expr: absent(up{job="apiserver"} == 1)
     for: 20m
@@ -104,6 +103,6 @@ groups:
       severity: critical
     annotations:
       description: Kubernetes API Certificate is expiring in less than 1 day
-      description: Kubernetes API Certificate is expiering
+      summary: Kubernetes API Certificate is expiering
     expr: sum(apiserver_client_certificate_expiration_seconds_bucket{le="86400"}) > 0
 {{ end }}
