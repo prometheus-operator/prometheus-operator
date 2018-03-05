@@ -39,10 +39,10 @@ spec:
               key: password
 {{- if .Values.extraVars }}
 {{ toYaml .Values.extraVars | indent 8 }}
-{{- end }}
+{{- end }} 
         volumeMounts:
         - name: grafana-storage
-          mountPath: /var/lib/grafana
+          mountPath: /var/grafana-storage
         ports:
         - name: web
           containerPort: 3000
@@ -53,7 +53,7 @@ spec:
           periodSeconds: 1
           timeoutSeconds: 1
           successThreshold: 1
-          failureThreshold: 10
+          failureThreshold: 10             
         resources:
           requests:
             memory: 100Mi
