@@ -15,7 +15,7 @@ do
   status_code=$(curl -s -o /dev/null -w "%{http_code}" https://s3-eu-west-1.amazonaws.com/${HELM_BUCKET_NAME}/stable/${tgz})
   if [ "$status_code" == "200" ] 
   then
-    cur_hash=$(md5sum ${HELM_CHARTS_PACKAGED_DIR}/${tgz})
+    cur_hash=$(md5sum ${HELM_CHARTS_PACKAGED_DIR}/${tgz} | awk '{print $1}' )
     remote_hash=$(curl -s https://s3-eu-west-1.amazonaws.com/${HELM_BUCKET_NAME}/stable/${tgz} | md5sum | awk '{print $1}')
     if [ "${tgz}" != "index.yaml" ]  && [ "$cur_hash" != "$remote_hash" ]
     then
