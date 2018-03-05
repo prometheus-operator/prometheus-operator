@@ -31,4 +31,4 @@ done
 if [ ${SYNC_TO_S3} = true ]
 then
   aws s3 sync --acl public-read ${HELM_CHARTS_PACKAGED_DIR} s3://${HELM_BUCKET_NAME}/stable/
-done
+fi
