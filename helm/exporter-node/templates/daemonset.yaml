@@ -42,9 +42,10 @@ spec:
             - name: sys
               mountPath: /host/sys
               readOnly: true
+    {{- if .Values.tolerations }}
       tolerations:
-        - effect: NoSchedule
-          operator: Exists
+{{ toYaml .Values.tolerations | indent 8 }}
+    {{- end }}
       hostNetwork: true
       hostPID: true
       volumes:

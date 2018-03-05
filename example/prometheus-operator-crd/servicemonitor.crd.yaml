@@ -83,8 +83,10 @@ spec:
                   metricRelabelings:
                     description: MetricRelabelConfigs to apply to samples before ingestion.
                     items:
-                      description: RelabelConfig allows dynamic rewriting of the label
-                        set.
+                      description: 'RelabelConfig allows dynamic rewriting of the
+                        label set, being applied to samples before ingestion. It defines
+                        `<metric_relabel_configs>`-section of Prometheus configuration.
+                        More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                       properties:
                         action:
                           description: Action to perform based on regex matching.
