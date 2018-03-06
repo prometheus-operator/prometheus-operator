@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 import os
 import re
-from ruamel import yaml 
-  
+from ruamel import yaml
+
 def escape(s):
   return s.replace("{{","{{`{{").replace("}}","}}`}}")
-  
+
 def get_header(file_name):
-  return "{{ define \"" + file_name + ".tpl\" }}\n" 
+  return "{{ define \"" + file_name + ".tpl\" }}\n"
 
 #####
 ## Step 1 - Sync prometheus alert rules, create template file
@@ -45,29 +45,11 @@ for chart in charts:
   lines += escape(f.read())
  
   lines += "{{ end }}" # footer
-  
+
   new_f = "{}/templates/{}".format(chart['destination'], name)
 
-  # recreate the file  
+  # recreate the file
   with open(new_f, 'w') as f:
       f.write(lines)
 
-  print "Generated {}".format(new_f)
-
-######
-## Step 2 - Parse grafana dashboards, create a template file
-######
-
-with open('contrib/kube-prometheus/manifests/grafana/grafana-dashboards.yaml', 'r') as s:
-  config_map = yaml.load_all(s, Loader=yaml.RoundTripLoader).next()
-  data = config_map['data']
-
-# prometheus datasource it's not required now 
-del data['prometheus-datasource.json']
-
-data_s = get_header("grafana-dashboards.yaml")
-data_s += escape(yaml.dump(data, Dumper=yaml.RoundTripDumper))
-data_s += "{{ end }}" # footer
-
-with open('helm/grafana/templates/grafana-dashboards.yaml', 'w') as f:
-  f.write(data_s)
+  print("Generated {}".format(new_f))
