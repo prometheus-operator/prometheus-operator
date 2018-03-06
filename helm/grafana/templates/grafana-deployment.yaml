@@ -39,10 +39,15 @@ spec:
               key: password
 {{- if .Values.extraVars }}
 {{ toYaml .Values.extraVars | indent 8 }}
-{{- end }} 
+{{- end }}
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/lib/grafana
+          mountPath: /var/grafana-storage
+      {{- if .Values.mountGrafanaConfig }}
+        - name: grafana-config
+          mountPath: /etc/grafana
+      {{- end }}
         ports:
         - name: web
           containerPort: 3000
@@ -53,7 +58,7 @@ spec:
           periodSeconds: 1
           timeoutSeconds: 1
           successThreshold: 1
-          failureThreshold: 10             
+          failureThreshold: 10
         resources:
           requests:
             memory: 100Mi
@@ -106,3 +111,9 @@ spec:
         - name: grafana-dashboards
           configMap:
             name: {{ template "grafana.server.fullname" . }}
+      {{- if .Values.mountGrafanaConfig }}
+        - name: grafana-config
+          hostPath:
+            path: /etc/grafana
+            type: directory
+      {{- end }}
