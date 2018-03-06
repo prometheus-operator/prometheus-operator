@@ -31,13 +31,10 @@ helm repo add ${HELM_BUCKET_NAME} ${HELM_REPO_URL}
 for chart in ${HELM_PACKAGES}
 do 
     # #  update dependencies before package the chart
-    # if ls ${HELM_CHARTS_DIRECTORY}/${chart} 
-    # do
-        cd ${HELM_CHARTS_DIRECTORY}/${chart} 
-        helm dep update
-        helm package . -d ${HELM_CHARTS_PACKAGED_DIR} 
-        cd -
-    # done
+    cd ${HELM_CHARTS_DIRECTORY}/${chart} 
+    helm dep update
+    helm package . -d ${HELM_CHARTS_PACKAGED_DIR} 
+    cd -
 done
 
 # donwload the current remote index.yaml 
