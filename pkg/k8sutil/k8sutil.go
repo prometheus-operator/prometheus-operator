@@ -56,7 +56,7 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 		return true, nil
 	})
 
-	return errors.Wrap(err, fmt.Sprintf("timed out waiting for Custom Resoruce"))
+	return errors.Wrap(err, fmt.Sprintf("timed out waiting for Custom Resource"))
 }
 
 // PodRunningAndReady returns whether a pod is running and each container has
