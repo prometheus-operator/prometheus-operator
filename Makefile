@@ -48,6 +48,9 @@ e2e:
 
 e2e-helm:
 	./helm/hack/e2e-test.sh
+	# package the chart and verify if they have the version bumped  
+	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes"
+	helm/hack/sync-repo.sh false
 
 clean-e2e:
 	kubectl -n $(NAMESPACE) delete prometheus,alertmanager,servicemonitor,statefulsets,deploy,svc,endpoints,pods,cm,secrets,replicationcontrollers --all
@@ -108,9 +111,9 @@ jsonnet-docker:
 
 helm-sync-s3:
 	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes"
-	helm/hack/sync-repo.sh
+	helm/hack/sync-repo.sh true
 	helm/hack/helm-package.sh kube-prometheus
-	helm/hack/sync-repo.sh
+	helm/hack/sync-repo.sh true
 
 generate-crd: generate-openapi po-crdgen
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
