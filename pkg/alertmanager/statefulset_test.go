@@ -15,13 +15,14 @@
 package alertmanager
 
 import (
+	"reflect"
+	"strings"
+	"testing"
+
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
-	"strings"
-	"testing"
 )
 
 var (
@@ -174,5 +175,38 @@ func TestStatefulEmptyDir(t *testing.T) {
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
 	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir != nil && !reflect.DeepEqual(emptyDir.Medium, ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir.Medium) {
 		t.Fatal("Error adding EmptyDir Spec to StatefulSetSpec")
+	}
+}
+func TestListenLocal(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			ListenLocal: true,
+		},
+	}, nil, defaultTestConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--web.listen-address=127.0.0.1:9093" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Alertmanager not listening on loopback when it should.")
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].ReadinessProbe != nil {
+		t.Fatal("Alertmanager readiness probe expected to be empty")
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].LivenessProbe != nil {
+		t.Fatal("Alertmanager readiness probe expected to be empty")
+	}
+
+	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 1 {
+		t.Fatal("Alertmanager container should only have one port defined")
 	}
 }
