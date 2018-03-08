@@ -12,7 +12,7 @@ data:
 {{ toYaml .Values.serverDashboardFiles | indent 2 }}
   {{ end }}
   {{- if .Values.keepOriginalDashboards }}
-  {{- include "grafana-dashboards.yaml.tpl" . | indent 2}}
+{{ (.Files.Glob "dashboards/*.json").AsConfig | indent 2 }}
   {{- end }}
   {{- if .Values.dataSource }}
 {{ toYaml .Values.dataSource | indent 2 }}
