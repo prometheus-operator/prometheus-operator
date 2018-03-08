@@ -26,7 +26,7 @@ do
     else
       echo "File ${tgz} does not exist "
     fi
-  done
+  fi
 done
 
 # sync charts
