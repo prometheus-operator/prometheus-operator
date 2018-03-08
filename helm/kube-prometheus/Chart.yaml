@@ -9,4 +9,8 @@ maintainers:
 name: kube-prometheus
 sources:
   - https://github.com/coreos/prometheus-operator
+<<<<<<< HEAD
 version: 0.0.37
+=======
+version: 0.0.27
+>>>>>>> Bump kube-prometheus version

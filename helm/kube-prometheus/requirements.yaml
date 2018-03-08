@@ -52,11 +52,7 @@ dependencies:
     condition: deployExporterNode
 
   - name: grafana
-<<<<<<< HEAD
     version: 0.0.22
-=======
-    version: 0.0.17
->>>>>>> Bump grafana version
     #e2e-repository: file://../grafana
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
     condition: deployGrafana
