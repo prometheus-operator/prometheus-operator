@@ -43,7 +43,6 @@ spec:
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/lib/grafana
-          mountPath: /var/grafana-storage
       {{- if .Values.mountGrafanaConfig }}
         - name: grafana-config
           mountPath: /etc/grafana
