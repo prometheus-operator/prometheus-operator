@@ -189,8 +189,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: example-app
-  labels:
-    team: frontend
 spec:
   selector:
     matchLabels:
@@ -255,8 +253,6 @@ For more information, see the [Prometheus Operator RBAC guide][prom-rbac].
 
 ## Include ServiceMonitors
 
-Finally, a Prometheus object defines the `serviceMonitorSelector` to specify which ServiceMonitors should be included. Above the label `team: frontend` was specified, so that's what the Prometheus object selects by.
-
 [embedmd]:# (../../example/user-guides/getting-started/prometheus.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -264,9 +260,7 @@ kind: Prometheus
 metadata:
   name: prometheus
 spec:
-  serviceMonitorSelector:
-    matchLabels:
-      team: frontend
+  serviceMonitorSelector: {}
   resources:
     requests:
       memory: 400Mi
@@ -275,6 +269,9 @@ spec:
 > If you have RBAC authorization activated, use the RBAC aware [Prometheus manifest][prometheus-manifest] instead.
 
 This enables the frontend team to create new ServiceMonitors and Services which allow Prometheus to be dynamically reconfigured.
+
+Note: `serviceMonitorSelector: {}` selects all service monitors.  If you omit this key altogether, it won't auto-detect any 
+service monitors at all.
 
 ## Expose the Prometheus instance
 
