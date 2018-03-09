@@ -31,7 +31,7 @@ selfServiceMonitor: true
 ##
 image:
   repository: quay.io/prometheus/prometheus
-  tag: v2.1.0
+  tag: v2.2.1
 
 ## Labels to be added to the Prometheus
 ##
