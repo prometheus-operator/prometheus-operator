@@ -60,9 +60,7 @@ spec:
   serviceMonitorSelector:
 {{ toYaml .Values.serviceMonitorsSelector | indent 4 }}
 {{- else }}
-  serviceMonitorSelector:
-    matchLabels:
-      prometheus: {{ .Release.Name }}
+  serviceMonitorSelector: {}
 {{- end }}
 {{- if .Values.rulesSelector }}
   ruleSelector:
