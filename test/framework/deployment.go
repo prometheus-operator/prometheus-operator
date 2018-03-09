@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"k8s.io/api/extensions/v1beta1"
+	appsv1 "k8s.io/api/apps/v1beta2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -27,12 +27,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func MakeDeployment(pathToYaml string) (*v1beta1.Deployment, error) {
+func MakeDeployment(pathToYaml string) (*appsv1.Deployment, error) {
 	manifest, err := PathToOSFile(pathToYaml)
 	if err != nil {
 		return nil, err
 	}
-	tectonicPromOp := v1beta1.Deployment{}
+	tectonicPromOp := appsv1.Deployment{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&tectonicPromOp); err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to decode file %s", pathToYaml))
 	}
@@ -40,8 +40,8 @@ func MakeDeployment(pathToYaml string) (*v1beta1.Deployment, error) {
 	return &tectonicPromOp, nil
 }
 
-func CreateDeployment(kubeClient kubernetes.Interface, namespace string, d *v1beta1.Deployment) error {
-	_, err := kubeClient.Extensions().Deployments(namespace).Create(d)
+func CreateDeployment(kubeClient kubernetes.Interface, namespace string, d *appsv1.Deployment) error {
+	_, err := kubeClient.AppsV1beta2().Deployments(namespace).Create(d)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
 	}
@@ -49,7 +49,7 @@ func CreateDeployment(kubeClient kubernetes.Interface, namespace string, d *v1be
 }
 
 func DeleteDeployment(kubeClient kubernetes.Interface, namespace, name string) error {
-	d, err := kubeClient.Extensions().Deployments(namespace).Get(name, metav1.GetOptions{})
+	d, err := kubeClient.AppsV1beta2().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -57,17 +57,17 @@ func DeleteDeployment(kubeClient kubernetes.Interface, namespace, name string) e
 	zero := int32(0)
 	d.Spec.Replicas = &zero
 
-	d, err = kubeClient.Extensions().Deployments(namespace).Update(d)
+	d, err = kubeClient.AppsV1beta2().Deployments(namespace).Update(d)
 	if err != nil {
 		return err
 	}
-	return kubeClient.Extensions().Deployments(namespace).Delete(d.Name, &metav1.DeleteOptions{})
+	return kubeClient.AppsV1beta2().Deployments(namespace).Delete(d.Name, &metav1.DeleteOptions{})
 }
 
 func WaitUntilDeploymentGone(kubeClient kubernetes.Interface, namespace, name string, timeout time.Duration) error {
 	return wait.Poll(time.Second, timeout, func() (bool, error) {
 		_, err := kubeClient.
-			AppsV1beta1().Deployments(namespace).
+			AppsV1beta2().Deployments(namespace).
 			Get(name, metav1.GetOptions{})
 
 		if err != nil {
