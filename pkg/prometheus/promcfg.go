@@ -104,6 +104,7 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(version, mons[identifier], ep, i, basicAuthSecrets))
 		}
 	}
+
 	var alertmanagerConfigs []yaml.MapSlice
 	for _, am := range p.Spec.Alerting.Alertmanagers {
 		alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(version, am))
@@ -123,6 +124,34 @@ func generateConfig(p *v1alpha1.Prometheus, mons map[string]*v1alpha1.ServiceMon
 			},
 		},
 	})
+
+	if len(p.Spec.RemoteWriteEndpoints) > 0 {
+		var remoteWriteConfigs []yaml.MapSlice
+		for _, rw := range p.Spec.RemoteWriteEndpoints {
+			remoteWriteConfigs = append(remoteWriteConfigs, yaml.MapSlice{
+				{Key: "url", Value: rw.URL},
+			})
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "remote_write",
+			Value: remoteWriteConfigs,
+		})
+	}
+
+	if len(p.Spec.RemoteReadEndpoints) > 0 {
+		var remoteReadConfigs []yaml.MapSlice
+		for _, rr := range p.Spec.RemoteReadEndpoints {
+			remoteReadConfigs = append(remoteReadConfigs, yaml.MapSlice{
+				{Key: "url", Value: rr.URL},
+			})
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "remote_read",
+			Value: remoteReadConfigs,
+		})
+	}
 
 	return yaml.Marshal(cfg)
 }
@@ -345,8 +374,40 @@ func generateServiceMonitorConfig(version semver.Version, m *v1alpha1.ServiceMon
 
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
+	var metricRelabelConfigs []yaml.MapSlice
+
+	for _,rc := range m.Spec.MetricRelabelConfigs {
+		ms := yaml.MapSlice{}
+		if len(rc.SourceLabels) > 0 {
+			ms = append(ms, yaml.MapItem{Key:"source_labels", Value: rc.SourceLabels})
+		}
+		if rc.Separator != "" {
+			ms = append(ms, yaml.MapItem{Key:"separator", Value: rc.Separator})
+		}
+		if rc.TargetLabel != "" {
+			ms = append(ms, yaml.MapItem{Key:"target_label", Value: rc.TargetLabel})
+		}
+		if rc.Regex != "" {
+			ms = append(ms, yaml.MapItem{Key:"regex", Value: rc.Regex})
+		}
+		if rc.Modulus != "" {
+			ms = append(ms, yaml.MapItem{Key:"modulus", Value: rc.Modulus})
+		}
+		if rc.Replacement != "" {
+			ms = append(ms, yaml.MapItem{Key:"replacement", Value: rc.Replacement})
+		}
+		if rc.Action != "" {
+			ms = append(ms, yaml.MapItem{Key:"action", Value: rc.Action})
+		}
+
+		metricRelabelConfigs = append(metricRelabelConfigs, ms)
+	}
+
+	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: metricRelabelConfigs})
+
 	return cfg
 }
+
 
 func k8sSDFromServiceMonitor(m *v1alpha1.ServiceMonitor) yaml.MapItem {
 	nsel := m.Spec.NamespaceSelector

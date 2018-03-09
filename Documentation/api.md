@@ -149,6 +149,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods. The Secrets are mounted into /etc/prometheus/secrets/<secret-name>. Secrets changes after initial creation of a Prometheus object are not reflected in the running Pods. To change the secrets mounted into the Prometheus Pods, the object must be deleted and recreated with the new list of secrets. | []string | false |
+| prometheusArgs | PrometheusArgs is a list of arguments that should be added or overridden in the prometheus command. Each arguments must include a leading dash and appear exactly as they will on the cli (eg `-storage.local.target-heap-size=751619276` | []string | false |
 
 ## PrometheusStatus
 
@@ -161,6 +162,20 @@ Most recent observed status of the Prometheus cluster. Read-only. Not included w
 | updatedReplicas | Total number of non-terminated pods targeted by this Prometheus deployment that have the desired version spec. | int32 | true |
 | availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this Prometheus deployment. | int32 | true |
 | unavailableReplicas | Total number of unavailable pods targeted by this Prometheus deployment. | int32 | true |
+
+
+## RelabelConfig
+Represents the relabel_config entity in Prometheus: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sourceLabels[] | The source labels select values from existing labels. Their content is concatenated using the configured separator and matched against the configured regular expression for the replace, keep, and drop actions. | []string | true |
+| separator | Separator placed between concatenated source label values. | string | true |
+| targetLabel | Label to which the resulting value is written in a replace action. It is mandatory for replace actions. Regex capture groups are available. | string | false |
+| regex | Regular expression against which the extracted value is matched. | string | false |
+| modulus | Modulus to take of the hash of the source label values. | string | false |
+| replacement | Replacement value against which a regex replace is performed if the regular expression matches. Regex capture groups are available. | string | false |
+| action | Action to perform based on regex matching | string | false |
 
 ## ServiceMonitor
 
@@ -190,6 +205,7 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 | endpoints | A list of endpoints allowed as part of this ServiceMonitor. | [][Endpoint](#endpoint) | false |
 | selector | Selector to select Endpoints objects. | [metav1.LabelSelector](https://kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | true |
 | namespaceSelector | Selector to select which namespaces the Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
+| metricRelabelConfigs | Metric relabeling is applied to samples as the last step before ingestion. It has the same configuration format and actions as target relabeling. Metric relabeling does not apply to automatically generated timeseries such as `up`. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs One use for this is to blacklist time series that are too expensive to ingest. | [][RelabelConfig](relabelConfig) | false |
 
 ## StorageSpec
 

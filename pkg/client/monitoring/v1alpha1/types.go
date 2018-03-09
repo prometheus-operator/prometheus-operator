@@ -104,6 +104,48 @@ type PrometheusSpec struct {
 	// EvaluationInterval string                    `json:"evaluationInterval"`
 	// Remote          RemoteSpec                 `json:"remote"`
 	// Sharding...
+
+	// PrometheusArgs is a string of arguments that will be passed to the Prometheus instance.
+	// Arguments specified here will be given precedence over the normally calculated arguments.
+	PrometheusArgs []string `json:"prometheusArgs,omitempty"`
+
+	ReadinessProbe *Probe `json:"readinessProbe,omitempty"`
+	LivenessProbe *Probe `json:"livenessProbe,omitempty"`
+
+	RemoteWriteEndpoints []RemoteWriteEndpoints `json:"remoteWrite,omitempty"`
+	RemoteReadEndpoints  []RemoteReadEndpoints  `json:"remoteRead,omitempty"`
+}
+
+type Probe struct {
+	// Number of seconds after the container has started before liveness probes are initiated.
+	// More info: http://kubernetes.io/docs/user-guide/pod-states#container-probes
+	// +optional
+	InitialDelaySeconds *int32 `json:"initialDelaySeconds,omitempty"`
+	// Number of seconds after which the probe times out.
+	// Defaults to 1 second. Minimum value is 1.
+	// More info: http://kubernetes.io/docs/user-guide/pod-states#container-probes
+	// +optional
+	TimeoutSeconds *int32 `json:"timeoutSeconds,omitempty"`
+	// How often (in seconds) to perform the probe.
+	// Default to 10 seconds. Minimum value is 1.
+	// +optional
+	PeriodSeconds *int32 `json:"periodSeconds,omitempty"`
+	// Minimum consecutive successes for the probe to be considered successful after having failed.
+	// Defaults to 1. Must be 1 for liveness. Minimum value is 1.
+	// +optional
+	SuccessThreshold *int32 `json:"successThreshold,omitempty"`
+	// Minimum consecutive failures for the probe to be considered failed after having succeeded.
+	// Defaults to 3. Minimum value is 1.
+	// +optional
+	FailureThreshold *int32 `json:"failureThreshold,omitempty"`
+}
+
+type RemoteReadEndpoints struct {
+	URL string `json:"url"`
+}
+
+type RemoteWriteEndpoints struct {
+	URL string `json:"url"`
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not
@@ -186,6 +228,18 @@ type ServiceMonitorSpec struct {
 	Selector metav1.LabelSelector `json:"selector"`
 	// Selector to select which namespaces the Endpoints objects are discovered from.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
+
+	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelConfigs,omitempty"`
+}
+
+type RelabelConfig struct {
+	SourceLabels []string `json:"sourceLabels,omitempty"`
+	Separator string `json:"separator,omitempty"`
+	TargetLabel string `json:"targetLabel,omitempty"`
+	Regex string `json:"regex,omitempty"`
+	Modulus string `json:"modulus,omitempty"`
+	Replacement string `json:"replacement,omitempty"`
+	Action string `json:"action,omitempty"`
 }
 
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.

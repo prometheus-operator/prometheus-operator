@@ -22,6 +22,8 @@ import (
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 	"reflect"
 	"testing"
+	"path"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var (
@@ -50,6 +52,143 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	if !reflect.DeepEqual(labels, sset.Labels) || !reflect.DeepEqual(annotations, sset.Annotations) {
 		t.Fatal("Labels or Annotations are not properly being propagated to the StatefulSet")
 	}
+}
+
+func TestPrometheusArgs(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+	promArgs := []string{"-config.file=/etc/prometheus/custom/prometheus.yaml"}
+
+	sset, err := makeStatefulSet(v1alpha1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: v1alpha1.PrometheusSpec{
+			PrometheusArgs: promArgs,
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+
+	require.NoError(t, err)
+    args := sset.Spec.Template.Spec.Containers[0].Args
+
+    // We expect defaults and overridden values to be present
+    expected := promArgs
+    expected = append(expected, "-storage.local.path=/var/prometheus/data")
+Outer:
+    for _,expect := range expected {
+		for _,a := range args {
+			if a == expect {
+				continue Outer
+			}
+		}
+		t.Fatalf("PrometheusArgs are not properly being propagated to the StatefulSet. Failed to find '%s' in %v", expect, args)
+	}
+}
+
+func TestPrometheusProbes(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	one := int32(1)
+	two := int32(2)
+	three := int32(3)
+	four := int32(4)
+	five := int32(5)
+
+	livenessProbe := &v1alpha1.Probe{
+		InitialDelaySeconds: &one,
+		TimeoutSeconds: &two,
+		PeriodSeconds: &three,
+		SuccessThreshold: &four,
+		FailureThreshold: &five,
+	}
+
+	readinessProbe := &v1alpha1.Probe{
+		InitialDelaySeconds: &five,
+		TimeoutSeconds: &four,
+		PeriodSeconds: &three,
+		SuccessThreshold: &two,
+		FailureThreshold: &one,
+	}
+
+	sset, err := makeStatefulSet(v1alpha1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: v1alpha1.PrometheusSpec{
+			LivenessProbe: livenessProbe,
+			ReadinessProbe: readinessProbe,
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+
+	require.NoError(t, err)
+
+	probeHandler := v1.Handler{
+		HTTPGet: &v1.HTTPGetAction{
+			Path: path.Clean("//status"),
+			Port: intstr.FromString("web"),
+		},
+	}
+
+	expectedLivenessProbe := &v1.Probe{
+		Handler: probeHandler,
+		InitialDelaySeconds: *livenessProbe.InitialDelaySeconds,
+		TimeoutSeconds: *livenessProbe.TimeoutSeconds,
+		PeriodSeconds: *livenessProbe.PeriodSeconds,
+		SuccessThreshold: *livenessProbe.SuccessThreshold,
+		FailureThreshold: *livenessProbe.FailureThreshold,
+	}
+
+	expectedReadinessProbe := &v1.Probe{
+		Handler: probeHandler,
+		InitialDelaySeconds: *readinessProbe.InitialDelaySeconds,
+		TimeoutSeconds: *readinessProbe.TimeoutSeconds,
+		PeriodSeconds: *readinessProbe.PeriodSeconds,
+		SuccessThreshold: *readinessProbe.SuccessThreshold,
+		FailureThreshold: *readinessProbe.FailureThreshold,
+	}
+
+	if !reflect.DeepEqual(expectedLivenessProbe, sset.Spec.Template.Spec.Containers[0].LivenessProbe) || !reflect.DeepEqual(expectedReadinessProbe, sset.Spec.Template.Spec.Containers[0].ReadinessProbe) {
+		t.Fatal("Probes are not properly being propagated to the StatefulSet")
+	}
+}
+
+func TestOverrideProbeDefaults(t *testing.T) {
+	one := int32(1)
+	two := int32(2)
+	three := int32(3)
+
+	src := &v1alpha1.Probe{
+		InitialDelaySeconds: &one,
+		PeriodSeconds: &two,
+		FailureThreshold: &three,
+	}
+
+	dst := &v1.Probe{
+		InitialDelaySeconds: *src.InitialDelaySeconds,
+		TimeoutSeconds: 10,
+		PeriodSeconds: *src.PeriodSeconds,
+		SuccessThreshold: 20,
+		FailureThreshold: *src.FailureThreshold,
+	}
+
+	overrideProbeDefaults(src, dst)
+
+	if !(dst.TimeoutSeconds == 10 || dst.SuccessThreshold == 20) {
+		t.Fatal("Defaults are not respected by probe overrides")
+	}
+
+
 }
 
 func TestStatefulSetPVC(t *testing.T) {
