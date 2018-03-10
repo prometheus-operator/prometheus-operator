@@ -564,7 +564,15 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
-	in.Alerting.DeepCopyInto(&out.Alerting)
+	if in.Alerting != nil {
+		in, out := &in.Alerting, &out.Alerting
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(AlertingSpec)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.NodeSelector != nil {
 		in, out := &in.NodeSelector, &out.NodeSelector
