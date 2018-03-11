@@ -284,6 +284,13 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
+	if in.Containers != nil {
+		in, out := &in.Containers, &out.Containers
+		*out = make([]core_v1.Container, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -623,6 +630,13 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		} else {
 			*out = new(core_v1.PodSecurityContext)
 			(*in).DeepCopyInto(*out)
+		}
+	}
+	if in.Containers != nil {
+		in, out := &in.Containers, &out.Containers
+		*out = make([]core_v1.Container, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	return

@@ -394,6 +394,19 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		promArgs = append(promArgs, fmt.Sprintf("-log.level=%s", p.Spec.LogLevel))
 	}
 
+	var ports []v1.ContainerPort
+	if p.Spec.ListenLocal {
+		promArgs = append(promArgs, "-web.listen-address=127.0.0.1:9090")
+	} else {
+		ports = []v1.ContainerPort{
+			{
+				Name:          "web",
+				ContainerPort: 9090,
+				Protocol:      v1.ProtocolTCP,
+			},
+		}
+	}
+
 	if version.Major == 2 {
 		for i, a := range promArgs {
 			promArgs[i] = "-" + a
@@ -505,6 +518,24 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		livenessProbeInitialDelaySeconds = 300
 	}
 
+	var livenessProbe *v1.Probe
+	var readinessProbe *v1.Probe
+	if !p.Spec.ListenLocal {
+		livenessProbe = &v1.Probe{
+			Handler:             livenessProbeHandler,
+			InitialDelaySeconds: livenessProbeInitialDelaySeconds,
+			PeriodSeconds:       5,
+			TimeoutSeconds:      probeTimeoutSeconds,
+			FailureThreshold:    10,
+		}
+		readinessProbe = &v1.Probe{
+			Handler:          readinessProbeHandler,
+			TimeoutSeconds:   probeTimeoutSeconds,
+			PeriodSeconds:    5,
+			FailureThreshold: 6,
+		}
+	}
+
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	if p.Spec.PodMetadata != nil {
@@ -534,33 +565,16 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
-				Containers: []v1.Container{
+				Containers: append([]v1.Container{
 					{
-						Name:  "prometheus",
-						Image: fmt.Sprintf("%s:%s", p.Spec.BaseImage, p.Spec.Version),
-						Ports: []v1.ContainerPort{
-							{
-								Name:          "web",
-								ContainerPort: 9090,
-								Protocol:      v1.ProtocolTCP,
-							},
-						},
-						Args:         promArgs,
-						VolumeMounts: promVolumeMounts,
-						LivenessProbe: &v1.Probe{
-							Handler:             livenessProbeHandler,
-							InitialDelaySeconds: livenessProbeInitialDelaySeconds,
-							PeriodSeconds:       5,
-							TimeoutSeconds:      probeTimeoutSeconds,
-							FailureThreshold:    10,
-						},
-						ReadinessProbe: &v1.Probe{
-							Handler:          readinessProbeHandler,
-							TimeoutSeconds:   probeTimeoutSeconds,
-							PeriodSeconds:    5,
-							FailureThreshold: 6,
-						},
-						Resources: p.Spec.Resources,
+						Name:           "prometheus",
+						Image:          fmt.Sprintf("%s:%s", p.Spec.BaseImage, p.Spec.Version),
+						Ports:          ports,
+						Args:           promArgs,
+						VolumeMounts:   promVolumeMounts,
+						LivenessProbe:  livenessProbe,
+						ReadinessProbe: readinessProbe,
+						Resources:      p.Spec.Resources,
 					}, {
 						Name:         "prometheus-config-reloader",
 						Image:        c.PrometheusConfigReloader,
@@ -573,7 +587,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 							},
 						},
 					},
-				},
+				}, p.Spec.Containers...),
 				SecurityContext:               securityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,

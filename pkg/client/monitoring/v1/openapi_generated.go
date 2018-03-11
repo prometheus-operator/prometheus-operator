@@ -304,11 +304,31 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
+						"listenLocal": {
+							SchemaProps: spec.SchemaProps{
+								Description: "ListenLocal makes the Alertmanager server listen on loopback, so that it does not bind against the Pod IP. Note this is only for the Alertmanager UI, not the gossip communication.",
+								Type:        []string{"boolean"},
+								Format:      "",
+							},
+						},
+						"containers": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Containers allows injecting additional containers. This is meant to allow adding an authentication proxy to an Alertmanager pod.",
+								Type:        []string{"array"},
+								Items: &spec.SchemaOrArray{
+									Schema: &spec.Schema{
+										SchemaProps: spec.SchemaProps{
+											Ref: ref("k8s.io/api/core/v1.Container"),
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerStatus": {
 			Schema: spec.Schema{
@@ -829,11 +849,31 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Ref:         ref("k8s.io/api/core/v1.PodSecurityContext"),
 							},
 						},
+						"listenLocal": {
+							SchemaProps: spec.SchemaProps{
+								Description: "ListenLocal makes the Prometheus server listen on loopback, so that it does not bind against the Pod IP.",
+								Type:        []string{"boolean"},
+								Format:      "",
+							},
+						},
+						"containers": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Containers allows injecting additional containers. This is meant to allow adding an authentication proxy to a Prometheus pod.",
+								Type:        []string{"array"},
+								Items: &spec.SchemaOrArray{
+									Schema: &spec.Schema{
+										SchemaProps: spec.SchemaProps{
+											Ref: ref("k8s.io/api/core/v1.Container"),
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertingSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteReadSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteWriteSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertingSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteReadSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteWriteSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusStatus": {
 			Schema: spec.Schema{
