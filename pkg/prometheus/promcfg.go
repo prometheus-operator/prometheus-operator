@@ -538,6 +538,14 @@ func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec,
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
 
+		if len(spec.RequiredMatchers) > 0 {
+			cfg = append(cfg, yaml.MapItem{Key: "required_matchers", Value: stringMapToMapSlice(spec.RequiredMatchers)})
+		}
+
+		if spec.ReadRecent {
+			cfg = append(cfg, yaml.MapItem{Key: "read_recent", Value: spec.ReadRecent})
+		}
+
 		if spec.BasicAuth != nil {
 			if s, ok := basicAuthSecrets[fmt.Sprintf("remoteRead/%d", i)]; ok {
 				cfg = append(cfg, yaml.MapItem{
@@ -577,6 +585,7 @@ func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec,
 		}
 
 		cfgs = append(cfgs, cfg)
+
 	}
 
 	return yaml.MapItem{
