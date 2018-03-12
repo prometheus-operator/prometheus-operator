@@ -278,12 +278,14 @@ serviceMonitors: []
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
 ##
 storageSpec: {}
-#   volumeClaimTemplate:
-#     spec:
-#       resources:
-#         requests:
-#           storage: 50Gi
-#   selector: {}
+#  volumeClaimTemplate:
+#    spec:
+#      storageClassName: gluster
+#      accessModes: ["ReadWriteOnce"]
+#      resources:
+#        requests:
+#          storage: 50Gi
+#    selector: {}
 
 # default rules are in templates/prometheus.rules.yaml
 # prometheusRules: {}
