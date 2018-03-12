@@ -100,6 +100,18 @@ logLevel: info
 ## The value "" will disable pod anti-affinity so that no anti-affinity rules will be configured.
 podAntiAffinity: "soft"
 
+## The remote_read spec configuration for Prometheus.
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#remotereadspec
+remoteRead: {}
+  # remoteRead:
+  #   - url: http://remote1/read
+
+## The remote_write spec configuriation for Prometheus.
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#remotewritespec
+remoteWrite: {}
+  # remoteWrite:
+  #   - url: http://remote1/push
+
 ## Resource limits & requests
 ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
 ##
