@@ -98,7 +98,7 @@ type PrometheusSpec struct {
 	// A selector to select which ConfigMaps to mount for loading rule files from.
 	RuleSelector *metav1.LabelSelector `json:"ruleSelector,omitempty"`
 	// Define details regarding alerting.
-	Alerting AlertingSpec `json:"alerting,omitempty"`
+	Alerting *AlertingSpec `json:"alerting,omitempty"`
 	// Define resources requests and limits for single Pods.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// Define which Nodes the Pods are scheduled on.
@@ -126,6 +126,12 @@ type PrometheusSpec struct {
 	// This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and
 	// default PodSecurityContext for other versions.
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
+	// ListenLocal makes the Prometheus server listen on loopback, so that it
+	// does not bind against the Pod IP.
+	ListenLocal bool `json:"listenLocal,omitempty"`
+	// Containers allows injecting additional containers. This is meant to
+	// allow adding an authentication proxy to a Prometheus pod.
+	Containers []v1.Container `json:"containers,omitempty"`
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not
@@ -418,6 +424,13 @@ type AlertmanagerSpec struct {
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+	// ListenLocal makes the Alertmanager server listen on loopback, so that it
+	// does not bind against the Pod IP. Note this is only for the Alertmanager
+	// UI, not the gossip communication.
+	ListenLocal bool `json:"listenLocal,omitempty"`
+	// Containers allows injecting additional containers. This is meant to
+	// allow adding an authentication proxy to an Alertmanager pod.
+	Containers []v1.Container `json:"containers,omitempty"`
 }
 
 // A list of Alertmanagers.

@@ -92,7 +92,7 @@ func generateTestConfig(version string) ([]byte, error) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				Alerting: monitoringv1.AlertingSpec{
+				Alerting: &monitoringv1.AlertingSpec{
 					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 						{
 							Name:      "alertmanager-main",

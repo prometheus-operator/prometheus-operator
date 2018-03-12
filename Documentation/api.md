@@ -100,6 +100,8 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
 | securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000. | *v1.PodSecurityContext | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
+| listenLocal | ListenLocal makes the Alertmanager server listen on loopback, so that it does not bind against the Pod IP. Note this is only for the Alertmanager UI, not the gossip communication. | bool | false |
+| containers | Containers allows injecting additional containers. This is meant to allow adding an authentication proxy to an Alertmanager pod. | []v1.Container | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -205,7 +207,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
 | ruleSelector | A selector to select which ConfigMaps to mount for loading rule files from. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
-| alerting | Define details regarding alerting. | [AlertingSpec](#alertingspec) | false |
+| alerting | Define details regarding alerting. | *[AlertingSpec](#alertingspec) | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
@@ -215,6 +217,8 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | remoteWrite | If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteWriteSpec](#remotewritespec) | false |
 | remoteRead | If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteReadSpec](#remotereadspec) | false |
 | securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and default PodSecurityContext for other versions. | *v1.PodSecurityContext | false |
+| listenLocal | ListenLocal makes the Prometheus server listen on loopback, so that it does not bind against the Pod IP. | bool | false |
+| containers | Containers allows injecting additional containers. This is meant to allow adding an authentication proxy to a Prometheus pod. | []v1.Container | false |
 
 [Back to TOC](#table-of-contents)
 

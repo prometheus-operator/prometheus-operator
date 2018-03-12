@@ -116,8 +116,10 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 		}
 	}
 	var alertmanagerConfigs []yaml.MapSlice
-	for _, am := range p.Spec.Alerting.Alertmanagers {
-		alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(version, am))
+	if p.Spec.Alerting != nil {
+		for _, am := range p.Spec.Alerting.Alertmanagers {
+			alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(version, am))
+		}
 	}
 
 	cfg = append(cfg, yaml.MapItem{

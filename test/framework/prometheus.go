@@ -92,7 +92,7 @@ func (f *Framework) MakeBasicPrometheusV1alpha1(ns, name, group string, replicas
 }
 
 func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name string) {
-	p.Spec.Alerting = monitoringv1.AlertingSpec{
+	p.Spec.Alerting = &monitoringv1.AlertingSpec{
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			monitoringv1.AlertmanagerEndpoints{
 				Namespace: ns,
