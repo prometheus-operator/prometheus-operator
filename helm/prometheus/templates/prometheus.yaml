@@ -64,6 +64,14 @@ spec:
     matchLabels:
       prometheus: {{ .Release.Name }}
 {{- end }}
+{{- if .Values.remoteRead }}
+  remoteRead:
+{{ toYaml .Values.remoteRead | indent 4 }}
+{{- end }}
+{{- if .Values.remoteWrite }}
+  remoteWrite:
+{{ toYaml .Values.remoteWrite | indent 4 }}
+{{- end }}
 {{- if .Values.rulesSelector }}
   ruleSelector:
     matchLabels:

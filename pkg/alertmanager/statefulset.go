@@ -173,9 +173,14 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 
 	amArgs := []string{
 		fmt.Sprintf("-config.file=%s", alertmanagerConfFile),
-		fmt.Sprintf("-web.listen-address=:%d", 9093),
 		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
 		fmt.Sprintf("-storage.path=%s", alertmanagerStorageDir),
+	}
+
+	if a.Spec.ListenLocal {
+		amArgs = append(amArgs, "-web.listen-address=127.0.0.1:9093")
+	} else {
+		amArgs = append(amArgs, "-web.listen-address=:9093")
 	}
 
 	if a.Spec.ExternalURL != "" {
@@ -200,6 +205,24 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		},
 	}
 
+	var livenessProbe *v1.Probe
+	var readinessProbe *v1.Probe
+	if !a.Spec.ListenLocal {
+		livenessProbe = &v1.Probe{
+			Handler:          probeHandler,
+			TimeoutSeconds:   probeTimeoutSeconds,
+			FailureThreshold: 10,
+		}
+
+		readinessProbe = &v1.Probe{
+			Handler:             probeHandler,
+			InitialDelaySeconds: 3,
+			TimeoutSeconds:      3,
+			PeriodSeconds:       5,
+			FailureThreshold:    10,
+		}
+	}
+
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	if a.Spec.PodMetadata != nil {
@@ -219,6 +242,23 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
 		amArgs = append(amArgs, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
+	}
+
+	ports := []v1.ContainerPort{
+		{
+			Name:          "mesh",
+			ContainerPort: 6783,
+			Protocol:      v1.ProtocolTCP,
+		},
+	}
+	if !a.Spec.ListenLocal {
+		ports = append([]v1.ContainerPort{
+			{
+				Name:          "web",
+				ContainerPort: 9093,
+				Protocol:      v1.ProtocolTCP,
+			},
+		}, ports...)
 	}
 
 	gid := int64(2000)
@@ -265,23 +305,12 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 			Spec: v1.PodSpec{
 				NodeSelector:                  a.Spec.NodeSelector,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
-				Containers: []v1.Container{
+				Containers: append([]v1.Container{
 					{
 						Args:  amArgs,
 						Name:  "alertmanager",
 						Image: image,
-						Ports: []v1.ContainerPort{
-							{
-								Name:          "web",
-								ContainerPort: 9093,
-								Protocol:      v1.ProtocolTCP,
-							},
-							{
-								Name:          "mesh",
-								ContainerPort: 6783,
-								Protocol:      v1.ProtocolTCP,
-							},
-						},
+						Ports: ports,
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config-volume",
@@ -293,19 +322,9 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 								SubPath:   subPathForStorage(a.Spec.Storage),
 							},
 						},
-						LivenessProbe: &v1.Probe{
-							Handler:          probeHandler,
-							TimeoutSeconds:   probeTimeoutSeconds,
-							FailureThreshold: 10,
-						},
-						ReadinessProbe: &v1.Probe{
-							Handler:             probeHandler,
-							InitialDelaySeconds: 3,
-							TimeoutSeconds:      3,
-							PeriodSeconds:       5,
-							FailureThreshold:    10,
-						},
-						Resources: a.Spec.Resources,
+						LivenessProbe:  livenessProbe,
+						ReadinessProbe: readinessProbe,
+						Resources:      a.Spec.Resources,
 					}, {
 						Name:  "config-reloader",
 						Image: config.ConfigReloaderImage,
@@ -327,7 +346,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 							},
 						},
 					},
-				},
+				}, a.Spec.Containers...),
 				Volumes: []v1.Volume{
 					{
 						Name: "config-volume",

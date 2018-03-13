@@ -116,8 +116,10 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 		}
 	}
 	var alertmanagerConfigs []yaml.MapSlice
-	for _, am := range p.Spec.Alerting.Alertmanagers {
-		alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(version, am))
+	if p.Spec.Alerting != nil {
+		for _, am := range p.Spec.Alerting.Alertmanagers {
+			alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(version, am))
+		}
 	}
 
 	cfg = append(cfg, yaml.MapItem{
@@ -136,11 +138,11 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 	})
 
 	if len(p.Spec.RemoteWrite) > 0 && version.Major >= 2 {
-		cfg = append(cfg, generateRemoteWriteConfig(version, p.Spec.RemoteWrite))
+		cfg = append(cfg, generateRemoteWriteConfig(version, p.Spec.RemoteWrite, basicAuthSecrets))
 	}
 
 	if len(p.Spec.RemoteRead) > 0 && version.Major >= 2 {
-		cfg = append(cfg, generateRemoteReadConfig(version, p.Spec.RemoteRead))
+		cfg = append(cfg, generateRemoteReadConfig(version, p.Spec.RemoteRead, basicAuthSecrets))
 	}
 
 	return yaml.Marshal(cfg)
@@ -207,7 +209,7 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	}
 
 	if ep.BasicAuth != nil {
-		if s, ok := basicAuthSecrets[fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)]; ok {
+		if s, ok := basicAuthSecrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{
 				Key: "basic_auth", Value: yaml.MapSlice{
 					{Key: "username", Value: s.username},
@@ -521,11 +523,11 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 	return cfg
 }
 
-func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec) yaml.MapItem {
+func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
-	for _, spec := range specs {
+	for i, spec := range specs {
 		//defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
@@ -536,13 +538,23 @@ func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec)
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
 
+		if len(spec.RequiredMatchers) > 0 {
+			cfg = append(cfg, yaml.MapItem{Key: "required_matchers", Value: stringMapToMapSlice(spec.RequiredMatchers)})
+		}
+
+		if spec.ReadRecent {
+			cfg = append(cfg, yaml.MapItem{Key: "read_recent", Value: spec.ReadRecent})
+		}
+
 		if spec.BasicAuth != nil {
-			cfg = append(cfg, yaml.MapItem{
-				Key: "basic_auth", Value: yaml.MapSlice{
-					{Key: "username", Value: spec.BasicAuth.Username},
-					{Key: "password", Value: spec.BasicAuth.Password},
-				},
-			})
+			if s, ok := basicAuthSecrets[fmt.Sprintf("remoteRead/%d", i)]; ok {
+				cfg = append(cfg, yaml.MapItem{
+					Key: "basic_auth", Value: yaml.MapSlice{
+						{Key: "username", Value: s.username},
+						{Key: "password", Value: s.password},
+					},
+				})
+			}
 		}
 
 		if spec.BearerTokenFile != "" {
@@ -573,6 +585,7 @@ func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec)
 		}
 
 		cfgs = append(cfgs, cfg)
+
 	}
 
 	return yaml.MapItem{
@@ -581,11 +594,11 @@ func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec)
 	}
 }
 
-func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpec) yaml.MapItem {
+func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpec, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
-	for _, spec := range specs {
+	for i, spec := range specs {
 		//defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
@@ -634,12 +647,14 @@ func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpe
 		}
 
 		if spec.BasicAuth != nil {
-			cfg = append(cfg, yaml.MapItem{
-				Key: "basic_auth", Value: yaml.MapSlice{
-					{Key: "username", Value: spec.BasicAuth.Username},
-					{Key: "password", Value: spec.BasicAuth.Password},
-				},
-			})
+			if s, ok := basicAuthSecrets[fmt.Sprintf("remoteWrite/%d", i)]; ok {
+				cfg = append(cfg, yaml.MapItem{
+					Key: "basic_auth", Value: yaml.MapSlice{
+						{Key: "username", Value: s.username},
+						{Key: "password", Value: s.password},
+					},
+				})
+			}
 		}
 
 		if spec.BearerToken != "" {
