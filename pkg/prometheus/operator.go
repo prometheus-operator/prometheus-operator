@@ -880,7 +880,45 @@ func (c *Operator) destroyPrometheus(key string) error {
 	return nil
 }
 
-func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, s *v1.SecretList) (map[string]BasicAuthCredentials, error) {
+func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (BasicAuthCredentials, error) {
+	var username string
+	var password string
+
+	for _, secret := range s.Items {
+
+		if secret.Name == basicAuth.Username.Name {
+
+			if u, ok := secret.Data[basicAuth.Username.Key]; ok {
+				username = string(u)
+			} else {
+				return BasicAuthCredentials{}, fmt.Errorf("Secret username key %q in secret %q not found.", basicAuth.Username.Key, secret.Name)
+			}
+
+		}
+
+		if secret.Name == basicAuth.Password.Name {
+
+			if p, ok := secret.Data[basicAuth.Password.Key]; ok {
+				password = string(p)
+			} else {
+				return BasicAuthCredentials{}, fmt.Errorf("Secret password key %q in secret %q not found.", basicAuth.Password.Key, secret.Name)
+			}
+
+		}
+		if username != "" && password != "" {
+			break
+		}
+	}
+
+	if username == "" && password == "" {
+		return BasicAuthCredentials{}, fmt.Errorf("BasicAuth username and password secret not found.")
+	}
+
+	return BasicAuthCredentials{username: username, password: password}, nil
+
+}
+
+func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, remoteReads []monitoringv1.RemoteReadSpec, remoteWrites []monitoringv1.RemoteWriteSpec, s *v1.SecretList) (map[string]BasicAuthCredentials, error) {
 
 	secrets := map[string]BasicAuthCredentials{}
 
@@ -890,44 +928,32 @@ func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMon
 
 			if ep.BasicAuth != nil {
 
-				var username string
-				var password string
-
-				for _, secret := range s.Items {
-
-					if secret.Name == ep.BasicAuth.Username.Name {
-
-						if u, ok := secret.Data[ep.BasicAuth.Username.Key]; ok {
-							username = string(u)
-						} else {
-							return nil, fmt.Errorf("Secret password of servicemonitor %s not found.", mon.Name)
-						}
-
-					}
-
-					if secret.Name == ep.BasicAuth.Password.Name {
-
-						if p, ok := secret.Data[ep.BasicAuth.Password.Key]; ok {
-							password = string(p)
-						} else {
-							return nil, fmt.Errorf("Secret username of servicemonitor %s not found.",
-								mon.Name)
-						}
-
-					}
-				}
-
-				if username == "" && password == "" {
-					return nil, fmt.Errorf("Could not generate basicAuth for servicemonitor %s. Username and password are empty.",
-						mon.Name)
+				if credentials, err := loadBasicAuthSecret(ep.BasicAuth, s); err != nil {
+					return nil, fmt.Errorf("Could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
 				} else {
-					secrets[fmt.Sprintf("%s/%s/%d", mon.Namespace, mon.Name, i)] =
-						BasicAuthCredentials{
-							username: username,
-							password: password,
-						}
+					secrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = credentials
 				}
 
+			}
+		}
+	}
+
+	for i, remote := range remoteReads {
+		if remote.BasicAuth != nil {
+			if credentials, err := loadBasicAuthSecret(remote.BasicAuth, s); err != nil {
+				return nil, fmt.Errorf("Could not generate basicAuth for remote_read config %d. %s", i, err)
+			} else {
+				secrets[fmt.Sprintf("remoteRead/%d", i)] = credentials
+			}
+		}
+	}
+
+	for i, remote := range remoteWrites {
+		if remote.BasicAuth != nil {
+			if credentials, err := loadBasicAuthSecret(remote.BasicAuth, s); err != nil {
+				return nil, fmt.Errorf("Could not generate basicAuth for remote_write config %d. %s", i, err)
+			} else {
+				secrets[fmt.Sprintf("remoteWrite/%d", i)] = credentials
 			}
 		}
 	}
@@ -950,7 +976,7 @@ func (c *Operator) createConfig(p *monitoringv1.Prometheus, ruleFileConfigMaps [
 		return err
 	}
 
-	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, listSecrets)
+	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, listSecrets)
 
 	if err != nil {
 		return err
