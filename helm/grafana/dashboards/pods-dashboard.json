@@ -70,7 +70,7 @@
                                 "expr": "sum by(container_name) (container_memory_usage_bytes{pod_name=\"$pod\", container_name=~\"$container\", container_name!=\"POD\"})",
                                 "interval": "10s",
                                 "intervalFactor": 1,
-                                "legendFormat": "Current: {{`{{ container_name }}`}}",
+                                "legendFormat": "Current: {{ container_name }}",
                                 "metric": "container_memory_usage_bytes",
                                 "refId": "A",
                                 "step": 15
@@ -79,7 +79,7 @@
                                 "expr": "kube_pod_container_resource_requests_memory_bytes{pod=\"$pod\", container=~\"$container\"}",
                                 "interval": "10s",
                                 "intervalFactor": 2,
-                                "legendFormat": "Requested: {{`{{ container }}`}}",
+                                "legendFormat": "Requested: {{ container }}",
                                 "metric": "kube_pod_container_resource_requests_memory_bytes",
                                 "refId": "B",
                                 "step": 20
@@ -88,7 +88,7 @@
                                 "expr": "kube_pod_container_resource_limits_memory_bytes{pod=\"$pod\", container=~\"$container\"}",
                                 "interval": "10s",
                                 "intervalFactor": 2,
-                                "legendFormat": "Limit: {{`{{ container }}`}}",
+                                "legendFormat": "Limit: {{ container }}",
                                 "metric": "kube_pod_container_resource_limits_memory_bytes",
                                 "refId": "C",
                                 "step": 20
@@ -175,7 +175,7 @@
                             {
                                 "expr": "sum by (container_name)(rate(container_cpu_usage_seconds_total{image!=\"\",container_name!=\"POD\",pod_name=\"$pod\"}[1m]))",
                                 "intervalFactor": 2,
-                                "legendFormat": "{{`{{ container_name }}`}}",
+                                "legendFormat": "{{ container_name }}",
                                 "refId": "A",
                                 "step": 30
                             },
@@ -183,7 +183,7 @@
                                 "expr": "kube_pod_container_resource_requests_cpu_cores{pod=\"$pod\", container=~\"$container\"}",
                                 "interval": "10s",
                                 "intervalFactor": 2,
-                                "legendFormat": "Requested: {{`{{ container }}`}}",
+                                "legendFormat": "Requested: {{ container }}",
                                 "metric": "kube_pod_container_resource_requests_cpu_cores",
                                 "refId": "B",
                                 "step": 20
@@ -192,7 +192,7 @@
                                 "expr": "kube_pod_container_resource_limits_cpu_cores{pod=\"$pod\", container=~\"$container\"}",
                                 "interval": "10s",
                                 "intervalFactor": 2,
-                                "legendFormat": "Limit: {{`{{ container }}`}}",
+                                "legendFormat": "Limit: {{ container }}",
                                 "metric": "kube_pod_container_resource_limits_memory_bytes",
                                 "refId": "C",
                                 "step": 20
@@ -279,7 +279,7 @@
                             {
                                 "expr": "sort_desc(sum by (pod_name) (rate(container_network_receive_bytes_total{pod_name=\"$pod\"}[1m])))",
                                 "intervalFactor": 2,
-                                "legendFormat": "{{`{{ pod_name }}`}}",
+                                "legendFormat": "{{ pod_name }}",
                                 "refId": "A",
                                 "step": 30
                             }

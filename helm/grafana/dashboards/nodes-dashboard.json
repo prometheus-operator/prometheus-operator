@@ -71,7 +71,7 @@
                                 "expr": "100 - (avg by (cpu) (irate(node_cpu{mode=\"idle\", instance=\"$server\"}[5m])) * 100)",
                                 "hide": false,
                                 "intervalFactor": 10,
-                                "legendFormat": "{{`{{cpu}}`}}",
+                                "legendFormat": "{{cpu}}",
                                 "refId": "A",
                                 "step": 50
                             }
@@ -640,7 +640,7 @@
                                 "expr": "rate(node_network_receive_bytes{instance=\"$server\",device!~\"lo\"}[5m])",
                                 "hide": false,
                                 "intervalFactor": 2,
-                                "legendFormat": "{{`{{device}}`}}",
+                                "legendFormat": "{{device}}",
                                 "refId": "A",
                                 "step": 10,
                                 "target": ""
@@ -722,7 +722,7 @@
                                 "expr": "rate(node_network_transmit_bytes{instance=\"$server\",device!~\"lo\"}[5m])",
                                 "hide": false,
                                 "intervalFactor": 2,
-                                "legendFormat": "{{`{{device}}`}}",
+                                "legendFormat": "{{device}}",
                                 "refId": "B",
                                 "step": 10,
                                 "target": ""
