@@ -1000,10 +1000,31 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
+						"requiredMatchers": {
+							SchemaProps: spec.SchemaProps{
+								Description: "An optional list of equality matchers which have to be present in a selector to query the remote read endpoint.",
+								Type:        []string{"object"},
+								AdditionalProperties: &spec.SchemaOrBool{
+									Schema: &spec.Schema{
+										SchemaProps: spec.SchemaProps{
+											Type:   []string{"string"},
+											Format: "",
+										},
+									},
+								},
+							},
+						},
 						"remoteTimeout": {
 							SchemaProps: spec.SchemaProps{
 								Description: "Timeout for requests to the remote write endpoint.",
 								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"readRecent": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Whether reads should be made for queries for time ranges that the local storage should have complete data for.",
+								Type:        []string{"boolean"},
 								Format:      "",
 							},
 						},
@@ -1033,7 +1054,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"),
 							},
 						},
-						"proxy_url": {
+						"proxyUrl": {
 							SchemaProps: spec.SchemaProps{
 								Description: "Optional ProxyURL",
 								Type:        []string{"string"},
@@ -1105,7 +1126,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"),
 							},
 						},
-						"proxy_url": {
+						"proxyUrl": {
 							SchemaProps: spec.SchemaProps{
 								Description: "Optional ProxyURL",
 								Type:        []string{"string"},

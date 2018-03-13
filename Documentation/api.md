@@ -259,12 +259,14 @@ RemoteReadSpec defines the remote_read configuration for prometheus.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | url | The URL of the endpoint to send samples to. | string | true |
+| requiredMatchers | An optional list of equality matchers which have to be present in a selector to query the remote read endpoint. | map[string]string | false |
 | remoteTimeout | Timeout for requests to the remote write endpoint. | string | false |
+| readRecent | Whether reads should be made for queries for time ranges that the local storage should have complete data for. | bool | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
 | bearerToken | bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
-| proxy_url | Optional ProxyURL | string | false |
+| proxyUrl | Optional ProxyURL | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -281,7 +283,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | bearerToken | File to read bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
-| proxy_url | Optional ProxyURL | string | false |
+| proxyUrl | Optional ProxyURL | string | false |
 
 [Back to TOC](#table-of-contents)
 

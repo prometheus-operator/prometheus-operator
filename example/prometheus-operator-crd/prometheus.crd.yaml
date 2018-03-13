@@ -1645,12 +1645,20 @@ spec:
                   bearerTokenFile:
                     description: File to read bearer token for remote write.
                     type: string
-                  proxy_url:
+                  proxyUrl:
                     description: Optional ProxyURL
                     type: string
+                  readRecent:
+                    description: Whether reads should be made for queries for time
+                      ranges that the local storage should have complete data for.
+                    type: boolean
                   remoteTimeout:
                     description: Timeout for requests to the remote write endpoint.
                     type: string
+                  requiredMatchers:
+                    description: An optional list of equality matchers which have
+                      to be present in a selector to query the remote read endpoint.
+                    type: object
                   tlsConfig:
                     description: TLSConfig specifies TLS configuration parameters.
                     properties:
@@ -1724,7 +1732,7 @@ spec:
                   bearerTokenFile:
                     description: File to read bearer token for remote write.
                     type: string
-                  proxy_url:
+                  proxyUrl:
                     description: Optional ProxyURL
                     type: string
                   remoteTimeout:

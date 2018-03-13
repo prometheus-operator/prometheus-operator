@@ -202,7 +202,7 @@ type RemoteWriteSpec struct {
 	// TLS Config to use for remote write.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	//Optional ProxyURL
-	ProxyURL string `json:"proxy_url,omitempty"`
+	ProxyURL string `json:"proxyUrl,omitempty"`
 }
 
 // RemoteReadSpec defines the remote_read configuration for prometheus.
@@ -210,8 +210,14 @@ type RemoteWriteSpec struct {
 type RemoteReadSpec struct {
 	//The URL of the endpoint to send samples to.
 	URL string `json:"url"`
+	//An optional list of equality matchers which have to be present
+	// in a selector to query the remote read endpoint.
+	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
 	//Timeout for requests to the remote write endpoint.
 	RemoteTimeout string `json:"remoteTimeout,omitempty"`
+	//Whether reads should be made for queries for time ranges that
+	// the local storage should have complete data for.
+	ReadRecent bool `json:"readRecent,omitempty"`
 	//BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// bearer token for remote write.
@@ -221,7 +227,7 @@ type RemoteReadSpec struct {
 	// TLS Config to use for remote write.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	//Optional ProxyURL
-	ProxyURL string `json:"proxy_url,omitempty"`
+	ProxyURL string `json:"proxyUrl,omitempty"`
 }
 
 // RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion.
