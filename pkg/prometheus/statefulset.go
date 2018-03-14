@@ -42,7 +42,7 @@ const (
 	configMapsFilename   = "configmaps.json"
 	prometheusConfDir    = "/etc/prometheus/config"
 	prometheusConfFile   = prometheusConfDir + "/prometheus.yaml"
-	prometheusStorageDir = "/var/prometheus/data"
+	prometheusStorageDir = "/prometheus"
 	prometheusRulesDir   = "/etc/prometheus/rules"
 	prometheusSecretsDir = "/etc/prometheus/secrets/"
 )

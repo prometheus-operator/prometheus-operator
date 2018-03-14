@@ -36,7 +36,7 @@ const (
 	defaultVersion         = "v0.14.0"
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
-	alertmanagerStorageDir = "/var/alertmanager/data"
+	alertmanagerStorageDir = "/alertmanager"
 )
 
 var (
