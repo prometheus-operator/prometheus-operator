@@ -11,7 +11,7 @@ global:
 kube_state_metrics:
   image:
     repository: gcr.io/google_containers/kube-state-metrics
-    tag: v1.1.0
+    tag: v1.2.0
     pullPolicy: IfNotPresent
   service:
     name: kube-state-metrics
@@ -21,7 +21,7 @@ kube_state_metrics:
 addon_resizer:
   image:
     repository: gcr.io/google_containers/addon-resizer
-    tag: "1.0"
+    tag: "1.7"
     pullPolicy: IfNotPresent
   resources:
     limits:
