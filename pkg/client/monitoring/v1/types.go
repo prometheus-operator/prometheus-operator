@@ -332,6 +332,15 @@ type Endpoint struct {
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
+	// StaticConfigs with targets to scrape.
+	StaticConfigs *StaticConfig `json:"staticConfigs,omitempty"`
+}
+
+// StaticConfig allows to specify a set of targets and parameters describing how to scrape them.
+// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<static_config>
+// +k8s:openapi-gen=true
+type StaticConfig struct {
+	Targets []string `json:"targets"`
 }
 
 // BasicAuth allow an endpoint to authenticate over basic authentication

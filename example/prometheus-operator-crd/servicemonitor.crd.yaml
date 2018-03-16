@@ -140,6 +140,16 @@ spec:
                   scrapeTimeout:
                     description: Timeout after which the scrape is ended
                     type: string
+                  staticConfigs:
+                    description: 'StaticConfig allows to specify a set of targets
+                      and parameters describing how to scrape them. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<static_config>'
+                    properties:
+                      targets:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - targets
                   targetPort: {}
                   tlsConfig:
                     description: TLSConfig specifies TLS configuration parameters.
