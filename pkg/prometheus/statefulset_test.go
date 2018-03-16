@@ -171,7 +171,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 								}, {
 									Name:      "prometheus--db",
 									ReadOnly:  false,
-									MountPath: "/var/prometheus/data",
+									MountPath: "/prometheus",
 									SubPath:   "",
 								}, {
 									Name:      "secret-test-secret1",

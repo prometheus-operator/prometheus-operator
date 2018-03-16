@@ -37,12 +37,12 @@ import (
 
 const (
 	governingServiceName = "prometheus-operated"
-	DefaultVersion       = "v2.2.0-rc.1"
+	DefaultVersion       = "v2.2.1"
 	defaultRetention     = "24h"
 	configMapsFilename   = "configmaps.json"
 	prometheusConfDir    = "/etc/prometheus/config"
 	prometheusConfFile   = prometheusConfDir + "/prometheus.yaml"
-	prometheusStorageDir = "/var/prometheus/data"
+	prometheusStorageDir = "/prometheus"
 	prometheusRulesDir   = "/etc/prometheus/rules"
 	prometheusSecretsDir = "/etc/prometheus/secrets/"
 )
@@ -72,6 +72,7 @@ var (
 		"v1.7.2",
 		"v1.8.0",
 		"v2.0.0",
+		"v2.2.1",
 	}
 )
 
