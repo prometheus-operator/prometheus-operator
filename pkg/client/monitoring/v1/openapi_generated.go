@@ -134,6 +134,13 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"),
 							},
 						},
+						"bearerTokenFile": {
+							SchemaProps: spec.SchemaProps{
+								Description: "BearerTokenFile to read from filesystem to use when authenticating to Alertmanager.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
 					},
 					Required: []string{"namespace", "name", "port"},
 				},

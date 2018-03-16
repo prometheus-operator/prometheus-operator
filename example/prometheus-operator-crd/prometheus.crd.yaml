@@ -544,6 +544,10 @@ spec:
                       Endpoints object containing alertmanager IPs to fire alerts
                       against.
                     properties:
+                      bearerTokenFile:
+                        description: BearerTokenFile to read from filesystem to use
+                          when authenticating to Alertmanager.
+                        type: string
                       name:
                         description: Name of Endpoints object in Namespace.
                         type: string
