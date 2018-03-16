@@ -65,6 +65,7 @@ AlertmanagerEndpoints defines a selection of a single Endpoints object containin
 | port | Port the Alertmanager API is exposed on. | intstr.IntOrString | true |
 | scheme | Scheme to use when firing alerts. | string | false |
 | pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | false |
+| insecureSkipVerify | Disable target certificate validation. | bool | false |
 
 [Back to TOC](#table-of-contents)
 

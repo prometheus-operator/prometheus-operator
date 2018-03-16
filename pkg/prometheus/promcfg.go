@@ -475,6 +475,7 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 	cfg := yaml.MapSlice{
 		{Key: "path_prefix", Value: am.PathPrefix},
 		{Key: "scheme", Value: am.Scheme},
+		{Key: "tls_config", Value: yaml.MapSlice{{Key: "insecure_skip_verify", Value: am.InsecureSkipVerify}}},
 	}
 
 	switch version.Major {

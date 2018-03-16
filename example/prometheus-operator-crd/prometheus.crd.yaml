@@ -544,6 +544,9 @@ spec:
                       Endpoints object containing alertmanager IPs to fire alerts
                       against.
                     properties:
+                      insecureSkipVerify:
+                        description: Disable target certificate validation.
+                        type: boolean
                       name:
                         description: Name of Endpoints object in Namespace.
                         type: string

@@ -128,6 +128,13 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
+						"insecureSkipVerify": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Disable target certificate validation.",
+								Type:        []string{"boolean"},
+								Format:      "",
+							},
+						},
 					},
 					Required: []string{"namespace", "name", "port"},
 				},
