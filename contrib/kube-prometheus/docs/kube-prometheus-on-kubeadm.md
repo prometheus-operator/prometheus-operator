@@ -50,9 +50,12 @@ In addition, we will be using `node-exporter` to monitor the `cAdvisor` service 
 
 Again, we need to expose the `cadvisor` that is installed and managed by the `kubelet` daemon and allow webhook token authentication. To do so, we do the following on all the masters and nodes:
 
-```
-sed -e "/cadvisor-port=0/d" -i /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-sed -e "s/--authorization-mode=Webhook/--authentication-token-webhook=true --authorization-mode=Webhook/"
+```bash
+KUBEADM_SYSTEMD_CONF=/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+sed -e "/cadvisor-port=0/d" -i "$KUBEADM_SYSTEMD_CONF"
+if ! grep -q "authentication-token-webhook=true" "$KUBEADM_SYSTEMD_CONF"; then
+  sed -e "s/--authorization-mode=Webhook/--authentication-token-webhook=true --authorization-mode=Webhook/" -i "$KUBEADM_SYSTEMD_CONF"
+fi
 systemctl daemon-reload
 systemctl restart kubelet
 ```

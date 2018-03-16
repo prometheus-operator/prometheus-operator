@@ -302,6 +302,40 @@ func TestMemoryRequestAdjustedWhenOnlyLimitGiven(t *testing.T) {
 	}
 }
 
+func TestListenLocal(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			ListenLocal: true,
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--web.listen-address=127.0.0.1:9090" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus not listening on loopback when it should.")
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].ReadinessProbe != nil {
+		t.Fatal("Prometheus readiness probe expected to be empty")
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].LivenessProbe != nil {
+		t.Fatal("Prometheus readiness probe expected to be empty")
+	}
+
+	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 0 {
+		t.Fatal("Prometheus container should have 0 ports defined")
+	}
+}
+
 func makeConfigMap() *v1.ConfigMap {
 	res := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
