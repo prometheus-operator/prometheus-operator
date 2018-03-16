@@ -60,6 +60,8 @@ type Operator struct {
 
 	queue workqueue.RateLimitingInterface
 
+	statefulsetErrors prometheus.Counter
+
 	config Config
 }
 
@@ -143,7 +145,17 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 }
 
 func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
-	r.MustRegister(NewAlertmanagerCollector(c.alrtInf.GetStore()))
+	c.statefulsetErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "prometheus_operator",
+		Subsystem: "alertmanager",
+		Name:      "reconcile_errors_total",
+		Help:      "Number of errors that occurred while reconciling the alertmanager statefulset",
+	})
+
+	r.MustRegister(
+		c.statefulsetErrors,
+		NewAlertmanagerCollector(c.alrtInf.GetStore()),
+	)
 }
 
 // Run the controller.
@@ -256,6 +268,7 @@ func (c *Operator) processNextWorkItem() bool {
 		return true
 	}
 
+	c.statefulsetErrors.Inc()
 	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("Sync %q failed", key)))
 	c.queue.AddRateLimited(key)
 
