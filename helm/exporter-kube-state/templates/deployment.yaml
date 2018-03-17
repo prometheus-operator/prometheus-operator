@@ -12,7 +12,6 @@ metadata:
 spec:
   replicas: {{ .Values.replicaCount }}
   revisionHistoryLimit: 10
-  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
