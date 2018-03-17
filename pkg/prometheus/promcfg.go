@@ -22,7 +22,7 @@ import (
 
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
@@ -54,6 +54,28 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	}
 
 	return res
+}
+
+func addTLStoYaml(cfg yaml.MapSlice, tls *v1.TLSConfig) yaml.MapSlice {
+	if tls != nil {
+		tlsConfig := yaml.MapSlice{
+			{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
+		}
+		if tls.CAFile != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
+		}
+		if tls.CertFile != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
+		}
+		if tls.KeyFile != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
+		}
+		if tls.ServerName != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
+		}
+		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
+	}
+	return cfg
 }
 
 func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
@@ -186,24 +208,9 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
-	if ep.TLSConfig != nil {
-		tlsConfig := yaml.MapSlice{
-			{Key: "insecure_skip_verify", Value: ep.TLSConfig.InsecureSkipVerify},
-		}
-		if ep.TLSConfig.CAFile != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: ep.TLSConfig.CAFile})
-		}
-		if ep.TLSConfig.CertFile != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: ep.TLSConfig.CertFile})
-		}
-		if ep.TLSConfig.KeyFile != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: ep.TLSConfig.KeyFile})
-		}
-		if ep.TLSConfig.ServerName != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: ep.TLSConfig.ServerName})
-		}
-		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-	}
+
+	cfg = addTLStoYaml(cfg, ep.TLSConfig)
+
 	if ep.BearerTokenFile != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
 	}
@@ -475,8 +482,9 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 	cfg := yaml.MapSlice{
 		{Key: "path_prefix", Value: am.PathPrefix},
 		{Key: "scheme", Value: am.Scheme},
-		{Key: "tls_config", Value: yaml.MapSlice{{Key: "insecure_skip_verify", Value: am.InsecureSkipVerify}}},
 	}
+
+	cfg = addTLStoYaml(cfg, am.TLSConfig)
 
 	switch version.Major {
 	case 1:
@@ -562,24 +570,7 @@ func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec,
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		if spec.TLSConfig != nil {
-			tlsConfig := yaml.MapSlice{
-				{Key: "insecure_skip_verify", Value: spec.TLSConfig.InsecureSkipVerify},
-			}
-			if spec.TLSConfig.CAFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: spec.TLSConfig.CAFile})
-			}
-			if spec.TLSConfig.CertFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: spec.TLSConfig.CertFile})
-			}
-			if spec.TLSConfig.KeyFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: spec.TLSConfig.KeyFile})
-			}
-			if spec.TLSConfig.ServerName != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: spec.TLSConfig.ServerName})
-			}
-			cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-		}
+		cfg = addTLStoYaml(cfg, spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
@@ -666,24 +657,7 @@ func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpe
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		if spec.TLSConfig != nil {
-			tlsConfig := yaml.MapSlice{
-				{Key: "insecure_skip_verify", Value: spec.TLSConfig.InsecureSkipVerify},
-			}
-			if spec.TLSConfig.CAFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: spec.TLSConfig.CAFile})
-			}
-			if spec.TLSConfig.CertFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: spec.TLSConfig.CertFile})
-			}
-			if spec.TLSConfig.KeyFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: spec.TLSConfig.KeyFile})
-			}
-			if spec.TLSConfig.ServerName != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: spec.TLSConfig.ServerName})
-			}
-			cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-		}
+		cfg = addTLStoYaml(cfg, spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})

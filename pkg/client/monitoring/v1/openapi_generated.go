@@ -128,11 +128,10 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
-						"insecureSkipVerify": {
+						"tlsConfig": {
 							SchemaProps: spec.SchemaProps{
-								Description: "Disable target certificate validation.",
-								Type:        []string{"boolean"},
-								Format:      "",
+								Description: "TLS Config to use for alertmanager connection.",
+								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"),
 							},
 						},
 					},
@@ -140,7 +139,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 				},
 			},
 			Dependencies: []string{
-				"k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerList": {
 			Schema: spec.Schema{
