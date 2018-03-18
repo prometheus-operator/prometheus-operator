@@ -128,12 +128,18 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
+						"tlsConfig": {
+							SchemaProps: spec.SchemaProps{
+								Description: "TLS Config to use for alertmanager connection.",
+								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"),
+							},
+						},
 					},
 					Required: []string{"namespace", "name", "port"},
 				},
 			},
 			Dependencies: []string{
-				"k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerList": {
 			Schema: spec.Schema{

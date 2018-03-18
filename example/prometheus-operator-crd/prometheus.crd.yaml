@@ -557,6 +557,24 @@ spec:
                       scheme:
                         description: Scheme to use when firing alerts.
                         type: string
+                      tlsConfig:
+                        description: TLSConfig specifies TLS configuration parameters.
+                        properties:
+                          caFile:
+                            description: The CA cert to use for the targets.
+                            type: string
+                          certFile:
+                            description: The client cert file for the targets.
+                            type: string
+                          insecureSkipVerify:
+                            description: Disable target certificate validation.
+                            type: boolean
+                          keyFile:
+                            description: The client key file for the targets.
+                            type: string
+                          serverName:
+                            description: Used to verify the hostname for the targets.
+                            type: string
                     required:
                     - namespace
                     - name

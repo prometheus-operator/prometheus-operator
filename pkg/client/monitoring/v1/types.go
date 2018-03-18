@@ -269,6 +269,8 @@ type AlertmanagerEndpoints struct {
 	Scheme string `json:"scheme,omitempty"`
 	// Prefix for the HTTP path alerts are pushed to.
 	PathPrefix string `json:"pathPrefix,omitempty"`
+	// TLS Config to use for alertmanager connection.
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.

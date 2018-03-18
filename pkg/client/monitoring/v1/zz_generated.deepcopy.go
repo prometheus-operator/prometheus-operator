@@ -131,7 +131,9 @@ func (in *AlertingSpec) DeepCopyInto(out *AlertingSpec) {
 	if in.Alertmanagers != nil {
 		in, out := &in.Alertmanagers, &out.Alertmanagers
 		*out = make([]AlertmanagerEndpoints, len(*in))
-		copy(*out, *in)
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }
@@ -178,6 +180,15 @@ func (in *Alertmanager) DeepCopy() *Alertmanager {
 func (in *AlertmanagerEndpoints) DeepCopyInto(out *AlertmanagerEndpoints) {
 	*out = *in
 	out.Port = in.Port
+	if in.TLSConfig != nil {
+		in, out := &in.TLSConfig, &out.TLSConfig
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(TLSConfig)
+			**out = **in
+		}
+	}
 	return
 }
 
