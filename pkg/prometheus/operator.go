@@ -245,10 +245,8 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
 	c.statefulsetErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace: "prometheus_operator",
-		Subsystem: "prometheus",
-		Name:      "reconcile_errors_total",
-		Help:      "Number of errors that occurred while reconciling the alertmanager statefulset",
+		Name: "prometheus_operator_prometheus_reconcile_errors_total",
+		Help: "Number of errors that occurred while reconciling the alertmanager statefulset",
 	})
 
 	r.MustRegister(
