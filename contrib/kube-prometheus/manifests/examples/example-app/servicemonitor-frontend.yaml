@@ -11,3 +11,6 @@ spec:
   endpoints:
   - port: web
     interval: 10s
+  namespaceSelector:
+    matchNames:
+      - default
