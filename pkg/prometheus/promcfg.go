@@ -497,6 +497,10 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 		cfg = append(cfg, k8sSDWithNamespaces([]string{am.Namespace}))
 	}
 
+	if am.BearerTokenFile != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
+	}
+
 	var relabelings []yaml.MapSlice
 
 	relabelings = append(relabelings, yaml.MapSlice{
