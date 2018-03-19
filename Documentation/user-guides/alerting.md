@@ -126,7 +126,7 @@ spec:
       memory: 400Mi
   ruleSelector:
     matchLabels:
-      role: prometheus-rulefiles
+      role: alert-rules
       prometheus: example
 ```
 
@@ -134,7 +134,7 @@ The above configuration specifies a `Prometheus` that finds all of the Alertmana
 
 Prometheus rule files are held in ConfigMaps. Use the label selector field `ruleSelector` in the Prometheus object to define the ConfigMaps from which rule files will be mounted. All top level files that end with the `.rules` extension will be loaded.
 
-The best practice is to label the `ConfigMap`s containing rule files with `role: prometheus-rulefiles` as well as the name of the Prometheus object, `prometheus: example` in this case.
+The best practice is to label the `ConfigMap`s containing rule files with `role: alert-rules` as well as the name of the Prometheus object, `prometheus: example` in this case.
 
 [embedmd]:# (../../example/user-guides/alerting/prometheus-example-rules.yaml)
 ```yaml
@@ -143,7 +143,7 @@ apiVersion: v1
 metadata:
   name: prometheus-example-rules
   labels:
-    role: prometheus-rulefiles
+    role: alert-rules
     prometheus: example
 data:
   example.rules.yaml: |+
