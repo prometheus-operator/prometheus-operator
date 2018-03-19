@@ -364,7 +364,7 @@ spec:
     - {key: k8s-app, operator: Exists}
   ruleSelector:
     matchLabels:
-      role: prometheus-rulefiles
+      role: alert-rules
       prometheus: k8s
   resources:
     requests:
