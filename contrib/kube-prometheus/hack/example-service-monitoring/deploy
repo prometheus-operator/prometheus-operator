@@ -1,18 +1,3 @@
 #!/usr/bin/env bash
 
-if [ -z "${KUBECONFIG}" ]; then
-    KUBECONFIG=~/.kube/config
-fi
-
-if [ -z "${NAMESPACE}" ]; then
-    NAMESPACE=default
-fi
-
-kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/prometheus-frontend-service-account.yaml
-kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/prometheus-frontend-role.yaml
-kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/prometheus-frontend-role-binding.yaml
-kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/prometheus-frontend-svc.yaml
-kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/example-app.yaml
-kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/prometheus-frontend.yaml
-kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" apply -f manifests/examples/example-app/servicemonitor-frontend.yaml
-
+kubectl apply -f manifests/examples/example-app
