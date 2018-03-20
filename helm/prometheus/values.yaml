@@ -145,7 +145,7 @@ rules:
 ## object, which shall be mounted into the Prometheus Pods.
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
 ##
-secrets: {}
+secrets: []
 
 service:
   ## Maintains session affinity.  Should be set to ClientIP for HA setup
