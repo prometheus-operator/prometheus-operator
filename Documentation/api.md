@@ -65,6 +65,8 @@ AlertmanagerEndpoints defines a selection of a single Endpoints object containin
 | port | Port the Alertmanager API is exposed on. | intstr.IntOrString | true |
 | scheme | Scheme to use when firing alerts. | string | false |
 | pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | false |
+| tlsConfig | TLS Config to use for alertmanager connection. | *[TLSConfig](#tlsconfig) | false |
+| bearerTokenFile | BearerTokenFile to read from filesystem to use when authenticating to Alertmanager. | string | false |
 
 [Back to TOC](#table-of-contents)
 
