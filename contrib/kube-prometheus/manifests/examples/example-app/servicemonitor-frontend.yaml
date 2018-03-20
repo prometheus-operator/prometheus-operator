@@ -2,6 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: frontend
+  namespace: default
   labels:
     tier: frontend
 spec:
