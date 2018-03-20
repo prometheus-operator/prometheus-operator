@@ -213,7 +213,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 						},
 						"baseImage": {
 							SchemaProps: spec.SchemaProps{
-								Description: "Base image that is used to deploy pods.",
+								Description: "Base image that is used to deploy pods, without tag.",
 								Type:        []string{"string"},
 								Format:      "",
 							},

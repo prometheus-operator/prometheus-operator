@@ -168,29 +168,30 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 
 	version, err := semver.Parse(versionStr)
 	if err != nil {
-		return nil, errors.Wrap(err, "parse version")
+		return nil, errors.Wrap(err, "failed to parse alertmanager version")
 	}
 
 	amArgs := []string{
-		fmt.Sprintf("-config.file=%s", alertmanagerConfFile),
-		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
-		fmt.Sprintf("-storage.path=%s", alertmanagerStorageDir),
+		fmt.Sprintf("--config.file=%s", alertmanagerConfFile),
+		fmt.Sprintf("--cluster.listen-address=:%d", 6783),
+		fmt.Sprintf("--storage.path=%s", alertmanagerStorageDir),
 	}
 
 	if a.Spec.ListenLocal {
-		amArgs = append(amArgs, "-web.listen-address=127.0.0.1:9093")
+		amArgs = append(amArgs, "--web.listen-address=127.0.0.1:9093")
 	} else {
-		amArgs = append(amArgs, "-web.listen-address=:9093")
+		amArgs = append(amArgs, "--web.listen-address=:9093")
 	}
 
 	if a.Spec.ExternalURL != "" {
-		amArgs = append(amArgs, "-web.external-url="+a.Spec.ExternalURL)
+		amArgs = append(amArgs, "--web.external-url="+a.Spec.ExternalURL)
 	}
 
 	webRoutePrefix := "/"
 	if a.Spec.RoutePrefix != "" {
 		webRoutePrefix = a.Spec.RoutePrefix
 	}
+	amArgs = append(amArgs, fmt.Sprintf("--web.route-prefix=%v", webRoutePrefix))
 
 	localReloadURL := &url.URL{
 		Scheme: "http",
@@ -241,7 +242,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 	podLabels["alertmanager"] = a.Name
 
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
-		amArgs = append(amArgs, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s.%s.svc:6783", prefixedName(a.Name), i, governingServiceName, a.Namespace))
 	}
 
 	ports := []v1.ContainerPort{
@@ -275,16 +276,31 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		securityContext = a.Spec.SecurityContext
 	}
 
+	// Adjust Alertmanager command line args to specified AM version
 	switch version.Major {
 	case 0:
-		if version.Minor >= 7 {
-			amArgs = append(amArgs, "-web.route-prefix="+webRoutePrefix)
-		}
-		if version.Minor >= 13 {
+		if version.Minor < 15 {
 			for i := range amArgs {
-				// starting with v0.13.0 of Alertmanager all flags are with double dashes.
-				amArgs[i] = "-" + amArgs[i]
+				// below Alertmanager v0.15.0 peer address port specification is not necessary
+				if strings.Contains(amArgs[i], "--cluster.peer") {
+					amArgs[i] = strings.TrimSuffix(amArgs[i], ":6783")
+				}
+
+				// below Alertmanager v0.15.0 high availability flags are prefixed with 'mesh' instead of 'cluster'
+				amArgs[i] = strings.Replace(amArgs[i], "--cluster.", "--mesh.", 1)
 			}
+		}
+		if version.Minor < 13 {
+			for i := range amArgs {
+				// below Alertmanager v0.13.0 all flags are with single dash.
+				amArgs[i] = strings.Replace(amArgs[i], "--", "-", 1)
+			}
+		}
+		if version.Minor < 7 {
+			// below Alertmanager v0.7.0 the flag 'web.route-prefix' does not exist
+			amArgs = filter(amArgs, func(s string) bool {
+				return !strings.Contains(s, "web.route-prefix")
+			})
 		}
 	default:
 		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
@@ -384,4 +400,14 @@ func subPathForStorage(s *monitoringv1.StorageSpec) string {
 	}
 
 	return "alertmanager-db"
+}
+
+func filter(strings []string, f func(string) bool) []string {
+	filteredStrings := make([]string, 0)
+	for _, s := range strings {
+		if f(s) {
+			filteredStrings = append(filteredStrings, s)
+		}
+	}
+	return filteredStrings
 }

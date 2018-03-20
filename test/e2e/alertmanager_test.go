@@ -130,28 +130,42 @@ func TestExposingAlertmanagerWithKubernetesAPI(t *testing.T) {
 func TestMeshInitialization(t *testing.T) {
 	t.Parallel()
 
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	// Starting with Alertmanager v0.15.0 hashicorp/memberlist is used for HA.
+	// Make sure both memberlist as well as mesh (< 0.15.0) work
+	amVersions := []string{"v0.14.0", "v0.15.0-rc.0"}
 
-	amClusterSize := 3
-	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
-	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
+	for _, v := range amVersions {
+		version := v
+		t.Run(
+			fmt.Sprintf("amVersion%v", strings.Replace(version, ".", "-", -1)),
+			func(t *testing.T) {
+				t.Parallel()
+				ctx := framework.NewTestCtx(t)
+				defer ctx.Cleanup(t)
+				ns := ctx.CreateNamespace(t, framework.KubeClient)
+				ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
-		t.Fatal(err)
-	}
+				amClusterSize := 3
+				alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
+				alertmanager.Spec.Version = version
+				alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
-	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
-		t.Fatal(err)
-	}
+				if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+					t.Fatal(err)
+				}
 
-	for i := 0; i < amClusterSize; i++ {
-		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitializedMesh(ns, name, amClusterSize); err != nil {
-			t.Fatal(err)
-		}
+				if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
+					t.Fatal(err)
+				}
+
+				for i := 0; i < amClusterSize; i++ {
+					name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
+					if err := framework.WaitForAlertmanagerInitializedMesh(ns, name, amClusterSize); err != nil {
+						t.Fatal(err)
+					}
+				}
+			},
+		)
 	}
 }
 
