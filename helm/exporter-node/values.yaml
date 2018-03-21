@@ -17,6 +17,10 @@ resources:
     cpu: 100m
     memory: 30Mi
 
+extraVolumes: []
+extraVolumeMounts: []
+extraArgs: []
+ 
 ## Tolerations for use with node taints
 ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 ##

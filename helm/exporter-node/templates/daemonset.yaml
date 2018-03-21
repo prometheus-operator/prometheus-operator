@@ -21,14 +21,17 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           args:
-          {{ if lt .Values.image.tag "v0.15.0" }}
+          {{- if lt .Values.image.tag "v0.15.0" }}
             - --collector.procfs=/host/proc
             - --collector.sysfs=/host/sys
-          {{ else }}
+          {{- else }}
             - --path.procfs=/host/proc
             - --path.sysfs=/host/sys
-          {{ end }}
+          {{- end }}
             - --web.listen-address=0.0.0.0:{{ .Values.service.containerPort }}
+          {{- if .Values.extraVolumeMounts }}
+{{ toYaml .Values.extraArgs | indent 12 }}
+          {{- end }}
           ports:
             - name: metrics
               containerPort: {{ .Values.service.containerPort }}
@@ -42,6 +45,9 @@ spec:
             - name: sys
               mountPath: /host/sys
               readOnly: true
+{{- if .Values.extraVolumeMounts }}
+{{ toYaml .Values.extraVolumeMounts | indent 12 }}
+{{- end }}
     {{- if .Values.tolerations }}
       tolerations:
 {{ toYaml .Values.tolerations | indent 8 }}
@@ -55,3 +61,6 @@ spec:
         - name: sys
           hostPath:
             path: /sys
+{{- if .Values.extraVolumes }}
+{{ toYaml .Values.extraVolumes | indent 8 }}
+{{- end}}
