@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	fsnotify "gopkg.in/fsnotify.v1"
+	fsnotify "github.com/fsnotify/fsnotify"
 
 	"github.com/cenkalti/backoff"
 	"github.com/ericchiang/k8s"

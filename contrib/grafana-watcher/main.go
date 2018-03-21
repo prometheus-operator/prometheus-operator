@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	fsnotify "gopkg.in/fsnotify.v1"
+	fsnotify "github.com/fsnotify/fsnotify"
 
 	"github.com/coreos/prometheus-operator/contrib/grafana-watcher/grafana"
 	"github.com/coreos/prometheus-operator/contrib/grafana-watcher/updater"
