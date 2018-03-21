@@ -17,5 +17,5 @@ spec:
       memory: 400Mi
   ruleSelector:
     matchLabels:
-      role: prometheus-rulefiles
+      role: alert-rules
       prometheus: example

@@ -38,8 +38,9 @@ Due to the use of CustomResourceDefinitions Kubernetes >= v1.7.0 is required.
 
 ## Prometheus
 
-The versions of Prometheus compatible to be run with the Prometheus Operator are:
-`)
+The versions of Prometheus compatible to be run with the Prometheus Operator are:`)
+	fmt.Println("")
+
 	for _, v := range prometheus.CompatibilityMatrix {
 		fmt.Printf("* %s\n", v)
 	}

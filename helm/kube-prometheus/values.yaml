@@ -40,7 +40,7 @@ alertmanager:
   ##
   image:
     repository: quay.io/prometheus/alertmanager
-    tag: v0.9.1
+    tag: v0.14.0
 
   ingress:
     ## If true, Alertmanager Ingress will be created
@@ -88,6 +88,12 @@ alertmanager:
   resources: {}
     # requests:
     #   memory: 400Mi
+
+  ## List of Secrets in the same namespace as the Prometheus
+  ## object, which shall be mounted into the Prometheus Pods.
+  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+  ##
+  secrets: []
 
   service:
     ## Annotations to be added to the Service
@@ -160,7 +166,7 @@ prometheus:
   ##
   image:
     repository: quay.io/prometheus/prometheus
-    tag: v2.0.0
+    tag: v2.2.1
 
   ingress:
     ## If true, Prometheus Ingress will be created

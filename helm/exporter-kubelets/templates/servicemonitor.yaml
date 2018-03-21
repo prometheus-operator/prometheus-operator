@@ -9,7 +9,7 @@ metadata:
     prometheus: {{ .Release.Name }}
   name: {{ template "exporter-kubelets.fullname" . }}
 spec:
-  jobLabel: {{ template "exporter-kubelets.fullname" . }}
+  jobLabel: component
   selector:
     matchLabels:
       k8s-app: kubelet

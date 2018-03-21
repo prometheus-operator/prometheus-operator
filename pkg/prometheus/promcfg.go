@@ -22,7 +22,7 @@ import (
 
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
@@ -54,6 +54,28 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	}
 
 	return res
+}
+
+func addTLStoYaml(cfg yaml.MapSlice, tls *v1.TLSConfig) yaml.MapSlice {
+	if tls != nil {
+		tlsConfig := yaml.MapSlice{
+			{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
+		}
+		if tls.CAFile != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
+		}
+		if tls.CertFile != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
+		}
+		if tls.KeyFile != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
+		}
+		if tls.ServerName != "" {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
+		}
+		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
+	}
+	return cfg
 }
 
 func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
@@ -116,8 +138,10 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 		}
 	}
 	var alertmanagerConfigs []yaml.MapSlice
-	for _, am := range p.Spec.Alerting.Alertmanagers {
-		alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(version, am))
+	if p.Spec.Alerting != nil {
+		for _, am := range p.Spec.Alerting.Alertmanagers {
+			alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(version, am))
+		}
 	}
 
 	cfg = append(cfg, yaml.MapItem{
@@ -136,11 +160,11 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 	})
 
 	if len(p.Spec.RemoteWrite) > 0 && version.Major >= 2 {
-		cfg = append(cfg, generateRemoteWriteConfig(version, p.Spec.RemoteWrite))
+		cfg = append(cfg, generateRemoteWriteConfig(version, p.Spec.RemoteWrite, basicAuthSecrets))
 	}
 
 	if len(p.Spec.RemoteRead) > 0 && version.Major >= 2 {
-		cfg = append(cfg, generateRemoteReadConfig(version, p.Spec.RemoteRead))
+		cfg = append(cfg, generateRemoteReadConfig(version, p.Spec.RemoteRead, basicAuthSecrets))
 	}
 
 	return yaml.Marshal(cfg)
@@ -184,30 +208,15 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
-	if ep.TLSConfig != nil {
-		tlsConfig := yaml.MapSlice{
-			{Key: "insecure_skip_verify", Value: ep.TLSConfig.InsecureSkipVerify},
-		}
-		if ep.TLSConfig.CAFile != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: ep.TLSConfig.CAFile})
-		}
-		if ep.TLSConfig.CertFile != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: ep.TLSConfig.CertFile})
-		}
-		if ep.TLSConfig.KeyFile != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: ep.TLSConfig.KeyFile})
-		}
-		if ep.TLSConfig.ServerName != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: ep.TLSConfig.ServerName})
-		}
-		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-	}
+
+	cfg = addTLStoYaml(cfg, ep.TLSConfig)
+
 	if ep.BearerTokenFile != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
 	}
 
 	if ep.BasicAuth != nil {
-		if s, ok := basicAuthSecrets[fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)]; ok {
+		if s, ok := basicAuthSecrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{
 				Key: "basic_auth", Value: yaml.MapSlice{
 					{Key: "username", Value: s.username},
@@ -475,6 +484,8 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 		{Key: "scheme", Value: am.Scheme},
 	}
 
+	cfg = addTLStoYaml(cfg, am.TLSConfig)
+
 	switch version.Major {
 	case 1:
 		if version.Minor < 7 {
@@ -484,6 +495,10 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 		}
 	case 2:
 		cfg = append(cfg, k8sSDWithNamespaces([]string{am.Namespace}))
+	}
+
+	if am.BearerTokenFile != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 	}
 
 	var relabelings []yaml.MapSlice
@@ -521,11 +536,11 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 	return cfg
 }
 
-func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec) yaml.MapItem {
+func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
-	for _, spec := range specs {
+	for i, spec := range specs {
 		//defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
@@ -536,43 +551,37 @@ func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec)
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
 
+		if len(spec.RequiredMatchers) > 0 {
+			cfg = append(cfg, yaml.MapItem{Key: "required_matchers", Value: stringMapToMapSlice(spec.RequiredMatchers)})
+		}
+
+		if spec.ReadRecent {
+			cfg = append(cfg, yaml.MapItem{Key: "read_recent", Value: spec.ReadRecent})
+		}
+
 		if spec.BasicAuth != nil {
-			cfg = append(cfg, yaml.MapItem{
-				Key: "basic_auth", Value: yaml.MapSlice{
-					{Key: "username", Value: spec.BasicAuth.Username},
-					{Key: "password", Value: spec.BasicAuth.Password},
-				},
-			})
+			if s, ok := basicAuthSecrets[fmt.Sprintf("remoteRead/%d", i)]; ok {
+				cfg = append(cfg, yaml.MapItem{
+					Key: "basic_auth", Value: yaml.MapSlice{
+						{Key: "username", Value: s.username},
+						{Key: "password", Value: s.password},
+					},
+				})
+			}
 		}
 
 		if spec.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		if spec.TLSConfig != nil {
-			tlsConfig := yaml.MapSlice{
-				{Key: "insecure_skip_verify", Value: spec.TLSConfig.InsecureSkipVerify},
-			}
-			if spec.TLSConfig.CAFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: spec.TLSConfig.CAFile})
-			}
-			if spec.TLSConfig.CertFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: spec.TLSConfig.CertFile})
-			}
-			if spec.TLSConfig.KeyFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: spec.TLSConfig.KeyFile})
-			}
-			if spec.TLSConfig.ServerName != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: spec.TLSConfig.ServerName})
-			}
-			cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-		}
+		cfg = addTLStoYaml(cfg, spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
 		}
 
 		cfgs = append(cfgs, cfg)
+
 	}
 
 	return yaml.MapItem{
@@ -581,11 +590,11 @@ func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec)
 	}
 }
 
-func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpec) yaml.MapItem {
+func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpec, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
-	for _, spec := range specs {
+	for i, spec := range specs {
 		//defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
@@ -634,12 +643,14 @@ func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpe
 		}
 
 		if spec.BasicAuth != nil {
-			cfg = append(cfg, yaml.MapItem{
-				Key: "basic_auth", Value: yaml.MapSlice{
-					{Key: "username", Value: spec.BasicAuth.Username},
-					{Key: "password", Value: spec.BasicAuth.Password},
-				},
-			})
+			if s, ok := basicAuthSecrets[fmt.Sprintf("remoteWrite/%d", i)]; ok {
+				cfg = append(cfg, yaml.MapItem{
+					Key: "basic_auth", Value: yaml.MapSlice{
+						{Key: "username", Value: s.username},
+						{Key: "password", Value: s.password},
+					},
+				})
+			}
 		}
 
 		if spec.BearerToken != "" {
@@ -650,24 +661,7 @@ func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpe
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		if spec.TLSConfig != nil {
-			tlsConfig := yaml.MapSlice{
-				{Key: "insecure_skip_verify", Value: spec.TLSConfig.InsecureSkipVerify},
-			}
-			if spec.TLSConfig.CAFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: spec.TLSConfig.CAFile})
-			}
-			if spec.TLSConfig.CertFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: spec.TLSConfig.CertFile})
-			}
-			if spec.TLSConfig.KeyFile != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: spec.TLSConfig.KeyFile})
-			}
-			if spec.TLSConfig.ServerName != "" {
-				tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: spec.TLSConfig.ServerName})
-			}
-			cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-		}
+		cfg = addTLStoYaml(cfg, spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})

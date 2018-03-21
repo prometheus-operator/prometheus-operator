@@ -54,3 +54,7 @@ spec:
               app: {{ template "alertmanager.name" . }}
               alertmanager: {{ .Release.Name }}
 {{- end }}
+{{- if .Values.tolerations }}
+  tolerations:
+{{ toYaml .Values.tolerations | indent 4 }}
+{{- end }}

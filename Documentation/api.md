@@ -65,6 +65,8 @@ AlertmanagerEndpoints defines a selection of a single Endpoints object containin
 | port | Port the Alertmanager API is exposed on. | intstr.IntOrString | true |
 | scheme | Scheme to use when firing alerts. | string | false |
 | pathPrefix | Prefix for the HTTP path alerts are pushed to. | string | false |
+| tlsConfig | TLS Config to use for alertmanager connection. | *[TLSConfig](#tlsconfig) | false |
+| bearerTokenFile | BearerTokenFile to read from filesystem to use when authenticating to Alertmanager. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -100,6 +102,8 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
 | securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000. | *v1.PodSecurityContext | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
+| listenLocal | ListenLocal makes the Alertmanager server listen on loopback, so that it does not bind against the Pod IP. Note this is only for the Alertmanager UI, not the gossip communication. | bool | false |
+| containers | Containers allows injecting additional containers. This is meant to allow adding an authentication proxy to an Alertmanager pod. | []v1.Container | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -205,7 +209,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
 | ruleSelector | A selector to select which ConfigMaps to mount for loading rule files from. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
-| alerting | Define details regarding alerting. | [AlertingSpec](#alertingspec) | false |
+| alerting | Define details regarding alerting. | *[AlertingSpec](#alertingspec) | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
@@ -215,6 +219,8 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | remoteWrite | If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteWriteSpec](#remotewritespec) | false |
 | remoteRead | If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteReadSpec](#remotereadspec) | false |
 | securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and default PodSecurityContext for other versions. | *v1.PodSecurityContext | false |
+| listenLocal | ListenLocal makes the Prometheus server listen on loopback, so that it does not bind against the Pod IP. | bool | false |
+| containers | Containers allows injecting additional containers. This is meant to allow adding an authentication proxy to a Prometheus pod. | []v1.Container | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -234,7 +240,7 @@ Most recent observed status of the Prometheus cluster. Read-only. Not included w
 
 ## RelabelConfig
 
-RelabelConfig allows dynamic rewriting of the label set.
+RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -255,12 +261,14 @@ RemoteReadSpec defines the remote_read configuration for prometheus.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | url | The URL of the endpoint to send samples to. | string | true |
+| requiredMatchers | An optional list of equality matchers which have to be present in a selector to query the remote read endpoint. | map[string]string | false |
 | remoteTimeout | Timeout for requests to the remote write endpoint. | string | false |
+| readRecent | Whether reads should be made for queries for time ranges that the local storage should have complete data for. | bool | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
 | bearerToken | bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
-| proxy_url | Optional ProxyURL | string | false |
+| proxyUrl | Optional ProxyURL | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -277,7 +285,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | bearerToken | File to read bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
-| proxy_url | Optional ProxyURL | string | false |
+| proxyUrl | Optional ProxyURL | string | false |
 
 [Back to TOC](#table-of-contents)
 

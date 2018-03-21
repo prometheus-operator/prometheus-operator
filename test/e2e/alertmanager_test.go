@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1beta2"
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -241,12 +241,17 @@ func TestAlertmanagerZeroDowntimeRollingDeployment(t *testing.T) {
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	whReplicas := int32(1)
-	whdpl := &v1beta1.Deployment{
+	whdpl := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "alertmanager-webhook",
 		},
-		Spec: v1beta1.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Replicas: &whReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": "alertmanager-webhook",
+				},
+			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{

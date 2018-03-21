@@ -58,6 +58,8 @@ Parameter | Description | Default
 `podAntiAffinity` | If "soft", the scheduler attempts to place Prometheus replicas on different nodes. If "hard" the scheduler is required to place them on different nodes. If "" (empty) then no anti-affinity rules will be configured. | `soft`
 `prometheusRules` | Prometheus rules | `[templates/prometheus.rules.yaml](templates/prometheus.rules.yaml)`
 `replicaCount` | Number of Prometheus replicas desired | `1`
+`remoteRead` | The remote_read spec configuration for Prometheus | `{}`
+`remoteWrite` | The remote_read spec configuration for Prometheus | `{}`
 `resources` | Pod resource requests & limits | `{}`
 `retention` | How long to retain metrics | `24h`
 `routePrefix` | Prefix used to register routes, overriding externalUrl route | `/`

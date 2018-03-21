@@ -10,7 +10,7 @@ global:
 ##
 prometheusConfigReloader:
   repository: quay.io/coreos/prometheus-config-reloader
-  tag: v0.0.2
+  tag: v0.0.3
 
 ## Configmap-reload image to use for reloading configmaps
 ##
@@ -22,7 +22,7 @@ configmapReload:
 ##
 image:
   repository: quay.io/coreos/prometheus-operator
-  tag: v0.16.1
+  tag: v0.17.0
   pullPolicy: IfNotPresent
 
 ## If enabled, prometheus-operator will create a service for scraping kubelets
@@ -35,6 +35,11 @@ kubeletService:
 ## Node labels for prometheus-operator pod assignment
 ##
 nodeSelector: {}
+
+## Tolerations for use with node taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: {}
 
 ## If true, create & use RBAC resources
 ##

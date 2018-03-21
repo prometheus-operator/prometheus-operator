@@ -333,7 +333,7 @@ func main() {
 
 		// Start http server.
 		if *verbose {
-			log.Println("starting http server")
+			log.Println("starting HTTP server")
 		}
 		if err := http.ListenAndServe(*httpAddr, handler); err != nil {
 			log.Fatalf("ListenAndServe %s: %v", *httpAddr, err)

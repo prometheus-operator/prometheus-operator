@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   name: prometheus-example-rules
   labels:
-    role: prometheus-rulefiles
+    role: alert-rules
     prometheus: example
 data:
   example.rules.yaml: |+

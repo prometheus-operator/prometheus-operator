@@ -1,9 +1,9 @@
-local k = import "ksonnet.beta.2/k.libsonnet";
-local deployment = k.extensions.v1beta1.deployment;
+local k = import "ksonnet.beta.3/k.libsonnet";
+local deployment = k.apps.v1beta2.deployment;
 
 local po = import "./prometheus-operator.jsonnet";
 
 local operatorDeployment = po +
-  deployment.mixin.spec.template.spec.serviceAccountName("prometheus-operator");
+  deployment.mixin.spec.template.spec.withServiceAccountName("prometheus-operator");
 
 operatorDeployment

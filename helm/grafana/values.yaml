@@ -1,5 +1,14 @@
 nodeSelector: {}
 
+## Tolerations for use with node taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: {}
+  #  - key: "key"
+  #    operator: "Equal"
+  #    value: "value"
+  #    effect: "NoSchedule"
+
 annotations: {}
 
 ## Pass extra environment variables to the Grafana container.
@@ -51,7 +60,7 @@ service:
 ##
 image:
   repository: grafana/grafana
-  tag: 4.6.3
+  tag: 5.0.0
 
 grafanaWatcher:
   repository: quay.io/coreos/grafana-watcher
@@ -96,6 +105,12 @@ ingress:
 dataSource: {}
 
 serverDashboardFiles: {}
+
+## Keep the Dashboards that are defined in this HELM chart
+keepOriginalDashboards: true
+
+## Keep the Datasources that are defined in this HELM chart
+keepOriginalDatasources: true
 
 auth:
   anonymous:
