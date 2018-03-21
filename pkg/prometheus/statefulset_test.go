@@ -159,14 +159,9 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 						{
 							VolumeMounts: []v1.VolumeMount{
 								{
-									Name:      "config",
+									Name:      "config-out",
 									ReadOnly:  true,
-									MountPath: "/etc/prometheus/config",
-									SubPath:   "",
-								}, {
-									Name:      "rules",
-									ReadOnly:  true,
-									MountPath: "/etc/prometheus/rules",
+									MountPath: "/etc/prometheus/config_out",
 									SubPath:   "",
 								}, {
 									Name:      "prometheus--db",
@@ -192,7 +187,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							},
 						},
 						{
-							Name: "rules",
+							Name: "config-out",
 							VolumeSource: v1.VolumeSource{
 								EmptyDir: &v1.EmptyDirVolumeSource{},
 							},
@@ -227,8 +222,15 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 
 	require.NoError(t, err)
 
-	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) || !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts) {
-		t.Fatal("Volumes mounted in a Pod are not created correctly initially.")
+	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) {
+		t.Fatalf("Unexpected volumes: want %v, got %v",
+			expected.Spec.Template.Spec.Volumes,
+			sset.Spec.Template.Spec.Volumes)
+	}
+	if !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts) {
+		t.Fatalf("Unexpected volume mounts: want %v, got %v",
+			expected.Spec.Template.Spec.Containers[0].VolumeMounts,
+			sset.Spec.Template.Spec.Containers[0].VolumeMounts)
 	}
 }
 
