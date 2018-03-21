@@ -15,7 +15,7 @@ jobs:
   # Build Prometheus config reloader
   - script: cd contrib/prometheus-config-reloader && make build
   # Ensure vendor folder matches vendor.json
-  - script: ./scripts/govendor-ensure.sh
+  - script: ./scripts/golang-dep-ensure.sh
   # Unit tests
   - script: make test
   - stage: E2e
