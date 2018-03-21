@@ -11,7 +11,7 @@ global:
 kube_state_metrics:
   image:
     repository: gcr.io/google_containers/kube-state-metrics
-    tag: v1.1.0
+    tag: v1.2.0
     pullPolicy: IfNotPresent
   service:
     name: kube-state-metrics
@@ -19,9 +19,13 @@ kube_state_metrics:
     externalPort: 80
     internalPort: 8080
 addon_resizer:
+  memory: 130Mi
+  extra_memory: 2Mi
+  cpu: 100m
+  extra_cpu: 1m
   image:
     repository: gcr.io/google_containers/addon-resizer
-    tag: "1.0"
+    tag: "1.7"
     pullPolicy: IfNotPresent
   resources:
     limits:
@@ -33,3 +37,12 @@ addon_resizer:
 
 # default rules are in templates/kube-state-metrics.rules.yaml
 # prometheusRules: {}
+
+## Tolerations for use with node taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: {}
+  #  - key: "key"
+  #    operator: "Equal"
+  #    value: "value"
+  #    effect: "NoSchedule"

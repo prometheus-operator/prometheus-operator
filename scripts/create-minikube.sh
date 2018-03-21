@@ -8,8 +8,8 @@ set -u
 # print each command before executing it
 set -x
 
-export MINIKUBE_VERSION=v0.24.1
-export KUBERNETES_VERSION=v1.8.0
+export MINIKUBE_VERSION=v0.25.0
+export KUBERNETES_VERSION=v1.9.0
 
 curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && \
     chmod +x kubectl &&  \

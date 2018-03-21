@@ -42,7 +42,7 @@ spec:
 {{- end }} 
         volumeMounts:
         - name: grafana-storage
-          mountPath: /var/grafana-storage
+          mountPath: /var/lib/grafana
         ports:
         - name: web
           containerPort: 3000
@@ -90,6 +90,10 @@ spec:
     {{- if .Values.nodeSelector }}
       nodeSelector:
     {{ toYaml .Values.nodeSelector | indent 4 }}
+    {{- end }}
+    {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
     {{- end }}
       volumes:
         - name: grafana-storage

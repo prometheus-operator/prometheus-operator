@@ -90,7 +90,7 @@ Parameter | Description | Default
 `kubeletService.name` | The name of the kubelet service to be created | `kubelet`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `prometheusConfigReloader.repository` | prometheus-config-reloader image | `quay.io/coreos/prometheus-config-reloader`
-`prometheusConfigReloader.tag` | prometheus-config-reloader tag | `v0.0.2`
+`prometheusConfigReloader.tag` | prometheus-config-reloader tag | `v0.0.3`
 `rbacEnable` | If true, create & use RBAC resources | `true`
 `resources` | Pod resource requests & limits | `{}`
 

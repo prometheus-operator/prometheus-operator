@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"testing"
 
+	yaml "gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,6 +47,106 @@ func TestConfigGeneration(t *testing.T) {
 	}
 }
 
+func TestNamespaceSetCorrectly(t *testing.T) {
+	sm := &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testservicemonitor1",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			NamespaceSelector: monitoringv1.NamespaceSelector{
+				MatchNames: []string{"test"},
+			},
+		},
+	}
+
+	c := k8sSDFromServiceMonitor(sm)
+	s, err := yaml.Marshal(yaml.MapSlice{c})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `kubernetes_sd_configs:
+- role: endpoints
+  namespaces:
+    names:
+    - test
+`
+
+	result := string(s)
+
+	if expected != result {
+		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	}
+}
+
+func TestAlertmanagerBearerToken(t *testing.T) {
+	cfg, err := generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Name:            "alertmanager-main",
+							Namespace:       "default",
+							Port:            intstr.FromString("web"),
+							BearerTokenFile: "/some/file/on/disk",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		0,
+		map[string]BasicAuthCredentials{},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// If this becomes an endless sink of maintenance, then we should just
+	// change this to check that just the `bearer_token_file` is set with
+	// something like json-path.
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels: {}
+scrape_configs: []
+alerting:
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    bearer_token_file: /some/file/on/disk
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: alertmanager-main
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web
+`
+
+	result := string(cfg)
+
+	if expected != result {
+		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	}
+}
+
 func generateTestConfig(version string) ([]byte, error) {
 	replicas := int32(1)
 	return generateConfig(
@@ -55,7 +156,7 @@ func generateTestConfig(version string) ([]byte, error) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				Alerting: monitoringv1.AlertingSpec{
+				Alerting: &monitoringv1.AlertingSpec{
 					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 						{
 							Name:      "alertmanager-main",

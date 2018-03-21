@@ -2314,7 +2314,12 @@ function SocketTransport() {
 	var id = 0;
 	var outputs = {};
 	var started = {};
-	var websocket = new WebSocket('ws://' + window.location.host + '/socket');
+	var websocket;
+	if (window.location.protocol == "http:") {
+		websocket = new WebSocket('ws://' + window.location.host + '/socket');
+	} else if (window.location.protocol == "https:") {
+		websocket = new WebSocket('wss://' + window.location.host + '/socket');
+	}
 
 	websocket.onclose = function() {
 		console.log('websocket connection closed');
@@ -2915,11 +2920,7 @@ pre .ln {
 	-ms-user-select: none;
 	user-select: none;
 }
-.ln::before {
-	/* Inserting the line numbers as a ::before pseudo-element avoids making
-	 * them selectable; it's the trick Github uses as well. */
-	content: attr(data-content);
-}
+
 body {
 	color: #222;
 }

@@ -15,6 +15,7 @@ items:
         app: {{ $app }}
         chart: {{ $chartName }}-{{ $chartVersion }}
         heritage: {{ $releaseService }}
+        prometheus: {{ $releaseName }}
         release: {{ $releaseName }}
         {{- if .serviceMonitorSelectorLabels }}
 {{ toYaml .serviceMonitorSelectorLabels | indent 8 }}

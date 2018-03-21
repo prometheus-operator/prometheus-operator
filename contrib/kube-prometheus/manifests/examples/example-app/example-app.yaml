@@ -4,6 +4,7 @@ metadata:
   name: example-app
   labels:
     tier: frontend
+  namespace: default
 spec: 
   selector: 
     app: example-app 
@@ -17,6 +18,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: example-app
+  namespace: default
 spec:
   replicas: 4
   template:

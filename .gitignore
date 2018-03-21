@@ -9,3 +9,4 @@ requirements.lock
 __pycache__
 .env/
 .history/
+.vscode/

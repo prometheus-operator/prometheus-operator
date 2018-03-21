@@ -20,7 +20,7 @@ import (
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/stretchr/testify/require"
-	"k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1beta2"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -151,8 +151,8 @@ func TestStatefulSetEmptyDir(t *testing.T) {
 }
 
 func TestStatefulSetVolumeInitial(t *testing.T) {
-	expected := &v1beta1.StatefulSet{
-		Spec: v1beta1.StatefulSetSpec{
+	expected := &appsv1.StatefulSet{
+		Spec: appsv1.StatefulSetSpec{
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
@@ -171,7 +171,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 								}, {
 									Name:      "prometheus--db",
 									ReadOnly:  false,
-									MountPath: "/var/prometheus/data",
+									MountPath: "/prometheus",
 									SubPath:   "",
 								}, {
 									Name:      "secret-test-secret1",
@@ -269,10 +269,10 @@ func TestMemoryRequestNotAdjustedWhenLimitLarger2Gi(t *testing.T) {
 	resourceLimit := sset.Spec.Template.Spec.Containers[0].Resources.Limits[v1.ResourceMemory]
 	limitString := resourceLimit.String()
 	if requestString != "2Gi" {
-		t.Fatalf("Resource request is expected to be 1Gi, instead found %s", resourceRequest)
+		t.Fatalf("Resource request is expected to be 1Gi, instead found %s", requestString)
 	}
 	if limitString != "3Gi" {
-		t.Fatalf("Resource limit is expected to be 1Gi, instead found %s", resourceLimit)
+		t.Fatalf("Resource limit is expected to be 1Gi, instead found %s", limitString)
 	}
 }
 
@@ -295,10 +295,44 @@ func TestMemoryRequestAdjustedWhenOnlyLimitGiven(t *testing.T) {
 	resourceLimit := sset.Spec.Template.Spec.Containers[0].Resources.Limits[v1.ResourceMemory]
 	limitString := resourceLimit.String()
 	if requestString != "1Gi" {
-		t.Fatalf("Resource request is expected to be 1Gi, instead found %s", resourceRequest)
+		t.Fatalf("Resource request is expected to be 1Gi, instead found %s", requestString)
 	}
 	if limitString != "1Gi" {
-		t.Fatalf("Resource limit is expected to be 1Gi, instead found %s", resourceLimit)
+		t.Fatalf("Resource limit is expected to be 1Gi, instead found %s", limitString)
+	}
+}
+
+func TestListenLocal(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			ListenLocal: true,
+		},
+	}, nil, defaultTestConfig, []*v1.ConfigMap{})
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--web.listen-address=127.0.0.1:9090" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus not listening on loopback when it should.")
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].ReadinessProbe != nil {
+		t.Fatal("Prometheus readiness probe expected to be empty")
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].LivenessProbe != nil {
+		t.Fatal("Prometheus readiness probe expected to be empty")
+	}
+
+	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 0 {
+		t.Fatal("Prometheus container should have 0 ports defined")
 	}
 }
 

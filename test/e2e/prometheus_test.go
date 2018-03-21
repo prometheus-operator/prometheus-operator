@@ -140,7 +140,7 @@ func TestPrometheusResourceUpdate(t *testing.T) {
 	res := pods.Items[0].Spec.Containers[0].Resources
 
 	if !reflect.DeepEqual(res, p.Spec.Resources) {
-		t.Fatalf("resources don't match. Has %q, want %q", res, p.Spec.Resources)
+		t.Fatalf("resources don't match. Has %#+v, want %#+v", res, p.Spec.Resources)
 	}
 
 	p.Spec.Resources = v1.ResourceRequirements{
@@ -217,6 +217,7 @@ scrape_configs:
 		},
 		Data: map[string][]byte{
 			"prometheus.yaml": []byte(firstConfig),
+			"configmaps.json": []byte("{}"),
 		},
 	}
 

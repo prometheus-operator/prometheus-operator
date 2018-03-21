@@ -31,7 +31,7 @@ selfServiceMonitor: true
 ##
 image:
   repository: quay.io/prometheus/prometheus
-  tag: v2.0.0
+  tag: v2.2.1
 
 ## Labels to be added to the Prometheus
 ##
@@ -67,6 +67,16 @@ ingress:
 ##
 nodeSelector: {}
 
+## Tolerations for use with node taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: {}
+  #  - key: "key"
+  #    operator: "Equal"
+  #    value: "value"
+  #    effect: "NoSchedule"
+
+
 ## If true, the Operator won't process any Prometheus configuration changes
 ##
 paused: false
@@ -89,6 +99,18 @@ logLevel: info
 ## The value "hard" means that the scheduler is *required* to not schedule two replica pods onto the same node.
 ## The value "" will disable pod anti-affinity so that no anti-affinity rules will be configured.
 podAntiAffinity: "soft"
+
+## The remote_read spec configuration for Prometheus.
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#remotereadspec
+remoteRead: {}
+  # remoteRead:
+  #   - url: http://remote1/read
+
+## The remote_write spec configuriation for Prometheus.
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#remotewritespec
+remoteWrite: {}
+  # remoteWrite:
+  #   - url: http://remote1/push
 
 ## Resource limits & requests
 ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -123,7 +145,7 @@ rules:
 ## object, which shall be mounted into the Prometheus Pods.
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
 ##
-secrets: {}
+secrets: []
 
 service:
   ## Maintains session affinity.  Should be set to ClientIP for HA setup
@@ -256,12 +278,14 @@ serviceMonitors: []
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
 ##
 storageSpec: {}
-#   volumeClaimTemplate:
-#     spec:
-#       resources:
-#         requests:
-#           storage: 50Gi
-#   selector: {}
+#  volumeClaimTemplate:
+#    spec:
+#      storageClassName: gluster
+#      accessModes: ["ReadWriteOnce"]
+#      resources:
+#        requests:
+#          storage: 50Gi
+#    selector: {}
 
 # default rules are in templates/prometheus.rules.yaml
 # prometheusRules: {}

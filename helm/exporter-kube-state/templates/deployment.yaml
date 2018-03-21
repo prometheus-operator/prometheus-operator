@@ -12,7 +12,6 @@ metadata:
 spec:
   replicas: {{ .Values.replicaCount }}
   revisionHistoryLimit: 10
-  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -61,14 +60,18 @@ spec:
         command:
           - /pod_nanny
           - --container={{ .Chart.Name }}
-          - --cpu=100m
-          - --extra-cpu=1m
-          - --memory=100Mi
-          - --extra-memory=2Mi
+          - --cpu={{ .Values.addon_resizer.cpu }}
+          - --extra-cpu={{ .Values.addon_resizer.extra_cpu }}
+          - --memory={{ .Values.addon_resizer.memory }}
+          - --extra-memory={{ .Values.addon_resizer.extra_memory }}
           - --threshold=5
           - --deployment={{ template "exporter-kube-state.fullname" . }}
         resources:
 {{ toYaml .Values.addon_resizer.resources | indent 12 }}
     {{- if .Values.global.rbacEnable }}
       serviceAccountName: {{ template "exporter-kube-state.fullname" . }}
+    {{- end }}
+    {{- if .Values.kube_state_metrics.tolerations }}
+      tolerations:
+    {{ toYaml .Values.kube_state_metrics.tolerations | indent 4 }}
     {{- end }}

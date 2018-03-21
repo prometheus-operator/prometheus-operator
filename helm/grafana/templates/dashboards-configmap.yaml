@@ -9,13 +9,15 @@ metadata:
   name: {{ template "grafana.server.fullname" . }}
 data:
   {{- if .Values.serverDashboardFiles }}
-  {{ toYaml .Values.serverDashboardFiles | indent 2 }}
-  {{ else }}
-  {{- include "grafana-dashboards.yaml.tpl" . | indent 2}}
+{{ toYaml .Values.serverDashboardFiles | indent 2 }}
+  {{ end }}
+  {{- if .Values.keepOriginalDashboards }}
+{{ (.Files.Glob "dashboards/*.json").AsConfig | indent 2 }}
   {{- end }}
   {{- if .Values.dataSource }}
 {{ toYaml .Values.dataSource | indent 2 }}
-  {{- else }}
+  {{- end }}
+  {{- if .Values.keepOriginalDatasources }}
   prometheus-datasource.json: |+
     {
       "access": "proxy",

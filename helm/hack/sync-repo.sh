@@ -4,24 +4,33 @@ set -o nounset
 set -o xtrace
 
 HELM_BUCKET_NAME="coreos-charts"
-HELM_CHARTS_PACKAGED_DIR=${1:-"/tmp/helm-packaged"}
-AWS_REGION=${2:-"us-west-2"}
-
-aws configure set region ${AWS_REGION}
+SYNC_TO_S3=${1:-"false"}
+HELM_CHARTS_PACKAGED_DIR=${2:-"/tmp/helm-packaged"}
+AWS_REGION=${3:-"eu-west-1"}
 
 #Check if the current chart has the same hash from the remote one
 for tgz in $(ls ${HELM_CHARTS_PACKAGED_DIR})
 do
-  # if remote file doesn't exist we can skip the comparison 
-  exists=$(aws s3api head-object --bucket ${HELM_BUCKET_NAME} --key stable/${tgz})||continue
-  cur_hash=($(md5sum ${HELM_CHARTS_PACKAGED_DIR}/${tgz}))
-  remote_hash=$(aws s3api head-object --bucket ${HELM_BUCKET_NAME} --key stable/${tgz} | jq '.ETag' -r| tr -d '"')
-  if [ "${tgz}" != "index.yaml" ]  && [ "$cur_hash" != "$remote_hash" ]
-  then
-    echo "ERROR: Current hash should be the same as the remote hash. Please bump the version of chart {$tgz}."
-    exit 0
-   fi
+  if echo "${tgz}" | grep -vq "kube-prometheus" 
+  then  # if remote file doesn't exist we can skip the comparison 
+    status_code=$(curl -s -o /dev/null -w "%{http_code}" https://s3-eu-west-1.amazonaws.com/${HELM_BUCKET_NAME}/stable/${tgz})
+    if [ "$status_code" == "200" ] 
+    then
+      cur_hash=$(md5sum ${HELM_CHARTS_PACKAGED_DIR}/${tgz} | awk '{print $1}' )
+      remote_hash=$(curl -s https://s3-eu-west-1.amazonaws.com/${HELM_BUCKET_NAME}/stable/${tgz} | md5sum | awk '{print $1}')
+      if [ "${tgz}" != "index.yaml" ]  && [ "$cur_hash" != "$remote_hash" ]
+      then
+        echo "ERROR: Current hash should be the same as the remote hash. Please bump the version of chart {$tgz}."
+        exit 1
+      fi
+    fi
+  fi
 done
 
 # sync charts
-aws s3 sync --acl public-read ${HELM_CHARTS_PACKAGED_DIR} s3://${HELM_BUCKET_NAME}/stable/
+if [ ${SYNC_TO_S3} = true ]
+then
+  aws s3 sync --acl public-read ${HELM_CHARTS_PACKAGED_DIR} s3://${HELM_BUCKET_NAME}/stable/
+fi
+
+exit 0
