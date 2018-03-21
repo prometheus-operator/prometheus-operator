@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	fsnotify "gopkg.in/fsnotify.v1"
+	fsnotify "github.com/fsnotify/fsnotify"
 
 	"github.com/cenkalti/backoff"
 	"github.com/ericchiang/k8s"
@@ -195,16 +195,19 @@ func (w *volumeWatcher) ReloadPrometheus() error {
 	}
 	resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Received response code %s, expected 200", resp.StatusCode)
+		return fmt.Errorf("Received response code %d, expected 200", resp.StatusCode)
 	}
 	return nil
 }
 
-func (w *volumeWatcher) Refresh() {
+func (w *volumeWatcher) Refresh() error {
 	w.logger.Log("msg", "Updating rule files...")
-	err := w.UpdateRuleFiles()
+	err := backoff.RetryNotify(w.UpdateRuleFiles, backoff.NewExponentialBackOff(), func(err error, next time.Duration) {
+		w.logger.Log("msg", "Updating rule files temporarily failed.", "err", err, "next-retry", next)
+	})
 	if err != nil {
 		w.logger.Log("msg", "Updating rule files failed.", "err", err)
+		return err
 	} else {
 		w.logger.Log("msg", "Rule files updated.")
 	}
@@ -215,9 +218,11 @@ func (w *volumeWatcher) Refresh() {
 	})
 	if err != nil {
 		w.logger.Log("msg", "Reloading Prometheus failed.", "err", err)
+		return err
 	} else {
 		w.logger.Log("msg", "Prometheus successfully reloaded.")
 	}
+	return nil
 }
 
 func (w *volumeWatcher) Run() {
@@ -229,7 +234,11 @@ func (w *volumeWatcher) Run() {
 	defer watcher.Close()
 
 	w.logger.Log("msg", "Starting...")
-	w.Refresh()
+	err = w.Refresh()
+	if err != nil {
+		w.logger.Log("msg", "Initial loading of config volume failed.", "err", err)
+		os.Exit(1)
+	}
 	err = watcher.Add(w.cfg.configVolumeDir)
 	if err != nil {
 		w.logger.Log("msg", "Adding config volume to be watched failed.", "err", err)
@@ -242,7 +251,10 @@ func (w *volumeWatcher) Run() {
 			if event.Op&fsnotify.Create == fsnotify.Create {
 				if filepath.Base(event.Name) == "..data" {
 					w.logger.Log("msg", "ConfigMap modified.")
-					w.Refresh()
+					if err := w.Refresh(); err != nil {
+						w.logger.Log("msg", "Rule files could not be refreshed.", "err", err)
+						os.Exit(1)
+					}
 				}
 			}
 		case err := <-watcher.Errors:

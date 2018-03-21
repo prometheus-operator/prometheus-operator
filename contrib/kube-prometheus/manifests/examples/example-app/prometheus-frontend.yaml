@@ -6,6 +6,7 @@ metadata:
   labels:
     prometheus: frontend
 spec:
+  serviceAccountName: prometheus-frontend
   version: v1.7.1
   serviceMonitorSelector:
     matchLabels:

@@ -20,7 +20,7 @@ import (
 	"path"
 	"strings"
 
-	"k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1beta2"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +36,7 @@ const (
 	defaultVersion         = "v0.14.0"
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
-	alertmanagerStorageDir = "/var/alertmanager/data"
+	alertmanagerStorageDir = "/alertmanager"
 )
 
 var (
@@ -44,7 +44,7 @@ var (
 	probeTimeoutSeconds int32 = 3
 )
 
-func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, config Config) (*v1beta1.StatefulSet, error) {
+func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, config Config) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -75,7 +75,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, co
 	}
 
 	boolTrue := true
-	statefulset := &v1beta1.StatefulSet{
+	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(am.Name),
 			Labels:      config.Labels.Merge(am.ObjectMeta.Labels),
@@ -162,7 +162,7 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 	return svc
 }
 
-func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.StatefulSetSpec, error) {
 	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Version)
 	versionStr := strings.TrimLeft(a.Spec.Version, "v")
 
@@ -173,9 +173,14 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 
 	amArgs := []string{
 		fmt.Sprintf("-config.file=%s", alertmanagerConfFile),
-		fmt.Sprintf("-web.listen-address=:%d", 9093),
 		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
 		fmt.Sprintf("-storage.path=%s", alertmanagerStorageDir),
+	}
+
+	if a.Spec.ListenLocal {
+		amArgs = append(amArgs, "-web.listen-address=127.0.0.1:9093")
+	} else {
+		amArgs = append(amArgs, "-web.listen-address=:9093")
 	}
 
 	if a.Spec.ExternalURL != "" {
@@ -200,6 +205,24 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		},
 	}
 
+	var livenessProbe *v1.Probe
+	var readinessProbe *v1.Probe
+	if !a.Spec.ListenLocal {
+		livenessProbe = &v1.Probe{
+			Handler:          probeHandler,
+			TimeoutSeconds:   probeTimeoutSeconds,
+			FailureThreshold: 10,
+		}
+
+		readinessProbe = &v1.Probe{
+			Handler:             probeHandler,
+			InitialDelaySeconds: 3,
+			TimeoutSeconds:      3,
+			PeriodSeconds:       5,
+			FailureThreshold:    10,
+		}
+	}
+
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	if a.Spec.PodMetadata != nil {
@@ -221,13 +244,32 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		amArgs = append(amArgs, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
 	}
 
+	ports := []v1.ContainerPort{
+		{
+			Name:          "mesh",
+			ContainerPort: 6783,
+			Protocol:      v1.ProtocolTCP,
+		},
+	}
+	if !a.Spec.ListenLocal {
+		ports = append([]v1.ContainerPort{
+			{
+				Name:          "web",
+				ContainerPort: 9093,
+				Protocol:      v1.ProtocolTCP,
+			},
+		}, ports...)
+	}
+
 	gid := int64(2000)
 	uid := int64(1000)
 	nr := true
 	securityContext := &v1.PodSecurityContext{
-		FSGroup:      &gid,
 		RunAsNonRoot: &nr,
-		RunAsUser:    &uid,
+	}
+	if !config.DisableAutoUserGroup {
+		securityContext.FSGroup = &gid
+		securityContext.RunAsUser = &uid
 	}
 	if a.Spec.SecurityContext != nil {
 		securityContext = a.Spec.SecurityContext
@@ -249,37 +291,30 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 	}
 
 	terminationGracePeriod := int64(0)
-	return &v1beta1.StatefulSetSpec{
+	finalLabels := config.Labels.Merge(podLabels)
+	return &appsv1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    a.Spec.Replicas,
-		UpdateStrategy: v1beta1.StatefulSetUpdateStrategy{
-			Type: v1beta1.RollingUpdateStatefulSetStrategyType,
+		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
+			Type: appsv1.RollingUpdateStatefulSetStrategyType,
+		},
+		Selector: &metav1.LabelSelector{
+			MatchLabels: finalLabels,
 		},
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels:      config.Labels.Merge(podLabels),
+				Labels:      finalLabels,
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
 				NodeSelector:                  a.Spec.NodeSelector,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
-				Containers: []v1.Container{
+				Containers: append([]v1.Container{
 					{
 						Args:  amArgs,
 						Name:  "alertmanager",
 						Image: image,
-						Ports: []v1.ContainerPort{
-							{
-								Name:          "web",
-								ContainerPort: 9093,
-								Protocol:      v1.ProtocolTCP,
-							},
-							{
-								Name:          "mesh",
-								ContainerPort: 6783,
-								Protocol:      v1.ProtocolTCP,
-							},
-						},
+						Ports: ports,
 						VolumeMounts: []v1.VolumeMount{
 							{
 								Name:      "config-volume",
@@ -291,19 +326,9 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 								SubPath:   subPathForStorage(a.Spec.Storage),
 							},
 						},
-						LivenessProbe: &v1.Probe{
-							Handler:          probeHandler,
-							TimeoutSeconds:   probeTimeoutSeconds,
-							FailureThreshold: 10,
-						},
-						ReadinessProbe: &v1.Probe{
-							Handler:             probeHandler,
-							InitialDelaySeconds: 3,
-							TimeoutSeconds:      3,
-							PeriodSeconds:       5,
-							FailureThreshold:    10,
-						},
-						Resources: a.Spec.Resources,
+						LivenessProbe:  livenessProbe,
+						ReadinessProbe: readinessProbe,
+						Resources:      a.Spec.Resources,
 					}, {
 						Name:  "config-reloader",
 						Image: config.ConfigReloaderImage,
@@ -325,7 +350,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 							},
 						},
 					},
-				},
+				}, a.Spec.Containers...),
 				Volumes: []v1.Volume{
 					{
 						Name: "config-volume",

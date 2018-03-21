@@ -6,14 +6,14 @@ metadata:
     prometheus: k8s
 spec:
   replicas: 2
-  version: v2.2.0-rc.1
+  version: v2.2.1
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpressions:
     - {key: k8s-app, operator: Exists}
   ruleSelector:
     matchLabels:
-      role: prometheus-rulefiles
+      role: alert-rules
       prometheus: k8s
   resources:
     requests:

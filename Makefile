@@ -1,6 +1,6 @@
 REPO?=quay.io/coreos/prometheus-operator
 TAG?=$(shell git rev-parse --short HEAD)
-NAMESPACE?=po-e2e-$(shell LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
+NAMESPACE?=po-e2e-$(shell LC_ALL=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
 KUBECONFIG?=$(HOME)/.kube/config
 
 PROMU := $(GOPATH)/bin/promu
@@ -48,6 +48,9 @@ e2e:
 
 e2e-helm:
 	./helm/hack/e2e-test.sh
+	# package the chart and verify if they have the version bumped  
+	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes"
+	helm/hack/sync-repo.sh false
 
 clean-e2e:
 	kubectl -n $(NAMESPACE) delete prometheus,alertmanager,servicemonitor,statefulsets,deploy,svc,endpoints,pods,cm,secrets,replicationcontrollers --all
@@ -73,12 +76,12 @@ generate: jsonnet-docker
 
 $(GOBIN)/openapi-gen:
 	go get -u -v -d k8s.io/code-generator/cmd/openapi-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.8
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.9
 	go install k8s.io/code-generator/cmd/openapi-gen
 
 $(GOBIN)/deepcopy-gen:
 	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.8
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.9
 	go install k8s.io/code-generator/cmd/deepcopy-gen
 
 openapi-gen: $(GOBIN)/openapi-gen
@@ -108,9 +111,9 @@ jsonnet-docker:
 
 helm-sync-s3:
 	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes"
-	helm/hack/sync-repo.sh
+	helm/hack/sync-repo.sh true
 	helm/hack/helm-package.sh kube-prometheus
-	helm/hack/sync-repo.sh
+	helm/hack/sync-repo.sh true
 
 generate-crd: generate-openapi po-crdgen
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml

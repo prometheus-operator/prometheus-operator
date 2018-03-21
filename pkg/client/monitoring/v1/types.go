@@ -98,7 +98,7 @@ type PrometheusSpec struct {
 	// A selector to select which ConfigMaps to mount for loading rule files from.
 	RuleSelector *metav1.LabelSelector `json:"ruleSelector,omitempty"`
 	// Define details regarding alerting.
-	Alerting AlertingSpec `json:"alerting,omitempty"`
+	Alerting *AlertingSpec `json:"alerting,omitempty"`
 	// Define resources requests and limits for single Pods.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// Define which Nodes the Pods are scheduled on.
@@ -126,6 +126,12 @@ type PrometheusSpec struct {
 	// This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and
 	// default PodSecurityContext for other versions.
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
+	// ListenLocal makes the Prometheus server listen on loopback, so that it
+	// does not bind against the Pod IP.
+	ListenLocal bool `json:"listenLocal,omitempty"`
+	// Containers allows injecting additional containers. This is meant to
+	// allow adding an authentication proxy to a Prometheus pod.
+	Containers []v1.Container `json:"containers,omitempty"`
 }
 
 // Most recent observed status of the Prometheus cluster. Read-only. Not
@@ -196,7 +202,7 @@ type RemoteWriteSpec struct {
 	// TLS Config to use for remote write.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	//Optional ProxyURL
-	ProxyURL string `json:"proxy_url,omitempty"`
+	ProxyURL string `json:"proxyUrl,omitempty"`
 }
 
 // RemoteReadSpec defines the remote_read configuration for prometheus.
@@ -204,8 +210,14 @@ type RemoteWriteSpec struct {
 type RemoteReadSpec struct {
 	//The URL of the endpoint to send samples to.
 	URL string `json:"url"`
+	//An optional list of equality matchers which have to be present
+	// in a selector to query the remote read endpoint.
+	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
 	//Timeout for requests to the remote write endpoint.
 	RemoteTimeout string `json:"remoteTimeout,omitempty"`
+	//Whether reads should be made for queries for time ranges that
+	// the local storage should have complete data for.
+	ReadRecent bool `json:"readRecent,omitempty"`
 	//BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// bearer token for remote write.
@@ -215,10 +227,12 @@ type RemoteReadSpec struct {
 	// TLS Config to use for remote write.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	//Optional ProxyURL
-	ProxyURL string `json:"proxy_url,omitempty"`
+	ProxyURL string `json:"proxyUrl,omitempty"`
 }
 
-// RelabelConfig allows dynamic rewriting of the label set.
+// RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion.
+// It defines `<metric_relabel_configs>`-section of Prometheus configuration.
+// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
 // +k8s:openapi-gen=true
 type RelabelConfig struct {
 	//The source labels select values from existing labels. Their content is concatenated
@@ -255,6 +269,11 @@ type AlertmanagerEndpoints struct {
 	Scheme string `json:"scheme,omitempty"`
 	// Prefix for the HTTP path alerts are pushed to.
 	PathPrefix string `json:"pathPrefix,omitempty"`
+	// TLS Config to use for alertmanager connection.
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+	// BearerTokenFile to read from filesystem to use when authenticating to
+	// Alertmanager.
+	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.
@@ -416,6 +435,13 @@ type AlertmanagerSpec struct {
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+	// ListenLocal makes the Alertmanager server listen on loopback, so that it
+	// does not bind against the Pod IP. Note this is only for the Alertmanager
+	// UI, not the gossip communication.
+	ListenLocal bool `json:"listenLocal,omitempty"`
+	// Containers allows injecting additional containers. This is meant to
+	// allow adding an authentication proxy to an Alertmanager pod.
+	Containers []v1.Container `json:"containers,omitempty"`
 }
 
 // A list of Alertmanagers.

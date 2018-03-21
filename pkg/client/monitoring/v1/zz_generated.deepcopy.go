@@ -21,109 +21,7 @@ package v1
 import (
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	conversion "k8s.io/apimachinery/pkg/conversion"
-	reflect "reflect"
 )
-
-// GetGeneratedDeepCopyFuncs returns the generated funcs, since we aren't registering them.
-//
-// Deprecated: deepcopy registration will go away when static deepcopy is fully implemented.
-func GetGeneratedDeepCopyFuncs() []conversion.GeneratedDeepCopyFunc {
-	return []conversion.GeneratedDeepCopyFunc{
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*AlertingSpec).DeepCopyInto(out.(*AlertingSpec))
-			return nil
-		}, InType: reflect.TypeOf(&AlertingSpec{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*Alertmanager).DeepCopyInto(out.(*Alertmanager))
-			return nil
-		}, InType: reflect.TypeOf(&Alertmanager{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*AlertmanagerEndpoints).DeepCopyInto(out.(*AlertmanagerEndpoints))
-			return nil
-		}, InType: reflect.TypeOf(&AlertmanagerEndpoints{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*AlertmanagerList).DeepCopyInto(out.(*AlertmanagerList))
-			return nil
-		}, InType: reflect.TypeOf(&AlertmanagerList{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*AlertmanagerSpec).DeepCopyInto(out.(*AlertmanagerSpec))
-			return nil
-		}, InType: reflect.TypeOf(&AlertmanagerSpec{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*AlertmanagerStatus).DeepCopyInto(out.(*AlertmanagerStatus))
-			return nil
-		}, InType: reflect.TypeOf(&AlertmanagerStatus{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*BasicAuth).DeepCopyInto(out.(*BasicAuth))
-			return nil
-		}, InType: reflect.TypeOf(&BasicAuth{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*CrdKind).DeepCopyInto(out.(*CrdKind))
-			return nil
-		}, InType: reflect.TypeOf(&CrdKind{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*CrdKinds).DeepCopyInto(out.(*CrdKinds))
-			return nil
-		}, InType: reflect.TypeOf(&CrdKinds{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*Endpoint).DeepCopyInto(out.(*Endpoint))
-			return nil
-		}, InType: reflect.TypeOf(&Endpoint{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*NamespaceSelector).DeepCopyInto(out.(*NamespaceSelector))
-			return nil
-		}, InType: reflect.TypeOf(&NamespaceSelector{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*Prometheus).DeepCopyInto(out.(*Prometheus))
-			return nil
-		}, InType: reflect.TypeOf(&Prometheus{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*PrometheusList).DeepCopyInto(out.(*PrometheusList))
-			return nil
-		}, InType: reflect.TypeOf(&PrometheusList{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*PrometheusSpec).DeepCopyInto(out.(*PrometheusSpec))
-			return nil
-		}, InType: reflect.TypeOf(&PrometheusSpec{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*PrometheusStatus).DeepCopyInto(out.(*PrometheusStatus))
-			return nil
-		}, InType: reflect.TypeOf(&PrometheusStatus{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*RelabelConfig).DeepCopyInto(out.(*RelabelConfig))
-			return nil
-		}, InType: reflect.TypeOf(&RelabelConfig{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*RemoteReadSpec).DeepCopyInto(out.(*RemoteReadSpec))
-			return nil
-		}, InType: reflect.TypeOf(&RemoteReadSpec{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*RemoteWriteSpec).DeepCopyInto(out.(*RemoteWriteSpec))
-			return nil
-		}, InType: reflect.TypeOf(&RemoteWriteSpec{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*ServiceMonitor).DeepCopyInto(out.(*ServiceMonitor))
-			return nil
-		}, InType: reflect.TypeOf(&ServiceMonitor{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*ServiceMonitorList).DeepCopyInto(out.(*ServiceMonitorList))
-			return nil
-		}, InType: reflect.TypeOf(&ServiceMonitorList{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*ServiceMonitorSpec).DeepCopyInto(out.(*ServiceMonitorSpec))
-			return nil
-		}, InType: reflect.TypeOf(&ServiceMonitorSpec{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*StorageSpec).DeepCopyInto(out.(*StorageSpec))
-			return nil
-		}, InType: reflect.TypeOf(&StorageSpec{})},
-		{Fn: func(in interface{}, out interface{}, c *conversion.Cloner) error {
-			in.(*TLSConfig).DeepCopyInto(out.(*TLSConfig))
-			return nil
-		}, InType: reflect.TypeOf(&TLSConfig{})},
-	}
-}
 
 // DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *AlertingSpec) DeepCopyInto(out *AlertingSpec) {
@@ -131,7 +29,9 @@ func (in *AlertingSpec) DeepCopyInto(out *AlertingSpec) {
 	if in.Alertmanagers != nil {
 		in, out := &in.Alertmanagers, &out.Alertmanagers
 		*out = make([]AlertmanagerEndpoints, len(*in))
-		copy(*out, *in)
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }
@@ -178,6 +78,15 @@ func (in *Alertmanager) DeepCopy() *Alertmanager {
 func (in *AlertmanagerEndpoints) DeepCopyInto(out *AlertmanagerEndpoints) {
 	*out = *in
 	out.Port = in.Port
+	if in.TLSConfig != nil {
+		in, out := &in.TLSConfig, &out.TLSConfig
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(TLSConfig)
+			**out = **in
+		}
+	}
 	return
 }
 
@@ -282,6 +191,13 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		} else {
 			*out = new(core_v1.PodSecurityContext)
 			(*in).DeepCopyInto(*out)
+		}
+	}
+	if in.Containers != nil {
+		in, out := &in.Containers, &out.Containers
+		*out = make([]core_v1.Container, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	return
@@ -564,7 +480,15 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
-	in.Alerting.DeepCopyInto(&out.Alerting)
+	if in.Alerting != nil {
+		in, out := &in.Alerting, &out.Alerting
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(AlertingSpec)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.NodeSelector != nil {
 		in, out := &in.NodeSelector, &out.NodeSelector
@@ -615,6 +539,13 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		} else {
 			*out = new(core_v1.PodSecurityContext)
 			(*in).DeepCopyInto(*out)
+		}
+	}
+	if in.Containers != nil {
+		in, out := &in.Containers, &out.Containers
+		*out = make([]core_v1.Container, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	return
@@ -670,6 +601,13 @@ func (in *RelabelConfig) DeepCopy() *RelabelConfig {
 // DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *RemoteReadSpec) DeepCopyInto(out *RemoteReadSpec) {
 	*out = *in
+	if in.RequiredMatchers != nil {
+		in, out := &in.RequiredMatchers, &out.RequiredMatchers
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		if *in == nil {

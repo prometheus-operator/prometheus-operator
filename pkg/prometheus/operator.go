@@ -28,7 +28,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	"k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1beta2"
 	"k8s.io/api/core/v1"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -65,6 +65,8 @@ type Operator struct {
 	ssetInf cache.SharedIndexInformer
 
 	queue workqueue.RateLimitingInterface
+
+	statefulsetErrors prometheus.Counter
 
 	host                   string
 	kubeletObjectName      string
@@ -127,6 +129,7 @@ type Config struct {
 	CrdGroup                     string
 	CrdKinds                     monitoringv1.CrdKinds
 	EnableValidation             bool
+	DisableAutoUserGroup         bool
 }
 
 type BasicAuthCredentials struct {
@@ -228,8 +231,8 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	})
 
 	c.ssetInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.AppsV1beta1().RESTClient(), "statefulsets", c.config.Namespace, fields.Everything()),
-		&v1beta1.StatefulSet{}, resyncPeriod, cache.Indexers{},
+		cache.NewListWatchFromClient(c.kclient.AppsV1beta2().RESTClient(), "statefulsets", c.config.Namespace, fields.Everything()),
+		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
 	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleAddStatefulSet,
@@ -241,7 +244,15 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 }
 
 func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
-	r.MustRegister(NewPrometheusCollector(c.promInf.GetStore()))
+	c.statefulsetErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_prometheus_reconcile_errors_total",
+		Help: "Number of errors that occurred while reconciling the alertmanager statefulset",
+	})
+
+	r.MustRegister(
+		c.statefulsetErrors,
+		NewPrometheusCollector(c.promInf.GetStore()),
+	)
 }
 
 // Run the controller.
@@ -576,6 +587,7 @@ func (c *Operator) processNextWorkItem() bool {
 		return true
 	}
 
+	c.statefulsetErrors.Inc()
 	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("Sync %q failed", key)))
 	c.queue.AddRateLimited(key)
 
@@ -631,8 +643,8 @@ func (c *Operator) handleAddStatefulSet(obj interface{}) {
 }
 
 func (c *Operator) handleUpdateStatefulSet(oldo, curo interface{}) {
-	old := oldo.(*v1beta1.StatefulSet)
-	cur := curo.(*v1beta1.StatefulSet)
+	old := oldo.(*appsv1.StatefulSet)
+	cur := curo.(*appsv1.StatefulSet)
 
 	c.logger.Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
@@ -690,8 +702,13 @@ func (c *Operator) sync(key string) error {
 	if err != nil {
 		return errors.Wrap(err, "generating empty config secret failed")
 	}
-	if _, err := c.kclient.Core().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "creating empty config file failed")
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	_, err = sClient.Get(s.Name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		if _, err := c.kclient.Core().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
+			return errors.Wrap(err, "creating empty config file failed")
+		}
+		return err
 	}
 
 	// Create governing service if it doesn't exist.
@@ -700,7 +717,7 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
-	ssetClient := c.kclient.AppsV1beta1().StatefulSets(p.Namespace)
+	ssetClient := c.kclient.AppsV1beta2().StatefulSets(p.Namespace)
 	// Ensure we have a StatefulSet running Prometheus deployed.
 	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(prometheusKeyToStatefulSetKey(key))
 	if err != nil {
@@ -717,7 +734,7 @@ func (c *Operator) sync(key string) error {
 		}
 		return nil
 	}
-	sset, err := makeStatefulSet(*p, obj.(*v1beta1.StatefulSet), &c.config, ruleFileConfigMaps)
+	sset, err := makeStatefulSet(*p, obj.(*appsv1.StatefulSet), &c.config, ruleFileConfigMaps)
 	if err != nil {
 		return errors.Wrap(err, "updating statefulset failed")
 	}
@@ -765,7 +782,7 @@ func PrometheusStatus(kclient kubernetes.Interface, p *monitoringv1.Prometheus) 
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.AppsV1beta1().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
+	sset, err := kclient.AppsV1beta2().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 	}
@@ -821,11 +838,11 @@ func (c *Operator) destroyPrometheus(key string) error {
 	if !exists {
 		return nil
 	}
-	sset := obj.(*v1beta1.StatefulSet)
+	sset := obj.(*appsv1.StatefulSet)
 	*sset.Spec.Replicas = 0
 
 	// Update the replica count to 0 and wait for all pods to be deleted.
-	ssetClient := c.kclient.AppsV1beta1().StatefulSets(sset.Namespace)
+	ssetClient := c.kclient.AppsV1beta2().StatefulSets(sset.Namespace)
 
 	if _, err := ssetClient.Update(sset); err != nil {
 		return errors.Wrap(err, "updating statefulset for scale-down failed")
@@ -874,7 +891,45 @@ func (c *Operator) destroyPrometheus(key string) error {
 	return nil
 }
 
-func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, s *v1.SecretList) (map[string]BasicAuthCredentials, error) {
+func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (BasicAuthCredentials, error) {
+	var username string
+	var password string
+
+	for _, secret := range s.Items {
+
+		if secret.Name == basicAuth.Username.Name {
+
+			if u, ok := secret.Data[basicAuth.Username.Key]; ok {
+				username = string(u)
+			} else {
+				return BasicAuthCredentials{}, fmt.Errorf("Secret username key %q in secret %q not found.", basicAuth.Username.Key, secret.Name)
+			}
+
+		}
+
+		if secret.Name == basicAuth.Password.Name {
+
+			if p, ok := secret.Data[basicAuth.Password.Key]; ok {
+				password = string(p)
+			} else {
+				return BasicAuthCredentials{}, fmt.Errorf("Secret password key %q in secret %q not found.", basicAuth.Password.Key, secret.Name)
+			}
+
+		}
+		if username != "" && password != "" {
+			break
+		}
+	}
+
+	if username == "" && password == "" {
+		return BasicAuthCredentials{}, fmt.Errorf("BasicAuth username and password secret not found.")
+	}
+
+	return BasicAuthCredentials{username: username, password: password}, nil
+
+}
+
+func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, remoteReads []monitoringv1.RemoteReadSpec, remoteWrites []monitoringv1.RemoteWriteSpec, s *v1.SecretList) (map[string]BasicAuthCredentials, error) {
 
 	secrets := map[string]BasicAuthCredentials{}
 
@@ -884,44 +939,32 @@ func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMon
 
 			if ep.BasicAuth != nil {
 
-				var username string
-				var password string
-
-				for _, secret := range s.Items {
-
-					if secret.Name == ep.BasicAuth.Username.Name {
-
-						if u, ok := secret.Data[ep.BasicAuth.Username.Key]; ok {
-							username = string(u)
-						} else {
-							return nil, fmt.Errorf("Secret password of servicemonitor %s not found.", mon.Name)
-						}
-
-					}
-
-					if secret.Name == ep.BasicAuth.Password.Name {
-
-						if p, ok := secret.Data[ep.BasicAuth.Password.Key]; ok {
-							password = string(p)
-						} else {
-							return nil, fmt.Errorf("Secret username of servicemonitor %s not found.",
-								mon.Name)
-						}
-
-					}
-				}
-
-				if username == "" && password == "" {
-					return nil, fmt.Errorf("Could not generate basicAuth for servicemonitor %s. Username and password are empty.",
-						mon.Name)
+				if credentials, err := loadBasicAuthSecret(ep.BasicAuth, s); err != nil {
+					return nil, fmt.Errorf("Could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
 				} else {
-					secrets[fmt.Sprintf("%s/%s/%d", mon.Namespace, mon.Name, i)] =
-						BasicAuthCredentials{
-							username: username,
-							password: password,
-						}
+					secrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = credentials
 				}
 
+			}
+		}
+	}
+
+	for i, remote := range remoteReads {
+		if remote.BasicAuth != nil {
+			if credentials, err := loadBasicAuthSecret(remote.BasicAuth, s); err != nil {
+				return nil, fmt.Errorf("Could not generate basicAuth for remote_read config %d. %s", i, err)
+			} else {
+				secrets[fmt.Sprintf("remoteRead/%d", i)] = credentials
+			}
+		}
+	}
+
+	for i, remote := range remoteWrites {
+		if remote.BasicAuth != nil {
+			if credentials, err := loadBasicAuthSecret(remote.BasicAuth, s); err != nil {
+				return nil, fmt.Errorf("Could not generate basicAuth for remote_write config %d. %s", i, err)
+			} else {
+				secrets[fmt.Sprintf("remoteWrite/%d", i)] = credentials
 			}
 		}
 	}
@@ -944,7 +987,7 @@ func (c *Operator) createConfig(p *monitoringv1.Prometheus, ruleFileConfigMaps [
 		return err
 	}
 
-	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, listSecrets)
+	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, listSecrets)
 
 	if err != nil {
 		return err
