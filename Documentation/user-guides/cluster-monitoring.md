@@ -39,7 +39,7 @@ The manifests used here use the [Prometheus Operator](https://github.com/coreos/
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml)
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   labels:
@@ -47,6 +47,9 @@ metadata:
   name: prometheus-operator
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: prometheus-operator
   template:
     metadata:
       labels:
