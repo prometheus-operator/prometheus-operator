@@ -21,16 +21,11 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           args:
-          {{- if lt .Values.image.tag "v0.15.0" }}
-            - --collector.procfs=/host/proc
-            - --collector.sysfs=/host/sys
-          {{- else }}
-            - --path.procfs=/host/proc
-            - --path.sysfs=/host/sys
-          {{- end }}
-            - --web.listen-address=0.0.0.0:{{ .Values.service.containerPort }}
-          {{- if .Values.extraVolumeMounts }}
-{{ toYaml .Values.extraArgs | indent 12 }}
+          - --web.listen-address=0.0.0.0:{{ .Values.service.containerPort }}
+          {{- if .Values.container }}
+            {{- if .Values.container.args }}
+{{ toYaml .Values.container.args | indent 10 }}
+            {{- end }}
           {{- end }}
           ports:
             - name: metrics
@@ -38,29 +33,21 @@ spec:
               hostPort: {{ .Values.service.containerPort }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
+          {{- if .Values.container }}
+            {{- if .Values.container.volumeMounts }}
           volumeMounts:
-            - name: proc
-              mountPath: /host/proc
-              readOnly:  true
-            - name: sys
-              mountPath: /host/sys
-              readOnly: true
-{{- if .Values.extraVolumeMounts }}
-{{ toYaml .Values.extraVolumeMounts | indent 12 }}
-{{- end }}
+{{ toYaml .Values.container.volumeMounts | indent 10 }}
+            {{- end }}
+          {{- end }}
     {{- if .Values.tolerations }}
       tolerations:
 {{ toYaml .Values.tolerations | indent 8 }}
     {{- end }}
       hostNetwork: true
       hostPID: true
+      {{- if .Values.container }}
+        {{- if .Values.container.volumes }}
       volumes:
-        - name: proc
-          hostPath:
-            path: /proc
-        - name: sys
-          hostPath:
-            path: /sys
-{{- if .Values.extraVolumes }}
-{{ toYaml .Values.extraVolumes | indent 8 }}
-{{- end}}
+{{ toYaml .Values.container.volumes | indent 6 }}
+        {{- end}}
+      {{- end}}
