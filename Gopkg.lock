@@ -191,7 +191,7 @@
   branch = "master"
   name = "github.com/improbable-eng/thanos"
   packages = ["pkg/reloader","pkg/runutil"]
-  revision = "a5a72465bfffcf334f2a2e6532429352b97ea756"
+  revision = "2b5d828f1b7c6d7cad39bf123489f4168cc7afa1"
 
 [[projects]]
   name = "github.com/json-iterator/go"
@@ -332,12 +332,6 @@
   version = "v2.2.6"
 
 [[projects]]
-  name = "gopkg.in/fsnotify.v1"
-  packages = ["."]
-  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
-  version = "v1.4.7"
-
-[[projects]]
   name = "gopkg.in/inf.v0"
   packages = ["."]
   revision = "3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4"
@@ -382,6 +376,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d5d65645a7f89a8240c84c4fd8992936fada1d91a001f0640d3f2233c23776f3"
+  inputs-digest = "2ab3538be92881f82829573bdf48f90a69af3146210b8cc6191426f05de47043"
   solver-name = "gps-cdcl"
   solver-version = 1
