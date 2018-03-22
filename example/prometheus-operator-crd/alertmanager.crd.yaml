@@ -521,7 +521,7 @@ spec:
                         - topologyKey
                       type: array
             baseImage:
-              description: Base image that is used to deploy pods.
+              description: Base image that is used to deploy pods, without tag.
               type: string
             containers:
               description: Containers allows injecting additional containers. This

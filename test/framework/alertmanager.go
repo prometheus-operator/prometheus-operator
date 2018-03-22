@@ -199,12 +199,12 @@ func amImage(version string) string {
 }
 
 func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPeers int) error {
-	return wait.Poll(time.Second, time.Second*20, func() (bool, error) {
+	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		amStatus, err := f.GetAlertmanagerConfig(ns, name)
 		if err != nil {
 			return false, err
 		}
-		if len(amStatus.Data.MeshStatus.Peers) == amountPeers {
+		if amStatus.Data.getAmountPeers() == amountPeers {
 			return true, nil
 		}
 
@@ -249,10 +249,20 @@ type alertmanagerStatus struct {
 }
 
 type alertmanagerStatusData struct {
-	MeshStatus meshStatus `json:"meshStatus"`
-	ConfigYAML string     `json:"configYAML"`
+	ClusterStatus *clusterStatus `json:"clusterStatus,omitempty"`
+	MeshStatus    *clusterStatus `json:"meshStatus,omitempty"`
+	ConfigYAML    string         `json:"configYAML"`
 }
 
-type meshStatus struct {
+// Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'
+func (s *alertmanagerStatusData) getAmountPeers() int {
+	if s.MeshStatus != nil {
+		return len(s.MeshStatus.Peers)
+	} else {
+		return len(s.ClusterStatus.Peers)
+	}
+}
+
+type clusterStatus struct {
 	Peers []interface{} `json:"peers"`
 }
