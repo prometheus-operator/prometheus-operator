@@ -3,7 +3,8 @@ groups:
 - name: kube-state-metrics.rules
   rules:
   - alert: DeploymentGenerationMismatch
-    expr: kube_deployment_status_observed_generation != kube_deployment_metadata_generation
+    expr: (kube_deployment_status_observed_generation != kube_deployment_metadata_generation) /
+          on(deployment) group_right() kube_deployment_labels
     for: 15m
     labels:
       severity: warning
@@ -12,9 +13,11 @@ groups:
         deployment {{`{{$labels.namespaces}}`}}/{{`{{$labels.deployment}}`}}
       summary: Deployment is outdated
   - alert: DeploymentReplicasNotUpdated
-    expr: ((kube_deployment_status_replicas_updated != kube_deployment_spec_replicas)
-      or (kube_deployment_status_replicas_available != kube_deployment_spec_replicas))
-      unless (kube_deployment_spec_paused == 1)
+    expr: sum( ((kube_deployment_status_replicas_updated != kube_deployment_spec_replicas)
+             or (kube_deployment_status_replicas_available != kube_deployment_spec_replicas))
+             unless (kube_deployment_spec_paused == 1) )
+          by (deployment) /
+          on(deployment) group_right() kube_deployment_labels
     for: 15m
     labels:
       severity: warning
@@ -50,7 +53,8 @@ groups:
         to run.
       summary: Daemonsets are not scheduled correctly
   - alert: PodFrequentlyRestarting
-    expr: increase(kube_pod_container_status_restarts_total[1h]) > 5
+    expr: (sum(increase(kube_pod_container_status_restarts_total[1h]) > 5) by (pod))
+          / on(pod) group_right() kube_pod_labels
     for: 10m
     labels:
       severity: warning
