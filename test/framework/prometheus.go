@@ -211,8 +211,7 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 		if st.UpdatedReplicas == *p.Spec.Replicas {
 			return true, nil
 		} else {
-			log.Printf("expected %v Prometheus instances, got %v", st.UpdatedReplicas, *p.Spec.Replicas)
-			log.Print(st)
+			log.Printf("expected %v Prometheus instances, got %v", *p.Spec.Replicas, st.UpdatedReplicas)
 			return false, nil
 		}
 	})

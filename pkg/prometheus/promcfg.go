@@ -37,7 +37,7 @@ func sanitizeLabelName(name string) string {
 }
 
 func configMapRuleFileFolder(configMapNumber int) string {
-	return fmt.Sprintf("/etc/prometheus/rules/rules-%d/", configMapNumber)
+	return fmt.Sprintf("/etc/prometheus/config_out/rules/rules-%d/", configMapNumber)
 }
 
 func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
@@ -78,6 +78,18 @@ func addTLStoYaml(cfg yaml.MapSlice, tls *v1.TLSConfig) yaml.MapSlice {
 	return cfg
 }
 
+func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
+	m := map[string]string{}
+
+	m["prometheus"] = fmt.Sprintf("%s/%s", p.Namespace, p.Name)
+	m["prometheus_replica"] = "$(POD_NAME)"
+
+	for n, v := range p.Spec.ExternalLabels {
+		m[n] = v
+	}
+	return stringMapToMapSlice(m)
+}
+
 func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials) ([]byte, error) {
 	versionStr := p.Spec.Version
 	if versionStr == "" {
@@ -106,7 +118,7 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 		Value: yaml.MapSlice{
 			{Key: "evaluation_interval", Value: evaluationInterval},
 			{Key: "scrape_interval", Value: scrapeInterval},
-			{Key: "external_labels", Value: stringMapToMapSlice(p.Spec.ExternalLabels)},
+			{Key: "external_labels", Value: buildExternalLabels(p)},
 		},
 	})
 
@@ -231,20 +243,17 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	// Filter targets by services selected by the monitor.
 
 	// Exact label matches.
-	labelKeys := make([]string, len(m.Spec.Selector.MatchLabels))
-	i = 0
-	for k, _ := range m.Spec.Selector.MatchLabels {
-		labelKeys[i] = k
-		i++
+	var labelKeys []string
+	for k := range m.Spec.Selector.MatchLabels {
+		labelKeys = append(labelKeys, k)
 	}
 	sort.Strings(labelKeys)
-	for i := range labelKeys {
-		k := labelKeys[i]
-		v := m.Spec.Selector.MatchLabels[k]
+
+	for _, k := range labelKeys {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k)}},
-			{Key: "regex", Value: v},
+			{Key: "regex", Value: m.Spec.Selector.MatchLabels[k]},
 		})
 	}
 	// Set based label matching. We have to map the valid relations
