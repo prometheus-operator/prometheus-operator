@@ -32,13 +32,13 @@
   branch = "master"
   name = "github.com/ant31/crd-validation"
   packages = ["pkg"]
-  revision = "a7560c85183cef6f2e9e912eaf4570bd368ea745"
+  revision = "eabcf70a1bd73e9296fa0c5f57de604689200a1b"
 
 [[projects]]
   branch = "master"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
-  revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
+  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
   name = "github.com/blang/semver"
@@ -252,8 +252,8 @@
 [[projects]]
   name = "github.com/json-iterator/go"
   packages = ["."]
-  revision = "3353055b2a1a5ae1b6a8dfde887a524e7088f3a2"
-  version = "1.1.2"
+  revision = "ca39e5af3ece67bbcda3d0f4f56a8e24d9f2dad4"
+  version = "1.1.3"
 
 [[projects]]
   name = "github.com/juju/ratelimit"
@@ -275,7 +275,7 @@
     "jlexer",
     "jwriter"
   ]
-  revision = "4a8a4c12c4d1b0c0a7de630426ce6dcb07141b17"
+  revision = "517203d186eb343d3df4068565cc0446b450d2c4"
 
 [[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
@@ -348,7 +348,7 @@
     "internal/bitbucket.org/ww/goautoneg",
     "model"
   ]
-  revision = "6fb6fce6f8b75884b92e1889c150403fc0872c5e"
+  revision = "e4aa40a9169a88835b849a6efb71e05dc04b88f0"
 
 [[projects]]
   branch = "master"
@@ -359,7 +359,7 @@
     "nfs",
     "xfs"
   ]
-  revision = "1c7ff3de94ae006f58cba483a4c9c6d7c61e1d98"
+  revision = "780932d4fbbe0e69b84c34c20f5c8d0981e109ea"
 
 [[projects]]
   branch = "master"
@@ -380,7 +380,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "c7dcf104e3a7a1417abc0230cb0d5240d764159d"
+  revision = "80db560fac1fb3e6ac81dbc7f8ae4c061f5257bd"
 
 [[projects]]
   branch = "master"
@@ -392,13 +392,13 @@
     "idna",
     "lex/httplex"
   ]
-  revision = "d0aafc73d5cdc42264b0af071c261abac580695e"
+  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sync"
   packages = ["errgroup"]
-  revision = "fd80eb99c8f653c847d294a001bdf2a3a6f768f5"
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
 [[projects]]
   branch = "master"
@@ -407,7 +407,7 @@
     "unix",
     "windows"
   ]
-  revision = "7dca6fe1f43775aa6d1334576870ff63f978f539"
+  revision = "c488ab1dd8481ef762f96a79a9577c27825be697"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -439,7 +439,7 @@
     "go/buildutil",
     "go/loader"
   ]
-  revision = "059bec968c61383b574810040ba9410712de36c5"
+  revision = "2226533658007779ffd629b495a088530c84dc50"
 
 [[projects]]
   name = "gopkg.in/alecthomas/kingpin.v2"
@@ -495,7 +495,6 @@
   version = "kubernetes-1.9.0"
 
 [[projects]]
-  branch = "master"
   name = "k8s.io/apiextensions-apiserver"
   packages = [
     "pkg/apis/apiextensions",
@@ -504,7 +503,8 @@
     "pkg/client/clientset/clientset/scheme",
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
   ]
-  revision = "f7df68b83f2a71fa37ed33c5057553c924b2277a"
+  revision = "98ecf7bbd60f9f11a72000e4f05203f542136219"
+  version = "kubernetes-1.9.0"
 
 [[projects]]
   name = "k8s.io/apimachinery"
@@ -618,6 +618,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "974708309f89f39c2d96ca1677337cc36a0cfdd4dbc2cbd69a47d870a992470b"
+  inputs-digest = "c4e63707f13149a6995bc6ac18d596c29ed698f87459304225ec3fde16b32e00"
   solver-name = "gps-cdcl"
   solver-version = 1
