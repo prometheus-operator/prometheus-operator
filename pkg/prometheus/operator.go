@@ -45,8 +45,6 @@ import (
 )
 
 const (
-	configFilename = "prometheus.yaml"
-
 	resyncPeriod = 5 * time.Minute
 )
 
@@ -1015,10 +1013,12 @@ func (c *Operator) createConfig(p *monitoringv1.Prometheus, ruleFileConfigMaps [
 		return err
 	}
 
-	generatedConf := s.Data[configFilename]
-	generatedConfigMaps := s.Data[configMapsFilename]
-	curConfig, curConfigFound := curSecret.Data[configFilename]
-	curConfigMaps, curConfigMapsFound := curSecret.Data[configMapsFilename]
+	var (
+		generatedConf                     = s.Data[configFilename]
+		generatedConfigMaps               = s.Data[ruleConfigmapsFilename]
+		curConfig, curConfigFound         = curSecret.Data[configFilename]
+		curConfigMaps, curConfigMapsFound = curSecret.Data[ruleConfigmapsFilename]
+	)
 	if curConfigFound && curConfigMapsFound {
 		if bytes.Equal(curConfig, generatedConf) && bytes.Equal(curConfigMaps, generatedConfigMaps) {
 			c.logger.Log("msg", "updating config skipped, no configuration change")
