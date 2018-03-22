@@ -90,6 +90,8 @@ var (
 	errTooManyAuthorities = errors.New("too many Authorities to pack (>65535)")
 	errTooManyAdditionals = errors.New("too many Additionals to pack (>65535)")
 	errNonCanonicalName   = errors.New("name is not in canonical format (it must end with a .)")
+	errStringTooLong      = errors.New("character string exceeds maximum length (255)")
+	errCompressedSRV      = errors.New("compressed name in SRV resource data")
 )
 
 // Internal constants.
@@ -218,6 +220,7 @@ func (h *header) count(sec section) uint16 {
 	return 0
 }
 
+// pack appends the wire format of the header to msg.
 func (h *header) pack(msg []byte) []byte {
 	msg = packUint16(msg, h.id)
 	msg = packUint16(msg, h.bits)
@@ -280,6 +283,7 @@ type ResourceBody interface {
 	realType() Type
 }
 
+// pack appends the wire format of the Resource to msg.
 func (r *Resource) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
 	if r.Body == nil {
 		return msg, errNilResouceBody
@@ -1311,9 +1315,10 @@ type ResourceHeader struct {
 	Length uint16
 }
 
-// pack packs all of the fields in a ResourceHeader except for the length. The
-// length bytes are returned as a slice so they can be filled in after the rest
-// of the Resource has been packed.
+// pack appends the wire format of the ResourceHeader to oldMsg.
+//
+// The bytes where length was packed are returned as a slice so they can be
+// updated after the rest of the Resource has been packed.
 func (h *ResourceHeader) pack(oldMsg []byte, compression map[string]int, compressionOff int) (msg []byte, length []byte, err error) {
 	msg = oldMsg
 	if msg, err = h.Name.pack(msg, compression, compressionOff); err != nil {
@@ -1385,6 +1390,7 @@ func skipResource(msg []byte, off int) (int, error) {
 	return newOff, nil
 }
 
+// packUint16 appends the wire format of field to msg.
 func packUint16(msg []byte, field uint16) []byte {
 	return append(msg, byte(field>>8), byte(field))
 }
@@ -1403,6 +1409,7 @@ func skipUint16(msg []byte, off int) (int, error) {
 	return off + uint16Len, nil
 }
 
+// packType appends the wire format of field to msg.
 func packType(msg []byte, field Type) []byte {
 	return packUint16(msg, uint16(field))
 }
@@ -1416,6 +1423,7 @@ func skipType(msg []byte, off int) (int, error) {
 	return skipUint16(msg, off)
 }
 
+// packClass appends the wire format of field to msg.
 func packClass(msg []byte, field Class) []byte {
 	return packUint16(msg, uint16(field))
 }
@@ -1429,6 +1437,7 @@ func skipClass(msg []byte, off int) (int, error) {
 	return skipUint16(msg, off)
 }
 
+// packUint32 appends the wire format of field to msg.
 func packUint32(msg []byte, field uint32) []byte {
 	return append(
 		msg,
@@ -1454,17 +1463,16 @@ func skipUint32(msg []byte, off int) (int, error) {
 	return off + uint32Len, nil
 }
 
-func packText(msg []byte, field string) []byte {
-	for len(field) > 0 {
-		l := len(field)
-		if l > 255 {
-			l = 255
-		}
-		msg = append(msg, byte(l))
-		msg = append(msg, field[:l]...)
-		field = field[l:]
+// packText appends the wire format of field to msg.
+func packText(msg []byte, field string) ([]byte, error) {
+	l := len(field)
+	if l > 255 {
+		return nil, errStringTooLong
 	}
-	return msg
+	msg = append(msg, byte(l))
+	msg = append(msg, field...)
+
+	return msg, nil
 }
 
 func unpackText(msg []byte, off int) (string, int, error) {
@@ -1490,6 +1498,7 @@ func skipText(msg []byte, off int) (int, error) {
 	return endOff, nil
 }
 
+// packBytes appends the wire format of field to msg.
 func packBytes(msg []byte, field []byte) []byte {
 	return append(msg, field...)
 }
@@ -1534,7 +1543,7 @@ func (n Name) String() string {
 	return string(n.Data[:n.Length])
 }
 
-// pack packs a domain name.
+// pack appends the wire format of the Name to msg.
 //
 // Domain names are a sequence of counted strings split at the dots. They end
 // with a zero-length string. Compression can be used to reuse domain suffixes.
@@ -1602,6 +1611,10 @@ func (n *Name) pack(msg []byte, compression map[string]int, compressionOff int) 
 
 // unpack unpacks a domain name.
 func (n *Name) unpack(msg []byte, off int) (int, error) {
+	return n.unpackCompressed(msg, off, true /* allowCompression */)
+}
+
+func (n *Name) unpackCompressed(msg []byte, off int, allowCompression bool) (int, error) {
 	// currOff is the current working offset.
 	currOff := off
 
@@ -1637,6 +1650,9 @@ Loop:
 			name = append(name, '.')
 			currOff = endOff
 		case 0xC0: // Pointer
+			if !allowCompression {
+				return off, errCompressedSRV
+			}
 			if currOff >= len(msg) {
 				return off, errInvalidPtr
 			}
@@ -1716,6 +1732,7 @@ type Question struct {
 	Class Class
 }
 
+// pack appends the wire format of the Question to msg.
 func (q *Question) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
 	msg, err := q.Name.pack(msg, compression, compressionOff)
 	if err != nil {
@@ -1796,6 +1813,7 @@ func (r *CNAMEResource) realType() Type {
 	return TypeCNAME
 }
 
+// pack appends the wire format of the CNAMEResource to msg.
 func (r *CNAMEResource) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
 	return r.CNAME.pack(msg, compression, compressionOff)
 }
@@ -1818,6 +1836,7 @@ func (r *MXResource) realType() Type {
 	return TypeMX
 }
 
+// pack appends the wire format of the MXResource to msg.
 func (r *MXResource) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
 	oldMsg := msg
 	msg = packUint16(msg, r.Pref)
@@ -1849,6 +1868,7 @@ func (r *NSResource) realType() Type {
 	return TypeNS
 }
 
+// pack appends the wire format of the NSResource to msg.
 func (r *NSResource) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
 	return r.NS.pack(msg, compression, compressionOff)
 }
@@ -1870,6 +1890,7 @@ func (r *PTRResource) realType() Type {
 	return TypePTR
 }
 
+// pack appends the wire format of the PTRResource to msg.
 func (r *PTRResource) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
 	return r.PTR.pack(msg, compression, compressionOff)
 }
@@ -1901,6 +1922,7 @@ func (r *SOAResource) realType() Type {
 	return TypeSOA
 }
 
+// pack appends the wire format of the SOAResource to msg.
 func (r *SOAResource) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
 	oldMsg := msg
 	msg, err := r.NS.pack(msg, compression, compressionOff)
@@ -1953,19 +1975,28 @@ func unpackSOAResource(msg []byte, off int) (SOAResource, error) {
 
 // A TXTResource is a TXT Resource record.
 type TXTResource struct {
-	Txt string // Not a domain name.
+	TXT []string
 }
 
 func (r *TXTResource) realType() Type {
 	return TypeTXT
 }
 
+// pack appends the wire format of the TXTResource to msg.
 func (r *TXTResource) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
-	return packText(msg, r.Txt), nil
+	oldMsg := msg
+	for _, s := range r.TXT {
+		var err error
+		msg, err = packText(msg, s)
+		if err != nil {
+			return oldMsg, err
+		}
+	}
+	return msg, nil
 }
 
 func unpackTXTResource(msg []byte, off int, length uint16) (TXTResource, error) {
-	var txt string
+	txts := make([]string, 0, 1)
 	for n := uint16(0); n < length; {
 		var t string
 		var err error
@@ -1977,9 +2008,9 @@ func unpackTXTResource(msg []byte, off int, length uint16) (TXTResource, error) 
 			return TXTResource{}, errCalcLen
 		}
 		n += uint16(len(t)) + 1
-		txt += t
+		txts = append(txts, t)
 	}
-	return TXTResource{txt}, nil
+	return TXTResource{txts}, nil
 }
 
 // An SRVResource is an SRV Resource record.
@@ -1994,6 +2025,7 @@ func (r *SRVResource) realType() Type {
 	return TypeSRV
 }
 
+// pack appends the wire format of the SRVResource to msg.
 func (r *SRVResource) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
 	oldMsg := msg
 	msg = packUint16(msg, r.Priority)
@@ -2020,7 +2052,7 @@ func unpackSRVResource(msg []byte, off int) (SRVResource, error) {
 		return SRVResource{}, &nestedError{"Port", err}
 	}
 	var target Name
-	if _, err := target.unpack(msg, off); err != nil {
+	if _, err := target.unpackCompressed(msg, off, false /* allowCompression */); err != nil {
 		return SRVResource{}, &nestedError{"Target", err}
 	}
 	return SRVResource{priority, weight, port, target}, nil
@@ -2035,6 +2067,7 @@ func (r *AResource) realType() Type {
 	return TypeA
 }
 
+// pack appends the wire format of the AResource to msg.
 func (r *AResource) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
 	return packBytes(msg, r.A[:]), nil
 }
@@ -2056,6 +2089,7 @@ func (r *AAAAResource) realType() Type {
 	return TypeAAAA
 }
 
+// pack appends the wire format of the AAAAResource to msg.
 func (r *AAAAResource) pack(msg []byte, compression map[string]int, compressionOff int) ([]byte, error) {
 	return packBytes(msg, r.AAAA[:]), nil
 }
