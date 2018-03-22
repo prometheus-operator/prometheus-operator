@@ -22,10 +22,8 @@ spec:
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           args:
           - --web.listen-address=0.0.0.0:{{ .Values.service.containerPort }}
-          {{- if .Values.container }}
-            {{- if .Values.container.args }}
+          {{- if and .Values.container .Values.container.args }}
 {{ toYaml .Values.container.args | indent 10 }}
-            {{- end }}
           {{- end }}
           ports:
             - name: metrics
@@ -33,11 +31,9 @@ spec:
               hostPort: {{ .Values.service.containerPort }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-          {{- if .Values.container }}
-            {{- if .Values.container.volumeMounts }}
+          {{- if and .Values.container .Values.container.volumeMounts }}
           volumeMounts:
 {{ toYaml .Values.container.volumeMounts | indent 10 }}
-            {{- end }}
           {{- end }}
     {{- if .Values.tolerations }}
       tolerations:
@@ -45,9 +41,7 @@ spec:
     {{- end }}
       hostNetwork: true
       hostPID: true
-      {{- if .Values.container }}
-        {{- if .Values.container.volumes }}
+      {{- if and .Values.container .Values.container.volumes }}
       volumes:
 {{ toYaml .Values.container.volumes | indent 6 }}
-        {{- end}}
       {{- end}}
