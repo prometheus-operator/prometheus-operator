@@ -186,7 +186,6 @@ func (rf *ruleFetcher) refresh(ctx context.Context, cms []*configMapRef) error {
 				return err
 			}
 		}
-		return nil
 	}
 
 	if err := os.RemoveAll(rf.outDir); err != nil {
