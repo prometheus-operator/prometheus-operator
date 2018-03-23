@@ -1590,6 +1590,13 @@ spec:
                 the server serves requests under a different route prefix. For example
                 for use with `kubectl proxy`.
               type: string
+            secrets:
+              description: Secrets is a list of Secrets in the same namespace as the
+                Alertmanager object, which shall be mounted into the Alertmanager
+                Pods. The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.
+              items:
+                type: string
+              type: array
             securityContext:
               description: PodSecurityContext holds pod-level security attributes
                 and common container settings. Some fields are also present in container.securityContext.  Field
