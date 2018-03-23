@@ -23,6 +23,7 @@ extraVars:
 ## Change to true override Grafana's default config.
 ## Make sure grafana.ini is present on /etc/grafana
 mountGrafanaConfig: false
+customGrafanaConfig: {}
 
 adminUser: "admin"
 adminPassword: "admin"
