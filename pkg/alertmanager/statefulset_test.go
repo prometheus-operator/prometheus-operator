@@ -351,6 +351,49 @@ func TestMakeStatefulSetSpecPeerFlagPort(t *testing.T) {
 	}
 }
 
+func TestAdditionalSecretsMounted(t *testing.T) {
+	secrets := []string{"secret1", "secret2"}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			Secrets: secrets,
+		},
+	}, nil, defaultTestConfig)
+	require.NoError(t, err)
+
+	secret1Found := false
+	secret2Found := false
+	for _, v := range sset.Spec.Template.Spec.Volumes {
+		if v.Secret != nil {
+			if v.Secret.SecretName == "secret1" {
+				secret1Found = true
+			}
+			if v.Secret.SecretName == "secret2" {
+				secret2Found = true
+			}
+		}
+	}
+
+	if !(secret1Found && secret2Found) {
+		t.Fatal("Additional secrets were not found.")
+	}
+
+	secret1Found = false
+	secret2Found = false
+	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if v.Name == "secret-secret1" && v.MountPath == "/etc/alertmanager/secrets/secret1" {
+			secret1Found = true
+		}
+		if v.Name == "secret-secret2" && v.MountPath == "/etc/alertmanager/secrets/secret2" {
+			secret2Found = true
+		}
+	}
+
+	if !(secret1Found && secret2Found) {
+		t.Fatal("Additional secrets were not found.")
+	}
+}
+
 func sliceContains(slice []string, match string) bool {
 	contains := false
 	for _, s := range slice {

@@ -402,6 +402,10 @@ type AlertmanagerSpec struct {
 	// to use for pulling prometheus and alertmanager images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	// Secrets is a list of Secrets in the same namespace as the Alertmanager
+	// object, which shall be mounted into the Alertmanager Pods.
+	// The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.
+	Secrets []string `json:"secrets,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will
 	// eventually make the size of the running cluster equal to the expected
 	// size.
