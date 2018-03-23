@@ -1,0 +1,18 @@
+{{ $useCustomConfig := and .Values.customGrafanaConfig (not .Values.mountGrafanaConfig) }}
+{{- if $useCustomConfig }}
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app: {{ template "grafana.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "grafana.server.fullname" . }}-config
+type: Opaque
+data:
+  {{- range $index, $config := .Values.customGrafanaConfig }}
+  {{ $index }}: {{ $config | b64enc | quote }}
+  {{- end }}
+{{- end }}
+
