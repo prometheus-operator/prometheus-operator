@@ -1,13 +1,13 @@
 kind: Service
 apiVersion: v1
-metadata: 
+metadata:
   name: example-app
   labels:
     tier: frontend
   namespace: default
-spec: 
-  selector: 
-    app: example-app 
+spec:
+  selector:
+    app: example-app
   ports:
   - name: web
     protocol: TCP

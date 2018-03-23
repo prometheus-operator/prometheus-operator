@@ -294,6 +294,8 @@ type ServiceMonitor struct {
 type ServiceMonitorSpec struct {
 	// The label to use to retrieve the job name from.
 	JobLabel string `json:"jobLabel,omitempty"`
+	// TargetLabels transfers labels on the Kubernetes Service onto the target.
+	TargetLabels []string `json:"targetLabels,omitempty"`
 	// A list of endpoints allowed as part of this ServiceMonitor.
 	Endpoints []Endpoint `json:"endpoints"`
 	// Selector to select Endpoints objects.

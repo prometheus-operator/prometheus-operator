@@ -1242,6 +1242,20 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
+						"targetLabels": {
+							SchemaProps: spec.SchemaProps{
+								Description: "TargetLabels transfers labels on the Kubernetes Service onto the target.",
+								Type:        []string{"array"},
+								Items: &spec.SchemaOrArray{
+									Schema: &spec.Schema{
+										SchemaProps: spec.SchemaProps{
+											Type:   []string{"string"},
+											Format: "",
+										},
+									},
+								},
+							},
+						},
 						"endpoints": {
 							SchemaProps: spec.SchemaProps{
 								Description: "A list of endpoints allowed as part of this ServiceMonitor.",
