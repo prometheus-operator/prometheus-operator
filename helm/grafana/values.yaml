@@ -20,6 +20,10 @@ annotations: {}
 #   value: extra-var-value-2
 extraVars:
 
+## Change to true override Grafana's default config.
+## Make sure grafana.ini is present on /etc/grafana
+mountGrafanaConfig: false
+
 adminUser: "admin"
 adminPassword: "admin"
 
