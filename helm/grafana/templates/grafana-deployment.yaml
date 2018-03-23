@@ -115,7 +115,7 @@ spec:
         - name: grafana-dashboards
           configMap:
             name: {{ template "grafana.server.fullname" . }}
-      {{- if .Values.mountGrafanaConfig }}      
+      {{- if .Values.mountGrafanaConfig }}
         - name: grafana-config
           hostPath:
             path: /etc/grafana
