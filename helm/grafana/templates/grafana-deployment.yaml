@@ -70,9 +70,9 @@ spec:
         args:
           - '--watch-dir=/var/grafana-dashboards'
           - '--grafana-url=http://127.0.0.1:3000'
-          {{- range .Values.serverDashboardConfigmaps}}
+          {{- range .Values.serverDashboardConfigmaps }}
           - '--watch-dir=/var/additional-dashboards/{{ . }}'
-          {{- end}}
+          {{- end }}
         env:
         - name: GRAFANA_USER
           valueFrom:
