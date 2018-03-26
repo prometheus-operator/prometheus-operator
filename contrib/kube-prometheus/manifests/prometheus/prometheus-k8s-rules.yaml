@@ -634,3 +634,12 @@ data:
         annotations:
           description: "Prometheus {{ $labels.namespace }}/{{ $labels.pod}} isn't ingesting samples."
           summary: "Prometheus isn't ingesting samples"
+    
+      - alert: PrometheusTargetScapesDuplicate
+        expr: increase(prometheus_target_scrapes_sample_duplicate_timestamp_total[5m]) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          description: "{{$labels.namespace}}/{{$labels.pod}} has many samples rejected due to duplicate timestamps but different values"
+          summary: Prometheus has many samples rejected
