@@ -139,6 +139,9 @@ rulesSelector: {}
 ##
 rules:
   specifiedInValues: true
+  ## What additional rules to be added to the ConfigMap
+  ## You can use this together with `rulesSelector`
+  additionalLabels: {}
   value: {}
 
 ## List of Secrets in the same namespace as the Prometheus
