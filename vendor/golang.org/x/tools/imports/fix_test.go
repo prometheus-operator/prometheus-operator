@@ -1449,6 +1449,29 @@ const _ = runtime.GOOS
 		{
 			config: testConfig{
 				gopathFiles: map[string]string{
+					"foo/foo.go":     "package foo \n const X = 1",
+					"foo/bar/bar.go": "package bar \n const X = 1",
+				},
+			},
+			localPrefix: "foo/",
+			src:         "package main \n const Y = bar.X \n const Z = foo.X \n const _ = runtime.GOOS",
+			want: `package main
+
+import (
+	"runtime"
+
+	"foo"
+	"foo/bar"
+)
+
+const Y = bar.X
+const Z = foo.X
+const _ = runtime.GOOS
+`,
+		},
+		{
+			config: testConfig{
+				gopathFiles: map[string]string{
 					"example.org/pkg/pkg.go":          "package pkg \n const A = 1",
 					"foo/bar/bar.go":                  "package bar \n const B = 1",
 					"code.org/r/p/expproj/expproj.go": "package expproj \n const C = 1",
@@ -2090,8 +2113,7 @@ const x = mypkg.Sprintf("%s", "my package")
 
 // end
 `
-
 	if got := string(out); got != want {
-		t.Errorf("Process returned unexpected result.\ngot:\n%v\nwant:\n%v", got, want)
+		t.Errorf("Process returned unexpected result.\ngot:\n%.100v\nwant:\n%.100v", got, want)
 	}
 }

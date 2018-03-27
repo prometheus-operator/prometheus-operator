@@ -305,3 +305,12 @@ func SetNonblock(fd int, nonblocking bool) (err error) {
 	_, err = fcntl(fd, F_SETFL, flag)
 	return err
 }
+
+// Exec calls execve(2), which replaces the calling executable in the process
+// tree. argv0 should be the full path to an executable ("/bin/ls") and the
+// executable name should also be the first argument in argv (["ls", "-l"]).
+// envv are the environment variables that should be passed to the new
+// process (["USER=go", "PWD=/tmp"]).
+func Exec(argv0 string, argv []string, envv []string) error {
+	return syscall.Exec(argv0, argv, envv)
+}

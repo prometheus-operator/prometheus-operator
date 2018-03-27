@@ -30,7 +30,6 @@ import (
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	extensionsapiserver "k8s.io/apiextensions-apiserver/pkg/apiserver"
-	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apiextensions-apiserver/test/integration/testserver"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -74,22 +73,8 @@ func NewNamespacedCustomResourceClient(ns string, client dynamic.Interface, defi
 	}, ns)
 }
 
-func NewNamespacedCustomResourceStatusClient(ns string, client dynamic.Interface, definition *apiextensionsv1beta1.CustomResourceDefinition) dynamic.ResourceInterface {
-	return client.Resource(&metav1.APIResource{
-		Name:       definition.Spec.Names.Plural + "/status",
-		Namespaced: definition.Spec.Scope == apiextensionsv1beta1.NamespaceScoped,
-	}, ns)
-}
-
-func NewNamespacedCustomResourceScaleClient(ns string, client dynamic.Interface, definition *apiextensionsv1beta1.CustomResourceDefinition) dynamic.ResourceInterface {
-	return client.Resource(&metav1.APIResource{
-		Name:       definition.Spec.Names.Plural + "/scale",
-		Namespaced: definition.Spec.Scope == apiextensionsv1beta1.NamespaceScoped,
-	}, ns)
-}
-
 func TestMultipleResourceInstances(t *testing.T) {
-	stopCh, apiExtensionClient, clientPool, err := testserver.StartDefaultServerWithClients()
+	stopCh, apiExtensionClient, clientPool, err := testserver.StartDefaultServer()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,7 +198,7 @@ func TestMultipleResourceInstances(t *testing.T) {
 }
 
 func TestMultipleRegistration(t *testing.T) {
-	stopCh, apiExtensionClient, clientPool, err := testserver.StartDefaultServerWithClients()
+	stopCh, apiExtensionClient, clientPool, err := testserver.StartDefaultServer()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -269,7 +254,7 @@ func TestMultipleRegistration(t *testing.T) {
 }
 
 func TestDeRegistrationAndReRegistration(t *testing.T) {
-	stopCh, apiExtensionClient, clientPool, err := testserver.StartDefaultServerWithClients()
+	stopCh, apiExtensionClient, clientPool, err := testserver.StartDefaultServer()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -362,17 +347,11 @@ func TestEtcdStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	stopCh, clientConfig, err := testserver.StartServer(config)
+	stopCh, apiExtensionClient, clientPool, err := testserver.StartServer(config)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer close(stopCh)
-
-	apiExtensionClient, err := apiextensionsclientset.NewForConfig(clientConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-	clientPool := dynamic.NewDynamicClientPool(clientConfig)
 
 	etcdPrefix := getPrefixFromConfig(t, config)
 

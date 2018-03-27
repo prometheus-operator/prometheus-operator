@@ -9,6 +9,8 @@ spec:
   selector:
     matchLabels:
       tier: frontend
+  targetLabels:
+    - tier
   endpoints:
   - port: web
     interval: 10s

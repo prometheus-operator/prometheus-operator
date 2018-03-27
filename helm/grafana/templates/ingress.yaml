@@ -3,15 +3,18 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
+{{- if .Values.ingress.annotations }}
   annotations:
-  {{- range $key, $value := .Values.ingress.annotations }}
-    {{ $key }}: {{ $value | quote }}
-  {{- end }}
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+{{- end }}
   labels:
     app: {{ template "grafana.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"
+{{- if .Values.ingress.labels }}
+{{ toYaml .Values.ingress.labels | indent 4 }}
+{{- end }}
   name: {{ template "grafana.server.fullname" . }}
 spec:
   rules:
