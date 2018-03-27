@@ -28,7 +28,7 @@ import (
 )
 
 func TestFinalization(t *testing.T) {
-	stopCh, apiExtensionClient, clientPool, err := testserver.StartDefaultServerWithClients()
+	stopCh, apiExtensionClient, clientPool, err := testserver.StartDefaultServer()
 	require.NoError(t, err)
 	defer close(stopCh)
 

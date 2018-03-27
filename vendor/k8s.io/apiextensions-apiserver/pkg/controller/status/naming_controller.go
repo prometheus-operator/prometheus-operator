@@ -182,8 +182,6 @@ func (c *NamingConditionController) calculateNamesAndConditions(in *apiextension
 		newNames.ListKind = requestedNames.ListKind
 	}
 
-	newNames.Categories = requestedNames.Categories
-
 	// if we haven't changed the condition, then our names must be good.
 	if namesAcceptedCondition.Status == apiextensions.ConditionUnknown {
 		namesAcceptedCondition.Status = apiextensions.ConditionTrue
