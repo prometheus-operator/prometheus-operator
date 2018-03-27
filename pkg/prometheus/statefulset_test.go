@@ -20,7 +20,7 @@ import (
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/stretchr/testify/require"
-	"k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1beta2"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -151,8 +151,8 @@ func TestStatefulSetEmptyDir(t *testing.T) {
 }
 
 func TestStatefulSetVolumeInitial(t *testing.T) {
-	expected := &v1beta1.StatefulSet{
-		Spec: v1beta1.StatefulSetSpec{
+	expected := &appsv1.StatefulSet{
+		Spec: appsv1.StatefulSetSpec{
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{

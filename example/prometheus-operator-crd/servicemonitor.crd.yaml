@@ -221,6 +221,12 @@ spec:
                     "In", and the values array contains only "value". The requirements
                     are ANDed.
                   type: object
+            targetLabels:
+              description: TargetLabels transfers labels on the Kubernetes Service
+                onto the target.
+              items:
+                type: string
+              type: array
           required:
           - endpoints
           - selector

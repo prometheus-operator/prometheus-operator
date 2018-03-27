@@ -45,7 +45,6 @@ func DefaultServerConfig() (*extensionsapiserver.Config, error) {
 	options.RecommendedOptions.SecureServing.BindPort = port
 	options.RecommendedOptions.Authentication = nil // disable
 	options.RecommendedOptions.Authorization = nil  // disable
-	options.RecommendedOptions.Admission = nil      // disable
 	options.RecommendedOptions.SecureServing.BindAddress = net.ParseIP("127.0.0.1")
 	etcdURL, ok := os.LookupEnv("KUBE_INTEGRATION_ETCD_URL")
 	if !ok {
@@ -59,10 +58,7 @@ func DefaultServerConfig() (*extensionsapiserver.Config, error) {
 	if err := options.RecommendedOptions.SecureServing.MaybeDefaultWithSelfSignedCerts("localhost", nil, []net.IP{net.ParseIP("127.0.0.1")}); err != nil {
 		return nil, fmt.Errorf("error creating self-signed certificates: %v", err)
 	}
-	if err := options.RecommendedOptions.ApplyTo(genericConfig, nil); err != nil {
-		return nil, err
-	}
-	if err := options.APIEnablement.ApplyTo(&genericConfig.Config, extensionsapiserver.DefaultAPIResourceConfigSource(), extensionsapiserver.Registry); err != nil {
+	if err := options.RecommendedOptions.ApplyTo(genericConfig); err != nil {
 		return nil, err
 	}
 

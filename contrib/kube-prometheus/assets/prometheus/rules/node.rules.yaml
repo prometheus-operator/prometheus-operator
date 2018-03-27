@@ -35,6 +35,7 @@ groups:
     annotations:
       description: device {{$labels.device}} on node {{$labels.instance}} is running
         full within the next 24 hours (mounted at {{$labels.mountpoint}})
+      summary: Node disk is running full within 24 hours
   - alert: NodeDiskRunningFull
     expr: predict_linear(node_filesystem_free[30m], 3600 * 2) < 0
     for: 10m
@@ -43,4 +44,4 @@ groups:
     annotations:
       description: device {{$labels.device}} on node {{$labels.instance}} is running
         full within the next 2 hours (mounted at {{$labels.mountpoint}})
-      summary: Node disk is running full
+      summary: Node disk is running full within 2 hours

@@ -16,288 +16,181 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	fsnotify "gopkg.in/fsnotify.v1"
-
-	"github.com/cenkalti/backoff"
 	"github.com/ericchiang/k8s"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/improbable-eng/thanos/pkg/reloader"
+	"github.com/oklog/run"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
-
-type config struct {
-	configVolumeDir string
-	ruleVolumeDir   string
-	reloadUrl       string
-}
-
-type volumeWatcher struct {
-	client *k8s.Client
-	cfg    config
-	logger log.Logger
-}
-
-func newVolumeWatcher(client *k8s.Client, cfg config, logger log.Logger) *volumeWatcher {
-	return &volumeWatcher{
-		client: client,
-		cfg:    cfg,
-		logger: logger,
-	}
-}
-
-type ConfigMapReference struct {
-	Key string `json:"key"`
-}
-
-type ConfigMapReferenceList struct {
-	Items []*ConfigMapReference `json:"items"`
-}
-
-func (w *volumeWatcher) UpdateRuleFiles() error {
-	file, err := os.Open(filepath.Join(w.cfg.configVolumeDir, "configmaps.json"))
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	configMaps := ConfigMapReferenceList{}
-	err = json.NewDecoder(file).Decode(&configMaps)
-	if err != nil {
-		return err
-	}
-
-	tmpdir, err := ioutil.TempDir(w.cfg.ruleVolumeDir, "prometheus-rule-files")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpdir)
-
-	for i, cm := range configMaps.Items {
-		err := w.writeRuleConfigMap(tmpdir, i, cm.Key)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = w.placeNewRuleFiles(tmpdir, w.cfg.ruleVolumeDir)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (w *volumeWatcher) placeNewRuleFiles(tmpdir, ruleFileDir string) error {
-	err := os.MkdirAll(ruleFileDir, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	err = w.removeOldRuleFiles(ruleFileDir, tmpdir)
-	if err != nil {
-		return err
-	}
-	d, err := os.Open(tmpdir)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		err = os.Rename(filepath.Join(tmpdir, name), filepath.Join(ruleFileDir, name))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (w *volumeWatcher) removeOldRuleFiles(dir string, tmpdir string) error {
-	d, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		s := filepath.Join(dir, name)
-		if s != tmpdir {
-			err = os.RemoveAll(s)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func (w *volumeWatcher) writeRuleConfigMap(rulesDir string, index int, configMap string) error {
-	configMapParts := strings.Split(configMap, "/")
-	if len(configMapParts) != 2 {
-		return fmt.Errorf("Malformatted configmap key: %s. Format must be namespace/name.", configMap)
-	}
-	configMapNamespace := configMapParts[0]
-	configMapName := configMapParts[1]
-
-	cm, err := w.client.CoreV1().GetConfigMap(context.TODO(), configMapName, configMapNamespace)
-	if err != nil {
-		return err
-	}
-
-	dir := filepath.Join(rulesDir, fmt.Sprintf("rules-%d", index))
-	err = os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	for filename, content := range cm.Data {
-		err = w.writeConfigMapFile(filepath.Join(dir, filename), content)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (w *volumeWatcher) writeConfigMapFile(filename, content string) error {
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = f.WriteString(content)
-	return err
-}
-
-func (w *volumeWatcher) ReloadPrometheus() error {
-	req, err := http.NewRequest("POST", w.cfg.reloadUrl, nil)
-	if err != nil {
-		return err
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Received response code %d, expected 200", resp.StatusCode)
-	}
-	return nil
-}
-
-func (w *volumeWatcher) Refresh() error {
-	w.logger.Log("msg", "Updating rule files...")
-	err := backoff.RetryNotify(w.UpdateRuleFiles, backoff.NewExponentialBackOff(), func(err error, next time.Duration) {
-		w.logger.Log("msg", "Updating rule files temporarily failed.", "err", err, "next-retry", next)
-	})
-	if err != nil {
-		w.logger.Log("msg", "Updating rule files failed.", "err", err)
-		return err
-	} else {
-		w.logger.Log("msg", "Rule files updated.")
-	}
-
-	w.logger.Log("msg", "Reloading Prometheus...")
-	err = backoff.RetryNotify(w.ReloadPrometheus, backoff.NewExponentialBackOff(), func(err error, next time.Duration) {
-		w.logger.Log("msg", "Reloading Prometheus temporarily failed.", "err", err, "next-retry", next)
-	})
-	if err != nil {
-		w.logger.Log("msg", "Reloading Prometheus failed.", "err", err)
-		return err
-	} else {
-		w.logger.Log("msg", "Prometheus successfully reloaded.")
-	}
-	return nil
-}
-
-func (w *volumeWatcher) Run() {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		w.logger.Log("msg", "Creating a new watcher failed.", "err", err)
-		os.Exit(1)
-	}
-	defer watcher.Close()
-
-	w.logger.Log("msg", "Starting...")
-	err = w.Refresh()
-	if err != nil {
-		w.logger.Log("msg", "Initial loading of config volume failed.", "err", err)
-		os.Exit(1)
-	}
-	err = watcher.Add(w.cfg.configVolumeDir)
-	if err != nil {
-		w.logger.Log("msg", "Adding config volume to be watched failed.", "err", err)
-		os.Exit(1)
-	}
-
-	for {
-		select {
-		case event := <-watcher.Events:
-			if event.Op&fsnotify.Create == fsnotify.Create {
-				if filepath.Base(event.Name) == "..data" {
-					w.logger.Log("msg", "ConfigMap modified.")
-					if err := w.Refresh(); err != nil {
-						w.logger.Log("msg", "Rule files could not be refreshed.", "err", err)
-						os.Exit(1)
-					}
-				}
-			}
-		case err := <-watcher.Errors:
-			w.logger.Log("err", err)
-		}
-	}
-}
 
 func main() {
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
-	cfg := config{}
-	flags := flag.NewFlagSet("prometheus-config-reloader", flag.ExitOnError)
-	flags.StringVar(&cfg.configVolumeDir, "config-volume-dir", "", "The directory to watch for changes to reload Prometheus.")
-	flags.StringVar(&cfg.ruleVolumeDir, "rule-volume-dir", "", "The directory to write rule files to.")
-	flags.StringVar(&cfg.reloadUrl, "reload-url", "", "The URL to call when intending to reload Prometheus.")
-	flags.Parse(os.Args[1:])
+	app := kingpin.New("prometheus-config-reloader", "")
 
-	if cfg.ruleVolumeDir == "" {
-		logger.Log("Missing directory to write rule files into\n")
-		flag.Usage()
-		os.Exit(1)
+	cfgFile := app.Flag("config-file", "config file watched by the reloader").
+		String()
+
+	ruleListFile := app.Flag("rule-list-file", "file listing configmaps of rules to load dynamically").
+		String()
+
+	cfgSubstFile := app.Flag("config-envsubst-file", "output file for environment variable substituted config file").
+		String()
+
+	ruleDir := app.Flag("rule-dir", "rule directory for the reloader to refresh").String()
+
+	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
+		Default("http://127.0.0.1:9090/-/reload").URL()
+
+	if _, err := app.Parse(os.Args[1:]); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
 	}
 
-	if cfg.configVolumeDir == "" {
-		logger.Log("Missing directory to watch for configuration changes\n")
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	if cfg.reloadUrl == "" {
-		logger.Log("Missing URL to call when intending to reload Prometheus\n")
-		flag.Usage()
-		os.Exit(1)
+	if err := os.MkdirAll(*ruleDir, 0777); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
 	}
 
 	client, err := k8s.NewInClusterClient()
 	if err != nil {
-		logger.Log("err", err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	newVolumeWatcher(client, cfg, log.With(logger, "component", "volume-watcher")).Run()
+	var g run.Group
+	{
+		ctx, cancel := context.WithCancel(context.Background())
+		rel := reloader.New(logger, *reloadURL, *cfgFile, *cfgSubstFile, *ruleDir)
+
+		g.Add(func() error {
+			return rel.Watch(ctx)
+		}, func(error) {
+			cancel()
+		})
+	}
+	{
+		ctx, cancel := context.WithCancel(context.Background())
+		tick := time.NewTicker(1 * time.Minute)
+
+		rfet := newRuleFetcher(client, *ruleListFile, *ruleDir)
+
+		g.Add(func() error {
+			defer tick.Stop()
+
+			for {
+				select {
+				case <-tick.C:
+					if err := rfet.Refresh(ctx); err != nil {
+						level.Error(logger).Log("msg", "updating rules failed", "err", err)
+					}
+				case <-ctx.Done():
+					return nil
+				}
+			}
+		}, func(error) {
+			cancel()
+		})
+	}
+
+	if err := g.Run(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+type configMapRef struct {
+	Key string `json:"key"`
+}
+
+type ruleFetcher struct {
+	client   *k8s.Client
+	listFile string
+	outDir   string
+
+	lastHash [sha256.Size]byte
+}
+
+func newRuleFetcher(client *k8s.Client, listFile, outDir string) *ruleFetcher {
+	return &ruleFetcher{
+		client:   client,
+		listFile: listFile,
+		outDir:   outDir,
+	}
+}
+
+func (rf *ruleFetcher) Refresh(ctx context.Context) error {
+	b, err := ioutil.ReadFile(rf.listFile)
+	if err != nil {
+		return err
+	}
+
+	h := sha256.Sum256(b)
+	if rf.lastHash == h {
+		return nil
+	}
+
+	var cms struct {
+		Items []*configMapRef `json:"items"`
+	}
+	err = json.Unmarshal(b, &cms)
+	if err != nil {
+		return err
+	}
+	if err := rf.refresh(ctx, cms.Items); err != nil {
+		return err
+	}
+
+	rf.lastHash = h
+	return nil
+}
+
+func (rf *ruleFetcher) refresh(ctx context.Context, cms []*configMapRef) error {
+	tmpdir := rf.outDir + ".tmp"
+
+	if err := os.MkdirAll(tmpdir, 0777); err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpdir)
+
+	for i, cm := range cms {
+		parts := strings.Split(cm.Key, "/")
+		if len(parts) != 2 {
+			return fmt.Errorf("malformatted configmap key: %s, must be namespace/name", cm.Key)
+		}
+		namespace, name := parts[0], parts[1]
+
+		cm, err := rf.client.CoreV1().GetConfigMap(ctx, name, namespace)
+		if err != nil {
+			return err
+		}
+		dir := filepath.Join(tmpdir, fmt.Sprintf("rules-%d", i))
+
+		if err = os.MkdirAll(dir, os.ModePerm); err != nil {
+			return err
+		}
+		for fn, content := range cm.Data {
+			if err := ioutil.WriteFile(filepath.Join(dir, fn), []byte(content), 0666); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	if err := os.RemoveAll(rf.outDir); err != nil {
+		return err
+	}
+	return os.Rename(tmpdir, rf.outDir)
 }

@@ -269,6 +269,11 @@ type AlertmanagerEndpoints struct {
 	Scheme string `json:"scheme,omitempty"`
 	// Prefix for the HTTP path alerts are pushed to.
 	PathPrefix string `json:"pathPrefix,omitempty"`
+	// TLS Config to use for alertmanager connection.
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+	// BearerTokenFile to read from filesystem to use when authenticating to
+	// Alertmanager.
+	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.
@@ -289,6 +294,8 @@ type ServiceMonitor struct {
 type ServiceMonitorSpec struct {
 	// The label to use to retrieve the job name from.
 	JobLabel string `json:"jobLabel,omitempty"`
+	// TargetLabels transfers labels on the Kubernetes Service onto the target.
+	TargetLabels []string `json:"targetLabels,omitempty"`
 	// A list of endpoints allowed as part of this ServiceMonitor.
 	Endpoints []Endpoint `json:"endpoints"`
 	// Selector to select Endpoints objects.
@@ -391,12 +398,16 @@ type AlertmanagerSpec struct {
 	PodMetadata *metav1.ObjectMeta `json:"podMetadata,omitempty"`
 	// Version the cluster should be on.
 	Version string `json:"version,omitempty"`
-	// Base image that is used to deploy pods.
+	// Base image that is used to deploy pods, without tag.
 	BaseImage string `json:"baseImage,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	// Secrets is a list of Secrets in the same namespace as the Alertmanager
+	// object, which shall be mounted into the Alertmanager Pods.
+	// The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.
+	Secrets []string `json:"secrets,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will
 	// eventually make the size of the running cluster equal to the expected
 	// size.

@@ -424,3 +424,59 @@ Dependencies: []string{
 },
 `, buffer.String())
 }
+
+func TestNestedLists(t *testing.T) {
+	err, assert, buffer := testOpenAPITypeWritter(t, `
+package foo
+
+// Blah is a test.
+// +k8s:openapi-gen=true
+// +k8s:openapi-gen=x-kubernetes-type-tag:type_test
+type Blah struct {
+	// Nested list
+	NestedList [][]int64
+}
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(`"base/foo.Blah": {
+Schema: spec.Schema{
+SchemaProps: spec.SchemaProps{
+Description: "Blah is a test.",
+Properties: map[string]spec.Schema{
+"NestedList": {
+SchemaProps: spec.SchemaProps{
+Description: "Nested list",
+Type: []string{"array"},
+Items: &spec.SchemaOrArray{
+Schema: &spec.Schema{
+SchemaProps: spec.SchemaProps{
+Type: []string{"array"},
+Items: &spec.SchemaOrArray{
+Schema: &spec.Schema{
+SchemaProps: spec.SchemaProps{
+Type: []string{"integer"},
+Format: "int64",
+},
+},
+},
+},
+},
+},
+},
+},
+},
+Required: []string{"NestedList"},
+},
+VendorExtensible: spec.VendorExtensible{
+Extensions: spec.Extensions{
+"x-kubernetes-type-tag": "type_test",
+},
+},
+},
+Dependencies: []string{
+},
+},
+`, buffer.String())
+}

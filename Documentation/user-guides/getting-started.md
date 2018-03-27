@@ -89,7 +89,7 @@ kind: ServiceAccount
 metadata:
   name: prometheus-operator
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   labels:
@@ -97,6 +97,9 @@ metadata:
   name: prometheus-operator
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: prometheus-operator
   template:
     metadata:
       labels:
@@ -315,5 +318,5 @@ Further reading:
 [exposing-prom]: exposing-prometheus-and-alertmanager.md
 [introducing-operators]: https://coreos.com/blog/introducing-operators.html
 [prom-rbac]: ../rbac.md
-[prometheus-manifest]: ../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml
+[prometheus-manifest]: ../../example/rbac/prometheus/prometheus.yaml
 [rbac-auth]: https://kubernetes.io/docs/admin/authorization/

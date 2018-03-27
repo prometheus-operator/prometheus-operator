@@ -1,12 +1,3 @@
 #!/usr/bin/env bash
 
-if [ -z "${KUBECONFIG}" ]; then
-    KUBECONFIG=~/.kube/config
-fi
-
-if [ -z "${NAMESPACE}" ]; then
-    NAMESPACE=default
-fi
-
-kubectl --namespace "$NAMESPACE" --kubeconfig="$KUBECONFIG" delete -f manifests/examples/example-app
-
+kubectl delete -f manifests/examples/example-app

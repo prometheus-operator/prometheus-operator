@@ -20,7 +20,7 @@ import (
 	"path"
 	"strings"
 
-	"k8s.io/api/apps/v1beta1"
+	appsv1 "k8s.io/api/apps/v1beta2"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,6 +34,7 @@ import (
 const (
 	governingServiceName   = "alertmanager-operated"
 	defaultVersion         = "v0.14.0"
+	secretsDir             = "/etc/alertmanager/secrets/"
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
 	alertmanagerStorageDir = "/alertmanager"
@@ -44,7 +45,7 @@ var (
 	probeTimeoutSeconds int32 = 3
 )
 
-func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, config Config) (*v1beta1.StatefulSet, error) {
+func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, config Config) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -75,7 +76,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *v1beta1.StatefulSet, co
 	}
 
 	boolTrue := true
-	statefulset := &v1beta1.StatefulSet{
+	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(am.Name),
 			Labels:      config.Labels.Merge(am.ObjectMeta.Labels),
@@ -162,35 +163,36 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 	return svc
 }
 
-func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.StatefulSetSpec, error) {
 	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Version)
 	versionStr := strings.TrimLeft(a.Spec.Version, "v")
 
 	version, err := semver.Parse(versionStr)
 	if err != nil {
-		return nil, errors.Wrap(err, "parse version")
+		return nil, errors.Wrap(err, "failed to parse alertmanager version")
 	}
 
 	amArgs := []string{
-		fmt.Sprintf("-config.file=%s", alertmanagerConfFile),
-		fmt.Sprintf("-mesh.listen-address=:%d", 6783),
-		fmt.Sprintf("-storage.path=%s", alertmanagerStorageDir),
+		fmt.Sprintf("--config.file=%s", alertmanagerConfFile),
+		fmt.Sprintf("--cluster.listen-address=:%d", 6783),
+		fmt.Sprintf("--storage.path=%s", alertmanagerStorageDir),
 	}
 
 	if a.Spec.ListenLocal {
-		amArgs = append(amArgs, "-web.listen-address=127.0.0.1:9093")
+		amArgs = append(amArgs, "--web.listen-address=127.0.0.1:9093")
 	} else {
-		amArgs = append(amArgs, "-web.listen-address=:9093")
+		amArgs = append(amArgs, "--web.listen-address=:9093")
 	}
 
 	if a.Spec.ExternalURL != "" {
-		amArgs = append(amArgs, "-web.external-url="+a.Spec.ExternalURL)
+		amArgs = append(amArgs, "--web.external-url="+a.Spec.ExternalURL)
 	}
 
 	webRoutePrefix := "/"
 	if a.Spec.RoutePrefix != "" {
 		webRoutePrefix = a.Spec.RoutePrefix
 	}
+	amArgs = append(amArgs, fmt.Sprintf("--web.route-prefix=%v", webRoutePrefix))
 
 	localReloadURL := &url.URL{
 		Scheme: "http",
@@ -241,7 +243,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 	podLabels["alertmanager"] = a.Name
 
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
-		amArgs = append(amArgs, fmt.Sprintf("-mesh.peer=%s-%d.%s.%s.svc", prefixedName(a.Name), i, governingServiceName, a.Namespace))
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s.%s.svc:6783", prefixedName(a.Name), i, governingServiceName, a.Namespace))
 	}
 
 	ports := []v1.ContainerPort{
@@ -275,31 +277,87 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 		securityContext = a.Spec.SecurityContext
 	}
 
+	// Adjust Alertmanager command line args to specified AM version
 	switch version.Major {
 	case 0:
-		if version.Minor >= 7 {
-			amArgs = append(amArgs, "-web.route-prefix="+webRoutePrefix)
-		}
-		if version.Minor >= 13 {
+		if version.Minor < 15 {
 			for i := range amArgs {
-				// starting with v0.13.0 of Alertmanager all flags are with double dashes.
-				amArgs[i] = "-" + amArgs[i]
+				// below Alertmanager v0.15.0 peer address port specification is not necessary
+				if strings.Contains(amArgs[i], "--cluster.peer") {
+					amArgs[i] = strings.TrimSuffix(amArgs[i], ":6783")
+				}
+
+				// below Alertmanager v0.15.0 high availability flags are prefixed with 'mesh' instead of 'cluster'
+				amArgs[i] = strings.Replace(amArgs[i], "--cluster.", "--mesh.", 1)
 			}
+		}
+		if version.Minor < 13 {
+			for i := range amArgs {
+				// below Alertmanager v0.13.0 all flags are with single dash.
+				amArgs[i] = strings.Replace(amArgs[i], "--", "-", 1)
+			}
+		}
+		if version.Minor < 7 {
+			// below Alertmanager v0.7.0 the flag 'web.route-prefix' does not exist
+			amArgs = filter(amArgs, func(s string) bool {
+				return !strings.Contains(s, "web.route-prefix")
+			})
 		}
 	default:
 		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
 	}
 
+	volumes := []v1.Volume{
+		{
+			Name: "config-volume",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: configSecretName(a.Name),
+				},
+			},
+		},
+	}
+	amVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      "config-volume",
+			MountPath: alertmanagerConfDir,
+		},
+		{
+			Name:      volumeName(a.Name),
+			MountPath: alertmanagerStorageDir,
+			SubPath:   subPathForStorage(a.Spec.Storage),
+		},
+	}
+	for _, s := range a.Spec.Secrets {
+		volumes = append(volumes, v1.Volume{
+			Name: "secret-" + s,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: s,
+				},
+			},
+		})
+		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+			Name:      "secret-" + s,
+			ReadOnly:  true,
+			MountPath: secretsDir + s,
+		})
+	}
+
 	terminationGracePeriod := int64(0)
-	return &v1beta1.StatefulSetSpec{
+	finalLabels := config.Labels.Merge(podLabels)
+	return &appsv1.StatefulSetSpec{
 		ServiceName: governingServiceName,
 		Replicas:    a.Spec.Replicas,
-		UpdateStrategy: v1beta1.StatefulSetUpdateStrategy{
-			Type: v1beta1.RollingUpdateStatefulSetStrategyType,
+		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
+			Type: appsv1.RollingUpdateStatefulSetStrategyType,
+		},
+		Selector: &metav1.LabelSelector{
+			MatchLabels: finalLabels,
 		},
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels:      config.Labels.Merge(podLabels),
+				Labels:      finalLabels,
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
@@ -307,21 +365,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
 				Containers: append([]v1.Container{
 					{
-						Args:  amArgs,
-						Name:  "alertmanager",
-						Image: image,
-						Ports: ports,
-						VolumeMounts: []v1.VolumeMount{
-							{
-								Name:      "config-volume",
-								MountPath: alertmanagerConfDir,
-							},
-							{
-								Name:      volumeName(a.Name),
-								MountPath: alertmanagerStorageDir,
-								SubPath:   subPathForStorage(a.Spec.Storage),
-							},
-						},
+						Args:           amArgs,
+						Name:           "alertmanager",
+						Image:          image,
+						Ports:          ports,
+						VolumeMounts:   amVolumeMounts,
 						LivenessProbe:  livenessProbe,
 						ReadinessProbe: readinessProbe,
 						Resources:      a.Spec.Resources,
@@ -347,16 +395,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*v1beta1.
 						},
 					},
 				}, a.Spec.Containers...),
-				Volumes: []v1.Volume{
-					{
-						Name: "config-volume",
-						VolumeSource: v1.VolumeSource{
-							Secret: &v1.SecretVolumeSource{
-								SecretName: configSecretName(a.Name),
-							},
-						},
-					},
-				},
+				Volumes:            volumes,
 				ServiceAccountName: a.Spec.ServiceAccountName,
 				SecurityContext:    securityContext,
 				Tolerations:        a.Spec.Tolerations,
@@ -384,4 +423,14 @@ func subPathForStorage(s *monitoringv1.StorageSpec) string {
 	}
 
 	return "alertmanager-db"
+}
+
+func filter(strings []string, f func(string) bool) []string {
+	filteredStrings := make([]string, 0)
+	for _, s := range strings {
+		if f(s) {
+			filteredStrings = append(filteredStrings, s)
+		}
+	}
+	return filteredStrings
 }

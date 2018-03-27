@@ -1,6 +1,6 @@
 REPO?=quay.io/coreos/prometheus-operator
 TAG?=$(shell git rev-parse --short HEAD)
-NAMESPACE?=po-e2e-$(shell LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
+NAMESPACE?=po-e2e-$(shell LC_ALL=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
 KUBECONFIG?=$(HOME)/.kube/config
 
 PROMU := $(GOPATH)/bin/promu
@@ -76,12 +76,12 @@ generate: jsonnet-docker
 
 $(GOBIN)/openapi-gen:
 	go get -u -v -d k8s.io/code-generator/cmd/openapi-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.8
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.9
 	go install k8s.io/code-generator/cmd/openapi-gen
 
 $(GOBIN)/deepcopy-gen:
 	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.8
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.9
 	go install k8s.io/code-generator/cmd/deepcopy-gen
 
 openapi-gen: $(GOBIN)/openapi-gen
