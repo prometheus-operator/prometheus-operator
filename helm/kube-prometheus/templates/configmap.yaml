@@ -14,7 +14,7 @@ data:
 {{- $root := . }}
 {{- range $key, $val := .Values.prometheusRules }}
   {{ $key }}: |-
-{{ $val | indent 4}}
+{{ tpl $val $root | indent 4}}
 {{- end }}
 {{ else }}
   general.rules: |-
