@@ -9,4 +9,5 @@ maintainers:
 name: kube-prometheus
 sources:
   - https://github.com/coreos/prometheus-operator
-version: 0.0.36
+version: 0.0.41
+

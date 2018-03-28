@@ -15,6 +15,7 @@
 package alertmanager
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -209,4 +210,196 @@ func TestListenLocal(t *testing.T) {
 	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 1 {
 		t.Fatal("Alertmanager container should only have one port defined")
 	}
+}
+
+// below Alertmanager v0.13.0 all flags are with single dash.
+func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
+	tests := []struct {
+		version string
+		prefix  string
+		amount  int
+	}{
+		{"v0.12.0", "-", 1},
+		{"v0.13.0", "--", 2},
+	}
+
+	for _, test := range tests {
+		a := monitoringv1.Alertmanager{}
+		a.Spec.Version = test.version
+		replicas := int32(3)
+		a.Spec.Replicas = &replicas
+
+		statefulSet, err := makeStatefulSetSpec(&a, Config{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		amArgs := statefulSet.Template.Spec.Containers[0].Args
+
+		for _, arg := range amArgs {
+			if arg[:test.amount] != test.prefix {
+				t.Fatalf("expected all args to start with %v but got %v", test.prefix, arg)
+			}
+		}
+	}
+}
+
+// below Alertmanager v0.7.0 the flag 'web.route-prefix' does not exist
+func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
+	tests := []struct {
+		version              string
+		expectWebRoutePrefix bool
+	}{
+		{"v0.6.0", false},
+		{"v0.7.0", true},
+	}
+
+	for _, test := range tests {
+		a := monitoringv1.Alertmanager{}
+		a.Spec.Version = test.version
+		replicas := int32(1)
+		a.Spec.Replicas = &replicas
+
+		statefulSet, err := makeStatefulSetSpec(&a, Config{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		amArgs := statefulSet.Template.Spec.Containers[0].Args
+
+		containsWebRoutePrefix := false
+
+		for _, arg := range amArgs {
+			if strings.Contains(arg, "-web.route-prefix") {
+				containsWebRoutePrefix = true
+			}
+		}
+
+		if containsWebRoutePrefix != test.expectWebRoutePrefix {
+			t.Fatalf("expected stateful set containing arg '-web.route-prefix' to be: %v", test.expectWebRoutePrefix)
+		}
+	}
+}
+
+// below Alertmanager v0.15.0 high availability flags are prefixed with 'mesh' instead of 'cluster'
+func TestMakeStatefulSetSpecMeshClusterFlags(t *testing.T) {
+	tests := []struct {
+		version       string
+		rightHAPrefix string
+		wrongHAPrefix string
+	}{
+		{"v0.14.0", "mesh", "cluster"},
+		{"v0.15.0", "cluster", "mesh"},
+	}
+
+	for _, test := range tests {
+		a := monitoringv1.Alertmanager{}
+		a.Spec.Version = test.version
+		replicas := int32(3)
+		a.Spec.Replicas = &replicas
+
+		statefulSet, err := makeStatefulSetSpec(&a, Config{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		haFlags := []string{"--%v.listen-address", "--%v.peer="}
+
+		amArgs := statefulSet.Template.Spec.Containers[0].Args
+
+		for _, flag := range haFlags {
+			if sliceContains(amArgs, fmt.Sprintf(flag, test.wrongHAPrefix)) {
+				t.Fatalf("expected Alertmanager args not to contain %v, but got %v", test.wrongHAPrefix, amArgs)
+			}
+			if !sliceContains(amArgs, fmt.Sprintf(flag, test.rightHAPrefix)) {
+				t.Fatalf("expected Alertmanager args to contain %v, but got %v", test.rightHAPrefix, amArgs)
+			}
+		}
+	}
+}
+
+// below Alertmanager v0.15.0 peer address port specification is not necessary
+func TestMakeStatefulSetSpecPeerFlagPort(t *testing.T) {
+	tests := []struct {
+		version    string
+		portNeeded bool
+	}{
+		{"v0.14.0", false},
+		{"v0.15.0", true},
+	}
+
+	for _, test := range tests {
+		a := monitoringv1.Alertmanager{}
+		a.Spec.Version = test.version
+		replicas := int32(3)
+		a.Spec.Replicas = &replicas
+
+		statefulSet, err := makeStatefulSetSpec(&a, Config{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		amArgs := statefulSet.Template.Spec.Containers[0].Args
+
+		for _, arg := range amArgs {
+			if strings.Contains(arg, ".peer") {
+				if strings.Contains(arg, ":6783") != test.portNeeded {
+					t.Fatalf("expected arg '%v' containing port specification to be: %v", arg, test.portNeeded)
+				}
+			}
+		}
+	}
+}
+
+func TestAdditionalSecretsMounted(t *testing.T) {
+	secrets := []string{"secret1", "secret2"}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			Secrets: secrets,
+		},
+	}, nil, defaultTestConfig)
+	require.NoError(t, err)
+
+	secret1Found := false
+	secret2Found := false
+	for _, v := range sset.Spec.Template.Spec.Volumes {
+		if v.Secret != nil {
+			if v.Secret.SecretName == "secret1" {
+				secret1Found = true
+			}
+			if v.Secret.SecretName == "secret2" {
+				secret2Found = true
+			}
+		}
+	}
+
+	if !(secret1Found && secret2Found) {
+		t.Fatal("Additional secrets were not found.")
+	}
+
+	secret1Found = false
+	secret2Found = false
+	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if v.Name == "secret-secret1" && v.MountPath == "/etc/alertmanager/secrets/secret1" {
+			secret1Found = true
+		}
+		if v.Name == "secret-secret2" && v.MountPath == "/etc/alertmanager/secrets/secret2" {
+			secret2Found = true
+		}
+	}
+
+	if !(secret1Found && secret2Found) {
+		t.Fatal("Additional secrets were not found.")
+	}
+}
+
+func sliceContains(slice []string, match string) bool {
+	contains := false
+	for _, s := range slice {
+		if strings.Contains(s, match) {
+			contains = true
+		}
+	}
+	return contains
 }
