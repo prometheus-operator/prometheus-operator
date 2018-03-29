@@ -9,6 +9,7 @@ service:
   type: ClusterIP
   externalPort: 9100
   containerPort: 9100
+
 resources:
   limits:
     cpu: 200m
@@ -17,6 +18,27 @@ resources:
     cpu: 100m
     memory: 30Mi
 
+container: 
+  args:
+  - --path.procfs=/host/proc
+  - --path.sysfs=/host/sys
+
+  volumes:
+  - name: proc
+    hostPath:
+      path: /proc
+  - name: sys
+    hostPath:
+      path: /sys
+  
+  volumeMounts:
+  - name: proc
+    mountPath: /host/proc
+    readOnly:  true
+  - name: sys
+    mountPath: /host/sys
+    readOnly: true
+ 
 ## Tolerations for use with node taints
 ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 ##

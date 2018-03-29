@@ -34,6 +34,7 @@ import (
 const (
 	governingServiceName   = "alertmanager-operated"
 	defaultVersion         = "v0.14.0"
+	secretsDir             = "/etc/alertmanager/secrets/"
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
 	alertmanagerStorageDir = "/alertmanager"
@@ -306,6 +307,43 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
 	}
 
+	volumes := []v1.Volume{
+		{
+			Name: "config-volume",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: configSecretName(a.Name),
+				},
+			},
+		},
+	}
+	amVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      "config-volume",
+			MountPath: alertmanagerConfDir,
+		},
+		{
+			Name:      volumeName(a.Name),
+			MountPath: alertmanagerStorageDir,
+			SubPath:   subPathForStorage(a.Spec.Storage),
+		},
+	}
+	for _, s := range a.Spec.Secrets {
+		volumes = append(volumes, v1.Volume{
+			Name: "secret-" + s,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: s,
+				},
+			},
+		})
+		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+			Name:      "secret-" + s,
+			ReadOnly:  true,
+			MountPath: secretsDir + s,
+		})
+	}
+
 	terminationGracePeriod := int64(0)
 	finalLabels := config.Labels.Merge(podLabels)
 	return &appsv1.StatefulSetSpec{
@@ -327,21 +365,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
 				Containers: append([]v1.Container{
 					{
-						Args:  amArgs,
-						Name:  "alertmanager",
-						Image: image,
-						Ports: ports,
-						VolumeMounts: []v1.VolumeMount{
-							{
-								Name:      "config-volume",
-								MountPath: alertmanagerConfDir,
-							},
-							{
-								Name:      volumeName(a.Name),
-								MountPath: alertmanagerStorageDir,
-								SubPath:   subPathForStorage(a.Spec.Storage),
-							},
-						},
+						Args:           amArgs,
+						Name:           "alertmanager",
+						Image:          image,
+						Ports:          ports,
+						VolumeMounts:   amVolumeMounts,
 						LivenessProbe:  livenessProbe,
 						ReadinessProbe: readinessProbe,
 						Resources:      a.Spec.Resources,
@@ -367,16 +395,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 						},
 					},
 				}, a.Spec.Containers...),
-				Volumes: []v1.Volume{
-					{
-						Name: "config-volume",
-						VolumeSource: v1.VolumeSource{
-							Secret: &v1.SecretVolumeSource{
-								SecretName: configSecretName(a.Name),
-							},
-						},
-					},
-				},
+				Volumes:            volumes,
 				ServiceAccountName: a.Spec.ServiceAccountName,
 				SecurityContext:    securityContext,
 				Tolerations:        a.Spec.Tolerations,

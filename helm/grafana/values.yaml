@@ -11,6 +11,10 @@ tolerations: {}
 
 annotations: {}
 
+## If true, create a serviceMonitor for grafana
+##
+selfServiceMonitor: true
+
 ## Pass extra environment variables to the Grafana container.
 ##
 # extraVars:
