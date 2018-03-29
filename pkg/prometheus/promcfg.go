@@ -345,6 +345,16 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 		},
 	}...)
 
+	// Relabel targetLabels from Service onto target.
+	for _, l := range m.Spec.TargetLabels {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(l)}},
+			{Key: "target_label", Value: sanitizeLabelName(l)},
+			{Key: "regex", Value: "(.+)"},
+			{Key: "replacement", Value: "${1}"},
+		})
+	}
+
 	// By default, generate a safe job name from the service name.  We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
 	// value for it. A single service may potentially have multiple metrics

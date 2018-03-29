@@ -318,5 +318,5 @@ Further reading:
 [exposing-prom]: exposing-prometheus-and-alertmanager.md
 [introducing-operators]: https://coreos.com/blog/introducing-operators.html
 [prom-rbac]: ../rbac.md
-[prometheus-manifest]: ../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml
+[prometheus-manifest]: ../../example/rbac/prometheus/prometheus.yaml
 [rbac-auth]: https://kubernetes.io/docs/admin/authorization/
