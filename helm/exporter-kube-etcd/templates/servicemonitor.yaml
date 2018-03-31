@@ -24,7 +24,13 @@ spec:
     {{- if eq .Values.scheme "https" }}
     scheme: https
     tlsConfig:
-      caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      caFile: {{ .Values.caFile }}
+      {{- if  .Values.certFile }}
+      certFile: {{ .Values.certFile }}
+      {{- end }}
+      {{- if .Values.keyFile }}
+      keyFile: {{ .Values.keyFile }}
+      {{- end}}
       insecureSkipVerify: true
     {{- end }}
 
