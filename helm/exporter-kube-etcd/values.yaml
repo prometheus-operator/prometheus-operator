@@ -6,3 +6,8 @@ endpoints: []
 scheme: http
 # default rules are in templates/etcd3.rules.yaml
 # prometheusRules: {}
+
+# TLS Cofiguration for the service monitor, default to none, but append cert and keyfile if passed
+caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+certFile: ""
+keyFile: ""
