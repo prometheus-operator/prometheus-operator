@@ -1,0 +1,3 @@
+# Default values for exporter-coredns.
+
+port: 9001

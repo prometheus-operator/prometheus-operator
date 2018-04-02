@@ -368,3 +368,7 @@ prometheus:
 
 # default rules are in templates/general.rules.yaml
 # prometheusRules: {}
+
+# Select Deployed DNS Solution
+deployCoreDNS: false
+deployKubeDNS: true
