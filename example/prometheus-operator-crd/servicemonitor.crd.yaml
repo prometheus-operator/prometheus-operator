@@ -123,9 +123,6 @@ spec:
                             in a replace action. It is mandatory for replace actions.
                             Regex capture groups are available.
                           type: string
-                      required:
-                      - sourceLabels
-                      - replacement
                     type: array
                   params:
                     description: Optional HTTP URL parameters
