@@ -28,6 +28,13 @@ extraVars:
 ## Make sure grafana.ini is present on /etc/grafana
 mountGrafanaConfig: false
 
+## Allow for the mounting of custom configuration files at /etc/grafana/conf
+## An example of this would be to mount a custom ldap.toml
+# customGrafanaConfig:
+#   ldap.toml: |
+#      ...
+customGrafanaConfig: {}
+
 adminUser: "admin"
 adminPassword: "admin"
 

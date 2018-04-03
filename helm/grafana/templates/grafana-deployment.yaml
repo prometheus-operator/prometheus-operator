@@ -1,3 +1,4 @@
+{{ $useCustomConfig := and .Values.customGrafanaConfig (not .Values.mountGrafanaConfig) }}
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -43,10 +44,14 @@ spec:
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/lib/grafana
-      {{- if .Values.mountGrafanaConfig }}
+        {{- if .Values.mountGrafanaConfig }}
         - name: grafana-config
           mountPath: /etc/grafana
-      {{- end }}
+        {{- end }}
+        {{- if $useCustomConfig }}
+        - name: grafana-config
+          mountPath: /etc/grafana/conf        
+        {{- end }}
         ports:
         - name: web
           containerPort: 3000
@@ -115,4 +120,14 @@ spec:
           hostPath:
             path: /etc/grafana
             type: directory
+      {{- end }}
+      {{- if $useCustomConfig }}
+        - name: grafana-config      
+          secret:
+            secretName: {{ template "grafana.server.fullname" . }}-config
+            items:
+            {{- range $index, $test := .Values.customGrafanaConfig }}
+            - key: {{ $index }}
+              path: {{ $index }}
+            {{- end }}
       {{- end }}
