@@ -114,6 +114,24 @@ spec:
     - monitoring
 ```
 
+In tlsConfig field aboved, you can find caFile/certFile/keyFile in etcd-secrets, using `kubectl exec -ti -n monitoring prometheus-k8s-0 /bin/sh` command and `ls /etc/prometheus/secrets/etcd-certs/` command to list cert-files of etcd:
+
+```bash
+etcd-ca.crt etcd.crt etcd.key
+```
+
+replace them into tlsConfig field:
+
+```bash
+...
+    tlsConfig:
+      caFile: /etc/prometheus/secrets/etcd-certs/etcd-ca.crt
+      certFile: /etc/prometheus/secrets/etcd-certs/etcd.crt
+      keyFile: /etc/prometheus/secrets/etcd-certs/etcd.key
+...
+
+```
+
 # Step 3: Open the port 
 
 You now need to allow the nodes Prometheus are running on to talk to the etcd on the port 2379 (if 2379 is the port used by etcd to expose the metrics)
