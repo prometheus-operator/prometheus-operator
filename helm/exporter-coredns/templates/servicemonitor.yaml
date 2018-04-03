@@ -3,7 +3,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    component: coredns
+    component: {{ .Values.selectorLabel }}
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"
     prometheus: {{ .Release.Name }}
@@ -13,7 +13,7 @@ spec:
   selector:
     matchLabels:
       app: {{ template "exporter-coredns.name" . }}
-      component: coredns
+      component: {{ .Values.selectorLabel }}
   namespaceSelector:
     matchNames:
       - "kube-system"

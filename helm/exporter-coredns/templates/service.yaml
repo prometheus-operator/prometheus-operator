@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     app: {{ template "exporter-coredns.name" . }}
-    component: coredns
+    component: {{ .Values.selectorLabel }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
@@ -17,5 +17,5 @@ spec:
       protocol: TCP
       targetPort: {{ .Values.port }}
   selector:
-    k8s-app: coredns
+    k8s-app: {{ .Values.selectorLabel }}
   type: ClusterIP
