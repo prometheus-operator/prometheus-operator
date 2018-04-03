@@ -131,7 +131,19 @@ routePrefix: /
 ## Rules configmap selector
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md
 ##
+## 1. If `matchLabels` is used, `rules.additionalLabels` must contain all the labels from
+##    `matchLabels` in order to be be matched by Prometheus
+## 2. If `matchExpressions` is used `rules.additionalLabels` must contain at least one label
+##    from `matchExpressions` in order to be matched by Prometheus
+## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels
 rulesSelector: {}
+ # rulesSelector: {
+ #   matchExpressions: [{key: prometheus, operator: In, values: [example-rules, example-rules-2]}]
+ # }
+ ### OR
+ # rulesSelector: {
+ #   matchLabels: [{role: example-rules}]
+ # }
 
 ## Prometheus alerting & recording rules
 ## Ref: https://prometheus.io/docs/querying/rules/
@@ -139,6 +151,11 @@ rulesSelector: {}
 ##
 rules:
   specifiedInValues: true
+  ## What additional rules to be added to the ConfigMap
+  ## You can use this together with `rulesSelector`
+  additionalLabels: {}
+  #  prometheus: example-rules
+  #  application: etcd
   value: {}
 
 ## List of Secrets in the same namespace as the Prometheus

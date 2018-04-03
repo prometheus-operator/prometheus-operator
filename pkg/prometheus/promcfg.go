@@ -392,8 +392,10 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	if ep.MetricRelabelConfigs != nil {
 		var metricRelabelings []yaml.MapSlice
 		for _, c := range ep.MetricRelabelConfigs {
-			relabeling := yaml.MapSlice{
-				{Key: "source_labels", Value: c.SourceLabels},
+			relabeling := yaml.MapSlice{}
+
+			if len(c.SourceLabels) > 0 {
+				relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
 			}
 
 			if c.Separator != "" {
