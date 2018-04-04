@@ -1,3 +1,28 @@
+## 0.18.0 / 2018-03-04
+
+From this release onwards only Kubernetes versions v1.8 and higher are supported. If you have an older version of Kubernetes and the Prometheus Operator running, we recommend upgrading Kubernetes first and then the Prometheus Operator.
+
+While multiple validation issues have been fixed, it will remain a beta feature in this release. If you want to update validations, you need to either apply the CustomResourceDefinitions located in `example/prometheus-operator-crd` or delete all CRDs and restart the Prometheus Operator.
+
+Some changes cause Prometheus and Alertmanager clusters to be redeployed. If you do not have persistent storage backing your data, this means you will loose the amount of data equal to your retention time.
+
+* [CHANGE] Use canonical `/prometheus` and `/alertmanager` as data dirs in containers.
+* [FEATURE] Allow configuring Prometheus and Alertmanager servers to listen on loopback interface, allowing proxies to be the ingress point of those Pods.
+* [FEATURE] Allow configuring additional containers in Prometheus and Alertmanager Pods.
+* [FEATURE] Add ability to whitelist Kubernetes labels to become Prometheus labels.
+* [FEATURE] Allow specifying additonal secrets for Alertmanager Pods to mount.
+* [FEATURE] Allow specifying `bearer_token_file` for Alertmanger configurations of Prometheus objects in order to authenticate with Alertmanager.
+* [FEATURE] Allow specifying TLS configuration for Alertmanger configurations of Prometheus objects.
+* [FEATURE] Add metrics for reconciliation errors: `prometheus_operator_alertmanager_reconcile_errors_total` and `prometheus_operator_prometheus_reconcile_errors_total`.
+* [FEATURE] Support `read_recent` and `required_matchers` fields for remote read configurations.
+* [FEATURE] Allow disabling any defaults of `SecurityContext` fields of Pods.
+* [BUGFIX] Handle Alertmanager >=v0.15.0 breaking changes correctly.
+* [BUGFIX] Fix invalid validations for metric relabeling fields.
+* [BUGFIX] Fix validations for `AlertingSpec`.
+* [BUGFIX] Fix validations for deprecated storage fields.
+* [BUGFIX] Fix remote read and write basic auth support.
+* [BUGFIX] Fix properly propagate errors of Prometheus config reloader.
+
 ## 0.17.0 / 2018-02-15
 
 This release adds validations as a beta feature. It will only be installed on new clusters, existing CRD definitions will not be updated, this will be done in a future release. Please try out this feature and give us feedback!
