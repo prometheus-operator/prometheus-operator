@@ -321,25 +321,18 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group":  "group4",
-					"group3": "group5",
-				},
-			},
-			Endpoints: []monitoringv1.Endpoint{{
-				Port:     "web",
-				Interval: "30s",
-				Path:     "/federate",
-				Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
-				StaticTargets: &monitoringv1.StaticConfig{
-					Targets: []string{
+			Endpoints: []monitoringv1.Endpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
+					Path:     "/federate",
+					Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
+					StaticTargets: []string{
 						"source-prometheus-1:9090",
 						"source-prometheus-2:9090",
 						"source-prometheus-3:9090",
 					},
 				},
-			},
 			},
 		},
 	}
