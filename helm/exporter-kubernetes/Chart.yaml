@@ -3,7 +3,5 @@ description: A Helm chart for Kubernetes
 name: exporter-kubernetes
 version: 0.1.6
 maintainers:
-  - name: Michael Goodness
-    email: mgoodness@gmail.com
   - name: Giancarlo Rubio
     email: gianrubio@gmail.com
