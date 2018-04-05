@@ -532,17 +532,25 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								},
 							},
 						},
-						"staticConfigs": {
+						"staticTargets": {
 							SchemaProps: spec.SchemaProps{
-								Description: "StaticConfigs with targets to scrape.",
-								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StaticConfig"),
+								Description: "StaticTargets with targets to scrape.",
+								Type:        []string{"array"},
+								Items: &spec.SchemaOrArray{
+									Schema: &spec.Schema{
+										SchemaProps: spec.SchemaProps{
+											Type:   []string{"string"},
+											Format: "",
+										},
+									},
+								},
 							},
 						},
 					},
 				},
 			},
 			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RelabelConfig", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StaticConfig", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RelabelConfig", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.NamespaceSelector": {
 			Schema: spec.Schema{
@@ -1306,30 +1314,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 			},
 			Dependencies: []string{
 				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Endpoint", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.NamespaceSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
-		},
-		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StaticConfig": {
-			Schema: spec.Schema{
-				SchemaProps: spec.SchemaProps{
-					Description: "StaticConfig allows to specify a set of targets and parameters describing how to scrape them. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<static_config>",
-					Properties: map[string]spec.Schema{
-						"targets": {
-							SchemaProps: spec.SchemaProps{
-								Type: []string{"array"},
-								Items: &spec.SchemaOrArray{
-									Schema: &spec.Schema{
-										SchemaProps: spec.SchemaProps{
-											Type:   []string{"string"},
-											Format: "",
-										},
-									},
-								},
-							},
-						},
-					},
-					Required: []string{"targets"},
-				},
-			},
-			Dependencies: []string{},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec": {
 			Schema: spec.Schema{

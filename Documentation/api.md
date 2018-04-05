@@ -29,7 +29,6 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
-* [StaticConfig](#staticconfig)
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
 
@@ -152,7 +151,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
-| staticConfigs | StaticConfigs with targets to scrape. | *[StaticConfig](#staticconfig) | false |
+| staticTargets | StaticTargets with targets to scrape. | []string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -325,16 +324,6 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 | endpoints | A list of endpoints allowed as part of this ServiceMonitor. | [][Endpoint](#endpoint) | true |
 | selector | Selector to select Endpoints objects. | [metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | true |
 | namespaceSelector | Selector to select which namespaces the Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
-
-[Back to TOC](#table-of-contents)
-
-## StaticConfig
-
-StaticConfig allows to specify a set of targets and parameters describing how to scrape them. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<static_config>
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| targets |  | []string | true |
 
 [Back to TOC](#table-of-contents)
 

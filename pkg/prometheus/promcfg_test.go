@@ -332,7 +332,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				Interval: "30s",
 				Path:     "/federate",
 				Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
-				StaticConfigs: &monitoringv1.StaticConfig{
+				StaticTargets: &monitoringv1.StaticConfig{
 					Targets: []string{
 						"source-prometheus-1:9090",
 						"source-prometheus-2:9090",
