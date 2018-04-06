@@ -312,5 +312,30 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 		},
 	}
 
+	res["servicemonitor5"] = &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testservicemonitor5",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group4",
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Endpoints: []monitoringv1.Endpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
+					Path:     "/federate",
+					Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
+					StaticTargets: []string{
+						"source-prometheus-1:9090",
+						"source-prometheus-2:9090",
+						"source-prometheus-3:9090",
+					},
+				},
+			},
+		},
+	}
+
 	return res
 }
