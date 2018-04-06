@@ -44,7 +44,7 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	res := yaml.MapSlice{}
 	ks := make([]string, 0)
 
-	for k, _ := range m {
+	for k := range m {
 		ks = append(ks, k)
 	}
 	sort.Strings(ks)
@@ -123,7 +123,7 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 
 	identifiers := make([]string, len(mons))
 	i := 0
-	for k, _ := range mons {
+	for k := range mons {
 		identifiers[i] = k
 		i++
 	}
@@ -243,7 +243,7 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	// Exact label matches.
 	labelKeys := make([]string, len(m.Spec.Selector.MatchLabels))
 	i = 0
-	for k, _ := range m.Spec.Selector.MatchLabels {
+	for k := range m.Spec.Selector.MatchLabels {
 		labelKeys[i] = k
 		i++
 	}
@@ -341,15 +341,15 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 
 	// Relabel namespace and pod and service labels into proper labels.
 	relabelings = append(relabelings, []yaml.MapSlice{
-		yaml.MapSlice{
+		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
 			{Key: "target_label", Value: "namespace"},
 		},
-		yaml.MapSlice{
+		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_name"}},
 			{Key: "target_label", Value: "pod"},
 		},
-		yaml.MapSlice{
+		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
 			{Key: "target_label", Value: "service"},
 		},
@@ -442,7 +442,7 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 
 func k8sSDFromServiceMonitor(m *v1.ServiceMonitor) yaml.MapItem {
 	nsel := m.Spec.NamespaceSelector
-	namespaces := []string{}
+	var namespaces []string
 	if !nsel.Any && len(nsel.MatchNames) == 0 {
 		namespaces = append(namespaces, m.Namespace)
 	}
@@ -458,8 +458,7 @@ func k8sSDFromServiceMonitor(m *v1.ServiceMonitor) yaml.MapItem {
 func k8sSDWithNamespaces(namespaces []string) yaml.MapItem {
 	return yaml.MapItem{
 		Key: "kubernetes_sd_configs",
-		Value: []yaml.MapSlice{
-			yaml.MapSlice{
+		Value: []yaml.MapSlice{{
 				{
 					Key:   "role",
 					Value: "endpoints",
@@ -481,8 +480,7 @@ func k8sSDWithNamespaces(namespaces []string) yaml.MapItem {
 func k8sSDAllNamespaces() yaml.MapItem {
 	return yaml.MapItem{
 		Key: "kubernetes_sd_configs",
-		Value: []yaml.MapSlice{
-			yaml.MapSlice{
+		Value: []yaml.MapSlice{{
 				{
 					Key:   "role",
 					Value: "endpoints",
@@ -560,7 +558,7 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 
 func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
 
-	cfgs := []yaml.MapSlice{}
+	var cfgs []yaml.MapSlice
 
 	for i, spec := range specs {
 		//defaults
@@ -614,7 +612,7 @@ func generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec,
 
 func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpec, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
 
-	cfgs := []yaml.MapSlice{}
+	var cfgs []yaml.MapSlice
 
 	for i, spec := range specs {
 		//defaults
@@ -628,7 +626,7 @@ func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpe
 		}
 
 		if spec.WriteRelabelConfigs != nil {
-			relabelings := []yaml.MapSlice{}
+			var relabelings []yaml.MapSlice
 			for _, c := range spec.WriteRelabelConfigs {
 				relabeling := yaml.MapSlice{
 					{Key: "source_labels", Value: c.SourceLabels},
