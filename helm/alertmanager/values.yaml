@@ -165,22 +165,24 @@ service:
   ##
   type: ClusterIP
 
-## If true, create & use RBAC resources
+## If true, create & use RBAC resources resp. Pod Security Policies
 ##
-rbacEnable: true
+global:
+  rbacEnable: true
+  pspEnable: true
 
 ## Alertmanager StorageSpec for persistent data
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
 ##
 storageSpec: {}
-#  volumeClaimTemplate:
-#    spec:
+  #  volumeClaimTemplate:
+  #    spec:
 #      storageClassName: gluster
-#      accessModes: ["ReadWriteOnce"]
-#      resources:
-#        requests:
-#          storage: 50Gi
-#    selector: {}
+  #      accessModes: ["ReadWriteOnce"]
+  #      resources:
+  #        requests:
+  #          storage: 50Gi
+  #    selector: {}
 
 # default rules are in templates/alertmanager.rules.yaml
 # prometheusRules: {}

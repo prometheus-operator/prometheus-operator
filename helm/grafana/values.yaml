@@ -18,6 +18,12 @@ selfServiceMonitor: true
 ##
 additionalServiceMonitorLabels: {}
 
+## If true, create & use RBAC resources resp. Pod Security Policies
+##
+global:
+  rbacEnable: true
+  pspEnable: true
+
 ## Pass extra environment variables to the Grafana container.
 ##
 # extraVars:

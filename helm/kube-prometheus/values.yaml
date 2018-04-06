@@ -4,10 +4,11 @@ deployExporterNode: True
 # Grafana
 deployGrafana: True
 
-## If true, create & use RBAC resources
+## If true, create & use RBAC resources resp. Pod Security Policies
 ##
 global:
   rbacEnable: true
+  pspEnable: true
 
 # AlertManager
 deployAlertManager: True
