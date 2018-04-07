@@ -51,7 +51,7 @@ The below manifest creates a Service to expose etcd metrics (port 2379)
 
 In case you have generated the etcd certificated with kube-aws, you will need to use insecureSkipVerify as the valid certificate domain will be different for each etcd node (etcd0, etcd1, etcd2). If you only have one etcd node, you can use the value from `etcd.internalDomainName` speficied in your kube-aws `cluster.yaml`
 
-In this example we use insecureSkipVerify: true as kube-aws default certiicates are not valid against the IP. They were created for the DNS. Depending on your use case, you might want to remove this flag or set it to false. (true required for kube-aws if using default certificate generators method)
+In this example we use insecureSkipVerify: true as kube-aws default certificates are not valid against the IP. They were created for the DNS. Depending on your use case, you might want to remove this flag or set it to false. (true required for kube-aws if using default certificate generators method)
 
 ```
 apiVersion: v1
