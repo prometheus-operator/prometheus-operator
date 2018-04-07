@@ -1340,7 +1340,7 @@ spec:
                 so that it does not bind against the Pod IP.
               type: boolean
             logLevel:
-              description: Log level for Prometheus be configured in.
+              description: Log level for Prometheus to be configured with.
               type: string
             nodeSelector:
               description: Define which Nodes the Pods are scheduled on.

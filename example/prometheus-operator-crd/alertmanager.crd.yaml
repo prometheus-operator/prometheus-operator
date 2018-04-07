@@ -1280,6 +1280,9 @@ spec:
                 so that it does not bind against the Pod IP. Note this is only for
                 the Alertmanager UI, not the gossip communication.
               type: boolean
+            logLevel:
+              description: Log level for Alertmanager to be configured with.
+              type: string
             nodeSelector:
               description: Define which Nodes the Pods are scheduled on.
               type: object

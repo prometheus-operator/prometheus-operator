@@ -194,6 +194,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	}
 	amArgs = append(amArgs, fmt.Sprintf("--web.route-prefix=%v", webRoutePrefix))
 
+	if a.Spec.LogLevel != "" && a.Spec.LogLevel != "info" {
+		amArgs = append(amArgs, fmt.Sprintf("--log.level=%s", a.Spec.LogLevel))
+	}
+
 	localReloadURL := &url.URL{
 		Scheme: "http",
 		Host:   "localhost:9093",
