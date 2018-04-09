@@ -332,7 +332,7 @@ type Endpoint struct {
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
-	// StaticTargets with targets to scrape.
+	// StaticTargets with targets to scrape. This is an experimental feature, it may change in any upcoming release in a breaking way.
 	StaticTargets []string `json:"staticTargets,omitempty"`
 }
 
