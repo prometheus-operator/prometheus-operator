@@ -147,6 +147,52 @@ alerting:
 	}
 }
 
+func TestStaticTargets(t *testing.T) {
+	sm := &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "statictargetsmonitor",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Endpoints: []monitoringv1.Endpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
+					Path:     "/federate",
+					Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
+					StaticTargets: []string{
+						"source-prometheus-1:9090",
+						"source-prometheus-2:9090",
+						"source-prometheus-3:9090",
+					},
+				},
+			},
+		},
+	}
+
+	c := k8sSDFromServiceMonitor(sm)
+	s, err := yaml.Marshal(yaml.MapSlice{c})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `kubernetes_sd_configs:
+- role: endpoints
+  namespaces:
+    names:
+    - test
+`
+
+	result := string(s)
+
+	if expected != result {
+		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	}
+}
+
 func generateTestConfig(version string) ([]byte, error) {
 	replicas := int32(1)
 	return generateConfig(
