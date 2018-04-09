@@ -157,6 +157,28 @@ func (f *Framework) Poll(timeout, pollInterval time.Duration, pollFunc func() (b
 	}
 }
 
-func ProxyGetPod(kubeClient kubernetes.Interface, namespace string, podName string, port string, path string) *rest.Request {
-	return kubeClient.CoreV1().RESTClient().Get().Prefix("proxy").Namespace(namespace).Resource("pods").Name(podName + ":" + port).Suffix(path)
+func ProxyGetPod(kubeClient kubernetes.Interface, namespace, podName, port, path string) *rest.Request {
+	return kubeClient.
+		CoreV1().
+		RESTClient().
+		Get().
+		Prefix("proxy").
+		Namespace(namespace).
+		Resource("pods").
+		Name(podName + ":" + port).
+		Suffix(path)
+}
+
+func ProxyPostPod(kubeClient kubernetes.Interface, namespace, podName, port, path, body string) *rest.Request {
+	return kubeClient.
+		CoreV1().
+		RESTClient().
+		Post().
+		Prefix("proxy").
+		Namespace(namespace).
+		Resource("pods").
+		Name(podName+":"+port).
+		Suffix(path).
+		Body([]byte(body)).
+		SetHeader("Content-Type", "application/json")
 }
