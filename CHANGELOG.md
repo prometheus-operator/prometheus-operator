@@ -1,3 +1,7 @@
+## 0.18.1 / 2018-04-09
+
+* [BUGFIX] Fix alertmanager >=0.15.0 cluster gossip communication (#1193)
+
 ## 0.18.0 / 2018-03-04
 
 From this release onwards only Kubernetes versions v1.8 and higher are supported. If you have an older version of Kubernetes and the Prometheus Operator running, we recommend upgrading Kubernetes first and then the Prometheus Operator.
