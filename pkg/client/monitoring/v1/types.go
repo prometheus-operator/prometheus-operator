@@ -75,7 +75,7 @@ type PrometheusSpec struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 	// Time duration Prometheus shall retain data for.
 	Retention string `json:"retention,omitempty"`
-	// Log level for Prometheus be configured in.
+	// Log level for Prometheus to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
 	// Interval between consecutive scrapes.
 	ScrapeInterval string `json:"scrapeInterval,omitempty"`
@@ -410,6 +410,8 @@ type AlertmanagerSpec struct {
 	// object, which shall be mounted into the Alertmanager Pods.
 	// The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.
 	Secrets []string `json:"secrets,omitempty"`
+	// Log level for Alertmanager to be configured with.
+	LogLevel string `json:"logLevel,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will
 	// eventually make the size of the running cluster equal to the expected
 	// size.

@@ -92,6 +92,7 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | baseImage | Base image that is used to deploy pods, without tag. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#localobjectreference-v1-core) | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Alertmanager object, which shall be mounted into the Alertmanager Pods. The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>. | []string | false |
+| logLevel | Log level for Alertmanager to be configured with. | string | false |
 | replicas | Size is the expected size of the alertmanager cluster. The controller will eventually make the size of the running cluster equal to the expected size. | *int32 | false |
 | storage | Storage is the definition of how storage will be used by the Alertmanager instances. | *[StorageSpec](#storagespec) | false |
 | externalUrl | The external URL the Alertmanager instances will be available under. This is necessary to generate correct URLs. This is necessary if Alertmanager is not served from root of a DNS name. | string | false |
@@ -203,7 +204,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#localobjectreference-v1-core) | false |
 | replicas | Number of instances to deploy for a Prometheus deployment. | *int32 | false |
 | retention | Time duration Prometheus shall retain data for. | string | false |
-| logLevel | Log level for Prometheus be configured in. | string | false |
+| logLevel | Log level for Prometheus to be configured with. | string | false |
 | scrapeInterval | Interval between consecutive scrapes. | string | false |
 | evaluationInterval | Interval between consecutive evaluations. | string | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
