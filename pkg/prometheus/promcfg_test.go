@@ -18,13 +18,13 @@ import (
 	"bytes"
 	"testing"
 
-	yaml "gopkg.in/yaml.v2"
+	"github.com/blang/semver"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	"gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 )
 
 func TestConfigGeneration(t *testing.T) {
@@ -148,6 +148,19 @@ alerting:
 }
 
 func TestStaticTargets(t *testing.T) {
+	ep := monitoringv1.Endpoint{
+		Port:        "web",
+		Interval:    "30s",
+		Path:        "/federate",
+		HonorLabels: true,
+		Params:      map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
+		StaticTargets: []string{
+			"source-prometheus-1:9090",
+			"source-prometheus-2:9090",
+			"source-prometheus-3:9090",
+		},
+	}
+
 	sm := &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "statictargetsmonitor",
@@ -157,33 +170,48 @@ func TestStaticTargets(t *testing.T) {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Endpoints: []monitoringv1.Endpoint{
-				{
-					Port:     "web",
-					Interval: "30s",
-					Path:     "/federate",
-					Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
-					StaticTargets: []string{
-						"source-prometheus-1:9090",
-						"source-prometheus-2:9090",
-						"source-prometheus-3:9090",
-					},
-				},
-			},
+			Endpoints: []monitoringv1.Endpoint{ep},
 		},
 	}
 
-	c := k8sSDFromServiceMonitor(sm)
-	s, err := yaml.Marshal(yaml.MapSlice{c})
+	smConfig := generateServiceMonitorConfig(semver.Version{}, sm, ep, 0, nil)
+	s, err := yaml.Marshal(smConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expected := `kubernetes_sd_configs:
-- role: endpoints
-  namespaces:
-    names:
-    - test
+	expected := `job_name: default/statictargetsmonitor/0
+honor_labels: true
+scrape_interval: 30s
+metrics_path: /federate
+params:
+  metrics[]:
+  - '{__name__=~"job:.*"}'
+static_configs:
+- targets:
+  - source-prometheus-1:9090
+  - source-prometheus-2:9090
+  - source-prometheus-3:9090
+relabel_configs:
+- action: keep
+  source_labels:
+  - __meta_kubernetes_endpoint_port_name
+  regex: web
+- source_labels:
+  - __meta_kubernetes_namespace
+  target_label: namespace
+- source_labels:
+  - __meta_kubernetes_pod_name
+  target_label: pod
+- source_labels:
+  - __meta_kubernetes_service_name
+  target_label: service
+- source_labels:
+  - __meta_kubernetes_service_name
+  target_label: job
+  replacement: ${1}
+- target_label: endpoint
+  replacement: web
 `
 
 	result := string(s)
