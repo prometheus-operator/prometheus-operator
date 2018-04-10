@@ -334,7 +334,7 @@ data:
         labels:
           severity: warning
         annotations:
-          description: Pod {{$labels.namespaces}}/{{$labels.pod}} is was restarted {{$value}}
+          description: Pod {{$labels.namespaces}}/{{$labels.pod}} was restarted {{$value}}
             times within the last hour
           summary: Pod is restarting frequently
   kubelet.rules.yaml: |+
