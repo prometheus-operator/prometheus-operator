@@ -214,9 +214,8 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	if ep.StaticTargets != nil {
 		cfg = append(cfg, yaml.MapItem{
 			Key: "static_configs",
-			Value: yaml.MapItem{
-				Key:   "targets",
-				Value: ep.StaticTargets,
+			Value: []yaml.MapSlice{
+				yaml.MapSlice{{Key: "targets", Value: ep.StaticTargets}},
 			},
 		})
 	}
