@@ -9,6 +9,7 @@
     roleNamespace:: import "prometheus-k8s-role-namespace.libsonnet",
     roleKubeSystem:: import "prometheus-k8s-role-kube-system.libsonnet",
     roleDefault:: import "prometheus-k8s-role-default.libsonnet",
+    rules:: import "prometheus-k8s-rules.libsonnet",
     serviceAccount:: import "prometheus-k8s-service-account.libsonnet",
     serviceMonitorAlertmanager:: import "prometheus-k8s-service-monitor-alertmanager.libsonnet",
     serviceMonitorApiserver:: import "prometheus-k8s-service-monitor-apiserver.libsonnet",

@@ -1,15 +1,20 @@
 apiVersion: v1
+data:
+  prometheus.yaml: |-
+    {
+        "datasources": [
+            {
+                "access": "proxy",
+                "etitable": false,
+                "name": "prometheus",
+                "org_id": 1,
+                "type": "prometheus",
+                "url": "http://prometheus-k8s.monitoring.svc:9090",
+                "version": 1
+            }
+        ]
+    }
 kind: ConfigMap
 metadata:
   name: grafana-datasources
-data:
-  prometheus.yaml: |+
-    datasources:
-     - name: prometheus
-       type: prometheus
-       access: proxy
-       org_id: 1
-       url: http://prometheus-k8s.monitoring.svc:9090
-       version: 1
-       editable: false
-
+  namespace: monitoring

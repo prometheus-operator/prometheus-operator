@@ -7,7 +7,7 @@
 
 To authenticate a `ServiceMonitor`s over a metrics endpoint use [`basicAuth`](../api.md#basicauth)
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/examples/basic-auth/service-monitor.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/examples/basic-auth/service-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -33,7 +33,7 @@ spec:
       app: myapp
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/examples/basic-auth/secrets.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/examples/basic-auth/secrets.yaml)
 ```yaml
 apiVersion: v1
 kind: Secret

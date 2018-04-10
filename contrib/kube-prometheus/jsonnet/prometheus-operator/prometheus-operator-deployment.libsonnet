@@ -2,7 +2,7 @@ local k = import "ksonnet.beta.3/k.libsonnet";
 local rawVersion = importstr "../../../../VERSION";
 
 local removeLineBreaks = function(str) std.join("", std.filter(function(c) c != "\n", std.stringChars(str)));
-local version = removeLineBreaks(rawVersion);
+local version = "v0.18.1";//removeLineBreaks(rawVersion);
 
 local deployment = k.apps.v1beta2.deployment;
 local container = k.apps.v1beta2.deployment.mixin.spec.template.spec.containersType;
@@ -12,7 +12,7 @@ local targetPort = 8080;
 local podLabels = {"k8s-app": "prometheus-operator"};
 
 local operatorContainer =
-  container.new("prometheus-operator", "quay.io/coreos/prometheus-operator:v" + version) +
+  container.new("prometheus-operator", "quay.io/coreos/prometheus-operator:" + version) +
   container.withPorts(containerPort.newNamed("http", targetPort)) +
   container.withArgs(["--kubelet-service=kube-system/kubelet", "--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1"]) +
   container.mixin.resources.withRequests({cpu: "100m", memory: "50Mi"}) +

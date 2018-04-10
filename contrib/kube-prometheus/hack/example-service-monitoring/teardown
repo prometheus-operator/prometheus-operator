@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-kubectl delete -f manifests/examples/example-app
+kubectl delete -f examples/example-app
