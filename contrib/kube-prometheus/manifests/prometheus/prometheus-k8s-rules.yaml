@@ -288,7 +288,7 @@ data:
           severity: warning
         annotations:
           description: Observed deployment generation does not match expected one for
-            deployment {{$labels.namespaces}}/{{$labels.deployment}}
+            deployment {{$labels.namespace}}/{{$labels.deployment}}
           summary: Deployment is outdated
       - alert: DeploymentReplicasNotUpdated
         expr: ((kube_deployment_status_replicas_updated != kube_deployment_spec_replicas)
@@ -298,7 +298,7 @@ data:
         labels:
           severity: warning
         annotations:
-          description: Replicas are not updated and available for deployment {{$labels.namespaces}}/{{$labels.deployment}}
+          description: Replicas are not updated and available for deployment {{$labels.namespace}}/{{$labels.deployment}}
           summary: Deployment replicas are outdated
       - alert: DaemonSetRolloutStuck
         expr: kube_daemonset_status_number_ready / kube_daemonset_status_desired_number_scheduled
@@ -308,7 +308,7 @@ data:
           severity: warning
         annotations:
           description: Only {{$value}}% of desired pods scheduled and ready for daemon
-            set {{$labels.namespaces}}/{{$labels.daemonset}}
+            set {{$labels.namespace}}/{{$labels.daemonset}}
           summary: DaemonSet is missing pods
       - alert: K8SDaemonSetsNotScheduled
         expr: kube_daemonset_status_desired_number_scheduled - kube_daemonset_status_current_number_scheduled
@@ -334,7 +334,7 @@ data:
         labels:
           severity: warning
         annotations:
-          description: Pod {{$labels.namespaces}}/{{$labels.pod}} was restarted {{$value}}
+          description: Pod {{$labels.namespace}}/{{$labels.pod}} was restarted {{$value}}
             times within the last hour
           summary: Pod is restarting frequently
   kubelet.rules.yaml: |+
