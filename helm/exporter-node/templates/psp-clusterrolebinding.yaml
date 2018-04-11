@@ -1,3 +1,4 @@
+{{- if .Values.global.rbacEnable }}
 {{- if .Values.global.pspEnable }}
 {{- if .Capabilities.APIVersions.Has "rbac.authorization.k8s.io/v1beta1" }}
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -21,4 +22,4 @@ subjects:
     name: {{ template "exporter-node.fullname" . }}
     namespace: {{ .Release.Namespace }}
 {{- end }}
-
+{{- end }}
