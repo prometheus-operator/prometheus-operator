@@ -554,5 +554,8 @@ func (c *Operator) createCRDs() error {
 	}
 
 	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
-	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Alertmanagers(c.config.Namespace).List)
+	return errors.Wrap(
+		k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Alertmanagers(c.config.Namespace).List),
+		"waiting for Alertmanager crd failed",
+	)
 }
