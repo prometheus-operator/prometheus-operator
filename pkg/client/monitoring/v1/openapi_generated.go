@@ -1063,7 +1063,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 						},
 						"remoteTimeout": {
 							SchemaProps: spec.SchemaProps{
-								Description: "Timeout for requests to the remote write endpoint.",
+								Description: "Timeout for requests to the remote read endpoint.",
 								Type:        []string{"string"},
 								Format:      "",
 							},
@@ -1083,21 +1083,21 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 						},
 						"bearerToken": {
 							SchemaProps: spec.SchemaProps{
-								Description: "bearer token for remote write.",
+								Description: "bearer token for remote read.",
 								Type:        []string{"string"},
 								Format:      "",
 							},
 						},
 						"bearerTokenFile": {
 							SchemaProps: spec.SchemaProps{
-								Description: "File to read bearer token for remote write.",
+								Description: "File to read bearer token for remote read.",
 								Type:        []string{"string"},
 								Format:      "",
 							},
 						},
 						"tlsConfig": {
 							SchemaProps: spec.SchemaProps{
-								Description: "TLS Config to use for remote write.",
+								Description: "TLS Config to use for remote read.",
 								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"),
 							},
 						},
