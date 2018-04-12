@@ -1670,10 +1670,10 @@ spec:
                         required:
                         - key
                   bearerToken:
-                    description: bearer token for remote write.
+                    description: bearer token for remote read.
                     type: string
                   bearerTokenFile:
-                    description: File to read bearer token for remote write.
+                    description: File to read bearer token for remote read.
                     type: string
                   proxyUrl:
                     description: Optional ProxyURL
@@ -1683,7 +1683,7 @@ spec:
                       ranges that the local storage should have complete data for.
                     type: boolean
                   remoteTimeout:
-                    description: Timeout for requests to the remote write endpoint.
+                    description: Timeout for requests to the remote read endpoint.
                     type: string
                   requiredMatchers:
                     description: An optional list of equality matchers which have
