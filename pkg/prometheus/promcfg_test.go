@@ -122,6 +122,9 @@ func TestAlertmanagerBearerToken(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 scrape_configs: []
 alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
   alertmanagers:
   - path_prefix: /
     scheme: http

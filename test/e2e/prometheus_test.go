@@ -268,59 +268,60 @@ scrape_configs:
 }
 
 func TestPrometheusReloadRules(t *testing.T) {
-	// t.Parallel()
+	t.Parallel()
 
-	// ctx := framework.NewTestCtx(t)
-	// defer ctx.Cleanup(t)
-	// ns := ctx.CreateNamespace(t, framework.KubeClient)
-	// ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
-	// name := "test"
+	name := "test"
 
-	// ruleFileConfigMap := &v1.ConfigMap{
-	// 	ObjectMeta: metav1.ObjectMeta{
-	// 		Name: fmt.Sprintf("prometheus-%s-rules", name),
-	// 		Labels: map[string]string{
-	// 			"role": "rulefile",
-	// 		},
-	// 	},
-	// 	Data: map[string]string{
-	// 		"test.rules": "",
-	// 	},
-	// }
+	ruleFileConfigMap := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("prometheus-%s-rules", name),
+			Labels: map[string]string{
+				"role": "rulefile",
+			},
+		},
+		Data: map[string]string{
+			"alerting.rules": "",
+		},
+	}
 
-	// _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ruleFileConfigMap)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
+	_, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ruleFileConfigMap)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	// p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	// if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
-	// 	t.Fatal(err)
-	// }
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		t.Fatal(err)
+	}
 
-	// ruleFileConfigMap.Data["test.rules"] = "# comment to trigger a configmap reload"
-	// _, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Update(ruleFileConfigMap)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
+	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, pSVC); err != nil {
+		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
 
-	// // remounting a ConfigMap can take some time
-	// err = wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-	// 	logs, err := testFramework.GetLogs(framework.KubeClient, ns, fmt.Sprintf("prometheus-%s-0", name), "prometheus-config-reloader")
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
+	ruleFileConfigMap.Data["alerting.rules"] = `
+groups:
+- name: ./alerting.rules
+  rules:
+  - alert: ExampleAlert
+    expr: vector(1)
+`
+	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Update(ruleFileConfigMap)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	// 	if strings.Contains(logs, "ConfigMap modified") && strings.Contains(logs, "Rule files updated") && strings.Contains(logs, "Prometheus successfully reloaded") {
-	// 		return true, nil
-	// 	}
-
-	// 	return false, nil
-	// })
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
+	err = framework.WaitForPrometheusFiringAlert(p.Namespace, pSVC.Name, "ExampleAlert")
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestPrometheusDiscovery(t *testing.T) {

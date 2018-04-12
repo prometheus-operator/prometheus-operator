@@ -161,9 +161,24 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 		Value: scrapeConfigs,
 	})
 
+	var alertRelabelConfigs []yaml.MapSlice
+
+	// action 'labeldrop' is not supported <= v1.4.1
+	if version.GT(semver.MustParse("1.4.1")) {
+		// Drop 'prometheus_replica' label, to make alerts from two Prometheus replicas alike
+		alertRelabelConfigs = append(alertRelabelConfigs, yaml.MapSlice{
+			{Key: "action", Value: "labeldrop"},
+			{Key: "regex", Value: "prometheus_replica"},
+		})
+	}
+
 	cfg = append(cfg, yaml.MapItem{
 		Key: "alerting",
 		Value: yaml.MapSlice{
+			{
+				Key:   "alert_relabel_configs",
+				Value: alertRelabelConfigs,
+			},
 			{
 				Key:   "alertmanagers",
 				Value: alertmanagerConfigs,

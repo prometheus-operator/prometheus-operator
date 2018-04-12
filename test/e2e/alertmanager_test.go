@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1beta2"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -324,8 +325,8 @@ func TestAlertmanagerZeroDowntimeRollingDeployment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	alertmanager := framework.MakeBasicAlertmanager("rolling-deploy", 2)
-	alertmanager.Spec.Version = "v0.7.0"
+	alertmanager := framework.MakeBasicAlertmanager("rolling-deploy", 3)
+	alertmanager.Spec.Version = "v0.13.0"
 	amsvc := framework.MakeAlertmanagerService(alertmanager.Name, "test", v1.ServiceTypeClusterIP)
 	amcfg := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -394,7 +395,23 @@ groups:
 		t.Fatal(err)
 	}
 
-	time.Sleep(1 * time.Minute)
+	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, pSVC); err != nil {
+		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	// The Prometheus config reloader reloads Prometheus periodically, not on
+	// alert rule change. Thereby one has to wait for Prometheus actually firing
+	// the alert.
+	err = framework.WaitForPrometheusFiringAlert(p.Namespace, pSVC.Name, "ExampleAlert")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Wait for alert to propagate
+	time.Sleep(10 * time.Second)
 
 	opts := metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -421,7 +438,7 @@ groups:
 		t.Fatalf("One notification expected, but %d received.\n\n%s", c, logs)
 	}
 
-	alertmanager.Spec.Version = "v0.7.1"
+	alertmanager.Spec.Version = "v0.14.0"
 	if _, err := framework.MonClient.Alertmanagers(ns).Update(alertmanager); err != nil {
 		t.Fatal(err)
 	}

@@ -299,6 +299,49 @@ func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
 	return rt.Data.ActiveTargets, nil
 }
 
+func (f *Framework) checkPrometheusFiringAlert(ns, svcName, alertName string) (bool, error) {
+	response, err := f.QueryPrometheusSVC(
+		ns,
+		svcName,
+		"/api/v1/query",
+		map[string]string{"query": fmt.Sprintf("ALERTS{alertname=\"%v\"}", alertName)},
+	)
+	if err != nil {
+		return false, err
+	}
+
+	q := prometheusQueryAPIResponse{}
+	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&q); err != nil {
+		return false, err
+	}
+
+	if len(q.Data.Result) != 1 {
+		return false, errors.Errorf("expected 1 query result but got %v", len(q.Data.Result))
+	}
+
+	alertstate, ok := q.Data.Result[0].Metric["alertstate"]
+	if !ok {
+		return false, errors.Errorf("could not retrieve 'alertstate' label from query result: %v", q.Data.Result[0])
+	}
+
+	return alertstate == "firing", nil
+}
+
+func (f *Framework) WaitForPrometheusFiringAlert(ns, svcName, alertName string) error {
+	var loopError error
+
+	err := wait.Poll(time.Second, 2*f.DefaultTimeout, func() (bool, error) {
+		var firing bool
+		firing, loopError = f.checkPrometheusFiringAlert(ns, svcName, alertName)
+		return firing, nil
+	})
+
+	if err != nil {
+		return errors.Wrap(loopError, err.Error())
+	}
+	return nil
+}
+
 type Target struct {
 	ScrapeURL string `json:"scrapeUrl"`
 }
@@ -310,4 +353,17 @@ type targetDiscovery struct {
 type prometheusTargetAPIResponse struct {
 	Status string           `json:"status"`
 	Data   *targetDiscovery `json:"data"`
+}
+
+type prometheusQueryResult struct {
+	Metric map[string]string `json:"metric"`
+}
+
+type prometheusQueryData struct {
+	Result []prometheusQueryResult `json:"result"`
+}
+
+type prometheusQueryAPIResponse struct {
+	Status string               `json:"status"`
+	Data   *prometheusQueryData `json:"data"`
 }
