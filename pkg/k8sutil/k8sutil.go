@@ -41,7 +41,7 @@ var CustomResourceDefinitionTypeMeta metav1.TypeMeta = metav1.TypeMeta{
 	APIVersion: "apiextensions.k8s.io/v1beta1",
 }
 
-// WaitForCRDReady waits for a third party resource to be available for use.
+// WaitForCRDReady waits for a custom resource definition to be available for use.
 func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
 	err := wait.Poll(3*time.Second, 10*time.Minute, func() (bool, error) {
 		_, err := listFunc(metav1.ListOptions{})
@@ -51,7 +51,7 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 					return false, nil
 				}
 			}
-			return false, err
+			return false, errors.Wrap(err, "failed to list CRD")
 		}
 		return true, nil
 	})

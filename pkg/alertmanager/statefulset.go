@@ -174,7 +174,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 
 	amArgs := []string{
 		fmt.Sprintf("--config.file=%s", alertmanagerConfFile),
-		fmt.Sprintf("--cluster.listen-address=:%d", 6783),
+		fmt.Sprintf("--cluster.listen-address=$(POD_IP):%d", 6783),
 		fmt.Sprintf("--storage.path=%s", alertmanagerStorageDir),
 	}
 
@@ -193,6 +193,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		webRoutePrefix = a.Spec.RoutePrefix
 	}
 	amArgs = append(amArgs, fmt.Sprintf("--web.route-prefix=%v", webRoutePrefix))
+
+	if a.Spec.LogLevel != "" && a.Spec.LogLevel != "info" {
+		amArgs = append(amArgs, fmt.Sprintf("--log.level=%s", a.Spec.LogLevel))
+	}
 
 	localReloadURL := &url.URL{
 		Scheme: "http",
@@ -373,6 +377,17 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 						LivenessProbe:  livenessProbe,
 						ReadinessProbe: readinessProbe,
 						Resources:      a.Spec.Resources,
+						Env: []v1.EnvVar{
+							{
+								// Necessary for '--cluster.listen-address' flag
+								Name: "POD_IP",
+								ValueFrom: &v1.EnvVarSource{
+									FieldRef: &v1.ObjectFieldSelector{
+										FieldPath: "status.podIP",
+									},
+								},
+							},
+						},
 					}, {
 						Name:  "config-reloader",
 						Image: config.ConfigReloaderImage,

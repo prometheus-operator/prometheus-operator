@@ -8,8 +8,8 @@ metadata:
     heritage: {{ .Release.Service }}
     prometheus: {{ .Release.Name }}
     release: {{ .Release.Name }}
-    {{- if .Values.rulesSelector }}
-{{ toYaml .Values.rulesSelector | indent 4 }}
+    {{- if .Values.rules.additionalLabels }}
+{{ toYaml .Values.rules.additionalLabels | indent 4 }}
     {{- end }}
   name: prometheus-{{ .Release.Name }}-rules
 data:

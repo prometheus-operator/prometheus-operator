@@ -9,4 +9,4 @@ maintainers:
 name: prometheus-operator
 sources:
   - https://github.com/coreos/prometheus-operator
-version: 0.0.15
+version: 0.0.16

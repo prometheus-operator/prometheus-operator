@@ -211,6 +211,15 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 
 	cfg = addTLStoYaml(cfg, ep.TLSConfig)
 
+	if ep.StaticTargets != nil {
+		cfg = append(cfg, yaml.MapItem{
+			Key: "static_configs",
+			Value: []yaml.MapSlice{
+				yaml.MapSlice{{Key: "targets", Value: ep.StaticTargets}},
+			},
+		})
+	}
+
 	if ep.BearerTokenFile != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
 	}
@@ -392,8 +401,10 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	if ep.MetricRelabelConfigs != nil {
 		var metricRelabelings []yaml.MapSlice
 		for _, c := range ep.MetricRelabelConfigs {
-			relabeling := yaml.MapSlice{
-				{Key: "source_labels", Value: c.SourceLabels},
+			relabeling := yaml.MapSlice{}
+
+			if len(c.SourceLabels) > 0 {
+				relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
 			}
 
 			if c.Separator != "" {

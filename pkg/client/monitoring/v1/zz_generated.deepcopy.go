@@ -333,6 +333,11 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 			}
 		}
 	}
+	if in.StaticTargets != nil {
+		in, out := &in.StaticTargets, &out.StaticTargets
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

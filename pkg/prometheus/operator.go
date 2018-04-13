@@ -37,6 +37,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -1079,10 +1080,20 @@ func (c *Operator) createCRDs() error {
 		c.logger.Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
 	}
 
-	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
-	err := k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Prometheuses(c.config.Namespace).List)
-	if err != nil {
-		return err
+	crdListFuncs := []struct {
+		name     string
+		listFunc func(opts metav1.ListOptions) (runtime.Object, error)
+	}{
+		{"Prometheus", c.mclient.MonitoringV1().Prometheuses(c.config.Namespace).List},
+		{"ServiceMonitor", c.mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).List},
 	}
-	return k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).List)
+
+	for _, crdListFunc := range crdListFuncs {
+		err := k8sutil.WaitForCRDReady(crdListFunc.listFunc)
+		if err != nil {
+			return errors.Wrapf(err, "waiting for %v crd failed", crdListFunc.name)
+		}
+	}
+
+	return nil
 }

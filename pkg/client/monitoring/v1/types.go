@@ -75,7 +75,7 @@ type PrometheusSpec struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 	// Time duration Prometheus shall retain data for.
 	Retention string `json:"retention,omitempty"`
-	// Log level for Prometheus be configured in.
+	// Log level for Prometheus to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
 	// Interval between consecutive scrapes.
 	ScrapeInterval string `json:"scrapeInterval,omitempty"`
@@ -213,18 +213,18 @@ type RemoteReadSpec struct {
 	//An optional list of equality matchers which have to be present
 	// in a selector to query the remote read endpoint.
 	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
-	//Timeout for requests to the remote write endpoint.
+	//Timeout for requests to the remote read endpoint.
 	RemoteTimeout string `json:"remoteTimeout,omitempty"`
 	//Whether reads should be made for queries for time ranges that
 	// the local storage should have complete data for.
 	ReadRecent bool `json:"readRecent,omitempty"`
 	//BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// bearer token for remote write.
+	// bearer token for remote read.
 	BearerToken string `json:"bearerToken,omitempty"`
-	// File to read bearer token for remote write.
+	// File to read bearer token for remote read.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
-	// TLS Config to use for remote write.
+	// TLS Config to use for remote read.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	//Optional ProxyURL
 	ProxyURL string `json:"proxyUrl,omitempty"`
@@ -238,7 +238,7 @@ type RelabelConfig struct {
 	//The source labels select values from existing labels. Their content is concatenated
 	//using the configured separator and matched against the configured regular expression
 	//for the replace, keep, and drop actions.
-	SourceLabels []string `json:"sourceLabels"`
+	SourceLabels []string `json:"sourceLabels,omitempty"`
 	//Separator placed between concatenated source label values. default is ';'.
 	Separator string `json:"separator,omitempty"`
 	//Label to which the resulting value is written in a replace action.
@@ -250,7 +250,7 @@ type RelabelConfig struct {
 	Modulus uint64 `json:"modulus,omitempty"`
 	//Replacement value against which a regex replace is performed if the
 	//regular expression matches. Regex capture groups are available. Default is '$1'
-	Replacement string `json:"replacement"`
+	Replacement string `json:"replacement,omitempty"`
 	// Action to perform based on regex matching. Default is 'replace'
 	Action string `json:"action,omitempty"`
 }
@@ -332,6 +332,8 @@ type Endpoint struct {
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
+	// StaticTargets with targets to scrape. This is an experimental feature, it may change in any upcoming release in a breaking way.
+	StaticTargets []string `json:"staticTargets,omitempty"`
 }
 
 // BasicAuth allow an endpoint to authenticate over basic authentication
@@ -408,6 +410,8 @@ type AlertmanagerSpec struct {
 	// object, which shall be mounted into the Alertmanager Pods.
 	// The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.
 	Secrets []string `json:"secrets,omitempty"`
+	// Log level for Alertmanager to be configured with.
+	LogLevel string `json:"logLevel,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will
 	// eventually make the size of the running cluster equal to the expected
 	// size.

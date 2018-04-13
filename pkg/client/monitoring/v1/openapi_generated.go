@@ -245,6 +245,13 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								},
 							},
 						},
+						"logLevel": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Log level for Alertmanager to be configured with.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
 						"replicas": {
 							SchemaProps: spec.SchemaProps{
 								Description: "Size is the expected size of the alertmanager cluster. The controller will eventually make the size of the running cluster equal to the expected size.",
@@ -532,6 +539,20 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								},
 							},
 						},
+						"staticTargets": {
+							SchemaProps: spec.SchemaProps{
+								Description: "StaticTargets with targets to scrape. This is an experimental feature, it may change in any upcoming release in a breaking way.",
+								Type:        []string{"array"},
+								Items: &spec.SchemaOrArray{
+									Schema: &spec.Schema{
+										SchemaProps: spec.SchemaProps{
+											Type:   []string{"string"},
+											Format: "",
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -719,7 +740,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 						},
 						"logLevel": {
 							SchemaProps: spec.SchemaProps{
-								Description: "Log level for Prometheus be configured in.",
+								Description: "Log level for Prometheus to be configured with.",
 								Type:        []string{"string"},
 								Format:      "",
 							},
@@ -1010,7 +1031,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 							},
 						},
 					},
-					Required: []string{"sourceLabels", "replacement"},
 				},
 			},
 			Dependencies: []string{},
@@ -1043,7 +1063,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 						},
 						"remoteTimeout": {
 							SchemaProps: spec.SchemaProps{
-								Description: "Timeout for requests to the remote write endpoint.",
+								Description: "Timeout for requests to the remote read endpoint.",
 								Type:        []string{"string"},
 								Format:      "",
 							},
@@ -1063,21 +1083,21 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 						},
 						"bearerToken": {
 							SchemaProps: spec.SchemaProps{
-								Description: "bearer token for remote write.",
+								Description: "bearer token for remote read.",
 								Type:        []string{"string"},
 								Format:      "",
 							},
 						},
 						"bearerTokenFile": {
 							SchemaProps: spec.SchemaProps{
-								Description: "File to read bearer token for remote write.",
+								Description: "File to read bearer token for remote read.",
 								Type:        []string{"string"},
 								Format:      "",
 							},
 						},
 						"tlsConfig": {
 							SchemaProps: spec.SchemaProps{
-								Description: "TLS Config to use for remote write.",
+								Description: "TLS Config to use for remote read.",
 								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"),
 							},
 						},

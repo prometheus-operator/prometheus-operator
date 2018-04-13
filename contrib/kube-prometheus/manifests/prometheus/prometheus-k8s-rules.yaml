@@ -288,7 +288,7 @@ data:
           severity: warning
         annotations:
           description: Observed deployment generation does not match expected one for
-            deployment {{$labels.namespaces}}/{{$labels.deployment}}
+            deployment {{$labels.namespace}}/{{$labels.deployment}}
           summary: Deployment is outdated
       - alert: DeploymentReplicasNotUpdated
         expr: ((kube_deployment_status_replicas_updated != kube_deployment_spec_replicas)
@@ -298,7 +298,7 @@ data:
         labels:
           severity: warning
         annotations:
-          description: Replicas are not updated and available for deployment {{$labels.namespaces}}/{{$labels.deployment}}
+          description: Replicas are not updated and available for deployment {{$labels.namespace}}/{{$labels.deployment}}
           summary: Deployment replicas are outdated
       - alert: DaemonSetRolloutStuck
         expr: kube_daemonset_status_number_ready / kube_daemonset_status_desired_number_scheduled
@@ -308,7 +308,7 @@ data:
           severity: warning
         annotations:
           description: Only {{$value}}% of desired pods scheduled and ready for daemon
-            set {{$labels.namespaces}}/{{$labels.daemonset}}
+            set {{$labels.namespace}}/{{$labels.daemonset}}
           summary: DaemonSet is missing pods
       - alert: K8SDaemonSetsNotScheduled
         expr: kube_daemonset_status_desired_number_scheduled - kube_daemonset_status_current_number_scheduled
@@ -334,7 +334,7 @@ data:
         labels:
           severity: warning
         annotations:
-          description: Pod {{$labels.namespaces}}/{{$labels.pod}} is was restarted {{$value}}
+          description: Pod {{$labels.namespace}}/{{$labels.pod}} was restarted {{$value}}
             times within the last hour
           summary: Pod is restarting frequently
   kubelet.rules.yaml: |+
@@ -498,7 +498,7 @@ data:
     - name: node.rules
       rules:
       - record: instance:node_cpu:rate:sum
-        expr: sum(rate(node_cpu{mode!="idle",mode!="iowait",mode!~"^(?:guest.*)$"}[3m]))
+        expr: sum(rate(node_cpu{mode!="idle",mode!="iowait"}[3m]))
           BY (instance)
       - record: instance:node_filesystem_usage:sum
         expr: sum((node_filesystem_size{mountpoint="/"} - node_filesystem_free{mountpoint="/"}))
@@ -508,10 +508,10 @@ data:
       - record: instance:node_network_transmit_bytes:rate:sum
         expr: sum(rate(node_network_transmit_bytes[3m])) BY (instance)
       - record: instance:node_cpu:ratio
-        expr: sum(rate(node_cpu{mode!="idle"}[5m])) WITHOUT (cpu, mode) / ON(instance)
+        expr: sum(rate(node_cpu{mode!="idle",mode!="iowait"}[5m])) WITHOUT (cpu, mode) / ON(instance)
           GROUP_LEFT() count(sum(node_cpu) BY (instance, cpu)) BY (instance)
       - record: cluster:node_cpu:sum_rate5m
-        expr: sum(rate(node_cpu{mode!="idle"}[5m]))
+        expr: sum(rate(node_cpu{mode!="idle",mode!="iowait"}[5m]))
       - record: cluster:node_cpu:ratio
         expr: cluster:node_cpu:rate5m / count(sum(node_cpu) BY (instance, cpu))
       - alert: NodeExporterDown

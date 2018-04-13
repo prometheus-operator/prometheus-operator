@@ -22,7 +22,7 @@ configmapReload:
 ##
 image:
   repository: quay.io/coreos/prometheus-operator
-  tag: v0.17.0
+  tag: v0.18.0
   pullPolicy: IfNotPresent
 
 ## If enabled, prometheus-operator will create a service for scraping kubelets

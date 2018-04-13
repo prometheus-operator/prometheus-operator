@@ -22,7 +22,7 @@ helm install coreos/kube-prometheus --name kube-prometheus --namespace monitorin
 ```
 helm install helm/prometheus-operator --name prometheus-operator --namespace monitoring
 mkdir -p helm/kube-prometheus/charts
-helm package -d helm/kube-prometheus/charts helm/alertmanager helm/grafana helm/prometheus  helm/exporter-kube-dns helm/exporter-kube-scheduler helm/exporter-kubelets helm/exporter-node helm/exporter-kube-controller-manager helm/exporter-kube-etcd helm/exporter-kube-state helm/exporter-kubernetes
+helm package -d helm/kube-prometheus/charts helm/alertmanager helm/grafana helm/prometheus  helm/exporter-kube-dns helm/exporter-kube-scheduler helm/exporter-kubelets helm/exporter-node helm/exporter-kube-controller-manager helm/exporter-kube-etcd helm/exporter-kube-state helm/exporter-coredns helm/exporter-kubernetes
 helm install helm/kube-prometheus --name kube-prometheus --namespace monitoring
 
 ```
