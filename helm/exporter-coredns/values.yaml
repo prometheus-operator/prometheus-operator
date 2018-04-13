@@ -5,3 +5,7 @@ port: 9153
 
 # The k8s-app label coredns is deployed with
 selectorLabel: coredns
+
+## Custom Labels to be added to ServiceMonitor
+##
+additionalServiceMonitorLabels: {}

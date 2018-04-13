@@ -46,3 +46,7 @@ tolerations: {}
   #    operator: "Equal"
   #    value: "value"
   #    effect: "NoSchedule"
+
+## Custom Labels to be added to ServiceMonitor
+##
+additionalServiceMonitorLabels: {}  

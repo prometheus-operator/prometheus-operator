@@ -14,6 +14,9 @@ annotations: {}
 ## If true, create a serviceMonitor for grafana
 ##
 selfServiceMonitor: true
+## Custom Labels to be added to ServiceMonitor
+##
+additionalServiceMonitorLabels: {}
 
 ## Pass extra environment variables to the Grafana container.
 ##

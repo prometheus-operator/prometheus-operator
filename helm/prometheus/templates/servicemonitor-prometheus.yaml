@@ -8,6 +8,9 @@ metadata:
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"
     prometheus: {{ .Release.Name }}
+    {{- if .Values.additionalSelfServiceMonitorLabels }}
+{{ toYaml .Values.additionalSelfServiceMonitorLabels | indent 4 }}
+    {{- end }}
   name: {{ template "prometheus.fullname" . }}
 spec:
   jobLabel: app

@@ -45,6 +45,10 @@ externalUrl: ""
 ##
 selfServiceMonitor: true
 
+## Custom Labels to be added to ServiceMonitor
+##
+additionalServiceMonitorLabels: {}
+
 ## Alertmanager container image
 ##
 image:

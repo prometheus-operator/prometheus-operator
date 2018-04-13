@@ -7,6 +7,9 @@ metadata:
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"
     prometheus: {{ .Release.Name }}
+    {{- if .Values.additionalServiceMonitorLabels }}
+{{ toYaml .Values.additionalServiceMonitorLabels | indent 4 }}
+    {{- end }}    
   name: {{ template "exporter-kubernetes.fullname" . }}
 spec:
   jobLabel: component

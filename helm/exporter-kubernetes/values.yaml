@@ -1,2 +1,6 @@
 # default rules are in templates/kubernetes.rules.yaml
 # prometheusRules: {}
+
+## Custom Labels to be added to ServiceMonitor
+##
+additionalServiceMonitorLabels: {}
