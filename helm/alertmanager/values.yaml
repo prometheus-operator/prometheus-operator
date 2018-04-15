@@ -49,6 +49,10 @@ selfServiceMonitor: true
 ##
 additionalServiceMonitorLabels: {}
 
+##Custom Labels to be added to Prometheus Rules ConfigMap
+##
+additionalRulesConfigMapLabels: {}
+
 ## Alertmanager container image
 ##
 image:

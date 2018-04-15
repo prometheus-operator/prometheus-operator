@@ -49,4 +49,7 @@ tolerations: {}
 
 ## Custom Labels to be added to ServiceMonitor
 ##
-additionalServiceMonitorLabels: {}  
+additionalServiceMonitorLabels: {}
+##Custom Labels to be added to Prometheus Rules ConfigMap
+##
+additionalRulesConfigMapLabels: {}
