@@ -89,9 +89,9 @@ alertmanager:
     # requests:
     #   memory: 400Mi
 
-  ## List of Secrets in the same namespace as the Prometheus
-  ## object, which shall be mounted into the Prometheus Pods.
-  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+  ## List of Secrets in the same namespace as the AlertManager
+  ## object, which shall be mounted into the AlertManager Pods.
+  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#alertmanagerspec
   ##
   secrets: []
 
@@ -214,6 +214,12 @@ prometheus:
   resources: {}
     # requests:
     #   memory: 400Mi
+
+  ## List of Secrets in the same namespace as the Prometheus
+  ## object, which shall be mounted into the Prometheus Pods.
+  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+  ##
+  secrets: []
 
   ## How long to retain metrics
   ##
