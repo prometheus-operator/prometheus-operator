@@ -21,7 +21,6 @@ import (
 	"log"
 	"reflect"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -286,7 +285,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 			},
 		},
 		Data: map[string]string{
-			"test.rules": "",
+			"alerting.rules": "",
 		},
 	}
 
@@ -300,25 +299,26 @@ func TestPrometheusReloadRules(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ruleFileConfigMap.Data["test.rules"] = "# comment to trigger a configmap reload"
+	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, pSVC); err != nil {
+		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	ruleFileConfigMap.Data["alerting.rules"] = `
+groups:
+- name: ./alerting.rules
+  rules:
+  - alert: ExampleAlert
+    expr: vector(1)
+`
 	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Update(ruleFileConfigMap)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// remounting a ConfigMap can take some time
-	err = wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		logs, err := testFramework.GetLogs(framework.KubeClient, ns, fmt.Sprintf("prometheus-%s-0", name), "prometheus-config-reloader")
-		if err != nil {
-			return false, err
-		}
-
-		if strings.Contains(logs, "ConfigMap modified") && strings.Contains(logs, "Rule files updated") && strings.Contains(logs, "Prometheus successfully reloaded") {
-			return true, nil
-		}
-
-		return false, nil
-	})
+	err = framework.WaitForPrometheusFiringAlert(p.Namespace, pSVC.Name, "ExampleAlert")
 	if err != nil {
 		t.Fatal(err)
 	}
