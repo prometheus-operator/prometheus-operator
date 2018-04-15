@@ -42,7 +42,7 @@ schedulerExtraArgs:
   address: 0.0.0.0
 ```
 
-Notice the `schedulerExtraArgs` and `controllerManagerExtraArgs`. This exposes the `kube-controller-manager` and `kube-scheduler` services to the rest of the cluster.
+Notice the `schedulerExtraArgs` and `controllerManagerExtraArgs`. This exposes the `kube-controller-manager` and `kube-scheduler` services to the rest of the cluster. If you have kubernetes core components as pods in the kube-system namespace, ensure that the `kube-prometheus-exporter-kube-scheduler` and `kube-prometheus-exporter-kube-controller-manager` services' `spec.selector` values match those of pods.
 
 In addition, we will be using `node-exporter` to monitor the `cAdvisor` service on all the nodes. This, however requires a change to the `kubelet` service on the master as well as all the nodes. According to the Kubernetes documentation
 
