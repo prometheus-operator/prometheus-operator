@@ -1,69 +1,63 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1beta2
 kind: DaemonSet
 metadata:
+  labels:
+    app: node-exporter
   name: node-exporter
+  namespace: monitoring
 spec:
-  updateStrategy:
-    rollingUpdate:
-      maxUnavailable: 1
-    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: node-exporter
   template:
     metadata:
       labels:
         app: node-exporter
-      name: node-exporter
     spec:
-      serviceAccountName: node-exporter
+      containers:
+      - args:
+        - --web.listen-address=127.0.0.1:9101
+        - --path.procfs=/host/proc
+        - --path.sysfs=/host/sys
+        image: quay.io/prometheus/node-exporter:v0.15.2
+        name: node-exporter
+        resources:
+          limits:
+            cpu: 102m
+            memory: 180Mi
+          requests:
+            cpu: 102m
+            memory: 180Mi
+        volumeMounts:
+        - mountPath: /host/proc
+          name: proc
+          readOnly: false
+        - mountPath: /host/sys
+          name: sys
+          readOnly: false
+      - args:
+        - --secure-listen-address=:9100
+        - --upstream=http://127.0.0.1:9101/
+        image: quay.io/coreos/kube-rbac-proxy:v0.3.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 9100
+          name: https
+        resources:
+          limits:
+            cpu: 20m
+            memory: 40Mi
+          requests:
+            cpu: 10m
+            memory: 20Mi
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
-      hostNetwork: true
-      hostPID: true
-      containers:
-      - image: quay.io/prometheus/node-exporter:v0.15.2
-        args:
-        - "--web.listen-address=127.0.0.1:9101"
-        - "--path.procfs=/host/proc"
-        - "--path.sysfs=/host/sys"
-        name: node-exporter
-        resources:
-          requests:
-            memory: 30Mi
-            cpu: 100m
-          limits:
-            memory: 50Mi
-            cpu: 200m
-        volumeMounts:
-        - name: proc
-          readOnly:  true
-          mountPath: /host/proc
-        - name: sys
-          readOnly: true
-          mountPath: /host/sys
-      - name: kube-rbac-proxy
-        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
-        args:
-        - "--secure-listen-address=:9100"
-        - "--upstream=http://127.0.0.1:9101/"
-        ports:
-        - containerPort: 9100
-          hostPort: 9100
-          name: https
-        resources:
-          requests:
-            memory: 20Mi
-            cpu: 10m
-          limits:
-            memory: 40Mi
-            cpu: 20m
-      tolerations:
-        - effect: NoSchedule
-          operator: Exists
+      serviceAccountName: node-exporter
       volumes:
-      - name: proc
-        hostPath:
+      - hostPath:
           path: /proc
-      - name: sys
-        hostPath:
+        name: proc
+      - hostPath:
           path: /sys
-
+        name: sys

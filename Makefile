@@ -71,7 +71,7 @@ docs: embedmd po-docgen
 	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
 generate: jsonnet-docker
-	docker run --rm -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy generate-openapi jsonnet generate-bundle docs generate-kube-prometheus generate-crd
+	docker run --rm -u=$(shell id -u $(USER)):$(shell id -g $(USER)) -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy generate-openapi jsonnet generate-bundle docs generate-kube-prometheus generate-crd
 
 
 $(GOBIN)/openapi-gen:
@@ -102,9 +102,9 @@ generate-kube-prometheus:
 	cd contrib/kube-prometheus; $(MAKE) generate-raw
 
 jsonnet:
-	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator.jsonnet | json2yaml > example/non-rbac/prometheus-operator.yaml
-	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | json2yaml > example/rbac/prometheus-operator/prometheus-operator.yaml
-	jsonnet -J /ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | json2yaml > contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml
+	jsonnet -J /go/src/github.com/ksonnet/ksonnet-lib hack/generate/prometheus-operator.jsonnet | gojsontoyaml > example/non-rbac/prometheus-operator.yaml
+	jsonnet -J /go/src/github.com/ksonnet/ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | gojsontoyaml > example/rbac/prometheus-operator/prometheus-operator.yaml
+	jsonnet -J /go/src/github.com/ksonnet/ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | gojsontoyaml > contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml
 
 jsonnet-docker:
 	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .

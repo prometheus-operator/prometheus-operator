@@ -1,15 +1,21 @@
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: kube-state-metrics-resizer
+  name: kube-state-metrics
+  namespace: monitoring
 rules:
-- apiGroups: [""]
+- apiGroups:
+  - ""
   resources:
   - pods
-  verbs: ["get"]
-- apiGroups: ["extensions"]
+  verbs:
+  - get
+- apiGroups:
+  - extensions
+  resourceNames:
+  - kube-state-metrics
   resources:
   - deployments
-  resourceNames: ["kube-state-metrics"]
-  verbs: ["get", "update"]
-
+  verbs:
+  - get
+  - update
