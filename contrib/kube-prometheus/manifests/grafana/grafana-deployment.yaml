@@ -1,48 +1,59 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
+  labels:
+    app: grafana
   name: grafana
+  namespace: monitoring
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
   template:
     metadata:
       labels:
         app: grafana
     spec:
+      containers:
+      - image: quay.io/coreos/monitoring-grafana:5.0.3
+        name: grafana
+        ports:
+        - containerPort: 3000
+          name: http
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        volumeMounts:
+        - mountPath: /data
+          name: grafana-storage
+          readOnly: false
+        - mountPath: /grafana/conf/provisioning/datasources
+          name: grafana-datasources
+          readOnly: false
+        - mountPath: /grafana/conf/provisioning/dashboards
+          name: grafana-dashboards
+          readOnly: false
+        - mountPath: /grafana-dashboard-definitions/0
+          name: grafana-dashboard-definitions
+          readOnly: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
-      containers:
-      - name: grafana
-        image: quay.io/coreos/monitoring-grafana:5.0.3
-        volumeMounts:
-        - name: grafana-storage
-          mountPath: /data
-        - name: grafana-datasources
-          mountPath: /grafana/conf/provisioning/datasources
-        - name: grafana-dashboards
-          mountPath: /grafana/conf/provisioning/dashboards
-        - name: grafana-dashboard-definitions-0
-          mountPath: /grafana-dashboard-definitions/0
-        ports:
-        - name: web
-          containerPort: 3000
-        resources:
-          requests:
-            memory: 100Mi
-            cpu: 100m
-          limits:
-            memory: 200Mi
-            cpu: 200m
+      serviceAccountName: grafana
       volumes:
-      - name: grafana-storage
-        emptyDir: {}
-      - name: grafana-datasources
-        configMap:
+      - emptyDir: {}
+        name: grafana-storage
+      - configMap:
           name: grafana-datasources
-      - name: grafana-dashboards
-        configMap:
+        name: grafana-datasources
+      - configMap:
           name: grafana-dashboards
-      - name: grafana-dashboard-definitions-0
-        configMap:
-          name: grafana-dashboard-definitions-0
+        name: grafana-dashboards
+      - configMap:
+          name: grafana-dashboard-definitions
+        name: grafana-dashboard-definitions

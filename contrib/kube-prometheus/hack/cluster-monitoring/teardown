@@ -1,30 +1,4 @@
 #!/usr/bin/env bash
 
-if [ -z "${KUBECONFIG}" ]; then
-    export KUBECONFIG=~/.kube/config
-fi
-
-# CAUTION - NAMESPACE must match its value when deploy script was run.
-# Some resources are always deployed to the monitoring namespace. 
-
-if [ -z "${NAMESPACE}" ]; then
-    NAMESPACE=monitoring
-fi
-
-kctl() {
-    kubectl --namespace "$NAMESPACE" "$@"
-}
-
-kctl delete -f manifests/node-exporter
-kctl delete -f manifests/kube-state-metrics
-kctl delete -f manifests/grafana
-find manifests/prometheus -type f ! -name prometheus-k8s-roles.yaml ! -name prometheus-k8s-role-bindings.yaml -exec kubectl --namespace "$NAMESPACE" delete -f {} \;
-kubectl delete -f manifests/prometheus/prometheus-k8s-roles.yaml
-kubectl delete -f manifests/prometheus/prometheus-k8s-role-bindings.yaml
-kctl delete -f manifests/alertmanager
-
-# Hack: wait a bit to let the controller delete the deployed Prometheus server.
-sleep 5
-
-kctl delete -f manifests/prometheus-operator
+kubectl delete namespace monitoring
 

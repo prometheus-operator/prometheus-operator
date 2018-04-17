@@ -115,6 +115,10 @@ ingress:
 # Set datasource in beginning
 dataSource: {}
 
+## A list of additional configmaps that contain -dashboard.json and/or -datasource.json files
+## that should be imported into grafana.
+serverDashboardConfigmaps: []
+
 serverDashboardFiles: {}
 
 ## Keep the Dashboards that are defined in this HELM chart

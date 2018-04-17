@@ -110,19 +110,20 @@ func (f *Framework) SecretFromYaml(filepath string) (*v1.Secret, error) {
 	return &s, nil
 }
 
-func (f *Framework) AlertmanagerConfigSecret(name string) (*v1.Secret, error) {
-	s, err := f.SecretFromYaml("../../contrib/kube-prometheus/manifests/alertmanager/alertmanager-config.yaml")
+func (f *Framework) AlertmanagerConfigSecret(ns, name string) (*v1.Secret, error) {
+	s, err := f.SecretFromYaml("../../contrib/kube-prometheus/manifests/alertmanager-main/alertmanager-main-secret.yaml")
 	if err != nil {
 		return nil, err
 	}
 
 	s.Name = name
+	s.Namespace = ns
 	return s, nil
 }
 
 func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) error {
 	amConfigSecretName := fmt.Sprintf("alertmanager-%s", a.Name)
-	s, err := f.AlertmanagerConfigSecret(amConfigSecretName)
+	s, err := f.AlertmanagerConfigSecret(ns, amConfigSecretName)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("making alertmanager config secret %v failed", amConfigSecretName))
 	}

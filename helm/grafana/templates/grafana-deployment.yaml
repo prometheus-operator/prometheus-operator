@@ -70,6 +70,9 @@ spec:
         args:
           - '--watch-dir=/var/grafana-dashboards'
           - '--grafana-url=http://127.0.0.1:3000'
+          {{- range .Values.serverDashboardConfigmaps }}
+          - '--watch-dir=/var/additional-dashboards/{{ . }}'
+          {{- end }}
         env:
         - name: GRAFANA_USER
           valueFrom:
@@ -91,6 +94,10 @@ spec:
         volumeMounts:
           - name: grafana-dashboards
             mountPath: /var/grafana-dashboards
+    {{- range .Values.serverDashboardConfigmaps }}
+          - name: {{ . }}
+            mountPath: /var/additional-dashboards/{{ . }}
+    {{- end }}
     {{- if .Values.nodeSelector }}
       nodeSelector:
     {{ toYaml .Values.nodeSelector | indent 4 }}
@@ -115,4 +122,9 @@ spec:
           hostPath:
             path: /etc/grafana
             type: directory
+      {{- end }}
+      {{- range .Values.serverDashboardConfigmaps }}
+        - name: {{ . }}
+          configMap:
+            name: {{ . }}
       {{- end }}

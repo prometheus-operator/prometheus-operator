@@ -1,5 +1,7 @@
 # kube-prometheus
 
+> Note that everything in the `contrib/kube-prometheus/` directory is experimental and may change significantly at any time.
+
 This repository collects Kubernetes manifests, [Grafana](http://grafana.com/) dashboards, and
 [Prometheus rules](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/)
 combined with documentation and scripts to provide single-command deployments of end-to-end
@@ -46,16 +48,15 @@ install
 Simply run:
 
 ```bash
-export KUBECONFIG=<path> # defaults to "~/.kube/config"
 cd contrib/kube-prometheus/
 hack/cluster-monitoring/deploy
 ```
 
-After all pods are ready, you can reach:
+After all pods are ready, you can reach each of the UIs by port-forwarding:
 
-* Prometheus UI on node port `30900`
-* Alertmanager UI on node port `30903`
-* Grafana on node port `30902`
+* Prometheus UI on node port `kubectl -n monitoring port-forward prometheus-k8s-0 9090`
+* Alertmanager UI on node port `kubectl -n monitoring port-forward alertmanager-main-0 9093`
+* Grafana on node port `kubectl -n monitoring port-forward $(kubectl get pods -n monitoring -lapp=grafana -ojsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}') 3000`
 
 To tear it all down again, run:
 
@@ -63,9 +64,53 @@ To tear it all down again, run:
 hack/cluster-monitoring/teardown
 ```
 
+## Customizing
+
+As everyone's infrastructure is slightly different, different organizations have different requirements. Thereby there may be modifications you want to do on kube-prometheus to fit your needs.
+
+The kube-prometheus stack is intended to be a jsonnet library for organizations to consume and use in their own infrastructure repository. Below is an example how it can be used to deploy the stack properly on minikube.
+
+The three "distribution" examples we have assembled can be found in:
+
+* `example-dist/base`: contains the plain kube-prometheus stack for organizations to build on.
+* `example-dist/kubeadm`: contains the kube-prometheus stack with slight modifications to work properly monitoring kubeadm clusters and exposes UIs on NodePorts for demonstration purposes.
+* `example-dist/bootkube`: contains the kube-prometheus stack with slight modifications to work properly on clusters created with bootkube.
+
+The examples in `example-dist/` are purely meant for demonstration purposes, the `kube-prometheus.jsonnet` file should live in your organizations infrastructure repository and use the kube-prometheus library provided here.
+
+Examples of additoinal modifications you may want to make could be adding an `Ingress` object for each of the UIs, but the point of this is that as opposed to other solutions out there, this library does not need to yield all possible customization options, it's all up to the user to customize!
+
+### minikube kubeadm example
+
+See `example-dist/kubeadm` for an example for deploying on minikube, using the minikube kubeadm bootstrapper. The `example-dist/kubeadm/kube-prometheus.jsonnet` file renders the kube-prometheus manifests using jsonnet and then merges the result with kubeadm specifics, such as information on how to monitor kube-controller-manager and kube-scheduler as created by kubeadm. In addition for demonstration purposes, it converts the services selecting Prometheus, Alertmanager and Grafana to NodePort services.
+
+Let's give that a try, and create a minikube cluster:
+
+```
+minikube delete && minikube start --kubernetes-version=v1.9.6 --memory=4096 --bootstrapper=kubeadm --extra-config=kubelet.authentication-token-webhook=true --extra-config=kubelet.authorization-mode=Webhook --extra-config=scheduler.address=0.0.0.0 --extra-config=controller-manager.address=0.0.0.0
+```
+
+Then we can render the manifests for kubeadm (because we are using the minikube kubeadm bootstrapper):
+
+```
+docker run --rm \
+  -v `pwd`:/go/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus \
+  --workdir /go/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus \
+  po-jsonnet \
+  ./hack/scripts/build-jsonnet.sh example-dist/kubeadm/kube-prometheus.jsonnet example-dist/kubeadm/manifests
+```
+
+> Note the `po-jsonnet` docker image is built using [this Dockerfile](/scripts/jsonnet/Dockerfile), you can also build it using `make image` from the `contrib/kube-prometheus` folder.
+
+Then the stack can be deployed using
+
+```
+hack/cluster-monitoring/deploy example-dist/kubeadm
+```
+
 ## Monitoring custom services
 
-The example manifests in [manifests/examples/example-app](/contrib/kube-prometheus/manifests/examples/example-app)
+The example manifests in [examples/example-app](/contrib/kube-prometheus/examples/example-app)
 deploy a fake service exposing Prometheus metrics. They additionally define a new Prometheus
 server and a [`ServiceMonitor`](https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md#servicemonitor),
 which specifies how the example service should be monitored.
@@ -76,10 +121,13 @@ manage its life cycle.
 hack/example-service-monitoring/deploy
 ```
 
-After all pods are ready you can reach the Prometheus server on node port `30100` and observe
-how it monitors the service as specified. Same as before, this Prometheus server automatically
-discovers the Alertmanager cluster deployed in the [Monitoring Kubernetes](#Monitoring-Kubernetes)
-section.
+After all pods are ready you can reach the Prometheus server similar to the Prometheus server above:
+
+```bash
+kubectl port-forward prometheus-frontend-0 9090
+```
+
+Then you can access Prometheus through `http://localhost:9090/`.
 
 Teardown:
 

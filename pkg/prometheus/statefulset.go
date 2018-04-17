@@ -36,15 +36,17 @@ import (
 )
 
 const (
-	governingServiceName = "prometheus-operated"
-	DefaultVersion       = "v2.2.1"
-	defaultRetention     = "24h"
-	configMapsFilename   = "configmaps.json"
-	prometheusConfDir    = "/etc/prometheus/config"
-	prometheusConfFile   = prometheusConfDir + "/prometheus.yaml"
-	prometheusStorageDir = "/prometheus"
-	prometheusRulesDir   = "/etc/prometheus/rules"
-	prometheusSecretsDir = "/etc/prometheus/secrets/"
+	governingServiceName   = "prometheus-operated"
+	DefaultVersion         = "v2.2.1"
+	defaultRetention       = "24h"
+	storageDir             = "/prometheus"
+	confDir                = "/etc/prometheus/config"
+	confOutDir             = "/etc/prometheus/config_out"
+	rulesDir               = "/etc/prometheus/config_out/rules"
+	secretsDir             = "/etc/prometheus/secrets/"
+	configFilename         = "prometheus.yaml"
+	configEnvsubstFilename = "prometheus.env.yaml"
+	ruleConfigmapsFilename = "configmaps.json"
 )
 
 var (
@@ -274,8 +276,8 @@ func makeConfigSecret(p *monitoringv1.Prometheus, configMaps []*v1.ConfigMap, co
 			},
 		},
 		Data: map[string][]byte{
-			configFilename:     []byte{},
-			configMapsFilename: b,
+			configFilename:         []byte{},
+			ruleConfigmapsFilename: b,
 		},
 	}, nil
 }
@@ -325,9 +327,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		promArgs = append(promArgs,
 			"-storage.local.retention="+p.Spec.Retention,
 			"-storage.local.num-fingerprint-mutexes=4096",
-			fmt.Sprintf("-storage.local.path=%s", prometheusStorageDir),
+			fmt.Sprintf("-storage.local.path=%s", storageDir),
 			"-storage.local.chunk-encoding-version=2",
-			fmt.Sprintf("-config.file=%s", prometheusConfFile))
+			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
+		)
 		// We attempt to specify decent storage tuning flags based on how much the
 		// requested memory can fit. The user has to specify an appropriate buffering
 		// in memory limits to catch increased memory usage during query bursts.
@@ -356,8 +359,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		securityContext = &v1.PodSecurityContext{}
 	case 2:
 		promArgs = append(promArgs,
-			fmt.Sprintf("-config.file=%s", prometheusConfFile),
-			fmt.Sprintf("-storage.tsdb.path=%s", prometheusStorageDir),
+			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
+			fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
 			"-storage.tsdb.retention="+p.Spec.Retention,
 			"-web.enable-lifecycle",
 			"-storage.tsdb.no-lockfile",
@@ -430,7 +433,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 			},
 		},
 		{
-			Name: "rules",
+			Name: "config-out",
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
@@ -439,18 +442,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 
 	promVolumeMounts := []v1.VolumeMount{
 		{
-			Name:      "config",
+			Name:      "config-out",
 			ReadOnly:  true,
-			MountPath: prometheusConfDir,
-		},
-		{
-			Name:      "rules",
-			ReadOnly:  true,
-			MountPath: prometheusRulesDir,
+			MountPath: confOutDir,
 		},
 		{
 			Name:      volumeName(p.Name),
-			MountPath: prometheusStorageDir,
+			MountPath: storageDir,
 			SubPath:   subPathForStorage(p.Spec.Storage),
 		},
 	}
@@ -467,26 +465,27 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
 			Name:      "secret-" + s,
 			ReadOnly:  true,
-			MountPath: prometheusSecretsDir + s,
+			MountPath: secretsDir + s,
 		})
 	}
 
 	configReloadVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config",
-			ReadOnly:  true,
-			MountPath: prometheusConfDir,
+			MountPath: confDir,
 		},
 		{
-			Name:      "rules",
-			MountPath: prometheusRulesDir,
+			Name:      "config-out",
+			MountPath: confOutDir,
 		},
 	}
 
 	configReloadArgs := []string{
-		fmt.Sprintf("-reload-url=%s", localReloadURL),
-		fmt.Sprintf("-config-volume-dir=%s", prometheusConfDir),
-		fmt.Sprintf("-rule-volume-dir=%s", prometheusRulesDir),
+		fmt.Sprintf("--reload-url=%s", localReloadURL),
+		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
+		fmt.Sprintf("--rule-list-file=%s", path.Join(confDir, ruleConfigmapsFilename)),
+		fmt.Sprintf("--config-envsubst-file=%s", path.Join(confOutDir, configEnvsubstFilename)),
+		fmt.Sprintf("--rule-dir=%s", rulesDir),
 	}
 
 	var livenessProbeHandler v1.Handler
@@ -551,10 +550,12 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 			}
 		}
 	}
+
 	podLabels["app"] = "prometheus"
 	podLabels["prometheus"] = p.Name
 
 	finalLabels := c.Labels.Merge(podLabels)
+
 	return &appsv1.StatefulSetSpec{
 		ServiceName:         governingServiceName,
 		Replicas:            p.Spec.Replicas,
@@ -582,8 +583,16 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMaps []
 						ReadinessProbe: readinessProbe,
 						Resources:      p.Spec.Resources,
 					}, {
-						Name:         "prometheus-config-reloader",
-						Image:        c.PrometheusConfigReloader,
+						Name:  "prometheus-config-reloader",
+						Image: c.PrometheusConfigReloader,
+						Env: []v1.EnvVar{
+							{
+								Name: "POD_NAME",
+								ValueFrom: &v1.EnvVarSource{
+									FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
+								},
+							},
+						},
 						Args:         configReloadArgs,
 						VolumeMounts: configReloadVolumeMounts,
 						Resources: v1.ResourceRequirements{
