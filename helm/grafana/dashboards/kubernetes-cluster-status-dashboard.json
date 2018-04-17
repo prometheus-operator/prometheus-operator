@@ -740,7 +740,7 @@
                         },
                         "targets": [
                             {
-                                "expr": "100 - (sum(kube_node_status_capacity_pods) - sum(kube_pod_info)) / sum(kube_node_status_capacity_pods) * 100",
+                                "expr": "100 - (sum(kube_node_status_capacity_pods) - sum(kube_pod_status_phase{phase='Running'})) / sum(kube_node_status_capacity_pods) * 100",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "refId": "A",
