@@ -78,11 +78,8 @@ rules:
 - apiGroups: [""]
   resources:
   - nodes
-  verbs: ["list", "watch"]
-- apiGroups: [""]
-  resources:
   - namespaces
-  verbs: ["list"]
+  verbs: ["list", "watch"]
 ---
 apiVersion: v1
 kind: ServiceAccount

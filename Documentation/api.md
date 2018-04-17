@@ -198,6 +198,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | ----- | ----------- | ------ | -------- |
 | podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#objectmeta-v1-meta) | false |
 | serviceMonitorSelector | ServiceMonitors to be selected for target discovery. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
+| serviceMonitorNamespaceSelector | Namespaces to be selected for ServiceMonitor discovery. If empty, only check own namespace. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
 | version | Version of Prometheus to be deployed. | string | false |
 | paused | When a Prometheus deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
 | baseImage | Base image to use for a Prometheus deployment. | string | false |
