@@ -45,7 +45,7 @@ data:
     - name: ./etcd3.rules
       rules:
       - alert: InsufficientMembers
-        expr: count(up{job="etcd"} == 0) > (count(up{job="etcd"}) / 2 - 1)
+        expr: count(up{job="etcd"} == 0) > ((count(up{job="etcd"}) - 1) / 2)
         for: 3m
         labels:
           severity: critical
