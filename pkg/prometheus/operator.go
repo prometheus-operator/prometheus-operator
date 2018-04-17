@@ -128,6 +128,7 @@ type Config struct {
 	CrdGroup                     string
 	CrdKinds                     monitoringv1.CrdKinds
 	EnableValidation             bool
+	StrictNamespaceSelection     bool
 	DisableAutoUserGroup         bool
 }
 
@@ -752,7 +753,7 @@ func (c *Operator) ruleFileConfigMaps(p *monitoringv1.Prometheus) ([]*v1.ConfigM
 		return nil, err
 	}
 
-	cache.ListAllByNamespace(c.cmapInf.GetIndexer(), p.Namespace, ruleSelector, func(obj interface{}) {
+	cache.ListAllByNamespace(c.cmapInf.GetIndexer(), c.selectNamespace(p), ruleSelector, func(obj interface{}) {
 		_, ok := c.keyFunc(obj)
 		if ok {
 			res = append(res, obj.(*v1.ConfigMap))
@@ -768,6 +769,14 @@ func ListOptions(name string) metav1.ListOptions {
 			"app":        "prometheus",
 			"prometheus": name,
 		})).String(),
+	}
+}
+
+func (c *Operator) selectNamespace(p *monitoringv1.Prometheus) string {
+	if c.config.StrictNamespaceSelection {
+		return p.Namespace
+	} else {
+		return c.config.Namespace
 	}
 }
 
@@ -1047,7 +1056,7 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 
 	// Only service monitors within the same namespace as the Prometheus
 	// object can belong to it.
-	cache.ListAllByNamespace(c.smonInf.GetIndexer(), p.Namespace, selector, func(obj interface{}) {
+	cache.ListAllByNamespace(c.smonInf.GetIndexer(), c.selectNamespace(p), selector, func(obj interface{}) {
 		k, ok := c.keyFunc(obj)
 		if ok {
 			res[k] = obj.(*monitoringv1.ServiceMonitor)
