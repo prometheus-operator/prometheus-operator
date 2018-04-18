@@ -63,6 +63,10 @@ image:
 ##
 labels: {}
 
+## "prometheus" label value for ServiceMonitor and rules ConfigMap
+## Release.Name by default
+prometheusLabelValue: ""
+
 ingress:
   ## If true, Alertmanager Ingress will be created
   ##
