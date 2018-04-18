@@ -8,6 +8,9 @@ metadata:
     prometheus: {{ .Release.Name }}
     release: {{ .Release.Name }}
     role: alert-rules
+    {{- if .Values.additionalRulesConfigMapLabels }}
+{{ toYaml .Values.additionalRulesConfigMapLabels | indent 4 }}
+    {{- end }}    
   name: {{ template "alertmanager.fullname" . }}
 data:
 {{- if .Values.prometheusRules }}

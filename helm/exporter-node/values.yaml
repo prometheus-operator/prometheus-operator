@@ -18,7 +18,7 @@ resources:
     cpu: 100m
     memory: 30Mi
 
-container: 
+container:
   args:
   - --path.procfs=/host/proc
   - --path.sysfs=/host/sys
@@ -30,7 +30,7 @@ container:
   - name: sys
     hostPath:
       path: /sys
-  
+
   volumeMounts:
   - name: proc
     mountPath: /host/proc
@@ -38,7 +38,7 @@ container:
   - name: sys
     mountPath: /host/sys
     readOnly: true
- 
+
 ## Tolerations for use with node taints
 ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 ##
@@ -49,3 +49,10 @@ tolerations:
 
 # default rules are in templates/node.rules.yaml
 # prometheusRules: {}
+
+## Custom Labels to be added to ServiceMonitor
+##
+additionalServiceMonitorLabels: {}
+##Custom Labels to be added to Prometheus Rules ConfigMap
+##
+additionalRulesConfigMapLabels: {}

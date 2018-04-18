@@ -9,6 +9,9 @@ metadata:
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"
     prometheus: {{ .Release.Name }}
+    {{- if .Values.additionalServiceMonitorLabels }}
+{{ toYaml .Values.additionalServiceMonitorLabels | indent 4 }}
+    {{- end }}    
   name: {{ template "grafana.fullname" . }}
 spec:
   jobLabel: {{ template "grafana.fullname" . }}

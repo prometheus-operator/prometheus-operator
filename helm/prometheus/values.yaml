@@ -27,6 +27,13 @@ externalUrl: ""
 ##
 selfServiceMonitor: true
 
+## Custom Labels to be added to ServiceMonitor
+##
+additionalSelfServiceMonitorLabels: {}
+##Custom Labels to be added to Prometheus Rules ConfigMap
+##
+additionalRulesConfigMapLabels: {}
+
 ## Prometheus container image
 ##
 image:

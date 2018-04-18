@@ -1,7 +1,7 @@
 # on what port are the metrics exposed by etcd. Use port 2379 for https
 etcdPort:  4001
 # for deployments that have etcd deployed outside of the cluster, list their adresses here
-endpoints: [] 
+endpoints: []
 # Are we talking http or https?
 scheme: http
 # default rules are in templates/etcd3.rules.yaml
@@ -11,3 +11,10 @@ scheme: http
 caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 certFile: ""
 keyFile: ""
+
+## Custom Labels to be added to ServiceMonitor
+##
+additionalServiceMonitorLabels: {}
+##Custom Labels to be added to Prometheus Rules ConfigMap
+##
+additionalRulesConfigMapLabels: {}
