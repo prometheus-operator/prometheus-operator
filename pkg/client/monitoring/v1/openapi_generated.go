@@ -690,6 +690,12 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 							},
 						},
+						"serviceMonitorNamespaceSelector": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Namespaces to be selected for ServiceMonitor discovery. If empty, only check own namespace.",
+								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+							},
+						},
 						"version": {
 							SchemaProps: spec.SchemaProps{
 								Description: "Version of Prometheus to be deployed.",
