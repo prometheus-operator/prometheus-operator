@@ -6,4 +6,5 @@
     role:: import "kube-state-metrics-role.libsonnet",
     serviceAccount:: import "kube-state-metrics-service-account.libsonnet",
     service:: import "kube-state-metrics-service.libsonnet",
+    serviceMonitor:: import "kube-state-metrics-service-monitor.libsonnet",
 }
