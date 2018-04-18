@@ -10,7 +10,7 @@ before_install:
 jobs:
   include:
   # Check generated contents are up to date and code is formatted.
-  - stage: Sanity check and unit tests 
+  - stage: Sanity check and unit tests
     script: ./scripts/check-make-generate.sh
   # Build Prometheus config reloader
   - script: cd contrib/prometheus-config-reloader && make build
@@ -28,3 +28,5 @@ jobs:
       script: make helm-sync-s3
       on:
         branch: master
+  - stage: push-docker-image
+    script: ./scripts/travis-push-docker-image.sh
