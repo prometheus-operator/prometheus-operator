@@ -53,6 +53,7 @@ local routingRule = policyRule.new() +
   policyRule.withApiGroups([""]) +
   policyRule.withResources([
     "services",
+    "endpoints",
   ]) +
   policyRule.withVerbs(["get", "create", "update"]);
 
