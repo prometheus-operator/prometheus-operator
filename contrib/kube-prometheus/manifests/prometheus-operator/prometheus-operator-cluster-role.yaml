@@ -49,6 +49,7 @@ rules:
   - ""
   resources:
   - services
+  - endpoints
   verbs:
   - get
   - create
