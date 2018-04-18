@@ -66,3 +66,11 @@ rules:
   - namespaces
   verbs:
   - list
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - create
+  - update
