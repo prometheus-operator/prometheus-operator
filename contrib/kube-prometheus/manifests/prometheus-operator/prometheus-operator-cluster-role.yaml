@@ -49,6 +49,7 @@ rules:
   - ""
   resources:
   - services
+  - endpoints
   verbs:
   - get
   - create
@@ -66,11 +67,3 @@ rules:
   - namespaces
   verbs:
   - list
-- apiGroups:
-  - ""
-  resources:
-  - endpoints
-  verbs:
-  - get
-  - create
-  - update
