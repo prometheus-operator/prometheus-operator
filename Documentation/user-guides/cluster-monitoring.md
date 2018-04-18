@@ -37,7 +37,7 @@ The manifests used here use the [Prometheus Operator](https://github.com/coreos/
 >
 > In future versions of minikube and kubeadm this will be the default, but for the time being, we will have to configure it ourselves.
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator-deployment.yaml)
 ```yaml
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -45,6 +45,7 @@ metadata:
   labels:
     k8s-app: prometheus-operator
   name: prometheus-operator
+  namespace: monitoring
 spec:
   replicas: 1
   selector:
@@ -493,7 +494,7 @@ spec:
       k8s-app: kube-scheduler
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-k8s/prometheus-k8s-service-monitor-kube-state-metrics.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics/kube-state-metrics-service-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -526,7 +527,7 @@ spec:
       k8s-app: kube-state-metrics
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-k8s/prometheus-k8s-service-monitor-node-exporter.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter/node-exporter-service-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor

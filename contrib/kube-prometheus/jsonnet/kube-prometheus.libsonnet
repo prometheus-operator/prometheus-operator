@@ -35,6 +35,7 @@ local ruleFiles = {
             "alertmanager-main/alertmanager-main-secret.yaml":          alertmanager.config.new(namespace, alertmanagerConfig),
             "alertmanager-main/alertmanager-main-service-account.yaml": alertmanager.serviceAccount.new(namespace),
             "alertmanager-main/alertmanager-main-service.yaml":         alertmanager.service.new(namespace),
+            "alertmanager-main/alertmanager-main-service-monitor.yaml": alertmanager.serviceMonitor.new(namespace),
             "alertmanager-main/alertmanager-main.yaml":                 alertmanager.alertmanager.new(namespace),
 
             "kube-state-metrics/kube-state-metrics-cluster-role-binding.yaml": ksm.clusterRoleBinding.new(namespace),
@@ -44,17 +45,20 @@ local ruleFiles = {
             "kube-state-metrics/kube-state-metrics-role.yaml":                 ksm.role.new(namespace),
             "kube-state-metrics/kube-state-metrics-service-account.yaml":      ksm.serviceAccount.new(namespace),
             "kube-state-metrics/kube-state-metrics-service.yaml":              ksm.service.new(namespace),
+            "kube-state-metrics/kube-state-metrics-service-monitor.yaml":      ksm.serviceMonitor.new(namespace),
 
             "node-exporter/node-exporter-cluster-role-binding.yaml": nodeExporter.clusterRoleBinding.new(namespace),
             "node-exporter/node-exporter-cluster-role.yaml":         nodeExporter.clusterRole.new(),
             "node-exporter/node-exporter-daemonset.yaml":            nodeExporter.daemonset.new(namespace),
             "node-exporter/node-exporter-service-account.yaml":      nodeExporter.serviceAccount.new(namespace),
             "node-exporter/node-exporter-service.yaml":              nodeExporter.service.new(namespace),
+            "node-exporter/node-exporter-service-monitor.yaml":      nodeExporter.serviceMonitor.new(namespace),
 
             "prometheus-operator/prometheus-operator-cluster-role-binding.yaml": po.clusterRoleBinding.new(namespace),
             "prometheus-operator/prometheus-operator-cluster-role.yaml":         po.clusterRole.new(),
             "prometheus-operator/prometheus-operator-deployment.yaml":           po.deployment.new(namespace),
             "prometheus-operator/prometheus-operator-service.yaml":              po.service.new(namespace),
+            "prometheus-operator/prometheus-operator-service-monitor.yaml":      po.serviceMonitor.new(namespace),
             "prometheus-operator/prometheus-operator-service-account.yaml":      po.serviceAccount.new(namespace),
 
             "prometheus-k8s/prometheus-k8s-cluster-role-binding.yaml":                    prometheus.clusterRoleBinding.new(namespace),
@@ -71,15 +75,11 @@ local ruleFiles = {
             "prometheus-k8s/prometheus-k8s-role-namespace.yaml":                          prometheus.roleNamespace.new(namespace),
             "prometheus-k8s/prometheus-k8s-role-kube-system.yaml":                        prometheus.roleKubeSystem.new(),
             "prometheus-k8s/prometheus-k8s-role-default.yaml":                            prometheus.roleDefault.new(),
-            "prometheus-k8s/prometheus-k8s-service-monitor-alertmanager.yaml":            prometheus.serviceMonitorAlertmanager.new(namespace),
             "prometheus-k8s/prometheus-k8s-service-monitor-apiserver.yaml":               prometheus.serviceMonitorApiserver.new(namespace),
             "prometheus-k8s/prometheus-k8s-service-monitor-coredns.yaml":                 prometheus.serviceMonitorCoreDNS.new(namespace),
             "prometheus-k8s/prometheus-k8s-service-monitor-kube-controller-manager.yaml": prometheus.serviceMonitorControllerManager.new(namespace),
             "prometheus-k8s/prometheus-k8s-service-monitor-kube-scheduler.yaml":          prometheus.serviceMonitorScheduler.new(namespace),
-            "prometheus-k8s/prometheus-k8s-service-monitor-kube-state-metrics.yaml":      prometheus.serviceMonitorKubeStateMetrics.new(namespace),
             "prometheus-k8s/prometheus-k8s-service-monitor-kubelet.yaml":                 prometheus.serviceMonitorKubelet.new(namespace),
-            "prometheus-k8s/prometheus-k8s-service-monitor-node-exporter.yaml":           prometheus.serviceMonitorNodeExporter.new(namespace),
-            "prometheus-k8s/prometheus-k8s-service-monitor-prometheus-operator.yaml":     prometheus.serviceMonitorPrometheusOperator.new(namespace),
             "prometheus-k8s/prometheus-k8s-service-monitor-prometheus.yaml":              prometheus.serviceMonitorPrometheus.new(namespace),
         }
 }
