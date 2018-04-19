@@ -5,7 +5,7 @@ metadata:
     app: {{ template "prometheus.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
-    prometheus: {{ .Release.Name }}
+    prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
     release: {{ .Release.Name }}
 {{- if .Values.labels }}
 {{ toYaml .Values.labels | indent 4 }}
@@ -62,7 +62,7 @@ spec:
 {{- else }}
   serviceMonitorSelector:
     matchLabels:
-      prometheus: {{ .Release.Name }}
+      prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
 {{- end }}
 {{- if .Values.remoteRead }}
   remoteRead:
@@ -79,7 +79,7 @@ spec:
   ruleSelector:
     matchLabels:
       role: alert-rules
-      prometheus: {{ .Release.Name }}
+      prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
 {{- end }}
 {{- if .Values.storageSpec }}
   storage:
@@ -94,7 +94,7 @@ spec:
         labelSelector:
           matchLabels:
             app: {{ template "prometheus.name" . }}
-            prometheus: {{ .Release.Name }}
+            prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
 {{- else if eq .Values.podAntiAffinity "soft" }}
   affinity:
     podAntiAffinity:
@@ -105,7 +105,7 @@ spec:
           labelSelector:
             matchLabels:
               app: {{ template "prometheus.name" . }}
-              prometheus: {{ .Release.Name }}
+              prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
 {{- end }}
 {{- if .Values.tolerations }}
   tolerations:

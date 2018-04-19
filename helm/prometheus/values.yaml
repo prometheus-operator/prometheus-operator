@@ -27,6 +27,10 @@ externalUrl: ""
 ##
 selfServiceMonitor: true
 
+## Change "prometheus" label value on all resources, .Release.Name by default
+##
+prometheusLabelValue: ""
+
 ## Custom Labels to be added to ServiceMonitor
 ##
 additionalSelfServiceMonitorLabels: {}

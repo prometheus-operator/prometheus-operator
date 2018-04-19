@@ -7,7 +7,7 @@ metadata:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"
-    prometheus: {{ .Release.Name }}
+    prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
     {{- if .Values.additionalSelfServiceMonitorLabels }}
 {{ toYaml .Values.additionalSelfServiceMonitorLabels | indent 4 }}
     {{- end }}
@@ -17,7 +17,7 @@ spec:
   selector:
     matchLabels:
       app: {{ template "prometheus.name" . }}
-      prometheus: {{ .Release.Name }}
+      prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
       chart: {{ .Chart.Name }}-{{ .Chart.Version }}
   namespaceSelector:
     matchNames:
