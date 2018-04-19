@@ -3,9 +3,7 @@ kind: Prometheus
 metadata:
   name: prometheus
 spec:
-  serviceMonitorSelector:
-    matchLabels:
-      team: frontend
+  serviceMonitorSelector: {}
   resources:
     requests:
       memory: 400Mi
