@@ -121,7 +121,7 @@ spec:
         - name: grafana-config
           hostPath:
             path: /etc/grafana
-            type: directory
+            type: Directory
       {{- end }}
       {{- range .Values.serverDashboardConfigmaps }}
         - name: {{ . }}
