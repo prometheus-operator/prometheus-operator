@@ -97,10 +97,11 @@ paused: false
 global:
   rbacEnable: true
 
-## serviceAccountName will be used only when rbacEnable is false.
-## Use it if rbac objects are managed outside this Chart. 
+## serviceAccount to use by Prometheus
 ##
-serviceAccountName: ""
+serviceAccount:
+  create: true
+  name: ""
 
 ## Number of Prometheus replicas desired
 ##

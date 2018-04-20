@@ -34,3 +34,14 @@ Return the appropriate apiVersion value to use for the prometheus-operator manag
 {{- printf "%s" "monitoring.coreos.com/v1alpha1" -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "prometheus.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+    {{ default (include "prometheus.fullname" .) .Values.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
