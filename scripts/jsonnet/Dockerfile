@@ -22,7 +22,7 @@ RUN mkdir -p /go/src/github.com/grafana/grafonnet-lib && \
 RUN mkdir -p /go/src/github.com/brancz/kubernetes-grafana && \
     git clone https://github.com/brancz/kubernetes-grafana.git /go/src/github.com/brancz/kubernetes-grafana && \
     cd /go/src/github.com/brancz/kubernetes-grafana && \
-    git checkout d0720e5e8ba8c530e4a8f24f09c971cb4d176ef6
+    git checkout 5df0eaa17361ce77f4a0486cc89f44f43bd51829
 
 RUN go get github.com/brancz/gojsontoyaml
 RUN go get github.com/campoy/embedmd
