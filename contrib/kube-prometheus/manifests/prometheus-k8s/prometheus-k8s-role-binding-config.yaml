@@ -9,5 +9,5 @@ roleRef:
   name: prometheus-k8s-config
 subjects:
 - kind: ServiceAccount
-  name: prometheus-k8s-config
+  name: prometheus-k8s
   namespace: monitoring

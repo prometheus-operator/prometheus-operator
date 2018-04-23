@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
+# exit immediately when a command fails
+set -e
+# only exit with zero if all commands of the pipeline exit successfully
+set -o pipefail
+# error on unset variables
+set -u
+# print each command before executing it
+set -x
 
 manifest_prefix=${1-.}
 
 kubectl create namespace monitoring
 
-kubectl apply -f ${manifest_prefix}/manifests/prometheus-operator/
+find ${manifest_prefix}/manifests/prometheus-operator/ -type f ! -name prometheus-operator-service-monitor.yaml -exec kubectl apply -f {} \;
 
 # Wait for CRDs to be ready.
 printf "Waiting for Operator to register custom resource definitions..."
@@ -16,9 +24,15 @@ until kubectl get prometheuses.monitoring.coreos.com > /dev/null 2>&1; do sleep 
 until kubectl get alertmanagers.monitoring.coreos.com > /dev/null 2>&1; do sleep 1; printf "."; done
 echo "done!"
 
+# need to ensure that ServiceMonitors are registered before we can create the prometheus-operator ServiceMonitor
+kubectl apply -f ${manifest_prefix}/manifests/prometheus-operator/prometheus-operator-service-monitor.yaml
+
 kubectl apply -f ${manifest_prefix}/manifests/node-exporter/
 kubectl apply -f ${manifest_prefix}/manifests/kube-state-metrics/
-kubectl apply -f ${manifest_prefix}/manifests/grafana/
+find ${manifest_prefix}/manifests/grafana/ -type f ! -name grafana-dashboard-definitions.yaml -exec kubectl apply -f {} \;
+
+# kubectl apply wants to put the previous version in an annotation, which is too large, therefore create instead of apply
+kubectl create -f ${manifest_prefix}/manifests/grafana/grafana-dashboard-definitions.yaml
 kubectl apply -f ${manifest_prefix}/manifests/prometheus-k8s/
 kubectl apply -f ${manifest_prefix}/manifests/alertmanager-main/
 
