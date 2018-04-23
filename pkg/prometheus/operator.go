@@ -898,10 +898,10 @@ func loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySele
 					return c, nil
 				}
 
-				return nil, fmt.Errorf("Key %v could not be found in Secret %v.", additionalScrapeConfigs.Key, additionalScrapeConfigs.Name)
+				return nil, fmt.Errorf("key %v could not be found in Secret %v.", additionalScrapeConfigs.Key, additionalScrapeConfigs.Name)
 			}
 		}
-		return nil, fmt.Errorf("Secret %v could not be found.", additionalScrapeConfigs.Name)
+		return nil, fmt.Errorf("secret %v could not be found.", additionalScrapeConfigs.Name)
 	}
 	return nil, nil
 }

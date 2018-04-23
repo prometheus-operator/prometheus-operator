@@ -260,7 +260,7 @@ func promImage(version string) string {
 func (f *Framework) WaitForTargets(ns, svcName string, amount int) error {
 	var targets []*Target
 
-	if err := wait.Poll(time.Second, time.Minute*10, func() (bool, error) {
+	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		var err error
 		targets, err = f.GetActiveTargets(ns, svcName)
 		if err != nil {

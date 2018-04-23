@@ -558,6 +558,15 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.AdditionalScrapeConfigs != nil {
+		in, out := &in.AdditionalScrapeConfigs, &out.AdditionalScrapeConfigs
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	return
 }
 

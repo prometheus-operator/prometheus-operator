@@ -159,7 +159,7 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 	var additionalScrapeConfigsYaml []yaml.MapSlice
 	err = yaml.Unmarshal([]byte(additionalScrapeConfigs), &additionalScrapeConfigsYaml)
 	if err != nil {
-		errors.Wrap(err, "Unmarshalling additional scrape configs failed")
+		errors.Wrap(err, "unmarshalling additional scrape configs failed")
 	}
 
 	cfg = append(cfg, yaml.MapItem{
