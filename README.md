@@ -37,9 +37,12 @@ Kubernetes itself and applications running on top of it.
 
 ## Prerequisites
 
-Version `>=0.2.0` of the Prometheus Operator requires a Kubernetes
-cluster of version `>=1.5.0`. If you are just starting out with the 
+Version `>=0.18.0` of the Prometheus Operator requires a Kubernetes
+cluster of version `>=1.8.0`. If you are just starting out with the
 Prometheus Operator, it is highly recommended to use the latest version.
+
+If you have an older version of Kubernetes and the Prometheus Operator running,
+we recommend upgrading Kubernetes first and then the Prometheus Operator.
 
 If you have previously used pre-1.5.0 releases of Kubernetes with the `0.1.0` 
 version of the Prometheus Operator, see the [migration](#migration) section.
