@@ -140,11 +140,6 @@ spec:
                   scrapeTimeout:
                     description: Timeout after which the scrape is ended
                     type: string
-                  staticTargets:
-                    description: StaticTargets with targets to scrape.
-                    items:
-                      type: string
-                    type: array
                   targetPort: {}
                   tlsConfig:
                     description: TLSConfig specifies TLS configuration parameters.
