@@ -333,11 +333,6 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 			}
 		}
 	}
-	if in.StaticTargets != nil {
-		in, out := &in.StaticTargets, &out.StaticTargets
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	return
 }
 
@@ -565,6 +560,15 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = make([]core_v1.Container, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.AdditionalScrapeConfigs != nil {
+		in, out := &in.AdditionalScrapeConfigs, &out.AdditionalScrapeConfigs
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
 		}
 	}
 	return

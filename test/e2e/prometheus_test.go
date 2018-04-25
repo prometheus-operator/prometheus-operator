@@ -268,6 +268,62 @@ scrape_configs:
 	}
 }
 
+func TestPrometheusAdditionalScrapeConfig(t *testing.T) {
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	prometheusName := "test"
+	group := "additional-config-test"
+	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+
+	s := framework.MakeBasicServiceMonitor(group)
+	if _, err := framework.MonClient.ServiceMonitors(ns).Create(s); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	additionalConfig := `
+- job_name: "prometheus"
+  static_configs:
+  - targets: ["localhost:9090"]
+`
+	secret := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "additional-scrape-configs",
+		},
+		Data: map[string][]byte{
+			"prometheus-additional.yaml": []byte(additionalConfig),
+		},
+	}
+	_, err := framework.KubeClient.CoreV1().Secrets(ns).Create(&secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+	p.Spec.AdditionalScrapeConfigs = &v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "additional-scrape-configs",
+		},
+		Key: "prometheus-additional.yaml",
+	}
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		t.Fatal(err)
+	}
+
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, svc); err != nil {
+		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	// Wait for ServiceMonitor target, as well as additional-config target
+	if err := framework.WaitForTargets(ns, svc.Name, 2); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestPrometheusReloadRules(t *testing.T) {
 	t.Parallel()
 

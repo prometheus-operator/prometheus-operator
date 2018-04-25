@@ -97,6 +97,12 @@ paused: false
 global:
   rbacEnable: true
 
+## serviceAccount to use by Prometheus
+##
+serviceAccount:
+  create: true
+  name: ""
+
 ## Number of Prometheus replicas desired
 ##
 replicaCount: 1

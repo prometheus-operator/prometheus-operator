@@ -1,0 +1,9 @@
+# this file was generated with the following command:
+# $ kubectl create secret generic additional-scrape-configs --from-file=prometheus-additional.yaml --dry-run -oyaml > additional-scrape-configs.yaml
+apiVersion: v1
+data:
+  prometheus-additional.yaml: LSBqb2JfbmFtZTogInByb21ldGhldXMiCiAgc3RhdGljX2NvbmZpZ3M6CiAgLSB0YXJnZXRzOiBbImxvY2FsaG9zdDo5MDkwIl0K
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: additional-scrape-configs

@@ -28,9 +28,5 @@ If release name contains chart name it will be used as a full name.
 Return the appropriate apiVersion value to use for the prometheus-operator managed k8s resources
 */}}
 {{- define "prometheus-operator.apiVersion" -}}
-{{- if lt .Values.image.tag "v0.12.0" }}
-{{- printf "%s" "monitoring.coreos.com/v1alpha1" -}}
-{{- else -}}
 {{- printf "%s" "monitoring.coreos.com/v1" -}}
-{{- end -}}
 {{- end -}}
