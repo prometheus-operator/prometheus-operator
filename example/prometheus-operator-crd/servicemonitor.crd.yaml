@@ -141,9 +141,7 @@ spec:
                     description: Timeout after which the scrape is ended
                     type: string
                   staticTargets:
-                    description: StaticTargets with targets to scrape. This is an
-                      experimental feature, it may change in any upcoming release
-                      in a breaking way.
+                    description: StaticTargets with targets to scrape.
                     items:
                       type: string
                     type: array

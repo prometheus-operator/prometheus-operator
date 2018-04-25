@@ -152,7 +152,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
-| staticTargets | StaticTargets with targets to scrape. This is an experimental feature, it may change in any upcoming release in a breaking way. | []string | false |
+| staticTargets | StaticTargets with targets to scrape. | []string | false |
 
 [Back to TOC](#table-of-contents)
 
