@@ -539,20 +539,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								},
 							},
 						},
-						"staticTargets": {
-							SchemaProps: spec.SchemaProps{
-								Description: "StaticTargets with targets to scrape. This is an experimental feature, it may change in any upcoming release in a breaking way.",
-								Type:        []string{"array"},
-								Items: &spec.SchemaOrArray{
-									Schema: &spec.Schema{
-										SchemaProps: spec.SchemaProps{
-											Type:   []string{"string"},
-											Format: "",
-										},
-									},
-								},
-							},
-						},
 					},
 				},
 			},
