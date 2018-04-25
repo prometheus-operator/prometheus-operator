@@ -71,7 +71,7 @@ docs: embedmd po-docgen
 	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
 generate: jsonnet-docker
-	docker run --rm -u=$(shell id -u $(USER)):$(shell id -g $(USER)) -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy generate-openapi jsonnet generate-bundle docs generate-kube-prometheus generate-crd
+	docker run --rm -u=$(shell id -u $(USER)):$(shell id -g $(USER)) -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy generate-openapi jsonnet generate-bundle generate-kube-prometheus docs generate-crd
 
 
 $(GOBIN)/openapi-gen:
@@ -99,6 +99,10 @@ generate-bundle:
 	hack/generate-bundle.sh
 
 generate-kube-prometheus:
+	# Update the Prometheus Operator version in kube-prometheus
+	sed -i                                                            \
+	  "s/local version = \".*\";/local version = \"v$(shell cat VERSION)\";/" \
+	  contrib/kube-prometheus/jsonnet/prometheus-operator/prometheus-operator-deployment.libsonnet;
 	cd contrib/kube-prometheus; $(MAKE) generate-raw
 
 jsonnet:

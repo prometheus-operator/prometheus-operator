@@ -1,8 +1,6 @@
 local k = import "ksonnet.beta.3/k.libsonnet";
-local rawVersion = importstr "../../../../VERSION";
 
-local removeLineBreaks = function(str) std.join("", std.filter(function(c) c != "\n", std.stringChars(str)));
-local version = "v0.18.1";//removeLineBreaks(rawVersion);
+local version = "v0.18.1";
 
 local deployment = k.apps.v1beta2.deployment;
 local container = k.apps.v1beta2.deployment.mixin.spec.template.spec.containersType;
