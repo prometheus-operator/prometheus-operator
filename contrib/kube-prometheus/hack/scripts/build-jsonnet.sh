@@ -8,12 +8,7 @@ json="tmp/manifests.json"
 
 rm -rf ${prefix}
 mkdir -p $(dirname "${json}")
-jsonnet \
-    -J $GOPATH/src/github.com/ksonnet/ksonnet-lib \
-    -J $GOPATH/src/github.com/grafana/grafonnet-lib \
-    -J $GOPATH/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus/jsonnet \
-    -J $GOPATH/src/github.com/brancz/kubernetes-grafana/src/kubernetes-jsonnet \
-    ${jsonnet} > ${json}
+jsonnet -J jsonnet/kube-prometheus/vendor -J jsonnet ${jsonnet} > ${json}
 
 files=$(jq -r 'keys[]' ${json})
 
@@ -21,5 +16,6 @@ for file in ${files}; do
     dir=$(dirname "${file}")
     path="${prefix}/${dir}"
     mkdir -p ${path}
-    jq -r ".[\"${file}\"]" ${json} | gojsontoyaml -yamltojson | gojsontoyaml > "${prefix}/${file}"
+    fullfile=$(echo ${file} | sed -r 's/([a-z0-9])([A-Z])/\1-\L\2/g' | tr '[:upper:]' '[:lower:]')
+    jq -r ".[\"${file}\"]" ${json} | gojsontoyaml -yamltojson | gojsontoyaml > "${prefix}/${fullfile}"
 done

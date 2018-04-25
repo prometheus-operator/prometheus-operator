@@ -37,7 +37,7 @@ The manifests used here use the [Prometheus Operator](https://github.com/coreos/
 >
 > In future versions of minikube and kubeadm this will be the default, but for the time being, we will have to configure it ourselves.
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator-deployment.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/0prometheus-operator-deployment.yaml)
 ```yaml
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -72,6 +72,8 @@ spec:
           requests:
             cpu: 100m
             memory: 50Mi
+      nodeSelector:
+        beta.kubernetes.io/os: linux
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
@@ -136,7 +138,7 @@ spec:
 
 Unrelated to Kubernetes itself, but still important is to gather various metrics about the actual nodes. Typical metrics are CPU, memory, disk and network utilization, all of these metrics can be gathered using the node_exporter.
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter/node-exporter-daemonset.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter-daemonset.yaml)
 ```yaml
 apiVersion: apps/v1beta2
 kind: DaemonSet
@@ -190,10 +192,15 @@ spec:
           requests:
             cpu: 10m
             memory: 20Mi
+      nodeSelector:
+        beta.kubernetes.io/os: linux
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
       serviceAccountName: node-exporter
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
       volumes:
       - hostPath:
           path: /proc
@@ -205,7 +212,7 @@ spec:
 
 And the respective `Service` manifest:
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter/node-exporter-service.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter-service.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
@@ -215,6 +222,7 @@ metadata:
   name: node-exporter
   namespace: monitoring
 spec:
+  clusterIP: None
   ports:
   - name: https
     port: 9100
@@ -225,7 +233,7 @@ spec:
 
 And last but not least, kube-state-metrics which collects information about Kubernetes objects themselves as they are accessible from the API. Find more information on what kind of metrics kube-state-metrics exposes in [its repository](https://github.com/kubernetes/kube-state-metrics).
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics/kube-state-metrics-deployment.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics-deployment.yaml)
 ```yaml
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -318,6 +326,8 @@ spec:
           requests:
             cpu: 10m
             memory: 30Mi
+      nodeSelector:
+        beta.kubernetes.io/os: linux
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
@@ -328,7 +338,7 @@ spec:
 
 And the respective `Service` manifest:
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics/kube-state-metrics-service.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics-service.yaml)
 ```yaml
 apiVersion: v1
 kind: Service
@@ -338,6 +348,7 @@ metadata:
   name: kube-state-metrics
   namespace: monitoring
 spec:
+  clusterIP: None
   ports:
   - name: https-main
     port: 8443
@@ -353,7 +364,7 @@ spec:
 
 Once all the steps in the previous section have been taken there should be `Endpoints` objects containing the IPs of all of the above mentioned Kubernetes components. Now to setup the actual Prometheus and Alertmanager clusters. This manifest assumes that the Alertmanager cluster will be deployed in the `monitoring` namespace.
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-k8s/prometheus-k8s.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-prometheus.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
@@ -368,6 +379,9 @@ spec:
     - name: alertmanager-main
       namespace: monitoring
       port: web
+  baseImage: quay.io/prometheus/prometheus
+  nodeSelector:
+    beta.kubernetes.io/os: linux
   replicas: 2
   resources:
     requests:
@@ -388,7 +402,7 @@ spec:
 
 The expression to match for selecting `ServiceMonitor`s here is that they must have a label which has a key called `k8s-app`. If you look closely at all the `Service` objects described above they all have a label called `k8s-app` and their component name this allows to conveniently select them with `ServiceMonitor`s.
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-k8s/prometheus-k8s-service-monitor-apiserver.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-service-monitor-apiserver.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -416,7 +430,7 @@ spec:
       provider: kubernetes
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-k8s/prometheus-k8s-service-monitor-kubelet.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-service-monitor-kubelet.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -450,7 +464,7 @@ spec:
       k8s-app: kubelet
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-k8s/prometheus-k8s-service-monitor-kube-controller-manager.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-service-monitor-kube-controller-manager.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -472,7 +486,7 @@ spec:
       k8s-app: kube-controller-manager
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-k8s/prometheus-k8s-service-monitor-kube-scheduler.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-service-monitor-kube-scheduler.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -494,7 +508,7 @@ spec:
       k8s-app: kube-scheduler
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics/kube-state-metrics-service-monitor.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics-service-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -527,7 +541,7 @@ spec:
       k8s-app: kube-state-metrics
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter/node-exporter-service-monitor.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter-service-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -555,7 +569,7 @@ spec:
 
 And the Alertmanager:
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/alertmanager-main/alertmanager-main.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/alertmanager-alertmanager.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Alertmanager
@@ -565,6 +579,9 @@ metadata:
   name: main
   namespace: monitoring
 spec:
+  baseImage: quay.io/prometheus/alertmanager
+  nodeSelector:
+    beta.kubernetes.io/os: linux
   replicas: 3
   serviceAccountName: alertmanager-main
   version: v0.14.0

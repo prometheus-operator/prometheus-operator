@@ -8,11 +8,11 @@ set -u
 # print each command before executing it
 set -x
 
-manifest_prefix=${1-.}
+manifest_prefix=${1-./manifests}
 
 kubectl create namespace monitoring
 
-find ${manifest_prefix}/manifests/prometheus-operator/ -type f ! -name prometheus-operator-service-monitor.yaml -exec kubectl apply -f {} \;
+find ${manifest_prefix}/prometheus-operator/ -type f ! -name service-monitor.yaml -exec kubectl apply -f {} \;
 
 # Wait for CRDs to be ready.
 printf "Waiting for Operator to register custom resource definitions..."
@@ -25,14 +25,14 @@ until kubectl get alertmanagers.monitoring.coreos.com > /dev/null 2>&1; do sleep
 echo "done!"
 
 # need to ensure that ServiceMonitors are registered before we can create the prometheus-operator ServiceMonitor
-kubectl apply -f ${manifest_prefix}/manifests/prometheus-operator/prometheus-operator-service-monitor.yaml
+kubectl apply -f ${manifest_prefix}/prometheus-operator/service-monitor.yaml
 
-kubectl apply -f ${manifest_prefix}/manifests/node-exporter/
-kubectl apply -f ${manifest_prefix}/manifests/kube-state-metrics/
-find ${manifest_prefix}/manifests/grafana/ -type f ! -name grafana-dashboard-definitions.yaml -exec kubectl apply -f {} \;
+kubectl apply -f ${manifest_prefix}/node-exporter/
+kubectl apply -f ${manifest_prefix}/kube-state-metrics/
+find ${manifest_prefix}/grafana/ -type f ! -name dashboard-definitions.yaml -exec kubectl apply -f {} \;
 
 # kubectl apply wants to put the previous version in an annotation, which is too large, therefore create instead of apply
-kubectl create -f ${manifest_prefix}/manifests/grafana/grafana-dashboard-definitions.yaml
-kubectl apply -f ${manifest_prefix}/manifests/prometheus-k8s/
-kubectl apply -f ${manifest_prefix}/manifests/alertmanager-main/
+kubectl create -f ${manifest_prefix}/grafana/dashboard-definitions.yaml
+kubectl apply -f ${manifest_prefix}/prometheus/
+kubectl apply -f ${manifest_prefix}/alertmanager/
 
