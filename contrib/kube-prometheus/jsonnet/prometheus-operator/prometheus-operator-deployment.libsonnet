@@ -1,6 +1,6 @@
 local k = import "ksonnet.beta.3/k.libsonnet";
 
-local version = "v0.18.1";
+local version = "v0.19.0";
 
 local deployment = k.apps.v1beta2.deployment;
 local container = k.apps.v1beta2.deployment.mixin.spec.template.spec.containersType;
