@@ -17,8 +17,7 @@ spec:
   jobLabel: {{ template "grafana.fullname" . }}
   selector:
     matchLabels:
-      grafana: {{ .Release.Name }}
-      app: {{ template "grafana.name" . }}
+      app: {{ template "grafana.fullname" . }}
       chart: {{ .Chart.Name }}-{{ .Chart.Version }}
   namespaceSelector:
     matchNames:
