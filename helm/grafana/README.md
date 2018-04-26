@@ -35,6 +35,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 Parameter | Description | Default
 --- | --- | ---
+`routePrefix` | Prefix used to register routes | `"/"`
 `auth.anonymous.enabled` | If true, enable anonymous authentication | `true`
 `adminUser` | Grafana admin user name | `admin`
 `adminPassword` | Grafana admin user password | `admin`
@@ -45,7 +46,8 @@ Parameter | Description | Default
 `grafanaWatcher.tag` | Image tag | `v0.0.8`
 `ingress.enabled` | If true, Grafana Ingress will be created | `false`
 `ingress.annotations` | Annotations for Grafana Ingress | `{}`
-`ingress.fqdn` | Grafana Ingress fully-qualified domain name | `""`
+`ingress.labels` | Labels for Grafana Ingress | `{}`
+`ingress.hosts` | Grafana Ingress fully-qualified domain names | `[]`
 `ingress.tls` | TLS configuration for Grafana Ingress | `[]`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `resources` | Pod resource requests & limits | `{}`

@@ -1,5 +1,7 @@
 {{- if .Values.ingress.enabled -}}
-{{- $releaseName := .Release.Name -}}
+{{- $serviceName := include "grafana.fullname" . }}
+{{- $routePrefix := .Values.routePrefix }}
+{{- $releaseName := .Release.Name }}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -8,24 +10,27 @@ metadata:
 {{ toYaml .Values.ingress.annotations | indent 4 }}
 {{- end }}
   labels:
-    app: {{ template "grafana.fullname" . }}
+    app: {{ template "grafana.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"
 {{- if .Values.ingress.labels }}
 {{ toYaml .Values.ingress.labels | indent 4 }}
 {{- end }}
-  name: {{ template "grafana.server.fullname" . }}
+  name: {{ template "grafana.fullname" . }}
 spec:
   rules:
-    - host: {{ .Values.ingress.fqdn }}
+    {{- range $host := .Values.ingress.hosts }}
+    - host: {{ $host }}
       http:
         paths:
-          - backend:
+          - path: "{{ $routePrefix }}"
+            backend:
               serviceName: {{ printf "%s-%s" $releaseName "grafana" | trunc 63 }}
               servicePort: 80
-  {{- if .Values.ingress.tls }}
+    {{- end -}}              
+{{- if .Values.ingress.tls }}
   tls:
 {{ toYaml .Values.ingress.tls | indent 4 }}
-  {{- end -}}
-{{- end -}}
+{{- end }}
+{{- end }}

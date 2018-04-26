@@ -63,7 +63,12 @@ ingress:
   ##
   labels: {}
 
-  fqdn: ""
+  ## Hostnames.
+  ## Must be provided if Ingress is enabled.
+  ##
+  # hosts:
+  #   - prometheus.domain.com
+  hosts: []
 
   ## TLS configuration for Prometheus Ingress
   ## Secret must be manually created in the namespace
