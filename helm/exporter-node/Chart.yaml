@@ -1,9 +1,15 @@
 apiVersion: v1
-description: A Helm chart for Kubernetes
+description: A Helm chart for Kubernetes node exporter
 name: exporter-node
-version: 0.2.2
+version: 0.3.0
 maintainers:
-  - name: Michael Goodness
-    email: mgoodness@gmail.com
   - name: Giancarlo Rubio
     email: gianrubio@gmail.com
+appVersion: "0.14.0"
+home: https://github.com/prometheus/node-exporter
+sources:
+  - https://github.com/prometheus/node-exporter
+keywords:
+- node-exporter
+- monitoring
+- prometheus
