@@ -3,6 +3,7 @@
 {{- $chartName := .Chart.Name -}}
 {{- $chartVersion := .Chart.Version -}}
 {{- $releaseService := .Release.Service -}}
+{{- $prometheusLabelValue := .Values.prometheusLabelValue -}}
 {{- if .Values.serviceMonitors }}
 apiVersion: v1
 kind: List
@@ -15,7 +16,7 @@ items:
         app: {{ $app }}
         chart: {{ $chartName }}-{{ $chartVersion }}
         heritage: {{ $releaseService }}
-        prometheus: {{ .Values.prometheusLabelValue | default $releaseName | quote }}
+        prometheus: {{ $prometheusLabelValue | default $releaseName | quote }}
         release: {{ $releaseName }}
         {{- if .serviceMonitorSelectorLabels }}
 {{ toYaml .serviceMonitorSelectorLabels | indent 8 }}
