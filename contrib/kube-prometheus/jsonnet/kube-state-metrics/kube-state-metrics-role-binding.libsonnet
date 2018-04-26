@@ -7,7 +7,7 @@ local roleBinding = k.rbac.v1.roleBinding;
           roleBinding.mixin.metadata.withName("kube-state-metrics") +
           roleBinding.mixin.metadata.withNamespace(namespace) +
           roleBinding.mixin.roleRef.withApiGroup("rbac.authorization.k8s.io") +
-          roleBinding.mixin.roleRef.withName("kube-state-metrics-addon-resizer") +
+          roleBinding.mixin.roleRef.withName("kube-state-metrics") +
           roleBinding.mixin.roleRef.mixinInstance({kind: "Role"}) +
           roleBinding.withSubjects([{kind: "ServiceAccount", name: "kube-state-metrics"}])
 }
