@@ -78,7 +78,7 @@ $ helm install coreos/alertmanager --name my-release -f values.yaml
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
 
-### Third-party Resource Documentation
+### CRD Resource Documentation
 - [Alertmanager](/Documentation/design.md#alertmanager)
 - [Prometheus](/Documentation/design.md#prometheus)
 - [ServiceMonitor](/Documentation/design.md#servicemonitor)

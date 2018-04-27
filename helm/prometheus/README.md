@@ -48,7 +48,7 @@ Parameter | Description | Default
 `externalLabels` | The labels to add to any time series or alerts when communicating with external systems  | `{}`
 `externalUrl` | External URL at which Prometheus will be reachable | `""`
 `image.repository` | Image | `quay.io/prometheus/prometheus`
-`image.tag` | Image tag | `v1.5.2`
+`image.tag` | Image tag | `v2.2.1`
 `ingress.enabled` | If true, Prometheus Ingress will be created | `false`
 `ingress.annotations` | Annotations for Prometheus Ingress` | `{}`
 `ingress.fqdn` | Prometheus Ingress fully-qualified domain name | `""`
@@ -73,7 +73,7 @@ Parameter | Description | Default
 `service.loadBalancerSourceRanges` | List of client IPs allowed to access Prometheus Service | `[]`
 `service.nodePort` | Port to expose Prometheus Service on each node | `39090`
 `service.type` | Prometheus Service type | `ClusterIP`
-`serviceMonitors` | ServiceMonitor third-party resources to create & be scraped by this Prometheus instance | `[]`
+`serviceMonitors` | ServiceMonitor crd resources to create & be scraped by this Prometheus instance | `[]`
 `serviceMonitorsSelector` | ServiceMonitor ConfigMap selector | `{}`
 `storageSpec` | Prometheus StorageSpec for persistent data | `{}`
 
@@ -116,10 +116,7 @@ serviceMonitors:
       any: true
 ```
 
-Make sure that `labels` matches the `serviceMonitorSelector` on the Prometheus deployment. You can find the current `serviceMonitorSelector` for Prometheus by running `kubectl get prometheus -o yaml --all-namespaces -o jsonpath='{.items[*].spec.serviceMonitorSelector.matchLabels}'`. 
-If the `label` added to the `serviceMonitor` don't match the `serviceMonitorSelector`, the Service Monitor will not be added to Prometheus.
-
-### Third-party Resource Documentation
+### CRD Resource Documentation
 - [Alertmanager](/Documentation/design.md#alertmanager)
 - [Prometheus](/Documentation/design.md#prometheus)
 - [ServiceMonitor](/Documentation/design.md#servicemonitor)
