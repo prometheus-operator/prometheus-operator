@@ -7,8 +7,14 @@ rules:
   - ""
   resources:
   - nodes/metrics
+  - nodes
+  - services
+  - endpoints
+  - pods
   verbs:
   - get
+  - list
+  - watch
 - nonResourceURLs:
   - /metrics
   verbs:
