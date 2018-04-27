@@ -255,6 +255,7 @@ func TestDeterministicRuleFileHashing(t *testing.T) {
 func TestMemoryRequestNotAdjustedWhenLimitLarger2Gi(t *testing.T) {
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
+			Version: "v1.8.2",
 			Resources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{
 					v1.ResourceMemory: resource.MustParse("3Gi"),
@@ -281,6 +282,7 @@ func TestMemoryRequestNotAdjustedWhenLimitLarger2Gi(t *testing.T) {
 func TestMemoryRequestAdjustedWhenOnlyLimitGiven(t *testing.T) {
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
+			Version: "v1.8.2",
 			Resources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{
 					v1.ResourceMemory: resource.MustParse("1Gi"),
