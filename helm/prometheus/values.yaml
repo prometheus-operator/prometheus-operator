@@ -329,3 +329,13 @@ storageSpec: {}
 
 # default rules are in templates/prometheus.rules.yaml
 # prometheusRules: {}
+
+## Prometheus AdditionalScrapeConfigs
+## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+##
+additionalScrapeConfigs: []
+# - job_name: "prometheus"
+#   static_configs:
+#   - targets:
+#     - "localhost:9090"
+
