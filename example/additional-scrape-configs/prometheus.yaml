@@ -15,9 +15,6 @@ spec:
     - namespace: default
       name: alertmanager
       port: web
-  resources:
-    requests:
-      memory: 400Mi
   additionalScrapeConfigs:
     name: additional-scrape-configs
     key: prometheus-additional.yaml
