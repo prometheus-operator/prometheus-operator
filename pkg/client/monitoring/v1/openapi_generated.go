@@ -678,7 +678,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 						},
 						"serviceMonitorNamespaceSelector": {
 							SchemaProps: spec.SchemaProps{
-								Description: "Namespaces to be selected for ServiceMonitor discovery. If empty, only check own namespace.",
+								Description: "Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace.",
 								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 							},
 						},

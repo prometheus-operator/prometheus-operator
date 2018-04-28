@@ -1076,8 +1076,8 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 		return nil, err
 	}
 
-	// If 'ServiceMonitorNamespaceSelector' is empty, only check own namespace.
-	if p.Spec.ServiceMonitorNamespaceSelector == nil || p.Spec.ServiceMonitorNamespaceSelector.Size() == 0 {
+	// If 'ServiceMonitorNamespaceSelector' is nil, only check own namespace.
+	if p.Spec.ServiceMonitorNamespaceSelector == nil {
 		namespaces = append(namespaces, p.Namespace)
 	} else {
 		servMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
