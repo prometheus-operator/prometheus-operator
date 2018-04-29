@@ -46,6 +46,11 @@ tolerations:
 - effect: NoSchedule
   operator: Exists
 
+## If true, create & use RBAC resources resp. Pod Security Policies
+##
+global:
+  rbacEnable: true
+  pspEnable: true
 
 # default rules are in templates/node.rules.yaml
 # prometheusRules: {}
