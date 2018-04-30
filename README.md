@@ -153,3 +153,9 @@ kubectl delete --ignore-not-found customresourcedefinitions \
   1. build the container image with the docker host from within minikube by running `eval $(minikube docker-env)`.
   2. You can build the container using `make container`.
   3. Finally run the e2e tests using `make e2e-test`.
+
+### Updating contributed rules
+
+If you change any example rules in the `contrib` directory you'll need
+to regenerate them prior to submitting the updates. To do this, run
+`make generate` from the root of the repository and commit the result.
