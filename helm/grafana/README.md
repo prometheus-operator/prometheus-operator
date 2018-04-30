@@ -46,6 +46,7 @@ Parameter | Description | Default
 `ingress.enabled` | If true, Grafana Ingress will be created | `false`
 `ingress.annotations` | Annotations for Grafana Ingress | `{}`
 `ingress.fqdn` | Grafana Ingress fully-qualified domain name | `""`
+`ingress.path` | Grafana Ingress path | `/`
 `ingress.tls` | TLS configuration for Grafana Ingress | `[]`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `resources` | Pod resource requests & limits | `{}`

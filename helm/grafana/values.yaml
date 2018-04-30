@@ -100,6 +100,10 @@ ingress:
   ##
   enabled: false
 
+  ## Grafana Ingress path
+  ##
+  path: /
+
   ## Annotations for Alertmanager Ingress
   ##
   annotations: {}
