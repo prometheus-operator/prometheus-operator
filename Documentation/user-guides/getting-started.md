@@ -264,6 +264,7 @@ kind: Prometheus
 metadata:
   name: prometheus
 spec:
+  serviceAccountName: prometheus
   serviceMonitorSelector:
     matchLabels:
       team: frontend
