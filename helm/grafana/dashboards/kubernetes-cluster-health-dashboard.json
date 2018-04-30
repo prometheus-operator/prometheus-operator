@@ -78,12 +78,13 @@
                         },
                         "targets": [
                             {
-                                "expr": "sum(up{job=~\"apiserver|kube-scheduler|kube-controller-manager\"} == 0)",
+                                "expr": "count(up{job=~\"apiserver|kube-scheduler|kube-controller-manager\"} == 0)",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "legendFormat": "",
                                 "refId": "A",
-                                "step": 600
+                                "step": 600,
+                                "instant": true
                             }
                         ],
                         "thresholds": "1, 3",
