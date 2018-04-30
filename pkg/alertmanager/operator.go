@@ -26,6 +26,7 @@ import (
 	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1beta2"
@@ -167,7 +168,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 			errChan <- errors.Wrap(err, "communicating with server failed")
 			return
 		}
-		c.logger.Log("msg", "connection established", "cluster-version", v)
+		level.Info(c.logger).Log("msg", "connection established", "cluster-version", v)
 
 		if err := c.createCRDs(); err != nil {
 			errChan <- err
@@ -181,7 +182,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		if err != nil {
 			return err
 		}
-		c.logger.Log("msg", "CRD API endpoints ready")
+		level.Info(c.logger).Log("msg", "CRD API endpoints ready")
 	case <-stopc:
 		return nil
 	}
@@ -198,7 +199,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 func (c *Operator) keyFunc(obj interface{}) (string, bool) {
 	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 	if err != nil {
-		c.logger.Log("msg", "creating key failed", "err", err)
+		level.Error(c.logger).Log("msg", "creating key failed", "err", err)
 		return k, false
 	}
 	return k, true
@@ -212,7 +213,7 @@ func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
 
 	o, err := meta.Accessor(obj)
 	if err != nil {
-		c.logger.Log("msg", "get object failed", "err", err)
+		level.Error(c.logger).Log("msg", "get object failed", "err", err)
 		return nil, false
 	}
 	return o, true
@@ -282,7 +283,7 @@ func (c *Operator) alertmanagerForStatefulSet(sset interface{}) *monitoringv1.Al
 	aKey := statefulSetKeyToAlertmanagerKey(key)
 	a, exists, err := c.alrtInf.GetStore().GetByKey(aKey)
 	if err != nil {
-		c.logger.Log("msg", "Alertmanager lookup failed", "err", err)
+		level.Error(c.logger).Log("msg", "Alertmanager lookup failed", "err", err)
 		return nil
 	}
 	if !exists {
@@ -315,7 +316,7 @@ func (c *Operator) handleAlertmanagerAdd(obj interface{}) {
 		return
 	}
 
-	c.logger.Log("msg", "Alertmanager added", "key", key)
+	level.Debug(c.logger).Log("msg", "Alertmanager added", "key", key)
 	c.enqueue(key)
 }
 
@@ -325,7 +326,7 @@ func (c *Operator) handleAlertmanagerDelete(obj interface{}) {
 		return
 	}
 
-	c.logger.Log("msg", "Alertmanager deleted", "key", key)
+	level.Debug(c.logger).Log("msg", "Alertmanager deleted", "key", key)
 	c.enqueue(key)
 }
 
@@ -335,7 +336,7 @@ func (c *Operator) handleAlertmanagerUpdate(old, cur interface{}) {
 		return
 	}
 
-	c.logger.Log("msg", "Alertmanager updated", "key", key)
+	level.Debug(c.logger).Log("msg", "Alertmanager updated", "key", key)
 	c.enqueue(key)
 }
 
@@ -355,7 +356,7 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 	old := oldo.(*appsv1.StatefulSet)
 	cur := curo.(*appsv1.StatefulSet)
 
-	c.logger.Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+	level.Debug(c.logger).Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
 	// Periodic resync may resend the deployment without changes in-between.
 	// Also breaks loops created by updating the resource ourselves.
@@ -391,7 +392,7 @@ func (c *Operator) sync(key string) error {
 		return nil
 	}
 
-	c.logger.Log("msg", "sync alertmanager", "key", key)
+	level.Info(c.logger).Log("msg", "sync alertmanager", "key", key)
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(am.Namespace)
@@ -550,7 +551,7 @@ func (c *Operator) createCRDs() error {
 		if _, err := crdClient.Create(crd); err != nil && !apierrors.IsAlreadyExists(err) {
 			return errors.Wrapf(err, "Creating CRD: %s", crd.Spec.Names.Kind)
 		}
-		c.logger.Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
+		level.Info(c.logger).Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
 	}
 
 	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
