@@ -31,7 +31,7 @@ $ minikube delete && minikube start --kubernetes-version=v1.10.1 --memory=4096 -
 
 ## Quickstart
 
-Although this project is intended to be used as a library, a compiled version of the Kubernetes manifests generated with this library is checked into this repository in order to try the content our quickly.
+Although this project is intended to be used as a library, a compiled version of the Kubernetes manifests generated with this library is checked into this repository in order to try the content out quickly.
 
 Simply create the stack:
 
@@ -55,46 +55,43 @@ $ jb install github.com/coreos/prometheus-operator/contrib/kube-prometheus/jsonn
 
 You may wish to not use ksonnet and simply render the generated manifests to files on disk, this can be done with:
 
-[embedmd]:# (hack/scripts/kube-prometheus-base.jsonnet)
+[embedmd]:# (example.jsonnet)
 ```jsonnet
-local kp = (import "kube-prometheus/kube-prometheus.libsonnet") + {
-    _config+:: {
-        namespace: "monitoring",
-    }
+local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
+  _config+:: {
+    namespace: 'monitoring',
+  },
 };
 
-{["0prometheus-operator-"+name+".yaml"]: std.manifestYamlDoc(kp.prometheusOperator[name]) for name in std.objectFields(kp.prometheusOperator)} +
-{["node-exporter-"+name+".yaml"]: std.manifestYamlDoc(kp.nodeExporter[name]) for name in std.objectFields(kp.nodeExporter)} +
-{["kube-state-metrics-"+name+".yaml"]: std.manifestYamlDoc(kp.kubeStateMetrics[name]) for name in std.objectFields(kp.kubeStateMetrics)} +
-{["alertmanager-"+name+".yaml"]: std.manifestYamlDoc(kp.alertmanager[name]) for name in std.objectFields(kp.alertmanager)} +
-{["prometheus-"+name+".yaml"]: std.manifestYamlDoc(kp.prometheus[name]) for name in std.objectFields(kp.prometheus)} +
-{["grafana-"+name+".yaml"]: std.manifestYamlDoc(kp.grafana[name]) for name in std.objectFields(kp.grafana)}
+{ ['00namespace-' + name]: kp.kubePrometheus[name] for name in std.objectFields(kp.kubePrometheus) } +
+{ ['0prometheus-operator-' + name]: kp.prometheusOperator[name] for name in std.objectFields(kp.prometheusOperator) } +
+{ ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) } +
+{ ['kube-state-metrics-' + name]: kp.kubeStateMetrics[name] for name in std.objectFields(kp.kubeStateMetrics) } +
+{ ['alertmanager-' + name]: kp.alertmanager[name] for name in std.objectFields(kp.alertmanager) } +
+{ ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
+{ ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
 ```
 
-This renders all manifests in a json structure of `{filename: manifest-content}`. To split this into files on disk use:
+This renders all manifests in a json structure of `{filename: manifest-content}`.
 
-> Note you need `jsonnet`, `jq`, `sed`, `tr` and `gojsonyaml` (`go get github.com/brancz/gojsontoyaml`) installed.
+### Compiling
 
-```bash
-jsonnet -J vendor example.jsonnet > tmp.json
+To compile the above and get each manifest in a separate file on disk use the following script:
 
-files=$(jq -r 'keys[]' tmp.json)
+[embedmd]:# (build.sh)
+```sh
+#!/usr/bin/env bash
+set -e
+set -x
 
-for file in ${files}; do
-	# prepare directory
-    dir=$(dirname "${file}")
-    path="${dir}"
-    mkdir -p ${path}
+                                               # optional, but we would like to generate yaml, not json
+jsonnet -J vendor -m manifests example.jsonnet | xargs -I{} sh -c 'cat $1 | gojsontoyaml > $1.yaml; rm $1' -- {}
 
-	# covert file name to snake case with dashes
-    fullfile=$(echo ${file} | sed -r 's/([a-z0-9])([A-Z])/\1-\L\2/g' | tr '[:upper:]' '[:lower:]')
-
-	# write each value to the path in key; convert multiple times to prettify yaml
-    jq -r ".[\"${file}\"]" tmp.json | gojsontoyaml -yamltojson | gojsontoyaml > "${fullfile}"
-done
-
-rm tmp.json
 ```
+
+> Note you need `jsonnet` and `gojsonyaml` (`go get github.com/brancz/gojsontoyaml`) installed. If you just want json output, not yaml, then you can skip the pipe and everything afterwards.
+
+This script reads each key of the generated json and uses that as the file name, and writes the value of that key to that file.
 
 ## Configuration
 
@@ -145,14 +142,28 @@ Jsonnet is a turing complete language, any logic can be reflected in it. It also
 A common example is that not all Kubernetes clusters are created exactly the same way, meaning the configuration to monitor them may be slightly different. For [kubeadm]() and [bootkube]() clusters there are mixins available to easily configure these:
 
 kubeadm:
+
 [embedmd]:# (examples/kubeadm.jsonnet)
+```jsonnet
+(import "kube-prometheus/kube-prometheus.libsonnet") +
+(import "kube-prometheus/kube-prometheus-kubeadm.libsonnet")
+```
 
 bootkube:
+
 [embedmd]:# (examples/bootkube.jsonnet)
+```jsonnet
+(import "kube-prometheus/kube-prometheus.libsonnet") +
+(import "kube-prometheus/kube-prometheus-bootkube.libsonnet")
+```
 
 Another mixin that may be useful for exploring the stack is to expose the UIs of Prometheus, Alertmanager and Grafana on NodePorts:
 
 [embedmd]:# (examples/node-ports.jsonnet)
+```jsonnet
+(import "kube-prometheus/kube-prometheus.libsonnet") +
+(import "kube-prometheus/kube-prometheus-node-ports.libsonnet")
+```
 
 For example the name of the `Prometheus` object provided by this library can be overridden:
 
@@ -179,7 +190,34 @@ local daemonset = k.apps.v1beta2.daemonSet;
 ((import "kube-prometheus/kube-prometheus.libsonnet") + {
 	nodeExporter+: {
 		daemonset+:
-            daemonset.mixin.metadata.withNamespace("my-custom-namespace") +
+            daemonset.mixin.metadata.withNamespace("my-custom-namespace")
     }
 }).nodeExporter.daemonset
+```
+
+## Example
+
+To use an easy to reproduce example, let's take the minikube setup as demonstrated in [prerequisites](#Prerequisites). It is a kubeadm cluster (as we use the kubeadm bootstrapper) and because we would like easy access to our Prometheus, Alertmanager and Grafana UI we want the services to be exposed as NodePort type services:
+
+> Note that NodePort type services is likely not a good idea for your production use case, it is only used for demonstration purposes here.
+
+[embedmd]:# (examples/minikube.jsonnet)
+```jsonnet
+local kp =
+  (import 'kube-prometheus/kube-prometheus.libsonnet') +
+  (import 'kube-prometheus/kube-prometheus-kubeadm.libsonnet') +
+  (import 'kube-prometheus/kube-prometheus-node-ports.libsonnet') +
+  {
+    _config+:: {
+      namespace: 'monitoring',
+    },
+  };
+
+{ ['00namespace-' + name]: kp.kubePrometheus[name] for name in std.objectFields(kp.kubePrometheus) } +
+{ ['0prometheus-operator-' + name]: kp.prometheusOperator[name] for name in std.objectFields(kp.prometheusOperator) } +
+{ ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) } +
+{ ['kube-state-metrics-' + name]: kp.kubeStateMetrics[name] for name in std.objectFields(kp.kubeStateMetrics) } +
+{ ['alertmanager-' + name]: kp.alertmanager[name] for name in std.objectFields(kp.alertmanager) } +
+{ ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
+{ ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
 ```

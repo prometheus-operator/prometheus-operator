@@ -402,7 +402,7 @@ spec:
 
 The expression to match for selecting `ServiceMonitor`s here is that they must have a label which has a key called `k8s-app`. If you look closely at all the `Service` objects described above they all have a label called `k8s-app` and their component name this allows to conveniently select them with `ServiceMonitor`s.
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-service-monitor-apiserver.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-serviceMonitorApiserver.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -430,7 +430,7 @@ spec:
       provider: kubernetes
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-service-monitor-kubelet.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-serviceMonitorKubelet.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -464,7 +464,7 @@ spec:
       k8s-app: kubelet
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-service-monitor-kube-controller-manager.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-serviceMonitorKubeControllerManager.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -486,7 +486,7 @@ spec:
       k8s-app: kube-controller-manager
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-service-monitor-kube-scheduler.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/prometheus-serviceMonitorKubeScheduler.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -508,7 +508,7 @@ spec:
       k8s-app: kube-scheduler
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics-service-monitor.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics-serviceMonitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -541,7 +541,7 @@ spec:
       k8s-app: kube-state-metrics
 ```
 
-[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter-service-monitor.yaml)
+[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter-serviceMonitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor

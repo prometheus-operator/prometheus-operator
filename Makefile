@@ -102,7 +102,7 @@ generate-kube-prometheus:
 	# Update the Prometheus Operator version in kube-prometheus
 	sed -i                                                            \
 		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(shell cat VERSION)',/" \
-	  contrib/kube-prometheus/jsonnet/kube-prometheus/prometheus-operator/prometheus-operator.libsonnet;
+		contrib/kube-prometheus/jsonnet/kube-prometheus/prometheus-operator/prometheus-operator.libsonnet;
 	cd contrib/kube-prometheus; $(MAKE) generate-raw
 
 jsonnet: jb
@@ -127,4 +127,4 @@ generate-crd: generate-openapi po-crdgen
 	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
 	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
 
-.PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs generate-crd
+.PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs generate-crd jb
