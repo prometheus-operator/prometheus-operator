@@ -47,11 +47,13 @@ Parameter | Description | Default
 `config` | Prometheus configuration directives | `{}`
 `externalLabels` | The labels to add to any time series or alerts when communicating with external systems  | `{}`
 `externalUrl` | External URL at which Prometheus will be reachable | `""`
+`routePrefix` | Prefix used to register routes | `"/"`
 `image.repository` | Image | `quay.io/prometheus/prometheus`
 `image.tag` | Image tag | `v2.2.1`
 `ingress.enabled` | If true, Prometheus Ingress will be created | `false`
 `ingress.annotations` | Annotations for Prometheus Ingress` | `{}`
-`ingress.fqdn` | Prometheus Ingress fully-qualified domain name | `""`
+`ingress.labels` | Labels for Prometheus Ingress | `{}`
+`ingress.hosts` | Prometheus Ingress fully-qualified domain names | `[]`
 `ingress.tls` | TLS configuration for Prometheus Ingress | `[]`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `paused` | If true, the Operator won't process any Prometheus configuration changes | `false`

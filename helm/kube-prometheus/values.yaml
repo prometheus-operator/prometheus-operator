@@ -54,7 +54,16 @@ alertmanager:
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
 
-    fqdn: ""
+    ## Labels to be added to the Ingress
+    ##
+    labels: {}
+
+    ## Hostnames.
+    ## Must be provided if Ingress is enabled.
+    ##
+    # hosts:
+    #   - alertmanager.domain.com
+    hosts: []
 
     ## TLS configuration for Alertmanager Ingress
     ## Secret must be manually created in the namespace
@@ -180,7 +189,16 @@ prometheus:
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
 
-    fqdn: ""
+    ## Labels to be added to the Ingress
+    ##
+    labels: {}
+
+    ## Hostnames.
+    ## Must be provided if Ingress is enabled.
+    ##
+    # hosts:
+    #   - alertmanager.domain.com
+    hosts: []
 
     ## TLS configuration for Prometheus Ingress
     ## Secret must be manually created in the namespace
