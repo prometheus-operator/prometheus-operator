@@ -45,11 +45,13 @@ Parameter | Description | Default
 --- | --- | ---
 `config` | Alertmanager configuration directives | `{}`
 `externalUrl` | External URL at which Alertmanager will be reachable | `""`
+`routePrefix` | Prefix used to register routes | `"/"`
 `image.repository` | Image | `quay.io/prometheus/alertmanager`
 `image.tag` | Image tag | `v0.12.0`
 `ingress.enabled` | If true, Alertmanager Ingress will be created | `false`
 `ingress.annotations` | Annotations for Alertmanager Ingress` | `{}`
-`ingress.fqdn` | Alertmanager Ingress fully-qualified domain name | `""`
+`ingress.labels` | Labels for Alertmanager Ingress` | `{}`
+`ingress.hosts` | Alertmanager Ingress hosts | `[]`
 `ingress.tls` | TLS configuration for Alertmanager Ingress | `[]`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `paused` | If true, the Operator won't process any Alertmanager configuration changes | `false`
@@ -78,7 +80,7 @@ $ helm install coreos/alertmanager --name my-release -f values.yaml
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
 
-### Third-party Resource Documentation
+### CRD Resource Documentation
 - [Alertmanager](/Documentation/design.md#alertmanager)
 - [Prometheus](/Documentation/design.md#prometheus)
 - [ServiceMonitor](/Documentation/design.md#servicemonitor)

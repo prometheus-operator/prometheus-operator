@@ -1,3 +1,12 @@
+## 0.19.0 / 2018-04-25
+
+* [FEATURE] Allow specifying additional Prometheus scrape configs via secret (#1246)
+* [FEATURE] Enable Thanos sidecar (#1219)
+* [FEATURE] Make AM log level configurable (#1192)
+* [ENHANCEMENT] Enable Prometheus to select Service Monitors outside own namespace (#1227)
+* [ENHANCEMENT] Enrich Prometheus operator CRD registration error handling (#1208)
+* [BUGFIX] Allow up to 10m for Prometheus pod on startup for data recovery (#1232)
+
 ## 0.18.1 / 2018-04-09
 
 * [BUGFIX] Fix alertmanager >=0.15.0 cluster gossip communication (#1193)

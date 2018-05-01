@@ -18,6 +18,12 @@ selfServiceMonitor: true
 ##
 additionalServiceMonitorLabels: {}
 
+## If true, create & use RBAC resources resp. Pod Security Policies
+##
+global:
+  rbacEnable: true
+  pspEnable: true
+
 ## Pass extra environment variables to the Grafana container.
 ##
 # extraVars:
@@ -100,7 +106,16 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
 
-  fqdn: ""
+  ## Labels to be added to the Ingress
+  ##
+  labels: {}
+  
+  ## Hostnames.
+  ## Must be provided if Ingress is enabled.
+  ##
+  # hosts:
+  #   - grafana.domain.com
+  hosts: []
 
   ## TLS configuration for Alertmanager Ingress
   ## Secret must be manually created in the namespace

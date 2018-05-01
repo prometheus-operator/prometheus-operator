@@ -82,7 +82,12 @@ ingress:
   ##
   labels: {}
 
-  fqdn: ""
+  ## Hostnames.
+  ## Must be provided if Ingress is enabled.
+  ##
+  # hosts:
+  #   - alertmanager.domain.com
+  hosts: []
 
   ## TLS configuration for Alertmanager Ingress
   ## Secret must be manually created in the namespace
@@ -165,9 +170,11 @@ service:
   ##
   type: ClusterIP
 
-## If true, create & use RBAC resources
+## If true, create & use RBAC resources resp. Pod Security Policies
 ##
-rbacEnable: true
+global:
+  rbacEnable: true
+  pspEnable: true
 
 ## Alertmanager StorageSpec for persistent data
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md

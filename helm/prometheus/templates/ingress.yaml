@@ -1,4 +1,6 @@
-{{- if .Values.ingress.enabled }}
+{{- if .Values.ingress.enabled -}}
+{{- $serviceName := include "prometheus.fullname" . }}
+{{- $routePrefix := .Values.routePrefix }}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -7,10 +9,10 @@ metadata:
 {{ toYaml .Values.ingress.annotations | indent 4 }}
 {{- end }}
   labels:
+    prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
     app: {{ template "prometheus.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
-    prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
     release: {{ .Release.Name }}
 {{- if .Values.ingress.labels }}
 {{ toYaml .Values.ingress.labels | indent 4 }}
@@ -18,13 +20,15 @@ metadata:
   name: {{ template "prometheus.fullname" . }}
 spec:
   rules:
-    - host: "{{ .Values.ingress.fqdn }}"
+    {{- range $host := .Values.ingress.hosts }}
+    - host: {{ $host }}
       http:
         paths:
-          - path: "{{ .Values.routePrefix }}"
+          - path: "{{ $routePrefix }}"
             backend:
-              serviceName: {{ template "prometheus.fullname" . }}
+              serviceName: "{{ $serviceName }}"
               servicePort: 9090
+    {{- end -}}              
 {{- if .Values.ingress.tls }}
   tls:
 {{ toYaml .Values.ingress.tls | indent 4 }}

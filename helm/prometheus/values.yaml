@@ -63,7 +63,12 @@ ingress:
   ##
   labels: {}
 
-  fqdn: ""
+  ## Hostnames.
+  ## Must be provided if Ingress is enabled.
+  ##
+  # hosts:
+  #   - prometheus.domain.com
+  hosts: []
 
   ## TLS configuration for Prometheus Ingress
   ## Secret must be manually created in the namespace
@@ -92,10 +97,11 @@ tolerations: {}
 ##
 paused: false
 
-## If true, create & use RBAC resources
+## If true, create & use RBAC resources resp. Pod Security Policies
 ##
 global:
   rbacEnable: true
+  pspEnable: true
 
 ## serviceAccount to use by Prometheus
 ##

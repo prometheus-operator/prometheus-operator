@@ -15,8 +15,8 @@ spec:
   baseImage: "{{ .Values.image.repository }}"
 {{- if .Values.externalUrl }}
   externalUrl: "{{ .Values.externalUrl }}"
-{{- else if .Values.ingress.fqdn }}
-  externalUrl: http://{{ .Values.ingress.fqdn }}{{ .Values.routePrefix }}
+{{- else if .Values.ingress.enabled }}
+  externalUrl: "http://{{ index .Values.ingress.hosts 0 }}{{ .Values.routePrefix }}"
 {{- else }}
   externalUrl: http://{{ template "alertmanager.fullname" . }}.{{ .Release.Namespace }}:9093
 {{- end }}
