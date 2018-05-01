@@ -1,4 +1,4 @@
-{{- if .Values.alertmanager.ingress.fqdn or .Values.prometheus.ingress.fqdn or .Values.grafana.ingress.fqdn -}}
+{{- if or .Values.alertmanager.ingress.fqdn .Values.prometheus.ingress.fqdn .Values.grafana.ingress.fqdn -}}
 DEPRECATION NOTICE:
 
 - alertmanager.ingress.fqdn is not used anymore, use alertmanager.ingress.hosts []
