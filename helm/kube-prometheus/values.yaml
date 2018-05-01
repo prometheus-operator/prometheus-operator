@@ -314,7 +314,9 @@ prometheus:
   ## Service monitors selector
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md
   ##
-  serviceMonitorsSelector: {}
+  serviceMonitorsSelector: 
+    matchExpressions:
+    - {key: prometheus, operator: In, values: [kube-prometheus, prometheus-operator]}
 
   ## ServiceMonitor CRDs to create & be scraped by the Prometheus instance.
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/service-monitor.md
