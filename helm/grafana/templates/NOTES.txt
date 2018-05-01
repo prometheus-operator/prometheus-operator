@@ -1,3 +1,4 @@
+{{ $routePrefix := .Values.routePrefix }}
 1. Get your '{{ .Values.adminUser }}' user password by running:
 
    kubectl get secret --namespace {{ .Release.Namespace }} {{ template "grafana.fullname" . }} -o jsonpath="{.data.password}" | base64 --decode ; echo
