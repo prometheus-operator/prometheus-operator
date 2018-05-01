@@ -45,6 +45,9 @@ tolerations: {}
 ##
 rbacEnable: true
 
+## If true, create Pod Security Policy resources
+pspEnable: true
+
 ## Prometheus-operator resource limits & requests
 ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
 ##

@@ -102,6 +102,9 @@ spec:
       nodeSelector:
     {{ toYaml .Values.nodeSelector | indent 4 }}
     {{- end }}
+    {{- if .Values.global.rbacEnable }}
+      serviceAccountName: {{ template "grafana.server.fullname" . }}
+    {{- end }}
     {{- if .Values.tolerations }}
       tolerations:
 {{ toYaml .Values.tolerations | indent 8 }}

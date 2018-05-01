@@ -89,6 +89,14 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *appsv1.StatefulSet, config 
 	if p.Spec.Version == "" {
 		p.Spec.Version = DefaultVersion
 	}
+
+	versionStr := strings.TrimLeft(p.Spec.Version, "v")
+
+	version, err := semver.Parse(versionStr)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse version")
+	}
+
 	if p.Spec.Replicas == nil {
 		p.Spec.Replicas = &minReplicas
 	}
@@ -105,7 +113,7 @@ func makeStatefulSet(p monitoringv1.Prometheus, old *appsv1.StatefulSet, config 
 	}
 	_, memoryRequestFound := p.Spec.Resources.Requests[v1.ResourceMemory]
 	memoryLimit, memoryLimitFound := p.Spec.Resources.Limits[v1.ResourceMemory]
-	if !memoryRequestFound {
+	if !memoryRequestFound && version.Major == 1 {
 		defaultMemoryRequest := resource.MustParse("2Gi")
 		compareResult := memoryLimit.Cmp(defaultMemoryRequest)
 		// If limit is given and smaller or equal to 2Gi, then set memory

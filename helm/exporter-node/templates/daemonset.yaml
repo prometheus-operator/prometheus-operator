@@ -35,6 +35,9 @@ spec:
           volumeMounts:
 {{ toYaml .Values.container.volumeMounts | indent 10 }}
           {{- end }}
+    {{- if .Values.global.rbacEnable }}
+      serviceAccountName: {{ template "exporter-node.fullname" . }}
+    {{- end }}
     {{- if .Values.tolerations }}
       tolerations:
 {{ toYaml .Values.tolerations | indent 8 }}

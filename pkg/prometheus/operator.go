@@ -26,6 +26,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1beta2"
@@ -130,6 +131,7 @@ type Config struct {
 	CrdKinds                     monitoringv1.CrdKinds
 	EnableValidation             bool
 	DisableAutoUserGroup         bool
+	LogLevel                     string
 }
 
 type BasicAuthCredentials struct {
@@ -271,7 +273,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 			errChan <- errors.Wrap(err, "communicating with server failed")
 			return
 		}
-		c.logger.Log("msg", "connection established", "cluster-version", v)
+		level.Info(c.logger).Log("msg", "connection established", "cluster-version", v)
 
 		if err := c.createCRDs(); err != nil {
 			errChan <- errors.Wrap(err, "creating CRDs failed")
@@ -285,7 +287,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		if err != nil {
 			return err
 		}
-		c.logger.Log("msg", "CRD API endpoints ready")
+		level.Info(c.logger).Log("msg", "CRD API endpoints ready")
 	case <-stopc:
 		return nil
 	}
@@ -310,7 +312,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 func (c *Operator) keyFunc(obj interface{}) (string, bool) {
 	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 	if err != nil {
-		c.logger.Log("msg", "creating key failed", "err", err)
+		level.Error(c.logger).Log("msg", "creating key failed", "err", err)
 		return k, false
 	}
 	return k, true
@@ -322,7 +324,7 @@ func (c *Operator) handleAddPrometheus(obj interface{}) {
 		return
 	}
 
-	c.logger.Log("msg", "Prometheus added", "key", key)
+	level.Debug(c.logger).Log("msg", "Prometheus added", "key", key)
 	c.enqueue(key)
 }
 
@@ -332,7 +334,7 @@ func (c *Operator) handleDeletePrometheus(obj interface{}) {
 		return
 	}
 
-	c.logger.Log("msg", "Prometheus deleted", "key", key)
+	level.Debug(c.logger).Log("msg", "Prometheus deleted", "key", key)
 	c.enqueue(key)
 }
 
@@ -342,7 +344,7 @@ func (c *Operator) handleUpdatePrometheus(old, cur interface{}) {
 		return
 	}
 
-	c.logger.Log("msg", "Prometheus updated", "key", key)
+	level.Debug(c.logger).Log("msg", "Prometheus updated", "key", key)
 	c.enqueue(key)
 }
 
@@ -356,7 +358,7 @@ func (c *Operator) reconcileNodeEndpoints(stopc <-chan struct{}) {
 		case <-ticker.C:
 			err := c.syncNodeEndpoints()
 			if err != nil {
-				c.logger.Log("msg", "syncing nodes into Endpoints object failed", "err", err)
+				level.Error(c.logger).Log("msg", "syncing nodes into Endpoints object failed", "err", err)
 			}
 		}
 	}
@@ -539,7 +541,7 @@ func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
 
 	o, err := meta.Accessor(obj)
 	if err != nil {
-		c.logger.Log("msg", "get object failed", "err", err)
+		level.Error(c.logger).Log("msg", "get object failed", "err", err)
 		return nil, false
 	}
 	return o, true
@@ -609,7 +611,7 @@ func (c *Operator) prometheusForStatefulSet(sset interface{}) *monitoringv1.Prom
 	promKey := statefulSetKeyToPrometheusKey(key)
 	p, exists, err := c.promInf.GetStore().GetByKey(promKey)
 	if err != nil {
-		c.logger.Log("msg", "Prometheus lookup failed", "err", err)
+		level.Error(c.logger).Log("msg", "Prometheus lookup failed", "err", err)
 		return nil
 	}
 	if !exists {
@@ -652,7 +654,7 @@ func (c *Operator) handleUpdateStatefulSet(oldo, curo interface{}) {
 	old := oldo.(*appsv1.StatefulSet)
 	cur := curo.(*appsv1.StatefulSet)
 
-	c.logger.Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+	level.Debug(c.logger).Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
 	// Periodic resync may resend the deployment without changes in-between.
 	// Also breaks loops created by updating the resource ourselves.
@@ -687,7 +689,7 @@ func (c *Operator) sync(key string) error {
 		return nil
 	}
 
-	c.logger.Log("msg", "sync prometheus", "key", key)
+	level.Info(c.logger).Log("msg", "sync prometheus", "key", key)
 
 	ruleFileConfigMaps, err := c.ruleFileConfigMaps(p)
 	if err != nil {
@@ -1037,7 +1039,7 @@ func (c *Operator) createConfig(p *monitoringv1.Prometheus, ruleFileConfigMaps [
 
 	curSecret, err := sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		c.logger.Log("msg", "creating configuration")
+		level.Debug(c.logger).Log("msg", "creating configuration")
 		_, err = sClient.Create(s)
 		return err
 	}
@@ -1050,16 +1052,16 @@ func (c *Operator) createConfig(p *monitoringv1.Prometheus, ruleFileConfigMaps [
 	)
 	if curConfigFound && curConfigMapsFound {
 		if bytes.Equal(curConfig, generatedConf) && bytes.Equal(curConfigMaps, generatedConfigMaps) {
-			c.logger.Log("msg", "updating config skipped, no configuration change")
+			level.Debug(c.logger).Log("msg", "updating config skipped, no configuration change")
 			return nil
 		} else {
-			c.logger.Log("msg", "current config or current configmaps has changed")
+			level.Debug(c.logger).Log("msg", "current config or current configmaps has changed")
 		}
 	} else {
-		c.logger.Log("msg", "no current config or current configmaps found", "currentConfigFound", curConfigFound, "currentConfigMapsFound", curConfigMapsFound)
+		level.Debug(c.logger).Log("msg", "no current config or current configmaps found", "currentConfigFound", curConfigFound, "currentConfigMapsFound", curConfigMapsFound)
 	}
 
-	c.logger.Log("msg", "updating configuration")
+	level.Debug(c.logger).Log("msg", "updating configuration")
 	_, err = sClient.Update(s)
 	return err
 }
@@ -1088,6 +1090,8 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 		})
 	}
 
+	level.Debug(c.logger).Log("msg", "filtering namespaces to select ServiceMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
+
 	for _, ns := range namespaces {
 		cache.ListAllByNamespace(c.smonInf.GetIndexer(), ns, servMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
@@ -1096,6 +1100,12 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 			}
 		})
 	}
+
+	serviceMonitors := []string{}
+	for k, _ := range res {
+		serviceMonitors = append(serviceMonitors, k)
+	}
+	level.Debug(c.logger).Log("msg", "selected ServiceMonitors", "servicemonitors", strings.Join(serviceMonitors, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	return res, nil
 }
@@ -1120,7 +1130,7 @@ func (c *Operator) createCRDs() error {
 		if _, err := crdClient.Create(crd); err != nil && !apierrors.IsAlreadyExists(err) {
 			return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
 		}
-		c.logger.Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
+		level.Info(c.logger).Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
 	}
 
 	crdListFuncs := []struct {

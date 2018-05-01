@@ -121,9 +121,6 @@ spec:
   serviceMonitorSelector:
     matchLabels:
       team: frontend
-  resources:
-    requests:
-      memory: 400Mi
   ruleSelector:
     matchLabels:
       role: alert-rules

@@ -3,10 +3,11 @@
 # Declare variables to be passed into your templates.
 replicaCount: 1
 
-## If true, create & use RBAC resources
+## If true, create & use RBAC resources resp. Pod Security Policies
 ##
 global:
   rbacEnable: true
+  pspEnable: true
 
 kube_state_metrics:
   image:
