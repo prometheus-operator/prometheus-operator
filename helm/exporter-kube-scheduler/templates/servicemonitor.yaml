@@ -2,6 +2,7 @@ apiVersion: {{ template "prometheus-operator.apiVersion" . }}
 kind: ServiceMonitor
 metadata:
   labels:
+    app: {{ template "exporter-kube-scheduler.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     component: kube-scheduler
     heritage: "{{ .Release.Service }}"
