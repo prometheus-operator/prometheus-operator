@@ -1,7 +1,8 @@
 apiVersion: {{ template "prometheus-operator.apiVersion" . }}
 kind: ServiceMonitor
 metadata:
-  labels:
+  labels:    
+    app: {{ template "exporter-kube-dns.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     component: kube-dns
     heritage: "{{ .Release.Service }}"

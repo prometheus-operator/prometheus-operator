@@ -2,6 +2,7 @@ apiVersion: {{ template "prometheus-operator.apiVersion" . }}
 kind: ServiceMonitor
 metadata:
   labels:
+    app: {{ template "exporter-node.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     component: node-exporter
     heritage: "{{ .Release.Service }}"
