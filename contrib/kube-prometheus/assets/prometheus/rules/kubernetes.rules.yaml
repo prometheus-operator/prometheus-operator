@@ -32,7 +32,7 @@ groups:
       1e+06
     labels:
       quantile: "0.99"
-  - record: apiserver_latency:quantile_seconds
+  - record: apiserver_latency_seconds:quantile
     expr: histogram_quantile(0.9, rate(apiserver_request_latencies_bucket[5m])) /
       1e+06
     labels:
