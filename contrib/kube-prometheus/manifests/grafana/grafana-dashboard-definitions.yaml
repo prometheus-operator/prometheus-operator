@@ -1419,7 +1419,7 @@ data:
                         "tableColumn": "",
                         "targets": [
                             {
-                                "expr": "(sum(node_filesystem_size{device!=\"rootfs\"}) - sum(node_filesystem_free{device!=\"rootfs\"})) / sum(node_filesystem_size{device!=\"rootfs\"}) * 100",
+                                "expr": "(sum(node_filesystem_size{device!=\"rootfs\"}) - sum(node_filesystem_avail{device!=\"rootfs\"})) / sum(node_filesystem_size{device!=\"rootfs\"}) * 100",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "legendFormat": ""
@@ -3350,7 +3350,7 @@ data:
                         "tableColumn": "",
                         "targets": [
                             {
-                                "expr": "(sum(node_filesystem_size{device!=\"rootfs\"}) - sum(node_filesystem_free{device!=\"rootfs\"})) / sum(node_filesystem_size{device!=\"rootfs\"})",
+                                "expr": "(sum(node_filesystem_size{device!=\"rootfs\"}) - sum(node_filesystem_avail{device!=\"rootfs\"})) / sum(node_filesystem_size{device!=\"rootfs\"})",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "legendFormat": ""
@@ -5799,7 +5799,7 @@ data:
                         "tableColumn": "",
                         "targets": [
                             {
-                                "expr": "(sum(node_filesystem_size{device!=\"rootfs\",instance=\"$server\"}) - sum(node_filesystem_free{device!=\"rootfs\",instance=\"$server\"})) / sum(node_filesystem_size{device!=\"rootfs\",instance=\"$server\"}) * 100",
+                                "expr": "(sum(node_filesystem_size{device!=\"rootfs\",instance=\"$server\"}) - sum(node_filesystem_avail{device!=\"rootfs\",instance=\"$server\"})) / sum(node_filesystem_size{device!=\"rootfs\",instance=\"$server\"}) * 100",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "legendFormat": ""

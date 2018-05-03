@@ -333,7 +333,7 @@ dashboard = Dashboard(
                         {
                             'expr': '(sum(node_filesystem_size{device!='
                             '\"rootfs\",instance=\"$server\"}) - '
-                            'sum(node_filesystem_free{device!=\"rootfs\",'
+                            'sum(node_filesystem_avail{device!=\"rootfs\",'
                             'instance=\"$server\"})) / sum(node_filesystem_'
                             'size{device!=\"rootfs\",instance=\"$server\"})',
                             'intervalFactor': 2,
