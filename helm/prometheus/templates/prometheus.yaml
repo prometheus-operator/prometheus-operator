@@ -5,7 +5,7 @@ metadata:
     app: {{ template "prometheus.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
-    prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
+    prometheus: {{ .Values.prometheusLabelValue | default (template "prometheus.fullname" .) | quote }}
     release: {{ .Release.Name }}
 {{- if .Values.labels }}
 {{ toYaml .Values.labels | indent 4 }}
