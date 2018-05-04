@@ -23,8 +23,8 @@ Next, use the following configuration to deny all the ingress (inbound) traffic.
    name: default-deny-all
    namespace: monitoring
  spec:
-   podSelector: {}
-   matchLabels:
+   podSelector: 
+     matchLabels:
 ```
 Save the config file as default-deny-all.yaml and apply the configuration to the cluster using
 
