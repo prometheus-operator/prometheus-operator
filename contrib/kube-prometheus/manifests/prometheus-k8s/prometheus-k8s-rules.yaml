@@ -539,7 +539,7 @@ data:
     PrometheusConfigReloadFailed\n    expr: prometheus_config_last_reload_successful
     == 0\n    for: 10m\n    labels:\n      severity: warning\n    annotations:\n      description:
     Reloading Prometheus' configuration has failed for {{$labels.namespace}}/{{$labels.pod}}\n
-    \     summary: Reloading Promehteus' configuration failed\n\n  - alert: PrometheusNotificationQueueRunningFull\n
+    \     summary: Reloading Prometheus' configuration failed\n\n  - alert: PrometheusNotificationQueueRunningFull\n
     \   expr: predict_linear(prometheus_notifications_queue_length[5m], 60 * 30) >
     prometheus_notifications_queue_capacity\n    for: 10m\n    labels:\n      severity:
     warning\n    annotations:\n      description: Prometheus' alert notification queue
