@@ -668,7 +668,7 @@
                         },
                         "targets": [
                             {
-                                "expr": "(sum(node_filesystem_size{device!=\"rootfs\"}) - sum(node_filesystem_free{device!=\"rootfs\"})) / sum(node_filesystem_size{device!=\"rootfs\"})",
+                                "expr": "(sum(node_filesystem_size{device!=\"rootfs\"}) - sum(node_filesystem_avail{device!=\"rootfs\"})) / sum(node_filesystem_size{device!=\"rootfs\"})",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "refId": "A",

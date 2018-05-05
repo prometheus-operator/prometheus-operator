@@ -396,7 +396,7 @@ dashboard = Dashboard(
                     targets=[
                         {
                             'expr': '(sum(node_filesystem_size{device!='
-                            '"rootfs"}) - sum(node_filesystem_free{device!='
+                            '"rootfs"}) - sum(node_filesystem_avail{device!='
                             '"rootfs"})) / sum(node_filesystem_size{device!='
                             '"rootfs"})',
                             'format': 'time_series',
