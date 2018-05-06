@@ -71,7 +71,7 @@ docs: embedmd po-docgen
 	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
 generate: jsonnet-docker
-	docker run --rm -u=$(shell id -u $(USER)):$(shell id -g $(USER)) -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy generate-openapi jsonnet generate-bundle generate-kube-prometheus docs generate-crd
+	docker run --rm -u=$(shell id -u $(USER)):$(shell id -g $(USER)) -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy generate-openapi generate-crd jsonnet generate-bundle generate-kube-prometheus docs
 
 
 $(GOBIN)/openapi-gen:
@@ -101,14 +101,17 @@ generate-bundle:
 generate-kube-prometheus:
 	# Update the Prometheus Operator version in kube-prometheus
 	sed -i                                                            \
-	  "s/local version = \".*\";/local version = \"v$(shell cat VERSION)\";/" \
-	  contrib/kube-prometheus/jsonnet/prometheus-operator/prometheus-operator-deployment.libsonnet;
+		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(shell cat VERSION)',/" \
+		contrib/kube-prometheus/jsonnet/kube-prometheus/prometheus-operator/prometheus-operator.libsonnet;
 	cd contrib/kube-prometheus; $(MAKE) generate-raw
 
-jsonnet:
-	jsonnet -J /go/src/github.com/ksonnet/ksonnet-lib hack/generate/prometheus-operator.jsonnet | gojsontoyaml > example/non-rbac/prometheus-operator.yaml
-	jsonnet -J /go/src/github.com/ksonnet/ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | gojsontoyaml > example/rbac/prometheus-operator/prometheus-operator.yaml
-	jsonnet -J /go/src/github.com/ksonnet/ksonnet-lib hack/generate/prometheus-operator-rbac.jsonnet | gojsontoyaml > contrib/kube-prometheus/manifests/prometheus-operator/prometheus-operator.yaml
+jsonnet: jb
+	cd hack/generate; jb install
+	jsonnet -J hack/generate/vendor hack/generate/prometheus-operator.jsonnet | gojsontoyaml > example/non-rbac/prometheus-operator.yaml
+	jsonnet -J hack/generate/vendor hack/generate/prometheus-operator-rbac.jsonnet | gojsontoyaml > example/rbac/prometheus-operator/prometheus-operator.yaml
+
+jb:
+	go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 
 jsonnet-docker:
 	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .
@@ -124,4 +127,4 @@ generate-crd: generate-openapi po-crdgen
 	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
 	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
 
-.PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs generate-crd
+.PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs generate-crd jb

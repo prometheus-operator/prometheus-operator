@@ -1,0 +1,59 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  labels:
+    app: grafana
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - image: grafana/grafana:5.1.0
+        name: grafana
+        ports:
+        - containerPort: 3000
+          name: http
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-storage
+          readOnly: false
+        - mountPath: /etc/grafana/provisioning/datasources
+          name: grafana-datasources
+          readOnly: false
+        - mountPath: /etc/grafana/provisioning/dashboards
+          name: grafana-dashboards
+          readOnly: false
+        - mountPath: /grafana-dashboard-definitions/0
+          name: grafana-dashboard-definitions
+          readOnly: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+      serviceAccountName: grafana
+      volumes:
+      - emptyDir: {}
+        name: grafana-storage
+      - configMap:
+          name: grafana-datasources
+        name: grafana-datasources
+      - configMap:
+          name: grafana-dashboards
+        name: grafana-dashboards
+      - configMap:
+          name: grafana-dashboard-definitions
+        name: grafana-dashboard-definitions

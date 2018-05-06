@@ -111,7 +111,7 @@ func (f *Framework) SecretFromYaml(filepath string) (*v1.Secret, error) {
 }
 
 func (f *Framework) AlertmanagerConfigSecret(ns, name string) (*v1.Secret, error) {
-	s, err := f.SecretFromYaml("../../contrib/kube-prometheus/manifests/alertmanager-main/alertmanager-main-secret.yaml")
+	s, err := f.SecretFromYaml("../../test/framework/ressources/alertmanager-main-secret.yaml")
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-local k = import "ksonnet.beta.3/k.libsonnet";
+local k = import "ksonnet/ksonnet.beta.3/k.libsonnet";
 local rawVersion = importstr "../../VERSION";
 
 local removeLineBreaks = function(str) std.join("", std.filter(function(c) c != "\n", std.stringChars(str)));
