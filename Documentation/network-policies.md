@@ -16,15 +16,15 @@ This example will close all inbound communication on the namespace monitoring, a
 First, follow the instructions to [add Calico to an existing Kubernetes cluster](http://docs.projectcalico.org/v1.5/getting-started/kubernetes/installation/).
 
 Next, use the following configuration to deny all the ingress (inbound) traffic.
-``` 
- kind: NetworkPolicy
+```yaml 
  apiVersion: networking.k8s.io/v1
+ kind: NetworkPolicy
  metadata:
- name: default-deny-all
- namespace: default
+   name: default-deny-all
+   namespace: monitoring
  spec:
- podSelector:
- matchLabels:
+   podSelector: 
+     matchLabels:
 ```
 Save the config file as default-deny-all.yaml and apply the configuration to the cluster using
 
