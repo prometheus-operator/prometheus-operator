@@ -71,7 +71,7 @@ func init() {
 	flagset.BoolVar(&cfg.TLSInsecure, "tls-insecure", false, "- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.")
 	flagset.StringVar(&cfg.PrometheusConfigReloader, "prometheus-config-reloader", "quay.io/coreos/prometheus-config-reloader:v0.0.4", "Config and rule reload image")
 	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", "quay.io/coreos/configmap-reload:v0.0.1", "Reload Image")
-	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", "quay.io/prometheus/alertmanager", "Alertmanager default base image")
+	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", "quay.io/mxinden/alertmanager", "Alertmanager default base image")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", "quay.io/prometheus/prometheus", "Prometheus default base image")
 	flagset.StringVar(&cfg.Namespace, "namespace", v1.NamespaceAll, "Namespace to scope the interaction of the Prometheus Operator and the apiserver.")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
