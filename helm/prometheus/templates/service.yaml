@@ -45,3 +45,4 @@ spec:
     prometheus: {{ .Values.prometheusLabelValue }}
     {{- end }}
   type: "{{ .Values.service.type }}"
+
