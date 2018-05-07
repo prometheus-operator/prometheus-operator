@@ -155,9 +155,7 @@ dashboard = Dashboard(
                     targets=[
                         {
                             'expr': 'node_memory_MemTotal{instance='
-                            '\"$server\"} - node_memory_MemFree{instance='
-                            '\"$server\"} - node_memory_Buffers{instance='
-                            '\"$server\"} - node_memory_Cached{instance='
+                            '\"$server\"} - node_memory_MemAvailable{instance='
                             '\"$server\"}',
                             'hide': False,
                             'interval': '',
