@@ -39,5 +39,10 @@ spec:
       protocol: TCP
   selector:
     app: {{ template "prometheus.name" . }}
-    prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
+    {{ if empty .Values.prometheusLabelValue -}}
+    prometheus: {{ template "prometheus.fullname" . }}
+    {{- else -}}
+    prometheus: {{ .Values.prometheusLabelValue }}
+    {{- end }}
   type: "{{ .Values.service.type }}"
+
