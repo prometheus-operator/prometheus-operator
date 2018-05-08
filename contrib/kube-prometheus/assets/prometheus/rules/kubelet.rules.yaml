@@ -13,7 +13,7 @@ groups:
   - alert: K8SManyNodesNotReady
     expr: count(kube_node_status_condition{condition="Ready",status="true"} == 0)
       > 1 and (count(kube_node_status_condition{condition="Ready",status="true"} ==
-      0) / count(kube_node_status_condition{condition="Ready",status="true"})) > 0.2
+      0) / count(kube_node_status_condition{condition="Ready",status="true"})) * 100 > 20
     for: 1m
     labels:
       severity: critical
