@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"k8s.io/api/core/v1"
@@ -278,18 +279,18 @@ func (f *Framework) GetSilences(ns, n string) ([]amAPISil, error) {
 	return getSilencesResponse.Data, nil
 }
 
-func (f *Framework) WaitForSpecificAlertmanagerConfig(ns, amName string, expectedConfig string) error {
+func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName string, expectedString string) error {
 	return wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
 		config, err := f.GetAlertmanagerConfig(ns, "alertmanager-"+amName+"-0")
 		if err != nil {
 			return false, err
 		}
 
-		if config.Data.ConfigYAML == expectedConfig {
+		if strings.Contains(config.Data.ConfigYAML, expectedString) {
 			return true, nil
 		}
 
-		log.Printf("\n\nFound:\n\n%#+v\n\nExpected:\n\n%#+v\n\n", config.Data.ConfigYAML, expectedConfig)
+		log.Printf("\n\nExpected:\n\n%#+v\n\nto contain:\n\n%#+v\n\n", config.Data.ConfigYAML, expectedString)
 
 		return false, nil
 	})
