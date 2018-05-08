@@ -232,7 +232,7 @@ func TestAlertmanagerReloadConfig(t *testing.T) {
 
 	firstConfig := `
 global:
-  resolve_timeout: 6m
+  resolve_timeout: 5m
 route:
   group_by: ['job']
   group_wait: 30s
@@ -242,7 +242,7 @@ route:
 receivers:
 - name: 'webhook'
   webhook_configs:
-  - url: 'http://alertmanagerwh:30500/'
+  - url: 'http://firstConfigWebHook:30500/'
 `
 	secondConfig := `
 global:
@@ -256,7 +256,7 @@ route:
 receivers:
 - name: 'webhook'
   webhook_configs:
-  - url: 'http://alertmanagerwh:30500/'
+  - url: 'http://secondConfigWebHook:30500/'
 `
 
 	cfg := &v1.Secret{
@@ -276,9 +276,9 @@ receivers:
 		t.Fatal(err)
 	}
 
-	firstExpectedConfig := "global:\n  resolve_timeout: 6m\n  smtp_require_tls: true\n  pagerduty_url: https://events.pagerduty.com/v2/enqueue\n  hipchat_api_url: https://api.hipchat.com/\n  opsgenie_api_url: https://api.opsgenie.com/\n  wechat_api_url: https://qyapi.weixin.qq.com/cgi-bin/\n  victorops_api_url: https://alert.victorops.com/integrations/generic/20131114/alert/\nroute:\n  receiver: webhook\n  group_by:\n  - job\n  group_wait: 30s\n  group_interval: 5m\n  repeat_interval: 12h\nreceivers:\n- name: webhook\n  webhook_configs:\n  - send_resolved: true\n    url: http://alertmanagerwh:30500/\ntemplates: []\n"
+	firstExpectedString := "firstConfigWebHook"
 	log.Println("waiting for first expected config")
-	if err := framework.WaitForSpecificAlertmanagerConfig(ns, alertmanager.Name, firstExpectedConfig); err != nil {
+	if err := framework.WaitForAlertmanagerConfigToContainString(ns, alertmanager.Name, firstExpectedString); err != nil {
 		t.Fatal(err)
 	}
 	log.Println("first expected config found")
@@ -289,9 +289,10 @@ receivers:
 		t.Fatal(err)
 	}
 
-	secondExpectedConfig := "global:\n  resolve_timeout: 5m\n  smtp_require_tls: true\n  pagerduty_url: https://events.pagerduty.com/v2/enqueue\n  hipchat_api_url: https://api.hipchat.com/\n  opsgenie_api_url: https://api.opsgenie.com/\n  wechat_api_url: https://qyapi.weixin.qq.com/cgi-bin/\n  victorops_api_url: https://alert.victorops.com/integrations/generic/20131114/alert/\nroute:\n  receiver: webhook\n  group_by:\n  - job\n  group_wait: 30s\n  group_interval: 5m\n  repeat_interval: 12h\nreceivers:\n- name: webhook\n  webhook_configs:\n  - send_resolved: true\n    url: http://alertmanagerwh:30500/\ntemplates: []\n"
+	secondExpectedString := "secondConfigWebHook"
+
 	log.Println("waiting for second expected config")
-	if err := framework.WaitForSpecificAlertmanagerConfig(ns, alertmanager.Name, secondExpectedConfig); err != nil {
+	if err := framework.WaitForAlertmanagerConfigToContainString(ns, alertmanager.Name, secondExpectedString); err != nil {
 		t.Fatal(err)
 	}
 	log.Println("second expected config found")
