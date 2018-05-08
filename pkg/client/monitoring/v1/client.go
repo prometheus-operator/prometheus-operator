@@ -29,6 +29,7 @@ const (
 	PrometheusKindKey     = "prometheus"
 	AlertManagerKindKey   = "alertmanager"
 	ServiceMonitorKindKey = "servicemonitor"
+	RuleFileKindKey       = "rulefile"
 )
 
 type CrdKind struct {
@@ -42,6 +43,7 @@ type CrdKinds struct {
 	Prometheus     CrdKind
 	Alertmanager   CrdKind
 	ServiceMonitor CrdKind
+	RuleFile       CrdKind
 }
 
 var DefaultCrdKinds CrdKinds = CrdKinds{
@@ -49,6 +51,7 @@ var DefaultCrdKinds CrdKinds = CrdKinds{
 	Prometheus:     CrdKind{Plural: PrometheusName, Kind: PrometheusesKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Prometheus"},
 	ServiceMonitor: CrdKind{Plural: ServiceMonitorName, Kind: ServiceMonitorsKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ServiceMonitor"},
 	Alertmanager:   CrdKind{Plural: AlertmanagerName, Kind: AlertmanagersKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Alertmanager"},
+	RuleFile:       CrdKind{Plural: RuleFileName, Kind: RuleFilesKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleFile"},
 }
 
 // Implement the flag.Value interface
@@ -60,10 +63,12 @@ func (crdkinds *CrdKinds) String() string {
 func (crdkinds *CrdKinds) Set(value string) error {
 	*crdkinds = DefaultCrdKinds
 	if value == "" {
-		value = fmt.Sprintf("%s=%s:%s,%s=%s:%s,%s=%s:%s",
+		value = fmt.Sprintf("%s=%s:%s,%s=%s:%s,%s=%s:%s,%s=%s:%s",
 			PrometheusKindKey, PrometheusesKind, PrometheusName,
 			AlertManagerKindKey, AlertmanagersKind, AlertmanagerName,
-			ServiceMonitorKindKey, ServiceMonitorsKind, ServiceMonitorName)
+			ServiceMonitorKindKey, ServiceMonitorsKind, ServiceMonitorName,
+			RuleFileKindKey, RuleFilesKind, RuleFileName,
+		)
 	}
 	splited := strings.Split(value, ",")
 	for _, pair := range splited {
@@ -77,6 +82,8 @@ func (crdkinds *CrdKinds) Set(value string) error {
 			(*crdkinds).ServiceMonitor = crdKind
 		case AlertManagerKindKey:
 			(*crdkinds).Alertmanager = crdKind
+		case RuleFileKindKey:
+			(*crdkinds).RuleFile = crdKind
 		default:
 			fmt.Printf("Warning: unknown kind: %s... ignoring", kindKey)
 		}
@@ -93,6 +100,7 @@ type MonitoringV1Interface interface {
 	PrometheusesGetter
 	AlertmanagersGetter
 	ServiceMonitorsGetter
+	RuleFilesGetter
 }
 
 // +k8s:deepcopy-gen=false
@@ -112,6 +120,10 @@ func (c *MonitoringV1Client) Alertmanagers(namespace string) AlertmanagerInterfa
 
 func (c *MonitoringV1Client) ServiceMonitors(namespace string) ServiceMonitorInterface {
 	return newServiceMonitors(c.restClient, c.dynamicClient, c.crdKinds.ServiceMonitor, namespace)
+}
+
+func (c *MonitoringV1Client) RuleFiles(namespace string) RuleFileInterface {
+	return newRuleFiles(c.restClient, c.dynamicClient, c.crdKinds.RuleFile, namespace)
 }
 
 func (c *MonitoringV1Client) RESTClient() rest.Interface {

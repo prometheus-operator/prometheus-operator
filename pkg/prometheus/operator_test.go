@@ -16,6 +16,8 @@ package prometheus
 
 import (
 	"testing"
+
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 )
 
 func TestListOptions(t *testing.T) {
@@ -24,5 +26,26 @@ func TestListOptions(t *testing.T) {
 		if o.LabelSelector != "app=prometheus,prometheus=test" && o.LabelSelector != "prometheus=test,app=prometheus" {
 			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app=prometheus,prometheus=test\"\n\nGot:      %#+v", o.LabelSelector)
 		}
+	}
+}
+
+func TestCreateStatefulSetChecksum(t *testing.T) {
+	p1 := monitoringv1.Prometheus{}
+	p1.Spec.Version = "v1.7.0"
+	p2 := monitoringv1.Prometheus{}
+	p2.Spec.Version = "v1.7.2"
+	c := Config{}
+
+	p1Checksum, err := createSSetInputChecksum(p1, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p2Checksum, err := createSSetInputChecksum(p2, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if p1Checksum == p2Checksum {
+		t.Fatal("expected two different Prometheus CRDs to result in two different checksums but got equal checksums")
 	}
 }

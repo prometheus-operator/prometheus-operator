@@ -306,6 +306,8 @@ func TestAlertmanagerZeroDowntimeRollingDeployment(t *testing.T) {
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
+	alertName := "ExampleAlert"
+
 	whReplicas := int32(1)
 	whdpl := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -411,7 +413,7 @@ inhibit_rules:
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(amcfg); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := framework.MonClient.Alertmanagers(ns).Create(alertmanager); err != nil {
+	if _, err := framework.MonClientV1.Alertmanagers(ns).Create(alertmanager); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, amsvc); err != nil {
@@ -421,27 +423,12 @@ inhibit_rules:
 	p := framework.MakeBasicPrometheus(ns, "test", "test", 3)
 	p.Spec.EvaluationInterval = "100ms"
 	framework.AddAlertingToPrometheus(p, ns, alertmanager.Name)
-	alertRule := &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("prometheus-%s-rules", p.Name),
-			Labels: map[string]string{
-				"role": "rulefile",
-			},
-		},
-		Data: map[string]string{
-			"alerting.rules": `
-groups:
-- name: ./alerting.rules
-  rules:
-  - alert: ExampleAlert
-    expr: vector(1)
-`,
-		},
-	}
 
-	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(alertRule); err != nil {
+	_, err = framework.MakeAndCreateFiringRuleFile(ns, p.Name, alertName)
+	if err != nil {
 		t.Fatal(err)
 	}
+
 	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
@@ -456,7 +443,7 @@ groups:
 	// The Prometheus config reloader reloads Prometheus periodically, not on
 	// alert rule change. Thereby one has to wait for Prometheus actually firing
 	// the alert.
-	err = framework.WaitForPrometheusFiringAlert(p.Namespace, pSVC.Name, "ExampleAlert")
+	err = framework.WaitForPrometheusFiringAlert(p.Namespace, pSVC.Name, alertName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -490,7 +477,7 @@ groups:
 	}
 
 	alertmanager.Spec.Version = "v0.14.0"
-	if _, err := framework.MonClient.Alertmanagers(ns).Update(alertmanager); err != nil {
+	if _, err := framework.MonClientV1.Alertmanagers(ns).Update(alertmanager); err != nil {
 		t.Fatal(err)
 	}
 

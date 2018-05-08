@@ -36,10 +36,6 @@ func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
 }
 
-func configMapRuleFileFolder(configMapNumber int) string {
-	return fmt.Sprintf("/etc/prometheus/config_out/rules/rules-%d/", configMapNumber)
-}
-
 func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	res := yaml.MapSlice{}
 	ks := make([]string, 0)
@@ -90,7 +86,7 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials, additionalScrapeConfigs []byte, additionalAlertManagerConfigs []byte) ([]byte, error) {
+func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, basicAuthSecrets map[string]BasicAuthCredentials, additionalScrapeConfigs []byte, additionalAlertManagerConfigs []byte) ([]byte, error) {
 	versionStr := p.Spec.Version
 	if versionStr == "" {
 		versionStr = DefaultVersion
@@ -122,16 +118,10 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 		},
 	})
 
-	if ruleConfigMaps > 0 {
-		configMaps := make([]string, ruleConfigMaps)
-		for i := 0; i < ruleConfigMaps; i++ {
-			configMaps[i] = configMapRuleFileFolder(i) + "*"
-		}
-		cfg = append(cfg, yaml.MapItem{
-			Key:   "rule_files",
-			Value: configMaps,
-		})
-	}
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "rule_files",
+		Value: []string{"/etc/prometheus/rules/*.yaml"},
+	})
 
 	identifiers := make([]string, len(mons))
 	i := 0

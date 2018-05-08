@@ -59,3 +59,7 @@
 [[override]]
   name = "github.com/ericchiang/k8s"
   version = "v0.4.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/kylelemons/godebug"

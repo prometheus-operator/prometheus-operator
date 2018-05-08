@@ -62,43 +62,6 @@
   version = "v2.6.0"
 
 [[projects]]
-  name = "github.com/ericchiang/k8s"
-  packages = [
-    ".",
-    "api/resource",
-    "api/unversioned",
-    "api/v1",
-    "apis/apps/v1alpha1",
-    "apis/apps/v1beta1",
-    "apis/authentication/v1",
-    "apis/authentication/v1beta1",
-    "apis/authorization/v1",
-    "apis/authorization/v1beta1",
-    "apis/autoscaling/v1",
-    "apis/autoscaling/v2alpha1",
-    "apis/batch/v1",
-    "apis/batch/v2alpha1",
-    "apis/certificates/v1alpha1",
-    "apis/certificates/v1beta1",
-    "apis/extensions/v1beta1",
-    "apis/imagepolicy/v1alpha1",
-    "apis/meta/v1",
-    "apis/policy/v1alpha1",
-    "apis/policy/v1beta1",
-    "apis/rbac/v1alpha1",
-    "apis/rbac/v1beta1",
-    "apis/settings/v1alpha1",
-    "apis/storage/v1",
-    "apis/storage/v1beta1",
-    "runtime",
-    "runtime/schema",
-    "util/intstr",
-    "watch/versioned"
-  ]
-  revision = "68b0248f880c5967d1ba7166486cb216af849b15"
-  version = "v0.4.0"
-
-[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
@@ -245,6 +208,15 @@
   name = "github.com/kr/logfmt"
   packages = ["."]
   revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/kylelemons/godebug"
+  packages = [
+    "diff",
+    "pretty"
+  ]
+  revision = "d65d576e9348f5982d7f6d83682b694e731a45c6"
 
 [[projects]]
   branch = "master"
@@ -403,16 +375,6 @@
   name = "golang.org/x/time"
   packages = ["rate"]
   revision = "fbb02b2291d28baffd63558aa44b4b56f178d650"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/tools"
-  packages = [
-    "go/ast/astutil",
-    "go/buildutil",
-    "go/loader"
-  ]
-  revision = "2226533658007779ffd629b495a088530c84dc50"
 
 [[projects]]
   name = "gopkg.in/alecthomas/kingpin.v2"
@@ -595,6 +557,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "46a17224425510beb17903cabf6407f31d7c7b24fd75037df3a5cfd0c7436f28"
+  inputs-digest = "f195376f6f2edf7355611d989c4b2e1370722a23205711e61e97aa903ebf4e5a"
   solver-name = "gps-cdcl"
   solver-version = 1

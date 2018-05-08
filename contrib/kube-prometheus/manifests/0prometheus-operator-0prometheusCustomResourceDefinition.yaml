@@ -27,6 +27,21 @@ spec:
           description: 'Specification of the desired behavior of the Prometheus cluster.
             More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
           properties:
+            additionalAlertManagerConfigs:
+              description: SecretKeySelector selects a key of a Secret.
+              properties:
+                key:
+                  description: The key of the secret to select from.  Must be a valid
+                    secret key.
+                  type: string
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                  type: string
+                optional:
+                  description: Specify whether the Secret or it's key must be defined
+                  type: boolean
+              required:
+              - key
             additionalScrapeConfigs:
               description: SecretKeySelector selects a key of a Secret.
               properties:
@@ -734,7 +749,7 @@ spec:
                               description: Specify whether the ConfigMap must be defined
                               type: boolean
                         prefix:
-                          description: An optional identifer to prepend to each key
+                          description: An optional identifier to prepend to each key
                             in the ConfigMap. Must be a C_IDENTIFIER.
                           type: string
                         secretRef:
@@ -1188,6 +1203,14 @@ spec:
                         description: Whether this container has a read-only root filesystem.
                           Default is false.
                         type: boolean
+                      runAsGroup:
+                        description: The GID to run the entrypoint of the container
+                          process. Uses runtime default if unset. May also be set
+                          in PodSecurityContext.  If set in both SecurityContext and
+                          PodSecurityContext, the value specified in SecurityContext
+                          takes precedence.
+                        format: int64
+                        type: integer
                       runAsNonRoot:
                         description: Indicates that the container must run as a non-root
                           user. If true, the Kubelet will validate the image at runtime
@@ -1299,8 +1322,7 @@ spec:
                           description: mountPropagation determines how mounts are
                             propagated from the host to container and the other way
                             around. When not set, MountPropagationHostToContainer
-                            is used. This field is alpha in 1.8 and can be reworked
-                            or removed in a future release.
+                            is used. This field is beta in 1.10.
                           type: string
                         name:
                           description: This must match the Name of a Volume.
@@ -1877,6 +1899,90 @@ spec:
                 the server serves requests under a different route prefix. For example
                 for use with `kubectl proxy`.
               type: string
+            ruleFileNamespaceSelector:
+              description: A label selector is a label query over a set of resources.
+                The result of matchLabels and matchExpressions are ANDed. An empty
+                label selector matches all objects. A null label selector matches
+                no objects.
+              properties:
+                matchExpressions:
+                  description: matchExpressions is a list of label selector requirements.
+                    The requirements are ANDed.
+                  items:
+                    description: A label selector requirement is a selector that contains
+                      values, a key, and an operator that relates the key and values.
+                    properties:
+                      key:
+                        description: key is the label key that the selector applies
+                          to.
+                        type: string
+                      operator:
+                        description: operator represents a key's relationship to a
+                          set of values. Valid operators are In, NotIn, Exists and
+                          DoesNotExist.
+                        type: string
+                      values:
+                        description: values is an array of string values. If the operator
+                          is In or NotIn, the values array must be non-empty. If the
+                          operator is Exists or DoesNotExist, the values array must
+                          be empty. This array is replaced during a strategic merge
+                          patch.
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - key
+                    - operator
+                  type: array
+                matchLabels:
+                  description: matchLabels is a map of {key,value} pairs. A single
+                    {key,value} in the matchLabels map is equivalent to an element
+                    of matchExpressions, whose key field is "key", the operator is
+                    "In", and the values array contains only "value". The requirements
+                    are ANDed.
+                  type: object
+            ruleFileSelector:
+              description: A label selector is a label query over a set of resources.
+                The result of matchLabels and matchExpressions are ANDed. An empty
+                label selector matches all objects. A null label selector matches
+                no objects.
+              properties:
+                matchExpressions:
+                  description: matchExpressions is a list of label selector requirements.
+                    The requirements are ANDed.
+                  items:
+                    description: A label selector requirement is a selector that contains
+                      values, a key, and an operator that relates the key and values.
+                    properties:
+                      key:
+                        description: key is the label key that the selector applies
+                          to.
+                        type: string
+                      operator:
+                        description: operator represents a key's relationship to a
+                          set of values. Valid operators are In, NotIn, Exists and
+                          DoesNotExist.
+                        type: string
+                      values:
+                        description: values is an array of string values. If the operator
+                          is In or NotIn, the values array must be non-empty. If the
+                          operator is Exists or DoesNotExist, the values array must
+                          be empty. This array is replaced during a strategic merge
+                          patch.
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - key
+                    - operator
+                  type: array
+                matchLabels:
+                  description: matchLabels is a map of {key,value} pairs. A single
+                    {key,value} in the matchLabels map is equivalent to an element
+                    of matchExpressions, whose key field is "key", the operator is
+                    "In", and the values array contains only "value". The requirements
+                    are ANDed.
+                  type: object
             ruleSelector:
               description: A label selector is a label query over a set of resources.
                 The result of matchLabels and matchExpressions are ANDed. An empty
@@ -1946,6 +2052,13 @@ spec:
                     1. The owning GID will be the FSGroup 2. The setgid bit is set (new files created in the volume will be owned by FSGroup) 3. The permission bits are OR'd with rw-rw----
 
                     If unset, the Kubelet will not modify the ownership and permissions of any volume.
+                  format: int64
+                  type: integer
+                runAsGroup:
+                  description: The GID to run the entrypoint of the container process.
+                    Uses runtime default if unset. May also be set in SecurityContext.  If
+                    set in both SecurityContext and PodSecurityContext, the value
+                    specified in SecurityContext takes precedence for that container.
                   format: int64
                   type: integer
                 runAsNonRoot:
