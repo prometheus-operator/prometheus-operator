@@ -54,9 +54,6 @@ spec:
         runAsNonRoot: true
         runAsUser: 65534
       serviceAccountName: node-exporter
-      tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
       volumes:
       - hostPath:
           path: /proc

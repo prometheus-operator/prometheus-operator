@@ -33,12 +33,16 @@ local nodeExporter =
 local proxy =
   container.new("kube-rbac-proxy", "quay.io/coreos/kube-rbac-proxy:" + kubeRbacProxyVersion) +
   container.withArgs([
-	"--secure-listen-address=:9100",
-	"--upstream=http://127.0.0.1:9101/",
+        "--secure-listen-address=:9100",
+        "--upstream=http://127.0.0.1:9101/",
   ]) +
   container.withPorts(containerPort.newNamed("https", 9100)) +
   container.mixin.resources.withRequests({cpu: "10m", memory: "20Mi"}) +
   container.mixin.resources.withLimits({cpu: "20m", memory: "40Mi"});
+
+local masterToleration = toleration.new() +
+    toleration.withEffect("NoSchedule") +
+    toleration.withKey("node-role.kubernetes.io/master");
 
 local c = [nodeExporter, proxy];
 
@@ -54,5 +58,6 @@ local c = [nodeExporter, proxy];
           daemonset.mixin.spec.template.spec.withVolumes([procVolume, sysVolume]) +
           daemonset.mixin.spec.template.spec.securityContext.withRunAsNonRoot(true) +
           daemonset.mixin.spec.template.spec.securityContext.withRunAsUser(65534) +
-          daemonset.mixin.spec.template.spec.withServiceAccountName("node-exporter")
+          daemonset.mixin.spec.template.spec.withServiceAccountName("node-exporter") +
+          daemonset.mixin.spec.template.spec.withTolerations([masterToleration])
 }
