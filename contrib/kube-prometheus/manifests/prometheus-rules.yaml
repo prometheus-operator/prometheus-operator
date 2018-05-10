@@ -94,7 +94,7 @@ data:
     \     sum by (namespace, pod) (kube_pod_status_phase{job=\"kube-state-metrics\",
     phase!~\"Running|Succeeded\"}) > 0\n    \"for\": \"1h\"\n    \"labels\": \n      \"severity\":
     \"critical\"\n  - \"alert\": \"KubeDeploymentGenerationMismatch\"\n    \"annotations\":
-    \n      \"message\": \"Deployment {{ $labels.namespace }}/{{ labels.deployment
+    \n      \"message\": \"Deployment {{ $labels.namespace }}/{{ $labels.deployment
     }} generation mismatch\"\n    \"expr\": |\n      kube_deployment_status_observed_generation{job=\"kube-state-metrics\"}\n
     \       !=\n      kube_deployment_metadata_generation{job=\"kube-state-metrics\"}\n
     \   \"for\": \"15m\"\n    \"labels\": \n      \"severity\": \"critical\"\n  -
