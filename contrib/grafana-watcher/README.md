@@ -2,6 +2,8 @@
 
 The Grafaner Watcher was built for [the kube-prometheus collection](https://github.com/coreos/kube-prometheus) in order to run Grafana in an easily replicable manner without the need to run a complicated database, and rather provision dashboards from configs off of files. It subscribes to filesystem changes in a given directory, reads files matching `*-datasource.json` and `*-dashboard.json` and imports the datasources and dashboards to a given Grafana instance via Grafana's REST API.
 
+**NOTE**: `grafana-watcher` is deprecated for Grafana 5.x and later. It's recommended to follow the [Grafana provisioning docs](http://docs.grafana.org/administration/provisioning/). For more information see [#1025](https://github.com/coreos/prometheus-operator/issues/1025#issuecomment-369225236) and [#1251](https://github.com/coreos/prometheus-operator/issues/1251#issuecomment-384079856).
+
 ## How to use
 
 A Docker container is provided on `quay.io/coreos/grafana-watcher` or can be built by your self. Run the container and make sure Grafana is reachable from Grafana Watcher. Pass source directory and Grafana URL to start command, e.g:

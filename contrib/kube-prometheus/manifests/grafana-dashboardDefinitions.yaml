@@ -794,7 +794,7 @@ data:
                         "steppedLine": false,
                         "targets": [
                             {
-                                "expr": "sum(max(node_filesystem_size{fstype=\u007e\"ext[24]\"} - node_filesystem_free{fstype=\u007e\"ext[24]\"}) by (device,pod,namespace)) by (pod,namespace) / scalar(sum(max(node_filesystem_size{fstype=\u007e\"ext[24]\"}) by (device,pod,namespace))) * on (namespace, pod) group_left(node) node_namespace_pod:kube_pod_info:\n",
+                                "expr": "sum(max(node_filesystem_size{fstype=\u007e\"ext[24]\"} - node_filesystem_avail{fstype=\u007e\"ext[24]\"}) by (device,pod,namespace)) by (pod,namespace) / scalar(sum(max(node_filesystem_size{fstype=\u007e\"ext[24]\"}) by (device,pod,namespace))) * on (namespace, pod) group_left(node) node_namespace_pod:kube_pod_info:\n",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "legendFormat": "{{node}}",
@@ -1703,7 +1703,7 @@ data:
                         "steppedLine": false,
                         "targets": [
                             {
-                                "expr": "1 - sum(max by (device, node) (node_filesystem_free{fstype=\u007e\"ext[24]\"})) / sum(max by (device, node) (node_filesystem_size{fstype=\u007e\"ext[24]\"}))",
+                                "expr": "1 - sum(max by (device, node) (node_filesystem_avail{fstype=\u007e\"ext[24]\"})) / sum(max by (device, node) (node_filesystem_size{fstype=\u007e\"ext[24]\"}))",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "legendFormat": "Disk",
@@ -5258,7 +5258,7 @@ data:
                         "tableColumn": "",
                         "targets": [
                             {
-                                "expr": "(\n  sum(node_filesystem_size{job=\"node-exporter\", device!=\"rootfs\", instance=\"$instance\"})\n- sum(node_filesystem_free{job=\"node-exporter\", device!=\"rootfs\", instance=\"$instance\"})\n) * 100\n  /\nsum(node_filesystem_size{job=\"node-exporter\", device!=\"rootfs\", instance=\"$instance\"})\n",
+                                "expr": "(\n  sum(node_filesystem_size{job=\"node-exporter\", device!=\"rootfs\", instance=\"$instance\"})\n- sum(node_filesystem_avail{job=\"node-exporter\", device!=\"rootfs\", instance=\"$instance\"})\n) * 100\n  /\nsum(node_filesystem_size{job=\"node-exporter\", device!=\"rootfs\", instance=\"$instance\"})\n",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "legendFormat": ""
