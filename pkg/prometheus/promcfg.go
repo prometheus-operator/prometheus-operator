@@ -90,7 +90,7 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials, additionalScrapeConfigs []byte) ([]byte, error) {
+func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleConfigMaps int, basicAuthSecrets map[string]BasicAuthCredentials, additionalScrapeConfigs []byte, additionalAlertManagerConfigs []byte) ([]byte, error) {
 	versionStr := p.Spec.Version
 	if versionStr == "" {
 		versionStr = DefaultVersion
@@ -166,6 +166,14 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, ruleCo
 		Key:   "scrape_configs",
 		Value: append(scrapeConfigs, additionalScrapeConfigsYaml...),
 	})
+
+	var additionalAlertManagerConfigsYaml []yaml.MapSlice
+	err = yaml.Unmarshal([]byte(additionalAlertManagerConfigs), &additionalAlertManagerConfigsYaml)
+	if err != nil {
+		errors.Wrap(err, "unmarshalling additional alert manager configs failed")
+	}
+
+	alertmanagerConfigs = append(alertmanagerConfigs, additionalAlertManagerConfigsYaml...)
 
 	var alertRelabelConfigs []yaml.MapSlice
 
