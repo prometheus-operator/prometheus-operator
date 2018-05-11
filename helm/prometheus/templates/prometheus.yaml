@@ -115,3 +115,9 @@ spec:
   tolerations:
 {{ toYaml .Values.tolerations | indent 4 }}
 {{- end }}
+{{- if .Values.additionalScrapeConfigs }}
+  additionalScrapeConfigs:
+    name: prometheus-{{ .Release.Name }}-additional-scrape-configs
+    key: additional-scrape-configs.yaml
+{{- end }}
+
