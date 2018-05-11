@@ -324,6 +324,85 @@ func TestPrometheusAdditionalScrapeConfig(t *testing.T) {
 	}
 }
 
+func TestPrometheusAdditionalAlertManagerConfig(t *testing.T) {
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	prometheusName := "test"
+	group := "additional-alert-config-test"
+	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+
+	s := framework.MakeBasicServiceMonitor(group)
+	if _, err := framework.MonClient.ServiceMonitors(ns).Create(s); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	additionalConfig := `
+- path_prefix: /
+  scheme: http
+  static_configs:
+  - targets: ["localhost:9093"]
+`
+	secret := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "additional-alert-configs",
+		},
+		Data: map[string][]byte{
+			"prometheus-additional.yaml": []byte(additionalConfig),
+		},
+	}
+	_, err := framework.KubeClient.CoreV1().Secrets(ns).Create(&secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+	p.Spec.AdditionalAlertManagerConfigs = &v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "additional-alert-configs",
+		},
+		Key: "prometheus-additional.yaml",
+	}
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		t.Fatal(err)
+	}
+
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, svc); err != nil {
+		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	// Wait for ServiceMonitor target
+	if err := framework.WaitForTargets(ns, svc.Name, 1); err != nil {
+		t.Fatal(err)
+	}
+
+	err = wait.Poll(time.Second, 5*time.Minute, func() (done bool, err error) {
+		response, err := framework.QueryPrometheusSVC(ns, svc.Name, "/api/v1/alertmanagers", map[string]string{})
+		if err != nil {
+			return true, err
+		}
+
+		ra := prometheusAlertmanagerAPIResponse{}
+		if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&ra); err != nil {
+			return true, err
+		}
+
+		if ra.Status == "success" && len(ra.Data.ActiveAlertmanagers) == 1 {
+			return true, nil
+		}
+
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "validating Prometheus Alertmanager configuration failed"))
+	}
+}
+
 func TestPrometheusReloadRules(t *testing.T) {
 	t.Parallel()
 
