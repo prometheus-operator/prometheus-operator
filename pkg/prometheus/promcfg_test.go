@@ -107,6 +107,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		0,
 		map[string]BasicAuthCredentials{},
 		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -203,6 +204,7 @@ func generateTestConfig(version string) ([]byte, error) {
 		makeServiceMonitors(),
 		1,
 		map[string]BasicAuthCredentials{},
+		nil,
 		nil,
 	)
 }
