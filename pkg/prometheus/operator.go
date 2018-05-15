@@ -761,7 +761,7 @@ func (c *Operator) ruleFileConfigMaps(p *monitoringv1.Prometheus) ([]*v1.ConfigM
 		return nil, err
 	}
 
-	cache.ListAllByNamespace(c.cmapInf.GetIndexer(), p.Namespace, ruleSelector, func(obj interface{}) {
+	cache.ListAllByNamespace(c.cmapInf.GetIndexer(), c.config.Namespace, ruleSelector, func(obj interface{}) {
 		_, ok := c.keyFunc(obj)
 		if ok {
 			res = append(res, obj.(*v1.ConfigMap))
