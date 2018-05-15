@@ -14,4 +14,12 @@ generate-raw:
 	jb install
 	./build.sh
 
-.PHONY: image generate crdtojsonnet generate-raw
+test: image
+	@echo ">> Compiling assets and generating Kubernetes manifests"
+	docker run --rm -u=$(shell id -u $(USER)):$(shell id -g $(USER)) -v $(shell dirname $(dir $(abspath $(dir $$PWD)))):/go/src/github.com/coreos/prometheus-operator/ --workdir /go/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus po-jsonnet make test-raw
+
+test-raw: crdtojsonnet
+	jb install
+	./test.sh
+
+.PHONY: image generate crdtojsonnet generate-raw test

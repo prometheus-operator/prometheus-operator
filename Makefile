@@ -66,7 +66,7 @@ po-docgen:
 	@go install github.com/coreos/prometheus-operator/cmd/po-docgen
 
 docs: embedmd po-docgen
-	$(GOPATH)/bin/embedmd -w `find Documentation contrib/kube-prometheus/README.md -name "*.md"`
+	$(GOPATH)/bin/embedmd -w `find Documentation contrib/kube-prometheus/ -name "*.md"`
 	$(GOPATH)/bin/po-docgen api pkg/client/monitoring/v1/types.go > Documentation/api.md
 	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
