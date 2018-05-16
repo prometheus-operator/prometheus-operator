@@ -71,7 +71,7 @@ spec:
     {{- if .Values.global.rbacEnable }}
       serviceAccountName: {{ template "exporter-kube-state.fullname" . }}
     {{- end }}
-    {{- if .Values.kube_state_metrics.tolerations }}
+{{- if .Values.tolerations }}
       tolerations:
-    {{ toYaml .Values.kube_state_metrics.tolerations | indent 4 }}
+{{ toYaml .Values.tolerations | indent 8 }}
     {{- end }}
