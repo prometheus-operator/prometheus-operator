@@ -443,7 +443,7 @@
                         },
                         "targets": [
                             {
-                                "expr": "count(increase(kube_pod_container_status_restarts{namespace=~\"kube-system|tectonic-system\"}[1h]) > 5)",
+                                "expr": "count(increase(kube_pod_container_status_restarts_total{namespace=~\"kube-system|tectonic-system\"}[1h]) > 5)",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "refId": "A",
