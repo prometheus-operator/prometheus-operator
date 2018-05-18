@@ -151,16 +151,16 @@ kubeadm:
 
 [embedmd]:# (examples/jsonnet-snippets/kubeadm.jsonnet)
 ```jsonnet
-(import "kube-prometheus/kube-prometheus.libsonnet") +
-(import "kube-prometheus/kube-prometheus-kubeadm.libsonnet")
+(import 'kube-prometheus/kube-prometheus.libsonnet') +
+(import 'kube-prometheus/kube-prometheus-kubeadm.libsonnet')
 ```
 
 bootkube:
 
 [embedmd]:# (examples/jsonnet-snippets/bootkube.jsonnet)
 ```jsonnet
-(import "kube-prometheus/kube-prometheus.libsonnet") +
-(import "kube-prometheus/kube-prometheus-bootkube.libsonnet")
+(import 'kube-prometheus/kube-prometheus.libsonnet') +
+(import 'kube-prometheus/kube-prometheus-bootkube.libsonnet')
 ```
 
 kops:
@@ -175,23 +175,23 @@ Another mixin that may be useful for exploring the stack is to expose the UIs of
 
 [embedmd]:# (examples/jsonnet-snippets/node-ports.jsonnet)
 ```jsonnet
-(import "kube-prometheus/kube-prometheus.libsonnet") +
-(import "kube-prometheus/kube-prometheus-node-ports.libsonnet")
+(import 'kube-prometheus/kube-prometheus.libsonnet') +
+(import 'kube-prometheus/kube-prometheus-node-ports.libsonnet')
 ```
 
 For example the name of the `Prometheus` object provided by this library can be overridden:
 
 [embedmd]:# (examples/prometheus-name-override.jsonnet)
 ```jsonnet
-((import "kube-prometheus/kube-prometheus.libsonnet") + {
-	prometheus+: {
-		prometheus+: {
-			metadata+: {
-				name: "my-name",
-			}
-		}
-	}
-}).prometheus.prometheus
+((import 'kube-prometheus/kube-prometheus.libsonnet') + {
+   prometheus+: {
+     prometheus+: {
+       metadata+: {
+         name: 'my-name',
+       },
+     },
+   },
+ }).prometheus.prometheus
 ```
 
 Standard Kubernetes manifests are all written using [ksonnet-lib](https://github.com/ksonnet/ksonnet-lib/), so they can be modified with the mixins supplied by ksonnet-lib. For example to override the namespace of the node-exporter DaemonSet:
