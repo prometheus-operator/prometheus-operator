@@ -210,6 +210,18 @@ spec:
         name: sys
 ```
 
+The respective `ServiceAccount` manifest:
+
+[embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter-serviceAccount.yaml)
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: node-exporter
+  namespace: monitoring
+```
+
+
 And the respective `Service` manifest:
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter-service.yaml)
