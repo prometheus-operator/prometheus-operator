@@ -87,7 +87,7 @@ set -x
 set -o pipefail
 
                                                # optional, but we would like to generate yaml, not json
-jsonnet -J vendor -m manifests example.jsonnet | xargs -I{} sh -c 'cat $1 | gojsontoyaml > $1.yaml; rm -f $1' -- {}
+jsonnet -J vendor -m manifests ${1-example.jsonnet} | xargs -I{} sh -c 'cat $1 | gojsontoyaml > $1.yaml; rm -f $1' -- {}
 
 ```
 
@@ -145,7 +145,7 @@ A common example is that not all Kubernetes clusters are created exactly the sam
 
 kubeadm:
 
-[embedmd]:# (examples/kubeadm.jsonnet)
+[embedmd]:# (examples/jsonnet-snippets/kubeadm.jsonnet)
 ```jsonnet
 (import "kube-prometheus/kube-prometheus.libsonnet") +
 (import "kube-prometheus/kube-prometheus-kubeadm.libsonnet")
@@ -153,7 +153,7 @@ kubeadm:
 
 bootkube:
 
-[embedmd]:# (examples/bootkube.jsonnet)
+[embedmd]:# (examples/jsonnet-snippets/bootkube.jsonnet)
 ```jsonnet
 (import "kube-prometheus/kube-prometheus.libsonnet") +
 (import "kube-prometheus/kube-prometheus-bootkube.libsonnet")
@@ -161,7 +161,7 @@ bootkube:
 
 Another mixin that may be useful for exploring the stack is to expose the UIs of Prometheus, Alertmanager and Grafana on NodePorts:
 
-[embedmd]:# (examples/node-ports.jsonnet)
+[embedmd]:# (examples/jsonnet-snippets/node-ports.jsonnet)
 ```jsonnet
 (import "kube-prometheus/kube-prometheus.libsonnet") +
 (import "kube-prometheus/kube-prometheus-node-ports.libsonnet")
@@ -186,16 +186,20 @@ Standard Kubernetes manifests are all written using [ksonnet-lib](https://github
 
 [embedmd]:# (examples/ksonnet-example.jsonnet)
 ```jsonnet
-local k = import "ksonnet/ksonnet.beta.3/k.libsonnet";
+local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 local daemonset = k.apps.v1beta2.daemonSet;
 
-((import "kube-prometheus/kube-prometheus.libsonnet") + {
-	nodeExporter+: {
-		daemonset+:
-            daemonset.mixin.metadata.withNamespace("my-custom-namespace")
-    }
-}).nodeExporter.daemonset
+((import 'kube-prometheus/kube-prometheus.libsonnet') + {
+   nodeExporter+: {
+     daemonset+:
+       daemonset.mixin.metadata.withNamespace('my-custom-namespace'),
+   },
+ }).nodeExporter.daemonset
 ```
+
+### Customizing Prometheus alerting/recording rules and Grafana dashboards
+
+See [developing alerts and dashboards](developing-alerts-and-dashboards.md) guide.
 
 ## Example
 

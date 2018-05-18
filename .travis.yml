@@ -12,6 +12,7 @@ jobs:
   # Check generated contents are up to date and code is formatted.
   - stage: Sanity check and unit tests
     script: ./scripts/check-make-generate.sh
+  - script: cd contrib/kube-prometheus && make test
   # Build Prometheus config reloader
   - script: cd contrib/prometheus-config-reloader && make build
   # Ensure vendor folder matches vendor.json
