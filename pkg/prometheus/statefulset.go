@@ -43,6 +43,7 @@ const (
 	configFilename         = "prometheus.yaml"
 	configEnvsubstFilename = "prometheus.env.yaml"
 	sSetInputChecksumName  = "prometheus-operator-input-checksum"
+	maxNameLength          = 63
 )
 
 var (
@@ -628,7 +629,11 @@ func configSecretName(name string) string {
 }
 
 func volumeName(name string) string {
-	return fmt.Sprintf("%s-db", prefixedName(name))
+	v := fmt.Sprintf("%s-db", prefixedName(name))
+	if len(v) > maxNameLength {
+		return v[:maxNameLength]
+	}
+	return v
 }
 
 func prefixedName(name string) string {
