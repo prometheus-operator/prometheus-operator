@@ -25,6 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+
+	"github.com/kylelemons/godebug/pretty"
 )
 
 func TestConfigGeneration(t *testing.T) {
@@ -104,7 +106,6 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 			},
 		},
 		nil,
-		0,
 		map[string]BasicAuthCredentials{},
 		nil,
 		nil,
@@ -122,6 +123,8 @@ func TestAlertmanagerBearerToken(t *testing.T) {
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+rule_files:
+- /etc/prometheus/rules/*.yaml
 scrape_configs: []
 alerting:
   alert_relabel_configs:
@@ -150,7 +153,8 @@ alerting:
 	result := string(cfg)
 
 	if expected != result {
-		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+		pretty.Compare(expected, result)
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
 	}
 }
 
@@ -183,7 +187,7 @@ func generateTestConfig(version string) ([]byte, error) {
 						"group": "group1",
 					},
 				},
-				RuleSelector: &metav1.LabelSelector{
+				RuleFileSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"role": "rulefile",
 					},
@@ -202,7 +206,6 @@ func generateTestConfig(version string) ([]byte, error) {
 			},
 		},
 		makeServiceMonitors(),
-		1,
 		map[string]BasicAuthCredentials{},
 		nil,
 		nil,

@@ -16,6 +16,7 @@ package framework
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,18 +29,20 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1alpha1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/pkg/errors"
 )
 
 type Framework struct {
-	KubeClient     kubernetes.Interface
-	MonClient      monitoringv1.MonitoringV1Interface
-	HTTPClient     *http.Client
-	MasterHost     string
-	Namespace      *v1.Namespace
-	OperatorPod    *v1.Pod
-	DefaultTimeout time.Duration
+	KubeClient        kubernetes.Interface
+	MonClientV1       monitoringv1.MonitoringV1Interface
+	MonClientV1alpha1 monitoringv1alpha1.MonitoringV1alpha1Interface
+	HTTPClient        *http.Client
+	MasterHost        string
+	Namespace         *v1.Namespace
+	OperatorPod       *v1.Pod
+	DefaultTimeout    time.Duration
 }
 
 // Setup setups a test framework and returns it.
@@ -59,9 +62,14 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 		return nil, errors.Wrap(err, "creating http-client failed")
 	}
 
-	mclient, err := monitoringv1.NewForConfig(&monitoringv1.DefaultCrdKinds, monitoringv1.Group, config)
+	mClientV1, err := monitoringv1.NewForConfig(&monitoringv1.DefaultCrdKinds, monitoringv1.Group, config)
 	if err != nil {
-		return nil, errors.Wrap(err, "creating monitoring client failed")
+		return nil, errors.Wrap(err, "creating v1 monitoring client failed")
+	}
+
+	mClientV1alpha1, err := monitoringv1alpha1.NewForConfig(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating v1alpha1 monitoring client failed")
 	}
 
 	namespace, err := CreateNamespace(cli, ns)
@@ -70,12 +78,13 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 	}
 
 	f := &Framework{
-		MasterHost:     config.Host,
-		KubeClient:     cli,
-		MonClient:      mclient,
-		HTTPClient:     httpc,
-		Namespace:      namespace,
-		DefaultTimeout: time.Minute,
+		MasterHost:        config.Host,
+		KubeClient:        cli,
+		MonClientV1:       mClientV1,
+		MonClientV1alpha1: mClientV1alpha1,
+		HTTPClient:        httpc,
+		Namespace:         namespace,
+		DefaultTimeout:    time.Minute,
 	}
 
 	err = f.Setup(opImage)
@@ -119,7 +128,20 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	if opImage != "" {
 		// Override operator image used, if specified when running tests.
 		deploy.Spec.Template.Spec.Containers[0].Image = opImage
+		repoAndTag := strings.Split(opImage, ":")
+		if len(repoAndTag) != 2 {
+			return errors.Errorf(
+				"expected operator image '%v' split by colon to result in two substrings but got '%v'",
+				opImage,
+				repoAndTag,
+			)
+		}
+		deploy.Spec.Template.Spec.Containers[0].Args[1] = "--prometheus-config-reloader=" +
+			"quay.io/coreos/prometheus-config-reloader:" +
+			repoAndTag[1]
 	}
+
+	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=all")
 
 	err = CreateDeployment(f.KubeClient, f.Namespace.Name, deploy)
 	if err != nil {

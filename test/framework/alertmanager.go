@@ -133,7 +133,7 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoring
 		return errors.Wrap(err, fmt.Sprintf("creating alertmanager config secret %v failed", s.Name))
 	}
 
-	_, err = f.MonClient.Alertmanagers(ns).Create(a)
+	_, err = f.MonClientV1.Alertmanagers(ns).Create(a)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
@@ -154,7 +154,7 @@ func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) erro
 }
 
 func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) error {
-	_, err := f.MonClient.Alertmanagers(ns).Update(a)
+	_, err := f.MonClientV1.Alertmanagers(ns).Update(a)
 	if err != nil {
 		return err
 	}
@@ -174,12 +174,12 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoring
 }
 
 func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClient.Alertmanagers(ns).Get(name, metav1.GetOptions{})
+	_, err := f.MonClientV1.Alertmanagers(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting Alertmanager tpr %v failed", name))
 	}
 
-	if err := f.MonClient.Alertmanagers(ns).Delete(name, nil); err != nil {
+	if err := f.MonClientV1.Alertmanagers(ns).Delete(name, nil); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting Alertmanager tpr %v failed", name))
 	}
 
