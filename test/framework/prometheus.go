@@ -48,36 +48,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 				},
 			},
 			ServiceAccountName: "prometheus",
-			RuleSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"role": "rulefile",
-				},
-			},
-			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("400Mi"),
-				},
-			},
-		},
-	}
-}
-
-func (f *Framework) MakeBasicPrometheusV1alpha1(ns, name, group string, replicas int32) *v1alpha1.Prometheus {
-	return &v1alpha1.Prometheus{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: ns,
-		},
-		Spec: v1alpha1.PrometheusSpec{
-			Replicas: &replicas,
-			Version:  prometheus.DefaultVersion,
-			ServiceMonitorSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": group,
-				},
-			},
-			ServiceAccountName: "prometheus",
-			RuleSelector: &metav1.LabelSelector{
+			RuleFileSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"role": "rulefile",
 				},
@@ -177,20 +148,20 @@ func (f *Framework) MakePrometheusService(name, group string, serviceType v1.Ser
 }
 
 func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) error {
-	_, err := f.MonClient.Prometheuses(ns).Create(p)
+	_, err := f.MonClientV1.Prometheuses(ns).Create(p)
 	if err != nil {
-		return fmt.Errorf("creating %d Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
+		return fmt.Errorf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
 	if err := f.WaitForPrometheusReady(p, 5*time.Minute); err != nil {
-		return fmt.Errorf("waiting for %d Prometheus instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
+		return fmt.Errorf("waiting for %v Prometheus instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
 	return nil
 }
 
 func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) error {
-	_, err := f.MonClient.Prometheuses(ns).Update(p)
+	_, err := f.MonClientV1.Prometheuses(ns).Update(p)
 	if err != nil {
 		return err
 	}
@@ -202,7 +173,7 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *monitoringv1
 }
 
 func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout time.Duration) error {
-	return wait.Poll(2*time.Second, timeout, func() (bool, error) {
+	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
 		st, _, err := prometheus.PrometheusStatus(f.KubeClient, p)
 		if err != nil {
 			log.Print(err)
@@ -211,19 +182,19 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 		if st.UpdatedReplicas == *p.Spec.Replicas {
 			return true, nil
 		} else {
-			log.Printf("expected %v Prometheus instances, got %v", *p.Spec.Replicas, st.UpdatedReplicas)
 			return false, nil
 		}
 	})
+	return errors.Wrapf(err, "waiting for Prometheus %v/%v", p.Namespace, p.Name)
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClient.Prometheuses(ns).Get(name, metav1.GetOptions{})
+	_, err := f.MonClientV1.Prometheuses(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting Prometheus tpr %v failed", name))
 	}
 
-	if err := f.MonClient.Prometheuses(ns).Delete(name, nil); err != nil {
+	if err := f.MonClientV1.Prometheuses(ns).Delete(name, nil); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting Prometheus tpr %v failed", name))
 	}
 
@@ -337,7 +308,12 @@ func (f *Framework) WaitForPrometheusFiringAlert(ns, svcName, alertName string) 
 	})
 
 	if err != nil {
-		return errors.Wrap(loopError, err.Error())
+		return errors.Errorf(
+			"waiting for alert '%v' to fire: %v: %v",
+			alertName,
+			err.Error(),
+			loopError.Error(),
+		)
 	}
 	return nil
 }

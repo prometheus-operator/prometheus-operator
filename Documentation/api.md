@@ -26,6 +26,11 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [RelabelConfig](#relabelconfig)
 * [RemoteReadSpec](#remotereadspec)
 * [RemoteWriteSpec](#remotewritespec)
+* [Rule](#rule)
+* [RuleFile](#rulefile)
+* [RuleFileList](#rulefilelist)
+* [RuleFileSpec](#rulefilespec)
+* [RuleGroup](#rulegroup)
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
@@ -211,7 +216,9 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
-| ruleSelector | A selector to select which ConfigMaps to mount for loading rule files from. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
+| ruleFileSelector | A selector to select which RuleFiles to mount for loading alerting rules from. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
+| ruleSelector | DEPRECATED with Prometheus Operator 'v0.20.0'. Any value in this field will just be copied to 'RuleFileSelector' field | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
+| ruleFileNamespaceSelector | Namespaces to be selected for RuleFiles discovery. If empty, only check own namespace. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
 | alerting | Define details regarding alerting. | *[AlertingSpec](#alertingspec) | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
@@ -291,6 +298,65 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
+
+[Back to TOC](#table-of-contents)
+
+## Rule
+
+Rule describes an alerting or recording rule.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| record |  | string | false |
+| alert |  | string | false |
+| expr |  | string | true |
+| for |  | time.Duration | false |
+| labels |  | map[string]string | false |
+| annotations |  | map[string]string | false |
+
+[Back to TOC](#table-of-contents)
+
+## RuleFile
+
+RuleFile defines alerting rules for a Prometheus instance
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata | Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ObjectMeta](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#objectmeta-v1-meta) | false |
+| spec | Specification of desired alerting rule definitions for Prometheus. | [RuleFileSpec](#rulefilespec) | true |
+
+[Back to TOC](#table-of-contents)
+
+## RuleFileList
+
+A list of RuleFiles.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata | Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ListMeta](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#listmeta-v1-meta) | false |
+| items | List of Rules | []*[RuleFile](#rulefile) | true |
+
+[Back to TOC](#table-of-contents)
+
+## RuleFileSpec
+
+RuleFileSpec contains specification parameters for a Rule.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| groups | Content of Prometheus rule file | [][RuleGroup](#rulegroup) | false |
+
+[Back to TOC](#table-of-contents)
+
+## RuleGroup
+
+RuleGroup is a list of sequentially evaluated recording and alerting rules.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name |  | string | true |
+| interval |  | time.Duration | false |
+| rules |  | [][Rule](#rule) | true |
 
 [Back to TOC](#table-of-contents)
 

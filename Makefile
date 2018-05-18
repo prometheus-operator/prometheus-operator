@@ -23,9 +23,10 @@ po-crdgen:
 
 crossbuild: promu
 	@$(PROMU) crossbuild
+	cd contrib/prometheus-config-reloader && make build
 
 test:
-	@go test -short $(pkgs)
+	@go test $(TEST_RUN_ARGS) -short $(pkgs)
 
 format:
 	go fmt $(pkgs)
@@ -35,6 +36,7 @@ check-license:
 
 container:
 	docker build -t $(REPO):$(TAG) .
+	cd contrib/prometheus-config-reloader && docker build -t quay.io/coreos/prometheus-config-reloader:$(TAG) .
 
 e2e-test:
 	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE)
@@ -48,7 +50,7 @@ e2e:
 
 e2e-helm:
 	./helm/hack/e2e-test.sh
-	# package the chart and verify if they have the version bumped  
+	# package the chart and verify if they have the version bumped
 	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes exporter-coredns"
 	helm/hack/sync-repo.sh false
 
@@ -66,7 +68,7 @@ po-docgen:
 	@go install github.com/coreos/prometheus-operator/cmd/po-docgen
 
 docs: embedmd po-docgen
-	$(GOPATH)/bin/embedmd -w `find Documentation contrib/kube-prometheus/README.md -name "*.md"`
+	$(GOPATH)/bin/embedmd -w `find Documentation contrib/kube-prometheus/ -name "*.md"`
 	$(GOPATH)/bin/po-docgen api pkg/client/monitoring/v1/types.go > Documentation/api.md
 	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
@@ -126,5 +128,6 @@ generate-crd: generate-openapi po-crdgen
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
 	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
 	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
+	po-crdgen rulefile > example/prometheus-operator-crd/rulefile.crd.yaml
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs generate-crd jb

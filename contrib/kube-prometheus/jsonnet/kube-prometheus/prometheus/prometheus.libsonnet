@@ -15,6 +15,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     prometheus+:: {
       replicas: 2,
       rules: {},
+      renderedRules: {},
     },
   },
 
@@ -36,7 +37,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     rules:
       local configMap = k.core.v1.configMap;
 
-      configMap.new('prometheus-k8s-rules', { 'all.rules.yaml': std.manifestYamlDoc($._config.prometheus.rules) }) +
+      configMap.new('prometheus-k8s-rules', ({ 'all.rules.yaml': std.manifestYamlDoc($._config.prometheus.rules) } + $._config.prometheus.renderedRules)) +
       configMap.mixin.metadata.withLabels({ role: 'alert-rules', prometheus: 'k8s' }) +
       configMap.mixin.metadata.withNamespace($._config.namespace),
     roleBindingDefault:

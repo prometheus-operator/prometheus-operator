@@ -666,7 +666,7 @@ spec:
                               description: Specify whether the ConfigMap must be defined
                               type: boolean
                         prefix:
-                          description: An optional identifer to prepend to each key
+                          description: An optional identifier to prepend to each key
                             in the ConfigMap. Must be a C_IDENTIFIER.
                           type: string
                         secretRef:
@@ -1120,6 +1120,14 @@ spec:
                         description: Whether this container has a read-only root filesystem.
                           Default is false.
                         type: boolean
+                      runAsGroup:
+                        description: The GID to run the entrypoint of the container
+                          process. Uses runtime default if unset. May also be set
+                          in PodSecurityContext.  If set in both SecurityContext and
+                          PodSecurityContext, the value specified in SecurityContext
+                          takes precedence.
+                        format: int64
+                        type: integer
                       runAsNonRoot:
                         description: Indicates that the container must run as a non-root
                           user. If true, the Kubelet will validate the image at runtime
@@ -1231,8 +1239,7 @@ spec:
                           description: mountPropagation determines how mounts are
                             propagated from the host to container and the other way
                             around. When not set, MountPropagationHostToContainer
-                            is used. This field is alpha in 1.8 and can be reworked
-                            or removed in a future release.
+                            is used. This field is beta in 1.10.
                           type: string
                         name:
                           description: This must match the Name of a Volume.
@@ -1612,6 +1619,13 @@ spec:
                     1. The owning GID will be the FSGroup 2. The setgid bit is set (new files created in the volume will be owned by FSGroup) 3. The permission bits are OR'd with rw-rw----
 
                     If unset, the Kubelet will not modify the ownership and permissions of any volume.
+                  format: int64
+                  type: integer
+                runAsGroup:
+                  description: The GID to run the entrypoint of the container process.
+                    Uses runtime default if unset. May also be set in SecurityContext.  If
+                    set in both SecurityContext and PodSecurityContext, the value
+                    specified in SecurityContext takes precedence for that container.
                   format: int64
                   type: integer
                 runAsNonRoot:

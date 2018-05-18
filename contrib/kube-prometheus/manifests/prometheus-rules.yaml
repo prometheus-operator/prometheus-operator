@@ -16,8 +16,9 @@ data:
     \ - \"expr\": |\n      sum by (namespace, label_name) (\n        sum(kube_pod_container_resource_requests_memory_bytes{job=\"kube-state-metrics\"})
     by (namespace, pod)\n      * on (namespace, pod) group_left(label_name)\n        label_replace(kube_pod_labels{job=\"kube-state-metrics\"},
     \"pod_name\", \"$1\", \"pod\", \"(.*)\")\n      )\n    \"record\": \"namespace_name:kube_pod_container_resource_requests_memory_bytes:sum\"\n
-    \ - \"expr\": |\n      sum by (namespace, label_name) (\n        sum(kube_pod_container_resource_requests_cpu_cores{job=\"kube-state-metrics\"})
-    by (namespace, pod)\n      * on (namespace, pod) group_left(label_name)\n        label_replace(kube_pod_labels{job=\"kube-state-metrics\"},
+    \ - \"expr\": |\n      sum by (namespace, label_name) (\n        sum(kube_pod_container_resource_requests_cpu_cores{job=\"kube-state-metrics\"}
+    and on(pod) kube_pod_status_scheduled{condition=\"true\"}) by (namespace, pod)\n
+    \     * on (namespace, pod) group_left(label_name)\n        label_replace(kube_pod_labels{job=\"kube-state-metrics\"},
     \"pod_name\", \"$1\", \"pod\", \"(.*)\")\n      )\n    \"record\": \"namespace_name:kube_pod_container_resource_requests_cpu_cores:sum\"\n-
     \"name\": \"node.rules\"\n  \"rules\": \n  - \"expr\": \"sum(min(kube_pod_info)
     by (node))\"\n    \"record\": \":kube_pod_info_node_count:\"\n  - \"expr\": |\n

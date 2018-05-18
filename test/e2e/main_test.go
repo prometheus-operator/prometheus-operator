@@ -47,19 +47,19 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	err = k8sutil.WaitForCRDReady(framework.MonClient.Prometheuses(v1.NamespaceAll).List)
+	err = k8sutil.WaitForCRDReady(framework.MonClientV1.Prometheuses(v1.NamespaceAll).List)
 	if err != nil {
 		log.Printf("Prometheus CRD not ready: %v\n", err)
 		os.Exit(1)
 	}
 
-	err = k8sutil.WaitForCRDReady(framework.MonClient.ServiceMonitors(v1.NamespaceAll).List)
+	err = k8sutil.WaitForCRDReady(framework.MonClientV1.ServiceMonitors(v1.NamespaceAll).List)
 	if err != nil {
 		log.Printf("ServiceMonitor CRD not ready: %v\n", err)
 		os.Exit(1)
 	}
 
-	err = k8sutil.WaitForCRDReady(framework.MonClient.Alertmanagers(v1.NamespaceAll).List)
+	err = k8sutil.WaitForCRDReady(framework.MonClientV1.Alertmanagers(v1.NamespaceAll).List)
 	if err != nil {
 		log.Printf("Alertmanagers CRD not ready: %v\n", err)
 		os.Exit(1)
