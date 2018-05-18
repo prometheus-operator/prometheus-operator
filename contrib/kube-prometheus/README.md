@@ -211,7 +211,7 @@ local daemonset = k.apps.v1beta2.daemonSet;
 
 ### Customizing Prometheus alerting/recording rules and Grafana dashboards
 
-See [developing alerts and dashboards](docs/developing-prometheus-rules-and-grafana-dashboards.md) guide.
+See [developing Prometheus rules and Grafana dashboards](docs/developing-prometheus-rules-and-grafana-dashboards.md) guide.
 
 ## Example
 
