@@ -163,6 +163,14 @@ bootkube:
 (import "kube-prometheus/kube-prometheus-bootkube.libsonnet")
 ```
 
+kops:
+
+[embedmd]:# (examples/jsonnet-snippets/kops.jsonnet)
+```jsonnet
+(import 'kube-prometheus/kube-prometheus.libsonnet') +
+(import 'kube-prometheus/kube-prometheus-kops.libsonnet')
+```
+
 Another mixin that may be useful for exploring the stack is to expose the UIs of Prometheus, Alertmanager and Grafana on NodePorts:
 
 [embedmd]:# (examples/jsonnet-snippets/node-ports.jsonnet)
