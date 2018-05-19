@@ -18,8 +18,6 @@ data:
         jobLabel: {{ template "prometheus-operator.name" . }}
         selector:
           matchLabels:
-        selector:
-          matchLabels:
             operated-prometheus: "true"
         namespaceSelector:
           matchNames:
