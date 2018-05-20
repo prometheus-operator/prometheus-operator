@@ -194,7 +194,7 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
 
 ### Pre-rendered Grafana dashboards
 
-As jsonnet is a superset of json, the jsonnet `import` function can be used to include Grafana dashboard json blobs. In this example we are importing a [provided example dashboard](examples/example-grafana-dashboard.json).
+As jsonnet is a superset of json, the jsonnet `import` function can be used to include Grafana dashboard json blobs. In this example we are importing a [provided example dashboard](../examples/example-grafana-dashboard.json).
 
 [embedmd]:# (../examples/grafana-additional-rendered-dashboard-example.jsonnet)
 ```jsonnet
