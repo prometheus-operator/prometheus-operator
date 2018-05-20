@@ -60,4 +60,4 @@ data:
 
 When the dashboard JSON is exported via the Grafana web-ui, it has to be wrapped in `{"dashboard": {}}`, variables, marked by `${}`, have to be replaced and the fields `__input` and `__requires` have to be removed, for the dashboard JSON to be parseable by Grafana via the REST API used by the Grafana Watcher.
 
-Alternatively use `make generate` as described in [Developing Alerts and Dashboards](../kube-prometheus/docs/developing-alerts-and-dashboards.md) to create the ConfigMap.
+Alternatively use `make generate` as described in [Developing Alerts and Dashboards](../kube-prometheus/docs/developing-prometheus-rules-and-grafana-dashboards.md) to create the ConfigMap.
