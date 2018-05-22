@@ -17,7 +17,7 @@ dependencies:
     condition: deployCoreDNS
 
   - name: exporter-kube-controller-manager
-    version: 0.1.9
+    version: 0.1.10
     #e2e-repository: file://../exporter-kube-controller-manager
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
@@ -33,7 +33,7 @@ dependencies:
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-kube-scheduler
-    version: 0.1.8
+    version: 0.1.9
     #e2e-repository: file://../exporter-kube-scheduler
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
