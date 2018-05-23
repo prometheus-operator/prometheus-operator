@@ -3,7 +3,7 @@
 ## Description:
 Tool to maintain grafana dashboards' configmap for a grafana deployed with kube-prometheus (a tool inside prometheus-operator).
 
-The tool reads the content of a directory with grafana .json resources (dashboards and datasources) and creates a manifest file under output/ directory with all the content from the files in a Kubernetes ConfigMap format.
+The tool reads the content of a directory with grafana dashboard .json resources and creates a manifest file under output/ directory with all the content from the files in a Kubernetes ConfigMap format.
 
 Based on a configurable size limit, the tool will create 1 or N configmaps to allocate the .json resources (bin packing). If the limit is reached then the configmaps generated will have names like grafana-dashboards-0, grafana-dashboards-1, etc, and if the limit is not reached the configmap generated will be called "grafana-dashboards".
 
@@ -12,7 +12,7 @@ Input Parameters Allowed:
 -i dir, --input-dir dir
   Directory with grafana dashboards to process.
   Important notes:
-    Files should be suffixed with -dashboard.json or -datasource.json.
+    Files should be suffixed with -dashboard.json.
     We don't recommend file names with spaces.
 
 -o file, --output-file file
