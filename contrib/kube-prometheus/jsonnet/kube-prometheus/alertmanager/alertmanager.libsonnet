@@ -15,6 +15,7 @@ local alertmanagerConfig = "\nglobal:\n  resolve_timeout: 5m\nroute:\n  group_by
     },
 
     alertmanager+:: {
+      name: $._config.alertmanager.name,
       config: alertmanagerConfig,
       replicas: 3,
     },
@@ -24,13 +25,13 @@ local alertmanagerConfig = "\nglobal:\n  resolve_timeout: 5m\nroute:\n  group_by
     secret:
       local secret = k.core.v1.secret;
 
-      secret.new('alertmanager-main', { 'alertmanager.yaml': std.base64($._config.alertmanager.config) }) +
+      secret.new('alertmanager-' + $._config.alertmanager.name, { 'alertmanager.yaml': std.base64($._config.alertmanager.config) }) +
       secret.mixin.metadata.withNamespace($._config.namespace),
 
     serviceAccount:
       local serviceAccount = k.core.v1.serviceAccount;
 
-      serviceAccount.new('alertmanager-main') +
+      serviceAccount.new('alertmanager-' + $._config.alertmanager.name) +
       serviceAccount.mixin.metadata.withNamespace($._config.namespace),
 
     service:
@@ -39,9 +40,9 @@ local alertmanagerConfig = "\nglobal:\n  resolve_timeout: 5m\nroute:\n  group_by
 
       local alertmanagerPort = servicePort.newNamed('web', 9093, 'web');
 
-      service.new('alertmanager-main', { app: 'alertmanager', alertmanager: 'main' }, alertmanagerPort) +
+      service.new('alertmanager-' + $._config.alertmanager.name, { app: 'alertmanager', alertmanager: $._config.alertmanager.name }, alertmanagerPort) +
       service.mixin.metadata.withNamespace($._config.namespace) +
-      service.mixin.metadata.withLabels({ alertmanager: 'main' }),
+      service.mixin.metadata.withLabels({ alertmanager: $._config.alertmanager.name }),
 
     serviceMonitor:
       {
@@ -57,7 +58,7 @@ local alertmanagerConfig = "\nglobal:\n  resolve_timeout: 5m\nroute:\n  group_by
         spec: {
           selector: {
             matchLabels: {
-              alertmanager: 'main',
+              alertmanager: $._config.alertmanager.name,
             },
           },
           namespaceSelector: {
@@ -79,10 +80,10 @@ local alertmanagerConfig = "\nglobal:\n  resolve_timeout: 5m\nroute:\n  group_by
         apiVersion: 'monitoring.coreos.com/v1',
         kind: 'Alertmanager',
         metadata: {
-          name: 'main',
+          name: $._config.alertmanager.name,
           namespace: $._config.namespace,
           labels: {
-            alertmanager: 'main',
+            alertmanager: $._config.alertmanager.name,
           },
         },
         spec: {
@@ -90,7 +91,7 @@ local alertmanagerConfig = "\nglobal:\n  resolve_timeout: 5m\nroute:\n  group_by
           version: $._config.versions.alertmanager,
           baseImage: $._config.imageRepos.alertmanager,
           nodeSelector: { 'beta.kubernetes.io/os': 'linux' },
-          serviceAccountName: 'alertmanager-main',
+          serviceAccountName: 'alertmanager-' + $._config.alertmanager.name,
         },
       },
   },

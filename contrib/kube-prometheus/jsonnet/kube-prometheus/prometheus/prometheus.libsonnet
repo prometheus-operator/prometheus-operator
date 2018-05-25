@@ -12,7 +12,12 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       prometheus: 'quay.io/prometheus/prometheus',
     },
 
+    alertmanager+:: {
+      name: 'main',
+    },
+
     prometheus+:: {
+      name: 'k8s',
       replicas: 2,
       rules: {},
       renderedRules: {},
@@ -23,7 +28,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     serviceAccount:
       local serviceAccount = k.core.v1.serviceAccount;
 
-      serviceAccount.new('prometheus-k8s') +
+      serviceAccount.new('prometheus-' + $._config.prometheus.name) +
       serviceAccount.mixin.metadata.withNamespace($._config.namespace),
     service:
       local service = k.core.v1.service;
@@ -31,25 +36,25 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
       local prometheusPort = servicePort.newNamed('web', 9090, 'web');
 
-      service.new('prometheus-k8s', { app: 'prometheus', prometheus: 'k8s' }, prometheusPort) +
+      service.new('prometheus-' + $._config.prometheus.name, { app: 'prometheus', prometheus: $._config.prometheus.name }, prometheusPort) +
       service.mixin.metadata.withNamespace($._config.namespace) +
-      service.mixin.metadata.withLabels({ prometheus: 'k8s' }),
+      service.mixin.metadata.withLabels({ prometheus: $._config.prometheus.name }),
     rules:
       local configMap = k.core.v1.configMap;
 
       configMap.new('prometheus-k8s-rules', ({ 'all.rules.yaml': std.manifestYamlDoc($._config.prometheus.rules) } + $._config.prometheus.renderedRules)) +
-      configMap.mixin.metadata.withLabels({ role: 'alert-rules', prometheus: 'k8s' }) +
+      configMap.mixin.metadata.withLabels({ role: 'alert-rules', prometheus: $._config.prometheus.name }) +
       configMap.mixin.metadata.withNamespace($._config.namespace),
     roleBindingDefault:
       local roleBinding = k.rbac.v1.roleBinding;
 
       roleBinding.new() +
-      roleBinding.mixin.metadata.withName('prometheus-k8s') +
+      roleBinding.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
       roleBinding.mixin.metadata.withNamespace('default') +
       roleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
-      roleBinding.mixin.roleRef.withName('prometheus-k8s') +
+      roleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
       roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
-      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-k8s', namespace: $._config.namespace }]),
+      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
     clusterRole:
       local clusterRole = k.rbac.v1.clusterRole;
       local policyRule = clusterRole.rulesType;
@@ -66,7 +71,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local rules = [nodeMetricsRule, metricsRule];
 
       clusterRole.new() +
-      clusterRole.mixin.metadata.withName('prometheus-k8s') +
+      clusterRole.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
       clusterRole.withRules(rules),
     roleConfig:
       local role = k.rbac.v1.role;
@@ -92,26 +97,26 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       roleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
       roleBinding.mixin.roleRef.withName('prometheus-k8s-config') +
       roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
-      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-k8s', namespace: $._config.namespace }]),
+      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
     roleBindingNamespace:
       local roleBinding = k.rbac.v1.roleBinding;
 
       roleBinding.new() +
-      roleBinding.mixin.metadata.withName('prometheus-k8s') +
+      roleBinding.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
       roleBinding.mixin.metadata.withNamespace($._config.namespace) +
       roleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
-      roleBinding.mixin.roleRef.withName('prometheus-k8s') +
+      roleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
       roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
-      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-k8s', namespace: $._config.namespace }]),
+      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
     clusterRoleBinding:
       local clusterRoleBinding = k.rbac.v1.clusterRoleBinding;
 
       clusterRoleBinding.new() +
-      clusterRoleBinding.mixin.metadata.withName('prometheus-k8s') +
+      clusterRoleBinding.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
       clusterRoleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
-      clusterRoleBinding.mixin.roleRef.withName('prometheus-k8s') +
+      clusterRoleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
       clusterRoleBinding.mixin.roleRef.mixinInstance({ kind: 'ClusterRole' }) +
-      clusterRoleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-k8s', namespace: $._config.namespace }]),
+      clusterRoleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
     roleKubeSystem:
       local role = k.rbac.v1.role;
       local policyRule = role.rulesType;
@@ -127,7 +132,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                        policyRule.withVerbs(['get', 'list', 'watch']);
 
       role.new() +
-      role.mixin.metadata.withName('prometheus-k8s') +
+      role.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
       role.mixin.metadata.withNamespace('kube-system') +
       role.withRules(coreRule),
     roleDefault:
@@ -145,19 +150,19 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                        policyRule.withVerbs(['get', 'list', 'watch']);
 
       role.new() +
-      role.mixin.metadata.withName('prometheus-k8s') +
+      role.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
       role.mixin.metadata.withNamespace('default') +
       role.withRules(coreRule),
     roleBindingKubeSystem:
       local roleBinding = k.rbac.v1.roleBinding;
 
       roleBinding.new() +
-      roleBinding.mixin.metadata.withName('prometheus-k8s') +
+      roleBinding.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
       roleBinding.mixin.metadata.withNamespace('kube-system') +
       roleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
-      roleBinding.mixin.roleRef.withName('prometheus-k8s') +
+      roleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
       roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
-      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-k8s', namespace: $._config.namespace }]),
+      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
     roleNamespace:
       local role = k.rbac.v1.role;
       local policyRule = role.rulesType;
@@ -173,7 +178,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                        policyRule.withVerbs(['get', 'list', 'watch']);
 
       role.new() +
-      role.mixin.metadata.withName('prometheus-k8s') +
+      role.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
       role.mixin.metadata.withNamespace($._config.namespace) +
       role.withRules(coreRule),
     prometheus:
@@ -188,29 +193,29 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         apiVersion: 'monitoring.coreos.com/v1',
         kind: 'Prometheus',
         metadata: {
-          name: 'k8s',
+          name: $._config.prometheus.name,
           namespace: $._config.namespace,
           labels: {
-            prometheus: 'k8s',
+            prometheus: $._config.prometheus.name,
           },
         },
         spec: {
           replicas: $._config.prometheus.replicas,
           version: $._config.versions.prometheus,
           baseImage: $._config.imageRepos.prometheus,
-          serviceAccountName: 'prometheus-k8s',
+          serviceAccountName: 'prometheus-' + $._config.prometheus.name,
           serviceMonitorSelector: selector.withMatchExpressions({ key: 'k8s-app', operator: 'Exists' }),
           nodeSelector: { 'beta.kubernetes.io/os': 'linux' },
           ruleSelector: selector.withMatchLabels({
             role: 'alert-rules',
-            prometheus: 'k8s',
+            prometheus: $._config.prometheus.name,
           }),
           resources: resources,
           alerting: {
             alertmanagers: [
               {
                 namespace: $._config.namespace,
-                name: 'alertmanager-main',
+                name: 'alertmanager-' + $._config.alertmanager.name,
                 port: 'web',
               },
             ],
@@ -231,7 +236,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         spec: {
           selector: {
             matchLabels: {
-              prometheus: 'k8s',
+              prometheus: $._config.prometheus.name,
             },
           },
           namespaceSelector: {
