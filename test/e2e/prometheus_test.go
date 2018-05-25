@@ -676,7 +676,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 			},
 			// First is the creation of the StatefulSet itself, second is the
 			// update of the ReadyReplicas status field
-			ExpectedChanges: 2,
+			ExpectedChanges: 3,
 		},
 		{
 			Name: "service",
