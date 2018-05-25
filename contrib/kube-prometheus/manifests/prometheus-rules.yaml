@@ -253,13 +253,14 @@ data:
     \"API server is erroring for {{ $value }}% of requests.\"\n    \"expr\": |\n      sum(rate(apiserver_request_count{job=\"kube-apiserver\",code=~\"^(?:5..)$\"}[5m]))
     without(instance, pod)\n        /\n      sum(rate(apiserver_request_count{job=\"kube-apiserver\"}[5m]))
     without(instance, pod) * 100 > 5\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\":
-    \"warning\"\n  - \"alert\": \"KubeCertificateExpiration\"\n    \"annotations\":
+    \"warning\"\n  - \"alert\": \"KubeClientCertificateExpiration\"\n    \"annotations\":
     \n      \"message\": \"Kubernetes API certificate is expiring in less than 7 days.\"\n
-    \   \"expr\": |\n      sum(apiserver_client_certificate_expiration_seconds_bucket{job=\"kube-apiserver\",le=\"604800\"})
-    > 0\n    \"labels\": \n      \"severity\": \"warning\"\n  - \"alert\": \"KubeCertificateExpiration\"\n
+    \   \"expr\": |\n      histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job=\"kube-apiserver\"}[5m])))
+    < 604800\n    \"labels\": \n      \"severity\": \"warning\"\n  - \"alert\": \"KubeClientCertificateExpiration\"\n
     \   \"annotations\": \n      \"message\": \"Kubernetes API certificate is expiring
-    in less than 1 day.\"\n    \"expr\": |\n      sum(apiserver_client_certificate_expiration_seconds_bucket{job=\"kube-apiserver\",le=\"86400\"})
-    > 0\n    \"labels\": \n      \"severity\": \"warning\""
+    in less than 1 day.\"\n    \"expr\": |\n      histogram_quantile(0.01, sum by
+    (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job=\"kube-apiserver\"}[5m])))
+    < 86400\n    \"labels\": \n      \"severity\": \"critical\""
 kind: ConfigMap
 metadata:
   labels:
