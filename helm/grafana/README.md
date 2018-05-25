@@ -61,6 +61,8 @@ Parameter | Description | Default
 `storageSpec` | Grafana StorageSpec for persistent data | `{}`
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
+
+```console
 $ helm install coreos/grafana --name my-release --set adminUser=bob
 ```
 
