@@ -153,10 +153,10 @@ https://grafana.com/dashboards/3070
 
 ## Save the dashboard in the configmap
 
-As documented here, [Developing Alerts and Dashboards](developing-alerts-and-dashboards.md), the Grafana instances are stateless. The dashboards are automatically re-loaded from the ConfigMap.
+As documented here, [Developing Alerts and Dashboards](developing-prometheus-rules-and-grafana-dashboards.md), the Grafana instances are stateless. The dashboards are automatically re-loaded from the ConfigMap.
 So if you load a dashboard through the Grafana UI, it won't be kept unless saved in ConfigMap
 
-Read [the document](developing-alerts-and-dashboards.md), but in summary:
+Read [the document](developing-prometheus-rules-and-grafana-dashboards.md), but in summary:
 
 ### Copy your dashboard:
 Once you are happy with the dashboard, export it and move it to `prometheus-operator/contrib/kube-prometheus/assets/grafana/` (ending in "-dashboard.json")

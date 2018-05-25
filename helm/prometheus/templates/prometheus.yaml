@@ -64,8 +64,8 @@ spec:
   serviceMonitorSelector:
 {{ toYaml .Values.serviceMonitorsSelector | indent 4 }}
 {{- else if .Values.prometheusLabelValue }}
-   serviceMonitorSelector:
-     matchLabels:
+  serviceMonitorSelector:
+    matchLabels:
       prometheus: {{ .Values.prometheusLabelValue }}
 {{- end }}
 {{- if .Values.remoteRead }}
