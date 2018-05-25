@@ -334,6 +334,15 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 			}
 		}
 	}
+	if in.ProxyURL != nil {
+		in, out := &in.ProxyURL, &out.ProxyURL
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
+	}
 	return
 }
 

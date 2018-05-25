@@ -133,6 +133,10 @@ spec:
                     description: Name of the service port this endpoint refers to.
                       Mutually exclusive with targetPort.
                     type: string
+                  proxyUrl:
+                    description: ProxyURL eg http://proxyserver:2195 Directs scrapes
+                      to proxy through this endpoint.
+                    type: string
                   scheme:
                     description: HTTP scheme to use for scraping.
                     type: string
