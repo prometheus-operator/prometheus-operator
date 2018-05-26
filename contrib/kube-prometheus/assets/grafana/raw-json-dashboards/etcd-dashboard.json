@@ -526,7 +526,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "process_resident_memory_bytes",
+              "expr": "process_resident_memory_bytes{job=\"etcd\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}} Resident Memory",
