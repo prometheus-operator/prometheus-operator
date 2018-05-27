@@ -58,13 +58,10 @@ spec:
           timeoutSeconds: 1
           successThreshold: 1
           failureThreshold: 10
+        {{- if .Values.resources }}
         resources:
-          requests:
-            memory: 100Mi
-            cpu: 100m
-          limits:
-            memory: 200Mi
-            cpu: 200m
+{{ toYaml .Values.resources | indent 12 }}
+        {{- end }}
       - name: grafana-watcher
         image: {{ .Values.grafanaWatcher.repository }}:{{ .Values.grafanaWatcher.tag }}
         args:
@@ -84,13 +81,10 @@ spec:
             secretKeyRef:
               name: {{ template "grafana.server.fullname" . }}
               key: password
+        {{- if .Values.grafanaWatcher.resources }}
         resources:
-          requests:
-            memory: "16Mi"
-            cpu: "50m"
-          limits:
-            memory: "32Mi"
-            cpu: "100m"
+{{ toYaml .Values.grafanaWatcher.resources | indent 12 }}
+        {{- end }}
         volumeMounts:
           - name: grafana-dashboards
             mountPath: /var/grafana-dashboards
