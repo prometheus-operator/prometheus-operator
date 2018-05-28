@@ -33,10 +33,6 @@
   name = "github.com/go-openapi/spec"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/spf13/pflag"
-
-[[constraint]]
   name = "k8s.io/api"
   version = "kubernetes-1.10.0"
 
