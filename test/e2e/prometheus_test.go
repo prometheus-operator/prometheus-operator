@@ -626,12 +626,11 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 		GetResourceVersion() string
 	}
 
-	// TODO: rename resouceDefinitions
 	resourceDefinitions := []struct {
-		Name            string
-		Getter          func(prometheusName string) (versionedResource, error)
-		Versions        map[string]interface{}
-		ExpectedChanges int
+		Name               string
+		Getter             func(prometheusName string) (versionedResource, error)
+		Versions           map[string]interface{}
+		MaxExpectedChanges int
 	}{
 		{
 			Name: "crd",
@@ -641,7 +640,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					Prometheuses(ns).
 					Get(prometheusName, metav1.GetOptions{})
 			},
-			ExpectedChanges: 1,
+			MaxExpectedChanges: 1,
 		},
 		{
 			Name: "rulesConfigMap",
@@ -652,7 +651,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					ConfigMaps(ns).
 					Get("prometheus-"+prometheusName+"-rules", metav1.GetOptions{})
 			},
-			ExpectedChanges: 1,
+			MaxExpectedChanges: 1,
 		},
 		{
 			Name: "configurationSecret",
@@ -663,7 +662,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					Secrets(ns).
 					Get("prometheus-"+prometheusName, metav1.GetOptions{})
 			},
-			ExpectedChanges: 1,
+			MaxExpectedChanges: 1,
 		},
 		{
 			Name: "statefulset",
@@ -674,9 +673,9 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					StatefulSets(ns).
 					Get("prometheus-"+prometheusName, metav1.GetOptions{})
 			},
-			// First is the creation of the StatefulSet itself, second is the
-			// update of the ReadyReplicas status field
-			ExpectedChanges: 3,
+			// First is the creation of the StatefulSet itself, following is the
+			// update of e.g. the ReadyReplicas status field
+			MaxExpectedChanges: 3,
 		},
 		{
 			Name: "service",
@@ -687,12 +686,12 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					Services(ns).
 					Get("prometheus-operated", metav1.GetOptions{})
 			},
-			ExpectedChanges: 1,
+			MaxExpectedChanges: 1,
 		},
 	}
 
 	// Init Versions maps
-	for i, _ := range resourceDefinitions {
+	for i := range resourceDefinitions {
 		resourceDefinitions[i].Versions = map[string]interface{}{}
 	}
 
@@ -731,7 +730,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 	cancel()
 
 	for _, resource := range resourceDefinitions {
-		if len(resource.Versions) != resource.ExpectedChanges {
+		if len(resource.Versions) > resource.MaxExpectedChanges || len(resource.Versions) < 1 {
 			var previous interface{}
 			for _, version := range resource.Versions {
 				if previous == nil {
@@ -745,7 +744,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 			t.Fatalf(
 				"expected resource %v to be created/updated %v times, but saw %v instead",
 				resource.Name,
-				resource.ExpectedChanges,
+				resource.MaxExpectedChanges,
 				len(resource.Versions),
 			)
 		}
