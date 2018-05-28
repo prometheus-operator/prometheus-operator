@@ -33,7 +33,7 @@ Input Parameters Allowed:
 
 ## Usage
 
-Just execute the .sh under bin/ directory. The output will be placed in the output/ directory.
+Just execute the .sh under bin/ directory. The output will be placed in the output/ directory.  (Note: script does not run on Mac OS.  See Docker example below for those on Mac OS.)
 
 Examples:
 ```bash
@@ -42,6 +42,14 @@ $ bin/grafana_dashboards_generate.sh -o manifests/grafana/grafana-dashboards.yam
 $ bin/grafana_dashboards_generate.sh -s 1000000 --apply-configmap --apply-type replace
 
 # Note: the output file, if provided with -o, shouldn't exist.
+```
+
+Example using docker:
+```bash
+# Run the command from grafana-dashboards-configmap-generator
+$ docker run --rm -it -v <directory where dashboards are located>:/dashboards -v `pwd`:/generator --workdir /generator/bin  ubuntu ./grafana_dashboards_generate.sh -i /dashboards
+
+# Note that output will by default be in the grafana-dashboards-configmap-generator/output folder.
 ```
 
 ## Configuration and options
