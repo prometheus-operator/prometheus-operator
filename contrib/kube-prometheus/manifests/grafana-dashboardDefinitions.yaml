@@ -3868,7 +3868,7 @@ data:
                         "steppedLine": false,
                         "targets": [
                             {
-                                "expr": "sum(irate(container_cpu_usage_seconds_total{namespace=\"$namespace\",pod_name=\"$pod\"}[1m])) by (container_name)",
+                                "expr": "sum(irate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\"}[1m])) by (container_name)",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "legendFormat": "{{container_name}}",
@@ -4097,7 +4097,7 @@ data:
                         ],
                         "targets": [
                             {
-                                "expr": "sum(label_replace(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod_name=\"$pod\"}[5m]), \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container)",
+                                "expr": "sum(label_replace(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\"}[5m]), \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container)",
                                 "format": "table",
                                 "instant": true,
                                 "intervalFactor": 2,
@@ -4228,7 +4228,7 @@ data:
                         "steppedLine": false,
                         "targets": [
                             {
-                                "expr": "sum(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\"}) by (container_name)",
+                                "expr": "sum(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\"}) by (container_name)",
                                 "format": "time_series",
                                 "intervalFactor": 2,
                                 "legendFormat": "{{container_name}}",
@@ -4457,7 +4457,7 @@ data:
                         ],
                         "targets": [
                             {
-                                "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\"}, \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container)",
+                                "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\"}, \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container)",
                                 "format": "table",
                                 "instant": true,
                                 "intervalFactor": 2,
@@ -5003,7 +5003,7 @@ data:
                             "rgba(237, 129, 40, 0.89)",
                             "rgba(245, 54, 54, 0.9)"
                         ],
-                        "datasource": "prometheus",
+                        "datasource": "$datasource",
                         "format": "percent",
                         "gauge": {
                             "maxValue": 100,
@@ -5206,7 +5206,7 @@ data:
                             "rgba(237, 129, 40, 0.89)",
                             "rgba(245, 54, 54, 0.9)"
                         ],
-                        "datasource": "prometheus",
+                        "datasource": "$datasource",
                         "format": "percent",
                         "gauge": {
                             "maxValue": 100,
@@ -6066,7 +6066,7 @@ data:
                             "rgba(237, 129, 40, 0.89)",
                             "#d44a3a"
                         ],
-                        "datasource": "prometheus",
+                        "datasource": "$datasource",
                         "format": "none",
                         "gauge": {
                             "maxValue": 100,
@@ -6145,7 +6145,7 @@ data:
                             "rgba(237, 129, 40, 0.89)",
                             "#d44a3a"
                         ],
-                        "datasource": "prometheus",
+                        "datasource": "$datasource",
                         "format": "none",
                         "gauge": {
                             "maxValue": 100,
@@ -6224,7 +6224,7 @@ data:
                             "rgba(237, 129, 40, 0.89)",
                             "#d44a3a"
                         ],
-                        "datasource": "prometheus",
+                        "datasource": "$datasource",
                         "format": "none",
                         "gauge": {
                             "maxValue": 100,
@@ -6317,7 +6317,7 @@ data:
                             "rgba(237, 129, 40, 0.89)",
                             "#d44a3a"
                         ],
-                        "datasource": "prometheus",
+                        "datasource": "$datasource",
                         "format": "none",
                         "gauge": {
                             "maxValue": 100,
@@ -6397,7 +6397,7 @@ data:
                             "rgba(237, 129, 40, 0.89)",
                             "#d44a3a"
                         ],
-                        "datasource": "prometheus",
+                        "datasource": "$datasource",
                         "format": "none",
                         "gauge": {
                             "maxValue": 100,
@@ -6477,7 +6477,7 @@ data:
                             "rgba(237, 129, 40, 0.89)",
                             "#d44a3a"
                         ],
-                        "datasource": "prometheus",
+                        "datasource": "$datasource",
                         "format": "none",
                         "gauge": {
                             "maxValue": 100,
@@ -6557,7 +6557,7 @@ data:
                             "rgba(237, 129, 40, 0.89)",
                             "#d44a3a"
                         ],
-                        "datasource": "prometheus",
+                        "datasource": "$datasource",
                         "format": "none",
                         "gauge": {
                             "maxValue": 100,

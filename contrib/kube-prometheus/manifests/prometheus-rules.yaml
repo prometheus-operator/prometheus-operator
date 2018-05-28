@@ -49,13 +49,13 @@ data:
     without(instance, pod)) / 1e+06\n    \"labels\": \n      \"quantile\": \"0.5\"\n
     \   \"record\": \"cluster_quantile:scheduler_binding_latency:histogram_quantile\"\n-
     \"name\": \"kube-apiserver.rules\"\n  \"rules\": \n  - \"expr\": |\n      histogram_quantile(0.99,
-    sum(rate(apiserver_request_latencies_bucket{job=\"kube-apiserver\"}[5m])) without(instance,
+    sum(rate(apiserver_request_latencies_bucket{job=\"apiserver\"}[5m])) without(instance,
     pod)) / 1e+06\n    \"labels\": \n      \"quantile\": \"0.99\"\n    \"record\":
     \"cluster_quantile:apiserver_request_latencies:histogram_quantile\"\n  - \"expr\":
-    |\n      histogram_quantile(0.9, sum(rate(apiserver_request_latencies_bucket{job=\"kube-apiserver\"}[5m]))
+    |\n      histogram_quantile(0.9, sum(rate(apiserver_request_latencies_bucket{job=\"apiserver\"}[5m]))
     without(instance, pod)) / 1e+06\n    \"labels\": \n      \"quantile\": \"0.9\"\n
     \   \"record\": \"cluster_quantile:apiserver_request_latencies:histogram_quantile\"\n
-    \ - \"expr\": |\n      histogram_quantile(0.5, sum(rate(apiserver_request_latencies_bucket{job=\"kube-apiserver\"}[5m]))
+    \ - \"expr\": |\n      histogram_quantile(0.5, sum(rate(apiserver_request_latencies_bucket{job=\"apiserver\"}[5m]))
     without(instance, pod)) / 1e+06\n    \"labels\": \n      \"quantile\": \"0.5\"\n
     \   \"record\": \"cluster_quantile:apiserver_request_latencies:histogram_quantile\"\n-
     \"name\": \"node.rules\"\n  \"rules\": \n  - \"expr\": \"sum(min(kube_pod_info)
@@ -122,20 +122,49 @@ data:
     by (node) (\n        (irate(node_network_receive_drop{job=\"node-exporter\",device=\"eth0\"}[1m])
     +\n        irate(node_network_transmit_drop{job=\"node-exporter\",device=\"eth0\"}[1m]))\n
     \     * on (namespace, pod) group_left(node)\n        node_namespace_pod:kube_pod_info:\n
-    \     )\n    \"record\": \"node:node_net_saturation:sum_irate\"\n- \"name\": \"kubernetes-absent\"\n
-    \ \"rules\": \n  - \"alert\": \"KubeAPIDown\"\n    \"annotations\": \n      \"message\":
-    \"KubeAPI has disappeared from Prometheus target discovery.\"\n    \"expr\": |\n
-    \     absent(up{job=\"kube-apiserver\"} == 1)\n    \"for\": \"15m\"\n    \"labels\":
-    \n      \"severity\": \"critical\"\n  - \"alert\": \"KubeControllerManagerDown\"\n
-    \   \"annotations\": \n      \"message\": \"KubeControllerManager has disappeared
-    from Prometheus target discovery.\"\n    \"expr\": |\n      absent(up{job=\"kube-controller-manager\"}
+    \     )\n    \"record\": \"node:node_net_saturation:sum_irate\"\n- \"name\": \"kube-prometheus-node-recording.rules\"\n
+    \ \"rules\": \n  - \"expr\": \"sum(rate(node_cpu{mode!=\\\"idle\\\",mode!=\\\"iowait\\\"}[3m]))
+    BY (instance)\"\n    \"record\": \"instance:node_cpu:rate:sum\"\n  - \"expr\":
+    \"sum((node_filesystem_size{mountpoint=\\\"/\\\"} - node_filesystem_free{mountpoint=\\\"/\\\"}))
+    BY (instance)\"\n    \"record\": \"instance:node_filesystem_usage:sum\"\n  - \"expr\":
+    \"sum(rate(node_network_receive_bytes[3m])) BY (instance)\"\n    \"record\": \"instance:node_network_receive_bytes:rate:sum\"\n
+    \ - \"expr\": \"sum(rate(node_network_transmit_bytes[3m])) BY (instance)\"\n    \"record\":
+    \"instance:node_network_transmit_bytes:rate:sum\"\n  - \"expr\": \"sum(rate(node_cpu{mode!=\\\"idle\\\",mode!=\\\"iowait\\\"}[5m]))
+    WITHOUT (cpu, mode) / ON(instance) GROUP_LEFT() count(sum(node_cpu) BY (instance,
+    cpu)) BY (instance)\"\n    \"record\": \"instance:node_cpu:ratio\"\n  - \"expr\":
+    \"sum(rate(node_cpu{mode!=\\\"idle\\\",mode!=\\\"iowait\\\"}[5m]))\"\n    \"record\":
+    \"cluster:node_cpu:sum_rate5m\"\n  - \"expr\": \"cluster:node_cpu:rate5m / count(sum(node_cpu)
+    BY (instance, cpu))\"\n    \"record\": \"cluster:node_cpu:ratio\"\n- \"name\":
+    \"kubernetes-absent\"\n  \"rules\": \n  - \"alert\": \"AlertmanagerDown\"\n    \"annotations\":
+    \n      \"message\": \"Alertmanager has disappeared from Prometheus target discovery.\"\n
+    \   \"expr\": |\n      absent(up{job=\"alertmanager-main\"} == 1)\n    \"for\":
+    \"15m\"\n    \"labels\": \n      \"severity\": \"critical\"\n  - \"alert\": \"KubeAPIDown\"\n
+    \   \"annotations\": \n      \"message\": \"KubeAPI has disappeared from Prometheus
+    target discovery.\"\n    \"expr\": |\n      absent(up{job=\"apiserver\"} == 1)\n
+    \   \"for\": \"15m\"\n    \"labels\": \n      \"severity\": \"critical\"\n  -
+    \"alert\": \"KubeControllerManagerDown\"\n    \"annotations\": \n      \"message\":
+    \"KubeControllerManager has disappeared from Prometheus target discovery.\"\n
+    \   \"expr\": |\n      absent(up{job=\"kube-controller-manager\"} == 1)\n    \"for\":
+    \"15m\"\n    \"labels\": \n      \"severity\": \"critical\"\n  - \"alert\": \"KubeSchedulerDown\"\n
+    \   \"annotations\": \n      \"message\": \"KubeScheduler has disappeared from
+    Prometheus target discovery.\"\n    \"expr\": |\n      absent(up{job=\"kube-scheduler\"}
     == 1)\n    \"for\": \"15m\"\n    \"labels\": \n      \"severity\": \"critical\"\n
-    \ - \"alert\": \"KubeSchedulerDown\"\n    \"annotations\": \n      \"message\":
-    \"KubeScheduler has disappeared from Prometheus target discovery.\"\n    \"expr\":
-    |\n      absent(up{job=\"kube-scheduler\"} == 1)\n    \"for\": \"15m\"\n    \"labels\":
+    \ - \"alert\": \"KubeStateMetricsDown\"\n    \"annotations\": \n      \"message\":
+    \"KubeStateMetrics has disappeared from Prometheus target discovery.\"\n    \"expr\":
+    |\n      absent(up{job=\"kube-state-metrics\"} == 1)\n    \"for\": \"15m\"\n    \"labels\":
     \n      \"severity\": \"critical\"\n  - \"alert\": \"KubeletDown\"\n    \"annotations\":
     \n      \"message\": \"Kubelet has disappeared from Prometheus target discovery.\"\n
     \   \"expr\": |\n      absent(up{job=\"kubelet\"} == 1)\n    \"for\": \"15m\"\n
+    \   \"labels\": \n      \"severity\": \"critical\"\n  - \"alert\": \"NodeExporterDown\"\n
+    \   \"annotations\": \n      \"message\": \"NodeExporter has disappeared from
+    Prometheus target discovery.\"\n    \"expr\": |\n      absent(up{job=\"node-exporter\"}
+    == 1)\n    \"for\": \"15m\"\n    \"labels\": \n      \"severity\": \"critical\"\n
+    \ - \"alert\": \"PrometheusDown\"\n    \"annotations\": \n      \"message\": \"Prometheus
+    has disappeared from Prometheus target discovery.\"\n    \"expr\": |\n      absent(up{job=\"prometheus-k8s\"}
+    == 1)\n    \"for\": \"15m\"\n    \"labels\": \n      \"severity\": \"critical\"\n
+    \ - \"alert\": \"PrometheusOperatorDown\"\n    \"annotations\": \n      \"message\":
+    \"PrometheusOperator has disappeared from Prometheus target discovery.\"\n    \"expr\":
+    |\n      absent(up{job=\"prometheus-operator\"} == 1)\n    \"for\": \"15m\"\n
     \   \"labels\": \n      \"severity\": \"critical\"\n- \"name\": \"kubernetes-apps\"\n
     \ \"rules\": \n  - \"alert\": \"KubePodCrashLooping\"\n    \"annotations\": \n
     \     \"message\": \"{{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container
@@ -239,28 +268,116 @@ data:
     100\n    \"for\": \"15m\"\n    \"labels\": \n      \"severity\": \"warning\"\n
     \ - \"alert\": \"KubeAPILatencyHigh\"\n    \"annotations\": \n      \"message\":
     \"The API server has a 99th percentile latency of {{ $value }} seconds for {{$labels.verb}}
-    {{$labels.resource}}.\"\n    \"expr\": |\n      cluster_quantile:apiserver_request_latencies:histogram_quantile{job=\"kube-apiserver\",quantile=\"0.99\",subresource!=\"log\",verb!~\"^(?:WATCH|WATCHLIST|PROXY|CONNECT)$\"}
+    {{$labels.resource}}.\"\n    \"expr\": |\n      cluster_quantile:apiserver_request_latencies:histogram_quantile{job=\"apiserver\",quantile=\"0.99\",subresource!=\"log\",verb!~\"^(?:WATCH|WATCHLIST|PROXY|CONNECT)$\"}
     > 1\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\": \"warning\"\n
     \ - \"alert\": \"KubeAPILatencyHigh\"\n    \"annotations\": \n      \"message\":
     \"The API server has a 99th percentile latency of {{ $value }} seconds for {{$labels.verb}}
-    {{$labels.resource}}.\"\n    \"expr\": |\n      cluster_quantile:apiserver_request_latencies:histogram_quantile{job=\"kube-apiserver\",quantile=\"0.99\",subresource!=\"log\",verb!~\"^(?:WATCH|WATCHLIST|PROXY|CONNECT)$\"}
+    {{$labels.resource}}.\"\n    \"expr\": |\n      cluster_quantile:apiserver_request_latencies:histogram_quantile{job=\"apiserver\",quantile=\"0.99\",subresource!=\"log\",verb!~\"^(?:WATCH|WATCHLIST|PROXY|CONNECT)$\"}
     > 4\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\": \"critical\"\n
     \ - \"alert\": \"KubeAPIErrorsHigh\"\n    \"annotations\": \n      \"message\":
-    \"API server is erroring for {{ $value }}% of requests.\"\n    \"expr\": |\n      sum(rate(apiserver_request_count{job=\"kube-apiserver\",code=~\"^(?:5..)$\"}[5m]))
-    without(instance, pod)\n        /\n      sum(rate(apiserver_request_count{job=\"kube-apiserver\"}[5m]))
+    \"API server is erroring for {{ $value }}% of requests.\"\n    \"expr\": |\n      sum(rate(apiserver_request_count{job=\"apiserver\",code=~\"^(?:5..)$\"}[5m]))
+    without(instance, pod)\n        /\n      sum(rate(apiserver_request_count{job=\"apiserver\"}[5m]))
     without(instance, pod) * 100 > 5\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\":
     \"critical\"\n  - \"alert\": \"KubeAPIErrorsHigh\"\n    \"annotations\": \n      \"message\":
-    \"API server is erroring for {{ $value }}% of requests.\"\n    \"expr\": |\n      sum(rate(apiserver_request_count{job=\"kube-apiserver\",code=~\"^(?:5..)$\"}[5m]))
-    without(instance, pod)\n        /\n      sum(rate(apiserver_request_count{job=\"kube-apiserver\"}[5m]))
+    \"API server is erroring for {{ $value }}% of requests.\"\n    \"expr\": |\n      sum(rate(apiserver_request_count{job=\"apiserver\",code=~\"^(?:5..)$\"}[5m]))
+    without(instance, pod)\n        /\n      sum(rate(apiserver_request_count{job=\"apiserver\"}[5m]))
     without(instance, pod) * 100 > 5\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\":
     \"warning\"\n  - \"alert\": \"KubeClientCertificateExpiration\"\n    \"annotations\":
     \n      \"message\": \"Kubernetes API certificate is expiring in less than 7 days.\"\n
-    \   \"expr\": |\n      histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job=\"kube-apiserver\"}[5m])))
+    \   \"expr\": |\n      histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job=\"apiserver\"}[5m])))
     < 604800\n    \"labels\": \n      \"severity\": \"warning\"\n  - \"alert\": \"KubeClientCertificateExpiration\"\n
     \   \"annotations\": \n      \"message\": \"Kubernetes API certificate is expiring
     in less than 1 day.\"\n    \"expr\": |\n      histogram_quantile(0.01, sum by
-    (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job=\"kube-apiserver\"}[5m])))
-    < 86400\n    \"labels\": \n      \"severity\": \"critical\""
+    (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job=\"apiserver\"}[5m])))
+    < 86400\n    \"labels\": \n      \"severity\": \"critical\"\n- \"name\": \"alertmanager.rules\"\n
+    \ \"rules\": \n  - \"alert\": \"AlertmanagerConfigInconsistent\"\n    \"annotations\":
+    \n      \"description\": \"The configuration of the instances of the Alertmanager
+    cluster `{{$labels.service}}` are out of sync.\"\n      \"summary\": \"Configuration
+    out of sync\"\n    \"expr\": |\n      count_values(\"config_hash\", alertmanager_config_hash{job=\"alertmanager-main\"})
+    BY (service) / ON(service) GROUP_LEFT() label_replace(prometheus_operator_alertmanager_spec_replicas{job=\"prometheus-operator\"},
+    \"service\", \"alertmanager-$1\", \"alertmanager\", \"(.*)\") != 1\n    \"for\":
+    \"5m\"\n    \"labels\": \n      \"severity\": \"critical\"\n  - \"alert\": \"AlertmanagerDownOrMissing\"\n
+    \   \"annotations\": \n      \"description\": \"An unexpected number of Alertmanagers
+    are scraped or Alertmanagers disappeared from discovery.\"\n      \"summary\":
+    \"Alertmanager down or missing\"\n    \"expr\": |\n      label_replace(prometheus_operator_alertmanager_spec_replicas{job=\"prometheus-operator\"},
+    \"job\", \"alertmanager-$1\", \"alertmanager\", \"(.*)\") / ON(job) GROUP_RIGHT()
+    sum(up{job=\"alertmanager-main\"}) BY (job) != 1\n    \"for\": \"5m\"\n    \"labels\":
+    \n      \"severity\": \"warning\"\n  - \"alert\": \"AlertmanagerFailedReload\"\n
+    \   \"annotations\": \n      \"description\": \"Reloading Alertmanager's configuration
+    has failed for {{ $labels.namespace }}/{{ $labels.pod}}.\"\n      \"summary\":
+    \"Alertmanager's configuration reload failed\"\n    \"expr\": |\n      alertmanager_config_last_reload_successful{job=\"alertmanager-main\"}
+    == 0\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\": \"warning\"\n-
+    \"name\": \"general.rules\"\n  \"rules\": \n  - \"alert\": \"TargetDown\"\n    \"annotations\":
+    \n      \"description\": \"{{ $value }}% of {{ $labels.job }} targets are down.\"\n
+    \     \"summary\": \"Targets are down\"\n    \"expr\": \"100 * (count(up == 0)
+    BY (job) / count(up) BY (job)) > 10\"\n    \"for\": \"10m\"\n    \"labels\": \n
+    \     \"severity\": \"warning\"\n  - \"alert\": \"DeadMansSwitch\"\n    \"annotations\":
+    \n      \"description\": \"This is a DeadMansSwitch meant to ensure that the entire
+    Alerting pipeline is functional.\"\n      \"summary\": \"Alerting DeadMansSwitch\"\n
+    \   \"expr\": \"vector(1)\"\n    \"labels\": \n      \"severity\": \"none\"\n-
+    \"name\": \"kube-prometheus-node-alerting.rules\"\n  \"rules\": \n  - \"alert\":
+    \"NodeDiskRunningFull\"\n    \"annotations\": \n      \"description\": \"device
+    {{$labels.device}} on node {{$labels.instance}} is running full within the next
+    24 hours (mounted at {{$labels.mountpoint}})\"\n      \"summary\": \"Node disk
+    is running full within 24 hours\"\n    \"expr\": |\n      predict_linear(node_filesystem_free{job=\"node-exporter\"}[6h],
+    3600 * 24) < 0\n    \"for\": \"30m\"\n    \"labels\": \n      \"severity\": \"warning\"\n
+    \ - \"alert\": \"NodeDiskRunningFull\"\n    \"annotations\": \n      \"description\":
+    \"device {{$labels.device}} on node {{$labels.instance}} is running full within
+    the next 2 hours (mounted at {{$labels.mountpoint}})\"\n      \"summary\": \"Node
+    disk is running full within 2 hours\"\n    \"expr\": |\n      predict_linear(node_filesystem_free{job=\"node-exporter\"}[30m],
+    3600 * 2) < 0\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\": \"critical\"\n-
+    \"name\": \"prometheus.rules\"\n  \"rules\": \n  - \"alert\": \"PrometheusConfigReloadFailed\"\n
+    \   \"annotations\": \n      \"description\": \"Reloading Prometheus' configuration
+    has failed for {{$labels.namespace}}/{{$labels.pod}}\"\n      \"summary\": \"Reloading
+    Promehteus' configuration failed\"\n    \"expr\": |\n      prometheus_config_last_reload_successful{job=\"prometheus-k8s\"}
+    == 0\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\": \"warning\"\n
+    \ - \"alert\": \"PrometheusNotificationQueueRunningFull\"\n    \"annotations\":
+    \n      \"description\": \"Prometheus' alert notification queue is running full
+    for {{$labels.namespace}}/{{ $labels.pod}}\"\n      \"summary\": \"Prometheus'
+    alert notification queue is running full\"\n    \"expr\": |\n      predict_linear(prometheus_notifications_queue_length{job=\"prometheus-k8s\"}[5m],
+    60 * 30) > prometheus_notifications_queue_capacity{job=\"prometheus-k8s\"}\n    \"for\":
+    \"10m\"\n    \"labels\": \n      \"severity\": \"warning\"\n  - \"alert\": \"PrometheusErrorSendingAlerts\"\n
+    \   \"annotations\": \n      \"description\": \"Errors while sending alerts from
+    Prometheus {{$labels.namespace}}/{{ $labels.pod}} to Alertmanager {{$labels.Alertmanager}}\"\n
+    \     \"summary\": \"Errors while sending alert from Prometheus\"\n    \"expr\":
+    |\n      rate(prometheus_notifications_errors_total{job=\"prometheus-k8s\"}[5m])
+    / rate(prometheus_notifications_sent_total{job=\"prometheus-k8s\"}[5m]) > 0.01\n
+    \   \"for\": \"10m\"\n    \"labels\": \n      \"severity\": \"warning\"\n  - \"alert\":
+    \"PrometheusErrorSendingAlerts\"\n    \"annotations\": \n      \"description\":
+    \"Errors while sending alerts from Prometheus {{$labels.namespace}}/{{ $labels.pod}}
+    to Alertmanager {{$labels.Alertmanager}}\"\n      \"summary\": \"Errors while
+    sending alerts from Prometheus\"\n    \"expr\": |\n      rate(prometheus_notifications_errors_total{job=\"prometheus-k8s\"}[5m])
+    / rate(prometheus_notifications_sent_total{job=\"prometheus-k8s\"}[5m]) > 0.03\n
+    \   \"for\": \"10m\"\n    \"labels\": \n      \"severity\": \"critical\"\n  -
+    \"alert\": \"PrometheusNotConnectedToAlertmanagers\"\n    \"annotations\": \n
+    \     \"description\": \"Prometheus {{ $labels.namespace }}/{{ $labels.pod}} is
+    not connected to any Alertmanagers\"\n      \"summary\": \"Prometheus is not connected
+    to any Alertmanagers\"\n    \"expr\": |\n      prometheus_notifications_alertmanagers_discovered{job=\"prometheus-k8s\"}
+    < 1\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\": \"warning\"\n
+    \ - \"alert\": \"PrometheusTSDBReloadsFailing\"\n    \"annotations\": \n      \"description\":
+    \"{{$labels.job}} at {{$labels.instance}} had {{$value | humanize}} reload failures
+    over the last four hours.\"\n      \"summary\": \"Prometheus has issues reloading
+    data blocks from disk\"\n    \"expr\": |\n      increase(prometheus_tsdb_reloads_failures_total{job=\"prometheus-k8s\"}[2h])
+    > 0\n    \"for\": \"12h\"\n    \"labels\": \n      \"severity\": \"warning\"\n
+    \ - \"alert\": \"PrometheusTSDBCompactionsFailing\"\n    \"annotations\": \n      \"description\":
+    \"{{$labels.job}} at {{$labels.instance}} had {{$value | humanize}} compaction
+    failures over the last four hours.\"\n      \"summary\": \"Prometheus has issues
+    compacting sample blocks\"\n    \"expr\": |\n      increase(prometheus_tsdb_compactions_failed_total{job=\"prometheus-k8s\"}[2h])
+    > 0\n    \"for\": \"12h\"\n    \"labels\": \n      \"severity\": \"warning\"\n
+    \ - \"alert\": \"PrometheusTSDBWALCorruptions\"\n    \"annotations\": \n      \"description\":
+    \"{{$labels.job}} at {{$labels.instance}} has a corrupted write-ahead log (WAL).\"\n
+    \     \"summary\": \"Prometheus write-ahead log is corrupted\"\n    \"expr\":
+    |\n      tsdb_wal_corruptions_total{job=\"prometheus-k8s\"} > 0\n    \"for\":
+    \"4h\"\n    \"labels\": \n      \"severity\": \"warning\"\n  - \"alert\": \"PrometheusNotIngestingSamples\"\n
+    \   \"annotations\": \n      \"description\": \"Prometheus {{ $labels.namespace
+    }}/{{ $labels.pod}} isn't ingesting samples.\"\n      \"summary\": \"Prometheus
+    isn't ingesting samples\"\n    \"expr\": |\n      rate(prometheus_tsdb_head_samples_appended_total{job=\"prometheus-k8s\"}[5m])
+    <= 0\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\": \"warning\"\n
+    \ - \"alert\": \"PrometheusTargetScapesDuplicate\"\n    \"annotations\": \n      \"description\":
+    \"{{$labels.namespace}}/{{$labels.pod}} has many samples rejected due to duplicate
+    timestamps but different values\"\n      \"summary\": \"Prometheus has many samples
+    rejected\"\n    \"expr\": |\n      increase(prometheus_target_scrapes_sample_duplicate_timestamp_total{job=\"prometheus-k8s\"}[5m])
+    > 0\n    \"for\": \"10m\"\n    \"labels\": \n      \"severity\": \"warning\""
 kind: ConfigMap
 metadata:
   labels:
