@@ -6,7 +6,7 @@ case `uname` in
             b64_opts='-b=0'
             ;; 
         *)
-            b64_opts='--width=0'
+            b64_opts='--wrap=0'
 esac
 
 go get -v -u github.com/cloudflare/cfssl/cmd/...
