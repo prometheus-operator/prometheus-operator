@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+# Detect if we are on mac or should use GNU base64 options
+case `uname` in
+        Darwin)
+            b64_opts='-b=0'
+            ;; 
+        *)
+            b64_opts='--width=0'
+esac
+
 go get -v -u github.com/cloudflare/cfssl/cmd/...
 
 export PURPOSE=metrics
@@ -16,6 +25,6 @@ kind: Secret
 metadata:
   name: cm-adapter-serving-certs
 data:
-  serving.crt: $(cat apiserver.pem | base64 --wrap=0)
-  serving.key: $(cat apiserver-key.pem | base64 --wrap=0)
+  serving.crt: $(cat apiserver.pem | base64 ${b64_opts})
+  serving.key: $(cat apiserver-key.pem | base64 ${b64_opts})
 EOF
