@@ -515,6 +515,66 @@ func TestPrometheusDeprecatedRuleSelectorField(t *testing.T) {
 	}
 }
 
+func TestPrometheusRuleConfigMapMigration(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "my-prometheus"
+	ruleFileName := "my-alerting-rule-file"
+	alertName := "ExampleAlert"
+
+	cm := v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "old-rule-file",
+			Labels: map[string]string{
+				"role": "rulefile",
+			},
+		},
+		Data: map[string]string{
+			ruleFileName: fmt.Sprintf(`
+groups:
+- name: ./alerting.rules
+  rules:
+  - alert: %v
+    expr: vector(1)
+`, alertName),
+		},
+	}
+	framework.KubeClient.CoreV1().ConfigMaps(ns).Create(&cm)
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	// Reset new 'RuleFileSelector' field
+	p.Spec.RuleFileSelector = nil
+	// Specify old 'RuleFile' field
+	p.Spec.RuleSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"role": "rulefile",
+		},
+	}
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		t.Fatal(err)
+	}
+
+	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, pSVC); err != nil {
+		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	if err := framework.WaitForRuleFile(ns, cm.Name+"-"+ruleFileName); err != nil {
+		t.Fatalf("waiting for rule config map to be converted to rule file crd: %v", err)
+	}
+
+	if err := framework.WaitForPrometheusFiringAlert(ns, pSVC.Name, alertName); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestPrometheusMultipleRuleFilesSameNS(t *testing.T) {
 	t.Parallel()
 
@@ -649,7 +709,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					KubeClient.
 					CoreV1().
 					ConfigMaps(ns).
-					Get("prometheus-"+prometheusName+"-rules", metav1.GetOptions{})
+					Get("prometheus-"+prometheusName+"-rulefiles", metav1.GetOptions{})
 			},
 			MaxExpectedChanges: 1,
 		},
@@ -766,7 +826,7 @@ func TestPrometheusWhenDeleteCRDCleanUpViaOwnerReference(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	configMapName := fmt.Sprintf("prometheus-%v-rules", p.Name)
+	configMapName := fmt.Sprintf("prometheus-%v-rulefiles", p.Name)
 
 	_, err := framework.WaitForConfigMapExist(ns, configMapName)
 	if err != nil {

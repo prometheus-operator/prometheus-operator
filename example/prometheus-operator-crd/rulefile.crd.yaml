@@ -305,8 +305,7 @@ spec:
                   and alerting rules.
                 properties:
                   interval:
-                    format: int64
-                    type: integer
+                    type: string
                   name:
                     type: string
                   rules:
@@ -320,8 +319,7 @@ spec:
                         expr:
                           type: string
                         for:
-                          format: int64
-                          type: integer
+                          type: string
                         labels:
                           type: object
                         record:

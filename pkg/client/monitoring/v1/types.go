@@ -15,8 +15,6 @@
 package v1
 
 import (
-	"time"
-
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -440,9 +438,9 @@ type RuleFileSpec struct {
 // RuleGroup is a list of sequentially evaluated recording and alerting rules.
 // +k8s:openapi-gen=true
 type RuleGroup struct {
-	Name     string        `json:"name"`
-	Interval time.Duration `json:"interval,omitempty"`
-	Rules    []Rule        `json:"rules"`
+	Name     string `json:"name"`
+	Interval string `json:"interval,omitempty"`
+	Rules    []Rule `json:"rules"`
 }
 
 // Rule describes an alerting or recording rule.
@@ -451,12 +449,12 @@ type Rule struct {
 	Record      string            `json:"record,omitempty"`
 	Alert       string            `json:"alert,omitempty"`
 	Expr        string            `json:"expr"`
-	For         time.Duration     `json:"for,omitempty"`
+	For         string            `json:"for,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
-// Describes an Alertmanager cluster.
+// Alertmanager describes an Alertmanager cluster.
 // +k8s:openapi-gen=true
 type Alertmanager struct {
 	metav1.TypeMeta `json:",inline"`

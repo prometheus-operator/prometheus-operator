@@ -27,9 +27,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/ghodss/yaml"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 )
 
 func (c *Operator) createOrUpdateRuleFileConfigMap(p *monitoringv1.Prometheus) error {
@@ -158,7 +158,7 @@ func (c *Operator) selectRuleFiles(p *monitoringv1.Prometheus, namespaces []stri
 
 	// sort ruleFiles map
 	filenames := []string{}
-	for k, _ := range ruleFiles {
+	for k := range ruleFiles {
 		filenames = append(filenames, k)
 	}
 	sort.Strings(filenames)
@@ -208,5 +208,5 @@ func checksumRuleFiles(files map[string]string) string {
 }
 
 func prometheusRuleFilesConfigMapName(prometheusName string) string {
-	return "prometheus-" + prometheusName + "-rules"
+	return "prometheus-" + prometheusName + "-rulefiles"
 }
