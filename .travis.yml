@@ -19,7 +19,7 @@ jobs:
   - script: ./scripts/golang-dep-ensure.sh
   # Unit tests
   - script: make test
-  - stage: E2e
+  # E2e tests
     script: ./scripts/travis-e2e.sh
   - script: ./scripts/travis-e2e-helm.sh
   - stage: deploy
