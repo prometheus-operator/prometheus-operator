@@ -301,7 +301,7 @@ func (f *Framework) checkPrometheusFiringAlert(ns, svcName, alertName string) (b
 func (f *Framework) WaitForPrometheusFiringAlert(ns, svcName, alertName string) error {
 	var loopError error
 
-	err := wait.Poll(time.Second, 2*f.DefaultTimeout, func() (bool, error) {
+	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
 		var firing bool
 		firing, loopError = f.checkPrometheusFiringAlert(ns, svcName, alertName)
 		return firing, nil
