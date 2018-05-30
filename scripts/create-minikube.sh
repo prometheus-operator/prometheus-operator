@@ -30,8 +30,8 @@ minikube version
 sudo minikube start \
 	--vm-driver=none \
 	--kubernetes-version=$KUBERNETES_VERSION \
-	--extra-config=apiserver.Authorization.Mode=RBAC \
-	--extra-config=apiserver.feature-gates=CustomResourceSubresources=true
+	--extra-config=apiserver.Authorization.Mode=RBAC # \
+	# --extra-config=apiserver.feature-gates=CustomResourceSubresources=true
 
 minikube update-context
 
