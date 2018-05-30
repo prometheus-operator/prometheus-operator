@@ -11,7 +11,7 @@ metadata:
     {{- if .Values.additionalRulesConfigMapLabels }}
 {{ toYaml .Values.additionalRulesConfigMapLabels | indent 4 }}
     {{- end }}    
-  name: {{ template "prometheus.fullname" . }}
+  name: {{ template "prometheus.fullname" . }}-rules
 data:
 {{- if .Values.prometheusRules }}
 {{- $root := . }}
