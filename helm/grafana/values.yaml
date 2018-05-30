@@ -40,6 +40,8 @@ mountGrafanaConfig: false
 adminUser: "admin"
 adminPassword: "admin"
 
+server_root_url: "%(protocol)s://%(domain)s:%(http_port)s/"
+
 service:
 
   ## Annotations to be added to the Service

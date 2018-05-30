@@ -23,6 +23,8 @@ spec:
       - name: grafana
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         env:
+        - name: GF_SERVER_ROOT_URL
+          value: "{{ .Values.server_root_url }}"
         - name: GF_AUTH_BASIC_ENABLED
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ENABLED
