@@ -59,6 +59,7 @@ Parameter | Description | Default
 `service.nodePort` | Port to expose Grafana Service on each node | `30902`
 `service.type` | Grafana Service type | `ClusterIP`
 `storageSpec` | Grafana StorageSpec for persistent data | `{}`
+`resources` | Pod resource requests & limits | `{}`
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 $ helm install coreos/grafana --name my-release --set adminUser=bob
