@@ -541,6 +541,13 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								},
 							},
 						},
+						"proxyUrl": {
+							SchemaProps: spec.SchemaProps{
+								Description: "ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
 					},
 				},
 			},

@@ -233,6 +233,9 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	if ep.Path != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: ep.Path})
 	}
+	if ep.ProxyURL != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: ep.ProxyURL})
+	}
 	if ep.Params != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: ep.Params})
 	}
