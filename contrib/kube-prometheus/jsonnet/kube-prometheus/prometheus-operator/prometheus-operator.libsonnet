@@ -6,10 +6,14 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
     versions+:: {
       prometheusOperator: 'v0.19.0',
+      configmapReloader: 'v0.0.1',
+      prometheusConfigReloader: 'v0.0.4',
     },
 
     imageRepos+:: {
       prometheusOperator: 'quay.io/coreos/prometheus-operator',
+      configmapReloader: 'quay.io/coreos/configmap-reload',
+      prometheusConfigReloader: 'quay.io/coreos/prometheus-config-reloader',
     },
   },
 
@@ -119,7 +123,11 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local operatorContainer =
         container.new('prometheus-operator', $._config.imageRepos.prometheusOperator + ':' + $._config.versions.prometheusOperator) +
         container.withPorts(containerPort.newNamed('http', targetPort)) +
-        container.withArgs(['--kubelet-service=kube-system/kubelet', '--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1']) +
+        container.withArgs([
+          '--kubelet-service=kube-system/kubelet',
+          '--config-reloader-image=' + $._config.imageRepos.configmapReloader + ':' + $._config.versions.configmapReloader,
+          '--prometheus-config-reloader=' + $._config.imageRepos.prometheusConfigReloader + ':' + $._config.versions.prometheusConfigReloader,
+        ]) +
         container.mixin.resources.withRequests({ cpu: '100m', memory: '50Mi' }) +
         container.mixin.resources.withLimits({ cpu: '200m', memory: '100Mi' });
 
