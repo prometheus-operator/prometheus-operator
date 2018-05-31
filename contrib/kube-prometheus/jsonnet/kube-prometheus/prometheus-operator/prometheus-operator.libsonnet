@@ -37,13 +37,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local clusterRole = k.rbac.v1.clusterRole;
       local policyRule = clusterRole.rulesType;
 
-      local extensionsRule = policyRule.new() +
-                             policyRule.withApiGroups(['extensions']) +
-                             policyRule.withResources([
-                               'thirdpartyresources',
-                             ]) +
-                             policyRule.withVerbs(['*']);
-
       local apiExtensionsRule = policyRule.new() +
                                 policyRule.withApiGroups(['apiextensions.k8s.io']) +
                                 policyRule.withResources([
@@ -106,7 +99,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                             ]) +
                             policyRule.withVerbs(['list', 'watch']);
 
-      local rules = [extensionsRule, apiExtensionsRule, monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
+      local rules = [apiExtensionsRule, monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
 
       clusterRole.new() +
       clusterRole.mixin.metadata.withName('prometheus-operator') +

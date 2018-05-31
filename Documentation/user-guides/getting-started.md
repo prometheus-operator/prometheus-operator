@@ -35,12 +35,6 @@ metadata:
   name: prometheus-operator
 rules:
 - apiGroups:
-  - extensions
-  resources:
-  - thirdpartyresources
-  verbs:
-  - "*"
-- apiGroups:
   - apiextensions.k8s.io
   resources:
   - customresourcedefinitions
