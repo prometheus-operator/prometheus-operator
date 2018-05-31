@@ -21,12 +21,6 @@ metadata:
   name: prometheus-operator
 rules:
 - apiGroups:
-  - extensions
-  resources:
-  - thirdpartyresources
-  verbs:
-  - "*"
-- apiGroups:
   - apiextensions.k8s.io
   resources:
   - customresourcedefinitions
@@ -71,9 +65,9 @@ rules:
 
 > Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus Operator `Pod`. The `ServiceAccount` used by the Prometheus Operator `Pod` can be specified in the `Deployment` object used to deploy it.
 
-When the Prometheus Operator boots up for the first time it registers the `thirdpartyresources` it uses, therefore the `create` action on those is required.
+When the Prometheus Operator boots up for the first time it registers the `customresourcedefinitions` it uses, therefore the `create` action on those is required.
 
-As the Prometheus Operator works extensively with the `thirdpartyresources` it registers, it requires all actions on those objects. Those are:
+As the Prometheus Operator works extensively with the `customresourcedefinitions` it registers, it requires all actions on those objects. Those are:
 
 * `alertmanagers`
 * `prometheuses`
