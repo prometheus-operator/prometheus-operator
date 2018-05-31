@@ -730,6 +730,12 @@ func (c *Operator) sync(key string) error {
 
 	level.Info(c.logger).Log("msg", "sync prometheus", "key", key)
 
+	// TODO: Remove migration with Prometheus Operator v0.21.0
+	err = c.migrateRuleConfigMapsToRuleFileCRDs(p)
+	if err != nil {
+		return err
+	}
+
 	err = c.createOrUpdateRuleFileConfigMap(p)
 	if err != nil {
 		return err

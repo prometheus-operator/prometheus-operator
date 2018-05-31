@@ -56,7 +56,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Alertmanager": {
 			Schema: spec.Schema{
 				SchemaProps: spec.SchemaProps{
-					Description: "Describes an Alertmanager cluster.",
+					Description: "Alertmanager describes an Alertmanager cluster.",
 					Properties: map[string]spec.Schema{
 						"kind": {
 							SchemaProps: spec.SchemaProps{
@@ -1237,8 +1237,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 						},
 						"for": {
 							SchemaProps: spec.SchemaProps{
-								Type:   []string{"integer"},
-								Format: "int64",
+								Type:   []string{"string"},
+								Format: "",
 							},
 						},
 						"labels": {
@@ -1393,8 +1393,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 						},
 						"interval": {
 							SchemaProps: spec.SchemaProps{
-								Type:   []string{"integer"},
-								Format: "int64",
+								Type:   []string{"string"},
+								Format: "",
 							},
 						},
 						"rules": {

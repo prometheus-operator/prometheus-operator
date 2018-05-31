@@ -49,7 +49,7 @@ AlertingSpec defines parameters for alerting configuration of Prometheus servers
 
 ## Alertmanager
 
-Describes an Alertmanager cluster.
+Alertmanager describes an Alertmanager cluster.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -311,7 +311,7 @@ Rule describes an alerting or recording rule.
 | record |  | string | false |
 | alert |  | string | false |
 | expr |  | string | true |
-| for |  | time.Duration | false |
+| for |  | string | false |
 | labels |  | map[string]string | false |
 | annotations |  | map[string]string | false |
 
@@ -356,7 +356,7 @@ RuleGroup is a list of sequentially evaluated recording and alerting rules.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | name |  | string | true |
-| interval |  | time.Duration | false |
+| interval |  | string | false |
 | rules |  | [][Rule](#rule) | true |
 
 [Back to TOC](#table-of-contents)

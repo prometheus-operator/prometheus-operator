@@ -11,7 +11,7 @@ spec:
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: Describes an Alertmanager cluster.
+      description: Alertmanager describes an Alertmanager cluster.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation

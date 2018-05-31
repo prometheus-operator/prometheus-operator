@@ -45,8 +45,7 @@ e2e-test:
 e2e-status:
 	kubectl get prometheus,alertmanager,servicemonitor,statefulsets,deploy,svc,endpoints,pods,cm,secrets,replicationcontrollers --all-namespaces
 
-e2e:
-	$(MAKE) container
+e2e: container
 	$(MAKE) e2e-test
 
 e2e-helm:
