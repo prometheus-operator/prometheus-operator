@@ -119,7 +119,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local operatorContainer =
         container.new('prometheus-operator', $._config.imageRepos.prometheusOperator + ':' + $._config.versions.prometheusOperator) +
         container.withPorts(containerPort.newNamed('http', targetPort)) +
-        container.withArgs(['--kubelet-service=kube-system/kubelet', '--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1']) +
+        container.withArgs(['--kubelet-service=kube-system/kubelet', '--config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1', '--prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.0.4']) +
         container.mixin.resources.withRequests({ cpu: '100m', memory: '50Mi' }) +
         container.mixin.resources.withLimits({ cpu: '200m', memory: '100Mi' });
 
