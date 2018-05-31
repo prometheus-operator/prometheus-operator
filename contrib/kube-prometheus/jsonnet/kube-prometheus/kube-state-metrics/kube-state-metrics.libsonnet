@@ -254,11 +254,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
               'k8s-app': 'kube-state-metrics',
             },
           },
-          namespaceSelector: {
-            matchNames: [
-              'monitoring',
-            ],
-          },
           endpoints: [
             {
               port: 'https-main',

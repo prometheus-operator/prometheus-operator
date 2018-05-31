@@ -546,9 +546,6 @@ spec:
     tlsConfig:
       insecureSkipVerify: true
   jobLabel: k8s-app
-  namespaceSelector:
-    matchNames:
-    - monitoring
   selector:
     matchLabels:
       k8s-app: kube-state-metrics
@@ -572,9 +569,6 @@ spec:
     tlsConfig:
       insecureSkipVerify: true
   jobLabel: k8s-app
-  namespaceSelector:
-    matchNames:
-    - monitoring
   selector:
     matchLabels:
       k8s-app: node-exporter

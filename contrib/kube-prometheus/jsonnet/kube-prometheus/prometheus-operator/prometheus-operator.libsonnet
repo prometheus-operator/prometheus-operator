@@ -149,5 +149,29 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       service.mixin.metadata.withLabels({ 'k8s-app': 'prometheus-operator' }) +
       service.mixin.metadata.withNamespace($._config.namespace) +
       service.mixin.spec.withClusterIp('None'),
+    serviceMonitor:
+      {
+        apiVersion: 'monitoring.coreos.com/v1',
+        kind: 'ServiceMonitor',
+        metadata: {
+          name: 'prometheus-operator',
+          namespace: $._config.namespace,
+          labels: {
+            'k8s-app': 'prometheus-operator',
+          },
+        },
+        spec: {
+          endpoints: [
+            {
+              port: 'http',
+            },
+          ],
+          selector: {
+            matchLabels: {
+              'k8s-app': 'prometheus-operator',
+            },
+          },
+        },
+      },
   },
 }

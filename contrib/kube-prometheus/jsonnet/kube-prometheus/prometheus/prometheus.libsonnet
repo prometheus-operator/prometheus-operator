@@ -222,7 +222,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           },
         },
       },
-    serviceMonitorPrometheus:
+    serviceMonitor:
       {
         apiVersion: 'monitoring.coreos.com/v1',
         kind: 'ServiceMonitor',
@@ -239,41 +239,12 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
               prometheus: $._config.prometheus.name,
             },
           },
-          namespaceSelector: {
-            matchNames: [
-              'monitoring',
-            ],
-          },
           endpoints: [
             {
               port: 'web',
               interval: '30s',
             },
           ],
-        },
-      },
-    serviceMonitorPrometheusOperator:
-      {
-        apiVersion: 'monitoring.coreos.com/v1',
-        kind: 'ServiceMonitor',
-        metadata: {
-          name: 'prometheus-operator',
-          namespace: $._config.namespace,
-          labels: {
-            'k8s-app': 'prometheus-operator',
-          },
-        },
-        spec: {
-          endpoints: [
-            {
-              port: 'http',
-            },
-          ],
-          selector: {
-            matchLabels: {
-              'k8s-app': 'prometheus-operator',
-            },
-          },
         },
       },
     serviceMonitorKubeScheduler:

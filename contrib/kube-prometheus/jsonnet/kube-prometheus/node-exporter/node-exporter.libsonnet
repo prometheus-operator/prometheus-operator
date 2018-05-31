@@ -134,11 +134,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
               'k8s-app': 'node-exporter',
             },
           },
-          namespaceSelector: {
-            matchNames: [
-              'monitoring',
-            ],
-          },
           endpoints: [
             {
               port: 'https',
