@@ -61,11 +61,6 @@ local alertmanagerConfig = "\nglobal:\n  resolve_timeout: 5m\nroute:\n  group_by
               alertmanager: $._config.alertmanager.name,
             },
           },
-          namespaceSelector: {
-            matchNames: [
-              'monitoring',
-            ],
-          },
           endpoints: [
             {
               port: 'web',
