@@ -68,6 +68,10 @@ spec:
     matchLabels:
       prometheus: {{ .Values.prometheusLabelValue }}
 {{- end }}
+{{- if .Values.serviceMonitorNamespaceSelector }}
+  serviceMonitorNamespaceSelector:
+{{ toYaml .Values.serviceMonitorNamespaceSelector | indent 4 }}
+{{- end }}
 {{- if .Values.remoteRead }}
   remoteRead:
 {{ toYaml .Values.remoteRead | indent 4 }}
