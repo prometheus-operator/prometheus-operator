@@ -1105,15 +1105,6 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 }
 
 func (c *Operator) createCRDs() error {
-	_, pErr := c.mclient.MonitoringV1().Prometheuses(c.config.Namespace).List(metav1.ListOptions{})
-	_, sErr := c.mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).List(metav1.ListOptions{})
-	_, rErr := c.mclient.MonitoringV1().RuleFiles(c.config.Namespace).List(metav1.ListOptions{})
-	if pErr == nil && sErr == nil && rErr == nil {
-		// If Prometheus, RuleFile and ServiceMonitor objects are already registered, we
-		// won't attempt to do so again.
-		return nil
-	}
-
 	crds := []*extensionsobj.CustomResourceDefinition{
 		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.Prometheus, c.config.CrdGroup, c.config.Labels.LabelsMap, c.config.EnableValidation),
 		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.ServiceMonitor, c.config.CrdGroup, c.config.Labels.LabelsMap, c.config.EnableValidation),
@@ -1123,10 +1114,23 @@ func (c *Operator) createCRDs() error {
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()
 
 	for _, crd := range crds {
-		if _, err := crdClient.Create(crd); err != nil && !apierrors.IsAlreadyExists(err) {
-			return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
+		oldCRD, err := crdClient.Get(crd.Name, metav1.GetOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return errors.Wrapf(err, "getting CRD: %s", crd.Spec.Names.Kind)
 		}
-		level.Info(c.logger).Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
+		if apierrors.IsNotFound(err) {
+			if _, err := crdClient.Create(crd); err != nil {
+				return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
+			}
+			level.Info(c.logger).Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
+		}
+		if err == nil {
+			crd.ResourceVersion = oldCRD.ResourceVersion
+			if _, err := crdClient.Update(crd); err != nil {
+				return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
+			}
+			level.Info(c.logger).Log("msg", "CRD updated", "crd", crd.Spec.Names.Kind)
+		}
 	}
 
 	crdListFuncs := []struct {
