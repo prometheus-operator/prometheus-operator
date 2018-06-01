@@ -339,3 +339,4 @@ additionalScrapeConfigs: []
 #   - targets:
 #     - "localhost:9090"
 
+serviceMonitorNamespaceSelector: {}
