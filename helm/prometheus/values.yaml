@@ -4,7 +4,7 @@
 alertingEndpoints: []
 #   - name: ""
 #     namespace: ""
-#     port: 9093
+#     port: http
 #     scheme: http
 
 ## Prometheus configuration directives
