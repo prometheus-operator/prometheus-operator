@@ -63,10 +63,10 @@ spec:
 {{- else if .Values.serviceMonitorsSelector }}
   serviceMonitorSelector:
 {{ toYaml .Values.serviceMonitorsSelector | indent 4 }}
-{{- else if .Values.prometheusLabelValue }}
+{{- else }}
   serviceMonitorSelector:
     matchLabels:
-      prometheus: {{ .Values.prometheusLabelValue }}
+      prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
 {{- end }}
 {{- if .Values.serviceMonitorNamespaceSelector }}
   serviceMonitorNamespaceSelector:
