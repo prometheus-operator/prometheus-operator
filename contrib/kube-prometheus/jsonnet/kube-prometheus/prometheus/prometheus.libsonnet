@@ -40,11 +40,21 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       service.mixin.metadata.withNamespace($._config.namespace) +
       service.mixin.metadata.withLabels({ prometheus: $._config.prometheus.name }),
     rules:
-      local configMap = k.core.v1.configMap;
-
-      configMap.new('prometheus-' + $._config.prometheus.name + '-rules', ({ 'all.rules.yaml': std.manifestYamlDoc($._config.prometheus.rules) } + $._config.prometheus.renderedRules)) +
-      configMap.mixin.metadata.withLabels({ role: 'alert-rules', prometheus: $._config.prometheus.name }) +
-      configMap.mixin.metadata.withNamespace($._config.namespace),
+      {
+        apiVersion: 'monitoring.coreos.com/v1',
+        kind: 'RuleFile',
+        metadata: {
+          labels: {
+            prometheus: $._config.prometheus.name,
+            role: 'alert-rules',
+          },
+          name: 'prometheus-' + $._config.prometheus.name + '-rules',
+          namespace: $._config.namespace,
+        },
+        spec: {
+          groups: $._config.prometheus.rules.groups,
+        },
+      },
     roleBindingDefault:
       local roleBinding = k.rbac.v1.roleBinding;
 
