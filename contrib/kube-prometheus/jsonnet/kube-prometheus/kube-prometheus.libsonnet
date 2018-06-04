@@ -1,4 +1,5 @@
 local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
+local configMapList = k.core.v1.configMapList;
 
 (import 'grafana/grafana.libsonnet') +
 (import 'kube-state-metrics/kube-state-metrics.libsonnet') +
@@ -11,6 +12,9 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 (import 'rules/rules.libsonnet') + {
   kubePrometheus+:: {
     namespace: k.core.v1.namespace.new($._config.namespace),
+  },
+  grafana+:: {
+    dashboardDefinitions: configMapList.new(super.dashboardDefinitions),
   },
 } + {
   _config+:: {
