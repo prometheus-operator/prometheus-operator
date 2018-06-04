@@ -60,6 +60,7 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
+        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.0.4
         image: quay.io/coreos/prometheus-operator:v0.19.0
         name: prometheus-operator
         ports:
@@ -545,9 +546,6 @@ spec:
     tlsConfig:
       insecureSkipVerify: true
   jobLabel: k8s-app
-  namespaceSelector:
-    matchNames:
-    - monitoring
   selector:
     matchLabels:
       k8s-app: kube-state-metrics
@@ -571,9 +569,6 @@ spec:
     tlsConfig:
       insecureSkipVerify: true
   jobLabel: k8s-app
-  namespaceSelector:
-    matchNames:
-    - monitoring
   selector:
     matchLabels:
       k8s-app: node-exporter
