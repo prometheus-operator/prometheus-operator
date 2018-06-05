@@ -11,7 +11,7 @@ spec:
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: Prometheus defines a Prometheus deployment.
+      # description: Prometheus defines a Prometheus deployment.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
