@@ -49,7 +49,7 @@ func (c *Operator) migrateRuleConfigMapsToRuleFileCRDs(p *monitoringv1.Prometheu
 
 	ruleFiles := []monitoringv1.RuleFile{}
 	for _, cm := range configMaps {
-		files, err := cmToRuleFiles(cm)
+		files, err := CMToRuleFiles(cm)
 		if err != nil {
 			return err
 		}
@@ -105,7 +105,10 @@ func (c *Operator) getRuleCMs(ns string, cmLabelSelector *metav1.LabelSelector) 
 	return configMaps, nil
 }
 
-func cmToRuleFiles(cm *v1.ConfigMap) ([]monitoringv1.RuleFile, error) {
+// CMToRuleFiles takes a rule config map and transforms it to possibly multiple
+// rule file crds. It is used in `cmd/po-rule-cm-to-rule-file-crds`. Thereby it
+// needs to be public.
+func CMToRuleFiles(cm *v1.ConfigMap) ([]monitoringv1.RuleFile, error) {
 	ruleFiles := []monitoringv1.RuleFile{}
 
 	for name, content := range cm.Data {
@@ -120,6 +123,11 @@ func cmToRuleFiles(cm *v1.ConfigMap) ([]monitoringv1.RuleFile, error) {
 		}
 
 		ruleFile := monitoringv1.RuleFile{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       monitoringv1.RuleFilesKind,
+				APIVersion: monitoringv1.Group + "/" + monitoringv1.Version,
+			},
+
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      cm.Name + "-" + name,
 				Namespace: cm.Namespace,
