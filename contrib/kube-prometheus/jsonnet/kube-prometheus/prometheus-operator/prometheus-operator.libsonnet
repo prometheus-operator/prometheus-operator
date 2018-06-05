@@ -7,7 +7,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     versions+:: {
       prometheusOperator: 'v0.19.0',
       configmapReloader: 'v0.0.1',
-      prometheusConfigReloader: 'v0.0.4',
     },
 
     imageRepos+:: {
@@ -52,6 +51,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                                'prometheuses/finalizers',
                                'alertmanagers/finalizers',
                                'servicemonitors',
+                               'rulefiles',
                              ]) +
                              policyRule.withVerbs(['*']);
 
@@ -119,7 +119,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         container.withArgs([
           '--kubelet-service=kube-system/kubelet',
           '--config-reloader-image=' + $._config.imageRepos.configmapReloader + ':' + $._config.versions.configmapReloader,
-          '--prometheus-config-reloader=' + $._config.imageRepos.prometheusConfigReloader + ':' + $._config.versions.prometheusConfigReloader,
+          '--prometheus-config-reloader=' + $._config.imageRepos.prometheusConfigReloader + ':' + $._config.versions.prometheusOperator,
         ]) +
         container.mixin.resources.withRequests({ cpu: '100m', memory: '50Mi' }) +
         container.mixin.resources.withLimits({ cpu: '200m', memory: '100Mi' });
