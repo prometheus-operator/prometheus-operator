@@ -424,7 +424,7 @@ inhibit_rules:
 	p.Spec.EvaluationInterval = "100ms"
 	framework.AddAlertingToPrometheus(p, ns, alertmanager.Name)
 
-	_, err = framework.MakeAndCreateFiringRuleFile(ns, p.Name, alertName)
+	_, err = framework.MakeAndCreateFiringRule(ns, p.Name, alertName)
 	if err != nil {
 		t.Fatal(err)
 	}

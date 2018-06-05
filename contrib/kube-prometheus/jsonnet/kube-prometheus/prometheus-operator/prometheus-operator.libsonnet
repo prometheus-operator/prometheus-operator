@@ -5,9 +5,8 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     namespace: 'default',
 
     versions+:: {
-      prometheusOperator: 'v0.19.0',
+      prometheusOperator: 'v0.20.0',
       configmapReloader: 'v0.0.1',
-      prometheusConfigReloader: 'v0.0.4',
     },
 
     imageRepos+:: {
@@ -22,6 +21,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     '0alertmanagerCustomResourceDefinition': import 'alertmanager-crd.libsonnet',
     '0prometheusCustomResourceDefinition': import 'prometheus-crd.libsonnet',
     '0servicemonitorCustomResourceDefinition': import 'servicemonitor-crd.libsonnet',
+    '0prometheusruleCustomResourceDefinition': import 'prometheusrule-crd.libsonnet',
 
     clusterRoleBinding:
       local clusterRoleBinding = k.rbac.v1.clusterRoleBinding;
@@ -52,6 +52,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                                'prometheuses/finalizers',
                                'alertmanagers/finalizers',
                                'servicemonitors',
+                               'prometheusrules',
                              ]) +
                              policyRule.withVerbs(['*']);
 
@@ -119,7 +120,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         container.withArgs([
           '--kubelet-service=kube-system/kubelet',
           '--config-reloader-image=' + $._config.imageRepos.configmapReloader + ':' + $._config.versions.configmapReloader,
-          '--prometheus-config-reloader=' + $._config.imageRepos.prometheusConfigReloader + ':' + $._config.versions.prometheusConfigReloader,
+          '--prometheus-config-reloader=' + $._config.imageRepos.prometheusConfigReloader + ':' + $._config.versions.prometheusOperator,
         ]) +
         container.mixin.resources.withRequests({ cpu: '100m', memory: '50Mi' }) +
         container.mixin.resources.withLimits({ cpu: '200m', memory: '100Mi' });

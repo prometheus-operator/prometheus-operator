@@ -48,7 +48,7 @@ rules:
   - prometheuses/finalizers
   - alertmanagers/finalizers
   - servicemonitors
-  - rulefiles
+  - prometheusrules
   verbs:
   - "*"
 - apiGroups:
@@ -101,7 +101,7 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        image: quay.io/coreos/prometheus-operator:v0.19.0
+        image: quay.io/coreos/prometheus-operator:v0.20.0
         name: prometheus-operator
         ports:
         - containerPort: 8080

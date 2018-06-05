@@ -17,11 +17,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	crdutils "github.com/ant31/crd-validation/pkg"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	k8sutil "github.com/coreos/prometheus-operator/pkg/k8sutil"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	"os"
 )
 
 var (
@@ -45,7 +46,7 @@ func initFlags(crdkind monitoringv1.CrdKind, flagset *flag.FlagSet) *flag.FlagSe
 func init() {
 	var command *flag.FlagSet
 	if len(os.Args) == 1 {
-		fmt.Println("usage: po-crdgen [prometheus | alertmanager | servicemonitor | rulefile] [<options>]")
+		fmt.Println("usage: po-crdgen [prometheus | alertmanager | servicemonitor | prometheusrule] [<options>]")
 		os.Exit(1)
 	}
 	switch os.Args[1] {
@@ -55,10 +56,10 @@ func init() {
 		command = initFlags(monitoringv1.DefaultCrdKinds.ServiceMonitor, flag.NewFlagSet("servicemonitor", flag.ExitOnError))
 	case "alertmanager":
 		command = initFlags(monitoringv1.DefaultCrdKinds.Alertmanager, flag.NewFlagSet("alertmanager", flag.ExitOnError))
-	case "rulefile":
-		command = initFlags(monitoringv1.DefaultCrdKinds.RuleFile, flag.NewFlagSet("rulefile", flag.ExitOnError))
+	case "prometheusrule":
+		command = initFlags(monitoringv1.DefaultCrdKinds.PrometheusRule, flag.NewFlagSet("prometheusrule", flag.ExitOnError))
 	default:
-		fmt.Printf("%q is not valid command.\n choices: [prometheus, alertmanager, servicemonitor, rulefile]", os.Args[1])
+		fmt.Printf("%q is not valid command.\n choices: [prometheus, alertmanager, servicemonitor, prometheusrule]", os.Args[1])
 		os.Exit(2)
 	}
 	command.Parse(os.Args[2:])

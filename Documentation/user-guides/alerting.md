@@ -51,7 +51,7 @@ receivers:
 
 Save the above Alertmanager config in a file called `alertmanager.yaml` and create a secret from it using `kubectl`.
 
-Alertmanager instances require the secret resource naming for follow the format
+Alertmanager instances require the secret resource naming to follow the format
 `alertmanager-{ALERTMANAGER_NAME}`. In the previous example, the name of the Alertmanager is `example`, so the secret name must be `alertmanager-example`, and the name of the config file `alertmanager.yaml`
 
 ```bash
@@ -121,7 +121,7 @@ spec:
   serviceMonitorSelector:
     matchLabels:
       team: frontend
-  ruleSelector:
+  ruleFileSelector:
     matchLabels:
       role: alert-rules
       prometheus: example
@@ -129,29 +129,29 @@ spec:
 
 The above configuration specifies a `Prometheus` that finds all of the Alertmanagers behind the `Service` created with `alertmanager-example-service.yaml`. The `alertmanagers` `name` and `port` fields should match those of the `Service` to allow this to occur.
 
-Prometheus rule files are held in ConfigMaps. Use the label selector field `ruleSelector` in the Prometheus object to define the ConfigMaps from which rule files will be mounted. All top level files that end with the `.rules` extension will be loaded.
+Prometheus rule files are held in `RuleFile` custom resources. Use the label selector field `ruleFileSelector` in the Prometheus object to define the rule files that you want to be mounted into Prometheus.
 
-The best practice is to label the `ConfigMap`s containing rule files with `role: alert-rules` as well as the name of the Prometheus object, `prometheus: example` in this case.
+The best practice is to label the `RuleFile`s containing rule files with `role: alert-rules` as well as the name of the Prometheus object, `prometheus: example` in this case.
 
 [embedmd]:# (../../example/user-guides/alerting/prometheus-example-rules.yaml)
 ```yaml
-kind: ConfigMap
-apiVersion: v1
+apiVersion: monitoring.coreos.com/v1
+kind: RuleFile
 metadata:
-  name: prometheus-example-rules
+  creationTimestamp: null
   labels:
-    role: alert-rules
     prometheus: example
-data:
-  example.rules.yaml: |+
-    groups:
-    - name: ./example.rules
-      rules:
-      - alert: ExampleAlert
-        expr: vector(1)
+    role: alert-rules
+  name: prometheus-example-rules
+spec:
+  groups:
+  - name: ./example.rules
+    rules:
+    - alert: ExampleAlert
+      expr: vector(1)
 ```
 
-That example `ConfigMap` always immediately triggers an alert, which is only for demonstration purposes. To validate that everything is working properly have a look at each of the Prometheus web UIs.
+The example `RuleFile` always immediately triggers an alert, which is only for demonstration purposes. To validate that everything is working properly have a look at each of the Prometheus web UIs.
 
 Use kubectl's proxy functionality to view the web UI without a Service.
 

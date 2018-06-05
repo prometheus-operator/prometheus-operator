@@ -30,7 +30,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (c *Operator) migrateRuleConfigMapsToRuleFileCRDs(p *monitoringv1.Prometheus) error {
+func (c *Operator) migrateRuleConfigMapsToRuleCRDs(p *monitoringv1.Prometheus) error {
 	configMaps, err := c.getRuleCMs(p.Namespace, p.Spec.RuleSelector)
 	if err != nil {
 		return err
@@ -47,32 +47,32 @@ func (c *Operator) migrateRuleConfigMapsToRuleFileCRDs(p *monitoringv1.Prometheu
 		"prometheus", p.Name,
 	)
 
-	ruleFiles := []monitoringv1.RuleFile{}
+	rules := []monitoringv1.PrometheusRule{}
 	for _, cm := range configMaps {
-		files, err := cmToRuleFiles(cm)
+		cmRules, err := CMToRule(cm)
 		if err != nil {
 			return err
 		}
-		ruleFiles = append(ruleFiles, files...)
+		rules = append(rules, cmRules...)
 	}
 
-	ruleFileNames := []string{}
-	for _, file := range configMaps {
-		ruleFileNames = append(ruleFileNames, file.Name)
+	ruleNames := []string{}
+	for _, rule := range configMaps {
+		ruleNames = append(ruleNames, rule.Name)
 	}
 	level.Debug(c.logger).Log(
 		"msg", "rule files to be created",
-		"rulefiles", strings.Join(ruleFileNames, ","),
+		"rules", strings.Join(ruleNames, ","),
 		"namespace", p.Namespace,
 		"prometheus", p.Name,
 	)
 
-	for _, ruleFile := range ruleFiles {
-		_, err := c.mclient.MonitoringV1().RuleFiles(p.Namespace).Create(&ruleFile)
+	for _, rule := range rules {
+		_, err := c.mclient.MonitoringV1().PrometheusRules(p.Namespace).Create(&rule)
 		if apierrors.IsAlreadyExists(err) {
 			level.Debug(c.logger).Log(
 				"msg", "rule file already exists for configmap key",
-				"rulefilename", ruleFile.Name,
+				"rule", rule.Name,
 				"namespace", p.Namespace,
 				"prometheus", p.Name,
 			)
@@ -105,31 +105,39 @@ func (c *Operator) getRuleCMs(ns string, cmLabelSelector *metav1.LabelSelector) 
 	return configMaps, nil
 }
 
-func cmToRuleFiles(cm *v1.ConfigMap) ([]monitoringv1.RuleFile, error) {
-	ruleFiles := []monitoringv1.RuleFile{}
+// CMToRule takes a rule config map and transforms it to possibly multiple
+// rule file crds. It is used in `cmd/po-rule-cm-to-rule-file-crds`. Thereby it
+// needs to be public.
+func CMToRule(cm *v1.ConfigMap) ([]monitoringv1.PrometheusRule, error) {
+	rules := []monitoringv1.PrometheusRule{}
 
 	for name, content := range cm.Data {
-		ruleFileSpec := monitoringv1.RuleFileSpec{}
+		ruleSpec := monitoringv1.PrometheusRuleSpec{}
 
-		if err := yaml.NewYAMLOrJSONDecoder(bytes.NewBufferString(content), 1000).Decode(&ruleFileSpec); err != nil {
-			return []monitoringv1.RuleFile{}, errors.Wrapf(
+		if err := yaml.NewYAMLOrJSONDecoder(bytes.NewBufferString(content), 1000).Decode(&ruleSpec); err != nil {
+			return []monitoringv1.PrometheusRule{}, errors.Wrapf(
 				err,
 				"unmarshal rules file %v in  configmap '%v' in namespace '%v'",
 				name, cm.Name, cm.Namespace,
 			)
 		}
 
-		ruleFile := monitoringv1.RuleFile{
+		rule := monitoringv1.PrometheusRule{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       monitoringv1.PrometheusRuleKind,
+				APIVersion: monitoringv1.Group + "/" + monitoringv1.Version,
+			},
+
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      cm.Name + "-" + name,
 				Namespace: cm.Namespace,
 				Labels:    cm.Labels,
 			},
-			Spec: ruleFileSpec,
+			Spec: ruleSpec,
 		}
 
-		ruleFiles = append(ruleFiles, ruleFile)
+		rules = append(rules, rule)
 	}
 
-	return ruleFiles, nil
+	return rules, nil
 }

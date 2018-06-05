@@ -38,6 +38,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -534,13 +535,6 @@ func (c *Operator) destroyAlertmanager(key string) error {
 }
 
 func (c *Operator) createCRDs() error {
-	_, aErr := c.mclient.MonitoringV1().Alertmanagers(c.config.Namespace).List(metav1.ListOptions{})
-	if aErr == nil {
-		// If Alertmanager objects are already registered, we won't attempt to
-		// do so again.
-		return nil
-	}
-
 	crds := []*extensionsobj.CustomResourceDefinition{
 		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.Alertmanager, c.config.CrdGroup, c.config.Labels.LabelsMap, c.config.EnableValidation),
 	}
@@ -548,15 +542,38 @@ func (c *Operator) createCRDs() error {
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()
 
 	for _, crd := range crds {
-		if _, err := crdClient.Create(crd); err != nil && !apierrors.IsAlreadyExists(err) {
-			return errors.Wrapf(err, "Creating CRD: %s", crd.Spec.Names.Kind)
+		oldCRD, err := crdClient.Get(crd.Name, metav1.GetOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return errors.Wrapf(err, "getting CRD: %s", crd.Spec.Names.Kind)
 		}
-		level.Info(c.logger).Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
+		if apierrors.IsNotFound(err) {
+			if _, err := crdClient.Create(crd); err != nil {
+				return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
+			}
+			level.Info(c.logger).Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
+		}
+		if err == nil {
+			crd.ResourceVersion = oldCRD.ResourceVersion
+			if _, err := crdClient.Update(crd); err != nil {
+				return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
+			}
+			level.Info(c.logger).Log("msg", "CRD updated", "crd", crd.Spec.Names.Kind)
+		}
 	}
 
-	// We have to wait for the CRDs to be ready. Otherwise the initial watch may fail.
-	return errors.Wrap(
-		k8sutil.WaitForCRDReady(c.mclient.MonitoringV1().Alertmanagers(c.config.Namespace).List),
-		"waiting for Alertmanager crd failed",
-	)
+	crdListFuncs := []struct {
+		name     string
+		listFunc func(opts metav1.ListOptions) (runtime.Object, error)
+	}{
+		{"Alertmanager", c.mclient.MonitoringV1().Alertmanagers(c.config.Namespace).List},
+	}
+
+	for _, crdListFunc := range crdListFuncs {
+		err := k8sutil.WaitForCRDReady(crdListFunc.listFunc)
+		if err != nil {
+			return errors.Wrapf(err, "waiting for %v crd failed", crdListFunc.name)
+		}
+	}
+
+	return nil
 }

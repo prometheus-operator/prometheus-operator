@@ -128,6 +128,6 @@ generate-crd: generate-openapi po-crdgen
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
 	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
 	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
-	po-crdgen rulefile > example/prometheus-operator-crd/rulefile.crd.yaml
+	po-crdgen prometheusrule > example/prometheus-operator-crd/prometheusrule.crd.yaml
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs generate-crd jb

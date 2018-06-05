@@ -32,7 +32,7 @@ func TestCMToRuleFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = cmToRuleFiles(cm)
+	_, err = CMToRule(cm)
 	if err != nil {
 		t.Fatal(err)
 	}

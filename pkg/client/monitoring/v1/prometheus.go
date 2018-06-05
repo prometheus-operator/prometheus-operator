@@ -176,6 +176,20 @@ func UnstructuredFromPrometheus(p *Prometheus) (*unstructured.Unstructured, erro
 	if err := json.Unmarshal(b, &r.Object); err != nil {
 		return nil, err
 	}
+	// Value-type timestamp fields like ObjectMeta.CreationTimestamp with a zero
+	// value are marshalled as "null" in JSON (rather than omitted) and then
+	// unmarshalled into Unstructured with the key intact and a null value (rather
+	// than being omitted); the net effect is the resulting structs can't be used
+	// to issue a POST because creationTimestamp=null is sent to the server and
+	// fails validation. For example, passing a Prometheus with a
+	// volumeClaimTemplate can result in an invalid object. This hack simply
+	// removes such timestamp fields manually.
+	//
+	// TODO: reevaluate the use of Unstructured directly here in the context of
+	// the latest dynamic client capabilities; this manual conversion may not be
+	// necessary anymore.
+	unstructured.RemoveNestedField(r.Object, "metadata", "creationTimestamp")
+	unstructured.RemoveNestedField(r.Object, "spec", "storage", "volumeClaimTemplate", "metadata", "creationTimestamp")
 	return &r, nil
 }
 

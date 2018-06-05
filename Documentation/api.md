@@ -21,15 +21,15 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [NamespaceSelector](#namespaceselector)
 * [Prometheus](#prometheus)
 * [PrometheusList](#prometheuslist)
+* [PrometheusRule](#prometheusrule)
+* [PrometheusRuleList](#prometheusrulelist)
+* [PrometheusRuleSpec](#prometheusrulespec)
 * [PrometheusSpec](#prometheusspec)
 * [PrometheusStatus](#prometheusstatus)
 * [RelabelConfig](#relabelconfig)
 * [RemoteReadSpec](#remotereadspec)
 * [RemoteWriteSpec](#remotewritespec)
 * [Rule](#rule)
-* [RuleFile](#rulefile)
-* [RuleFileList](#rulefilelist)
-* [RuleFileSpec](#rulefilespec)
 * [RuleGroup](#rulegroup)
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
@@ -195,6 +195,38 @@ PrometheusList is a list of Prometheuses.
 
 [Back to TOC](#table-of-contents)
 
+## PrometheusRule
+
+PrometheusRule defines alerting rules for a Prometheus instance
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata | Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ObjectMeta](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#objectmeta-v1-meta) | false |
+| spec | Specification of desired alerting rule definitions for Prometheus. | [PrometheusRuleSpec](#prometheusrulespec) | true |
+
+[Back to TOC](#table-of-contents)
+
+## PrometheusRuleList
+
+A list of PrometheusRules.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata | Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ListMeta](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#listmeta-v1-meta) | false |
+| items | List of Rules | []*[PrometheusRule](#prometheusrule) | true |
+
+[Back to TOC](#table-of-contents)
+
+## PrometheusRuleSpec
+
+PrometheusRuleSpec contains specification parameters for a Rule.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| groups | Content of Prometheus rule file | [][RuleGroup](#rulegroup) | false |
+
+[Back to TOC](#table-of-contents)
+
 ## PrometheusSpec
 
 Specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
@@ -217,9 +249,8 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
-| ruleFileSelector | A selector to select which RuleFiles to mount for loading alerting rules from. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
-| ruleSelector | DEPRECATED with Prometheus Operator 'v0.20.0'. Any value in this field will just be copied to 'RuleFileSelector' field | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
-| ruleFileNamespaceSelector | Namespaces to be selected for RuleFiles discovery. If empty, only check own namespace. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
+| ruleSelector | A selector to select which PrometheusRules to mount for loading alerting rules from. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
+| ruleNamespaceSelector | Namespaces to be selected for PrometheusRules discovery. If unspecified, only the same namespace as the Prometheus object is in is used. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
 | alerting | Define details regarding alerting. | *[AlertingSpec](#alertingspec) | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
@@ -314,38 +345,6 @@ Rule describes an alerting or recording rule.
 | for |  | string | false |
 | labels |  | map[string]string | false |
 | annotations |  | map[string]string | false |
-
-[Back to TOC](#table-of-contents)
-
-## RuleFile
-
-RuleFile defines alerting rules for a Prometheus instance
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| metadata | Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ObjectMeta](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#objectmeta-v1-meta) | false |
-| spec | Specification of desired alerting rule definitions for Prometheus. | [RuleFileSpec](#rulefilespec) | true |
-
-[Back to TOC](#table-of-contents)
-
-## RuleFileList
-
-A list of RuleFiles.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| metadata | Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata | [metav1.ListMeta](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#listmeta-v1-meta) | false |
-| items | List of Rules | []*[RuleFile](#rulefile) | true |
-
-[Back to TOC](#table-of-contents)
-
-## RuleFileSpec
-
-RuleFileSpec contains specification parameters for a Rule.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| groups | Content of Prometheus rule file | [][RuleGroup](#rulegroup) | false |
 
 [Back to TOC](#table-of-contents)
 

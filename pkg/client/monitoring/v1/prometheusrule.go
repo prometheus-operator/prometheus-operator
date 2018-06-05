@@ -28,35 +28,35 @@ import (
 )
 
 const (
-	RuleFilesKind = "RuleFile"
-	RuleFileName  = "rulefiles"
+	PrometheusRuleKind = "PrometheusRule"
+	PrometheusRuleName = "prometheusrules"
 )
 
-type RuleFilesGetter interface {
-	RuleFiles(namespace string) RuleFileInterface
+type PrometheusRulesGetter interface {
+	PrometheusRules(namespace string) PrometheusRuleInterface
 }
 
-var _ RuleFileInterface = &rulefiles{}
+var _ PrometheusRuleInterface = &prometheusrules{}
 
-type RuleFileInterface interface {
-	Create(*RuleFile) (*RuleFile, error)
-	Get(name string, opts metav1.GetOptions) (*RuleFile, error)
-	Update(*RuleFile) (*RuleFile, error)
+type PrometheusRuleInterface interface {
+	Create(*PrometheusRule) (*PrometheusRule, error)
+	Get(name string, opts metav1.GetOptions) (*PrometheusRule, error)
+	Update(*PrometheusRule) (*PrometheusRule, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
 	Watch(opts metav1.ListOptions) (watch.Interface, error)
 	DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error
 }
 
-type rulefiles struct {
+type prometheusrules struct {
 	restClient rest.Interface
 	client     dynamic.ResourceInterface
 	crdKind    CrdKind
 	ns         string
 }
 
-func newRuleFiles(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *rulefiles {
-	return &rulefiles{
+func newPrometheusRules(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *prometheusrules {
+	return &prometheusrules{
 		restClient: r,
 		client: c.Resource(
 			&metav1.APIResource{
@@ -71,8 +71,8 @@ func newRuleFiles(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespac
 	}
 }
 
-func (s *rulefiles) Create(o *RuleFile) (*RuleFile, error) {
-	us, err := UnstructuredFromRuleFile(o)
+func (s *prometheusrules) Create(o *PrometheusRule) (*PrometheusRule, error) {
+	us, err := UnstructuredFromPrometheusRule(o)
 	if err != nil {
 		return nil, err
 	}
@@ -82,19 +82,19 @@ func (s *rulefiles) Create(o *RuleFile) (*RuleFile, error) {
 		return nil, err
 	}
 
-	return RuleFileFromUnstructured(us)
+	return PrometheusRuleFromUnstructured(us)
 }
 
-func (s *rulefiles) Get(name string, opts metav1.GetOptions) (*RuleFile, error) {
+func (s *prometheusrules) Get(name string, opts metav1.GetOptions) (*PrometheusRule, error) {
 	obj, err := s.client.Get(name, opts)
 	if err != nil {
 		return nil, err
 	}
-	return RuleFileFromUnstructured(obj)
+	return PrometheusRuleFromUnstructured(obj)
 }
 
-func (s *rulefiles) Update(o *RuleFile) (*RuleFile, error) {
-	us, err := UnstructuredFromRuleFile(o)
+func (s *prometheusrules) Update(o *PrometheusRule) (*PrometheusRule, error) {
+	us, err := UnstructuredFromPrometheusRule(o)
 	if err != nil {
 		return nil, err
 	}
@@ -110,14 +110,14 @@ func (s *rulefiles) Update(o *RuleFile) (*RuleFile, error) {
 		return nil, err
 	}
 
-	return RuleFileFromUnstructured(us)
+	return PrometheusRuleFromUnstructured(us)
 }
 
-func (s *rulefiles) Delete(name string, options *metav1.DeleteOptions) error {
+func (s *prometheusrules) Delete(name string, options *metav1.DeleteOptions) error {
 	return s.client.Delete(name, options)
 }
 
-func (s *rulefiles) List(opts metav1.ListOptions) (runtime.Object, error) {
+func (s *prometheusrules) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := s.restClient.Get().
 		Namespace(s.ns).
 		Resource(s.crdKind.Plural)
@@ -126,11 +126,11 @@ func (s *rulefiles) List(opts metav1.ListOptions) (runtime.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	var sm RuleFileList
+	var sm PrometheusRuleList
 	return &sm, json.Unmarshal(b, &sm)
 }
 
-func (s *rulefiles) Watch(opts metav1.ListOptions) (watch.Interface, error) {
+func (s *prometheusrules) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	r, err := s.restClient.Get().
 		Prefix("watch").
 		Namespace(s.ns).
@@ -139,34 +139,34 @@ func (s *rulefiles) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	if err != nil {
 		return nil, err
 	}
-	return watch.NewStreamWatcher(&ruleFileDecoder{
+	return watch.NewStreamWatcher(&prometheusRuleDecoder{
 		dec:   json.NewDecoder(r),
 		close: r.Close,
 	}), nil
 }
 
-func (s *rulefiles) DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error {
+func (s *prometheusrules) DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error {
 	return s.client.DeleteCollection(dopts, lopts)
 }
 
-// RuleFileFromUnstructured unmarshals a RuleFile object from dynamic client's unstructured
-func RuleFileFromUnstructured(r *unstructured.Unstructured) (*RuleFile, error) {
+// PrometheusRuleFromUnstructured unmarshals a PrometheusRule object from dynamic client's unstructured
+func PrometheusRuleFromUnstructured(r *unstructured.Unstructured) (*PrometheusRule, error) {
 	b, err := json.Marshal(r.Object)
 	if err != nil {
 		return nil, err
 	}
-	var s RuleFile
+	var s PrometheusRule
 	if err := json.Unmarshal(b, &s); err != nil {
 		return nil, err
 	}
-	s.TypeMeta.Kind = RuleFilesKind
+	s.TypeMeta.Kind = PrometheusRuleKind
 	s.TypeMeta.APIVersion = Group + "/" + Version
 	return &s, nil
 }
 
-// UnstructuredFromRuleFile marshals a RuleFile object into dynamic client's unstructured
-func UnstructuredFromRuleFile(s *RuleFile) (*unstructured.Unstructured, error) {
-	s.TypeMeta.Kind = RuleFilesKind
+// UnstructuredFromPrometheusRule marshals a PrometheusRule object into dynamic client's unstructured
+func UnstructuredFromPrometheusRule(s *PrometheusRule) (*unstructured.Unstructured, error) {
+	s.TypeMeta.Kind = PrometheusRuleKind
 	s.TypeMeta.APIVersion = Group + "/" + Version
 	b, err := json.Marshal(s)
 	if err != nil {
@@ -179,19 +179,19 @@ func UnstructuredFromRuleFile(s *RuleFile) (*unstructured.Unstructured, error) {
 	return &r, nil
 }
 
-type ruleFileDecoder struct {
+type prometheusRuleDecoder struct {
 	dec   *json.Decoder
 	close func() error
 }
 
-func (d *ruleFileDecoder) Close() {
+func (d *prometheusRuleDecoder) Close() {
 	d.close()
 }
 
-func (d *ruleFileDecoder) Decode() (action watch.EventType, object runtime.Object, err error) {
+func (d *prometheusRuleDecoder) Decode() (action watch.EventType, object runtime.Object, err error) {
 	var e struct {
 		Type   watch.EventType
-		Object RuleFile
+		Object PrometheusRule
 	}
 	if err := d.dec.Decode(&e); err != nil {
 		return watch.Error, nil, err
