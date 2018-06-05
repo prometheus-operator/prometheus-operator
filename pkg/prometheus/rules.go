@@ -125,14 +125,7 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) (map[string]string, error) {
 	rules := map[string]string{}
 
-	// With Prometheus Operator v0.20.0 the 'RuleSelector' field in the Prometheus
-	// CRD Spec is deprecated. Any value in 'RuleSelector' is just copied to the new
-	// field 'PrometheusRuleSelector'.
-	if p.Spec.PrometheusRuleSelector == nil && p.Spec.RuleSelector != nil {
-		p.Spec.PrometheusRuleSelector = p.Spec.RuleSelector
-	}
-
-	ruleSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PrometheusRuleSelector)
+	ruleSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleSelector)
 	if err != nil {
 		return rules, errors.Wrap(err, "convert rule label selector to selector")
 	}

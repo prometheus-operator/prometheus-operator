@@ -567,15 +567,6 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
-	if in.PrometheusRuleSelector != nil {
-		in, out := &in.PrometheusRuleSelector, &out.PrometheusRuleSelector
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(meta_v1.LabelSelector)
-			(*in).DeepCopyInto(*out)
-		}
-	}
 	if in.RuleSelector != nil {
 		in, out := &in.RuleSelector, &out.RuleSelector
 		if *in == nil {

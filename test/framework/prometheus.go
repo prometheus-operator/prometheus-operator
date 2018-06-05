@@ -48,7 +48,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 				},
 			},
 			ServiceAccountName: "prometheus",
-			PrometheusRuleSelector: &metav1.LabelSelector{
+			RuleSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"role": "rulefile",
 				},

@@ -100,12 +100,9 @@ type PrometheusSpec struct {
 	Storage *StorageSpec `json:"storage,omitempty"`
 	// A selector to select which PrometheusRules to mount for loading alerting
 	// rules from.
-	PrometheusRuleSelector *metav1.LabelSelector `json:"prometheusRuleSelector,omitempty"`
-	// DEPRECATED with Prometheus Operator 'v0.20.0'. Any value in this field
-	// will just be copied to 'PrometheusRuleSelector' field
 	RuleSelector *metav1.LabelSelector `json:"ruleSelector,omitempty"`
-	// Namespaces to be selected for PrometheusRules discovery. If empty, only
-	// check own namespace.
+	// Namespaces to be selected for PrometheusRules discovery. If unspecified, only
+	// the same namespace as the Prometheus object is in is used.
 	RuleNamespaceSelector *metav1.LabelSelector `json:"ruleNamespaceSelector,omitempty"`
 	// Define details regarding alerting.
 	Alerting *AlertingSpec `json:"alerting,omitempty"`

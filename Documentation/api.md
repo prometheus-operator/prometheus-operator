@@ -249,9 +249,8 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
-| prometheusRuleSelector | A selector to select which PrometheusRules to mount for loading alerting rules from. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
-| ruleSelector | DEPRECATED with Prometheus Operator 'v0.20.0'. Any value in this field will just be copied to 'PrometheusRuleSelector' field | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
-| ruleNamespaceSelector | Namespaces to be selected for PrometheusRules discovery. If empty, only check own namespace. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
+| ruleSelector | A selector to select which PrometheusRules to mount for loading alerting rules from. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
+| ruleNamespaceSelector | Namespaces to be selected for PrometheusRules discovery. If unspecified, only the same namespace as the Prometheus object is in is used. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
 | alerting | Define details regarding alerting. | *[AlertingSpec](#alertingspec) | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |

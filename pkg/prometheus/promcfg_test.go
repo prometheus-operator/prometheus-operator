@@ -187,7 +187,7 @@ func generateTestConfig(version string) ([]byte, error) {
 						"group": "group1",
 					},
 				},
-				PrometheusRuleSelector: &metav1.LabelSelector{
+				RuleSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"role": "rulefile",
 					},

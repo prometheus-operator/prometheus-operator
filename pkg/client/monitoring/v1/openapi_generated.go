@@ -901,21 +901,15 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec"),
 							},
 						},
-						"prometheusRuleSelector": {
+						"ruleSelector": {
 							SchemaProps: spec.SchemaProps{
 								Description: "A selector to select which PrometheusRules to mount for loading alerting rules from.",
 								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 							},
 						},
-						"ruleSelector": {
-							SchemaProps: spec.SchemaProps{
-								Description: "DEPRECATED with Prometheus Operator 'v0.20.0'. Any value in this field will just be copied to 'PrometheusRuleSelector' field",
-								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
-							},
-						},
 						"ruleNamespaceSelector": {
 							SchemaProps: spec.SchemaProps{
-								Description: "Namespaces to be selected for PrometheusRules discovery. If empty, only check own namespace.",
+								Description: "Namespaces to be selected for PrometheusRules discovery. If unspecified, only the same namespace as the Prometheus object is in is used.",
 								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 							},
 						},

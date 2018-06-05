@@ -490,9 +490,6 @@ func TestPrometheusDeprecatedRuleSelectorField(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.EvaluationInterval = "1s"
-	// Reset new 'RuleFileSelector' field
-	p.Spec.PrometheusRuleSelector = nil
-	// Specify old 'RuleFile' field
 	p.Spec.RuleSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"role": "rulefile",
@@ -547,9 +544,6 @@ groups:
 	framework.KubeClient.CoreV1().ConfigMaps(ns).Create(&cm)
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	// Reset new 'RuleFileSelector' field
-	p.Spec.PrometheusRuleSelector = nil
-	// Specify old 'RuleFile' field
 	p.Spec.RuleSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"role": "rulefile",
