@@ -10,13 +10,13 @@ IMAGE = $(REPO):$(TAG)
 build:
 	$(ENVVAR) go build -o $(NAME) main.go
 
-image: build
+container: build
 	docker build -t $(IMAGE) .
 
-push: image
+push: container
 	docker push $(IMAGE)
 
 clean:
 	rm -f $(NAME)
 
-.PHONY: all build image push clean
+.PHONY: all build container push clean
