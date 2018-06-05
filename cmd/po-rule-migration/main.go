@@ -65,7 +65,7 @@ func main() {
 		log.Fatalf("failed to decode manifest: %v", err.Error())
 	}
 
-	ruleFiles, err := prometheus.CMToRuleFiles(&configMap)
+	ruleFiles, err := prometheus.CMToRule(&configMap)
 	if err != nil {
 		log.Fatalf("failed to transform config map to rule file crds: %v", err.Error())
 	}

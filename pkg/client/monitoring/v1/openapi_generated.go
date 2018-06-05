@@ -668,6 +668,113 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 			Dependencies: []string{
 				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Prometheus", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 		},
+		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusRule": {
+			Schema: spec.Schema{
+				SchemaProps: spec.SchemaProps{
+					Description: "PrometheusRule defines alerting rules for a Prometheus instance",
+					Properties: map[string]spec.Schema{
+						"kind": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"apiVersion": {
+							SchemaProps: spec.SchemaProps{
+								Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"metadata": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
+								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+							},
+						},
+						"spec": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Specification of desired alerting rule definitions for Prometheus.",
+								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusRuleSpec"),
+							},
+						},
+					},
+					Required: []string{"spec"},
+				},
+			},
+			Dependencies: []string{
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusRuleSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+		},
+		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusRuleList": {
+			Schema: spec.Schema{
+				SchemaProps: spec.SchemaProps{
+					Description: "A list of PrometheusRules.",
+					Properties: map[string]spec.Schema{
+						"kind": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"apiVersion": {
+							SchemaProps: spec.SchemaProps{
+								Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"metadata": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
+								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+							},
+						},
+						"items": {
+							SchemaProps: spec.SchemaProps{
+								Description: "List of Rules",
+								Type:        []string{"array"},
+								Items: &spec.SchemaOrArray{
+									Schema: &spec.Schema{
+										SchemaProps: spec.SchemaProps{
+											Ref: ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusRule"),
+										},
+									},
+								},
+							},
+						},
+					},
+					Required: []string{"items"},
+				},
+			},
+			Dependencies: []string{
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusRule", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+		},
+		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusRuleSpec": {
+			Schema: spec.Schema{
+				SchemaProps: spec.SchemaProps{
+					Description: "PrometheusRuleSpec contains specification parameters for a Rule.",
+					Properties: map[string]spec.Schema{
+						"groups": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Content of Prometheus rule file",
+								Type:        []string{"array"},
+								Items: &spec.SchemaOrArray{
+									Schema: &spec.Schema{
+										SchemaProps: spec.SchemaProps{
+											Ref: ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleGroup"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			Dependencies: []string{
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleGroup"},
+		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusSpec": {
 			Schema: spec.Schema{
 				SchemaProps: spec.SchemaProps{
@@ -794,21 +901,21 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec"),
 							},
 						},
-						"ruleFileSelector": {
+						"prometheusRuleSelector": {
 							SchemaProps: spec.SchemaProps{
-								Description: "A selector to select which RuleFiles to mount for loading alerting rules from.",
+								Description: "A selector to select which PrometheusRules to mount for loading alerting rules from.",
 								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 							},
 						},
 						"ruleSelector": {
 							SchemaProps: spec.SchemaProps{
-								Description: "DEPRECATED with Prometheus Operator 'v0.20.0'. Any value in this field will just be copied to 'RuleFileSelector' field",
+								Description: "DEPRECATED with Prometheus Operator 'v0.20.0'. Any value in this field will just be copied to 'PrometheusRuleSelector' field",
 								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 							},
 						},
-						"ruleFileNamespaceSelector": {
+						"ruleNamespaceSelector": {
 							SchemaProps: spec.SchemaProps{
-								Description: "Namespaces to be selected for RuleFiles discovery. If empty, only check own namespace.",
+								Description: "Namespaces to be selected for PrometheusRules discovery. If empty, only check own namespace.",
 								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 							},
 						},
@@ -1272,113 +1379,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 				},
 			},
 			Dependencies: []string{},
-		},
-		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleFile": {
-			Schema: spec.Schema{
-				SchemaProps: spec.SchemaProps{
-					Description: "RuleFile defines alerting rules for a Prometheus instance",
-					Properties: map[string]spec.Schema{
-						"kind": {
-							SchemaProps: spec.SchemaProps{
-								Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
-								Type:        []string{"string"},
-								Format:      "",
-							},
-						},
-						"apiVersion": {
-							SchemaProps: spec.SchemaProps{
-								Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
-								Type:        []string{"string"},
-								Format:      "",
-							},
-						},
-						"metadata": {
-							SchemaProps: spec.SchemaProps{
-								Description: "Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
-								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-							},
-						},
-						"spec": {
-							SchemaProps: spec.SchemaProps{
-								Description: "Specification of desired alerting rule definitions for Prometheus.",
-								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleFileSpec"),
-							},
-						},
-					},
-					Required: []string{"spec"},
-				},
-			},
-			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleFileSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
-		},
-		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleFileList": {
-			Schema: spec.Schema{
-				SchemaProps: spec.SchemaProps{
-					Description: "A list of RuleFiles.",
-					Properties: map[string]spec.Schema{
-						"kind": {
-							SchemaProps: spec.SchemaProps{
-								Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
-								Type:        []string{"string"},
-								Format:      "",
-							},
-						},
-						"apiVersion": {
-							SchemaProps: spec.SchemaProps{
-								Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
-								Type:        []string{"string"},
-								Format:      "",
-							},
-						},
-						"metadata": {
-							SchemaProps: spec.SchemaProps{
-								Description: "Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
-								Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-							},
-						},
-						"items": {
-							SchemaProps: spec.SchemaProps{
-								Description: "List of Rules",
-								Type:        []string{"array"},
-								Items: &spec.SchemaOrArray{
-									Schema: &spec.Schema{
-										SchemaProps: spec.SchemaProps{
-											Ref: ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleFile"),
-										},
-									},
-								},
-							},
-						},
-					},
-					Required: []string{"items"},
-				},
-			},
-			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleFile", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
-		},
-		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleFileSpec": {
-			Schema: spec.Schema{
-				SchemaProps: spec.SchemaProps{
-					Description: "RuleFileSpec contains specification parameters for a Rule.",
-					Properties: map[string]spec.Schema{
-						"groups": {
-							SchemaProps: spec.SchemaProps{
-								Description: "Content of Prometheus rule file",
-								Type:        []string{"array"},
-								Items: &spec.SchemaOrArray{
-									Schema: &spec.Schema{
-										SchemaProps: spec.SchemaProps{
-											Ref: ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleGroup"),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleGroup"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleGroup": {
 			Schema: spec.Schema{

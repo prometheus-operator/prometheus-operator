@@ -32,41 +32,41 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (c *Operator) createOrUpdateRuleFileConfigMap(p *monitoringv1.Prometheus) error {
+func (c *Operator) createOrUpdateRuleConfigMap(p *monitoringv1.Prometheus) error {
 	cClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
 
-	namespaces, err := c.selectRuleFileNamespaces(p)
+	namespaces, err := c.selectRuleNamespaces(p)
 	if err != nil {
 		return err
 	}
 
-	ruleFiles, err := c.selectRuleFiles(p, namespaces)
+	rules, err := c.selectRules(p, namespaces)
 	if err != nil {
 		return err
 	}
 
-	newConfigMap := c.makeRulesConfigMap(p, ruleFiles)
+	newConfigMap := c.makeRulesConfigMap(p, rules)
 
-	currentConfigMap, err := cClient.Get(prometheusRuleFilesConfigMapName(p.Name), metav1.GetOptions{})
+	currentConfigMap, err := cClient.Get(prometheusRuleConfigMapName(p.Name), metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
 	isNotFound := false
 	if apierrors.IsNotFound(err) {
 		level.Debug(c.logger).Log(
-			"msg", "no RuleFiles configmap created yet",
+			"msg", "no PrometheusRule configmap created yet",
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
 		)
 		isNotFound = true
 	}
 
-	newChecksum := checksumRuleFiles(ruleFiles)
-	currentChecksum := checksumRuleFiles(currentConfigMap.Data)
+	newChecksum := checksumRules(rules)
+	currentChecksum := checksumRules(currentConfigMap.Data)
 
 	if newChecksum == currentChecksum && !isNotFound {
 		level.Debug(c.logger).Log(
-			"msg", "no RuleFile changes",
+			"msg", "no PrometheusRule changes",
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
 		)
@@ -75,14 +75,14 @@ func (c *Operator) createOrUpdateRuleFileConfigMap(p *monitoringv1.Prometheus) e
 
 	if isNotFound {
 		level.Debug(c.logger).Log(
-			"msg", "no RuleFile found, creating new one",
+			"msg", "no PrometheusRule found, creating new one",
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
 		)
 		_, err = cClient.Create(newConfigMap)
 	} else {
 		level.Debug(c.logger).Log(
-			"msg", "updating RuleFile",
+			"msg", "updating PrometheusRule",
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
 		)
@@ -95,25 +95,25 @@ func (c *Operator) createOrUpdateRuleFileConfigMap(p *monitoringv1.Prometheus) e
 	return nil
 }
 
-func (c *Operator) selectRuleFileNamespaces(p *monitoringv1.Prometheus) ([]string, error) {
+func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, error) {
 	namespaces := []string{}
 
-	// If 'RuleFilesNamespaceSelector' is nil, only check own namespace.
-	if p.Spec.RuleFileNamespaceSelector == nil {
+	// If 'RuleNamespaceSelector' is nil, only check own namespace.
+	if p.Spec.RuleNamespaceSelector == nil {
 		namespaces = append(namespaces, p.Namespace)
 	} else {
-		ruleFileNamespaceSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleFileNamespaceSelector)
+		ruleNamespaceSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
 		if err != nil {
-			return namespaces, errors.Wrap(err, "convert rule file namespace label selector to selector")
+			return namespaces, errors.Wrap(err, "convert rule namespace label selector to selector")
 		}
 
-		cache.ListAll(c.nsInf.GetStore(), ruleFileNamespaceSelector, func(obj interface{}) {
+		cache.ListAll(c.nsInf.GetStore(), ruleNamespaceSelector, func(obj interface{}) {
 			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
 		})
 	}
 
 	level.Debug(c.logger).Log(
-		"msg", "selected RuleFileNamespaces",
+		"msg", "selected RuleNamespaces",
 		"namespaces", strings.Join(namespaces, ","),
 		"namespace", p.Namespace,
 		"prometheus", p.Name,
@@ -122,31 +122,31 @@ func (c *Operator) selectRuleFileNamespaces(p *monitoringv1.Prometheus) ([]strin
 	return namespaces, nil
 }
 
-func (c *Operator) selectRuleFiles(p *monitoringv1.Prometheus, namespaces []string) (map[string]string, error) {
-	ruleFiles := map[string]string{}
+func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) (map[string]string, error) {
+	rules := map[string]string{}
 
 	// With Prometheus Operator v0.20.0 the 'RuleSelector' field in the Prometheus
 	// CRD Spec is deprecated. Any value in 'RuleSelector' is just copied to the new
-	// field 'RuleFileSelector'.
-	if p.Spec.RuleFileSelector == nil && p.Spec.RuleSelector != nil {
-		p.Spec.RuleFileSelector = p.Spec.RuleSelector
+	// field 'PrometheusRuleSelector'.
+	if p.Spec.PrometheusRuleSelector == nil && p.Spec.RuleSelector != nil {
+		p.Spec.PrometheusRuleSelector = p.Spec.RuleSelector
 	}
 
-	fileSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleFileSelector)
+	ruleSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PrometheusRuleSelector)
 	if err != nil {
-		return ruleFiles, errors.Wrap(err, "convert rule file label selector to selector")
+		return rules, errors.Wrap(err, "convert rule label selector to selector")
 	}
 
 	for _, ns := range namespaces {
 		var marshalErr error
-		err := cache.ListAllByNamespace(c.ruleFileInf.GetIndexer(), ns, fileSelector, func(obj interface{}) {
-			file := obj.(*monitoringv1.RuleFile)
-			content, err := yaml.Marshal(file.Spec)
+		err := cache.ListAllByNamespace(c.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
+			rule := obj.(*monitoringv1.PrometheusRule)
+			content, err := yaml.Marshal(rule.Spec)
 			if err != nil {
 				marshalErr = err
 				return
 			}
-			ruleFiles[fmt.Sprintf("%v-%v.yaml", file.Namespace, file.Name)] = string(content)
+			rules[fmt.Sprintf("%v-%v.yaml", rule.Namespace, rule.Name)] = string(content)
 		})
 		if err != nil {
 			return nil, err
@@ -156,32 +156,32 @@ func (c *Operator) selectRuleFiles(p *monitoringv1.Prometheus, namespaces []stri
 		}
 	}
 
-	// sort ruleFiles map
-	filenames := []string{}
-	for k := range ruleFiles {
-		filenames = append(filenames, k)
+	// sort rules map
+	rulenames := []string{}
+	for k := range rules {
+		rulenames = append(rulenames, k)
 	}
-	sort.Strings(filenames)
-	sortedRuleFiles := map[string]string{}
-	for _, name := range filenames {
-		sortedRuleFiles[name] = ruleFiles[name]
+	sort.Strings(rulenames)
+	sortedRules := map[string]string{}
+	for _, name := range rulenames {
+		sortedRules[name] = rules[name]
 	}
 
 	level.Debug(c.logger).Log(
-		"msg", "selected RuleFiles",
-		"rulefiles", strings.Join(filenames, ","),
+		"msg", "selected Rules",
+		"rules", strings.Join(rulenames, ","),
 		"namespace", p.Namespace,
 		"prometheus", p.Name,
 	)
 
-	return sortedRuleFiles, nil
+	return sortedRules, nil
 }
 
 func (c *Operator) makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string) *v1.ConfigMap {
 	boolTrue := true
 	return &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   prometheusRuleFilesConfigMapName(p.Name),
+			Name:   prometheusRuleConfigMapName(p.Name),
 			Labels: managedByOperatorLabels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -198,7 +198,7 @@ func (c *Operator) makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[
 	}
 }
 
-func checksumRuleFiles(files map[string]string) string {
+func checksumRules(files map[string]string) string {
 	var sum string
 	for name, value := range files {
 		sum = sum + name + value
@@ -207,6 +207,6 @@ func checksumRuleFiles(files map[string]string) string {
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(sum)))
 }
 
-func prometheusRuleFilesConfigMapName(prometheusName string) string {
+func prometheusRuleConfigMapName(prometheusName string) string {
 	return "prometheus-" + prometheusName + "-rulefiles"
 }

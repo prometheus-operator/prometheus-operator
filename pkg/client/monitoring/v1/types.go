@@ -98,14 +98,15 @@ type PrometheusSpec struct {
 	RoutePrefix string `json:"routePrefix,omitempty"`
 	// Storage spec to specify how storage shall be used.
 	Storage *StorageSpec `json:"storage,omitempty"`
-	// A selector to select which RuleFiles to mount for loading alerting rules from.
-	RuleFileSelector *metav1.LabelSelector `json:"ruleFileSelector,omitempty"`
+	// A selector to select which PrometheusRules to mount for loading alerting
+	// rules from.
+	PrometheusRuleSelector *metav1.LabelSelector `json:"prometheusRuleSelector,omitempty"`
 	// DEPRECATED with Prometheus Operator 'v0.20.0'. Any value in this field
-	// will just be copied to 'RuleFileSelector' field
+	// will just be copied to 'PrometheusRuleSelector' field
 	RuleSelector *metav1.LabelSelector `json:"ruleSelector,omitempty"`
-	// Namespaces to be selected for RuleFiles discovery. If empty, only
+	// Namespaces to be selected for PrometheusRules discovery. If empty, only
 	// check own namespace.
-	RuleFileNamespaceSelector *metav1.LabelSelector `json:"ruleFileNamespaceSelector,omitempty"`
+	RuleNamespaceSelector *metav1.LabelSelector `json:"ruleNamespaceSelector,omitempty"`
 	// Define details regarding alerting.
 	Alerting *AlertingSpec `json:"alerting,omitempty"`
 	// Define resources requests and limits for single Pods.
@@ -405,31 +406,31 @@ type ServiceMonitorList struct {
 	Items []*ServiceMonitor `json:"items"`
 }
 
-// A list of RuleFiles.
+// A list of PrometheusRules.
 // +k8s:openapi-gen=true
-type RuleFileList struct {
+type PrometheusRuleList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Rules
-	Items []*RuleFile `json:"items"`
+	Items []*PrometheusRule `json:"items"`
 }
 
-// RuleFile defines alerting rules for a Prometheus instance
+// PrometheusRule defines alerting rules for a Prometheus instance
 // +k8s:openapi-gen=true
-type RuleFile struct {
+type PrometheusRule struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
 	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired alerting rule definitions for Prometheus.
-	Spec RuleFileSpec `json:"spec"`
+	Spec PrometheusRuleSpec `json:"spec"`
 }
 
-// RuleFileSpec contains specification parameters for a Rule.
+// PrometheusRuleSpec contains specification parameters for a Rule.
 // +k8s:openapi-gen=true
-type RuleFileSpec struct {
+type PrometheusRuleSpec struct {
 	// Content of Prometheus rule file
 	Groups []RuleGroup `json:"groups,omitempty"`
 }
@@ -610,10 +611,10 @@ func (l *ServiceMonitorList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
-func (f *RuleFile) DeepCopyObject() runtime.Object {
+func (f *PrometheusRule) DeepCopyObject() runtime.Object {
 	return f.DeepCopy()
 }
 
-func (l *RuleFileList) DeepCopyObject() runtime.Object {
+func (l *PrometheusRuleList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }

@@ -42,7 +42,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     rules:
       {
         apiVersion: 'monitoring.coreos.com/v1',
-        kind: 'RuleFile',
+        kind: 'PrometheusRule',
         metadata: {
           labels: {
             prometheus: $._config.prometheus.name,
