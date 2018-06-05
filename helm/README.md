@@ -6,6 +6,8 @@ helm install coreos/prometheus-operator --name prometheus-operator --namespace m
 helm install coreos/kube-prometheus --name kube-prometheus --namespace monitoring
 ````
 
+If you are on a platform that uses the `k8s-app` labeling scheme for the scheduler and controller manager you can `--set exporter-node.selectorComponentMatchKey=k8s-app,exporter-kube-scheduler.selectorComponentMatchKey=k8s-app` to get started.
+
 # How to contribue?
 
 1. Fork the project

@@ -17,7 +17,7 @@ spec:
   selector:
     matchLabels:
       app: {{ template "exporter-kube-scheduler.name" . }}
-      component: kube-scheduler
+      {{ default "component" .Values.selectorComponentMatchKey }}: kube-scheduler
   namespaceSelector:
     matchNames:
       - "kube-system"

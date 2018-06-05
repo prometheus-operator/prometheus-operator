@@ -17,7 +17,7 @@ spec:
   selector:
     matchLabels:
       app: {{ template "exporter-kube-controller-manager.name" . }}
-      component: kube-controller-manager
+      {{ default "component" .Values.selectorComponentMatchKey }}: kube-controller-manager
   namespaceSelector:
     matchNames:
       - "kube-system"
