@@ -3,16 +3,16 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  name: rulefiles.monitoring.coreos.com
+  name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
   names:
-    kind: RuleFile
-    plural: rulefiles
+    kind: PrometheusRule
+    plural: prometheusrules
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: RuleFile defines alerting rules for a Prometheus instance
+      description: PrometheusRule defines alerting rules for a Prometheus instance
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -296,7 +296,8 @@ spec:
                 Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
               type: string
         spec:
-          description: RuleFileSpec contains specification parameters for a Rule.
+          description: PrometheusRuleSpec contains specification parameters for a
+            Rule.
           properties:
             groups:
               description: Content of Prometheus rule file

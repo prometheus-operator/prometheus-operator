@@ -16,12 +16,13 @@ package v1
 
 import (
 	"fmt"
+	"strings"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"strings"
 )
 
 const (
@@ -29,7 +30,7 @@ const (
 	PrometheusKindKey     = "prometheus"
 	AlertManagerKindKey   = "alertmanager"
 	ServiceMonitorKindKey = "servicemonitor"
-	RuleFileKindKey       = "rulefile"
+	PrometheusRuleKindKey = "prometheusrule"
 )
 
 type CrdKind struct {
@@ -43,7 +44,7 @@ type CrdKinds struct {
 	Prometheus     CrdKind
 	Alertmanager   CrdKind
 	ServiceMonitor CrdKind
-	RuleFile       CrdKind
+	PrometheusRule CrdKind
 }
 
 var DefaultCrdKinds CrdKinds = CrdKinds{
@@ -51,7 +52,7 @@ var DefaultCrdKinds CrdKinds = CrdKinds{
 	Prometheus:     CrdKind{Plural: PrometheusName, Kind: PrometheusesKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Prometheus"},
 	ServiceMonitor: CrdKind{Plural: ServiceMonitorName, Kind: ServiceMonitorsKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ServiceMonitor"},
 	Alertmanager:   CrdKind{Plural: AlertmanagerName, Kind: AlertmanagersKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Alertmanager"},
-	RuleFile:       CrdKind{Plural: RuleFileName, Kind: RuleFilesKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RuleFile"},
+	PrometheusRule: CrdKind{Plural: PrometheusRuleName, Kind: PrometheusRuleKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusRule"},
 }
 
 // Implement the flag.Value interface
@@ -67,7 +68,7 @@ func (crdkinds *CrdKinds) Set(value string) error {
 			PrometheusKindKey, PrometheusesKind, PrometheusName,
 			AlertManagerKindKey, AlertmanagersKind, AlertmanagerName,
 			ServiceMonitorKindKey, ServiceMonitorsKind, ServiceMonitorName,
-			RuleFileKindKey, RuleFilesKind, RuleFileName,
+			PrometheusRuleKindKey, PrometheusRuleKind, PrometheusRuleName,
 		)
 	}
 	splited := strings.Split(value, ",")
@@ -82,8 +83,8 @@ func (crdkinds *CrdKinds) Set(value string) error {
 			(*crdkinds).ServiceMonitor = crdKind
 		case AlertManagerKindKey:
 			(*crdkinds).Alertmanager = crdKind
-		case RuleFileKindKey:
-			(*crdkinds).RuleFile = crdKind
+		case PrometheusRuleKindKey:
+			(*crdkinds).PrometheusRule = crdKind
 		default:
 			fmt.Printf("Warning: unknown kind: %s... ignoring", kindKey)
 		}
@@ -100,7 +101,7 @@ type MonitoringV1Interface interface {
 	PrometheusesGetter
 	AlertmanagersGetter
 	ServiceMonitorsGetter
-	RuleFilesGetter
+	PrometheusRulesGetter
 }
 
 // +k8s:deepcopy-gen=false
@@ -122,8 +123,8 @@ func (c *MonitoringV1Client) ServiceMonitors(namespace string) ServiceMonitorInt
 	return newServiceMonitors(c.restClient, c.dynamicClient, c.crdKinds.ServiceMonitor, namespace)
 }
 
-func (c *MonitoringV1Client) RuleFiles(namespace string) RuleFileInterface {
-	return newRuleFiles(c.restClient, c.dynamicClient, c.crdKinds.RuleFile, namespace)
+func (c *MonitoringV1Client) PrometheusRules(namespace string) PrometheusRuleInterface {
+	return newPrometheusRules(c.restClient, c.dynamicClient, c.crdKinds.PrometheusRule, namespace)
 }
 
 func (c *MonitoringV1Client) RESTClient() rest.Interface {

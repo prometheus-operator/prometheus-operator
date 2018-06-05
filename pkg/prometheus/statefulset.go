@@ -410,7 +410,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 			VolumeSource: v1.VolumeSource{
 				ConfigMap: &v1.ConfigMapVolumeSource{
 					LocalObjectReference: v1.LocalObjectReference{
-						Name: prometheusRuleFilesConfigMapName(p.Name),
+						Name: prometheusRuleConfigMapName(p.Name),
 					},
 				},
 			},

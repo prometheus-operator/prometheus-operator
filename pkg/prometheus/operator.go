@@ -60,13 +60,13 @@ type Operator struct {
 	crdclient apiextensionsclient.Interface
 	logger    log.Logger
 
-	promInf     cache.SharedIndexInformer
-	smonInf     cache.SharedIndexInformer
-	ruleFileInf cache.SharedIndexInformer
-	cmapInf     cache.SharedIndexInformer
-	secrInf     cache.SharedIndexInformer
-	ssetInf     cache.SharedIndexInformer
-	nsInf       cache.SharedIndexInformer
+	promInf cache.SharedIndexInformer
+	smonInf cache.SharedIndexInformer
+	ruleInf cache.SharedIndexInformer
+	cmapInf cache.SharedIndexInformer
+	secrInf cache.SharedIndexInformer
+	ssetInf cache.SharedIndexInformer
+	nsInf   cache.SharedIndexInformer
 
 	queue workqueue.RateLimitingInterface
 
@@ -216,14 +216,14 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		UpdateFunc: c.handleSmonUpdate,
 	})
 
-	c.ruleFileInf = cache.NewSharedIndexInformer(
+	c.ruleInf = cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc:  mclient.MonitoringV1().RuleFiles(c.config.Namespace).List,
-			WatchFunc: mclient.MonitoringV1().RuleFiles(c.config.Namespace).Watch,
+			ListFunc:  mclient.MonitoringV1().PrometheusRules(c.config.Namespace).List,
+			WatchFunc: mclient.MonitoringV1().PrometheusRules(c.config.Namespace).Watch,
 		},
-		&monitoringv1.RuleFile{}, resyncPeriod, cache.Indexers{},
+		&monitoringv1.PrometheusRule{}, resyncPeriod, cache.Indexers{},
 	)
-	c.ruleFileInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	c.ruleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleRuleAdd,
 		DeleteFunc: c.handleRuleDelete,
 		UpdateFunc: c.handleRuleUpdate,
@@ -312,7 +312,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 
 	go c.promInf.Run(stopc)
 	go c.smonInf.Run(stopc)
-	go c.ruleFileInf.Run(stopc)
+	go c.ruleInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
 	go c.secrInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
@@ -731,12 +731,12 @@ func (c *Operator) sync(key string) error {
 	level.Info(c.logger).Log("msg", "sync prometheus", "key", key)
 
 	// TODO: Remove migration with Prometheus Operator v0.21.0
-	err = c.migrateRuleConfigMapsToRuleFileCRDs(p)
+	err = c.migrateRuleConfigMapsToRuleCRDs(p)
 	if err != nil {
 		return err
 	}
 
-	err = c.createOrUpdateRuleFileConfigMap(p)
+	err = c.createOrUpdateRuleConfigMap(p)
 	if err != nil {
 		return err
 	}
@@ -1108,7 +1108,7 @@ func (c *Operator) createCRDs() error {
 	crds := []*extensionsobj.CustomResourceDefinition{
 		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.Prometheus, c.config.CrdGroup, c.config.Labels.LabelsMap, c.config.EnableValidation),
 		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.ServiceMonitor, c.config.CrdGroup, c.config.Labels.LabelsMap, c.config.EnableValidation),
-		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.RuleFile, c.config.CrdGroup, c.config.Labels.LabelsMap, c.config.EnableValidation),
+		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.PrometheusRule, c.config.CrdGroup, c.config.Labels.LabelsMap, c.config.EnableValidation),
 	}
 
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()
@@ -1139,7 +1139,7 @@ func (c *Operator) createCRDs() error {
 	}{
 		{"Prometheus", c.mclient.MonitoringV1().Prometheuses(c.config.Namespace).List},
 		{"ServiceMonitor", c.mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).List},
-		{"RuleFile", c.mclient.MonitoringV1().RuleFiles(c.config.Namespace).List},
+		{"PrometheusRule", c.mclient.MonitoringV1().PrometheusRules(c.config.Namespace).List},
 	}
 
 	for _, crdListFunc := range crdListFuncs {

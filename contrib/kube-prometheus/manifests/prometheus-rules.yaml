@@ -1,5 +1,5 @@
 apiVersion: monitoring.coreos.com/v1
-kind: RuleFile
+kind: PrometheusRule
 metadata:
   labels:
     prometheus: k8s

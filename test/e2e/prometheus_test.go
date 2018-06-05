@@ -423,7 +423,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 	firtAlertName := "firstAlert"
 	secondAlertName := "secondAlert"
 
-	ruleFile, err := framework.MakeAndCreateFiringRuleFile(ns, name, firtAlertName)
+	ruleFile, err := framework.MakeAndCreateFiringRule(ns, name, firtAlertName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -457,7 +457,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 			},
 		},
 	}
-	err = framework.UpdateRuleFile(ns, ruleFile)
+	err = framework.UpdateRule(ns, ruleFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -483,16 +483,13 @@ func TestPrometheusDeprecatedRuleSelectorField(t *testing.T) {
 	name := "test"
 	firtAlertName := "firstAlert"
 
-	_, err := framework.MakeAndCreateFiringRuleFile(ns, name, firtAlertName)
+	_, err := framework.MakeAndCreateFiringRule(ns, name, firtAlertName)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.EvaluationInterval = "1s"
-	// Reset new 'RuleFileSelector' field
-	p.Spec.RuleFileSelector = nil
-	// Specify old 'RuleFile' field
 	p.Spec.RuleSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"role": "rulefile",
@@ -547,9 +544,6 @@ groups:
 	framework.KubeClient.CoreV1().ConfigMaps(ns).Create(&cm)
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	// Reset new 'RuleFileSelector' field
-	p.Spec.RuleFileSelector = nil
-	// Specify old 'RuleFile' field
 	p.Spec.RuleSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"role": "rulefile",
@@ -566,7 +560,7 @@ groups:
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	if err := framework.WaitForRuleFile(ns, cm.Name+"-"+ruleFileName); err != nil {
+	if err := framework.WaitForRule(ns, cm.Name+"-"+ruleFileName); err != nil {
 		t.Fatalf("waiting for rule config map to be converted to rule file crd: %v", err)
 	}
 
@@ -587,7 +581,7 @@ func TestPrometheusMultipleRuleFilesSameNS(t *testing.T) {
 	alertNames := []string{"first-alert", "second-alert"}
 
 	for _, alertName := range alertNames {
-		_, err := framework.MakeAndCreateFiringRuleFile(ns, alertName, alertName)
+		_, err := framework.MakeAndCreateFiringRule(ns, alertName, alertName)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -637,7 +631,7 @@ func TestPrometheusMultipleRuleFilesDifferentNS(t *testing.T) {
 	}
 
 	for _, file := range ruleFiles {
-		_, err := framework.MakeAndCreateFiringRuleFile(file.ns, file.alertName, file.alertName)
+		_, err := framework.MakeAndCreateFiringRule(file.ns, file.alertName, file.alertName)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -645,7 +639,7 @@ func TestPrometheusMultipleRuleFilesDifferentNS(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(rootNS, name, name, 1)
 	p.Spec.EvaluationInterval = "1s"
-	p.Spec.RuleFileNamespaceSelector = &metav1.LabelSelector{
+	p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
 		MatchLabels: ruleFilesNamespaceSelector,
 	}
 	if err := framework.CreatePrometheusAndWaitUntilReady(rootNS, p); err != nil {

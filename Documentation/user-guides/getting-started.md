@@ -48,7 +48,7 @@ rules:
   - prometheuses/finalizers
   - alertmanagers/finalizers
   - servicemonitors
-  - rulefiles
+  - prometheusrules
   verbs:
   - "*"
 - apiGroups:
