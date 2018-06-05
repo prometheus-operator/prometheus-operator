@@ -11,7 +11,7 @@
               summary: 'Node disk is running full within 24 hours',
             },
             expr: |||
-              predict_linear(node_filesystem_free{%(nodeExporterSelector)s}[6h], 3600 * 24) < 0
+              predict_linear(node_filesystem_free{%(nodeExporterSelector)s,mountpoint!~"^/etc/(?:resolv.conf|hosts|hostname)$"}[6h], 3600 * 24) < 0
             ||| % $._config,
             'for': '30m',
             labels: {
@@ -25,7 +25,7 @@
               summary: 'Node disk is running full within 2 hours',
             },
             expr: |||
-              predict_linear(node_filesystem_free{%(nodeExporterSelector)s}[30m], 3600 * 2) < 0
+              predict_linear(node_filesystem_free{%(nodeExporterSelector)s,mountpoint!~"^/etc/(?:resolv.conf|hosts|hostname)$"}[30m], 3600 * 2) < 0
             ||| % $._config,
             'for': '10m',
             labels: {
