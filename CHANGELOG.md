@@ -1,3 +1,34 @@
+# Next release
+
+* [CHANGE] Deprecate specification of Prometheus rules via ConfigMaps in favor of `PrometheusRule` CRDs
+
+## 0.20.0 / 2018-06-05
+
+With this release we introduce a new Custom Resource Definition - the
+`PrometheusRule` CRD. It addresses the need for rule syntax validation and rule
+selection accross namespaces. `PrometheusRule` replaces the configuration of
+Prometheus rules via K8s ConfigMaps. There are two migration paths:
+
+1. Automated live migration: If the Prometheus Operator finds Kubernetes
+   ConfigMaps that match the `RuleSelector` in a `Prometheus` specification, it
+   will convert them to matching `PrometheusRule` resources.
+
+2. Manual migration: We provide a basic CLI tool to convert Kubernetes
+   ConfigMaps to `PrometheusRule` resources.
+
+```bash
+go get -u github.com/coreos/prometheus-operator/cmd/po-rule-migration
+po-rule-migration \
+--rule-config-map=<path-to-config-map> \
+--rule-crds-destination=<path-to-rule-crd-destination>
+```
+
+* [FEATURE] Add leveled logging to Prometheus Operator (#1277)
+* [FEATURE] Allow additional Alertmanager configuration in Prometheus CRD (#1338)
+* [FEATURE] Introduce `PrometheusRule` Custom Resource Definition (#1333)
+* [ENHANCEMENT] Allow Prometheus to consider all namespaces to find ServiceMonitors (#1278)
+* [BUGFIX] Do not attempt to set default memory request for Prometheus 2.0 (#1275)
+
 ## 0.19.0 / 2018-04-25
 
 * [FEATURE] Allow specifying additional Prometheus scrape configs via secret (#1246)
