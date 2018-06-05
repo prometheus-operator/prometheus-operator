@@ -1,14 +1,14 @@
-kind: ConfigMap
-apiVersion: v1
+apiVersion: monitoring.coreos.com/v1
+kind: RuleFile
 metadata:
-  name: prometheus-example-rules
+  creationTimestamp: null
   labels:
-    role: alert-rules
     prometheus: example
-data:
-  example.rules.yaml: |+
-    groups:
-    - name: ./example.rules
-      rules:
-      - alert: ExampleAlert
-        expr: vector(1)
+    role: alert-rules
+  name: prometheus-example-rules
+spec:
+  groups:
+  - name: ./example.rules
+    rules:
+    - alert: ExampleAlert
+      expr: vector(1)
