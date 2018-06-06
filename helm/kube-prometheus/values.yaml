@@ -431,3 +431,7 @@ prometheus:
 # Select Deployed DNS Solution
 deployCoreDNS: false
 deployKubeDNS: true
+
+##Custom Labels to be added to Prometheus Rules ConfigMap
+##
+additionalRulesConfigMapLabels: {}
