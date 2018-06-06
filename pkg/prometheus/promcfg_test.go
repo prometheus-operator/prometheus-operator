@@ -66,7 +66,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 		},
 	}
 
-	c := k8sSDFromServiceMonitor(sm)
+	c := generateK8SSDConfig(getNamespacesFromServiceMonitor(sm), nil, nil)
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	if err != nil {
 		t.Fatal(err)
@@ -83,6 +83,84 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 
 	if expected != result {
 		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	}
+}
+
+func TestK8SSDConfigGeneration(t *testing.T) {
+	sm := &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testservicemonitor1",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			NamespaceSelector: monitoringv1.NamespaceSelector{
+				MatchNames: []string{"test"},
+			},
+		},
+	}
+
+	testcases := []struct {
+		apiserverConfig  *monitoringv1.APIServerConfig
+		basicAuthSecrets map[string]BasicAuthCredentials
+		expected         string
+	}{
+		{
+			nil,
+			nil,
+			`kubernetes_sd_configs:
+- role: endpoints
+  namespaces:
+    names:
+    - test
+`,
+		},
+		{
+			&monitoringv1.APIServerConfig{
+				Host:            "example.com",
+				BasicAuth:       &monitoringv1.BasicAuth{},
+				BearerToken:     "bearer_token",
+				BearerTokenFile: "bearer_token_file",
+				TLSConfig:       nil,
+			},
+			map[string]BasicAuthCredentials{
+				"apiserver": {
+					"foo",
+					"bar",
+				},
+			},
+			`kubernetes_sd_configs:
+- role: endpoints
+  namespaces:
+    names:
+    - test
+  api_server: example.com
+  basic_auth:
+    username: foo
+    password: bar
+  bearer_token: bearer_token
+  bearer_token_file: bearer_token_file
+`,
+		},
+	}
+
+	for _, tc := range testcases {
+		c := generateK8SSDConfig(
+			getNamespacesFromServiceMonitor(sm),
+			tc.apiserverConfig,
+			tc.basicAuthSecrets,
+		)
+		s, err := yaml.Marshal(yaml.MapSlice{c})
+		if err != nil {
+			t.Fatal(err)
+		}
+		result := string(s)
+
+		if result != tc.expected {
+			t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, tc.expected)
+		}
 	}
 }
 

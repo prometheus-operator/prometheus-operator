@@ -956,7 +956,14 @@ func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (B
 
 }
 
-func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, remoteReads []monitoringv1.RemoteReadSpec, remoteWrites []monitoringv1.RemoteWriteSpec, SecretsInPromNS *v1.SecretList) (map[string]BasicAuthCredentials, error) {
+func (c *Operator) loadBasicAuthSecrets(
+	mons map[string]*monitoringv1.ServiceMonitor,
+	remoteReads []monitoringv1.RemoteReadSpec,
+	remoteWrites []monitoringv1.RemoteWriteSpec,
+	apiserverConfig *monitoringv1.APIServerConfig,
+	SecretsInPromNS *v1.SecretList,
+) (map[string]BasicAuthCredentials, error) {
+
 	sMonSecretMap := make(map[string]*v1.SecretList)
 	for _, mon := range mons {
 		smNamespace := mon.Namespace
@@ -1004,6 +1011,15 @@ func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMon
 		}
 	}
 
+	// load apiserver basic auth secret
+	if apiserverConfig != nil && apiserverConfig.BasicAuth != nil {
+		credentials, err := loadBasicAuthSecret(apiserverConfig.BasicAuth, SecretsInPromNS)
+		if err != nil {
+			return nil, fmt.Errorf("could not generate basicAuth for apiserver config. %s", err)
+		}
+		secrets["apiserver"] = credentials
+	}
+
 	return secrets, nil
 
 }
@@ -1020,8 +1036,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		return err
 	}
 
-	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, SecretsInPromNS)
-
+	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, p.Spec.APIServerConfig, SecretsInPromNS)
 	if err != nil {
 		return err
 	}

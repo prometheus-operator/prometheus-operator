@@ -144,16 +144,18 @@ func generateConfig(
 	// Sorting ensures, that we always generate the config in the same order.
 	sort.Strings(identifiers)
 
+	apiserverConfig := p.Spec.APIServerConfig
+
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range identifiers {
 		for i, ep := range mons[identifier].Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(version, mons[identifier], ep, i, basicAuthSecrets))
+			scrapeConfigs = append(scrapeConfigs, generateServiceMonitorConfig(version, mons[identifier], ep, i, apiserverConfig, basicAuthSecrets))
 		}
 	}
 	var alertmanagerConfigs []yaml.MapSlice
 	if p.Spec.Alerting != nil {
 		for _, am := range p.Spec.Alerting.Alertmanagers {
-			alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(version, am))
+			alertmanagerConfigs = append(alertmanagerConfigs, generateAlertmanagerConfig(version, am, apiserverConfig, basicAuthSecrets))
 		}
 	}
 
@@ -212,7 +214,7 @@ func generateConfig(
 	return yaml.Marshal(cfg)
 }
 
-func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, ep v1.Endpoint, i int, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
+func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, ep v1.Endpoint, i int, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -227,12 +229,12 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	switch version.Major {
 	case 1:
 		if version.Minor < 7 {
-			cfg = append(cfg, k8sSDAllNamespaces())
+			cfg = append(cfg, generateK8SSDConfig(nil, nil, nil))
 		} else {
-			cfg = append(cfg, k8sSDFromServiceMonitor(m))
+			cfg = append(cfg, generateK8SSDConfig(getNamespacesFromServiceMonitor(m), apiserverConfig, basicAuthSecrets))
 		}
 	case 2:
-		cfg = append(cfg, k8sSDFromServiceMonitor(m))
+		cfg = append(cfg, generateK8SSDConfig(getNamespacesFromServiceMonitor(m), apiserverConfig, basicAuthSecrets))
 	}
 
 	if ep.Interval != "" {
@@ -472,7 +474,7 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 	return cfg
 }
 
-func k8sSDFromServiceMonitor(m *v1.ServiceMonitor) yaml.MapItem {
+func getNamespacesFromServiceMonitor(m *v1.ServiceMonitor) []string {
 	nsel := m.Spec.NamespaceSelector
 	namespaces := []string{}
 	if !nsel.Any && len(nsel.MatchNames) == 0 {
@@ -483,48 +485,65 @@ func k8sSDFromServiceMonitor(m *v1.ServiceMonitor) yaml.MapItem {
 			namespaces = append(namespaces, nsel.MatchNames[i])
 		}
 	}
-
-	return k8sSDWithNamespaces(namespaces)
+	return namespaces
 }
 
-func k8sSDWithNamespaces(namespaces []string) yaml.MapItem {
-	return yaml.MapItem{
-		Key: "kubernetes_sd_configs",
-		Value: []yaml.MapSlice{
-			{
+func generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
+	k8sSDConfig := yaml.MapSlice{
+		{
+			Key:   "role",
+			Value: "endpoints",
+		},
+	}
+
+	if namespaces != nil {
+		k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
+			Key: "namespaces",
+			Value: yaml.MapSlice{
 				{
-					Key:   "role",
-					Value: "endpoints",
+					Key:   "names",
+					Value: namespaces,
 				},
-				{
-					Key: "namespaces",
-					Value: yaml.MapSlice{
-						{
-							Key:   "names",
-							Value: namespaces,
-						},
+			},
+		})
+	}
+
+	if apiserverConfig != nil {
+		k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
+			Key: "api_server", Value: apiserverConfig.Host,
+		})
+
+		if apiserverConfig.BasicAuth != nil && basicAuthSecrets != nil {
+			if s, ok := basicAuthSecrets["apiserver"]; ok {
+				k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
+					Key: "basic_auth", Value: yaml.MapSlice{
+						{Key: "username", Value: s.username},
+						{Key: "password", Value: s.password},
 					},
-				},
-			},
-		},
-	}
-}
+				})
+			}
+		}
 
-func k8sSDAllNamespaces() yaml.MapItem {
+		if apiserverConfig.BearerToken != "" {
+			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token", Value: apiserverConfig.BearerToken})
+		}
+
+		if apiserverConfig.BearerTokenFile != "" {
+			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token_file", Value: apiserverConfig.BearerTokenFile})
+		}
+
+		k8sSDConfig = addTLStoYaml(k8sSDConfig, apiserverConfig.TLSConfig)
+	}
+
 	return yaml.MapItem{
 		Key: "kubernetes_sd_configs",
 		Value: []yaml.MapSlice{
-			{
-				{
-					Key:   "role",
-					Value: "endpoints",
-				},
-			},
+			k8sSDConfig,
 		},
 	}
 }
 
-func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoints) yaml.MapSlice {
+func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoints, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
 	if am.Scheme == "" {
 		am.Scheme = "http"
 	}
@@ -543,12 +562,12 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 	switch version.Major {
 	case 1:
 		if version.Minor < 7 {
-			cfg = append(cfg, k8sSDAllNamespaces())
+			cfg = append(cfg, generateK8SSDConfig(nil, nil, nil))
 		} else {
-			cfg = append(cfg, k8sSDWithNamespaces([]string{am.Namespace}))
+			cfg = append(cfg, generateK8SSDConfig([]string{am.Namespace}, apiserverConfig, basicAuthSecrets))
 		}
 	case 2:
-		cfg = append(cfg, k8sSDWithNamespaces([]string{am.Namespace}))
+		cfg = append(cfg, generateK8SSDConfig([]string{am.Namespace}, apiserverConfig, basicAuthSecrets))
 	}
 
 	if am.BearerTokenFile != "" {
