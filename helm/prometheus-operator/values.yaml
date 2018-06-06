@@ -10,7 +10,7 @@ global:
 ##
 prometheusConfigReloader:
   repository: quay.io/coreos/prometheus-config-reloader
-  tag: v0.0.4
+  tag: v0.20.0
 
 ## Configmap-reload image to use for reloading configmaps
 ##
