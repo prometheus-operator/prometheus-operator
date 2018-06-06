@@ -4,6 +4,7 @@ metadata:
   labels:
     k8s-app: prometheus-operator
   name: prometheus-operator
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -18,6 +19,7 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
+        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.20.0
         image: quay.io/coreos/prometheus-operator:v0.20.0
         name: prometheus-operator
         ports:
@@ -30,6 +32,9 @@ spec:
           requests:
             cpu: 100m
             memory: 50Mi
+      nodeSelector:
+        beta.kubernetes.io/os: linux
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
+      serviceAccountName: ""

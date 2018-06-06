@@ -16,7 +16,7 @@ To follow this getting started you will need a Kubernetes cluster you have acces
 
 [embedmd]:# (../../bundle.yaml)
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: prometheus-operator
@@ -29,7 +29,7 @@ subjects:
   name: prometheus-operator
   namespace: default
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: prometheus-operator
@@ -39,7 +39,7 @@ rules:
   resources:
   - customresourcedefinitions
   verbs:
-  - "*"
+  - '*'
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -50,36 +50,50 @@ rules:
   - servicemonitors
   - prometheusrules
   verbs:
-  - "*"
+  - '*'
 - apiGroups:
   - apps
   resources:
   - statefulsets
-  verbs: ["*"]
-- apiGroups: [""]
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
   resources:
   - configmaps
   - secrets
-  verbs: ["*"]
-- apiGroups: [""]
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
   resources:
   - pods
-  verbs: ["list", "delete"]
-- apiGroups: [""]
+  verbs:
+  - list
+  - delete
+- apiGroups:
+  - ""
   resources:
   - services
   - endpoints
-  verbs: ["get", "create", "update"]
-- apiGroups: [""]
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
+  - ""
   resources:
   - nodes
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - namespaces
-  verbs: ["list", "watch"]
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: prometheus-operator
+  verbs:
+  - list
+  - watch
 ---
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -87,6 +101,7 @@ metadata:
   labels:
     k8s-app: prometheus-operator
   name: prometheus-operator
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -101,6 +116,7 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
+        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.20.0
         image: quay.io/coreos/prometheus-operator:v0.20.0
         name: prometheus-operator
         ports:
@@ -113,10 +129,18 @@ spec:
           requests:
             cpu: 100m
             memory: 50Mi
+      nodeSelector:
+        beta.kubernetes.io/os: linux
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
       serviceAccountName: prometheus-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus-operator
+  namespace: default
 ```
 
 ## Related resources

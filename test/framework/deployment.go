@@ -41,6 +41,7 @@ func MakeDeployment(pathToYaml string) (*appsv1.Deployment, error) {
 }
 
 func CreateDeployment(kubeClient kubernetes.Interface, namespace string, d *appsv1.Deployment) error {
+	d.Namespace = namespace
 	_, err := kubeClient.AppsV1beta2().Deployments(namespace).Create(d)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))

@@ -29,6 +29,16 @@
                 }
             },
             "version": "master"
+        },
+        {
+            "name": "prometheus-operator",
+            "source": {
+                "git": {
+                    "remote": "https://github.com/coreos/prometheus-operator",
+                    "subdir": "jsonnet/prometheus-operator"
+                }
+            },
+            "version": "extract-po-jsonnet"
         }
     ]
 }

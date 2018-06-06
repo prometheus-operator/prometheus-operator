@@ -68,7 +68,7 @@ po-docgen:
 	@go install github.com/coreos/prometheus-operator/cmd/po-docgen
 
 docs: embedmd po-docgen
-	$(GOPATH)/bin/embedmd -w `find Documentation contrib/kube-prometheus/ -name "*.md"`
+	$(GOPATH)/bin/embedmd -w `find Documentation contrib/kube-prometheus/ -name "*.md" | grep -v vendor`
 	$(GOPATH)/bin/po-docgen api pkg/client/monitoring/v1/types.go > Documentation/api.md
 	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
 
@@ -101,16 +101,15 @@ generate-bundle:
 	hack/generate-bundle.sh
 
 generate-kube-prometheus:
-	# Update the Prometheus Operator version in kube-prometheus
-	sed -i                                                            \
-		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(shell cat VERSION)',/" \
-		contrib/kube-prometheus/jsonnet/kube-prometheus/prometheus-operator/prometheus-operator.libsonnet;
 	cd contrib/kube-prometheus; $(MAKE) generate-raw
 
 jsonnet: jb
-	cd hack/generate; jb install
-	jsonnet -J hack/generate/vendor hack/generate/prometheus-operator.jsonnet | gojsontoyaml > example/non-rbac/prometheus-operator.yaml
-	jsonnet -J hack/generate/vendor hack/generate/prometheus-operator-rbac.jsonnet | gojsontoyaml > example/rbac/prometheus-operator/prometheus-operator.yaml
+	# Update the Prometheus Operator version in kube-prometheus
+	sed -i                                                            \
+		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(shell cat VERSION)',/" \
+		jsonnet/prometheus-operator/prometheus-operator.libsonnet;
+	cd hack/generate; jb install;
+	hack/generate/build-jsonnet.sh
 
 jb:
 	go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
@@ -129,5 +128,9 @@ generate-crd: generate-openapi po-crdgen
 	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
 	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
 	po-crdgen prometheusrule > example/prometheus-operator-crd/prometheusrule.crd.yaml
+	cat example/prometheus-operator-crd/alertmanager.crd.yaml   | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/alertmanager-crd.libsonnet
+	cat example/prometheus-operator-crd/prometheus.crd.yaml     | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheus-crd.libsonnet
+	cat example/prometheus-operator-crd/servicemonitor.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
+	cat example/prometheus-operator-crd/prometheusrule.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
 
 .PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs generate-crd jb
