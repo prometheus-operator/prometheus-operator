@@ -3,7 +3,7 @@ groups:
 - name: ./etcd3.rules
   rules:
   - alert: InsufficientMembers
-    expr: count(up{job="etcd"} == 0) > (count(up{job="etcd"}) / 2 - 1)
+    expr: count(up{job="kube-etcd"} == 0) > (count(up{job="kube-etcd"}) / 2 - 1)
     for: 3m
     labels:
       severity: critical
@@ -11,7 +11,7 @@ groups:
       description: If one more etcd member goes down the cluster will be unavailable
       summary: etcd cluster insufficient members
   - alert: NoLeader
-    expr: etcd_server_has_leader{job="etcd"} == 0
+    expr: etcd_server_has_leader{job="kube-etcd"} == 0
     for: 1m
     labels:
       severity: critical
@@ -19,7 +19,7 @@ groups:
       description: etcd member {{`{{ $labels.instance }}`}} has no leader
       summary: etcd member has no leader
   - alert: HighNumberOfLeaderChanges
-    expr: increase(etcd_server_leader_changes_seen_total{job="etcd"}[1h]) > 3
+    expr: increase(etcd_server_leader_changes_seen_total{job="kube-etcd"}[1h]) > 3
     labels:
       severity: warning
     annotations:
@@ -27,8 +27,8 @@ groups:
         changes within the last hour
       summary: a high number of leader changes within the etcd cluster are happening
   - alert: HighNumberOfFailedGRPCRequests
-    expr: sum(rate(grpc_server_handled_total{grpc_code!="OK",job="etcd"}[5m])) BY (grpc_service, grpc_method)
-      / sum(rate(grpc_server_handled_total{job="etcd"}[5m])) BY (grpc_service, grpc_method) > 0.01
+    expr: sum(rate(grpc_server_handled_total{grpc_code!="OK",job="kube-etcd"}[5m])) BY (grpc_service, grpc_method)
+      / sum(rate(grpc_server_handled_total{job="kube-etcd"}[5m])) BY (grpc_service, grpc_method) > 0.01
     for: 10m
     labels:
       severity: warning
@@ -37,8 +37,8 @@ groups:
         on etcd instance {{`{{ $labels.instance }}`}}'
       summary: a high number of gRPC requests are failing
   - alert: HighNumberOfFailedGRPCRequests
-    expr: sum(rate(grpc_server_handled_total{grpc_code!="OK",job="etcd"}[5m])) BY (grpc_service, grpc_method)
-      / sum(rate(grpc_server_handled_total{job="etcd"}[5m])) BY (grpc_service, grpc_method) > 0.05
+    expr: sum(rate(grpc_server_handled_total{grpc_code!="OK",job="kube-etcd"}[5m])) BY (grpc_service, grpc_method)
+      / sum(rate(grpc_server_handled_total{job="kube-etcd"}[5m])) BY (grpc_service, grpc_method) > 0.05
     for: 5m
     labels:
       severity: critical
@@ -47,7 +47,7 @@ groups:
         on etcd instance {{`{{ $labels.instance }}`}}'
       summary: a high number of gRPC requests are failing
   - alert: GRPCRequestsSlow
-    expr: histogram_quantile(0.99, sum(rate(grpc_server_handling_seconds_bucket{job="etcd",grpc_type="unary"}[5m])) by (grpc_service, grpc_method, le))
+    expr: histogram_quantile(0.99, sum(rate(grpc_server_handling_seconds_bucket{job="kube-etcd",grpc_type="unary"}[5m])) by (grpc_service, grpc_method, le))
       > 0.15
     for: 10m
     labels:
@@ -57,7 +57,7 @@ groups:
         }}`}} are slow
       summary: slow gRPC requests
   - alert: HighNumberOfFailedHTTPRequests
-    expr: sum(rate(etcd_http_failed_total{job="etcd"}[5m])) BY (method) / sum(rate(etcd_http_received_total{job="etcd"}[5m]))
+    expr: sum(rate(etcd_http_failed_total{job="kube-etcd"}[5m])) BY (method) / sum(rate(etcd_http_received_total{job="kube-etcd"}[5m]))
       BY (method) > 0.01
     for: 10m
     labels:
@@ -67,7 +67,7 @@ groups:
         instance {{`{{ $labels.instance }}`}}'
       summary: a high number of HTTP requests are failing
   - alert: HighNumberOfFailedHTTPRequests
-    expr: sum(rate(etcd_http_failed_total{job="etcd"}[5m])) BY (method) / sum(rate(etcd_http_received_total{job="etcd"}[5m]))
+    expr: sum(rate(etcd_http_failed_total{job="kube-etcd"}[5m])) BY (method) / sum(rate(etcd_http_received_total{job="kube-etcd"}[5m]))
       BY (method) > 0.05
     for: 5m
     labels:
@@ -97,7 +97,7 @@ groups:
         {{`{{ $labels.To }}`}} is slow
       summary: etcd member communication is slow
   - alert: HighNumberOfFailedProposals
-    expr: increase(etcd_server_proposals_failed_total{job="etcd"}[1h]) > 5
+    expr: increase(etcd_server_proposals_failed_total{job="kube-etcd"}[1h]) > 5
     labels:
       severity: warning
     annotations:
