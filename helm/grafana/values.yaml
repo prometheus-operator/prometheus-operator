@@ -54,6 +54,10 @@ service:
   ##
   externalIPs: []
 
+  ## Labels to be added to the Service
+  ##
+  labels: {}
+
   ## External IP address to assign to Alertmanager Service
   ## Only used if service.type is 'LoadBalancer' and supported by cloud provider
   ##

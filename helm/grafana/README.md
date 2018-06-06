@@ -54,6 +54,7 @@ Parameter | Description | Default
 `service.annotations` | Annotations to be added to the Grafana Service | `{}`
 `service.clusterIP` | Cluster-internal IP address for Grafana Service | `""`
 `service.externalIPs` | List of external IP addresses at which the Grafana Service will be available | `[]`
+`service.labels` | Labels for Grafana Service | `{}`
 `service.loadBalancerIP` | External IP address to assign to Grafana Service | `""`
 `service.loadBalancerSourceRanges` | List of client IPs allowed to access Grafana Service | `[]`
 `service.nodePort` | Port to expose Grafana Service on each node | `30902`
