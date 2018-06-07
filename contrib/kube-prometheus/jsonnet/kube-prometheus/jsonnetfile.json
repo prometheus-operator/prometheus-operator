@@ -38,7 +38,7 @@
                     "subdir": "jsonnet/prometheus-operator"
                 }
             },
-            "version": "extract-po-jsonnet"
+            "version": "master"
         }
     ]
 }
