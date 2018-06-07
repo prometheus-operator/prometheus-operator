@@ -26,6 +26,7 @@ This stack is meant for cluster monitoring, so it is pre-configured to collect m
     * [Compiling](#compiling)
 * [Configuration](#configuration)
 * [Customization](#customization)
+    * [Alertmanager configuration](#alertmanager-configuration)
     * [Customizing Prometheus alerting/recording rules and Grafana dashboards](#customizing-prometheus-alertingrecording-rules-and-grafana-dashboards)
     * [Exposing Prometheus/Alermanager/Grafana via Ingress](#exposing-prometheusalermanagergrafana-via-ingress)
 * [Minikube Example](#minikube-example)
@@ -240,6 +241,49 @@ local daemonset = k.apps.v1beta2.daemonSet;
        daemonset.mixin.metadata.withNamespace('my-custom-namespace'),
    },
  }).nodeExporter.daemonset
+```
+
+### Alertmanager configuration
+
+The Alertmanager configuration is located in the `_config.alertmanager.config` configuration field. In order to set a custom Alertmanager configuration simply set this field.
+
+[embedmd]:# (examples/alertmanager-config.jsonnet)
+```jsonnet
+((import 'kube-prometheus/kube-prometheus.libsonnet') + {
+   _config+:: {
+     alertmanager+: {
+       config: |||
+         global:
+           resolve_timeout: 10m
+         route:
+           group_by: ['job']
+           group_wait: 30s
+           group_interval: 5m
+           repeat_interval: 12h
+           receiver: 'null'
+           routes:
+           - match:
+               alertname: DeadMansSwitch
+             receiver: 'null'
+         receivers:
+         - name: 'null'
+       |||,
+     },
+   },
+ }).alertmanager.secret
+```
+
+In the above example the configuration has been inlined, but can just as well be an external file imported in jsonnet via the `importstr` function.
+
+[embedmd]:# (examples/alertmanager-config-external.jsonnet)
+```jsonnet
+((import 'kube-prometheus/kube-prometheus.libsonnet') + {
+   _config+:: {
+     alertmanager+: {
+       config: importstr 'alertmanager-config.yaml',
+     },
+   },
+ }).alertmanager.secret
 ```
 
 ### Customizing Prometheus alerting/recording rules and Grafana dashboards

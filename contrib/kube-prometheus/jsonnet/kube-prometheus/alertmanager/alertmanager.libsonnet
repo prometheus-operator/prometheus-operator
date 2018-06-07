@@ -1,7 +1,5 @@
 local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
-local alertmanagerConfig = "\nglobal:\n  resolve_timeout: 5m\nroute:\n  group_by: ['job']\n  group_wait: 30s\n  group_interval: 5m\n  repeat_interval: 12h\n  receiver: 'null'\n  routes:\n  - match:\n      alertname: DeadMansSwitch\n    receiver: 'null'\nreceivers:\n- name: 'null'\n";
-
 {
   _config+:: {
     namespace: 'default',
@@ -16,7 +14,22 @@ local alertmanagerConfig = "\nglobal:\n  resolve_timeout: 5m\nroute:\n  group_by
 
     alertmanager+:: {
       name: $._config.alertmanager.name,
-      config: alertmanagerConfig,
+      config: |||
+        global:
+          resolve_timeout: 5m
+        route:
+          group_by: ['job']
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 12h
+          receiver: 'null'
+          routes:
+          - match:
+              alertname: DeadMansSwitch
+            receiver: 'null'
+        receivers:
+        - name: 'null'
+      |||,
       replicas: 3,
     },
   },
