@@ -435,3 +435,5 @@ deployKubeDNS: true
 ##Custom Labels to be added to Prometheus Rules ConfigMap
 ##
 additionalRulesConfigMapLabels: {}
+  # additionalRulesConfigMapLabels:
+  #   team: devops
