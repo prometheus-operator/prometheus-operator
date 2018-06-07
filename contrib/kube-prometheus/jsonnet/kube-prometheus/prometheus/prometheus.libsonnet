@@ -306,6 +306,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
               port: 'https-metrics',
               scheme: 'https',
               interval: '30s',
+              honorLabels: true,
               tlsConfig: {
                 insecureSkipVerify: true,
               },

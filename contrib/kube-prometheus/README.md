@@ -154,6 +154,19 @@ A hidden `_config` field is located at the top level of the object this library 
 }
 ```
 
+The grafana definition is located in a different project (https://github.com/brancz/kubernetes-grafana), but needed configuration can be customized from the same file. F.e. to allow anonymous access to grafana, add the `_config` section:
+
+```
+      grafana+:: {
+        config: {
+          sections: {
+            "auth.anonymous": {enabled: true},
+          },
+        },
+      },
+```
+
+
 ## Customization
 
 Jsonnet is a turing complete language, any logic can be reflected in it. It also has powerful merge functionalities, allowing sophisticated customizations of any kind simply by merging it into the object the library provides.

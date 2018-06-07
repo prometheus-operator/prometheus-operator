@@ -27,6 +27,7 @@ func CreateServiceAccount(kubeClient kubernetes.Interface, namespace string, rel
 	if err != nil {
 		return finalizerFn, err
 	}
+	serviceAccount.Namespace = namespace
 	_, err = kubeClient.CoreV1().ServiceAccounts(namespace).Create(serviceAccount)
 	if err != nil {
 		return finalizerFn, err

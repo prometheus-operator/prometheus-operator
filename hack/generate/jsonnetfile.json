@@ -1,14 +1,14 @@
 {
     "dependencies": [
         {
-            "name": "ksonnet",
+            "name": "prometheus-operator",
             "source": {
                 "git": {
-                    "remote": "https://github.com/ksonnet/ksonnet-lib",
-                    "subdir": ""
+                    "remote": "../../",
+                    "subdir": "jsonnet/prometheus-operator"
                 }
             },
-            "version": "master"
+            "version": "."
         }
     ]
 }

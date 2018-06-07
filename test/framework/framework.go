@@ -120,7 +120,7 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 		return errors.Wrap(err, "failed to create prometheus cluster role")
 	}
 
-	deploy, err := MakeDeployment("../../example/rbac/prometheus-operator/prometheus-operator.yaml")
+	deploy, err := MakeDeployment("../../example/rbac/prometheus-operator/prometheus-operator-deployment.yaml")
 	if err != nil {
 		return err
 	}
