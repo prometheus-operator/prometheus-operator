@@ -8,5 +8,3 @@ for file in "${files[@]}"
 do
     jq -r ".[\"${file}\"]" tmp/po.json | gojsontoyaml > "example/rbac/prometheus-operator/${file}"
 done
-
-jsonnet -J hack/generate/vendor hack/generate/prometheus-operator-non-rbac.jsonnet | gojsontoyaml > example/non-rbac/prometheus-operator.yaml
