@@ -204,6 +204,9 @@ type StorageSpec struct {
 	// EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More
 	// info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
 	EmptyDir *v1.EmptyDirVolumeSource `json:"emptyDir,omitempty"`
+	// HostPathVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More
+	// info: https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
+	HostPath *v1.HostPathVolumeSource `json:"hostPath,omitempty"`
 	// A label query over volumes to consider for binding.
 	// DEPRECATED
 	Selector *metav1.LabelSelector `json:"selector,omitempty"`

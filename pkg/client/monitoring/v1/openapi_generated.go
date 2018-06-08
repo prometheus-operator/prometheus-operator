@@ -1563,6 +1563,12 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Ref:         ref("k8s.io/api/core/v1.EmptyDirVolumeSource"),
 							},
 						},
+						"hostPath": {
+							SchemaProps: spec.SchemaProps{
+								Description: "HostPathVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More info: https://kubernetes.io/docs/concepts/storage/volumes/#hostpath",
+								Ref:         ref("k8s.io/api/core/v1.HostPathVolumeSource"),
+							},
+						},
 						"selector": {
 							SchemaProps: spec.SchemaProps{
 								Description: "A label query over volumes to consider for binding. DEPRECATED",
@@ -1585,7 +1591,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 				},
 			},
 			Dependencies: []string{
-				"k8s.io/api/core/v1.EmptyDirVolumeSource", "k8s.io/api/core/v1.PersistentVolumeClaim", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+				"k8s.io/api/core/v1.EmptyDirVolumeSource", "k8s.io/api/core/v1.HostPathVolumeSource", "k8s.io/api/core/v1.PersistentVolumeClaim", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig": {
 			Schema: spec.Schema{
