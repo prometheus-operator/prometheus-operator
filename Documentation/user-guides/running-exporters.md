@@ -68,7 +68,7 @@ spec:
     interval: 15s
 ```
 
-(A better example for monitoring Kubernetes cluster components can be found in [Cluster Monitoring][cluster-monitoring](cluster-monitoring.md).)
+A better example for monitoring Kubernetes cluster components can be found in [Cluster Monitoring](cluster-monitoring.md).
 
 ## Troubleshooting
 
