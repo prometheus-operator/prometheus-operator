@@ -5,7 +5,7 @@ data:
         "datasources": [
             {
                 "access": "proxy",
-                "etitable": false,
+                "editable": false,
                 "name": "prometheus",
                 "org_id": 1,
                 "type": "prometheus",
