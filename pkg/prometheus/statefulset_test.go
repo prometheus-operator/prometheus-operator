@@ -205,7 +205,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							VolumeSource: v1.VolumeSource{
 								ConfigMap: &v1.ConfigMapVolumeSource{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "prometheus-volume-init-test-rules",
+										Name: "prometheus-volume-init-test-rulefiles",
 									},
 								},
 							},
