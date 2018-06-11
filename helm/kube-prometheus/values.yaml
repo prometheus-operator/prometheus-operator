@@ -329,6 +329,7 @@ prometheus:
       - exporter-kubelets
       - exporter-kubernetes
       - exporter-node
+      - exporter-blackbox
       - grafana
       - prometheus
       - prometheus-operator

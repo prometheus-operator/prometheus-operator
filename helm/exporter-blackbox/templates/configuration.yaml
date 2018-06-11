@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: "prometheus"
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    prometheus: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+    role: config
+  name: "exporter-blackbox-config"
+data:
+  {{- if .Values.keepOriginalConfig }}
+{{ (tpl (.Files.Glob "config/*").AsConfig . ) | indent 2 }}
+  {{- end }}

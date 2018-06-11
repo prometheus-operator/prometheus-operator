@@ -1,0 +1,14 @@
+{{ define "blackbox.rules.yaml.tpl" }}
+groups:
+- name: blackbox.rules
+  rules:
+  - alert: BlackboxExporterDown
+    expr: absent(up{job="blackbox-exporter"} == 1)
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: Prometheus could not scrape blackbox-exporter for more than 10m,
+        or blackbox-exporter has disappeared from discovery
+      summary: Prometheus could not scrape blackbox-exporter
+{{ end }}

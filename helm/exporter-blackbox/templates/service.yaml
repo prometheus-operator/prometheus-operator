@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "exporter-blackbox.fullname" . }}
+  labels:
+    app: {{ template "exporter-blackbox.name" . }}
+    component: blackbox-exporter
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - name: metrics
+    port: {{ .Values.service.externalPort }}
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app: {{ template "exporter-blackbox.fullname" . }}
+    component: blackbox-exporter
+    release: {{ .Release.Name }}
