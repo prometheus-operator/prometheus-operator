@@ -286,7 +286,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 		return nil, errors.Wrap(err, "parse version")
 	}
 
-	var promArgs []string
+	promArgs := []string{
+		"-web.console.templates=/etc/prometheus/consoles",
+		"-web.console.libraries=/etc/prometheus/console-libraries",
+	}
+
 	var securityContext *v1.PodSecurityContext
 
 	switch version.Major {
