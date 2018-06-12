@@ -12,7 +12,7 @@ spec:
   serviceMonitorSelector:
     matchLabels:
       team: frontend
-  ruleFileSelector:
+  ruleSelector:
     matchLabels:
       role: alert-rules
       prometheus: example
