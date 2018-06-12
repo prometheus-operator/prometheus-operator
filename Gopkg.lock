@@ -47,6 +47,21 @@
   version = "v3.5.1"
 
 [[projects]]
+  name = "github.com/coreos/prometheus-operator"
+  packages = [
+    "pkg/alertmanager",
+    "pkg/api",
+    "pkg/client/monitoring",
+    "pkg/client/monitoring/v1",
+    "pkg/client/monitoring/v1alpha1",
+    "pkg/k8sutil",
+    "pkg/prometheus",
+    "test/framework"
+  ]
+  revision = "f67b87ff1ff38051c339cbc7f8782a6fefffe27f"
+  version = "v0.20.0"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -557,6 +572,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a163ed58d0f9c69709808679f6106fbbc4720f28a81444e57d272f9baf87e0a5"
+  inputs-digest = "0b999579513677f46f739225176ea799abec5fcbabcd3b03c72ae6048fd9026e"
   solver-name = "gps-cdcl"
   solver-version = 1
