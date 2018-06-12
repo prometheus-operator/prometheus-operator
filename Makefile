@@ -27,10 +27,14 @@ all: format generate build test
 build: operator prometheus-config-reloader
 
 operator: $(GOLANG_FILES)
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $@ cmd/operator/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
+	-ldflags "-X github.com/coreos/prometheus-operator/pkg/version.Version=$(shell cat VERSION)" \
+	-o $@ cmd/operator/main.go
 
 prometheus-config-reloader:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $@ cmd/$@/main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
+	-ldflags "-X github.com/coreos/prometheus-operator/pkg/version.Version=$(shell cat VERSION)" \
+	-o $@ cmd/$@/main.go
 
 pkg/client/monitoring/v1/zz_generated.deepcopy.go: $(DEEPCOPY_GEN_BINARY)
 	$(DEEPCOPY_GEN_BINARY) \
