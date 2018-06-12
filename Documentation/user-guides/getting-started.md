@@ -202,6 +202,8 @@ spec:
 
 This Service object is discovered by a ServiceMonitor, which selects in the same way. The `app` label must have the value `example-app`.
 
+
+
 [embedmd]:# (../../example/user-guides/getting-started/example-app-service-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -217,6 +219,8 @@ spec:
   endpoints:
   - port: web
 ```
+
+> Before the version `v0.19.0`, ServiceMonitors must be installed in the same namespace as the Prometheus Operator.
 
 ## Enable RBAC rules for Prometheus pods
 
