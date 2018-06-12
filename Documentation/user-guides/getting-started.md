@@ -202,8 +202,6 @@ spec:
 
 This Service object is discovered by a ServiceMonitor, which selects in the same way. The `app` label must have the value `example-app`.
 
-
-
 [embedmd]:# (../../example/user-guides/getting-started/example-app-service-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
