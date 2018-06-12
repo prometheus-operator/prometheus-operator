@@ -1,136 +1,222 @@
 SHELL=/bin/bash -o pipefail
+
 REPO?=quay.io/coreos/prometheus-operator
 TAG?=$(shell git rev-parse --short HEAD)
-NAMESPACE?=po-e2e-$(shell LC_ALL=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
-KUBECONFIG?=$(HOME)/.kube/config
 
-PROMU := $(GOPATH)/bin/promu
-PREFIX ?= $(shell pwd)
-ifeq ($(GOBIN),)
-GOBIN :=${GOPATH}/bin
-endif
+PO_CRDGEN_BINARY:=$(GOPATH)/bin/po-crdgen
+OPENAPI_GEN_BINARY:=$(GOPATH)/bin/openapi-gen
+DEEPCOPY_GEN_BINARY:=$(GOPATH)/bin/deepcopy-gen
+GOJSONTOYAML_BINARY:=$(GOPATH)/bin/gojsontoyaml
+JB_BINARY:=$(GOPATH)/bin/jb
+PO_DOCGEN_BINARY:=$(GOPATH)/bin/po-docgen
+EMBEDMD_BINARY:=$(GOPATH)/bin/embedmd
+
+GOLANG_FILES:=$(shell find . -name \*.go -print)
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 
-all: check-license format build test
 
-build: promu
-	@$(PROMU) build --prefix $(PREFIX)
+.PHONY: all
+all: format generate build test
 
-short-build:
-	go install github.com/coreos/prometheus-operator/cmd/operator
 
-po-crdgen:
-	go install github.com/coreos/prometheus-operator/cmd/po-crdgen
+############
+# Building #
+############
 
-crossbuild: promu
-	@$(PROMU) crossbuild
-	cd contrib/prometheus-config-reloader && make build
+.PHONY: build
+build: operator prometheus-config-reloader
 
-test:
-	@go test $(TEST_RUN_ARGS) -short $(pkgs)
+operator: $(GOLANG_FILES)
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $@ cmd/operator/main.go
 
-format:
+prometheus-config-reloader:
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $@ cmd/$@/main.go
+
+pkg/client/monitoring/v1/zz_generated.deepcopy.go: $(DEEPCOPY_GEN_BINARY)
+	$(DEEPCOPY_GEN_BINARY) \
+	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 \
+	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
+	-v=4 \
+	--logtostderr \
+	--bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" \
+	--output-file-base zz_generated.deepcopy
+
+pkg/client/monitoring/v1alpha1/zz_generated.deepcopy.go: $(DEEPCOPY_GEN_BINARY)
+	$(DEEPCOPY_GEN_BINARY) \
+	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1 \
+	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
+	-v=4 \
+	--logtostderr \
+	--bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" \
+	--output-file-base zz_generated.deepcopy
+
+.PHONY: image
+image: hack/operator-image hack/prometheus-config-reloader-image
+
+hack/operator-image: Dockerfile operator
+# Create empty target file, for the sole purpose of recording when this target
+# was last executed via the last-modification timestamp on the file. See
+# https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+	docker build -t $(REPO):$(TAG) .
+	touch $@
+
+hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile prometheus-config-reloader
+# Create empty target file, for the sole purpose of recording when this target
+# was last executed via the last-modification timestamp on the file. See
+# https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+	docker build -t quay.io/coreos/prometheus-config-reloader:$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	touch $@
+
+
+##############
+# Generating #
+##############
+
+.PHONY: generate
+generate: Documentation/*
+
+.PHONY: generate-in-docker
+generate-in-docker: hack/jsonnet-docker-image
+	docker run \
+	--rm \
+	-u=$(shell id -u $(USER)):$(shell id -g $(USER)) \
+	-v `pwd`:/go/src/github.com/coreos/prometheus-operator \
+	po-jsonnet make generate
+
+.PHONY: kube-prometheus
+kube-prometheus:
+	cd contrib/kube-prometheus; $(MAKE) generate
+
+example/prometheus-operator-crd/**.crd.yaml: pkg/client/monitoring/v1/openapi_generated.go $(PO_CRDGEN_BINARY)
+	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
+	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
+	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
+	po-crdgen prometheusrule > example/prometheus-operator-crd/prometheusrule.crd.yaml
+
+jsonnet/prometheus-operator/**-crd.libsonnet: example/prometheus-operator-crd/**.crd.yaml $(GOJSONTOYAML_BINARY)
+	cat example/prometheus-operator-crd/alertmanager.crd.yaml   | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/alertmanager-crd.libsonnet
+	cat example/prometheus-operator-crd/prometheus.crd.yaml     | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheus-crd.libsonnet
+	cat example/prometheus-operator-crd/servicemonitor.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
+	cat example/prometheus-operator-crd/prometheusrule.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
+
+pkg/client/monitoring/v1/openapi_generated.go: $(OPENAPI_GEN_BINARY)
+	$(OPENAPI_GEN_BINARY) \
+	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1 \
+	-p github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 \
+	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header"
+
+bundle.yaml: example/rbac/prometheus-operator/*.yaml
+	hack/generate-bundle.sh
+
+hack/generate/vendor: $(JB_BINARY) jsonnet/prometheus-operator/**
+	cd hack/generate; $(JB_BINARY) install;
+
+example/non-rbac/prometheus-operator.yaml: hack/generate/vendor hack/generate/prometheus-operator-non-rbac.jsonnet
+	hack/generate/build-non-rbac-prometheus-operator.sh
+
+example/rbac/prometheus-operator/*.yaml: hack/generate/vendor hack/generate/prometheus-operator-rbac.jsonnet
+	hack/generate/build-rbac-prometheus-operator.sh
+
+jsonnet/prometheus-operator/prometheus-operator.libsonnet: VERSION
+	sed -i                                                            \
+		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(shell cat VERSION)',/" \
+		jsonnet/prometheus-operator/prometheus-operator.libsonnet;
+
+FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
+TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(wildcard Documentation/*.md))
+
+Documentation/api.md: $(PO_DOCGEN_BINARY) pkg/client/monitoring/v1/types.go
+	$(PO_DOCGEN_BINARY) api pkg/client/monitoring/v1/types.go > $@
+
+Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
+	$(PO_DOCGEN_BINARY) compatibility > $@
+
+$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) kube-prometheus
+	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
+
+
+##############
+# Formatting #
+##############
+
+.PHONY: format
+format: go-fmt check-license
+
+.PHONY: go-fmt
+go-fmt:
 	go fmt $(pkgs)
 
+.PHONY: check-license
 check-license:
 	./scripts/check_license.sh
 
-container:
-	docker build -t $(REPO):$(TAG) .
-	cd contrib/prometheus-config-reloader && docker build -t quay.io/coreos/prometheus-config-reloader:$(TAG) .
 
-e2e-test:
+###########
+# Testing #
+###########
+
+.PHONY: test
+test: test-unit test-e2e
+
+.PHONY: test-unit
+test-unit:
+	@go test $(TEST_RUN_ARGS) -short $(pkgs)
+
+.PHONY: test-e2e
+test-e2e: NAMESPACE?=po-e2e-$(shell LC_ALL=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
+test-e2e: KUBECONFIG?=$(HOME)/.kube/config
+test-e2e:
 	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE)
 
-e2e-status:
-	kubectl get prometheus,alertmanager,servicemonitor,statefulsets,deploy,svc,endpoints,pods,cm,secrets,replicationcontrollers --all-namespaces
-
-e2e: container
-	$(MAKE) e2e-test
-
-e2e-helm:
+.PHONY: test-e2e-helm
+test-e2e-helm:
 	./helm/hack/e2e-test.sh
 	# package the chart and verify if they have the version bumped
 	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes exporter-coredns"
 	helm/hack/sync-repo.sh false
 
-clean-e2e:
-	kubectl -n $(NAMESPACE) delete prometheus,alertmanager,servicemonitor,statefulsets,deploy,svc,endpoints,pods,cm,secrets,replicationcontrollers --all
-	kubectl delete namespace $(NAMESPACE)
 
-promu:
-	@go get -u github.com/prometheus/promu
+########
+# Misc #
+########
 
-embedmd:
-	@go get github.com/campoy/embedmd
-
-po-docgen:
-	@go install github.com/coreos/prometheus-operator/cmd/po-docgen
-
-docs: embedmd po-docgen
-	$(GOPATH)/bin/embedmd -w `find Documentation contrib/kube-prometheus/ -name "*.md" | grep -v vendor`
-	$(GOPATH)/bin/po-docgen api pkg/client/monitoring/v1/types.go > Documentation/api.md
-	$(GOPATH)/bin/po-docgen compatibility > Documentation/compatibility.md
-
-generate: jsonnet-docker
-	docker run --rm -u=$(shell id -u $(USER)):$(shell id -g $(USER)) -v `pwd`:/go/src/github.com/coreos/prometheus-operator po-jsonnet make generate-deepcopy generate-openapi generate-crd jsonnet generate-bundle generate-kube-prometheus docs
-
-
-$(GOBIN)/openapi-gen:
-	go get -u -v -d k8s.io/code-generator/cmd/openapi-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.10
-	go install k8s.io/code-generator/cmd/openapi-gen
-
-$(GOBIN)/deepcopy-gen:
-	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.10
-	go install k8s.io/code-generator/cmd/deepcopy-gen
-
-openapi-gen: $(GOBIN)/openapi-gen
-
-deepcopy-gen: $(GOBIN)/deepcopy-gen
-
-generate-deepcopy: deepcopy-gen
-	$(GOBIN)/deepcopy-gen -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" --output-file-base zz_generated.deepcopy
-	$(GOBIN)/deepcopy-gen -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" -v=4 --logtostderr --bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" --output-file-base zz_generated.deepcopy
-
-generate-openapi: openapi-gen
-	$(GOBIN)/openapi-gen  -i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1  -p github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 --go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header"
-
-generate-bundle:
-	hack/generate-bundle.sh
-
-generate-kube-prometheus:
-	cd contrib/kube-prometheus; $(MAKE) generate-raw
-
-jsonnet: jb
-	# Update the Prometheus Operator version in kube-prometheus
-	sed -i                                                            \
-		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(shell cat VERSION)',/" \
-		jsonnet/prometheus-operator/prometheus-operator.libsonnet;
-	cd hack/generate; jb install;
-	hack/generate/build-jsonnet.sh
-
-jb:
-	go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
-
-jsonnet-docker:
+hack/jsonnet-docker-image: scripts/jsonnet/Dockerfile
 	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .
+	touch $@
 
+.PHONY: helm-sync-s3
 helm-sync-s3:
 	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes exporter-coredns"
 	helm/hack/sync-repo.sh true
 	helm/hack/helm-package.sh kube-prometheus
 	helm/hack/sync-repo.sh true
 
-generate-crd: generate-openapi po-crdgen
-	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
-	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
-	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
-	po-crdgen prometheusrule > example/prometheus-operator-crd/prometheusrule.crd.yaml
-	cat example/prometheus-operator-crd/alertmanager.crd.yaml   | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/alertmanager-crd.libsonnet
-	cat example/prometheus-operator-crd/prometheus.crd.yaml     | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheus-crd.libsonnet
-	cat example/prometheus-operator-crd/servicemonitor.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
-	cat example/prometheus-operator-crd/prometheusrule.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
 
-.PHONY: all build crossbuild test format check-license container e2e-test e2e-status e2e clean-e2e embedmd apidocgen docs generate-crd jb
+############
+# Binaries #
+############
+
+$(EMBEDMD_BINARY):
+	@go get github.com/campoy/embedmd
+
+$(JB_BINARY):
+	go get -u github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
+
+$(PO_CRDGEN_BINARY): cmd/po-crdgen/**.go
+	go install github.com/coreos/prometheus-operator/cmd/po-crdgen
+
+$(PO_DOCGEN_BINARY): cmd/po-docgen/**.go
+	go install github.com/coreos/prometheus-operator/cmd/po-docgen
+
+$(OPENAPI_GEN_BINARY):
+	go get -u -v -d k8s.io/code-generator/cmd/openapi-gen
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.10
+	go install k8s.io/code-generator/cmd/openapi-gen
+
+$(DEEPCOPY_GEN_BINARY):
+	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.10
+	go install k8s.io/code-generator/cmd/deepcopy-gen
+
+$(GOJSONTOYAML_BINARY):
+	go get -u github.com/brancz/gojsontoyaml
