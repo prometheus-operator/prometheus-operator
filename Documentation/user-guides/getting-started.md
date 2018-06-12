@@ -157,7 +157,7 @@ The Prometheus resource declaratively describes the desired state of a Prometheu
 
 ![Prometheus Operator Architecture](images/architecture.png "Prometheus Operator Architecture")
 
-The Prometheus resource includes a field called `serviceMonitorSelector`, which defines a selection of ServiceMonitors to be used.
+The Prometheus resource includes a field called `serviceMonitorSelector`, which defines a selection of ServiceMonitors to be used. By default and before the version `v0.19.0`, ServiceMonitors must be installed in the same namespace as the Prometheus instance. With the Prometheus Operator `v0.19.0` and above, ServiceMonitors can be selected outside the Prometheus namespace via the `serviceMonitorNamespaceSelector` field of the Prometheus resource.
 
 First, deploy three instances of a simple example application, which listens and exposes metrics on port `8080`.
 
@@ -219,8 +219,6 @@ spec:
   endpoints:
   - port: web
 ```
-
-> Before the version `v0.19.0`, ServiceMonitors must be installed in the same namespace as the Prometheus Operator.
 
 ## Enable RBAC rules for Prometheus pods
 
