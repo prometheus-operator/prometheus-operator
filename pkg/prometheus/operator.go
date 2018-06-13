@@ -136,6 +136,7 @@ type Config struct {
 	EnableValidation             bool
 	DisableAutoUserGroup         bool
 	LogLevel                     string
+	LogFormat                    string
 }
 
 type BasicAuthCredentials struct {
