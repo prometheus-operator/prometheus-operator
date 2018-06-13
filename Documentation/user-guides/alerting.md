@@ -121,7 +121,7 @@ spec:
   serviceMonitorSelector:
     matchLabels:
       team: frontend
-  ruleFileSelector:
+  ruleSelector:
     matchLabels:
       role: alert-rules
       prometheus: example
@@ -129,14 +129,14 @@ spec:
 
 The above configuration specifies a `Prometheus` that finds all of the Alertmanagers behind the `Service` created with `alertmanager-example-service.yaml`. The `alertmanagers` `name` and `port` fields should match those of the `Service` to allow this to occur.
 
-Prometheus rule files are held in `RuleFile` custom resources. Use the label selector field `ruleFileSelector` in the Prometheus object to define the rule files that you want to be mounted into Prometheus.
+Prometheus rule files are held in `PrometheusRule` custom resources. Use the label selector field `ruleSelector` in the Prometheus object to define the rule files that you want to be mounted into Prometheus.
 
-The best practice is to label the `RuleFile`s containing rule files with `role: alert-rules` as well as the name of the Prometheus object, `prometheus: example` in this case.
+The best practice is to label the `PrometheusRule`s containing rule files with `role: alert-rules` as well as the name of the Prometheus object, `prometheus: example` in this case.
 
 [embedmd]:# (../../example/user-guides/alerting/prometheus-example-rules.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
-kind: RuleFile
+kind: PrometheusRule
 metadata:
   creationTimestamp: null
   labels:
@@ -151,7 +151,7 @@ spec:
       expr: vector(1)
 ```
 
-The example `RuleFile` always immediately triggers an alert, which is only for demonstration purposes. To validate that everything is working properly have a look at each of the Prometheus web UIs.
+The example `PrometheusRule` always immediately triggers an alert, which is only for demonstration purposes. To validate that everything is working properly have a look at each of the Prometheus web UIs.
 
 Use kubectl's proxy functionality to view the web UI without a Service.
 
