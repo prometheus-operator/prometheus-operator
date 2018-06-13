@@ -431,3 +431,4 @@ prometheus:
 # Select Deployed DNS Solution
 deployCoreDNS: false
 deployKubeDNS: true
+deployKubeEtcd: true
