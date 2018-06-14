@@ -37,7 +37,7 @@ prometheus-config-reloader:
 	-ldflags "-X github.com/coreos/prometheus-operator/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/$@/main.go
 
-pkg/client/monitoring/v1/zz_generated.deepcopy.go: $(DEEPCOPY_GEN_BINARY)
+pkg/client/monitoring/v1/zz_generated.deepcopy.go: .header pkg/client/monitoring/v1/types.go $(DEEPCOPY_GEN_BINARY)
 	$(DEEPCOPY_GEN_BINARY) \
 	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 \
 	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
@@ -78,7 +78,7 @@ hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 ##############
 
 .PHONY: generate
-generate: Documentation/*
+generate: pkg/client/monitoring/v1/zz_generated.deepcopy.go pkg/client/monitoring/v1/openapi_generated.go kube-prometheus Documentation/*
 
 .PHONY: generate-in-docker
 generate-in-docker: hack/jsonnet-docker-image

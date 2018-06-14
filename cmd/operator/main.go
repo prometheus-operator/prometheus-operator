@@ -78,6 +78,7 @@ func init() {
 	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", "quay.io/coreos/configmap-reload:v0.0.1", "Reload Image")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", "quay.io/prometheus/alertmanager", "Alertmanager default base image")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", "quay.io/prometheus/prometheus", "Prometheus default base image")
+	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", "improbable/thanos", "Thanos default base image")
 	flagset.StringVar(&cfg.Namespace, "namespace", v1.NamespaceAll, "Namespace to scope the interaction of the Prometheus Operator and the apiserver.")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
 	flagset.StringVar(&cfg.CrdGroup, "crd-apigroup", monitoringv1.Group, "prometheus CRD  API group name")
