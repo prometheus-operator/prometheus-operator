@@ -16,6 +16,11 @@ metadata:
 {{- end }}
   name: {{ template "prometheus.fullname" . }}
 spec:
+{{- if .Values.labels }}
+  podMetadata:
+    labels:
+{{ toYaml .Values.labels | indent 6 }}
+{{- end }}
 {{- if .Values.alertingEndpoints }}
   alerting:
     alertmanagers:
