@@ -15,7 +15,7 @@ Here is a ready to use manifest of a `ClusterRole` that can be used to start the
 
 [embedmd]:# (../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml)
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: prometheus-operator
@@ -25,7 +25,7 @@ rules:
   resources:
   - customresourcedefinitions
   verbs:
-  - "*"
+  - '*'
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -36,31 +36,50 @@ rules:
   - servicemonitors
   - prometheusrules
   verbs:
-  - "*"
+  - '*'
 - apiGroups:
   - apps
   resources:
   - statefulsets
-  verbs: ["*"]
-- apiGroups: [""]
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
   resources:
   - configmaps
   - secrets
-  verbs: ["*"]
-- apiGroups: [""]
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
   resources:
   - pods
-  verbs: ["list", "delete"]
-- apiGroups: [""]
+  verbs:
+  - list
+  - delete
+- apiGroups:
+  - ""
   resources:
   - services
   - endpoints
-  verbs: ["get", "create", "update"]
-- apiGroups: [""]
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
+  - ""
   resources:
   - nodes
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - namespaces
-  verbs: ["list", "watch"]
+  verbs:
+  - list
+  - watch
 ```
 
 > Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus Operator `Pod`. The `ServiceAccount` used by the Prometheus Operator `Pod` can be specified in the `Deployment` object used to deploy it.
@@ -127,6 +146,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus-operator
+  namespace: default
 ```
 
 Note that the `ServiceAccountName` also has to actually be used in the `PodTemplate` of the `Deployment` of the Prometheus Operator.
@@ -135,7 +155,7 @@ And then a `ClusterRoleBinding`:
 
 [embedmd]:# (../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml)
 ```yaml
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: prometheus-operator

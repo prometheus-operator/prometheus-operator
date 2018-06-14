@@ -1,9 +1,8 @@
-local k = import "ksonnet/ksonnet.beta.3/k.libsonnet";
-local deployment = k.apps.v1beta2.deployment;
+local po = (import 'prometheus-operator/prometheus-operator.libsonnet').prometheusOperator;
 
-local po = import "./prometheus-operator.jsonnet";
-
-local operatorDeployment = po +
-  deployment.mixin.spec.template.spec.withServiceAccountName("prometheus-operator");
-
-operatorDeployment
+{
+  'prometheus-operator-cluster-role-binding.yaml': po.clusterRoleBinding,
+  'prometheus-operator-cluster-role.yaml': po.clusterRole,
+  'prometheus-operator-service-account.yaml': po.serviceAccount,
+  'prometheus-operator-deployment.yaml': po.deployment,
+}

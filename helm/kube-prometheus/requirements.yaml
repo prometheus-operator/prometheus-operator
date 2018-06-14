@@ -28,9 +28,10 @@ dependencies:
     condition: deployKubeDNS
 
   - name: exporter-kube-etcd
-    version: 0.1.11
+    version: 0.1.13
     #e2e-repository: file://../exporter-kube-etcd
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+    condition: deployKubeEtcd
 
   - name: exporter-kube-scheduler
     version: 0.1.8

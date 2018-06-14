@@ -1,3 +1,4 @@
+{{- if .Values.serviceMonitor.create }}
 apiVersion: {{ template "prometheus-operator.apiVersion" . }}
 kind: ServiceMonitor
 metadata:
@@ -37,3 +38,4 @@ spec:
       {{- end}}
       insecureSkipVerify: true
     {{- end }}
+{{- end }}

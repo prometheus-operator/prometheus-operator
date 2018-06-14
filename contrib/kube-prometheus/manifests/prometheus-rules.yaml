@@ -679,7 +679,7 @@ spec:
           full within the next 24 hours (mounted at {{$labels.mountpoint}})
         summary: Node disk is running full within 24 hours
       expr: |
-        predict_linear(node_filesystem_free{job="node-exporter"}[6h], 3600 * 24) < 0
+        predict_linear(node_filesystem_free{job="node-exporter",mountpoint!~"^/etc/(?:resolv.conf|hosts|hostname)$"}[6h], 3600 * 24) < 0
       for: 30m
       labels:
         severity: warning
@@ -689,7 +689,7 @@ spec:
           full within the next 2 hours (mounted at {{$labels.mountpoint}})
         summary: Node disk is running full within 2 hours
       expr: |
-        predict_linear(node_filesystem_free{job="node-exporter"}[30m], 3600 * 2) < 0
+        predict_linear(node_filesystem_free{job="node-exporter",mountpoint!~"^/etc/(?:resolv.conf|hosts|hostname)$"}[30m], 3600 * 2) < 0
       for: 10m
       labels:
         severity: critical

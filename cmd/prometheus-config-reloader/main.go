@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/coreos/prometheus-operator/pkg/version"
+
 	"github.com/go-kit/kit/log"
 	"github.com/improbable-eng/thanos/pkg/reloader"
 	"github.com/oklog/run"
@@ -29,6 +31,8 @@ func main() {
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
+
+	logger.Log("msg", fmt.Sprintf("Starting prometheus-config-reloader version '%v'.", version.Version))
 
 	app := kingpin.New("prometheus-config-reloader", "")
 

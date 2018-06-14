@@ -18,3 +18,6 @@ additionalServiceMonitorLabels: {}
 ##Custom Labels to be added to Prometheus Rules ConfigMap
 ##
 additionalRulesConfigMapLabels: {}
+
+serviceMonitor:
+  create: true
