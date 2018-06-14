@@ -23,8 +23,6 @@ post](https://coreos.com/blog/the-prometheus-operator.html).
 
 **Documentation is hosted on [coreos.com](https://coreos.com/operators/prometheus/docs/latest/)**
 
-The current project roadmap [can be found here](./ROADMAP.md).
-
 ## Prometheus Operator vs. kube-prometheus
 
 The Prometheus Operator makes the Prometheus configuration Kubernetes native
