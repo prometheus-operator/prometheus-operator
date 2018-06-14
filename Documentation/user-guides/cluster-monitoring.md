@@ -185,6 +185,7 @@ spec:
         name: kube-rbac-proxy
         ports:
         - containerPort: 9100
+          hostPort: 9100
           name: https
         resources:
           limits:
@@ -193,6 +194,8 @@ spec:
           requests:
             cpu: 10m
             memory: 20Mi
+      hostNetwork: true
+      hostPID: true
       nodeSelector:
         beta.kubernetes.io/os: linux
       securityContext:

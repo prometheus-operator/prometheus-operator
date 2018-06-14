@@ -89,7 +89,7 @@ generate-in-docker: hack/jsonnet-docker-image
 
 .PHONY: kube-prometheus
 kube-prometheus:
-	cd contrib/kube-prometheus; $(MAKE) generate
+	cd contrib/kube-prometheus && $(MAKE) generate
 
 example/prometheus-operator-crd/**.crd.yaml: pkg/client/monitoring/v1/openapi_generated.go $(PO_CRDGEN_BINARY)
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml

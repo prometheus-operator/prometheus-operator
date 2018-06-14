@@ -90,7 +90,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           '--secure-listen-address=:9100',
           '--upstream=http://127.0.0.1:9101/',
         ]) +
-        container.withPorts(containerPort.newNamed('https', 9100)) +
+        container.withPorts(containerPort.new(9100) + containerPort.withHostPort(9100) + containerPort.withName('https')) +
         container.mixin.resources.withRequests({ cpu: '10m', memory: '20Mi' }) +
         container.mixin.resources.withLimits({ cpu: '20m', memory: '40Mi' });
 
@@ -108,7 +108,9 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       daemonset.mixin.spec.template.spec.withVolumes([procVolume, sysVolume]) +
       daemonset.mixin.spec.template.spec.securityContext.withRunAsNonRoot(true) +
       daemonset.mixin.spec.template.spec.securityContext.withRunAsUser(65534) +
-      daemonset.mixin.spec.template.spec.withServiceAccountName('node-exporter'),
+      daemonset.mixin.spec.template.spec.withServiceAccountName('node-exporter') +
+      daemonset.mixin.spec.template.spec.withHostPid(true) +
+      daemonset.mixin.spec.template.spec.withHostNetwork(true),
 
     serviceAccount:
       local serviceAccount = k.core.v1.serviceAccount;
