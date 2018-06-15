@@ -1,0 +1,51 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ template "exporter-blackbox.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    operator: prometheus
+    release: {{ .Release.Name }}
+  name: {{ template "exporter-blackbox.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "exporter-blackbox.fullname" . }}
+        component: blackbox-exporter
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: blackbox-exporter
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          args:
+          - --web.listen-address=0.0.0.0:{{ .Values.service.containerPort }}
+          {{- if and .Values.container .Values.container.args }}
+{{ toYaml .Values.container.args | indent 10 }}
+          {{- end }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.service.containerPort }}
+              hostPort: {{ .Values.service.containerPort }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          {{- if and .Values.container .Values.container.volumeMounts }}
+          volumeMounts:
+{{ toYaml .Values.container.volumeMounts | indent 10 }}
+          {{- end }}
+    {{- if .Values.global.rbacEnable }}
+      serviceAccountName: {{ template "exporter-blackbox.fullname" . }}
+    {{- end }}
+    {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+    {{- end }}
+      hostNetwork: true
+      hostPID: true
+      {{- if and .Values.container .Values.container.volumes }}
+      volumes:
+{{ toYaml .Values.container.volumes | indent 6 }}
+      {{- end}}

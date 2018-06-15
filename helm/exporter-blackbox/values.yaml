@@ -1,0 +1,62 @@
+# This is a YAML-formatted file.
+
+#Use original blackbox configuration located in config/blackbox.yaml
+keepOriginalConfig: True
+
+# Declare variables to be passed into your templates.
+replicaCount: 1
+image:
+  repository: quay.io/prometheus/blackbox-exporter
+  tag: v0.12.0
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  externalPort: 9115
+  containerPort: 9115
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 50Mi
+  requests:
+    cpu: 100m
+    memory: 30Mi
+
+container:
+  args:
+  - --config.file=/config/blackbox.yaml
+
+  volumes:
+  - name: blackbox-config
+    configMap:
+      name: exporter-blackbox-config
+      items:
+        - key: blackbox.yaml
+          path: blackbox.yaml
+
+  volumeMounts:
+  - name: blackbox-config
+    mountPath: /config
+
+## Tolerations for use with node taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations:
+- effect: NoSchedule
+  operator: Exists
+
+## If true, create & use RBAC resources resp. Pod Security Policies
+##
+global:
+  rbacEnable: true
+  pspEnable: true
+
+# default rules are in templates/node.rules.yaml
+# prometheusRules: {}
+
+## Custom Labels to be added to ServiceMonitor
+##
+additionalServiceMonitorLabels: {}
+##Custom Labels to be added to Prometheus Rules ConfigMap
+##
+additionalRulesConfigMapLabels: {}

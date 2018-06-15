@@ -170,7 +170,7 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	if finalizerFn, err := CreateRoleBinding(kubeClient, ns, "../framework/ressources/prometheus-role-binding.yml"); err != nil {
+	if finalizerFn, err := CreateRoleBinding(kubeClient, ns, "../framework/resources/prometheus-role-binding.yml"); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus role binding"))
 	} else {
 		ctx.AddFinalizerFn(finalizerFn)

@@ -339,4 +339,35 @@ additionalScrapeConfigs: []
 #   - targets:
 #     - "localhost:9090"
 
+# Example Blackbox Scrape
+#- job_name: blackbox-endpoints
+#  params:
+#    module:
+#    - http_2xx
+#  scrape_interval: 15s
+#  scrape_timeout: 10s
+#  metrics_path: /probe
+#  scheme: http
+#  static_configs:
+#  - targets:
+#    - <TARGET HERE>
+#  relabel_configs:
+#  - source_labels: [__address__]
+#    separator: ;
+#    regex: (.*)
+#    target_label: __param_target
+#    replacement: $1
+#    action: replace
+#  - source_labels: [__param_target]
+#    separator: ;
+#    regex: (.*)
+#    target_label: instance
+#    replacement: $1
+#    action: replace
+#  - separator: ;
+#    regex: (.*)
+#    target_label: __address__
+#    replacement: monitoring-kube-prometheus-exporter-blackbox.default:9115
+#    action: replace
+
 serviceMonitorNamespaceSelector: {}
