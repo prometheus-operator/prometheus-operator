@@ -203,6 +203,28 @@ type RemoteWriteSpec struct {
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	//Optional ProxyURL
 	ProxyURL string `json:"proxyUrl,omitempty"`
+	// QueueConfig allows tuning of the remote write queue parameters.
+	QueueConfig *QueueConfig `json:"queueConfig,omitempty"`
+}
+
+// QueueConfig allows the tuning of remote_write queue_config parameters. This object
+// is referenced in the RemoteWriteSpec object.
+// +k8s:openapi-gen=true
+type QueueConfig struct {
+	// Capacity is the number of samples to buffer per shard before we start dropping them.
+	Capacity int `json:"capacity,omitempty"`
+	// MaxShards is the maximum number of shards, i.e. amount of concurrency.
+	MaxShards int `json:"maxShards,omitempty"`
+	// MaxSamplesPerSend is the maximum number of samples per send.
+	MaxSamplesPerSend int `json:"maxSamplesPerSend,omitempty"`
+	// BatchSendDeadline is the maximum time a sample will wait in buffer.
+	BatchSendDeadline string `json:"batchSendDeadline,omitempty"`
+	// MaxRetries is the maximum number of times to retry a batch on recoverable errors.
+	MaxRetries int `json:"maxRetries,omitempty"`
+	// MinBackoff is the initial retry delay. Gets doubled for every retry.
+	MinBackoff string `json:"minBackoff,omitempty"`
+	// MaxBackoff is the maximum retry delay.
+	MaxBackoff string `json:"maxBackoff,omitempty"`
 }
 
 // RemoteReadSpec defines the remote_read configuration for prometheus.

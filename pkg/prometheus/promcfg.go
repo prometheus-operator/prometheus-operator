@@ -667,6 +667,40 @@ func generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpe
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
 		}
 
+		if spec.QueueConfig != nil {
+			queueConfig := yaml.MapSlice{}
+
+			if spec.QueueConfig.Capacity != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "capacity", Value: spec.QueueConfig.Capacity})
+			}
+
+			if spec.QueueConfig.MaxShards != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_shards", Value: spec.QueueConfig.MaxShards})
+			}
+
+			if spec.QueueConfig.MaxSamplesPerSend != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_samples_per_send", Value: spec.QueueConfig.MaxSamplesPerSend})
+			}
+
+			if spec.QueueConfig.BatchSendDeadline != "" {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: spec.QueueConfig.BatchSendDeadline})
+			}
+
+			if spec.QueueConfig.MaxRetries != int(0) {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_retries", Value: spec.QueueConfig.MaxRetries})
+			}
+
+			if spec.QueueConfig.MinBackoff != "" {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_backoff", Value: spec.QueueConfig.MinBackoff})
+			}
+
+			if spec.QueueConfig.MaxBackoff != "" {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: spec.QueueConfig.MaxBackoff})
+			}
+
+			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
+		}
+
 		cfgs = append(cfgs, cfg)
 	}
 

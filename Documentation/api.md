@@ -23,6 +23,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [PrometheusList](#prometheuslist)
 * [PrometheusSpec](#prometheusspec)
 * [PrometheusStatus](#prometheusstatus)
+* [QueueConfig](#queueconfig)
 * [RelabelConfig](#relabelconfig)
 * [RemoteReadSpec](#remotereadspec)
 * [RemoteWriteSpec](#remotewritespec)
@@ -238,6 +239,22 @@ Most recent observed status of the Prometheus cluster. Read-only. Not included w
 
 [Back to TOC](#table-of-contents)
 
+## QueueConfig
+
+QueueConfig allows the tuning of remote_write queue_config parameters. This object is referenced in the RemoteWriteSpec object.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| capacity | Capacity is the number of samples to buffer per shard before we start dropping them. | int | false |
+| maxShards | MaxShards is the maximum number of shards, i.e. amount of concurrency. | int | false |
+| maxSamplesPerSend | MaxSamplesPerSend is the maximum number of samples per send. | int | false |
+| batchSendDeadline | BatchSendDeadline is the maximum time a sample will wait in buffer. | string | false |
+| maxRetries | MaxRetries is the maximum number of times to retry a batch on recoverable errors. | int | false |
+| minBackoff | MinBackoff is the initial retry delay. Gets doubled for every retry. | string | false |
+| maxBackoff | MaxBackoff is the maximum retry delay. | string | false |
+
+[Back to TOC](#table-of-contents)
+
 ## RelabelConfig
 
 RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
@@ -286,6 +303,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
+| queueConfig | QueueConfig allows tuning of the remote write queue parameters. | *[QueueConfig](#queueconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
