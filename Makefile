@@ -1,6 +1,7 @@
 SHELL=/bin/bash -o pipefail
 
 REPO?=quay.io/coreos/prometheus-operator
+REPO_PROMETHEUS_CONFIG_RELOADER?=quay.io/coreos/prometheus-config-reloader
 TAG?=$(shell git rev-parse --short HEAD)
 
 PO_CRDGEN_BINARY:=$(GOPATH)/bin/po-crdgen
@@ -68,7 +69,7 @@ hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build -t quay.io/coreos/prometheus-config-reloader:$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	docker build -t $(REPO_PROMETHEUS_CONFIG_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
 
