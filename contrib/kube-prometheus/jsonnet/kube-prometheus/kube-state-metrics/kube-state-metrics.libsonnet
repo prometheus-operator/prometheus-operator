@@ -176,7 +176,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       deployment.mixin.metadata.withNamespace($._config.namespace) +
       deployment.mixin.metadata.withLabels(podLabels) +
       deployment.mixin.spec.selector.withMatchLabels(podLabels) +
-      deployment.mixin.spec.template.spec.withNodeSelector({ 'beta.kubernetes.io/os': 'linux' }) +
       deployment.mixin.spec.template.spec.securityContext.withRunAsNonRoot(true) +
       deployment.mixin.spec.template.spec.securityContext.withRunAsUser(65534) +
       deployment.mixin.spec.template.spec.withServiceAccountName('kube-state-metrics'),
