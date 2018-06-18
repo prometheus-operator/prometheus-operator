@@ -16,6 +16,8 @@ if [[ "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
 fi
 
 # Push to Quay '-dev' repo if not a git tag or master branch build
+export REPO="quay.io/coreos/prometheus-operator"
+export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader"
 if [[ "${TRAVIS_TAG}" == "" ]] && [[ "${TRAVIS_BRANCH}" != master ]]; then
 	export REPO="quay.io/coreos/prometheus-operator-dev"
 	export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader-dev"
