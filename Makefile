@@ -145,7 +145,7 @@ $(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) kube-prometheus
 ##############
 
 .PHONY: format
-format: go-fmt check-license
+format: go-fmt check-license shellcheck
 
 .PHONY: go-fmt
 go-fmt:
@@ -154,6 +154,10 @@ go-fmt:
 .PHONY: check-license
 check-license:
 	./scripts/check_license.sh
+
+.PHONY: shellcheck
+shellcheck:
+	docker run -v "${PWD}:/mnt" koalaman/shellcheck:stable $(shell find -type f -name "*.sh" -not -path "*vendor*")
 
 
 ###########

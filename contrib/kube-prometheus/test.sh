@@ -8,7 +8,8 @@ for i in examples/jsonnet-snippets/*.jsonnet; do
     [ -f "$i" ] || break
     echo "Testing: ${i}"
     echo ""
-    snippet="local kp = $(<${i});
+    fileContent=$(<"$i")
+    snippet="local kp = $fileContent;
 
 $(<examples/jsonnet-build-snippet/build-snippet.jsonnet)"
     echo "${snippet}" > "test.jsonnet"
@@ -25,8 +26,8 @@ for i in examples/*.jsonnet; do
     echo "Testing: ${i}"
     echo ""
     echo "\`\`\`"
-    echo "$(<${i})"
+    cat "${i}"
     echo "\`\`\`"
     echo ""
-    jsonnet -J vendor ${i} > /dev/null
+    jsonnet -J vendor "${i}" > /dev/null
 done

@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 licRes=$(
-for file in $(find . -type f -iname '*.go' ! -path '*/vendor/*'); do
-	head -n3 "${file}" | grep -Eq "(Copyright|generated|GENERATED)" || echo -e "  ${file}"
-done;)
+    find . -type f -iname '*.go' ! -path '*/vendor/*' -exec \
+         sh -c 'head -n3 $1 | grep -Eq "(Copyright|generated|GENERATED)" || echo -e  $1' {} {} \;
+)
+
 if [ -n "${licRes}" ]; then
-	echo -e "license header checking failed:\n${licRes}"
+	echo -e "license header checking failed:\\n${licRes}"
 	exit 255
 fi

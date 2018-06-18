@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Detect if we are on mac or should use GNU base64 options
-case `uname` in
+case $(uname) in
         Darwin)
             b64_opts='-b=0'
             ;; 
@@ -17,7 +17,8 @@ echo '{"signing":{"default":{"expiry":"43800h","usages":["signing","key encipher
 
 export SERVICE_NAME=custom-metrics-apiserver
 export ALT_NAMES='"custom-metrics-apiserver.monitoring","custom-metrics-apiserver.monitoring.svc"'
-echo '{"CN":"'${SERVICE_NAME}'","hosts":['${ALT_NAMES}'],"key":{"algo":"rsa","size":2048}}' | cfssl gencert -ca=metrics-ca.crt -ca-key=metrics-ca.key -config=metrics-ca-config.json - | cfssljson -bare apiserver
+echo "{\"CN\":\"${SERVICE_NAME}\", \"hosts\": [${ALT_NAMES}], \"key\": {\"algo\": \"rsa\",\"size\": 2048}}" | \
+       	cfssl gencert -ca=metrics-ca.crt -ca-key=metrics-ca.key -config=metrics-ca-config.json - | cfssljson -bare apiserver
 
 cat <<-EOF > cm-adapter-serving-certs.yaml
 apiVersion: v1
@@ -25,6 +26,6 @@ kind: Secret
 metadata:
   name: cm-adapter-serving-certs
 data:
-  serving.crt: $(cat apiserver.pem | base64 ${b64_opts})
-  serving.key: $(cat apiserver-key.pem | base64 ${b64_opts})
+  serving.crt: $(base64 ${b64_opts} < apiserver.pem)
+  serving.key: $(base64 ${b64_opts} < apiserver-key.pem)
 EOF
