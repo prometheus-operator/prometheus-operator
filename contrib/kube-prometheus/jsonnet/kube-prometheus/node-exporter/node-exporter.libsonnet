@@ -103,7 +103,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       daemonset.mixin.spec.selector.withMatchLabels(podLabels) +
       daemonset.mixin.spec.template.metadata.withLabels(podLabels) +
       daemonset.mixin.spec.template.spec.withTolerations([masterToleration]) +
-      daemonset.mixin.spec.template.spec.withNodeSelector({ 'beta.kubernetes.io/os': 'linux' }) +
       daemonset.mixin.spec.template.spec.withContainers(c) +
       daemonset.mixin.spec.template.spec.withVolumes([procVolume, sysVolume]) +
       daemonset.mixin.spec.template.spec.securityContext.withRunAsNonRoot(true) +
