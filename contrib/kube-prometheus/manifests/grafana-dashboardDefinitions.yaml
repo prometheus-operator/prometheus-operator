@@ -64,7 +64,7 @@ items:
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
-                                  "legendLink": "/dashboard/file/k8s-node-rsrc-use.json",
+                                  "legendLink": "/d/4ac4f123aae0ff6dbaf4f4f66120033b/k8s-node-rsrc-use",
                                   "step": 10
                               }
                           ],
@@ -150,7 +150,7 @@ items:
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
-                                  "legendLink": "/dashboard/file/k8s-node-rsrc-use.json",
+                                  "legendLink": "/d/4ac4f123aae0ff6dbaf4f4f66120033b/k8s-node-rsrc-use",
                                   "step": 10
                               }
                           ],
@@ -248,7 +248,7 @@ items:
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
-                                  "legendLink": "/dashboard/file/k8s-node-rsrc-use.json",
+                                  "legendLink": "/d/4ac4f123aae0ff6dbaf4f4f66120033b/k8s-node-rsrc-use",
                                   "step": 10
                               }
                           ],
@@ -334,7 +334,7 @@ items:
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
-                                  "legendLink": "/dashboard/file/k8s-node-rsrc-use.json",
+                                  "legendLink": "/d/4ac4f123aae0ff6dbaf4f4f66120033b/k8s-node-rsrc-use",
                                   "step": 10
                               }
                           ],
@@ -432,7 +432,7 @@ items:
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
-                                  "legendLink": "/dashboard/file/k8s-node-rsrc-use.json",
+                                  "legendLink": "/d/4ac4f123aae0ff6dbaf4f4f66120033b/k8s-node-rsrc-use",
                                   "step": 10
                               }
                           ],
@@ -518,7 +518,7 @@ items:
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
-                                  "legendLink": "/dashboard/file/k8s-node-rsrc-use.json",
+                                  "legendLink": "/d/4ac4f123aae0ff6dbaf4f4f66120033b/k8s-node-rsrc-use",
                                   "step": 10
                               }
                           ],
@@ -616,7 +616,7 @@ items:
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
-                                  "legendLink": "/dashboard/file/k8s-node-rsrc-use.json",
+                                  "legendLink": "/d/4ac4f123aae0ff6dbaf4f4f66120033b/k8s-node-rsrc-use",
                                   "step": 10
                               }
                           ],
@@ -702,7 +702,7 @@ items:
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
-                                  "legendLink": "/dashboard/file/k8s-node-rsrc-use.json",
+                                  "legendLink": "/d/4ac4f123aae0ff6dbaf4f4f66120033b/k8s-node-rsrc-use",
                                   "step": 10
                               }
                           ],
@@ -800,7 +800,7 @@ items:
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
-                                  "legendLink": "/dashboard/file/k8s-node-rsrc-use.json",
+                                  "legendLink": "/d/4ac4f123aae0ff6dbaf4f4f66120033b/k8s-node-rsrc-use",
                                   "step": 10
                               }
                           ],
@@ -909,6 +909,7 @@ items:
           },
           "timezone": "utc",
           "title": "K8s / USE Method / Cluster",
+          "uid": "a6e7d1362e1ddbb79db21d5bb40d7137",
           "version": 0
       }
   kind: ConfigMap
@@ -1851,6 +1852,7 @@ items:
           },
           "timezone": "utc",
           "title": "K8s / USE Method / Node",
+          "uid": "4ac4f123aae0ff6dbaf4f4f66120033b",
           "version": 0
       }
   kind: ConfigMap
@@ -2468,7 +2470,7 @@ items:
                                   "decimals": 2,
                                   "link": true,
                                   "linkTooltip": "Drill down",
-                                  "linkUrl": "/dashboard/file/k8s-resources-namespace.json?var-datasource=$datasource&var-namespace=$__cell",
+                                  "linkUrl": "/d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?var-datasource=$datasource&var-namespace=$__cell",
                                   "pattern": "namespace",
                                   "thresholds": [
 
@@ -2828,7 +2830,7 @@ items:
                                   "decimals": 2,
                                   "link": true,
                                   "linkTooltip": "Drill down",
-                                  "linkUrl": "/dashboard/file/k8s-resources-namespace.json?var-datasource=$datasource&var-namespace=$__cell",
+                                  "linkUrl": "/d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?var-datasource=$datasource&var-namespace=$__cell",
                                   "pattern": "namespace",
                                   "thresholds": [
 
@@ -3000,6 +3002,7 @@ items:
           },
           "timezone": "utc",
           "title": "K8s / Compute Resources / Cluster",
+          "uid": "efa86fd1d0c121a26444b636a3f509a8",
           "version": 0
       }
   kind: ConfigMap
@@ -3269,7 +3272,7 @@ items:
                                   "decimals": 2,
                                   "link": true,
                                   "linkTooltip": "Drill down",
-                                  "linkUrl": "/dashboard/file/k8s-resources-pod.json?var-datasource=$datasource&var-namespace=$namespace&var-pod=$__cell",
+                                  "linkUrl": "/d/6581e46e4e5c7ba40a07646395ef7b23/k8s-resources-pod?var-datasource=$datasource&var-namespace=$namespace&var-pod=$__cell",
                                   "pattern": "pod",
                                   "thresholds": [
 
@@ -3629,7 +3632,7 @@ items:
                                   "decimals": 2,
                                   "link": true,
                                   "linkTooltip": "Drill down",
-                                  "linkUrl": "/dashboard/file/k8s-resources-pod.json?var-datasource=$datasource&var-namespace=$namespace&var-pod=$__cell",
+                                  "linkUrl": "/d/6581e46e4e5c7ba40a07646395ef7b23/k8s-resources-pod?var-datasource=$datasource&var-namespace=$namespace&var-pod=$__cell",
                                   "pattern": "pod",
                                   "thresholds": [
 
@@ -3828,6 +3831,7 @@ items:
           },
           "timezone": "utc",
           "title": "K8s / Compute Resources / Namespace",
+          "uid": "85a562078cdf77779eaa1add43ccec1e",
           "version": 0
       }
   kind: ConfigMap
@@ -4683,6 +4687,7 @@ items:
           },
           "timezone": "utc",
           "title": "K8s / Compute Resources / Pod",
+          "uid": "6581e46e4e5c7ba40a07646395ef7b23",
           "version": 0
       }
   kind: ConfigMap
@@ -5609,6 +5614,7 @@ items:
           },
           "timezone": "browser",
           "title": "Nodes",
+          "uid": "fa49a4706d07a042595b664c87fb33ea",
           "version": 0
       }
   kind: ConfigMap
@@ -6098,6 +6104,7 @@ items:
           },
           "timezone": "browser",
           "title": "Pods",
+          "uid": "ab4f13a9892a76a4d21ce8c2445bf4ea",
           "version": 0
       }
   kind: ConfigMap
@@ -6950,6 +6957,7 @@ items:
           },
           "timezone": "browser",
           "title": "StatefulSets",
+          "uid": "a31c1f46e6f727cb37c0d731a7245005",
           "version": 0
       }
   kind: ConfigMap
