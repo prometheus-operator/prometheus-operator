@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/coreos/prometheus-operator/pkg/version"
 
@@ -27,20 +28,27 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
+const (
+	logFormatLogfmt = "logfmt"
+	logFormatJson   = "json"
+)
+
+var (
+	availableLogFormats = []string{
+		logFormatLogfmt,
+		logFormatJson,
+	}
+)
+
 func main() {
-	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
-	logger = log.With(logger, "caller", log.DefaultCaller)
-
-	logger.Log("msg", fmt.Sprintf("Starting prometheus-config-reloader version '%v'.", version.Version))
-
 	app := kingpin.New("prometheus-config-reloader", "")
-
 	cfgFile := app.Flag("config-file", "config file watched by the reloader").
 		String()
 
 	cfgSubstFile := app.Flag("config-envsubst-file", "output file for environment variable substituted config file").
 		String()
+
+	logFormat := app.Flag("log-format", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", "))).Default(logFormatLogfmt).String()
 
 	ruleDir := app.Flag("rule-dir", "rule directory for the reloader to refresh").String()
 
@@ -51,6 +59,15 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
+
+	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
+	if *logFormat == logFormatJson {
+		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
+	}
+	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
+	logger = log.With(logger, "caller", log.DefaultCaller)
+
+	logger.Log("msg", fmt.Sprintf("Starting prometheus-config-reloader version '%v'.", version.Version))
 
 	if *ruleDir != "" {
 		if err := os.MkdirAll(*ruleDir, 0777); err != nil {
