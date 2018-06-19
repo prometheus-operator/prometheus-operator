@@ -947,6 +947,15 @@ func (in *StorageSpec) DeepCopyInto(out *StorageSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
+	if in.HostPath != nil {
+		in, out := &in.HostPath, &out.HostPath
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.HostPathVolumeSource)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	if in.Selector != nil {
 		in, out := &in.Selector, &out.Selector
 		if *in == nil {
