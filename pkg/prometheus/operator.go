@@ -77,6 +77,8 @@ type Operator struct {
 	kubeletObjectNamespace string
 	kubeletSyncEnabled     bool
 	config                 Config
+
+	configGenerator *configGenerator
 }
 
 type Labels struct {
@@ -192,6 +194,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		kubeletObjectNamespace: kubeletObjectNamespace,
 		kubeletSyncEnabled:     kubeletSyncEnabled,
 		config:                 conf,
+		configGenerator:        NewConfigGenerator(logger),
 	}
 
 	c.promInf = cache.NewSharedIndexInformer(
@@ -1051,7 +1054,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	}
 
 	// Update secret based on the most recent configuration.
-	conf, err := generateConfig(
+	conf, err := c.configGenerator.generateConfig(
 		p,
 		smons,
 		basicAuthSecrets,

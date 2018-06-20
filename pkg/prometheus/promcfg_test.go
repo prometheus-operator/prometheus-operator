@@ -66,7 +66,9 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 		},
 	}
 
-	c := generateK8SSDConfig(getNamespacesFromServiceMonitor(sm), nil, nil)
+	cg := &configGenerator{}
+
+	c := cg.generateK8SSDConfig(getNamespacesFromServiceMonitor(sm), nil, nil)
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	if err != nil {
 		t.Fatal(err)
@@ -101,6 +103,8 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			},
 		},
 	}
+
+	cg := &configGenerator{}
 
 	testcases := []struct {
 		apiserverConfig  *monitoringv1.APIServerConfig
@@ -147,7 +151,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		c := generateK8SSDConfig(
+		c := cg.generateK8SSDConfig(
 			getNamespacesFromServiceMonitor(sm),
 			tc.apiserverConfig,
 			tc.basicAuthSecrets,
@@ -165,7 +169,8 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 }
 
 func TestAlertmanagerBearerToken(t *testing.T) {
-	cfg, err := generateConfig(
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
 		&monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
@@ -238,8 +243,9 @@ alerting:
 }
 
 func generateTestConfig(version string) ([]byte, error) {
+	cg := &configGenerator{}
 	replicas := int32(1)
-	return generateConfig(
+	return cg.generateConfig(
 		&monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
