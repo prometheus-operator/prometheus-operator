@@ -51,6 +51,10 @@ tolerations:
 global:
   rbacEnable: true
   pspEnable: true
+  
+  # Reference to one or more secrets to be used when pulling images
+  imagePullSecrets: {}
+  #  - name: "image-pull-secret"
 
 # default rules are in templates/node.rules.yaml
 # prometheusRules: {}

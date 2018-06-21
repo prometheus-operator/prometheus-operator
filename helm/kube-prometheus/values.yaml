@@ -9,6 +9,10 @@ deployGrafana: True
 global:
   rbacEnable: true
   pspEnable: true
+  
+  # Reference to one or more secrets to be used when pulling images
+  imagePullSecrets: {}
+  #  - name: "image-pull-secret"
 
 # AlertManager
 deployAlertManager: True
