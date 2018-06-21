@@ -149,7 +149,7 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, basicA
 	var additionalScrapeConfigsYaml []yaml.MapSlice
 	err = yaml.Unmarshal([]byte(additionalScrapeConfigs), &additionalScrapeConfigsYaml)
 	if err != nil {
-		errors.Wrap(err, "unmarshalling additional scrape configs failed")
+		return nil, errors.Wrap(err, "unmarshalling additional scrape configs failed")
 	}
 
 	cfg = append(cfg, yaml.MapItem{
@@ -160,7 +160,7 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, basicA
 	var additionalAlertManagerConfigsYaml []yaml.MapSlice
 	err = yaml.Unmarshal([]byte(additionalAlertManagerConfigs), &additionalAlertManagerConfigsYaml)
 	if err != nil {
-		errors.Wrap(err, "unmarshalling additional alert manager configs failed")
+		return nil, errors.Wrap(err, "unmarshalling additional alert manager configs failed")
 	}
 
 	alertmanagerConfigs = append(alertmanagerConfigs, additionalAlertManagerConfigsYaml...)
