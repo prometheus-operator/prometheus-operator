@@ -342,9 +342,9 @@ additionalScrapeConfigs: []
 ## Prometheus AdditionalAlertManagerConfigs
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
 ##
-additionalAlertManagerConfigs: {}
-# static_configs:
-# - targets:
-#   - "localhost:9093"
+additionalAlertManagerConfigs: []
+# - static_configs:
+#   - targets:
+#     - "localhost:9093"
 
 serviceMonitorNamespaceSelector: {}
