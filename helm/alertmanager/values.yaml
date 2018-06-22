@@ -36,6 +36,8 @@ templateFiles: {}
 #         *Details:*
 #           {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
 #           {{ end }}
+#       {{ end }}
+#       {{ end }}
 
 ## External URL at which Alertmanager will be reachable
 ##
