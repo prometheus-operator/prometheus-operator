@@ -2672,6 +2672,77 @@ spec:
                         phase:
                           description: Phase represents the current phase of PersistentVolumeClaim.
                           type: string
+            thanos:
+              description: ThanosSpec defines parameters for a Prometheus server within
+                a Thanos deployment.
+              properties:
+                baseImage:
+                  description: Thanos base image if other than default.
+                  type: string
+                gcs:
+                  description: ThanosGCSSpec defines parameters for use of Google
+                    Cloud Storage (GCS) with Thanos.
+                  properties:
+                    bucket:
+                      description: Google Cloud Storage bucket name for stored blocks.
+                        If empty it won't store any block inside Google Cloud Storage.
+                      type: string
+                peers:
+                  description: Peers is a DNS name for Thanos to discover peers through.
+                  type: string
+                s3:
+                  description: ThanosSpec defines parameters for of AWS Simple Storage
+                    Service (S3) with Thanos. (S3 compatible services apply as well)
+                  properties:
+                    accessKey:
+                      description: SecretKeySelector selects a key of a Secret.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or it's key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                    bucket:
+                      description: S3-Compatible API bucket name for stored blocks.
+                      type: string
+                    endpoint:
+                      description: S3-Compatible API endpoint for stored blocks.
+                      type: string
+                    insecure:
+                      description: Whether to use an insecure connection with an S3-Compatible
+                        API.
+                      type: boolean
+                    secretKey:
+                      description: SecretKeySelector selects a key of a Secret.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or it's key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                    signatureVersion2:
+                      description: Whether to use S3 Signature Version 2; otherwise
+                        Signature Version 4 will be used.
+                      type: boolean
+                version:
+                  description: Version describes the version of Thanos to use.
+                  type: string
             tolerations:
               description: If specified, the pod's tolerations.
               items:

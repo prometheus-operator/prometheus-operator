@@ -1101,6 +1101,65 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 			},
 			Dependencies: []string{},
 		},
+		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.QueueConfig": {
+			Schema: spec.Schema{
+				SchemaProps: spec.SchemaProps{
+					Description: "QueueConfig allows the tuning of remote_write queue_config parameters. This object is referenced in the RemoteWriteSpec object.",
+					Properties: map[string]spec.Schema{
+						"capacity": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Capacity is the number of samples to buffer per shard before we start dropping them.",
+								Type:        []string{"integer"},
+								Format:      "int32",
+							},
+						},
+						"maxShards": {
+							SchemaProps: spec.SchemaProps{
+								Description: "MaxShards is the maximum number of shards, i.e. amount of concurrency.",
+								Type:        []string{"integer"},
+								Format:      "int32",
+							},
+						},
+						"maxSamplesPerSend": {
+							SchemaProps: spec.SchemaProps{
+								Description: "MaxSamplesPerSend is the maximum number of samples per send.",
+								Type:        []string{"integer"},
+								Format:      "int32",
+							},
+						},
+						"batchSendDeadline": {
+							SchemaProps: spec.SchemaProps{
+								Description: "BatchSendDeadline is the maximum time a sample will wait in buffer.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"maxRetries": {
+							SchemaProps: spec.SchemaProps{
+								Description: "MaxRetries is the maximum number of times to retry a batch on recoverable errors.",
+								Type:        []string{"integer"},
+								Format:      "int32",
+							},
+						},
+						"minBackoff": {
+							SchemaProps: spec.SchemaProps{
+								Description: "MinBackoff is the initial retry delay. Gets doubled for every retry.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"maxBackoff": {
+							SchemaProps: spec.SchemaProps{
+								Description: "MaxBackoff is the maximum retry delay.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+					},
+				},
+			},
+			Dependencies: []string{},
+		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RelabelConfig": {
 			Schema: spec.Schema{
 				SchemaProps: spec.SchemaProps{
@@ -1312,12 +1371,18 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
+						"queueConfig": {
+							SchemaProps: spec.SchemaProps{
+								Description: "QueueConfig allows tuning of the remote write queue parameters.",
+								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.QueueConfig"),
+							},
+						},
 					},
 					Required: []string{"url"},
 				},
 			},
 			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RelabelConfig", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.QueueConfig", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RelabelConfig", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Rule": {
 			Schema: spec.Schema{

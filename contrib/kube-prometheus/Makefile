@@ -29,7 +29,7 @@ generate: manifests/** **.md
 	echo '>>> inside **.md'
 	$(EMBEDMD_BINARY) -w `find . -name "*.md" | grep -v vendor`
 
-manifests/**: vendor/** example.jsonnet
+manifests/**: vendor/** $(wildcard jsonnet/**/*) example.jsonnet
 	./build.sh
 
 vendor/**: $(JB_BINARY) jsonnetfile.json
