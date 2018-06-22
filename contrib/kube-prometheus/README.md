@@ -120,6 +120,8 @@ jsonnet -J vendor -m manifests ${1-example.jsonnet} | xargs -I{} sh -c 'cat $1 |
 
 This script reads each key of the generated json and uses that as the file name, and writes the value of that key to that file.
 
+> You can also run this script executing the command `make generate-raw` from kube-prometheus base directory of this repository but the above option it is recommended so that you run it in your own infrastructure repository.
+
 ## Configuration
 
 A hidden `_config` field is located at the top level of the object this library provides. These are the available fields with their respective default values:
