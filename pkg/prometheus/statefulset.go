@@ -481,7 +481,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 
 	var livenessProbeHandler v1.Handler
 	var readinessProbeHandler v1.Handler
-	var livenessFailureThreshold int32
 	if (version.Major == 1 && version.Minor >= 8) || version.Major == 2 {
 		livenessProbeHandler = v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
@@ -495,7 +494,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 				Port: intstr.FromString("web"),
 			},
 		}
-		livenessFailureThreshold = 6
 	} else {
 		livenessProbeHandler = v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
@@ -504,9 +502,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 			},
 		}
 		readinessProbeHandler = livenessProbeHandler
-		// For larger servers, restoring a checkpoint on startup may take quite a bit of time.
-		// Wait up to 5 minutes (60 fails * 5s per fail)
-		livenessFailureThreshold = 60
 	}
 
 	var livenessProbe *v1.Probe
@@ -516,7 +511,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 			Handler:          livenessProbeHandler,
 			PeriodSeconds:    5,
 			TimeoutSeconds:   probeTimeoutSeconds,
-			FailureThreshold: livenessFailureThreshold,
+			FailureThreshold:  120, // Allow up to 10m on startup for data recovery
 		}
 		readinessProbe = &v1.Probe{
 			Handler:          readinessProbeHandler,
