@@ -89,7 +89,7 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, basicAuthSecrets map[string]BasicAuthCredentials, additionalScrapeConfigs []byte, additionalAlertManagerConfigs []byte) ([]byte, error) {
 	versionStr := p.Spec.Version
 	if versionStr == "" {
-		versionStr = DefaultVersion
+		versionStr = DefaultPrometheusVersion
 	}
 
 	version, err := semver.Parse(strings.TrimLeft(versionStr, "v"))

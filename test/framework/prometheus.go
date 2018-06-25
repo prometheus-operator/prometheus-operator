@@ -41,7 +41,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			Replicas: &replicas,
-			Version:  prometheus.DefaultVersion,
+			Version:  prometheus.DefaultPrometheusVersion,
 			ServiceMonitorSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": group,
@@ -141,6 +141,48 @@ func (f *Framework) MakePrometheusService(name, group string, serviceType v1.Ser
 			},
 			Selector: map[string]string{
 				"prometheus": name,
+			},
+		},
+	}
+	return service
+}
+
+func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
+	service := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:       "http-query",
+					Port:       10902,
+					TargetPort: intstr.FromString("http"),
+				},
+			},
+			Selector: map[string]string{
+				"app": "thanos-query",
+			},
+		},
+	}
+	return service
+}
+
+func (f *Framework) MakeThanosService(name string) *v1.Service {
+	service := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:       "cluster",
+					Port:       10900,
+					TargetPort: intstr.FromString("cluster"),
+				},
+			},
+			Selector: map[string]string{
+				"thanos-peer": "true",
 			},
 		},
 	}
