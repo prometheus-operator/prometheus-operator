@@ -19,6 +19,7 @@ kube_state_metrics:
     type: ClusterIP
     externalPort: 80
     internalPort: 8080
+  resources: {}
 addon_resizer:
   memory: 130Mi
   extra_memory: 2Mi
