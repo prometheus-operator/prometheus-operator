@@ -23,5 +23,5 @@ data:
           matchNames:
             - {{ .Release.Namespace | quote }}
         endpoints:
-        - port: http
+        - port: web
           interval: 30s
