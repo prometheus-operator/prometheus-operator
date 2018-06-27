@@ -23,16 +23,18 @@ generate-in-docker: ../../hack/jsonnet-docker-image
 	--workdir /go/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus \
 	po-jsonnet make generate
 
-generate: manifests/** **.md
+generate: manifests **.md
 
 **.md: $(EMBEDMD_BINARY) $(shell find examples) build.sh example.jsonnet
 	echo '>>> inside **.md'
 	$(EMBEDMD_BINARY) -w `find . -name "*.md" | grep -v vendor`
 
-manifests/**: vendor/** $(wildcard jsonnet/**/*) example.jsonnet
+manifests: vendor example.jsonnet
+	rm -rf manifests
 	./build.sh
 
-vendor/**: $(JB_BINARY) jsonnetfile.json
+vendor: $(JB_BINARY) jsonnetfile.json
+	rm -rf vendor
 	$(JB_BINARY) install
 
 fmt:
