@@ -1,6 +1,7 @@
 SHELL=/bin/bash -o pipefail
 
 REPO?=quay.io/coreos/prometheus-operator
+REPO_PROMETHEUS_CONFIG_RELOADER?=quay.io/coreos/prometheus-config-reloader
 TAG?=$(shell git rev-parse --short HEAD)
 
 PO_CRDGEN_BINARY:=$(GOPATH)/bin/po-crdgen
@@ -36,7 +37,7 @@ prometheus-config-reloader:
 	-ldflags "-X github.com/coreos/prometheus-operator/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/$@/main.go
 
-pkg/client/monitoring/v1/zz_generated.deepcopy.go: $(DEEPCOPY_GEN_BINARY)
+pkg/client/monitoring/v1/zz_generated.deepcopy.go: .header pkg/client/monitoring/v1/types.go $(DEEPCOPY_GEN_BINARY)
 	$(DEEPCOPY_GEN_BINARY) \
 	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 \
 	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
@@ -68,7 +69,7 @@ hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build -t quay.io/coreos/prometheus-config-reloader:$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	docker build -t $(REPO_PROMETHEUS_CONFIG_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
 
@@ -77,7 +78,7 @@ hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 ##############
 
 .PHONY: generate
-generate: Documentation/*
+generate: pkg/client/monitoring/v1/zz_generated.deepcopy.go pkg/client/monitoring/v1/openapi_generated.go kube-prometheus Documentation/*
 
 .PHONY: generate-in-docker
 generate-in-docker: hack/jsonnet-docker-image

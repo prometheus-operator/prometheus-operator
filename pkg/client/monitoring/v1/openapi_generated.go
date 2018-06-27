@@ -1043,11 +1043,17 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 							},
 						},
+						"thanos": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Thanos configuration allows configuring various aspects of a Prometheus server in a Thanos environment.\n\nThis section is experimental, it may change significantly without deprecation notice in any release.\n\nThis is experimental and may change significantly without backward compatibility in any release.",
+								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosSpec"),
+							},
+						},
 					},
 				},
 			},
 			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertingSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteReadSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteWriteSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertingSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteReadSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteWriteSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.PrometheusStatus": {
 			Schema: spec.Schema{
@@ -1091,6 +1097,65 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 						},
 					},
 					Required: []string{"paused", "replicas", "updatedReplicas", "availableReplicas", "unavailableReplicas"},
+				},
+			},
+			Dependencies: []string{},
+		},
+		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.QueueConfig": {
+			Schema: spec.Schema{
+				SchemaProps: spec.SchemaProps{
+					Description: "QueueConfig allows the tuning of remote_write queue_config parameters. This object is referenced in the RemoteWriteSpec object.",
+					Properties: map[string]spec.Schema{
+						"capacity": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Capacity is the number of samples to buffer per shard before we start dropping them.",
+								Type:        []string{"integer"},
+								Format:      "int32",
+							},
+						},
+						"maxShards": {
+							SchemaProps: spec.SchemaProps{
+								Description: "MaxShards is the maximum number of shards, i.e. amount of concurrency.",
+								Type:        []string{"integer"},
+								Format:      "int32",
+							},
+						},
+						"maxSamplesPerSend": {
+							SchemaProps: spec.SchemaProps{
+								Description: "MaxSamplesPerSend is the maximum number of samples per send.",
+								Type:        []string{"integer"},
+								Format:      "int32",
+							},
+						},
+						"batchSendDeadline": {
+							SchemaProps: spec.SchemaProps{
+								Description: "BatchSendDeadline is the maximum time a sample will wait in buffer.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"maxRetries": {
+							SchemaProps: spec.SchemaProps{
+								Description: "MaxRetries is the maximum number of times to retry a batch on recoverable errors.",
+								Type:        []string{"integer"},
+								Format:      "int32",
+							},
+						},
+						"minBackoff": {
+							SchemaProps: spec.SchemaProps{
+								Description: "MinBackoff is the initial retry delay. Gets doubled for every retry.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"maxBackoff": {
+							SchemaProps: spec.SchemaProps{
+								Description: "MaxBackoff is the maximum retry delay.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+					},
 				},
 			},
 			Dependencies: []string{},
@@ -1306,12 +1371,18 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 								Format:      "",
 							},
 						},
+						"queueConfig": {
+							SchemaProps: spec.SchemaProps{
+								Description: "QueueConfig allows tuning of the remote write queue parameters.",
+								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.QueueConfig"),
+							},
+						},
 					},
 					Required: []string{"url"},
 				},
 			},
 			Dependencies: []string{
-				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RelabelConfig", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"},
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.QueueConfig", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RelabelConfig", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"},
 		},
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Rule": {
 			Schema: spec.Schema{
@@ -1631,6 +1702,118 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 				},
 			},
 			Dependencies: []string{},
+		},
+		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosGCSSpec": {
+			Schema: spec.Schema{
+				SchemaProps: spec.SchemaProps{
+					Description: "ThanosGCSSpec defines parameters for use of Google Cloud Storage (GCS) with Thanos.",
+					Properties: map[string]spec.Schema{
+						"bucket": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Google Cloud Storage bucket name for stored blocks. If empty it won't store any block inside Google Cloud Storage.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+					},
+				},
+			},
+			Dependencies: []string{},
+		},
+		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosS3Spec": {
+			Schema: spec.Schema{
+				SchemaProps: spec.SchemaProps{
+					Description: "ThanosSpec defines parameters for of AWS Simple Storage Service (S3) with Thanos. (S3 compatible services apply as well)",
+					Properties: map[string]spec.Schema{
+						"bucket": {
+							SchemaProps: spec.SchemaProps{
+								Description: "S3-Compatible API bucket name for stored blocks.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"endpoint": {
+							SchemaProps: spec.SchemaProps{
+								Description: "S3-Compatible API endpoint for stored blocks.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"accessKey": {
+							SchemaProps: spec.SchemaProps{
+								Description: "AccessKey for an S3-Compatible API.",
+								Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
+							},
+						},
+						"secretKey": {
+							SchemaProps: spec.SchemaProps{
+								Description: "SecretKey for an S3-Compatible API.",
+								Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
+							},
+						},
+						"insecure": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Whether to use an insecure connection with an S3-Compatible API.",
+								Type:        []string{"boolean"},
+								Format:      "",
+							},
+						},
+						"signatureVersion2": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used.",
+								Type:        []string{"boolean"},
+								Format:      "",
+							},
+						},
+					},
+				},
+			},
+			Dependencies: []string{
+				"k8s.io/api/core/v1.SecretKeySelector"},
+		},
+		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosSpec": {
+			Schema: spec.Schema{
+				SchemaProps: spec.SchemaProps{
+					Description: "ThanosSpec defines parameters for a Prometheus server within a Thanos deployment.",
+					Properties: map[string]spec.Schema{
+						"peers": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Peers is a DNS name for Thanos to discover peers through.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"version": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Version describes the version of Thanos to use.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"baseImage": {
+							SchemaProps: spec.SchemaProps{
+								Description: "Thanos base image if other than default.",
+								Type:        []string{"string"},
+								Format:      "",
+							},
+						},
+						"gcs": {
+							SchemaProps: spec.SchemaProps{
+								Description: "GCS configures use of GCS in Thanos.",
+								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosGCSSpec"),
+							},
+						},
+						"s3": {
+							SchemaProps: spec.SchemaProps{
+								Description: "S3 configures use of S3 in Thanos.",
+								Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosS3Spec"),
+							},
+						},
+					},
+				},
+			},
+			Dependencies: []string{
+				"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosGCSSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosS3Spec"},
 		},
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource": {
 			Schema: spec.Schema{

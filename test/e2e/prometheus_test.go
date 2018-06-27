@@ -1070,6 +1070,107 @@ func TestPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 	}
 }
 
+func TestThanos(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	peerServiceName := "thanos-peers"
+	querierServiceName := "thanos-querier"
+	basicPrometheus := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
+	peerServiceDNS := fmt.Sprintf("%s.%s.svc:10900", peerServiceName, ns)
+	version := "v0.1.0-rc.1"
+	basicPrometheus.Spec.Thanos = &monitoringv1.ThanosSpec{
+		Peers:   &peerServiceDNS,
+		Version: &version,
+	}
+	basicPrometheus.Spec.PodMetadata = &metav1.ObjectMeta{
+		Labels: map[string]string{
+			"thanos-peer": "true",
+		},
+	}
+	replicas := int32(2)
+	basicPrometheus.Spec.Replicas = &replicas
+	pservice := framework.MakePrometheusService(basicPrometheus.Name, "test-group", v1.ServiceTypeClusterIP)
+	tservice := framework.MakeThanosService(peerServiceName)
+	qservice := framework.MakeThanosQuerierService(querierServiceName)
+	s := framework.MakeBasicServiceMonitor("test-group")
+	thanosQuerier, err := testFramework.MakeDeployment("../../example/thanos/querier-deployment.yaml")
+	if err != nil {
+		t.Fatal("Making deployment failed: ", err)
+	}
+	querierArgs := []string{
+		"query",
+		"--log.level=debug",
+		"--query.replica-label=prometheus_replica",
+		fmt.Sprintf("--cluster.peers=%s", peerServiceDNS),
+	}
+	log.Println("setting up querier with args: ", querierArgs)
+	thanosQuerier.Spec.Template.Spec.Containers[0].Args = querierArgs
+
+	if err := testFramework.CreateDeployment(framework.KubeClient, ns, thanosQuerier); err != nil {
+		t.Fatal("Creating Thanos querier failed: ", err)
+	}
+
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, qservice); err != nil {
+		t.Fatal("Creating Thanos querier service failed: ", err)
+	}
+
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(s); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	if _, err := framework.KubeClient.CoreV1().Services(ns).Create(pservice); err != nil {
+		t.Fatal("Creating prometheus service failed: ", err)
+	}
+
+	if _, err := framework.MonClientV1.Prometheuses(ns).Create(basicPrometheus); err != nil {
+		t.Fatal("Creating prometheus failed: ", err)
+	}
+
+	if _, err := framework.KubeClient.CoreV1().Services(ns).Create(tservice); err != nil {
+		t.Fatal("Creating prometheus service failed: ", err)
+	}
+
+	err = wait.Poll(5*time.Second, 5*time.Minute, func() (bool, error) {
+		proxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
+		request := proxyGet("http", querierServiceName, "http-query", "/api/v1/query", map[string]string{"query": "prometheus_build_info", "dedup": "false"})
+		b, err := request.DoRaw()
+		if err != nil {
+			log.Println(fmt.Sprintf("Error performing request against Thanos querier: %v\n\nretrying...", err))
+			return false, nil
+		}
+
+		d := struct {
+			Data struct {
+				Result []map[string]interface{} `json:"result"`
+			} `json:"data"`
+		}{}
+
+		err = json.Unmarshal(b, &d)
+		if err != nil {
+			return false, err
+		}
+
+		result := len(d.Data.Result)
+		// We're expecting 4 results as we are requesting the
+		// `prometheus_build_info` metric, which is collected for both
+		// Prometheus replicas by both replicas.
+		expected := 4
+		if result != expected {
+			log.Printf("Unexpected number of results from query. Got %d, expected %d. retrying...\n", result, expected)
+			return false, nil
+		}
+		return true, nil
+	})
+	if err != nil {
+		t.Fatal("Failed to get correct result from Thanos querier: ", err)
+	}
+}
+
 func isDiscoveryWorking(ns, svcName, prometheusName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(prometheusName))

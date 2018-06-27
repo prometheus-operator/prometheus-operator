@@ -10,5 +10,4 @@ spec:
     port: 10900
     targetPort: cluster
   selector:
-    # Useful endpoint for gathering all thanos components for common gossip cluster.
     thanos-peer: "true"
