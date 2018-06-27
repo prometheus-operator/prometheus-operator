@@ -132,7 +132,7 @@ spec:
     name: prometheus-{{ .Release.Name }}-additional-scrape-configs
     key: additional-scrape-configs.yaml
 {{- end }}
-{{- if .Values.additionalScrapeConfigs }}
+{{- if .Values.additionalAlertManagerConfigs }}
   additionalAlertManagerConfigs:
     name: prometheus-{{ .Release.Name }}-additional-alertmanager-configs
     key: additional-alertmanager-configs.yaml
