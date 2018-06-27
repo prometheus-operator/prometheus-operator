@@ -16,6 +16,11 @@ metadata:
 {{- end }}
   name: {{ template "prometheus.fullname" . }}
 spec:
+{{- if .Values.labels }}
+  podMetadata:
+    labels:
+{{ toYaml .Values.labels | indent 6 }}
+{{- end }}
 {{- if .Values.alertingEndpoints }}
   alerting:
     alertmanagers:
@@ -128,5 +133,9 @@ spec:
   additionalAlertManagerConfigs:
     name: prometheus-{{ .Release.Name }}-additional-alertmanager-configs
     key: additional-alertmanager-configs.yaml
+{{- end }}
+{{- if .Values.sidecarsSpec }}
+  containers:
+{{ toYaml .Values.sidecarsSpec | indent 4 }}
 {{- end }}
 
