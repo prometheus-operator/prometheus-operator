@@ -348,3 +348,7 @@ additionalAlertManagerConfigs: {}
 #   - "localhost:9093"
 
 serviceMonitorNamespaceSelector: {}
+
+sidecarsSpec: []
+# - name: sidecar
+#   image: registry/name:tag

@@ -425,6 +425,10 @@ prometheus:
   #          storage: 50Gi
   #    selector: {}
 
+  sidecarsSpec: []
+  # - name: sidecar
+  #   image: registry/name:tag
+
 # default rules are in templates/general.rules.yaml
 # prometheusRules: {}
 
