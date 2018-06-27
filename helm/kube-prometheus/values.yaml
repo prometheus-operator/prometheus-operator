@@ -4,6 +4,18 @@ deployExporterNode: True
 # Grafana
 deployGrafana: True
 
+# Kubelets
+deployKubelets: True
+
+# Kube-scheduler
+deployKubeScheduler: True
+
+# Controller Manager
+deployKubeControllerManager: True
+
+# Kube state
+deployKubeState: True
+
 ## If true, create & use RBAC resources resp. Pod Security Policies
 ##
 global:
