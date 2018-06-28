@@ -109,7 +109,7 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
 
 ### Pre-rendered rules
 
-We acknowledge, that users may need to transition existing rules, and therefore allow an option to add additional pre-rendered rules. This can be done simply by importing the existing rules in the [Prometheus rule format](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/) using the jsonnet function `importstr`. In this example we are importing a [provided example rule](examples/example.rules.yaml).
+We acknowledge, that users may need to transition existing rules, and therefore allow an option to add additional pre-rendered rules. This can be done simply by importing the existing rules in the [Prometheus rule format](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/) using the jsonnet function `importstr`. In this example we are importing a [provided example rule](../examples/example.rules.yaml).
 
 [embedmd]:# (../examples/prometheus-additional-rendered-rule-example.jsonnet)
 ```jsonnet
@@ -139,7 +139,7 @@ Dashboards can either be added using jsonnet or simply a pre-rendered json dashb
 
 ### Jsonnet dashboard
 
-We recommend using the [grafonnet]() library for jsonnet, which gives you a simple DSL to generate Grafana dashboards. Following the [Prometheus Monitoring Mixins proposal](https://docs.google.com/document/d/1A9xvzwqnFVSOZ5fD3blKODXfsat5fg6ZhnKu9LK3lB4/) additional dashboards are added to the `grafanaDashboards` key, located in the top level object. To add new jsonnet dashboards, simply add one.
+We recommend using the [grafonnet](https://github.com/grafana/grafonnet-lib/) library for jsonnet, which gives you a simple DSL to generate Grafana dashboards. Following the [Prometheus Monitoring Mixins proposal](https://docs.google.com/document/d/1A9xvzwqnFVSOZ5fD3blKODXfsat5fg6ZhnKu9LK3lB4/) additional dashboards are added to the `grafanaDashboards` key, located in the top level object. To add new jsonnet dashboards, simply add one.
 
 > Note that dashboards can just as well be included into this file, using the jsonnet `import` function. In this example it is just inlined in order to demonstrate their use in a single file.
 
