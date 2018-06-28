@@ -330,24 +330,7 @@ prometheus:
   ## Service monitors selector
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md
   ##
-  serviceMonitorsSelector:
-    matchExpressions:
-    - key: app
-      operator: In
-      values:
-      - alertmanager
-      - exporter-coredns
-      - exporter-kube-controller-manager
-      - exporter-kube-dns
-      - exporter-kube-etcd
-      - exporter-kube-scheduler
-      - exporter-kube-state
-      - exporter-kubelets
-      - exporter-kubernetes
-      - exporter-node
-      - grafana
-      - prometheus
-      - prometheus-operator
+  serviceMonitorsSelector: {}
 
   ## ServiceMonitor CRDs to create & be scraped by the Prometheus instance.
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/service-monitor.md
