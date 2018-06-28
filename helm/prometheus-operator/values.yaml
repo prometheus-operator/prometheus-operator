@@ -49,7 +49,7 @@ rbacEnable: true
 pspEnable: true
 
 # Reference to one or more secrets to be used when pulling images
-imagePullSecrets: {}
+imagePullSecrets: []
 #  - name: "image-pull-secret"
 
 ## Prometheus-operator resource limits & requests

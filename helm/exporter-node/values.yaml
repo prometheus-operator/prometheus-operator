@@ -53,7 +53,7 @@ global:
   pspEnable: true
   
   # Reference to one or more secrets to be used when pulling images
-  imagePullSecrets: {}
+  imagePullSecrets: []
   #  - name: "image-pull-secret"
 
 # default rules are in templates/node.rules.yaml
