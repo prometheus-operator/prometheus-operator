@@ -1,3 +1,4 @@
+{{- if .Values.enableDaemonSet }}
 {{- if .Values.global.rbacEnable }}
 {{- if .Values.global.pspEnable }}
 kind: ClusterRole
@@ -19,5 +20,6 @@ rules:
   verbs:     ['use']
   resourceNames:
   - {{ template "exporter-node.fullname" . }}
+{{- end }}
 {{- end }}
 {{- end }}

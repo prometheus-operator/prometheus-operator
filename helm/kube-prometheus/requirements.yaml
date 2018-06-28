@@ -58,7 +58,7 @@ dependencies:
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-node
-    version: 0.3.2
+    version: 0.4.0
     #e2e-repository: file://../exporter-node
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
     condition: deployExporterNode
