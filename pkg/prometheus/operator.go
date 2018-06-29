@@ -949,7 +949,21 @@ func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (B
 
 }
 
-func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, remoteReads []monitoringv1.RemoteReadSpec, remoteWrites []monitoringv1.RemoteWriteSpec, sMonSecretMap map[string]*v1.SecretList, promSecrets *v1.SecretList) (map[string]BasicAuthCredentials, error) {
+func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, remoteReads []monitoringv1.RemoteReadSpec, remoteWrites []monitoringv1.RemoteWriteSpec, promSecrets *v1.SecretList) (map[string]BasicAuthCredentials, error) {
+
+	sMonSecretMap := make(map[string]*v1.SecretList)
+	for _, mon := range mons {
+		smNamespace := mon.Namespace
+		if sMonSecretMap[smNamespace] == nil {
+			msClient := c.kclient.CoreV1().Secrets(smNamespace)
+			listSecrets, err := msClient.List(metav1.ListOptions{})
+
+			if err != nil {
+				return nil, err
+			}
+			sMonSecretMap[smNamespace] = listSecrets
+		}
+	}
 
 	secrets := map[string]BasicAuthCredentials{}
 
@@ -1005,21 +1019,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus)
 		return err
 	}
 
-	sMonSecretMap := make(map[string]*v1.SecretList)
-	for _, smon := range smons {
-		smNamespace := smon.Namespace
-		if sMonSecretMap[smNamespace] == nil {
-			msClient := c.kclient.CoreV1().Secrets(smNamespace)
-			listSecrets, err := msClient.List(metav1.ListOptions{})
-
-			if err != nil {
-				return err
-			}
-			sMonSecretMap[smNamespace] = listSecrets
-		}
-	}
-
-	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, sMonSecretMap, promSecrets)
+	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, promSecrets)
 
 	if err != nil {
 		return err
