@@ -27,4 +27,4 @@ spec:
     matchExpressions:
     - key: k8s-app
       operator: Exists
-  version: v2.2.1
+  version: v2.3.1

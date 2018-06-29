@@ -4,6 +4,18 @@ deployExporterNode: True
 # Grafana
 deployGrafana: True
 
+# Kubelets
+deployKubelets: True
+
+# Kube-scheduler
+deployKubeScheduler: True
+
+# Controller Manager
+deployKubeControllerManager: True
+
+# Kube state
+deployKubeState: True
+
 ## If true, create & use RBAC resources resp. Pod Security Policies
 ##
 global:
@@ -253,6 +265,10 @@ prometheus:
   ##
   routePrefix: /
 
+  ## Namespaces to be selected for PrometheusRules discovery.
+  ## If unspecified, only the same namespace as the Prometheus object is in is used.
+  ruleNamespaceSelector: {}
+
   ## Rules configmap selector
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md
   ##
@@ -318,24 +334,7 @@ prometheus:
   ## Service monitors selector
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md
   ##
-  serviceMonitorsSelector:
-    matchExpressions:
-    - key: app
-      operator: In
-      values:
-      - alertmanager
-      - exporter-coredns
-      - exporter-kube-controller-manager
-      - exporter-kube-dns
-      - exporter-kube-etcd
-      - exporter-kube-scheduler
-      - exporter-kube-state
-      - exporter-kubelets
-      - exporter-kubernetes
-      - exporter-node
-      - grafana
-      - prometheus
-      - prometheus-operator
+  serviceMonitorsSelector: {}
 
   ## ServiceMonitor CRDs to create & be scraped by the Prometheus instance.
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/service-monitor.md
@@ -428,6 +427,10 @@ prometheus:
   #        requests:
   #          storage: 50Gi
   #    selector: {}
+
+  sidecarsSpec: []
+  # - name: sidecar
+  #   image: registry/name:tag
 
 # default rules are in templates/general.rules.yaml
 # prometheusRules: {}

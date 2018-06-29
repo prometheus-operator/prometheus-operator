@@ -155,6 +155,9 @@ retention: 24h
 ##
 routePrefix: /
 
+## Namespaces to be selected for PrometheusRules discovery.
+## If unspecified, only the same namespace as the Prometheus object is in is used.
+ruleNamespaceSelector: {}
 ## Rules configmap selector
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md
 ##
@@ -352,3 +355,7 @@ additionalAlertManagerConfigs: {}
 #   - "localhost:9093"
 
 serviceMonitorNamespaceSelector: {}
+
+sidecarsSpec: []
+# - name: sidecar
+#   image: registry/name:tag

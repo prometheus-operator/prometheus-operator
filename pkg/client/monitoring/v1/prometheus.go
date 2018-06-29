@@ -190,6 +190,7 @@ func UnstructuredFromPrometheus(p *Prometheus) (*unstructured.Unstructured, erro
 	// necessary anymore.
 	unstructured.RemoveNestedField(r.Object, "metadata", "creationTimestamp")
 	unstructured.RemoveNestedField(r.Object, "spec", "storage", "volumeClaimTemplate", "metadata", "creationTimestamp")
+	unstructured.RemoveNestedField(r.Object, "spec", "podMetadata", "creationTimestamp")
 	return &r, nil
 }
 

@@ -6727,7 +6727,7 @@ items:
                           "bars": false,
                           "dashLength": 10,
                           "dashes": false,
-                          "datasource": "prometheus",
+                          "datasource": "$datasource",
                           "fill": 1,
                           "gridPos": {
 
@@ -6877,7 +6877,7 @@ items:
                       "current": {
 
                       },
-                      "datasource": "prometheus",
+                      "datasource": "$datasource",
                       "hide": 0,
                       "includeAll": false,
                       "label": "Namespace",
@@ -6903,7 +6903,7 @@ items:
                       "current": {
 
                       },
-                      "datasource": "prometheus",
+                      "datasource": "$datasource",
                       "hide": 0,
                       "includeAll": false,
                       "label": "Name",
