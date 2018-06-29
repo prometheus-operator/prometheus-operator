@@ -7,7 +7,7 @@ maintainers:
 name: prometheus-operator
 sources:
   - https://github.com/coreos/prometheus-operator
-version: 0.0.25
+version: 0.0.27
 appVersion: "0.19.0"
 home: https://github.com/coreos/prometheus-operator
 keywords:
