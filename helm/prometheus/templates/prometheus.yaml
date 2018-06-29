@@ -86,6 +86,7 @@ spec:
 {{ toYaml .Values.remoteWrite | indent 4 }}
 {{- end }}
 {{- if .Values.ruleNamespaceSelector }}
+  ruleNamespaceSelector:
 {{ toYaml .Values.ruleNamespaceSelector | indent 4 }}
 {{- end }}
 {{- if .Values.rulesSelector }}
