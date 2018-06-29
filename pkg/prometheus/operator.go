@@ -949,7 +949,7 @@ func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (B
 
 }
 
-func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, remoteReads []monitoringv1.RemoteReadSpec, remoteWrites []monitoringv1.RemoteWriteSpec, secretMap map[string]*v1.SecretList, promSecrets *v1.SecretList) (map[string]BasicAuthCredentials, error) {
+func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, remoteReads []monitoringv1.RemoteReadSpec, remoteWrites []monitoringv1.RemoteWriteSpec, sMonSecretMap map[string]*v1.SecretList, promSecrets *v1.SecretList) (map[string]BasicAuthCredentials, error) {
 
 	secrets := map[string]BasicAuthCredentials{}
 
@@ -959,7 +959,7 @@ func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMon
 
 			if ep.BasicAuth != nil {
 
-				if credentials, err := loadBasicAuthSecret(ep.BasicAuth, secretMap[mon.Namespace]); err != nil {
+				if credentials, err := loadBasicAuthSecret(ep.BasicAuth, sMonSecretMap[mon.Namespace]); err != nil {
 					return nil, fmt.Errorf("Could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
 				} else {
 					secrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = credentials
@@ -1005,21 +1005,21 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus)
 		return err
 	}
 
-	secretMap := make(map[string]*v1.SecretList)
+	sMonSecretMap := make(map[string]*v1.SecretList)
 	for _, smon := range smons {
 		smNamespace := smon.Namespace
-		if secretMap[smNamespace] == nil {
+		if sMonSecretMap[smNamespace] == nil {
 			msClient := c.kclient.CoreV1().Secrets(smNamespace)
 			listSecrets, err := msClient.List(metav1.ListOptions{})
 
 			if err != nil {
 				return err
 			}
-			secretMap[smNamespace] = listSecrets
+			sMonSecretMap[smNamespace] = listSecrets
 		}
 	}
 
-	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, secretMap, promSecrets)
+	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, sMonSecretMap, promSecrets)
 
 	if err != nil {
 		return err
