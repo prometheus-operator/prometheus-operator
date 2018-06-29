@@ -325,8 +325,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	}
 
 	volumeName := volumeName(a.Name)
-	if p.Spec.Storage.VolumeClaimTemplate.Name != "" {
-		volumeName := p.Spec.Storage.VolumeClaimTemplate.Name
+	if a.Spec.Storage.VolumeClaimTemplate.Name != "" {
+		volumeName = a.Spec.Storage.VolumeClaimTemplate.Name
 	}
 
 	amVolumeMounts := []v1.VolumeMount{
