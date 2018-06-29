@@ -2,6 +2,14 @@
 
 * [CHANGE] Deprecate specification of Prometheus rules via ConfigMaps in favor of `PrometheusRule` CRDs
 
+## 0.21.0 / 2018-06-28
+
+* [CHANGE] Default to Prometheus v2.3.1.
+* [CHANGE] Default to Alertmanager v0.15.0.
+* [FEATURE] Make remote write queue configurations configurable.
+* [FEATURE] Add Thanos integration (experimental).
+* [BUGFIX] Fix usage of console templates and libraries.
+
 ## 0.20.0 / 2018-06-05
 
 With this release we introduce a new Custom Resource Definition - the

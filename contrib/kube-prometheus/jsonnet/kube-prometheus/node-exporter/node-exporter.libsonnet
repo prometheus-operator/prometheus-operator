@@ -6,7 +6,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
     versions+:: {
       nodeExporter: 'v0.15.2',
-      kubeRbacProxy: 'v0.3.0',
+      kubeRbacProxy: 'v0.3.1',
     },
 
     imageRepos+:: {

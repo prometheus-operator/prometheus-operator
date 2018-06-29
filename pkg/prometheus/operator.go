@@ -128,6 +128,7 @@ type Config struct {
 	PrometheusConfigReloader     string
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string
+	ThanosDefaultBaseImage       string
 	Namespace                    string
 	Labels                       Labels
 	CrdGroup                     string

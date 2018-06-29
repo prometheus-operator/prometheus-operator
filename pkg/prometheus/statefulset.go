@@ -32,17 +32,18 @@ import (
 )
 
 const (
-	governingServiceName   = "prometheus-operated"
-	DefaultVersion         = "v2.2.1"
-	defaultRetention       = "24h"
-	storageDir             = "/prometheus"
-	confDir                = "/etc/prometheus/config"
-	confOutDir             = "/etc/prometheus/config_out"
-	rulesDir               = "/etc/prometheus/rules"
-	secretsDir             = "/etc/prometheus/secrets/"
-	configFilename         = "prometheus.yaml"
-	configEnvsubstFilename = "prometheus.env.yaml"
-	sSetInputChecksumName  = "prometheus-operator-input-checksum"
+	governingServiceName     = "prometheus-operated"
+	DefaultPrometheusVersion = "v2.3.1"
+	DefaultThanosVersion     = "v0.1.0-rc.1"
+	defaultRetention         = "24h"
+	storageDir               = "/prometheus"
+	confDir                  = "/etc/prometheus/config"
+	confOutDir               = "/etc/prometheus/config_out"
+	rulesDir                 = "/etc/prometheus/rules"
+	secretsDir               = "/etc/prometheus/secrets/"
+	configFilename           = "prometheus.yaml"
+	configEnvsubstFilename   = "prometheus.env.yaml"
+	sSetInputChecksumName    = "prometheus-operator-input-checksum"
 )
 
 var (
@@ -88,7 +89,11 @@ func makeStatefulSet(
 		p.Spec.BaseImage = config.PrometheusDefaultBaseImage
 	}
 	if p.Spec.Version == "" {
-		p.Spec.Version = DefaultVersion
+		p.Spec.Version = DefaultPrometheusVersion
+	}
+	if p.Spec.Thanos != nil && p.Spec.Thanos.Version == nil {
+		v := DefaultThanosVersion
+		p.Spec.Thanos.Version = &v
 	}
 
 	versionStr := strings.TrimLeft(p.Spec.Version, "v")
@@ -542,6 +547,86 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 
 	finalLabels := c.Labels.Merge(podLabels)
 
+	additionalContainers := p.Spec.Containers
+
+	if p.Spec.Thanos != nil {
+		thanosBaseImage := c.ThanosDefaultBaseImage
+		if p.Spec.Thanos.BaseImage != nil {
+			thanosBaseImage = *p.Spec.Thanos.BaseImage
+		}
+
+		thanosArgs := []string{"sidecar"}
+
+		if p.Spec.Thanos.Peers != nil {
+			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.peers=%s", *p.Spec.Thanos.Peers))
+		}
+		if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
+			thanosArgs = append(thanosArgs, fmt.Sprintf("--log.level=%s", p.Spec.LogLevel))
+		}
+
+		if p.Spec.Thanos.GCS != nil {
+			if p.Spec.Thanos.GCS.Bucket != nil {
+				thanosArgs = append(thanosArgs, fmt.Sprintf("--gcs.bucket=%s", *p.Spec.Thanos.GCS.Bucket))
+			}
+		}
+
+		envVars := []v1.EnvVar{}
+		if p.Spec.Thanos.S3 != nil {
+			if p.Spec.Thanos.S3.Bucket != nil {
+				thanosArgs = append(thanosArgs, fmt.Sprintf("--s3.bucket=%s", *p.Spec.Thanos.S3.Bucket))
+			}
+			if p.Spec.Thanos.S3.Endpoint != nil {
+				thanosArgs = append(thanosArgs, fmt.Sprintf("--s3.endpoint=%s", *p.Spec.Thanos.S3.Endpoint))
+			}
+			if p.Spec.Thanos.S3.Insecure != nil && *p.Spec.Thanos.S3.Insecure {
+				thanosArgs = append(thanosArgs, "--s3.insecure")
+			}
+			if p.Spec.Thanos.S3.SignatureVersion2 != nil && *p.Spec.Thanos.S3.SignatureVersion2 {
+				thanosArgs = append(thanosArgs, "--s3.signature-version2")
+			}
+			if p.Spec.Thanos.S3.AccessKey != nil {
+				envVars = append(envVars, v1.EnvVar{
+					Name: "S3_ACCESS_KEY",
+					ValueFrom: &v1.EnvVarSource{
+						SecretKeyRef: p.Spec.Thanos.S3.AccessKey,
+					},
+				})
+			}
+			if p.Spec.Thanos.S3.SecretKey != nil {
+				envVars = append(envVars, v1.EnvVar{
+					Name: "S3_SECRET_KEY",
+					ValueFrom: &v1.EnvVarSource{
+						SecretKeyRef: p.Spec.Thanos.S3.SecretKey,
+					},
+				})
+			}
+		}
+
+		c := v1.Container{
+			Name:  "thanos-sidecar",
+			Image: thanosBaseImage + ":" + *p.Spec.Thanos.Version,
+			Args:  thanosArgs,
+			Ports: []v1.ContainerPort{
+				{
+					Name:          "http",
+					ContainerPort: 10902,
+				},
+				{
+					Name:          "grpc",
+					ContainerPort: 10901,
+				},
+				{
+					Name:          "cluster",
+					ContainerPort: 10900,
+				},
+			},
+			Env: envVars,
+		}
+
+		additionalContainers = append(additionalContainers, c)
+		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h", "--storage.tsdb.max-block-duration=2h")
+	}
+
 	return &appsv1.StatefulSetSpec{
 		ServiceName:         governingServiceName,
 		Replicas:            p.Spec.Replicas,
@@ -610,7 +695,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 							},
 						},
 					},
-				}, p.Spec.Containers...),
+				}, additionalContainers...),
 				SecurityContext:               securityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
