@@ -83,11 +83,13 @@ spec:
                         properties:
                           preference:
                             description: A null or empty node selector term matches
-                              no objects.
+                              no objects. The requirements of them are ANDed. The
+                              TopologySelectorTerm type implements a subset of the
+                              NodeSelectorTerm.
                             properties:
                               matchExpressions:
-                                description: Required. A list of node selector requirements.
-                                  The requirements are ANDed.
+                                description: A list of node selector requirements
+                                  by node's labels.
                                 items:
                                   description: A node selector requirement is a selector
                                     that contains values, a key, and an operator that
@@ -118,8 +120,39 @@ spec:
                                   - key
                                   - operator
                                 type: array
-                            required:
-                            - matchExpressions
+                              matchFields:
+                                description: A list of node selector requirements
+                                  by node's fields.
+                                items:
+                                  description: A node selector requirement is a selector
+                                    that contains values, a key, and an operator that
+                                    relates the key and values.
+                                  properties:
+                                    key:
+                                      description: The label key that the selector
+                                        applies to.
+                                      type: string
+                                    operator:
+                                      description: Represents a key's relationship
+                                        to a set of values. Valid operators are In,
+                                        NotIn, Exists, DoesNotExist. Gt, and Lt.
+                                      type: string
+                                    values:
+                                      description: An array of string values. If the
+                                        operator is In or NotIn, the values array
+                                        must be non-empty. If the operator is Exists
+                                        or DoesNotExist, the values array must be
+                                        empty. If the operator is Gt or Lt, the values
+                                        array must have a single element, which will
+                                        be interpreted as an integer. This array is
+                                        replaced during a strategic merge patch.
+                                      items:
+                                        type: string
+                                      type: array
+                                  required:
+                                  - key
+                                  - operator
+                                type: array
                           weight:
                             description: Weight associated with matching the corresponding
                               nodeSelectorTerm, in the range 1-100.
@@ -140,11 +173,13 @@ spec:
                             terms are ORed.
                           items:
                             description: A null or empty node selector term matches
-                              no objects.
+                              no objects. The requirements of them are ANDed. The
+                              TopologySelectorTerm type implements a subset of the
+                              NodeSelectorTerm.
                             properties:
                               matchExpressions:
-                                description: Required. A list of node selector requirements.
-                                  The requirements are ANDed.
+                                description: A list of node selector requirements
+                                  by node's labels.
                                 items:
                                   description: A node selector requirement is a selector
                                     that contains values, a key, and an operator that
@@ -175,8 +210,39 @@ spec:
                                   - key
                                   - operator
                                 type: array
-                            required:
-                            - matchExpressions
+                              matchFields:
+                                description: A list of node selector requirements
+                                  by node's fields.
+                                items:
+                                  description: A node selector requirement is a selector
+                                    that contains values, a key, and an operator that
+                                    relates the key and values.
+                                  properties:
+                                    key:
+                                      description: The label key that the selector
+                                        applies to.
+                                      type: string
+                                    operator:
+                                      description: Represents a key's relationship
+                                        to a set of values. Valid operators are In,
+                                        NotIn, Exists, DoesNotExist. Gt, and Lt.
+                                      type: string
+                                    values:
+                                      description: An array of string values. If the
+                                        operator is In or NotIn, the values array
+                                        must be non-empty. If the operator is Exists
+                                        or DoesNotExist, the values array must be
+                                        empty. If the operator is Gt or Lt, the values
+                                        array must have a single element, which will
+                                        be interpreted as an integer. This array is
+                                        replaced during a strategic merge patch.
+                                      items:
+                                        type: string
+                                      type: array
+                                  required:
+                                  - key
+                                  - operator
+                                type: array
                           type: array
                       required:
                       - nodeSelectorTerms
@@ -2100,6 +2166,23 @@ spec:
                     format: int64
                     type: integer
                   type: array
+                sysctls:
+                  description: Sysctls hold a list of namespaced sysctls used for
+                    the pod. Pods with unsupported sysctls (by the container runtime)
+                    might fail to launch.
+                  items:
+                    description: Sysctl defines a kernel parameter to be set
+                    properties:
+                      name:
+                        description: Name of a property to set
+                        type: string
+                      value:
+                        description: Value of a property to set
+                        type: string
+                    required:
+                    - name
+                    - value
+                  type: array
             serviceAccountName:
               description: ServiceAccountName is the name of the ServiceAccount to
                 use to run the Prometheus Pods.
@@ -2864,3 +2947,4 @@ status:
     kind: ""
     plural: ""
   conditions: null
+  storedVersions: null

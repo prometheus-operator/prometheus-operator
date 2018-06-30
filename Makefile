@@ -215,12 +215,12 @@ $(PO_DOCGEN_BINARY): cmd/po-docgen/**.go
 
 $(OPENAPI_GEN_BINARY):
 	go get -u -v -d k8s.io/code-generator/cmd/openapi-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.10
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.11
 	go install k8s.io/code-generator/cmd/openapi-gen
 
 $(DEEPCOPY_GEN_BINARY):
 	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.10
+	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.11
 	go install k8s.io/code-generator/cmd/deepcopy-gen
 
 $(GOJSONTOYAML_BINARY):
