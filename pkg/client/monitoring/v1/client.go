@@ -20,7 +20,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/client-go/dynamic"
+	dynamic "k8s.io/client-go/deprecated-dynamic"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 )
@@ -139,7 +139,10 @@ func NewForConfig(crdKinds *CrdKinds, apiGroup string, c *rest.Config) (*Monitor
 		return nil, err
 	}
 
-	dynamicClient, err := dynamic.NewClient(&config)
+	dynamicClient, err := dynamic.NewClient(&config, schema.GroupVersion{
+		Group:   apiGroup,
+		Version: Version,
+	})
 	if err != nil {
 		return nil, err
 	}

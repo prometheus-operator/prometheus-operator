@@ -2864,3 +2864,4 @@ status:
     kind: ""
     plural: ""
   conditions: null
+  storedVersions: null
