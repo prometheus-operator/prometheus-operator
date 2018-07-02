@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	yaml "gopkg.in/yaml.v2"
@@ -109,6 +110,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		map[string]BasicAuthCredentials{},
 		nil,
 		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -123,8 +125,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
-rule_files:
-- /etc/prometheus/rules/*.yaml
+rule_files: []
 scrape_configs: []
 alerting:
   alert_relabel_configs:
@@ -153,7 +154,7 @@ alerting:
 	result := string(cfg)
 
 	if expected != result {
-		pretty.Compare(expected, result)
+		fmt.Println(pretty.Compare(expected, result))
 		t.Fatal("expected Prometheus configuration and actual configuration do not match")
 	}
 }
@@ -207,6 +208,7 @@ func generateTestConfig(version string) ([]byte, error) {
 		},
 		makeServiceMonitors(),
 		map[string]BasicAuthCredentials{},
+		nil,
 		nil,
 		nil,
 	)

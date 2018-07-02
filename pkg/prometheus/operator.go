@@ -737,7 +737,7 @@ func (c *Operator) sync(key string) error {
 		return err
 	}
 
-	err = c.createOrUpdateRuleConfigMap(p)
+	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(p)
 	if err != nil {
 		return err
 	}
@@ -746,12 +746,12 @@ func (c *Operator) sync(key string) error {
 	// configuration themselves.
 	if p.Spec.ServiceMonitorSelector != nil {
 		// We just always regenerate the configuration to be safe.
-		if err := c.createOrUpdateConfigurationSecret(p); err != nil {
+		if err := c.createOrUpdateConfigurationSecret(p, ruleConfigMapNames); err != nil {
 			return errors.Wrap(err, "creating config failed")
 		}
 	}
 
-	// Create Secret if it doesn't exist.
+	// Create empty Secret if it doesn't exist. See comment above.
 	s, err := makeEmptyConfigurationSecret(p, c.config)
 	if err != nil {
 		return errors.Wrap(err, "generating empty config secret failed")
@@ -778,14 +778,14 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "retrieving statefulset failed")
 	}
 
-	newSSetInputChecksum, err := createSSetInputChecksum(*p, c.config)
+	newSSetInputChecksum, err := createSSetInputChecksum(*p, c.config, ruleConfigMapNames)
 	if err != nil {
 		return err
 	}
 
 	if !exists {
 		level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
-		sset, err := makeStatefulSet(*p, "", &c.config, newSSetInputChecksum)
+		sset, err := makeStatefulSet(*p, "", &c.config, ruleConfigMapNames, newSSetInputChecksum)
 		if err != nil {
 			return errors.Wrap(err, "making statefulset failed")
 		}
@@ -803,7 +803,7 @@ func (c *Operator) sync(key string) error {
 		return nil
 	}
 
-	sset, err := makeStatefulSet(*p, obj.(*appsv1.StatefulSet).Spec.PodManagementPolicy, &c.config, newSSetInputChecksum)
+	sset, err := makeStatefulSet(*p, obj.(*appsv1.StatefulSet).Spec.PodManagementPolicy, &c.config, ruleConfigMapNames, newSSetInputChecksum)
 	if err != nil {
 		return errors.Wrap(err, "making statefulset failed")
 	}
@@ -816,13 +816,13 @@ func (c *Operator) sync(key string) error {
 	return nil
 }
 
-// TODO: rename sSetInputChecksum
-func createSSetInputChecksum(p monitoringv1.Prometheus, c Config) (string, error) {
+func createSSetInputChecksum(p monitoringv1.Prometheus, c Config, ruleConfigMapNames []string) (string, error) {
 	json, err := json.Marshal(
 		struct {
 			P monitoringv1.Prometheus
 			C Config
-		}{p, c},
+			R []string
+		}{p, c, ruleConfigMapNames},
 	)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to marshal Prometheus CRD and config to json")
@@ -993,7 +993,7 @@ func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMon
 
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus) error {
+func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus, ruleConfigMapNames []string) error {
 	smons, err := c.selectServiceMonitors(p)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
@@ -1023,7 +1023,14 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus)
 	}
 
 	// Update secret based on the most recent configuration.
-	conf, err := generateConfig(p, smons, basicAuthSecrets, additionalScrapeConfigs, additionalAlertManagerConfigs)
+	conf, err := generateConfig(
+		p,
+		smons,
+		basicAuthSecrets,
+		additionalScrapeConfigs,
+		additionalAlertManagerConfigs,
+		ruleConfigMapNames,
+	)
 	if err != nil {
 		return errors.Wrap(err, "generating config failed")
 	}
