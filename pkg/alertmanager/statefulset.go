@@ -117,7 +117,9 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 		})
 	} else {
 		pvcTemplate := storageSpec.VolumeClaimTemplate
-		pvcTemplate.Name = volumeName(am.Name)
+		if pvcTemplate.Name == "" {
+			pvcTemplate.Name = volumeName(am.Name)
+		}
 		pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
 		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
 		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
@@ -321,13 +323,21 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			},
 		},
 	}
+
+	volName := volumeName(a.Name)
+	if a.Spec.Storage != nil {
+		if a.Spec.Storage.VolumeClaimTemplate.Name != "" {
+			volName = a.Spec.Storage.VolumeClaimTemplate.Name
+		}
+	}
+
 	amVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config-volume",
 			MountPath: alertmanagerConfDir,
 		},
 		{
-			Name:      volumeName(a.Name),
+			Name:      volName,
 			MountPath: alertmanagerStorageDir,
 			SubPath:   subPathForStorage(a.Spec.Storage),
 		},
