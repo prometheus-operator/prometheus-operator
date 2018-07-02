@@ -1381,6 +1381,9 @@ spec:
                     request.
                   type: string
                 creationTimestamp:
+                  description: Time is a wrapper around time.Time which supports correct
+                    marshaling to YAML and JSON.  Wrappers are provided for many of
+                    the factory methods that the time package offers.
                   format: date-time
                   type: string
                 deletionGracePeriodSeconds:
@@ -1390,6 +1393,9 @@ spec:
                   format: int64
                   type: integer
                 deletionTimestamp:
+                  description: Time is a wrapper around time.Time which supports correct
+                    marshaling to YAML and JSON.  Wrappers are provided for many of
+                    the factory methods that the time package offers.
                   format: date-time
                   type: string
                 finalizers:
@@ -1872,6 +1878,10 @@ spec:
                             it if set in create or update request.
                           type: string
                         creationTimestamp:
+                          description: Time is a wrapper around time.Time which supports
+                            correct marshaling to YAML and JSON.  Wrappers are provided
+                            for many of the factory methods that the time package
+                            offers.
                           format: date-time
                           type: string
                         deletionGracePeriodSeconds:
@@ -1882,6 +1892,10 @@ spec:
                           format: int64
                           type: integer
                         deletionTimestamp:
+                          description: Time is a wrapper around time.Time which supports
+                            correct marshaling to YAML and JSON.  Wrappers are provided
+                            for many of the factory methods that the time package
+                            offers.
                           format: date-time
                           type: string
                         finalizers:
@@ -2254,9 +2268,17 @@ spec:
                               about state of pvc
                             properties:
                               lastProbeTime:
+                                description: Time is a wrapper around time.Time which
+                                  supports correct marshaling to YAML and JSON.  Wrappers
+                                  are provided for many of the factory methods that
+                                  the time package offers.
                                 format: date-time
                                 type: string
                               lastTransitionTime:
+                                description: Time is a wrapper around time.Time which
+                                  supports correct marshaling to YAML and JSON.  Wrappers
+                                  are provided for many of the factory methods that
+                                  the time package offers.
                                 format: date-time
                                 type: string
                               message:
