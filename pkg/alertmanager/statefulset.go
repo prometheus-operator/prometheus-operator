@@ -324,9 +324,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		},
 	}
 
-	volumeName := volumeName(a.Name)
-	if a.Spec.Storage.VolumeClaimTemplate.Name != "" {
-		volumeName = a.Spec.Storage.VolumeClaimTemplate.Name
+	volName := volumeName(a.Name)
+	if a.Spec.Storage != nil {
+		if a.Spec.Storage.VolumeClaimTemplate.Name != "" {
+			volName = a.Spec.Storage.VolumeClaimTemplate.Name
+		}
 	}
 
 	amVolumeMounts := []v1.VolumeMount{
@@ -335,7 +337,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			MountPath: alertmanagerConfDir,
 		},
 		{
-			Name:      volumeName,
+			Name:      volName,
 			MountPath: alertmanagerStorageDir,
 			SubPath:   subPathForStorage(a.Spec.Storage),
 		},

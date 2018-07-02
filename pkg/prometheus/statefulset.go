@@ -428,9 +428,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 		},
 	}
 
-	volumeName := volumeName(p.Name)
-	if p.Spec.Storage.VolumeClaimTemplate.Name != "" {
-		volumeName = p.Spec.Storage.VolumeClaimTemplate.Name
+	volName := volumeName(p.Name)
+	if p.Spec.Storage != nil {
+		if p.Spec.Storage.VolumeClaimTemplate.Name != "" {
+			volName = p.Spec.Storage.VolumeClaimTemplate.Name
+		}
 	}
 
 	promVolumeMounts := []v1.VolumeMount{
@@ -444,7 +446,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 			MountPath: "/etc/prometheus/rules",
 		},
 		{
-			Name:      volumeName,
+			Name:      volName,
 			MountPath: storageDir,
 			SubPath:   subPathForStorage(p.Spec.Storage),
 		},
