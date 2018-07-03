@@ -186,7 +186,9 @@ func makeStatefulSet(
 		})
 	} else {
 		pvcTemplate := storageSpec.VolumeClaimTemplate
-		pvcTemplate.Name = volumeName(p.Name)
+		if pvcTemplate.Name == "" {
+			pvcTemplate.Name = volumeName(p.Name)
+		}
 		pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
 		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
 		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
@@ -426,6 +428,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 		},
 	}
 
+	volName := volumeName(p.Name)
+	if p.Spec.Storage != nil {
+		if p.Spec.Storage.VolumeClaimTemplate.Name != "" {
+			volName = p.Spec.Storage.VolumeClaimTemplate.Name
+		}
+	}
+
 	promVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config-out",
@@ -437,7 +446,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 			MountPath: "/etc/prometheus/rules",
 		},
 		{
-			Name:      volumeName(p.Name),
+			Name:      volName,
 			MountPath: storageDir,
 			SubPath:   subPathForStorage(p.Spec.Storage),
 		},

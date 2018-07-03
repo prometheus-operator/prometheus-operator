@@ -58,3 +58,5 @@ spec:
   tolerations:
 {{ toYaml .Values.tolerations | indent 4 }}
 {{- end }}
+  imagePullSecrets:
+{{ toYaml .Values.global.imagePullSecrets | indent 4 }}

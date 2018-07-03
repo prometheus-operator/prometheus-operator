@@ -8,6 +8,10 @@ replicaCount: 1
 global:
   rbacEnable: true
   pspEnable: true
+  
+  # Reference to one or more secrets to be used when pulling images
+  imagePullSecrets: []
+  #  - name: "image-pull-secret"
 
 kube_state_metrics:
   image:
