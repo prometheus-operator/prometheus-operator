@@ -9,7 +9,7 @@ set -u
 set -x
 
 export MINIKUBE_VERSION=v0.25.0
-export KUBERNETES_VERSION=v1.9.0
+export KUBERNETES_VERSION=v1.10.0
 
 curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && \
     chmod +x kubectl &&  \
@@ -27,7 +27,11 @@ touch $HOME/.kube/config
 
 export KUBECONFIG=$HOME/.kube/config
 minikube version
-sudo minikube start --vm-driver=none --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.Authorization.Mode=RBAC
+sudo minikube start \
+	--vm-driver=none \
+	--kubernetes-version=$KUBERNETES_VERSION \
+	--extra-config=apiserver.Authorization.Mode=RBAC # \
+	# --extra-config=apiserver.feature-gates=CustomResourceSubresources=true
 
 minikube update-context
 
