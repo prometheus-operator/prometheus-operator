@@ -37,6 +37,13 @@ templateFiles: {}
 #           {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
 #           {{ end }}
 
+## The name of a secret in the same kubernetes namespace which contains the Alertmanager config
+## If defined this will be used instead of the `config` block values.
+## The name of the secret must be alertmanager-{{ .Release.Name }} and its data must contain, at least, a key called `alertmanager.yaml`
+## that contains the configuration as value.
+##
+configFromSecret: ""
+
 ## External URL at which Alertmanager will be reachable
 ##
 externalUrl: ""
