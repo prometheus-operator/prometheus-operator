@@ -12,6 +12,8 @@ export MINIKUBE_VERSION=v0.28.0
 export KUBERNETES_VERSION=v1.10.0
 
 sudo mount --make-rshared /
+sudo mount --make-rshared /proc
+sudo mount --make-rshared /sys
 
 curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && \
     chmod +x kubectl &&  \
