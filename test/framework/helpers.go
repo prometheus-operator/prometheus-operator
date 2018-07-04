@@ -162,10 +162,10 @@ func ProxyGetPod(kubeClient kubernetes.Interface, namespace, podName, port, path
 		CoreV1().
 		RESTClient().
 		Get().
-		Prefix("proxy").
 		Namespace(namespace).
 		Resource("pods").
-		Name(podName + ":" + port).
+		SubResource("proxy").
+		Name(podName).
 		Suffix(path)
 }
 
@@ -174,10 +174,10 @@ func ProxyPostPod(kubeClient kubernetes.Interface, namespace, podName, port, pat
 		CoreV1().
 		RESTClient().
 		Post().
-		Prefix("proxy").
 		Namespace(namespace).
 		Resource("pods").
-		Name(podName+":"+port).
+		SubResource("proxy").
+		Name(podName).
 		Suffix(path).
 		Body([]byte(body)).
 		SetHeader("Content-Type", "application/json")
