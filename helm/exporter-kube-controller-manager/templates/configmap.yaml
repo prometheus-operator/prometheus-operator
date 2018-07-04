@@ -1,5 +1,5 @@
-apiVersion: v1
-kind: ConfigMap
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
 metadata:
   labels:
     app: "prometheus"
@@ -8,18 +8,16 @@ metadata:
     prometheus: {{ .Release.Name }}
     release: {{ .Release.Name }}
     role: alert-rules
-    {{- if .Values.additionalRulesConfigMapLabels }}
-{{ toYaml .Values.additionalRulesConfigMapLabels | indent 4 }}
+    {{- if .Values.additionalRulesLabels }}
+{{ toYaml .Values.additionalRulesLabels | indent 4 }}
+    {{- else if .Values.additionalRulesConfigMapLabels }}       # Deprecated for .Values.additionalRulesLabels
+{{ toYaml .Values.additionalRulesConfigMapLabels | indent 4 }}  # Deprecated for .Values.additionalRulesLabels
     {{- end }}
   name: {{ template "exporter-kube-controller-manager.fullname" . }}
-data:
+spec:
 {{- if .Values.prometheusRules }}
-{{- $root := . }}
-{{- range $key, $val := .Values.prometheusRules }}
-  {{ $key }}: |-
-{{ $val | indent 4}}
-{{- end }}
+  groups:
+{{ toYaml .Values.prometheusRules | indent 4 }}
 {{ else }}
-  kube-controller-manager.rules: |-
-    {{- include "kube-controller-manager.rules.yaml.tpl" . | indent 4}}
+{{ include "kube-controller-manager.rules.yaml.tpl" . | indent 2}}
 {{ end }}
