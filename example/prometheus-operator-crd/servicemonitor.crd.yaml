@@ -12,7 +12,7 @@ spec:
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: ServiceMonitor defines monitoring for a set of services.
+      # description: ServiceMonitor defines monitoring for a set of services.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
