@@ -638,8 +638,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 					ContainerPort: 10900,
 				},
 			},
-			Env: envVars,
-			VolumeMounts:   thanosVolumeMounts,
+			Env:          envVars,
+			VolumeMounts: thanosVolumeMounts,
 		}
 
 		additionalContainers = append(additionalContainers, c)
