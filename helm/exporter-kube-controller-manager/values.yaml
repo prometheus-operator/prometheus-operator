@@ -1,6 +1,6 @@
-# on what port are the metrics exposed by etcd
+# on what port are the metrics exposed by kube controller manager
 controllerManagerPort: 10252
-# for deployments that have etcd deployed outside of the cluster, list their adresses here
+# for deployments that have kube controller manager deployed outside of the cluster, list their adresses here
 endpoints: []
 # Are we talking http or https?
 scheme: http
