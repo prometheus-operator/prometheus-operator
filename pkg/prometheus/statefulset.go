@@ -566,6 +566,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 
 		thanosArgs := []string{"sidecar"}
 
+		thanosArgs = append(thanosArgs, fmt.Sprintf("--tsdb.path=%s", storageDir))
 		if p.Spec.Thanos.Peers != nil {
 			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.peers=%s", *p.Spec.Thanos.Peers))
 		}
@@ -611,6 +612,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 			}
 		}
 
+		thanosVolumeMounts := []v1.VolumeMount{
+			{
+				Name:      volName,
+				MountPath: storageDir,
+				SubPath:   subPathForStorage(p.Spec.Storage),
+			},
+		}
+
 		c := v1.Container{
 			Name:  "thanos-sidecar",
 			Image: thanosBaseImage + ":" + *p.Spec.Thanos.Version,
@@ -629,7 +638,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 					ContainerPort: 10900,
 				},
 			},
-			Env: envVars,
+			Env:          envVars,
+			VolumeMounts: thanosVolumeMounts,
 		}
 
 		additionalContainers = append(additionalContainers, c)
