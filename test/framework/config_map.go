@@ -21,6 +21,8 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	"github.com/pkg/errors"
 )
 
 func (f *Framework) WaitForConfigMapExist(ns, name string) (*v1.ConfigMap, error) {
@@ -42,7 +44,7 @@ func (f *Framework) WaitForConfigMapExist(ns, name string) (*v1.ConfigMap, error
 		return true, nil
 	})
 
-	return configMap, err
+	return configMap, errors.Wrapf(err, "waiting for config map '%v' in namespace '%v'", name, ns)
 }
 
 func (f *Framework) WaitForConfigMapNotExist(ns, name string) error {
@@ -63,5 +65,5 @@ func (f *Framework) WaitForConfigMapNotExist(ns, name string) error {
 		return false, nil
 	})
 
-	return err
+	return errors.Wrapf(err, "waiting for config map '%v' in namespace '%v' to not exist", name, ns)
 }
