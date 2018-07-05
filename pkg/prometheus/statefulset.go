@@ -566,6 +566,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config) (*appsv1.Stateful
 
 		thanosArgs := []string{"sidecar"}
 
+		thanosArgs = append(thanosArgs, fmt.Sprintf("--tsdb.path=%s", storageDir))
 		if p.Spec.Thanos.Peers != nil {
 			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.peers=%s", *p.Spec.Thanos.Peers))
 		}
