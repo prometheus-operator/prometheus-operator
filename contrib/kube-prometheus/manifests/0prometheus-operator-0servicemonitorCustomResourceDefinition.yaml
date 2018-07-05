@@ -11,7 +11,6 @@ spec:
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: ServiceMonitor defines monitoring for a set of services.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -143,7 +142,10 @@ spec:
                   scrapeTimeout:
                     description: Timeout after which the scrape is ended
                     type: string
-                  targetPort: {}
+                  targetPort:
+                    anyOf:
+                    - type: string
+                    - type: integer
                   tlsConfig:
                     description: TLSConfig specifies TLS configuration parameters.
                     properties:
@@ -230,12 +232,4 @@ spec:
           required:
           - endpoints
           - selector
-      required:
-      - spec
   version: v1
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: null
-  storedVersions: null

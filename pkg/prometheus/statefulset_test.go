@@ -48,7 +48,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, "", defaultTestConfig, "")
+	}, "", defaultTestConfig, nil, "")
 
 	require.NoError(t, err)
 
@@ -72,7 +72,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 				Labels:      labels,
 			},
 		},
-	}, "", defaultTestConfig, "")
+	}, "", defaultTestConfig, nil, "")
 	require.NoError(t, err)
 	if _, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok {
 		t.Fatal("Pod labes are not properly propagated")
@@ -112,7 +112,7 @@ func TestStatefulSetPVC(t *testing.T) {
 				VolumeClaimTemplate: pvc,
 			},
 		},
-	}, "", defaultTestConfig, "")
+	}, "", defaultTestConfig, nil, "")
 
 	require.NoError(t, err)
 	ssetPvc := sset.Spec.VolumeClaimTemplates[0]
@@ -144,7 +144,7 @@ func TestStatefulSetEmptyDir(t *testing.T) {
 				EmptyDir: &emptyDir,
 			},
 		},
-	}, "", defaultTestConfig, "")
+	}, "", defaultTestConfig, nil, "")
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
@@ -166,17 +166,20 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									ReadOnly:  true,
 									MountPath: "/etc/prometheus/config_out",
 									SubPath:   "",
-								}, {
-									Name:      "rules",
-									ReadOnly:  false,
-									MountPath: "/etc/prometheus/rules",
-									SubPath:   "",
-								}, {
+								},
+								{
 									Name:      "prometheus-volume-init-test-db",
 									ReadOnly:  false,
 									MountPath: "/prometheus",
 									SubPath:   "",
-								}, {
+								},
+								{
+									Name:      "rules-configmap-one",
+									ReadOnly:  false,
+									MountPath: "/etc/prometheus/rules/rules-configmap-one",
+									SubPath:   "",
+								},
+								{
 									Name:      "secret-test-secret1",
 									ReadOnly:  true,
 									MountPath: "/etc/prometheus/secrets/test-secret1",
@@ -201,11 +204,11 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 							},
 						},
 						{
-							Name: "rules",
+							Name: "rules-configmap-one",
 							VolumeSource: v1.VolumeSource{
 								ConfigMap: &v1.ConfigMapVolumeSource{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "prometheus-volume-init-test-rulefiles",
+										Name: "rules-configmap-one",
 									},
 								},
 							},
@@ -239,7 +242,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 				"test-secret1",
 			},
 		},
-	}, "", defaultTestConfig, "")
+	}, "", defaultTestConfig, []string{"rules-configmap-one"}, "")
 
 	require.NoError(t, err)
 
@@ -265,7 +268,7 @@ func TestMemoryRequestNotAdjustedWhenLimitLarger2Gi(t *testing.T) {
 				},
 			},
 		},
-	}, "", defaultTestConfig, "")
+	}, "", defaultTestConfig, nil, "")
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -292,7 +295,7 @@ func TestMemoryRequestAdjustedWhenOnlyLimitGiven(t *testing.T) {
 				},
 			},
 		},
-	}, "", defaultTestConfig, "")
+	}, "", defaultTestConfig, nil, "")
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -314,7 +317,7 @@ func TestListenLocal(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			ListenLocal: true,
 		},
-	}, "", defaultTestConfig, "")
+	}, "", defaultTestConfig, nil, "")
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}

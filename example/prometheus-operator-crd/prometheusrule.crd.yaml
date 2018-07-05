@@ -12,7 +12,6 @@ spec:
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: PrometheusRule defines alerting rules for a Prometheus instance
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -338,12 +337,4 @@ spec:
                 - name
                 - rules
               type: array
-      required:
-      - spec
   version: v1
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: null
-  storedVersions: null

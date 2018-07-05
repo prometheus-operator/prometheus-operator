@@ -11,7 +11,6 @@ spec:
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: Prometheus defines a Prometheus deployment.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -640,7 +639,10 @@ spec:
                       pathPrefix:
                         description: Prefix for the HTTP path alerts are pushed to.
                         type: string
-                      port: {}
+                      port:
+                        anyOf:
+                        - type: string
+                        - type: integer
                       scheme:
                         description: Scheme to use when firing alerts.
                         type: string
@@ -898,7 +900,10 @@ spec:
                               path:
                                 description: Path to access on the HTTP server.
                                 type: string
-                              port: {}
+                              port:
+                                anyOf:
+                                - type: string
+                                - type: integer
                               scheme:
                                 description: Scheme to use for connecting to the host.
                                   Defaults to HTTP.
@@ -913,7 +918,10 @@ spec:
                                 description: 'Optional: Host name to connect to, defaults
                                   to the pod IP.'
                                 type: string
-                              port: {}
+                              port:
+                                anyOf:
+                                - type: string
+                                - type: integer
                             required:
                             - port
                       preStop:
@@ -965,7 +973,10 @@ spec:
                               path:
                                 description: Path to access on the HTTP server.
                                 type: string
-                              port: {}
+                              port:
+                                anyOf:
+                                - type: string
+                                - type: integer
                               scheme:
                                 description: Scheme to use for connecting to the host.
                                   Defaults to HTTP.
@@ -980,7 +991,10 @@ spec:
                                 description: 'Optional: Host name to connect to, defaults
                                   to the pod IP.'
                                 type: string
-                              port: {}
+                              port:
+                                anyOf:
+                                - type: string
+                                - type: integer
                             required:
                             - port
                   livenessProbe:
@@ -1038,7 +1052,10 @@ spec:
                           path:
                             description: Path to access on the HTTP server.
                             type: string
-                          port: {}
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
                           scheme:
                             description: Scheme to use for connecting to the host.
                               Defaults to HTTP.
@@ -1069,7 +1086,10 @@ spec:
                             description: 'Optional: Host name to connect to, defaults
                               to the pod IP.'
                             type: string
-                          port: {}
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
                         required:
                         - port
                       timeoutSeconds:
@@ -1178,7 +1198,10 @@ spec:
                           path:
                             description: Path to access on the HTTP server.
                             type: string
-                          port: {}
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
                           scheme:
                             description: Scheme to use for connecting to the host.
                               Defaults to HTTP.
@@ -1209,7 +1232,10 @@ spec:
                             description: 'Optional: Host name to connect to, defaults
                               to the pod IP.'
                             type: string
-                          port: {}
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
                         required:
                         - port
                       timeoutSeconds:
@@ -2961,12 +2987,4 @@ spec:
           - updatedReplicas
           - availableReplicas
           - unavailableReplicas
-      required:
-      - spec
   version: v1
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: null
-  storedVersions: null

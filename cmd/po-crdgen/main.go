@@ -72,6 +72,10 @@ func main() {
 			SpecName: cfg.SpecDefinitionName},
 		cfg.Group, cfg.Labels.LabelsMap, cfg.EnableValidation)
 
-	crdutils.MarshallCrd(crd, cfg.OutputFormat)
+	err := crdutils.MarshallCrd(crd, cfg.OutputFormat)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		os.Exit(1)
+	}
 	os.Exit(0)
 }

@@ -32,7 +32,7 @@
   branch = "master"
   name = "github.com/ant31/crd-validation"
   packages = ["pkg"]
-  revision = "eabcf70a1bd73e9296fa0c5f57de604689200a1b"
+  revision = "30f8a35d0ac2d8a2825c78ff47885979e3ee1121"
 
 [[projects]]
   branch = "master"

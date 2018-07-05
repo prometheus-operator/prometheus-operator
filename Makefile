@@ -78,7 +78,7 @@ hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 ##############
 
 .PHONY: generate
-generate: pkg/client/monitoring/v1/zz_generated.deepcopy.go pkg/client/monitoring/v1/openapi_generated.go jsonnet/prometheus-operator/**-crd.libsonnet kube-prometheus Documentation/*
+generate: pkg/client/monitoring/v1/zz_generated.deepcopy.go pkg/client/monitoring/v1/openapi_generated.go jsonnet/prometheus-operator/**-crd.libsonnet bundle.yaml kube-prometheus Documentation/*
 
 .PHONY: generate-in-docker
 generate-in-docker: hack/jsonnet-docker-image
