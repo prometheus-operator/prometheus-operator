@@ -38,9 +38,35 @@ func GetCustomResourceValidations(fn GetAPIDefinitions) map[string]*extensionsob
 // GetCustomResourceValidation returns the validation definition for a CRD name
 func GetCustomResourceValidation(name string, fn func(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition) *extensionsobj.CustomResourceValidation {
 	openapiSpec := fn(OpenAPIRefCallBack)
+	fixKnownTypes(openapiSpec)
 	schema := openapiSpec[name].Schema
-	return &extensionsobj.CustomResourceValidation{
+	crv := &extensionsobj.CustomResourceValidation{
 		OpenAPIV3Schema: SchemaPropsToJSONProps(&schema, openapiSpec, true),
 	}
-
+	crv.OpenAPIV3Schema.Description = ""
+	crv.OpenAPIV3Schema.Required = nil
+	return crv
 }
+
+// ref: https://github.com/kubernetes/kubernetes/issues/62329
+func fixKnownTypes(openapiSpec map[string]common.OpenAPIDefinition) {
+	openapiSpec["k8s.io/apimachinery/pkg/util/intstr.IntOrString"] = common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				AnyOf: []spec.Schema{
+					{
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"string"},
+						},
+					},
+					{
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"integer"},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+

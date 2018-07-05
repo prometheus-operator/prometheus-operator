@@ -34,19 +34,19 @@
 
 [[constraint]]
   name = "k8s.io/api"
-  version = "kubernetes-1.10.0"
+  version = "kubernetes-1.11.0"
 
 [[constraint]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.10.0"
+  version = "kubernetes-1.11.0"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.10.0"
+  version = "kubernetes-1.11.0"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "7.0.0"
+  version = "8.0.0"
 
 [[constraint]]
   branch = "master"
@@ -59,3 +59,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/kylelemons/godebug"
+
+[[override]]
+  name = "github.com/json-iterator/go"
+  revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"

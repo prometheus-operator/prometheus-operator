@@ -18,6 +18,6 @@ spec:
       targetPort: {{ .Values.etcdPort }}
 {{- if .Values.endpoints }}{{- else }}
   selector:
-    k8s-app: etcd-server
+    {{ .Values.serviceSelectorLabelKey }}: {{ .Values.serviceSelectorLabelValue }}
 {{- end }}
   type: ClusterIP

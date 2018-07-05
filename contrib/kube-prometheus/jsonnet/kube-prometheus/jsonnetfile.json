@@ -39,6 +39,16 @@
                 }
             },
             "version": "master"
+        },
+        {
+            "name": "etcd-mixin",
+            "source": {
+                "git": {
+                    "remote": "https://github.com/coreos/etcd",
+                    "subdir": "Documentation/etcd-mixin"
+                }
+            },
+            "version": "master"
         }
     ]
 }

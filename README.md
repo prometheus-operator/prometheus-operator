@@ -149,5 +149,5 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 1. `make test` executes all *unit tests*.
 2. You can execute the *e2e tests* on a local minikube by compiling the static binary (which is what is used for the container images) with `make crossbuild`.
   1. build the container image with the docker host from within minikube by running `eval $(minikube docker-env)`.
-  2. You can build the container using `make container`.
+  2. You can build the container images using `make image`.
   3. Finally run the e2e tests using `make e2e-test`.

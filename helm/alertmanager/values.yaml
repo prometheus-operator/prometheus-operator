@@ -175,6 +175,10 @@ service:
 global:
   rbacEnable: true
   pspEnable: true
+  
+  # Reference to one or more secrets to be used when pulling images
+  imagePullSecrets: []
+  #  - name: "image-pull-secret"
 
 ## Alertmanager StorageSpec for persistent data
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md

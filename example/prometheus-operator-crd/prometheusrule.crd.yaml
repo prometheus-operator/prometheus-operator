@@ -12,7 +12,6 @@ spec:
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: PrometheusRule defines alerting rules for a Prometheus instance
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -41,6 +40,9 @@ spec:
                 going to ignore it if set in create or update request.
               type: string
             creationTimestamp:
+              description: Time is a wrapper around time.Time which supports correct
+                marshaling to YAML and JSON.  Wrappers are provided for many of the
+                factory methods that the time package offers.
               format: date-time
               type: string
             deletionGracePeriodSeconds:
@@ -50,6 +52,9 @@ spec:
               format: int64
               type: integer
             deletionTimestamp:
+              description: Time is a wrapper around time.Time which supports correct
+                marshaling to YAML and JSON.  Wrappers are provided for many of the
+                factory methods that the time package offers.
               format: date-time
               type: string
             finalizers:
@@ -332,11 +337,4 @@ spec:
                 - name
                 - rules
               type: array
-      required:
-      - spec
   version: v1
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: null
