@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: thanos-query
-        image: improbable/thanos:v0.1.0-rc.1
+        image: improbable/thanos:v0.1.0-rc.2
         args:
         - "query"
         - "--log.level=debug"
