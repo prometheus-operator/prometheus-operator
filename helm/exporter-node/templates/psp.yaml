@@ -1,3 +1,4 @@
+{{- if .Values.enableDaemonSet }}
 {{- if .Values.global.pspEnable }}
 apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
@@ -50,4 +51,5 @@ spec:
       - min: 0
         max: 65535
   readOnlyRootFilesystem: false
+{{- end }}
 {{- end }}
