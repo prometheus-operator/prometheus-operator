@@ -439,3 +439,9 @@ prometheus:
 deployCoreDNS: false
 deployKubeDNS: true
 deployKubeEtcd: true
+
+##Custom Labels to be added to Prometheus Rules ConfigMap
+##
+additionalRulesConfigMapLabels: {}
+  # additionalRulesConfigMapLabels:
+  #   team: devops
