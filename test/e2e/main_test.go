@@ -16,16 +16,14 @@ package e2e
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"testing"
 
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	operatorFramework "github.com/coreos/prometheus-operator/test/framework"
+
+	"k8s.io/api/core/v1"
 )
 
 var framework *operatorFramework.Framework
@@ -68,34 +66,22 @@ func TestMain(m *testing.M) {
 	}
 
 	defer func() {
+		if code != 0 {
+			if err := framework.PrintEvents(); err != nil {
+				log.Printf("failed to print events: %v", err)
+			}
+			if err := framework.PrintPodLogs(framework.Namespace.Name, framework.OperatorPod.Name); err != nil {
+				log.Printf("failed to print Prometheus Operator logs: %v", err)
+			}
+		}
+
 		if err := framework.Teardown(); err != nil {
 			log.Printf("failed to teardown framework: %v\n", err)
 			code = 1
-		}
-
-		if code != 0 {
-			if err := printKubernetesEvents(); err != nil {
-				log.Printf("failed to print events: %v", err)
-			}
 		}
 
 		os.Exit(code)
 	}()
 
 	code = m.Run()
-}
-
-func printKubernetesEvents() error {
-	fmt.Println("Printing Kubernetes events for debugging:")
-	events, err := framework.KubeClient.CoreV1().Events("").List(metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	if events != nil {
-		for _, e := range events.Items {
-			fmt.Printf("FirstTimestamp: '%v', Reason: '%v', Message: '%v'\n", e.FirstTimestamp, e.Reason, e.Message)
-		}
-	}
-
-	return nil
 }

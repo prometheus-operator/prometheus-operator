@@ -64,7 +64,7 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 	p := &monitoringv1.Prometheus{}
 	ruleFiles := map[string]string{}
 
-	ruleFiles["my-rule-file-1"] = strings.Repeat("a", v1.MaxSecretSize)
+	ruleFiles["my-rule-file-1"] = strings.Repeat("a", maxConfigMapDataSize)
 	ruleFiles["my-rule-file-2"] = "a"
 
 	configMaps, err := makeRulesConfigMaps(p, ruleFiles)
