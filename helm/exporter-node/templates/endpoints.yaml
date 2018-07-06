@@ -1,0 +1,21 @@
+{{- if .Values.endpoints }}
+apiVersion: v1
+kind: Endpoints
+metadata:
+  labels:
+    app: {{ template "exporter-node.name" . }}
+    component: node-exporter
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+  name: {{ template "exporter-node.fullname" . }}
+subsets:
+  - addresses:
+      {{- range .Values.endpoints }}
+      - ip: {{ . }}
+      {{- end }}
+    ports:
+      - name: metrics
+        port: {{ .Values.nodeExporterPort }}
+        protocol: TCP
+{{- end }}
