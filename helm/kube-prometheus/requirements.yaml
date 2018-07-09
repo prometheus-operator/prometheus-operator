@@ -7,7 +7,7 @@ dependencies:
 
   - name: prometheus
     version: 0.0.49
-    # e2e-repository: file://../prometheus
+    #e2e-repository: file://../prometheus
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
   - name: exporter-coredns
