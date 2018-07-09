@@ -11,14 +11,13 @@ set -o xtrace
 NAMESPACE=$1
 
 # Ensure all pods in the namespace entered a Running state
-SUCCESS=0
 PODS_FOUND=0
 POD_RETRY_COUNT=0
 RETRY=60
 RETRY_DELAY=10
 while [ "$POD_RETRY_COUNT" -lt "$RETRY" ]; do
   POD_RETRY_COUNT=$((POD_RETRY_COUNT+1))
-  POD_STATUS=`kubectl get pods --no-headers --namespace $NAMESPACE`
+  POD_STATUS=$(kubectl get pods --no-headers --namespace "${NAMESPACE}")
   if [ -z "$POD_STATUS" ];then
     echo "INFO: No pods found for this release, retrying after sleep"
     POD_RETRY_COUNT=$((POD_RETRY_COUNT+1))
@@ -34,8 +33,8 @@ while [ "$POD_RETRY_COUNT" -lt "$RETRY" ]; do
 
     CONTAINER_RETRY_COUNT=0
     while [ "$CONTAINER_RETRY_COUNT" -lt "$RETRY" ]; do
-      UNREADY_CONTAINERS=`kubectl get pods --namespace $NAMESPACE \
-        -o jsonpath="{.items[*].status.containerStatuses[?(@.ready!=true)].name}"`
+      UNREADY_CONTAINERS=$(kubectl get pods --namespace "${NAMESPACE}" \
+        -o jsonpath="{.items[*].status.containerStatuses[?(@.ready!=true)].name}")
       if [ -n "$UNREADY_CONTAINERS" ];then
         echo "INFO: Some containers are not yet ready; retrying after sleep"
         CONTAINER_RETRY_COUNT=$((CONTAINER_RETRY_COUNT+1))
