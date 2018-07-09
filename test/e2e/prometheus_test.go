@@ -651,6 +651,14 @@ func TestPrometheusRulesExceedingConfigMapLimit(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	defer func() {
+		if t.Failed() {
+			if err := framework.PrintPodLogs(ns, "prometheus-"+p.Name+"-0"); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}()
+
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
 	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, pSVC); err != nil {
 		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
@@ -658,16 +666,16 @@ func TestPrometheusRulesExceedingConfigMapLimit(t *testing.T) {
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	// Make sure both rule files ended up in the Prometheus Pod
 	for i := range prometheusRules {
-		err := framework.WaitForPrometheusFiringAlert(ns, pSVC.Name, "my-alert-"+strconv.Itoa(i))
+		_, err := framework.WaitForConfigMapExist(ns, "prometheus-"+p.Name+"-rulefiles-"+strconv.Itoa(i))
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
+	// Make sure both rule files ended up in the Prometheus Pod
 	for i := range prometheusRules {
-		_, err := framework.WaitForConfigMapExist(ns, "prometheus-"+p.Name+"-rulefiles-"+strconv.Itoa(i))
+		err := framework.WaitForPrometheusFiringAlert(ns, pSVC.Name, "my-alert-"+strconv.Itoa(i))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -686,6 +694,11 @@ func TestPrometheusRulesExceedingConfigMapLimit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = framework.WaitForPrometheusFiringAlert(ns, pSVC.Name, "my-alert-0")
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 // generateHugePrometheusRule returns a Prometheus rule instance that would fill
@@ -698,8 +711,8 @@ func generateHugePrometheusRule(ns, identifier string) monitoringv1.PrometheusRu
 			Rules: []monitoringv1.Rule{},
 		},
 	}
-	// Approximating that each rule is 50 bytes and that the config map limit is 1024 * 1024 bytes
-	for i := 0; i < 15000; i++ {
+	// One rule marshaled as yaml is ~34 bytes long, the max is ~524288 bytes.
+	for i := 0; i < 12000; i++ {
 		groups[0].Rules = append(groups[0].Rules, monitoringv1.Rule{
 			Alert: alertName + "-" + identifier,
 			Expr:  "vector(1)",
