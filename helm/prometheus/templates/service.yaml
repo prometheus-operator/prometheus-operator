@@ -14,7 +14,7 @@ metadata:
 {{- if .Values.service.labels }}
 {{ toYaml .Values.service.labels | indent 4 }}
 {{- end }}
-name: {{ .Values.service.nameOverride | default .Release.Name | quote }}
+  name: {{ .Values.service.nameOverride | default .Release.Name }}
 spec:
   sessionAffinity: "{{ .Values.service.sessionAffinity }}"
   clusterIP: "{{ .Values.service.clusterIP }}"
