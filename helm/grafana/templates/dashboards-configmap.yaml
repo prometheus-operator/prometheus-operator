@@ -24,6 +24,10 @@ data:
       "basicAuth": false,
       "name": "prometheus",
       "type": "prometheus",
-      "url": "http://{{ printf "%s" .Release.Name }}:9090"
+{{- if hasPrefix "/" .Values.prometheusRoutePrefix }}
+      "url": "http://{{ printf "%s-%s" .Release.Name "prometheus" }}:9090{{ .Values.prometheusRoutePrefix }}"
+{{- else }}
+      "url": "http://{{ printf "%s-%s" .Release.Name "prometheus" }}:9090/{{ .Values.prometheusRoutePrefix }}"
+{{- end }}
     }
   {{- end }}

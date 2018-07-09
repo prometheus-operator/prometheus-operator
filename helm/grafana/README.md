@@ -36,6 +36,7 @@ The command removes all the Kubernetes components associated with the chart and 
 Parameter | Description | Default
 --- | --- | ---
 `routePrefix` | Prefix used to register routes | `"/"`
+`prometheusRoutePrefix` | Prometheus route prefix (needed for datasource url creation) | `"/"`
 `auth.anonymous.enabled` | If true, enable anonymous authentication | `true`
 `adminUser` | Grafana admin user name | `admin`
 `adminPassword` | Grafana admin user password | `admin`

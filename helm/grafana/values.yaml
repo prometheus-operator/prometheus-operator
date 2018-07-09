@@ -23,7 +23,7 @@ additionalServiceMonitorLabels: {}
 global:
   rbacEnable: true
   pspEnable: true
-  
+
   # Reference to one or more secrets to be used when pulling images
   imagePullSecrets: []
   #  - name: "image-pull-secret"
@@ -133,7 +133,7 @@ ingress:
   ## Labels to be added to the Ingress
   ##
   labels: {}
-  
+
   ## Hostnames.
   ## Must be provided if Ingress is enabled.
   ##
@@ -153,6 +153,9 @@ ingress:
 
 # Set datasource in beginning
 dataSource: {}
+
+## Prometheus route prefix (needed for datasource url creation)
+prometheusRoutePrefix: /
 
 ## A list of additional configmaps that contain -dashboard.json and/or -datasource.json files
 ## that should be imported into grafana.
