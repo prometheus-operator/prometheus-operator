@@ -110,16 +110,17 @@ pkg/client/monitoring/v1/openapi_generated.go: pkg/client/monitoring/v1/types.go
 	-p github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 \
 	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header"
 
-bundle.yaml: example/rbac/prometheus-operator/*.yaml
+bundle.yaml: $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	hack/generate-bundle.sh
 
 hack/generate/vendor: $(JB_BINARY) jsonnet/prometheus-operator/**
 	cd hack/generate; $(JB_BINARY) install;
 
-example/non-rbac/prometheus-operator.yaml: hack/generate/vendor hack/generate/prometheus-operator-non-rbac.jsonnet
+example/non-rbac/prometheus-operator.yaml: hack/generate/vendor hack/generate/prometheus-operator-non-rbac.jsonnet $(shell find jsonnet -type f)
 	hack/generate/build-non-rbac-prometheus-operator.sh
 
-example/rbac/prometheus-operator/*.yaml: hack/generate/vendor hack/generate/prometheus-operator-rbac.jsonnet
+RBAC_MANIFESTS = example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml example/rbac/prometheus-operator/prometheus-operator-service-account.yaml example/rbac/prometheus-operator/prometheus-operator-deployment.yaml
+$(RBAC_MANIFESTS): hack/generate/vendor hack/generate/prometheus-operator-rbac.jsonnet $(shell find jsonnet -type f)
 	hack/generate/build-rbac-prometheus-operator.sh
 
 jsonnet/prometheus-operator/prometheus-operator.libsonnet: VERSION
