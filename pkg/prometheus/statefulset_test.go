@@ -31,7 +31,9 @@ import (
 
 var (
 	defaultTestConfig = &Config{
-		ConfigReloaderImage: "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderImage:        "quay.io/coreos/configmap-reload:latest",
+		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
+		ThanosDefaultBaseImage:     "improbable/thanos",
 	}
 )
 
@@ -343,5 +345,45 @@ func TestListenLocal(t *testing.T) {
 
 	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 0 {
 		t.Fatal("Prometheus container should have 0 ports defined")
+	}
+}
+
+func TestTagAndVersion(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Tag:     "my-unrelated-tag",
+			Version: "v2.3.1",
+		},
+	}, appsv1.OrderedReadyPodManagement, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	image := sset.Spec.Template.Spec.Containers[0].Image
+	expected := "quay.io/prometheus/prometheus:my-unrelated-tag"
+	if image != expected {
+		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
+	}
+}
+
+func TestThanosTagAndVersion(t *testing.T) {
+	thanosTag := "my-unrelated-tag"
+	thanosVersion := "v0.1.0-rc.2"
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				Version: &thanosVersion,
+				Tag:     &thanosTag,
+			},
+		},
+	}, appsv1.OrderedReadyPodManagement, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	image := sset.Spec.Template.Spec.Containers[2].Image
+	expected := "improbable/thanos:my-unrelated-tag"
+	if image != expected {
+		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 	}
 }
