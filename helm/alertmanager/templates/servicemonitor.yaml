@@ -25,5 +25,10 @@ spec:
       - {{ .Release.Namespace | quote }}
   endpoints:
   - port: http
+    {{- if hasSuffix "/" .Values.routePrefix }}
+    path: "{{ .Values.routePrefix }}metrics"
+    {{- else }}
+    path: "{{ .Values.routePrefix }}/metrics"
+    {{- end }}
     interval: 30s
 {{- end }}

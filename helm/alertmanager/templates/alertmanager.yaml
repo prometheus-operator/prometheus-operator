@@ -28,6 +28,9 @@ spec:
   replicas: {{ .Values.replicaCount }}
   resources:
 {{ toYaml .Values.resources | indent 4 }}
+{{- if .Values.routePrefix }}
+  routePrefix: "{{ .Values.routePrefix }}"
+{{- end }}
 {{- if .Values.storageSpec }}
   storage:
 {{ toYaml .Values.storageSpec | indent 4 }}

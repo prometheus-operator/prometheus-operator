@@ -182,7 +182,7 @@ service:
 global:
   rbacEnable: true
   pspEnable: true
-  
+
   # Reference to one or more secrets to be used when pulling images
   imagePullSecrets: []
   #  - name: "image-pull-secret"
@@ -202,3 +202,8 @@ storageSpec: {}
 
 # default rules are in templates/alertmanager.rules.yaml
 # prometheusRules: {}
+
+## Prefix used to register routes.
+## Useful for proxies that rewrite URLs.
+##
+routePrefix: /

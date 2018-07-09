@@ -10,7 +10,7 @@ sources:
   - https://github.com/prometheus/alertmanager
 version: 0.1.7
 appVersion: "0.15.1"
-home: https://github.com/prometheus/alertmanager 
+home: https://github.com/prometheus/alertmanager
 keywords:
 - alertmanager
 - monitoring
