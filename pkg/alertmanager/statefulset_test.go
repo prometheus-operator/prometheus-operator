@@ -344,7 +344,7 @@ func TestMakeStatefulSetSpecPeerFlagPort(t *testing.T) {
 
 		for _, arg := range amArgs {
 			if strings.Contains(arg, ".peer") {
-				if strings.Contains(arg, ":6783") != test.portNeeded {
+				if strings.Contains(arg, ":"+string(alertmanagerGossipPort)) != test.portNeeded {
 					t.Fatalf("expected arg '%v' containing port specification to be: %v", arg, test.portNeeded)
 				}
 			}

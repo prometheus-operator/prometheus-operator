@@ -137,7 +137,7 @@ Documentation/api.md: $(PO_DOCGEN_BINARY) pkg/client/monitoring/v1/types.go
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
 
-$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) kube-prometheus
+$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example -type f) kube-prometheus
 	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
 
 

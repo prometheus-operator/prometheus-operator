@@ -38,6 +38,7 @@ const (
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
 	alertmanagerStorageDir = "/alertmanager"
+	alertmanagerGossipPort = 9094
 )
 
 var (
@@ -151,10 +152,16 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 					Protocol:   v1.ProtocolTCP,
 				},
 				{
-					Name:       "mesh",
-					Port:       6783,
-					TargetPort: intstr.FromInt(6783),
+					Name:       "mesh-tcp",
+					Port:       alertmanagerGossipPort,
+					TargetPort: intstr.FromInt(alertmanagerGossipPort),
 					Protocol:   v1.ProtocolTCP,
+				},
+				{
+					Name:       "mesh-udp",
+					Port:       alertmanagerGossipPort,
+					TargetPort: intstr.FromInt(alertmanagerGossipPort),
+					Protocol:   v1.ProtocolUDP,
 				},
 			},
 			Selector: map[string]string{
@@ -180,7 +187,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 
 	amArgs := []string{
 		fmt.Sprintf("--config.file=%s", alertmanagerConfFile),
-		fmt.Sprintf("--cluster.listen-address=$(POD_IP):%d", 6783),
+		fmt.Sprintf("--cluster.listen-address=$(POD_IP):%d", alertmanagerGossipPort),
 		fmt.Sprintf("--storage.path=%s", alertmanagerStorageDir),
 	}
 
@@ -253,14 +260,19 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	podLabels["alertmanager"] = a.Name
 
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
-		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s.%s.svc:6783", prefixedName(a.Name), i, governingServiceName, a.Namespace))
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s.%s.svc:%d", prefixedName(a.Name), i, governingServiceName, a.Namespace, alertmanagerGossipPort))
 	}
 
 	ports := []v1.ContainerPort{
 		{
-			Name:          "mesh",
-			ContainerPort: 6783,
+			Name:          "mesh-tcp",
+			ContainerPort: alertmanagerGossipPort,
 			Protocol:      v1.ProtocolTCP,
+		},
+		{
+			Name:          "mesh-udp",
+			ContainerPort: alertmanagerGossipPort,
+			Protocol:      v1.ProtocolUDP,
 		},
 	}
 	if !a.Spec.ListenLocal {
@@ -294,7 +306,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			for i := range amArgs {
 				// below Alertmanager v0.15.0 peer address port specification is not necessary
 				if strings.Contains(amArgs[i], "--cluster.peer") {
-					amArgs[i] = strings.TrimSuffix(amArgs[i], ":6783")
+					amArgs[i] = strings.TrimSuffix(amArgs[i], ":"+string(alertmanagerGossipPort))
 				}
 
 				// below Alertmanager v0.15.0 high availability flags are prefixed with 'mesh' instead of 'cluster'

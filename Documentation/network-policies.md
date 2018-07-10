@@ -48,8 +48,8 @@ networkpolicy "prometheus" configured
 
 #### Alertmanager
 
-* Allow inbound tcp dst port 9093 from any source to alertmanager  
-* Allow inbound tcp dst port 6783 from only alertmanager to alertmanager 
+* Allow inbound tcp dst port 9093 from any source to alertmanager
+* Allow inbound tcp & udp dst port 9094 from only alertmanager to alertmanager
  
 [embedmd]:# (../example/networkpolicies/alertmanager.yaml)
 ```yaml
@@ -86,8 +86,10 @@ spec:
           values:
           - main
     ports:
-    - port: 6783
+    - port: 9094
       protocol: tcp
+    - port: 9094
+      protocol: udp
   podSelector:
     matchLabels:
       alertmanager: main
