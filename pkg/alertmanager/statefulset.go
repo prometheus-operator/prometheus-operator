@@ -33,7 +33,7 @@ import (
 
 const (
 	governingServiceName   = "alertmanager-operated"
-	defaultVersion         = "v0.15.0"
+	defaultVersion         = "v0.15.1-rc.2"
 	secretsDir             = "/etc/alertmanager/secrets/"
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
@@ -182,6 +182,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		fmt.Sprintf("--config.file=%s", alertmanagerConfFile),
 		fmt.Sprintf("--cluster.listen-address=$(POD_IP):%d", 6783),
 		fmt.Sprintf("--storage.path=%s", alertmanagerStorageDir),
+		"--log.level=debug",
 	}
 
 	if a.Spec.ListenLocal {
