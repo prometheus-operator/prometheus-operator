@@ -57,7 +57,7 @@ Although this project is intended to be used as a library, a compiled version of
 Simply create the stack:
 
 ```
-$ kubectl create -f manifests/
+$ kubectl create -R -f manifests/
 ```
 
 ## Usage
