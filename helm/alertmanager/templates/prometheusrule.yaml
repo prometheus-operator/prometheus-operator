@@ -7,7 +7,6 @@ metadata:
     heritage: {{ .Release.Service }}
     prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
     release: {{ .Release.Name }}
-    role: alert-rules
     {{- if .Values.additionalRulesLabels }}
 {{ toYaml .Values.additionalRulesLabels | indent 4 }}
     {{- else if .Values.additionalRulesConfigMapLabels }}       # Deprecated for .Values.additionalRulesLabels
