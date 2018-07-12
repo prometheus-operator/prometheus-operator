@@ -572,7 +572,7 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 	} else if am.Port.IntVal != 0 {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_container_port_number"}},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
 			{Key: "regex", Value: am.Port.String()},
 		})
 	}
