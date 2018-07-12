@@ -144,6 +144,7 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 					repoAndTag[1]
 			}
 		}
+		deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--alertmanager-default-base-image=quay.io/mxinden/alertmanager")
 	}
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=all")
