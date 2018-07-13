@@ -4,6 +4,22 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
   _config+:: {
     namespace: 'default',
 
+    kubeStateMetrics+:: {
+      // when this is an empty string, you get the default set
+      collectors: '',
+      scrapeTimeout: '',
+      scrapeInterval: '30s',
+    },
+
+    resizer+:: {
+      kubeStateMetrics+:: {
+        cpu: '100m',
+        extraCpu: '2m',
+        memory: '150Mi',
+        extraMemory: '30Mi',
+      },
+    },
+
     versions+:: {
       kubeStateMetrics: 'v1.3.1',
       kubeRbacProxy: 'v0.3.1',
@@ -137,19 +153,20 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           '--port=8081',
           '--telemetry-host=127.0.0.1',
           '--telemetry-port=8082',
+          '--collectors=' + $._config.kubeStateMetrics.collectors,
         ]) +
-        container.mixin.resources.withRequests({ cpu: '102m', memory: '180Mi' }) +
-        container.mixin.resources.withLimits({ cpu: '102m', memory: '180Mi' });
+        container.mixin.resources.withRequests({ cpu: $._config.resizer.kubeStateMetrics.cpu, memory: $._config.resizer.kubeStateMetrics.memory }) +
+        container.mixin.resources.withLimits({ cpu: $._config.resizer.kubeStateMetrics.cpu, memory: $._config.resizer.kubeStateMetrics.memory });
 
       local addonResizer =
         container.new('addon-resizer', $._config.imageRepos.addonResizer + ':' + $._config.versions.addonResizer) +
         container.withCommand([
           '/pod_nanny',
           '--container=kube-state-metrics',
-          '--cpu=100m',
-          '--extra-cpu=2m',
-          '--memory=150Mi',
-          '--extra-memory=30Mi',
+          '--cpu=' + $._config.resizer.kubeStateMetrics.cpu,
+          '--extra-cpu=' + $._config.resizer.kubeStateMetrics.extraCpu,
+          '--memory=' + $._config.resizer.kubeStateMetrics.memory,
+          '--extra-memory=' + $._config.resizer.kubeStateMetrics.extraMemory,
           '--threshold=5',
           '--deployment=kube-state-metrics',
         ]) +
@@ -258,13 +275,13 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
             {
               port: 'https-main',
               scheme: 'https',
-              interval: '30s',
+              interval: $._config.kubeStateMetrics.scrapeInterval,
               honorLabels: true,
               bearerTokenFile: '/var/run/secrets/kubernetes.io/serviceaccount/token',
               tlsConfig: {
                 insecureSkipVerify: true,
               },
-            },
+            } + if $._config.kubeStateMetrics.scrapeTimeout != '' then { scrapeTimeout: $._config.kubeStateMetrics.scrapeTimeout } else {},
             {
               port: 'https-self',
               scheme: 'https',

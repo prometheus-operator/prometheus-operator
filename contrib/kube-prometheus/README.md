@@ -369,3 +369,24 @@ The Prometheus `/targets` page will show the kubelet job with the error `403 Una
 #### Authorization problem
 
 The Prometheus `/targets` page will show the kubelet job with the error `401 Unauthorized`, when token authorization is not enabled. Ensure that the `--authorization-mode=Webhook` flag is enabled on all kubelet configurations.
+### kube-state-metrics resource usaged
+
+In some environments, kube-state-metrics may need additional
+resources. One driver for more resource needs, is a high number of
+namespaces. There may be others.
+
+kube-state-metrics has it's resources using an
+[addon-resizer](https://github.com/kubernetes/autoscaler/tree/master/addon-resizer/nanny)
+You can control it's parameters by setting variables in the
+config. They default to:
+
+``` jsonnet
+    resizer+:: {
+      kubeStateMetrics+:: {
+        cpu: '100m',
+        extraCpu: '2m',
+        memory: '150Mi',
+        extraMemory: '30Mi',
+      },
+    }
+```
