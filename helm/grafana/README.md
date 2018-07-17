@@ -49,6 +49,7 @@ Parameter | Description | Default
 `ingress.labels` | Labels for Grafana Ingress | `{}`
 `ingress.hosts` | Grafana Ingress fully-qualified domain names | `[]`
 `ingress.tls` | TLS configuration for Grafana Ingress | `[]`
+`ldapSecret` | Secret name for LDAP config (key should be ldap.toml) | `""`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `resources` | Pod resource requests & limits | `{}`
 `service.annotations` | Annotations to be added to the Grafana Service | `{}`

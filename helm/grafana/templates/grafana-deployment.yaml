@@ -47,6 +47,11 @@ spec:
         - name: grafana-config
           mountPath: /etc/grafana
       {{- end }}
+      {{- if .Values.ldapSecret }}
+        - name: grafana-ldap
+          mountPath: /etc/grafana/ldap.toml
+          subPath: ldap.toml
+      {{- end }}
         ports:
         - name: web
           containerPort: 3000
@@ -124,4 +129,9 @@ spec:
         - name: {{ . }}
           configMap:
             name: {{ . }}
+      {{- end }}
+      {{- if .Values.ldapSecret }}
+        - name: grafana-ldap
+          secret:
+            secretName: {{ .Values.ldapSecret }}
       {{- end }}

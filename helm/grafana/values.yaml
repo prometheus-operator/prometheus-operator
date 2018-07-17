@@ -44,6 +44,9 @@ mountGrafanaConfig: false
 adminUser: "admin"
 adminPassword: "admin"
 
+## Set secret name to use to get ldap config (key needs to be ldap.toml)
+ldapSecret:
+
 service:
 
   ## Annotations to be added to the Service
