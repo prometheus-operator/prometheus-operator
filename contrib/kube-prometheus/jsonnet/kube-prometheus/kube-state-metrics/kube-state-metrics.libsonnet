@@ -7,7 +7,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     kubeStateMetrics+:: {
       collectors: '',  // empty string gets a default set
       scrapeInterval: '30s',
-      scrapeTimeout: '',
+      scrapeTimeout: '30s',
 
       baseCPU: '100m',
       baseMemory: '150Mi',
@@ -270,12 +270,13 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
               port: 'https-main',
               scheme: 'https',
               interval: $._config.kubeStateMetrics.scrapeInterval,
+              scrapeTimeout: $._config.kubeStateMetrics.scrapeTimeout,
               honorLabels: true,
               bearerTokenFile: '/var/run/secrets/kubernetes.io/serviceaccount/token',
               tlsConfig: {
                 insecureSkipVerify: true,
               },
-            } + if $._config.kubeStateMetrics.scrapeTimeout != '' then { scrapeTimeout: $._config.kubeStateMetrics.scrapeTimeout } else {},
+            },
             {
               port: 'https-self',
               scheme: 'https',
