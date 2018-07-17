@@ -1,6 +1,6 @@
 {{- if and .Values.rules.specifiedInValues .Values.rules.value }}
-apiVersion: v1
-kind: ConfigMap
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
 metadata:
   labels:
     app: {{ template "prometheus.name" . }}
@@ -12,6 +12,7 @@ metadata:
 {{ toYaml .Values.rules.additionalLabels | indent 4 }}
     {{- end }}
   name: prometheus-{{ .Release.Name }}-rules
-data:
-{{ toYaml .Values.rules.value | indent 2 }}
+spec:
+  groups:
+{{ toYaml .Values.rules.value | indent 4 }}
 {{- end }}

@@ -49,9 +49,9 @@ selfServiceMonitor: true
 ##
 additionalServiceMonitorLabels: {}
 
-##Custom Labels to be added to Prometheus Rules ConfigMap
+##Custom Labels to be added to Prometheus Rules CRD
 ##
-additionalRulesConfigMapLabels: {}
+additionalRulesLabels: {}
 
 ## Alertmanager container image
 ##
@@ -63,7 +63,7 @@ image:
 ##
 labels: {}
 
-## "prometheus" label value for ServiceMonitor and rules ConfigMap
+## "prometheus" label value for ServiceMonitor ConfigMap and Prometheus Rules CRD
 ## Release.Name by default
 prometheusLabelValue: ""
 

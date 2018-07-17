@@ -1,0 +1,3 @@
+DEPRECATION NOTICE:
+
+- additionalRulesConfigMapLabels is not used anymore, use additionalRulesLabels
