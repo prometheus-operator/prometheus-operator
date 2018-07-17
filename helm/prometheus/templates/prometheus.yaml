@@ -42,7 +42,7 @@ spec:
 {{- else if .Values.ingress.enabled }}
   externalUrl: "http://{{ index .Values.ingress.hosts 0 }}{{ .Values.routePrefix }}"
 {{- else }}
-  externalUrl: http://{{ template "prometheus.fullname" . }}.{{ .Release.Namespace }}:9090
+  externalUrl: http://{{ template "prometheus.fullname" . }}.{{ .Release.Namespace }}:{{ .Values.service.port }}
 {{- end }}
 {{- if .Values.nodeSelector }}
   nodeSelector:

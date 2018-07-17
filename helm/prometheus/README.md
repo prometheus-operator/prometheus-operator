@@ -75,6 +75,7 @@ Parameter | Description | Default
 `service.loadBalancerIP` | External IP address to assign to Prometheus Service | `""`
 `service.loadBalancerSourceRanges` | List of client IPs allowed to access Prometheus Service | `[]`
 `service.nodePort` | Port to expose Prometheus Service on each node | `39090`
+`service.port` | Incoming port of the Prometheus Service | `9090`
 `service.type` | Prometheus Service type | `ClusterIP`
 `serviceMonitors` | ServiceMonitor crd resources to create & be scraped by this Prometheus instance | `[]`
 `serviceMonitorsSelector` | ServiceMonitor ConfigMap selector | `{}`

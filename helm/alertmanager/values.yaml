@@ -166,6 +166,10 @@ service:
   ##
   nodePort: 30903
 
+  ## The incoming port of the service
+  ##
+  port: 9093
+
   ## Service type
   ##
   type: ClusterIP
