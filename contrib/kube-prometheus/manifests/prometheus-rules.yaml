@@ -388,7 +388,7 @@ spec:
         kube_deployment_spec_replicas{job="kube-state-metrics"}
           !=
         kube_deployment_status_replicas_available{job="kube-state-metrics"}
-      for: 15m
+      for: 1h
       labels:
         severity: critical
     - alert: KubeStatefulSetReplicasMismatch
