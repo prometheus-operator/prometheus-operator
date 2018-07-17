@@ -58,6 +58,7 @@ Parameter | Description | Default
 `service.loadBalancerIP` | External IP address to assign to Grafana Service | `""`
 `service.loadBalancerSourceRanges` | List of client IPs allowed to access Grafana Service | `[]`
 `service.nodePort` | Port to expose Grafana Service on each node | `30902`
+`service.port` | Incoming port of the Grafana Service | `80`
 `service.type` | Grafana Service type | `ClusterIP`
 `storageSpec` | Grafana StorageSpec for persistent data | `{}`
 `resources` | Pod resource requests & limits | `{}`

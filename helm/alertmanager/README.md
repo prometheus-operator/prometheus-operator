@@ -65,6 +65,7 @@ Parameter | Description | Default
 `service.loadBalancerIP` | External IP address to assign to Alertmanager Service | `""`
 `service.loadBalancerSourceRanges` | List of client IPs allowed to access Alertmanager Service | `[]`
 `service.nodePort` | Port to expose Alertmanager Service on each node | `39093`
+`service.port` | Incoming port of the Alertmanager Service | `9093`
 `service.type` | Alertmanager Service type | `ClusterIP`
 `storageSpec` | Alertmanager StorageSpec for persistent data | `{}`
 
