@@ -78,7 +78,7 @@ hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 ##############
 
 .PHONY: generate
-generate: pkg/client/monitoring/v1/zz_generated.deepcopy.go pkg/client/monitoring/v1/openapi_generated.go jsonnet/prometheus-operator/**-crd.libsonnet bundle.yaml kube-prometheus Documentation/*
+generate: pkg/client/monitoring/v1/zz_generated.deepcopy.go pkg/client/monitoring/v1/openapi_generated.go $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml kube-prometheus $(shell find Documentation -type f)
 
 .PHONY: generate-in-docker
 generate-in-docker: hack/jsonnet-docker-image
@@ -98,7 +98,7 @@ example/prometheus-operator-crd/**.crd.yaml: pkg/client/monitoring/v1/openapi_ge
 	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
 	po-crdgen prometheusrule > example/prometheus-operator-crd/prometheusrule.crd.yaml
 
-jsonnet/prometheus-operator/**-crd.libsonnet: example/prometheus-operator-crd/**.crd.yaml $(GOJSONTOYAML_BINARY)
+jsonnet/prometheus-operator/**-crd.libsonnet: $(shell find -type f example/prometheus-operator-crd/*.crd.yaml) $(GOJSONTOYAML_BINARY)
 	cat example/prometheus-operator-crd/alertmanager.crd.yaml   | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/alertmanager-crd.libsonnet
 	cat example/prometheus-operator-crd/prometheus.crd.yaml     | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheus-crd.libsonnet
 	cat example/prometheus-operator-crd/servicemonitor.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
@@ -113,7 +113,7 @@ pkg/client/monitoring/v1/openapi_generated.go: pkg/client/monitoring/v1/types.go
 bundle.yaml: $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	hack/generate-bundle.sh
 
-hack/generate/vendor: $(JB_BINARY) jsonnet/prometheus-operator/**
+hack/generate/vendor: $(JB_BINARY) $(shell find -type f jsonnet/prometheus-operator)
 	cd hack/generate; $(JB_BINARY) install;
 
 example/non-rbac/prometheus-operator.yaml: hack/generate/vendor hack/generate/prometheus-operator-non-rbac.jsonnet $(shell find jsonnet -type f)
@@ -215,7 +215,7 @@ $(JB_BINARY):
 $(PO_CRDGEN_BINARY): cmd/po-crdgen/main.go pkg/client/monitoring/v1/openapi_generated.go
 	go install github.com/coreos/prometheus-operator/cmd/po-crdgen
 
-$(PO_DOCGEN_BINARY): cmd/po-docgen/**.go
+$(PO_DOCGEN_BINARY): $(shell find cmd/po-docgen -type f) pkg/client/monitoring/v1/types.go
 	go install github.com/coreos/prometheus-operator/cmd/po-docgen
 
 $(OPENAPI_GEN_BINARY):
