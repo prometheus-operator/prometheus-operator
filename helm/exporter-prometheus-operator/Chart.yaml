@@ -1,10 +1,10 @@
 apiVersion: v1
-description: Manifests, dashboards, and alerting rules for end-to-end Kubernetes cluster monitoring.
+description: Helm chart for prometheus operator
 engine: gotpl
 maintainers:
   - name: Giancarlo Rubio
     email: gianrubio@gmail.com
-name: kube-prometheus
+name: exporter-prometheus-operator
 sources:
   - https://github.com/coreos/prometheus-operator
-version: 0.0.106
+version: 0.0.1

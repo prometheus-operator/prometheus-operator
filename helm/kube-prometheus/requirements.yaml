@@ -57,6 +57,11 @@ dependencies:
     #e2e-repository: file://../exporter-kubernetes
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 
+  - name: exporter-prometheus-operator
+    version: 0.0.1
+    #e2e-repository: file://../exporter-prometheus-operator
+    repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+
   - name: exporter-node
     version: 0.4.6
     #e2e-repository: file://../exporter-node
