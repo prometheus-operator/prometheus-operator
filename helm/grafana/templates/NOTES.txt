@@ -3,7 +3,7 @@
 
    kubectl get secret --namespace {{ .Release.Namespace }} {{ template "grafana.fullname" . }} -o jsonpath="{.data.password}" | base64 --decode ; echo
 
-2. The Grafana server can be accessed via port 80 on the following DNS name from within your cluster:
+2. The Grafana server can be accessed via port {{ .Values.service.port }} on the following DNS name from within your cluster:
 
    {{ template "grafana.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
 {{ if .Values.ingress.enabled }}
@@ -21,7 +21,7 @@
    NOTE: It may take a few minutes for the LoadBalancer IP to be available.
         You can watch the status of by running 'kubectl get svc --namespace {{ .Release.Namespace }} -w {{ template "grafana.fullname" . }}'
      export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ template "grafana.fullname" . }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-     echo http://$SERVICE_IP:80
+     echo http://$SERVICE_IP:{{ .Values.service.port }}
 {{ else if contains "ClusterIP"  .Values.service.type }}
      export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app={{ template "grafana.fullname" . }}" -o jsonpath="{.items[0].metadata.name}")
      kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 3000

@@ -77,6 +77,10 @@ service:
   ##
   nodePort: 30902
 
+  ## The incoming port of the service
+  ##
+  port: 80
+
   ## Service type
   ##
   type: ClusterIP

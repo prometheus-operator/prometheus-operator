@@ -17,7 +17,7 @@ metadata:
 spec:
   ports:
     - name: "http"
-      port: 80
+      port: {{ .Values.service.port }}
       protocol: TCP
       targetPort: 3000
 {{- if contains "NodePort" .Values.service.type }}
