@@ -312,11 +312,11 @@ spec:
         name: kube-state-metrics
         resources:
           limits:
-            cpu: 102m
-            memory: 180Mi
+            cpu: 100m
+            memory: 150Mi
           requests:
-            cpu: 102m
-            memory: 180Mi
+            cpu: 100m
+            memory: 150Mi
       - command:
         - /pod_nanny
         - --container=kube-state-metrics
@@ -545,6 +545,7 @@ spec:
     interval: 30s
     port: https-main
     scheme: https
+    scrapeTimeout: 30s
     tlsConfig:
       insecureSkipVerify: true
   - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
