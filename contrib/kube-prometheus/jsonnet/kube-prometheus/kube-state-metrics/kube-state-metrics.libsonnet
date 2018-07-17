@@ -5,19 +5,14 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     namespace: 'default',
 
     kubeStateMetrics+:: {
-      // when this is an empty string, you get the default set
-      collectors: '',
-      scrapeTimeout: '',
+      collectors: '',  // empty string gets a default set
       scrapeInterval: '30s',
-    },
+      scrapeTimeout: '',
 
-    resizer+:: {
-      kubeStateMetrics+:: {
-        cpu: '100m',
-        extraCpu: '2m',
-        memory: '150Mi',
-        extraMemory: '30Mi',
-      },
+      baseCPU: '100m',
+      baseMemory: '150Mi',
+      cpuPerNode: '2m',
+      memoryPerNode: '30Mi',
     },
 
     versions+:: {
@@ -153,20 +148,19 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           '--port=8081',
           '--telemetry-host=127.0.0.1',
           '--telemetry-port=8082',
-          '--collectors=' + $._config.kubeStateMetrics.collectors,
-        ]) +
-        container.mixin.resources.withRequests({ cpu: $._config.resizer.kubeStateMetrics.cpu, memory: $._config.resizer.kubeStateMetrics.memory }) +
-        container.mixin.resources.withLimits({ cpu: $._config.resizer.kubeStateMetrics.cpu, memory: $._config.resizer.kubeStateMetrics.memory });
+        ] + if $._config.kubeStateMetrics.collectors != '' then ['--collectors=' + $._config.kubeStateMetrics.collectors] else []) +
+        container.mixin.resources.withRequests({ cpu: $._config.kubeStateMetrics.baseCPU, memory: $._config.kubeStateMetrics.baseMemory }) +
+        container.mixin.resources.withLimits({ cpu: $._config.kubeStateMetrics.baseCPU, memory: $._config.kubeStateMetrics.baseMemory });
 
       local addonResizer =
         container.new('addon-resizer', $._config.imageRepos.addonResizer + ':' + $._config.versions.addonResizer) +
         container.withCommand([
           '/pod_nanny',
           '--container=kube-state-metrics',
-          '--cpu=' + $._config.resizer.kubeStateMetrics.cpu,
-          '--extra-cpu=' + $._config.resizer.kubeStateMetrics.extraCpu,
-          '--memory=' + $._config.resizer.kubeStateMetrics.memory,
-          '--extra-memory=' + $._config.resizer.kubeStateMetrics.extraMemory,
+          '--cpu=' + $._config.kubeStateMetrics.baseCPU,
+          '--extra-cpu=' + $._config.kubeStateMetrics.cpuPerNode,
+          '--memory=' + $._config.kubeStateMetrics.baseMemory,
+          '--extra-memory=' + $._config.kubeStateMetrics.memoryPerNode,
           '--threshold=5',
           '--deployment=kube-state-metrics',
         ]) +
