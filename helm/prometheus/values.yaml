@@ -239,6 +239,10 @@ service:
   ##
   nodePort: 30900
 
+  ## The incoming port of the service
+  ##
+  port: 9090
+
   ## Service type
   ##
   type: ClusterIP
