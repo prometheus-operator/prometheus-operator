@@ -9,6 +9,7 @@ dependencies:
     version: 0.0.50
     #e2e-repository: file://../prometheus
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+    condition: deployPrometheus
 
   - name: exporter-coredns
     version: 0.0.3

@@ -1,6 +1,9 @@
 # exporter-node configuration
 deployExporterNode: True
 
+# Prometheus
+deployPrometheus: True
+
 # Grafana
 deployGrafana: True
 
