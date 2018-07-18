@@ -17,24 +17,26 @@ HELM_INDEX="${HELM_CHARTS_PACKAGED_DIR}/index.yaml"
 
 wget ${HELM_URL}/${HELM_TARBALL}
 tar xzfv ${HELM_TARBALL}
-export PATH=${PATH}:$(pwd)/linux-amd64/
+PATH=${PATH}:$(pwd)/linux-amd64/
+export PATH
 
 # Clean up tarball
 rm -f ${HELM_TARBALL}
 
 # Package helm and dependencies
-mkdir -p ${HELM_CHARTS_PACKAGED_DIR}
+mkdir -p "${HELM_CHARTS_PACKAGED_DIR}"
 helm init --client-only
 helm repo add ${HELM_BUCKET_NAME} ${HELM_REPO_URL} 
 
 # check if charts has dependencies,
 for chart in ${HELM_PACKAGES}
-do 
-    # #  update dependencies before package the chart
-    cd ${HELM_CHARTS_DIRECTORY}/${chart} 
-    helm dep update
-    helm package . -d ${HELM_CHARTS_PACKAGED_DIR} 
-    cd -
+do
+    (
+        # update dependencies before package the chart
+        cd "${HELM_CHARTS_DIRECTORY}/${chart}"
+        helm dep update
+        helm package . -d "${HELM_CHARTS_PACKAGED_DIR}"
+    )
 done
 
 # donwload the current remote index.yaml 
@@ -42,4 +44,4 @@ if [ ! -f "${HELM_INDEX}" ]; then
     wget ${HELM_REPO_URL}index.yaml -O "${HELM_INDEX}"
 fi
 
-helm repo index ${HELM_CHARTS_PACKAGED_DIR} --url ${HELM_REPO_URL} --debug --merge ${HELM_INDEX}
+helm repo index "${HELM_CHARTS_PACKAGED_DIR}" --url "${HELM_REPO_URL}" --debug --merge "${HELM_INDEX}"

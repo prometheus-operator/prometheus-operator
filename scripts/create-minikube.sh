@@ -8,8 +8,12 @@ set -u
 # print each command before executing it
 set -x
 
-export MINIKUBE_VERSION=v0.25.0
-export KUBERNETES_VERSION=v1.9.0
+export MINIKUBE_VERSION=v0.28.0
+export KUBERNETES_VERSION=v1.10.0
+
+sudo mount --make-rshared /
+sudo mount --make-rshared /proc
+sudo mount --make-rshared /sys
 
 curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && \
     chmod +x kubectl &&  \
@@ -22,12 +26,12 @@ export MINIKUBE_WANTUPDATENOTIFICATION=false
 export MINIKUBE_WANTREPORTERRORPROMPT=false
 export MINIKUBE_HOME=$HOME
 export CHANGE_MINIKUBE_NONE_USER=true
-mkdir $HOME/.kube || true
-touch $HOME/.kube/config
+mkdir "${HOME}"/.kube || true
+touch "${HOME}"/.kube/config
 
 export KUBECONFIG=$HOME/.kube/config
 minikube version
-sudo minikube start --vm-driver=none --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.Authorization.Mode=RBAC
+sudo minikube start --vm-driver=none --bootstrapper=localkube --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.Authorization.Mode=RBAC --extra-config=apiserver.feature-gates=CustomResourceSubresources=true
 
 minikube update-context
 

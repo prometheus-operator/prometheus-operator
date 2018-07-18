@@ -95,7 +95,6 @@ spec:
 {{- else }}
   ruleSelector:
     matchLabels:
-      role: alert-rules
       prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
 {{- end }}
 {{- if .Values.storageSpec }}

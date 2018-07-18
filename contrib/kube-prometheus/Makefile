@@ -3,8 +3,6 @@ JSONNET_FMT := jsonnet fmt -n 2 --max-blank-lines 2 --string-style s --comment-s
 JB_BINARY:=$(GOPATH)/bin/jb
 EMBEDMD_BINARY:=$(GOPATH)/bin/embedmd
 
-# edit 1
-
 all: generate fmt test
 
 ../../hack/jsonnet-docker-image: ../../scripts/jsonnet/Dockerfile
@@ -26,10 +24,9 @@ generate-in-docker: ../../hack/jsonnet-docker-image
 generate: manifests **.md
 
 **.md: $(EMBEDMD_BINARY) $(shell find examples) build.sh example.jsonnet
-	echo '>>> inside **.md'
 	$(EMBEDMD_BINARY) -w `find . -name "*.md" | grep -v vendor`
 
-manifests: vendor example.jsonnet
+manifests: vendor example.jsonnet build.sh
 	rm -rf manifests
 	./build.sh
 

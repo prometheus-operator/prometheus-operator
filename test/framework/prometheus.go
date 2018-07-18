@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"k8s.io/api/core/v1"
@@ -215,19 +214,22 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *monitoringv1
 }
 
 func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout time.Duration) error {
+	var pollErr error
+
 	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
-		st, _, err := prometheus.PrometheusStatus(f.KubeClient, p)
-		if err != nil {
-			log.Print(err)
+		st, _, pollErr := prometheus.PrometheusStatus(f.KubeClient, p)
+
+		if pollErr != nil {
 			return false, nil
 		}
+
 		if st.UpdatedReplicas == *p.Spec.Replicas {
 			return true, nil
-		} else {
-			return false, nil
 		}
+
+		return false, nil
 	})
-	return errors.Wrapf(err, "waiting for Prometheus %v/%v", p.Namespace, p.Name)
+	return errors.Wrapf(pollErr, "waiting for Prometheus %v/%v: %v", p.Namespace, p.Name, err)
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {

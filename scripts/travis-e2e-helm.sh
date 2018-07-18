@@ -8,7 +8,9 @@ set -u
 # print each command before executing it
 set -x
 
-$(dirname "$BASH_SOURCE")/create-minikube.sh
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+
+"${SCRIPT_DIR}"/create-minikube.sh
 
 # build nsenter
 # https://github.com/kubernetes/helm/issues/966
@@ -20,4 +22,4 @@ cd .tmp/util-linux-2.30.2 && ./autogen.sh && ./configure && make nsenter && sudo
 
 make test-e2e-helm
 
-$(dirname "$BASH_SOURCE")/delete-minikube.sh
+"${SCRIPT_DIR}"/delete-minikube.sh

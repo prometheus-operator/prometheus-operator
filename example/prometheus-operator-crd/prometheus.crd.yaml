@@ -12,7 +12,6 @@ spec:
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: Prometheus defines a Prometheus deployment.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -641,7 +640,10 @@ spec:
                       pathPrefix:
                         description: Prefix for the HTTP path alerts are pushed to.
                         type: string
-                      port: {}
+                      port:
+                        anyOf:
+                        - type: string
+                        - type: integer
                       scheme:
                         description: Scheme to use when firing alerts.
                         type: string
@@ -899,7 +901,10 @@ spec:
                               path:
                                 description: Path to access on the HTTP server.
                                 type: string
-                              port: {}
+                              port:
+                                anyOf:
+                                - type: string
+                                - type: integer
                               scheme:
                                 description: Scheme to use for connecting to the host.
                                   Defaults to HTTP.
@@ -914,7 +919,10 @@ spec:
                                 description: 'Optional: Host name to connect to, defaults
                                   to the pod IP.'
                                 type: string
-                              port: {}
+                              port:
+                                anyOf:
+                                - type: string
+                                - type: integer
                             required:
                             - port
                       preStop:
@@ -966,7 +974,10 @@ spec:
                               path:
                                 description: Path to access on the HTTP server.
                                 type: string
-                              port: {}
+                              port:
+                                anyOf:
+                                - type: string
+                                - type: integer
                               scheme:
                                 description: Scheme to use for connecting to the host.
                                   Defaults to HTTP.
@@ -981,7 +992,10 @@ spec:
                                 description: 'Optional: Host name to connect to, defaults
                                   to the pod IP.'
                                 type: string
-                              port: {}
+                              port:
+                                anyOf:
+                                - type: string
+                                - type: integer
                             required:
                             - port
                   livenessProbe:
@@ -1039,7 +1053,10 @@ spec:
                           path:
                             description: Path to access on the HTTP server.
                             type: string
-                          port: {}
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
                           scheme:
                             description: Scheme to use for connecting to the host.
                               Defaults to HTTP.
@@ -1070,7 +1087,10 @@ spec:
                             description: 'Optional: Host name to connect to, defaults
                               to the pod IP.'
                             type: string
-                          port: {}
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
                         required:
                         - port
                       timeoutSeconds:
@@ -1179,7 +1199,10 @@ spec:
                           path:
                             description: Path to access on the HTTP server.
                             type: string
-                          port: {}
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
                           scheme:
                             description: Scheme to use for connecting to the host.
                               Defaults to HTTP.
@@ -1210,7 +1233,10 @@ spec:
                             description: 'Optional: Host name to connect to, defaults
                               to the pod IP.'
                             type: string
-                          port: {}
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
                         required:
                         - port
                       timeoutSeconds:
@@ -2814,6 +2840,10 @@ spec:
                         phase:
                           description: Phase represents the current phase of PersistentVolumeClaim.
                           type: string
+            tag:
+              description: Tag of Prometheus container image to be deployed. Defaults
+                to the value of `version`.
+              type: string
             thanos:
               description: ThanosSpec defines parameters for a Prometheus server within
                 a Thanos deployment.
@@ -2882,6 +2912,10 @@ spec:
                       description: Whether to use S3 Signature Version 2; otherwise
                         Signature Version 4 will be used.
                       type: boolean
+                tag:
+                  description: Tag of Thanos sidecar container image to be deployed.
+                    Defaults to the value of `version`.
+                  type: string
                 version:
                   description: Version describes the version of Thanos to use.
                   type: string
@@ -2962,12 +2996,4 @@ spec:
           - updatedReplicas
           - availableReplicas
           - unavailableReplicas
-      required:
-      - spec
   version: v1
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: null
-  storedVersions: null

@@ -1,3 +1,4 @@
+{{- if .Values.enableDaemonSet }}
 {{- if .Values.global.rbacEnable }}
 {{- if .Values.global.pspEnable }}
 {{- if .Capabilities.APIVersions.Has "rbac.authorization.k8s.io/v1beta1" }}
@@ -21,5 +22,6 @@ subjects:
   - kind: ServiceAccount
     name: {{ template "exporter-node.fullname" . }}
     namespace: {{ .Release.Namespace }}
+{{- end }}
 {{- end }}
 {{- end }}

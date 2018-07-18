@@ -2,6 +2,14 @@
 
 * [CHANGE] Deprecate specification of Prometheus rules via ConfigMaps in favor of `PrometheusRule` CRDs
 
+## 0.22.0 / 2018-07-09
+
+* [FEATURE] Allow setting volume name via volumetemplateclaimtemplate in prom and alertmanager (#1538)
+* [FEATURE] Allow setting custom tags of container images (#1584) 
+* [ENHANCEMENT] Update default Thanos to v0.1.0-rc.2 (#1585)
+* [ENHANCEMENT] Split rule config map mounted into Prometheus if it exceeds Kubernetes config map limit (#1562)
+* [BUGFIX] Mount Prometheus data volume into Thanos sidecar & pass correct path to Thanos sidecar (#1583)
+
 ## 0.21.0 / 2018-06-28
 
 * [CHANGE] Default to Prometheus v2.3.1.

@@ -18,12 +18,12 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 
 	"k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 
@@ -32,67 +32,94 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (c *Operator) createOrUpdateRuleConfigMap(p *monitoringv1.Prometheus) error {
+// The maximum `Data` size of a config map seems to differ between
+// environments. This is probably due to different meta data sizes which count
+// into the overall maximum size of a config map. Thereby lets leave a
+// large buffer.
+var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
+
+func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]string, error) {
 	cClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
 
 	namespaces, err := c.selectRuleNamespaces(p)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rules, err := c.selectRules(p, namespaces)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	newConfigMap := c.makeRulesConfigMap(p, rules)
-
-	currentConfigMap, err := cClient.Get(prometheusRuleConfigMapName(p.Name), metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return err
+	newConfigMaps, err := makeRulesConfigMaps(p, rules)
+	if err != nil {
+		errors.Wrap(err, "failed to make rules config maps")
 	}
-	isNotFound := false
-	if apierrors.IsNotFound(err) {
+
+	newConfigMapNames := []string{}
+	for _, cm := range newConfigMaps {
+		newConfigMapNames = append(newConfigMapNames, cm.Name)
+	}
+
+	currentConfigMapList, err := cClient.List(prometheusRulesConfigMapSelector(p.Name))
+	if err != nil {
+		return nil, err
+	}
+	currentConfigMaps := currentConfigMapList.Items
+
+	if len(currentConfigMaps) == 0 {
 		level.Debug(c.logger).Log(
-			"msg", "no PrometheusRule configmap created yet",
+			"msg", "no PrometheusRule configmap found, creating new one",
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
 		)
-		isNotFound = true
+		for _, cm := range newConfigMaps {
+			_, err = cClient.Create(&cm)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to create config map '%v'", cm.Name)
+			}
+		}
+		return newConfigMapNames, nil
 	}
 
-	newChecksum := checksumRules(rules)
-	currentChecksum := checksumRules(currentConfigMap.Data)
+	newChecksum := checksumConfigMaps(newConfigMaps)
+	currentChecksum := checksumConfigMaps(currentConfigMaps)
 
-	if newChecksum == currentChecksum && !isNotFound {
+	if newChecksum == currentChecksum {
 		level.Debug(c.logger).Log(
 			"msg", "no PrometheusRule changes",
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
 		)
-		return nil
+		return newConfigMapNames, nil
 	}
 
-	if isNotFound {
-		level.Debug(c.logger).Log(
-			"msg", "no PrometheusRule found, creating new one",
-			"namespace", p.Namespace,
-			"prometheus", p.Name,
-		)
-		_, err = cClient.Create(newConfigMap)
-	} else {
-		level.Debug(c.logger).Log(
-			"msg", "updating PrometheusRule",
-			"namespace", p.Namespace,
-			"prometheus", p.Name,
-		)
-		_, err = cClient.Update(newConfigMap)
-	}
-	if err != nil {
-		return err
+	// Simply deleting old config maps and creating new ones for now. Could be
+	// replaced by logic that only deletes obsolete config maps in the future.
+	for _, cm := range currentConfigMaps {
+		err := cClient.Delete(cm.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to delete current config map '%v'", cm.Name)
+		}
 	}
 
-	return nil
+	level.Debug(c.logger).Log(
+		"msg", "updating PrometheusRule",
+		"namespace", p.Namespace,
+		"prometheus", p.Name,
+	)
+	for _, cm := range newConfigMaps {
+		_, err = cClient.Create(&cm)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create new config map '%v'", cm.Name)
+		}
+	}
+
+	return newConfigMapNames, nil
+}
+
+func prometheusRulesConfigMapSelector(prometheusName string) metav1.ListOptions {
+	return metav1.ListOptions{LabelSelector: fmt.Sprintf("prometheus-name=%v", prometheusName)}
 }
 
 func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, error) {
@@ -149,33 +176,96 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 		}
 	}
 
-	// sort rules map
-	rulenames := []string{}
-	for k := range rules {
-		rulenames = append(rulenames, k)
-	}
-	sort.Strings(rulenames)
-	sortedRules := map[string]string{}
-	for _, name := range rulenames {
-		sortedRules[name] = rules[name]
+	ruleNames := []string{}
+	for name := range rules {
+		ruleNames = append(ruleNames, name)
 	}
 
 	level.Debug(c.logger).Log(
 		"msg", "selected Rules",
-		"rules", strings.Join(rulenames, ","),
+		"rules", strings.Join(ruleNames, ","),
 		"namespace", p.Namespace,
 		"prometheus", p.Name,
 	)
 
-	return sortedRules, nil
+	return rules, nil
 }
 
-func (c *Operator) makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string) *v1.ConfigMap {
+func sortKeyesOfStringMap(m map[string]string) []string {
+	keys := []string{}
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+	return keys
+}
+
+// makeRulesConfigMaps takes a Prometheus configuration and rule files and
+// returns a list of Kubernetes config maps to be later on mounted into the
+// Prometheus instance.
+// If the total size of rule files exceeds the Kubernetes config map limit,
+// they are split up via the simple first-fit [1] bin packing algorithm. In the
+// future this can be replaced by a more sophisticated algorithm, but for now
+// simplicity should be sufficient.
+// [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
+func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string) ([]v1.ConfigMap, error) {
+	//check if none of the rule files is too large for a single config map
+	for filename, file := range ruleFiles {
+		if len(file) > maxConfigMapDataSize {
+			return nil, errors.Errorf(
+				"rule file '%v' is too large for a single Kubernetes config map",
+				filename,
+			)
+		}
+	}
+
+	buckets := []map[string]string{
+		map[string]string{},
+	}
+	currBucketIndex := 0
+	sortedNames := sortKeyesOfStringMap(ruleFiles)
+
+	for _, filename := range sortedNames {
+		// If rule file doesn't fit into current bucket, create new bucket
+		if bucketSize(buckets[currBucketIndex])+len(ruleFiles[filename]) > maxConfigMapDataSize {
+			buckets = append(buckets, map[string]string{})
+			currBucketIndex++
+		}
+		buckets[currBucketIndex][filename] = ruleFiles[filename]
+	}
+
+	ruleFileConfigMaps := []v1.ConfigMap{}
+	for i, bucket := range buckets {
+		cm := makeRulesConfigMap(p, bucket)
+		cm.Name = cm.Name + "-" + strconv.Itoa(i)
+		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
+	}
+
+	return ruleFileConfigMaps, nil
+}
+
+func bucketSize(bucket map[string]string) int {
+	totalSize := 0
+	for _, v := range bucket {
+		totalSize += len(v)
+	}
+
+	return totalSize
+}
+
+func makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string) v1.ConfigMap {
 	boolTrue := true
-	return &v1.ConfigMap{
+
+	labels := map[string]string{"prometheus-name": p.Name}
+	for k, v := range managedByOperatorLabels {
+		labels[k] = v
+	}
+
+	return v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   prometheusRuleConfigMapName(p.Name),
-			Labels: managedByOperatorLabels,
+			Labels: labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         p.APIVersion,
@@ -191,10 +281,19 @@ func (c *Operator) makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[
 	}
 }
 
-func checksumRules(files map[string]string) string {
-	var sum string
-	for name, value := range files {
-		sum = sum + name + value
+func checksumConfigMaps(configMaps []v1.ConfigMap) string {
+	ruleFiles := map[string]string{}
+	for _, cm := range configMaps {
+		for filename, file := range cm.Data {
+			ruleFiles[filename] = file
+		}
+	}
+
+	sortedKeys := sortKeyesOfStringMap(ruleFiles)
+
+	sum := ""
+	for _, name := range sortedKeys {
+		sum += name + ruleFiles[name]
 	}
 
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(sum)))

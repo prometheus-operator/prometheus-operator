@@ -9,6 +9,7 @@ metadata:
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 spec:
+{{- if .Values.enableDaemonSet }}
   type: {{ .Values.service.type }}
   ports:
   - name: metrics
@@ -19,3 +20,12 @@ spec:
     app: {{ template "exporter-node.fullname" . }}
     component: node-exporter
     release: {{ .Release.Name }}
+{{- else }}
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: metrics
+    port: {{ .Values.service.externalPort }}
+    protocol: TCP
+    targetPort: metrics
+{{- end }}

@@ -1137,6 +1137,15 @@ func (in *ThanosSpec) DeepCopyInto(out *ThanosSpec) {
 			**out = **in
 		}
 	}
+	if in.Tag != nil {
+		in, out := &in.Tag, &out.Tag
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
+	}
 	if in.BaseImage != nil {
 		in, out := &in.BaseImage, &out.BaseImage
 		if *in == nil {

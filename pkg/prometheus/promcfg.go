@@ -86,7 +86,14 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, basicAuthSecrets map[string]BasicAuthCredentials, additionalScrapeConfigs []byte, additionalAlertManagerConfigs []byte) ([]byte, error) {
+func generateConfig(
+	p *v1.Prometheus,
+	mons map[string]*v1.ServiceMonitor,
+	basicAuthSecrets map[string]BasicAuthCredentials,
+	additionalScrapeConfigs []byte,
+	additionalAlertManagerConfigs []byte,
+	ruleConfigMapNames []string,
+) ([]byte, error) {
 	versionStr := p.Spec.Version
 	if versionStr == "" {
 		versionStr = DefaultPrometheusVersion
@@ -118,14 +125,18 @@ func generateConfig(p *v1.Prometheus, mons map[string]*v1.ServiceMonitor, basicA
 		},
 	})
 
+	ruleFilePaths := []string{}
+	for _, name := range ruleConfigMapNames {
+		ruleFilePaths = append(ruleFilePaths, rulesDir+"/"+name+"/*.yaml")
+	}
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "rule_files",
-		Value: []string{"/etc/prometheus/rules/*.yaml"},
+		Value: ruleFilePaths,
 	})
 
 	identifiers := make([]string, len(mons))
 	i := 0
-	for k, _ := range mons {
+	for k := range mons {
 		identifiers[i] = k
 		i++
 	}
@@ -561,7 +572,7 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 	} else if am.Port.IntVal != 0 {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_container_port_number"}},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
 			{Key: "regex", Value: am.Port.String()},
 		})
 	}

@@ -4,6 +4,10 @@ etcdPort:  4001
 endpoints: []
 # Are we talking http or https?
 scheme: http
+# service selector label key to target kube etcd pods
+serviceSelectorLabelKey: k8s-app
+# service selector label value to target kube etcd pods
+serviceSelectorLabelValue: etcd-server
 # default rules are in templates/etcd3.rules.yaml
 # prometheusRules: {}
 
@@ -15,9 +19,9 @@ keyFile: ""
 ## Custom Labels to be added to ServiceMonitor
 ##
 additionalServiceMonitorLabels: {}
-##Custom Labels to be added to Prometheus Rules ConfigMap
+##Custom Labels to be added to Prometheus Rules CRD
 ##
-additionalRulesConfigMapLabels: {}
+additionalRulesLabels: {}
 
 serviceMonitor:
   create: true
