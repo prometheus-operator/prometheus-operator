@@ -360,3 +360,7 @@ serviceMonitorNamespaceSelector: {}
 sidecarsSpec: []
 # - name: sidecar
 #   image: registry/name:tag
+
+## ThanosSpec Configuration
+#  ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#thanosspec
+#thanos: {}

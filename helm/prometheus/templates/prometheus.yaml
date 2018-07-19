@@ -143,4 +143,8 @@ spec:
   containers:
 {{ toYaml .Values.sidecarsSpec | indent 4 }}
 {{- end }}
+{{- if .Values.thanos }}
+  thanos:
+{{ toYaml .Values.thanos | indent 4 }}
+{{- end }}
 
