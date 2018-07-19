@@ -50,11 +50,11 @@ service:
   ##
   annotations: {}
 
-  ## Cluster-internal IP address for Alertmanager Service
+  ## Cluster-internal IP address for Grafana Service
   ##
   clusterIP: ""
 
-  ## List of external IP addresses at which the Alertmanager Service will be available
+  ## List of external IP addresses at which the Grafana Service will be available
   ##
   externalIPs: []
 
@@ -62,12 +62,12 @@ service:
   ##
   labels: {}
 
-  ## External IP address to assign to Alertmanager Service
+  ## External IP address to assign to Grafana Service
   ## Only used if service.type is 'LoadBalancer' and supported by cloud provider
   ##
   loadBalancerIP: ""
 
-  ## List of client IPs allowed to access Alertmanager Service
+  ## List of client IPs allowed to access Grafana Service
   ## Only used if service.type is 'LoadBalancer' and supported by cloud provider
   ##
   loadBalancerSourceRanges: []
@@ -124,7 +124,7 @@ ingress:
   ##
   enabled: false
 
-  ## Annotations for Alertmanager Ingress
+  ## Annotations for Grafana Ingress
   ##
   annotations: {}
     # kubernetes.io/ingress.class: nginx
@@ -141,13 +141,13 @@ ingress:
   #   - grafana.domain.com
   hosts: []
 
-  ## TLS configuration for Alertmanager Ingress
+  ## TLS configuration for Grafana Ingress
   ## Secret must be manually created in the namespace
   ##
   tls: []
-    # - secretName: alertmanager-general-tls
+    # - secretName: grafana-general-tls
     #   hosts:
-    #     - alertmanager.example.com
+    #     - grafana.example.com
 
 
 
