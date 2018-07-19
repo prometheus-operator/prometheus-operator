@@ -320,7 +320,9 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.cmapInf.Run(stopc)
 	go c.secrInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
-	go c.nsInf.Run(stopc)
+	if c.config.Namespace == v1.NamespaceAll {
+		go c.nsInf.Run(stopc)
+	}
 
 	if c.kubeletSyncEnabled {
 		go c.reconcileNodeEndpoints(stopc)
