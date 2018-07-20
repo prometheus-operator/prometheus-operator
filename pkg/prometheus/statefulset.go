@@ -296,7 +296,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 	promArgs := []string{
 		"-web.console.templates=/etc/prometheus/consoles",
-		"-web.console.libraries=/etc/prometheus/console-libraries",
+		"-web.console.libraries=/etc/prometheus/console_libraries",
 	}
 
 	var securityContext *v1.PodSecurityContext
