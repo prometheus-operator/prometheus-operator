@@ -6,6 +6,10 @@
 
 **Environment**
 
+* Prometheus Operator version:
+
+	insert image tag or Git SHA here
+
 * Kubernetes version information:
 
 	insert output of `kubectl version` here
