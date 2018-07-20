@@ -84,13 +84,13 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 
 func TestChecksumConfigMaps(t *testing.T) {
 	configMapsAsc := []v1.ConfigMap{
-		v1.ConfigMap{
+		{
 			Data: map[string]string{
 				"key1a": "value1a",
 				"key1b": "value1b",
 			},
 		},
-		v1.ConfigMap{
+		{
 			Data: map[string]string{
 				"key2a": "value2a",
 				"key2b": "value2b",
@@ -98,13 +98,13 @@ func TestChecksumConfigMaps(t *testing.T) {
 		},
 	}
 	configMapsDesc := []v1.ConfigMap{
-		v1.ConfigMap{
+		{
 			Data: map[string]string{
 				"key2b": "value2b",
 				"key2a": "value2a",
 			},
 		},
-		v1.ConfigMap{
+		{
 			Data: map[string]string{
 				"key1b": "value1b",
 				"key1a": "value1a",

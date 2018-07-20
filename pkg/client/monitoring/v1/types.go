@@ -50,7 +50,7 @@ type PrometheusList struct {
 	Items []*Prometheus `json:"items"`
 }
 
-// Specification of the desired behavior of the Prometheus cluster. More info:
+// PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
@@ -176,7 +176,7 @@ type PrometheusSpec struct {
 	Thanos *ThanosSpec `json:"thanos,omitempty"`
 }
 
-// Most recent observed status of the Prometheus cluster. Read-only. Not
+// PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not
 // included when requesting from the apiserver, only from the Prometheus
 // Operator API itself. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
@@ -252,7 +252,7 @@ type ThanosGCSSpec struct {
 	Bucket *string `json:"bucket,omitempty"`
 }
 
-// ThanosSpec defines parameters for of AWS Simple Storage Service (S3) with
+// ThanosS3Spec defines parameters for of AWS Simple Storage Service (S3) with
 // Thanos. (S3 compatible services apply as well)
 // +k8s:openapi-gen=true
 type ThanosS3Spec struct {
@@ -469,7 +469,7 @@ type TLSConfig struct {
 	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
 }
 
-// A list of ServiceMonitors.
+// ServiceMonitorList is a list of ServiceMonitors.
 // +k8s:openapi-gen=true
 type ServiceMonitorList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -480,7 +480,7 @@ type ServiceMonitorList struct {
 	Items []*ServiceMonitor `json:"items"`
 }
 
-// A list of PrometheusRules.
+// PrometheusRuleList is a list of PrometheusRules.
 // +k8s:openapi-gen=true
 type PrometheusRuleList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -549,7 +549,7 @@ type Alertmanager struct {
 	Status *AlertmanagerStatus `json:"status,omitempty"`
 }
 
-// Specification of the desired behavior of the Alertmanager cluster. More info:
+// AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type AlertmanagerSpec struct {
@@ -615,7 +615,7 @@ type AlertmanagerSpec struct {
 	Containers []v1.Container `json:"containers,omitempty"`
 }
 
-// A list of Alertmanagers.
+// AlertmanagerList is a list of Alertmanagers.
 // +k8s:openapi-gen=true
 type AlertmanagerList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -626,7 +626,7 @@ type AlertmanagerList struct {
 	Items []Alertmanager `json:"items"`
 }
 
-// Most recent observed status of the Alertmanager cluster. Read-only. Not
+// AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not
 // included when requesting from the apiserver, only from the Prometheus
 // Operator API itself. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
@@ -648,7 +648,7 @@ type AlertmanagerStatus struct {
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
 }
 
-// A selector for selecting namespaces either selecting all namespaces or a
+// NamespaceSelector is a selector for selecting either all namespaces or a
 // list of namespaces.
 // +k8s:openapi-gen=true
 type NamespaceSelector struct {
@@ -663,34 +663,42 @@ type NamespaceSelector struct {
 	// implementation to support label selections.
 }
 
+// DeepCopyObject implements the runtime.Object interface.
 func (l *Alertmanager) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+// DeepCopyObject implements the runtime.Object interface.
 func (l *AlertmanagerList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+// DeepCopyObject implements the runtime.Object interface.
 func (l *Prometheus) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+// DeepCopyObject implements the runtime.Object interface.
 func (l *PrometheusList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+// DeepCopyObject implements the runtime.Object interface.
 func (l *ServiceMonitor) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+// DeepCopyObject implements the runtime.Object interface.
 func (l *ServiceMonitorList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
+// DeepCopyObject implements the runtime.Object interface.
 func (f *PrometheusRule) DeepCopyObject() runtime.Object {
 	return f.DeepCopy()
 }
 
+// DeepCopyObject implements the runtime.Object interface.
 func (l *PrometheusRuleList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }

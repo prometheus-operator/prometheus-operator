@@ -350,7 +350,7 @@ func TestAlertmanagerZeroDowntimeRollingDeployment(t *testing.T) {
 		Spec: v1.ServiceSpec{
 			Type: v1.ServiceTypeClusterIP,
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "web",
 					Port:       5001,
 					TargetPort: intstr.FromString("web"),

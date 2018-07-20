@@ -38,11 +38,7 @@ func DeleteRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath 
 		return err
 	}
 
-	if err := kubeClient.RbacV1().RoleBindings(ns).Delete(roleBinding.Name, &metav1.DeleteOptions{}); err != nil {
-		return err
-	}
-
-	return nil
+	return kubeClient.RbacV1().RoleBindings(ns).Delete(roleBinding.Name, &metav1.DeleteOptions{})
 }
 
 func parseRoleBindingYaml(relativePath string) (*rbacv1.RoleBinding, error) {

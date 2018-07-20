@@ -43,10 +43,7 @@ func (ctx *TestCtx) CreateNamespace(t *testing.T, kubeClient kubernetes.Interfac
 	}
 
 	namespaceFinalizerFn := func() error {
-		if err := DeleteNamespace(kubeClient, name); err != nil {
-			return err
-		}
-		return nil
+		return DeleteNamespace(kubeClient, name)
 	}
 
 	ctx.AddFinalizerFn(namespaceFinalizerFn)
