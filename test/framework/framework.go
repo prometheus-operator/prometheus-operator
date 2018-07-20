@@ -165,6 +165,26 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 	f.OperatorPod = &pl.Items[0]
 
+	err = k8sutil.WaitForCRDReady(f.MonClientV1.Prometheuses(v1.NamespaceAll).List)
+	if err != nil {
+		return errors.Wrap(err, "Prometheus CRD not ready: %v\n")
+	}
+
+	err = k8sutil.WaitForCRDReady(f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List)
+	if err != nil {
+		return errors.Wrap(err, "ServiceMonitor CRD not ready: %v\n")
+	}
+
+	err = k8sutil.WaitForCRDReady(f.MonClientV1.PrometheusRules(v1.NamespaceAll).List)
+	if err != nil {
+		return errors.Wrap(err, "PrometheusRule CRD not ready: %v\n")
+	}
+
+	err = k8sutil.WaitForCRDReady(f.MonClientV1.Alertmanagers(v1.NamespaceAll).List)
+	if err != nil {
+		return errors.Wrap(err, "Alertmanager CRD not ready: %v\n")
+	}
+
 	return nil
 }
 
