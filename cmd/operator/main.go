@@ -96,6 +96,7 @@ func init() {
 	flagset.BoolVar(&cfg.DisableAutoUserGroup, "disable-auto-user-group", false, "Disables the Prometheus Operator setting the `runAsUser` and `fsGroup` fields in Pods.")
 	flagset.StringVar(&cfg.LogLevel, "log-level", logLevelInfo, fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(availableLogLevels, ", ")))
 	flagset.StringVar(&cfg.LogFormat, "log-format", logFormatLogfmt, fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", ")))
+	flagset.BoolVar(&cfg.ManageCRDs, "manage-crds", true, "Manage all CRDs with the Prometheus Operator.")
 	flagset.Parse(os.Args[1:])
 
 }
