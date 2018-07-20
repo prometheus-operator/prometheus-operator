@@ -137,6 +137,7 @@ type Config struct {
 	DisableAutoUserGroup         bool
 	LogLevel                     string
 	LogFormat                    string
+	ManageCRDs                   bool
 }
 
 type BasicAuthCredentials struct {
@@ -293,9 +294,11 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 		}
 		level.Info(c.logger).Log("msg", "connection established", "cluster-version", v)
 
-		if err := c.createCRDs(); err != nil {
-			errChan <- errors.Wrap(err, "creating CRDs failed")
-			return
+		if c.config.ManageCRDs {
+			if err := c.createCRDs(); err != nil {
+				errChan <- errors.Wrap(err, "creating CRDs failed")
+				return
+			}
 		}
 		errChan <- nil
 	}()
@@ -318,7 +321,9 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.cmapInf.Run(stopc)
 	go c.secrInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
-	go c.nsInf.Run(stopc)
+	if c.config.Namespace == v1.NamespaceAll {
+		go c.nsInf.Run(stopc)
+	}
 
 	if c.kubeletSyncEnabled {
 		go c.reconcileNodeEndpoints(stopc)

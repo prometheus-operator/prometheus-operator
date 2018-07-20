@@ -2,6 +2,11 @@
 
 * [CHANGE] Deprecate specification of Prometheus rules via ConfigMaps in favor of `PrometheusRule` CRDs
 
+## 0.22.1 / 2018-07-19
+
+* [ENHANCEMENT] Enable operation when CRDs are created externally (#1640)
+* [BUGFIX] Do not watch for new namespaces if a specific namespace has been selected (#1640)
+
 ## 0.22.0 / 2018-07-09
 
 * [FEATURE] Allow setting volume name via volumetemplateclaimtemplate in prom and alertmanager (#1538)
