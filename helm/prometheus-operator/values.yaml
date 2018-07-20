@@ -52,6 +52,9 @@ pspEnable: true
 imagePullSecrets: []
 #  - name: "image-pull-secret"
 
+# Use logfmt (default) or json-formatted logging
+# logFormat: logfmt
+
 ## Prometheus-operator resource limits & requests
 ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
 ##
