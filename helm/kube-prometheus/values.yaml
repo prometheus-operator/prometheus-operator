@@ -269,7 +269,7 @@ prometheus:
   ## If unspecified, only the same namespace as the Prometheus object is in is used.
   ruleNamespaceSelector: {}
 
-  ## Rules configmap selector
+  ## Rules PrometheusRule CRD selector
   ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md
   ##
   ## 1. If `matchLabels` is used, `rules.additionalLabels` must contain all the labels from
@@ -292,7 +292,7 @@ prometheus:
   ##
   rules:
     specifiedInValues: true
-    ## What additional rules to be added to the ConfigMap
+    ## What additional rules to be added to the PrometheusRule CRD
     ## You can use this together with `rulesSelector`
     additionalLabels: {}
     #  prometheus: example-rules
@@ -440,8 +440,8 @@ deployCoreDNS: false
 deployKubeDNS: true
 deployKubeEtcd: true
 
-##Custom Labels to be added to Prometheus Rules ConfigMap
+##Custom Labels to be added to Prometheus Rules CRD
 ##
-additionalRulesConfigMapLabels: {}
+additionalRulesLabels: {}
   # additionalRulesConfigMapLabels:
   #   team: devops
