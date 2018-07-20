@@ -98,7 +98,7 @@ example/prometheus-operator-crd/**.crd.yaml: pkg/client/monitoring/v1/openapi_ge
 	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
 	po-crdgen prometheusrule > example/prometheus-operator-crd/prometheusrule.crd.yaml
 
-jsonnet/prometheus-operator/**-crd.libsonnet: $(shell find -type f example/prometheus-operator-crd/*.crd.yaml) $(GOJSONTOYAML_BINARY)
+jsonnet/prometheus-operator/**-crd.libsonnet: $(shell find example/prometheus-operator-crd/*.crd.yaml -type f) $(GOJSONTOYAML_BINARY)
 	cat example/prometheus-operator-crd/alertmanager.crd.yaml   | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/alertmanager-crd.libsonnet
 	cat example/prometheus-operator-crd/prometheus.crd.yaml     | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheus-crd.libsonnet
 	cat example/prometheus-operator-crd/servicemonitor.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
@@ -113,7 +113,7 @@ pkg/client/monitoring/v1/openapi_generated.go: pkg/client/monitoring/v1/types.go
 bundle.yaml: $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	hack/generate-bundle.sh
 
-hack/generate/vendor: $(JB_BINARY) $(shell find -type f jsonnet/prometheus-operator)
+hack/generate/vendor: $(JB_BINARY) $(shell find jsonnet/prometheus-operator -type f)
 	cd hack/generate; $(JB_BINARY) install;
 
 example/non-rbac/prometheus-operator.yaml: hack/generate/vendor hack/generate/prometheus-operator-non-rbac.jsonnet $(shell find jsonnet -type f)
@@ -158,7 +158,7 @@ check-license:
 
 .PHONY: shellcheck
 shellcheck:
-	docker run -v "${PWD}:/mnt" koalaman/shellcheck:stable $(shell find -type f -name "*.sh" -not -path "*vendor*")
+	docker run -v "${PWD}:/mnt" koalaman/shellcheck:stable $(shell find . -type f -name "*.sh" -not -path "*vendor*")
 
 
 ###########
