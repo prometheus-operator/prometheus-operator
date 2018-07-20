@@ -128,6 +128,15 @@ logLevel: info
 ## The value "" will disable pod anti-affinity so that no anti-affinity rules will be configured.
 podAntiAffinity: "soft"
 
+podMetadata:
+  ## Annotations to be added to Prometheus pods
+  ##
+  annotations: {}
+
+  ## Labels to be added to Prometheus pods
+  ##
+  labels: {}
+
 ## The remote_read spec configuration for Prometheus.
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#remotereadspec
 remoteRead: {}
