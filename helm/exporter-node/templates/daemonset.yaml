@@ -1,3 +1,4 @@
+{{- if .Values.enableDaemonSet }}
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -48,3 +49,4 @@ spec:
       volumes:
 {{ toYaml .Values.container.volumes | indent 6 }}
       {{- end}}
+{{- end }}

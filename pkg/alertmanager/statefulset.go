@@ -166,7 +166,11 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 }
 
 func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.StatefulSetSpec, error) {
-	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Version)
+	tag := a.Spec.Version
+	if a.Spec.Tag != "" {
+		tag = a.Spec.Tag
+	}
+	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, tag)
 	versionStr := strings.TrimLeft(a.Spec.Version, "v")
 
 	version, err := semver.Parse(versionStr)

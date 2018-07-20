@@ -10,7 +10,6 @@ before_install:
 jobs:
   include:
   - stage: Sanity check and tests
-
   # Check generated contents are up to date and code is formatted.
     script: make format generate-in-docker && git diff --exit-code
   - script: cd contrib/kube-prometheus && make test-in-docker
@@ -21,12 +20,10 @@ jobs:
   # Unit tests
   - script: make test-unit
   # E2e tests
-    script: ./scripts/travis-e2e.sh
+  - script: ./scripts/travis-e2e.sh
   - script: ./scripts/travis-e2e-helm.sh
 
-
   - stage: deploy
-
     script: skip
     deploy:
       provider: script
@@ -34,7 +31,5 @@ jobs:
       on:
         branch: master
 
-
   - stage: push-docker-image
-
     script: ./scripts/travis-push-docker-image.sh

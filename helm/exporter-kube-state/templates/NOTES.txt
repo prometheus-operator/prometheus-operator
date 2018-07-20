@@ -15,3 +15,7 @@
 {{- end }}
 
 IMPORTANT: this is a singleton chart; only install one per cluster
+
+DEPRECATION NOTICE:
+
+- additionalRulesConfigMapLabels is not used anymore, use additionalRulesLabels

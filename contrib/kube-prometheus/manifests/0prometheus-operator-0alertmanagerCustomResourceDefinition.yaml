@@ -2325,6 +2325,10 @@ spec:
                         phase:
                           description: Phase represents the current phase of PersistentVolumeClaim.
                           type: string
+            tag:
+              description: Tag of Alertmanager container image to be deployed. Defaults
+                to the value of `version`.
+              type: string
             tolerations:
               description: If specified, the pod's tolerations.
               items:

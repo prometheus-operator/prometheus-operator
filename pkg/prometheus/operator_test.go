@@ -36,11 +36,11 @@ func TestCreateStatefulSetChecksum(t *testing.T) {
 	p2.Spec.Version = "v1.7.2"
 	c := Config{}
 
-	p1Checksum, err := createSSetInputChecksum(p1, c)
+	p1Checksum, err := createSSetInputChecksum(p1, c, []string{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	p2Checksum, err := createSSetInputChecksum(p2, c)
+	p2Checksum, err := createSSetInputChecksum(p2, c, []string{})
 	if err != nil {
 		t.Fatal(err)
 	}

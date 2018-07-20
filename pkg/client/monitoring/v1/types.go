@@ -65,6 +65,8 @@ type PrometheusSpec struct {
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 	// Version of Prometheus to be deployed.
 	Version string `json:"version,omitempty"`
+	// Tag of Prometheus container image to be deployed. Defaults to the value of `version`.
+	Tag string `json:"tag,omitempty"`
 	// When a Prometheus deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
 	Paused bool `json:"paused,omitempty"`
@@ -231,6 +233,8 @@ type ThanosSpec struct {
 	Peers *string `json:"peers,omitempty"`
 	// Version describes the version of Thanos to use.
 	Version *string `json:"version,omitempty"`
+	// Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`.
+	Tag *string `json:"tag,omitempty"`
 	// Thanos base image if other than default.
 	BaseImage *string `json:"baseImage,omitempty"`
 	// GCS configures use of GCS in Thanos.
@@ -555,6 +559,8 @@ type AlertmanagerSpec struct {
 	PodMetadata *metav1.ObjectMeta `json:"podMetadata,omitempty"`
 	// Version the cluster should be on.
 	Version string `json:"version,omitempty"`
+	// Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.
+	Tag string `json:"tag,omitempty"`
 	// Base image that is used to deploy pods, without tag.
 	BaseImage string `json:"baseImage,omitempty"`
 	// An optional list of references to secrets in the same namespace

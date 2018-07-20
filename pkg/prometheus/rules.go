@@ -32,6 +32,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// The maximum `Data` size of a config map seems to differ between
+// environments. This is probably due to different meta data sizes which count
+// into the overall maximum size of a config map. Thereby lets leave a
+// large buffer.
+var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
+
 func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]string, error) {
 	cClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
 
@@ -206,7 +212,7 @@ func sortKeyesOfStringMap(m map[string]string) []string {
 func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string) ([]v1.ConfigMap, error) {
 	//check if none of the rule files is too large for a single config map
 	for filename, file := range ruleFiles {
-		if len(file) > v1.MaxSecretSize {
+		if len(file) > maxConfigMapDataSize {
 			return nil, errors.Errorf(
 				"rule file '%v' is too large for a single Kubernetes config map",
 				filename,
@@ -222,7 +228,7 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 
 	for _, filename := range sortedNames {
 		// If rule file doesn't fit into current bucket, create new bucket
-		if bucketSize(buckets[currBucketIndex])+len(ruleFiles[filename]) > v1.MaxSecretSize {
+		if bucketSize(buckets[currBucketIndex])+len(ruleFiles[filename]) > maxConfigMapDataSize {
 			buckets = append(buckets, map[string]string{})
 			currBucketIndex++
 		}

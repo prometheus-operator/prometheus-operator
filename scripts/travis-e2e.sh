@@ -8,7 +8,9 @@ set -u
 # print each command before executing it
 set -x
 
-$(dirname "$BASH_SOURCE")/create-minikube.sh
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+
+"${SCRIPT_DIR}"/create-minikube.sh
 
 # waiting for kube-dns to be ready
 JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
@@ -16,4 +18,4 @@ JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.ty
 make build image
 make test-e2e
 
-$(dirname "$BASH_SOURCE")/delete-minikube.sh
+"${SCRIPT_DIR}"/delete-minikube.sh

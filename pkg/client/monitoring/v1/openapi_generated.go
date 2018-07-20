@@ -489,6 +489,13 @@ func schema_pkg_client_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallba
 							Format:      "",
 						},
 					},
+					"tag": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"baseImage": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Base image that is used to deploy pods, without tag.",
@@ -1107,6 +1114,13 @@ func schema_pkg_client_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback
 					"version": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Version of Prometheus to be deployed.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"tag": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Tag of Prometheus container image to be deployed. Defaults to the value of `version`.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2137,6 +2151,13 @@ func schema_pkg_client_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) co
 					"version": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Version describes the version of Thanos to use.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"tag": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`.",
 							Type:        []string{"string"},
 							Format:      "",
 						},

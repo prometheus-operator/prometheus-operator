@@ -26,12 +26,12 @@ export MINIKUBE_WANTUPDATENOTIFICATION=false
 export MINIKUBE_WANTREPORTERRORPROMPT=false
 export MINIKUBE_HOME=$HOME
 export CHANGE_MINIKUBE_NONE_USER=true
-mkdir $HOME/.kube || true
-touch $HOME/.kube/config
+mkdir "${HOME}"/.kube || true
+touch "${HOME}"/.kube/config
 
 export KUBECONFIG=$HOME/.kube/config
 minikube version
-sudo minikube start --vm-driver=none --bootstrapper=localkube --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.Authorization.Mode=RBAC
+sudo minikube start --vm-driver=none --bootstrapper=localkube --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.Authorization.Mode=RBAC --extra-config=apiserver.feature-gates=CustomResourceSubresources=true
 
 minikube update-context
 

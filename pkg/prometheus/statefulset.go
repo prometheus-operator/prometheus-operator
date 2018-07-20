@@ -595,6 +595,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			thanosBaseImage = *p.Spec.Thanos.BaseImage
 		}
 
+		thanosTag := *p.Spec.Thanos.Version
+		if p.Spec.Thanos.Tag != nil {
+			thanosTag = *p.Spec.Thanos.Tag
+		}
+
 		thanosArgs := []string{"sidecar"}
 
 		thanosArgs = append(thanosArgs, fmt.Sprintf("--tsdb.path=%s", storageDir))
@@ -653,7 +658,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 		c := v1.Container{
 			Name:  "thanos-sidecar",
-			Image: thanosBaseImage + ":" + *p.Spec.Thanos.Version,
+			Image: thanosBaseImage + ":" + thanosTag,
 			Args:  thanosArgs,
 			Ports: []v1.ContainerPort{
 				{
@@ -677,6 +682,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h", "--storage.tsdb.max-block-duration=2h")
 	}
 
+	prometheusTag := p.Spec.Version
+	if p.Spec.Tag != "" {
+		prometheusTag = p.Spec.Tag
+	}
+
 	return &appsv1.StatefulSetSpec{
 		ServiceName:         governingServiceName,
 		Replicas:            p.Spec.Replicas,
@@ -696,7 +706,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				Containers: append([]v1.Container{
 					{
 						Name:           "prometheus",
-						Image:          fmt.Sprintf("%s:%s", p.Spec.BaseImage, p.Spec.Version),
+						Image:          fmt.Sprintf("%s:%s", p.Spec.BaseImage, prometheusTag),
 						Ports:          ports,
 						Args:           promArgs,
 						VolumeMounts:   promVolumeMounts,

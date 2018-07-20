@@ -62,6 +62,13 @@ global:
 ## Custom Labels to be added to ServiceMonitor
 ##
 additionalServiceMonitorLabels: {}
-##Custom Labels to be added to Prometheus Rules ConfigMap
+##Custom Labels to be added to Prometheus Rules CRD
 ##
-additionalRulesConfigMapLabels: {}
+additionalRulesLabels: {}
+
+# deploy node_exporter as a DaemonSet
+enableDaemonSet: true
+# for deployments that have node_exporter deployed outside of the cluster, list
+# their addresses here
+endpoints: []
+nodeExporterPort: 9100
