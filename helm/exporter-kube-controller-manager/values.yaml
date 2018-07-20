@@ -12,6 +12,6 @@ serviceSelectorLabelKey: k8s-app
 ##
 additionalServiceMonitorLabels: {}
 
-##Custom Labels to be added to Prometheus Rules ConfigMap
+##Custom Labels to be added to Prometheus Rules CRD
 ##
-additionalRulesConfigMapLabels: {}
+additionalRulesLabels: {}
