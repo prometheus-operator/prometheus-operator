@@ -6,7 +6,7 @@ dependencies:
     condition: deployAlertManager
 
   - name: prometheus
-    version: 0.0.50
+    version: 0.0.51
     #e2e-repository: file://../prometheus
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 

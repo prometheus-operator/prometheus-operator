@@ -21,7 +21,7 @@ deployKubeState: True
 global:
   rbacEnable: true
   pspEnable: true
-  
+
   # Reference to one or more secrets to be used when pulling images
   imagePullSecrets: []
   #  - name: "image-pull-secret"
@@ -189,10 +189,10 @@ prometheus:
   externalUrl: ""
 
   ## Prometheus container image
-  ##
+  ## Keep in sync with version in helm/prometheus/values.yaml
   image:
     repository: quay.io/prometheus/prometheus
-    tag: v2.2.1
+    tag: v2.3.2
 
   ingress:
     ## If true, Prometheus Ingress will be created
