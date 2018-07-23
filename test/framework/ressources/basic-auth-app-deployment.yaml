@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: basic-auth-test-app
+  labels:
+    group: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      group: test
+  template:
+    metadata:
+      labels:
+        group: test
+    spec:
+      containers:
+      - name: example-app
+        image: quay.io/coreos/basic-auth-test-app:0.1.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: web
+          containerPort: 8080
