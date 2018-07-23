@@ -94,7 +94,7 @@ spec:
     {{- end }}
     {{- if .Values.nodeSelector }}
       nodeSelector:
-    {{ toYaml .Values.nodeSelector | indent 4 }}
+{{ toYaml .Values.nodeSelector | indent 8 }}
     {{- end }}
     {{- if .Values.global.rbacEnable }}
       serviceAccountName: {{ template "grafana.server.fullname" . }}
