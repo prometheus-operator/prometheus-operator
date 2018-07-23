@@ -232,7 +232,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
-				monitoringv1.Endpoint{
+				{
 					Port:     "web",
 					Interval: "30s",
 				},
@@ -256,7 +256,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
-				monitoringv1.Endpoint{
+				{
 					Port:     "web",
 					Interval: "30s",
 				},
@@ -280,11 +280,11 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
-				monitoringv1.Endpoint{
+				{
 					Port:     "web",
 					Interval: "30s",
 					Path:     "/federate",
-					Params:   map[string][]string{"metrics[]": []string{"{__name__=~\"job:.*\"}"}},
+					Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
 				},
 			},
 		},
@@ -306,16 +306,16 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
-				monitoringv1.Endpoint{
+				{
 					Port:     "web",
 					Interval: "30s",
 					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
-						&monitoringv1.RelabelConfig{
+						{
 							Action:       "drop",
 							Regex:        "my-job-pod-.+",
 							SourceLabels: []string{"pod_name"},
 						},
-						&monitoringv1.RelabelConfig{
+						{
 							Action:       "drop",
 							Regex:        "test",
 							SourceLabels: []string{"namespace"},

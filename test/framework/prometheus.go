@@ -64,7 +64,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name string) {
 	p.Spec.Alerting = &monitoringv1.AlertingSpec{
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
-			monitoringv1.AlertmanagerEndpoints{
+			{
 				Namespace: ns,
 				Name:      fmt.Sprintf("alertmanager-%s", name),
 				Port:      intstr.FromString("web"),
@@ -88,7 +88,7 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
-				monitoringv1.Endpoint{
+				{
 					Port:     "web",
 					Interval: "30s",
 				},
@@ -112,7 +112,7 @@ func (f *Framework) MakeBasicServiceMonitorV1alpha1(name string) *v1alpha1.Servi
 				},
 			},
 			Endpoints: []v1alpha1.Endpoint{
-				v1alpha1.Endpoint{
+				{
 					Port:     "web",
 					Interval: "30s",
 				},
@@ -132,7 +132,7 @@ func (f *Framework) MakePrometheusService(name, group string, serviceType v1.Ser
 		Spec: v1.ServiceSpec{
 			Type: serviceType,
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "web",
 					Port:       9090,
 					TargetPort: intstr.FromString("web"),
@@ -153,7 +153,7 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "http-query",
 					Port:       10902,
 					TargetPort: intstr.FromString("http"),
@@ -174,7 +174,7 @@ func (f *Framework) MakeThanosService(name string) *v1.Service {
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "cluster",
 					Port:       10900,
 					TargetPort: intstr.FromString("cluster"),

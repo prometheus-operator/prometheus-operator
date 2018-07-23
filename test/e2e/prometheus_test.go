@@ -450,10 +450,10 @@ func TestPrometheusReloadRules(t *testing.T) {
 	}
 
 	ruleFile.Spec.Groups = []monitoringv1.RuleGroup{
-		monitoringv1.RuleGroup{
+		{
 			Name: "my-alerting-group",
 			Rules: []monitoringv1.Rule{
-				monitoringv1.Rule{
+				{
 					Alert: secondAlertName,
 					Expr:  "vector(1)",
 				},
@@ -706,7 +706,7 @@ func TestPrometheusRulesExceedingConfigMapLimit(t *testing.T) {
 func generateHugePrometheusRule(ns, identifier string) monitoringv1.PrometheusRule {
 	alertName := "my-alert"
 	groups := []monitoringv1.RuleGroup{
-		monitoringv1.RuleGroup{
+		{
 			Name:  alertName,
 			Rules: []monitoringv1.Rule{},
 		},
@@ -1064,7 +1064,7 @@ func TestPrometheusDiscoverTargetPort(t *testing.T) {
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
-				monitoringv1.Endpoint{
+				{
 					TargetPort: intstr.FromInt(9090),
 					Interval:   "30s",
 				},

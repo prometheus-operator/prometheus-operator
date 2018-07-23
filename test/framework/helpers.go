@@ -106,7 +106,7 @@ func WaitForHTTPSuccessStatusCode(timeout time.Duration, url string) error {
 	})
 
 	return errors.Wrap(err, fmt.Sprintf(
-		"waiting for %v to return a successfull status code timed out. Last response from server was: %v",
+		"waiting for %v to return a successful status code timed out. Last response from server was: %v",
 		url,
 		resp,
 	))

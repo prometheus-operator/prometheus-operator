@@ -50,10 +50,10 @@ func (f *Framework) CreateRule(ns string, ar monitoringv1.PrometheusRule) error 
 
 func (f *Framework) MakeAndCreateFiringRule(ns, name, alertName string) (monitoringv1.PrometheusRule, error) {
 	groups := []monitoringv1.RuleGroup{
-		monitoringv1.RuleGroup{
+		{
 			Name: alertName,
 			Rules: []monitoringv1.Rule{
-				monitoringv1.Rule{
+				{
 					Alert: alertName,
 					Expr:  "vector(1)",
 				},

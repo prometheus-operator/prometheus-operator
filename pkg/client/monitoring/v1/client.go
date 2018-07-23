@@ -47,7 +47,7 @@ type CrdKinds struct {
 	PrometheusRule CrdKind
 }
 
-var DefaultCrdKinds CrdKinds = CrdKinds{
+var DefaultCrdKinds = CrdKinds{
 	KindsString:    "",
 	Prometheus:     CrdKind{Plural: PrometheusName, Kind: PrometheusesKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Prometheus"},
 	ServiceMonitor: CrdKind{Plural: ServiceMonitorName, Kind: ServiceMonitorsKind, SpecName: "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ServiceMonitor"},

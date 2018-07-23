@@ -252,7 +252,7 @@ func makeConfigSecret(p *monitoringv1.Prometheus, config Config) *v1.Secret {
 			},
 		},
 		Data: map[string][]byte{
-			configFilename: []byte{},
+			configFilename: {},
 		},
 	}
 }

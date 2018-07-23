@@ -80,7 +80,7 @@ func (f *Framework) MakeAlertmanagerService(name, group string, serviceType v1.S
 		Spec: v1.ServiceSpec{
 			Type: serviceType,
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "web",
 					Port:       9093,
 					TargetPort: intstr.FromString("web"),
@@ -336,9 +336,8 @@ type amAPIStatusData struct {
 func (s *amAPIStatusData) getAmountPeers() int {
 	if s.MeshStatus != nil {
 		return len(s.MeshStatus.Peers)
-	} else {
-		return len(s.ClusterStatus.Peers)
 	}
+	return len(s.ClusterStatus.Peers)
 }
 
 type clusterStatus struct {
