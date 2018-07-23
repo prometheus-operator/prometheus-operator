@@ -132,3 +132,11 @@ kubectl delete --ignore-not-found customresourcedefinitions \
   1. `minikube start --kubernetes-version=v1.10.0 --memory=4096 --extra-config=apiserver.Authorization.Mode=RBAC`
   2. `eval $(minikube docker-env) && make image` - build Prometheus Operator docker image on minikube's docker
   3. `make test-e2e`
+  
+
+
+## Security
+
+If you found a security vulnerability related to the Prometheus Operator, please
+do not report it by opening a GitHub issue, but instead please send an e-mail to
+the maintainers of the project found in the [OWNERS](OWNERS) file.
