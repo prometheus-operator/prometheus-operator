@@ -1253,6 +1253,106 @@ func TestThanos(t *testing.T) {
 	}
 }
 
+func TestPrometheusGetBasicAuthSecret(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBACGlobal(t, ns, framework.KubeClient)
+
+	name := "test"
+
+	maptest := make(map[string]string)
+	maptest["tc"] = ns
+	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
+	prometheusCRD.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+		MatchLabels: maptest,
+	}
+
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheusCRD); err != nil {
+		t.Fatal(err)
+	}
+	testNamespace := ctx.CreateNamespace(t, framework.KubeClient)
+
+	testFramework.AddLabelsToNamespace(framework.KubeClient, testNamespace, maptest)
+
+	simple, err := testFramework.MakeDeployment("../../test/framework/ressources/basic-auth-app-deployment.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := testFramework.CreateDeployment(framework.KubeClient, testNamespace, simple); err != nil {
+		t.Fatal("Creating simple basic auth app failed: ", err)
+	}
+
+	authSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Data: map[string][]byte{
+			"user":     []byte("user"),
+			"password": []byte("pass"),
+		},
+	}
+
+	if _, err := framework.KubeClient.CoreV1().Secrets(testNamespace).Create(authSecret); err != nil {
+		t.Fatal(err)
+	}
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"group": name,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeLoadBalancer,
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name: "web",
+					Port: 8080,
+				},
+			},
+			Selector: map[string]string{
+				"group": name,
+			},
+		},
+	}
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+		Username: v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: name,
+			},
+			Key: "user",
+		},
+		Password: v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: name,
+			},
+			Key: "password",
+		},
+	}
+
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, testNamespace, svc); err != nil {
+		t.Fatal(err)
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	if _, err := framework.MonClientV1.ServiceMonitors(testNamespace).Create(sm); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	if err := framework.WaitForTargets(ns, "prometheus-operated", 1); err != nil {
+		t.Fatal(err)
+	}
+
+}
+
 func isDiscoveryWorking(ns, svcName, prometheusName string) func() (bool, error) {
 	return func() (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(prometheusName))
