@@ -426,7 +426,7 @@ func schema_pkg_client_monitoring_v1_AlertmanagerList(ref common.ReferenceCallba
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "A list of Alertmanagers.",
+				Description: "AlertmanagerList is a list of Alertmanagers.",
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -474,7 +474,7 @@ func schema_pkg_client_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallba
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Specification of the desired behavior of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+				Description: "AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
 				Properties: map[string]spec.Schema{
 					"podMetadata": {
 						SchemaProps: spec.SchemaProps{
@@ -655,7 +655,7 @@ func schema_pkg_client_monitoring_v1_AlertmanagerStatus(ref common.ReferenceCall
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Most recent observed status of the Alertmanager cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+				Description: "AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
 				Properties: map[string]spec.Schema{
 					"paused": {
 						SchemaProps: spec.SchemaProps{
@@ -852,7 +852,7 @@ func schema_pkg_client_monitoring_v1_NamespaceSelector(ref common.ReferenceCallb
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "A selector for selecting namespaces either selecting all namespaces or a list of namespaces.",
+				Description: "NamespaceSelector is a selector for selecting either all namespaces or a list of namespaces.",
 				Properties: map[string]spec.Schema{
 					"any": {
 						SchemaProps: spec.SchemaProps{
@@ -1016,7 +1016,7 @@ func schema_pkg_client_monitoring_v1_PrometheusRuleList(ref common.ReferenceCall
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "A list of PrometheusRules.",
+				Description: "PrometheusRuleList is a list of PrometheusRules.",
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -1091,7 +1091,7 @@ func schema_pkg_client_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+				Description: "PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
 				Properties: map[string]spec.Schema{
 					"podMetadata": {
 						SchemaProps: spec.SchemaProps{
@@ -1381,7 +1381,7 @@ func schema_pkg_client_monitoring_v1_PrometheusStatus(ref common.ReferenceCallba
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+				Description: "PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
 				Properties: map[string]spec.Schema{
 					"paused": {
 						SchemaProps: spec.SchemaProps{
@@ -1863,7 +1863,7 @@ func schema_pkg_client_monitoring_v1_ServiceMonitorList(ref common.ReferenceCall
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "A list of ServiceMonitors.",
+				Description: "ServiceMonitorList is a list of ServiceMonitors.",
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -2085,7 +2085,7 @@ func schema_pkg_client_monitoring_v1_ThanosS3Spec(ref common.ReferenceCallback) 
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ThanosSpec defines parameters for of AWS Simple Storage Service (S3) with Thanos. (S3 compatible services apply as well)",
+				Description: "ThanosS3Spec defines parameters for of AWS Simple Storage Service (S3) with Thanos. (S3 compatible services apply as well)",
 				Properties: map[string]spec.Schema{
 					"bucket": {
 						SchemaProps: spec.SchemaProps{
