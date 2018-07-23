@@ -1,12 +1,13 @@
 # TL;DR
 
 ```
+# Install helm https://docs.helm.sh/using_helm/ then run:
 helm repo add coreos https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
 helm install coreos/prometheus-operator --name prometheus-operator --namespace monitoring
 helm install coreos/kube-prometheus --name kube-prometheus --namespace monitoring
 ````
 
-# How to contribue?
+# How to contribute?
 
 1. Fork the project
 2. Make	 the changes in the helm charts
