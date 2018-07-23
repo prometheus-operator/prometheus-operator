@@ -206,7 +206,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 
 	localReloadURL := &url.URL{
 		Scheme: "http",
-		Host:   "localhost:9093",
+		Host:   config.LocalHost + ":9093",
 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 

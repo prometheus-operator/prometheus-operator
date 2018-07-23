@@ -69,6 +69,7 @@ type Operator struct {
 
 type Config struct {
 	Host                         string
+	LocalHost                    string
 	ConfigReloaderImage          string
 	AlertmanagerDefaultBaseImage string
 	Namespace                    string
@@ -110,6 +111,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		queue:     workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
 		config: Config{
 			Host:                         c.Host,
+			LocalHost:                    c.LocalHost,
 			ConfigReloaderImage:          c.ConfigReloaderImage,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
 			Namespace:                    c.Namespace,

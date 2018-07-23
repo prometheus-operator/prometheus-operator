@@ -135,6 +135,7 @@ type Config struct {
 	CrdKinds                     monitoringv1.CrdKinds
 	EnableValidation             bool
 	DisableAutoUserGroup         bool
+	LocalHost                    string
 	LogLevel                     string
 	LogFormat                    string
 	ManageCRDs                   bool
