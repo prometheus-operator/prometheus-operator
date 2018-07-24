@@ -98,6 +98,7 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 | ----- | ----------- | ------ | -------- |
 | podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#objectmeta-v1-meta) | false |
 | version | Version the cluster should be on. | string | false |
+| tag | Tag of Alertmanager container image to be deployed. Defaults to the value of `version`. | string | false |
 | baseImage | Base image that is used to deploy pods, without tag. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#localobjectreference-v1-core) | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Alertmanager object, which shall be mounted into the Alertmanager Pods. The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>. | []string | false |
@@ -241,6 +242,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | serviceMonitorSelector | ServiceMonitors to be selected for target discovery. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
 | serviceMonitorNamespaceSelector | Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
 | version | Version of Prometheus to be deployed. | string | false |
+| tag | Tag of Prometheus container image to be deployed. Defaults to the value of `version`. | string | false |
 | paused | When a Prometheus deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
 | baseImage | Base image to use for a Prometheus deployment. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#localobjectreference-v1-core) | false |
@@ -253,7 +255,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
-| ruleSelector | A selector to select which PrometheusRules to mount for loading alerting rules from. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
+| ruleSelector | A selector to select which PrometheusRules to mount for loading alerting rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus Operator will migrate any legacy rule config maps to PrometheusRule custom resources selected by RuleSelector. Make sure it does not match any config maps that you do not want to be migrated. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
 | ruleNamespaceSelector | Namespaces to be selected for PrometheusRules discovery. If unspecified, only the same namespace as the Prometheus object is in is used. | *[metav1.LabelSelector](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#labelselector-v1-meta) | false |
 | alerting | Define details regarding alerting. | *[AlertingSpec](#alertingspec) | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://v1-6.docs.kubernetes.io/docs/api-reference/v1.6/#resourcerequirements-v1-core) | false |
@@ -479,8 +481,9 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | ----- | ----------- | ------ | -------- |
 | peers | Peers is a DNS name for Thanos to discover peers through. | *string | false |
 | version | Version describes the version of Thanos to use. | *string | false |
+| tag | Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`. | *string | false |
 | baseImage | Thanos base image if other than default. | *string | false |
-| gcs | GCS configures use of GCS in Thanos. | *[ThanosGCSSpec](#thanosgcsspec) | true |
-| s3 | S3 configures use of S3 in Thanos. | *[ThanosS3Spec](#thanoss3spec) | true |
+| gcs | GCS configures use of GCS in Thanos. | *[ThanosGCSSpec](#thanosgcsspec) | false |
+| s3 | S3 configures use of S3 in Thanos. | *[ThanosS3Spec](#thanoss3spec) | false |
 
 [Back to TOC](#table-of-contents)

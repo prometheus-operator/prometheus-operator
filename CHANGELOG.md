@@ -1,4 +1,4 @@
-# Next release
+# Upcoming
 
 * [CHANGE] Deprecate specification of Prometheus rules via ConfigMaps in favor of `PrometheusRule` CRDs
 

@@ -102,7 +102,27 @@ func (c *Operator) getRuleCMs(ns string, cmLabelSelector *metav1.LabelSelector) 
 		configMaps = append(configMaps, obj.(*v1.ConfigMap))
 	})
 
-	return configMaps, nil
+	// If a user sets the RuleSelector property of a Prometheus custom resource
+	// to an empty object (`{}`), all config maps in that namespace will be
+	// selected for migration, including the Prometheus config map used to mount
+	// all PrometheusRules into the Prometheus statefulset. The following filters
+	// this config map out.
+	cmsNotGeneratedByPO := []*v1.ConfigMap{}
+	for _, cm := range configMaps {
+		migrate := true
+		for key, value := range cm.Labels {
+			if key == managedByOperatorLabel && value == managedByOperatorLabelValue {
+				migrate = false
+				break
+			}
+		}
+
+		if migrate {
+			cmsNotGeneratedByPO = append(cmsNotGeneratedByPO, cm)
+		}
+	}
+
+	return cmsNotGeneratedByPO, nil
 }
 
 // CMToRule takes a rule config map and transforms it to possibly multiple
