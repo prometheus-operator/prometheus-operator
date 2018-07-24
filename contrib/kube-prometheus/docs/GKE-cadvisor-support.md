@@ -10,10 +10,9 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') +
     (import 'kube-prometheus/kube-prometheus-insecure-kubelet.libsonnet') +
 	{
         _config+:: {
-		...
+		# ... config here
 		}
     };
-{ ['kube-state-metrics-' + name]: kp.kubeStateMetrics[name] for name in std.objectFields(kp.kubeStateMetrics) }
 ```
 
 Or, you can patch and re-apply your existing manifests with:
