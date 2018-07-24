@@ -23,8 +23,8 @@ spec:
             submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
           type: string
         spec:
-          description: 'Specification of the desired behavior of the Prometheus cluster.
-            More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
+          description: 'PrometheusSpec is a specification of the desired behavior
+            of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
           properties:
             additionalAlertManagerConfigs:
               description: SecretKeySelector selects a key of a Secret.
@@ -2862,7 +2862,7 @@ spec:
                   description: Peers is a DNS name for Thanos to discover peers through.
                   type: string
                 s3:
-                  description: ThanosSpec defines parameters for of AWS Simple Storage
+                  description: ThanosS3Spec defines parameters for of AWS Simple Storage
                     Service (S3) with Thanos. (S3 compatible services apply as well)
                   properties:
                     accessKey:
@@ -2961,9 +2961,9 @@ spec:
               description: Version of Prometheus to be deployed.
               type: string
         status:
-          description: 'Most recent observed status of the Prometheus cluster. Read-only.
-            Not included when requesting from the apiserver, only from the Prometheus
-            Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
+          description: 'PrometheusStatus is the most recent observed status of the
+            Prometheus cluster. Read-only. Not included when requesting from the apiserver,
+            only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
           properties:
             availableReplicas:
               description: Total number of available pods (ready for at least minReadySeconds)

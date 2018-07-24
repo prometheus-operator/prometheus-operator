@@ -36,11 +36,11 @@ func MakeBasicIngress(serviceName string, servicePort int) *v1beta1.Ingress {
 		},
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
-				v1beta1.IngressRule{
+				{
 					IngressRuleValue: v1beta1.IngressRuleValue{
 						HTTP: &v1beta1.HTTPIngressRuleValue{
 							Paths: []v1beta1.HTTPIngressPath{
-								v1beta1.HTTPIngressPath{
+								{
 									Backend: v1beta1.IngressBackend{
 										ServiceName: serviceName,
 										ServicePort: intstr.FromInt(servicePort),

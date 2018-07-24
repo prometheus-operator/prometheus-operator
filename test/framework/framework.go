@@ -45,7 +45,7 @@ type Framework struct {
 	DefaultTimeout    time.Duration
 }
 
-// Setup setups a test framework and returns it.
+// New setups a test framework and returns it.
 func New(ns, kubeconfig, opImage string) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
@@ -202,6 +202,20 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 	}
 }
 
+func (ctx *TestCtx) SetupPrometheusRBACGlobal(t *testing.T, ns string, kubeClient kubernetes.Interface) {
+	if finalizerFn, err := CreateServiceAccount(kubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	if finalizerFn, err := CreateClusterRoleBinding(kubeClient, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus cluster role binding"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+}
+
 // Teardown tears down a previously initialized test environment.
 func (f *Framework) Teardown() error {
 	if err := f.KubeClient.Core().Services(f.Namespace.Name).Delete("prometheus-operated", nil); err != nil && !k8sutil.IsResourceNotFoundError(err) {
@@ -215,9 +229,6 @@ func (f *Framework) Teardown() error {
 	if err := f.KubeClient.Extensions().Deployments(f.Namespace.Name).Delete("prometheus-operator", nil); err != nil {
 		return err
 	}
-	if err := DeleteNamespace(f.KubeClient, f.Namespace.Name); err != nil {
-		return err
-	}
 
-	return nil
+	return DeleteNamespace(f.KubeClient, f.Namespace.Name)
 }
