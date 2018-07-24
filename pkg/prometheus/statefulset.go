@@ -398,7 +398,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 	localReloadURL := &url.URL{
 		Scheme: "http",
-		Host:   "localhost:9090",
+		Host:   c.LocalHost + ":9090",
 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
@@ -603,6 +603,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 		thanosArgs := []string{"sidecar"}
 
+		thanosArgs = append(thanosArgs, fmt.Sprintf("--prometheus.url=http://%s:9090", c.LocalHost))
 		thanosArgs = append(thanosArgs, fmt.Sprintf("--tsdb.path=%s", storageDir))
 		if p.Spec.Thanos.Peers != nil {
 			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.peers=%s", *p.Spec.Thanos.Peers))
