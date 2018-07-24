@@ -74,6 +74,9 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                        policyRule.withApiGroups(['apps']) +
                        policyRule.withResources([
                          'statefulsets',
+                         'daemonsets',
+                         'deployments',
+                         'replicasets',
                        ]) +
                        policyRule.withVerbs(['list', 'watch']);
 
@@ -222,7 +225,15 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                              policyRule.withVerbs(['get', 'update']) +
                              policyRule.withResourceNames(['kube-state-metrics']);
 
-      local rules = [coreRule, extensionsRule];
+      local appsRule = policyRule.new() +
+                       policyRule.withApiGroups(['apps']) +
+                       policyRule.withResources([
+                         'deployments',
+                       ]) +
+                       policyRule.withVerbs(['get', 'update']) +
+                       policyRule.withResourceNames(['kube-state-metrics']);
+
+      local rules = [coreRule, extensionsRule, appsRule];
 
       role.new() +
       role.mixin.metadata.withName('kube-state-metrics') +
