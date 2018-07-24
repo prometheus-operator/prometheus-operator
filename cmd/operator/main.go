@@ -130,7 +130,10 @@ func Main() int {
 	logger.Log("msg", fmt.Sprintf("Starting Prometheus Operator version '%v'.", version.Version))
 
 	r := prometheus.NewRegistry()
-	r.MustRegister(prometheus.NewGoCollector())
+	r.MustRegister(
+		prometheus.NewGoCollector(),
+		prometheus.NewProcessCollector(os.Getpid(), ""),
+	)
 
 	po, err := prometheuscontroller.New(cfg, log.With(logger, "component", "prometheusoperator"))
 	if err != nil {
