@@ -34,9 +34,10 @@ prometheusLabelValue: ""
 ## Custom Labels to be added to ServiceMonitor
 ##
 additionalSelfServiceMonitorLabels: {}
-##Custom Labels to be added to Prometheus Rules ConfigMap
+
+##Custom Labels to be added to Prometheus Rules CRDs
 ##
-additionalRulesConfigMapLabels: {}
+additionalRulesLabels: {}
 
 ## Prometheus container image
 ##
@@ -127,6 +128,15 @@ logLevel: info
 ## The value "" will disable pod anti-affinity so that no anti-affinity rules will be configured.
 podAntiAffinity: "soft"
 
+podMetadata:
+  ## Annotations to be added to Prometheus pods
+  ##
+  annotations: {}
+
+  ## Labels to be added to Prometheus pods
+  ##
+  labels: {}
+
 ## The remote_read spec configuration for Prometheus.
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#remotereadspec
 remoteRead: {}
@@ -158,7 +168,7 @@ routePrefix: /
 ## Namespaces to be selected for PrometheusRules discovery.
 ## If unspecified, only the same namespace as the Prometheus object is in is used.
 ruleNamespaceSelector: {}
-## Rules configmap selector
+## Rules CRD selector
 ## Ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/design.md
 ##
 ## 1. If `matchLabels` is used, `rules.additionalLabels` must contain all the labels from
@@ -181,7 +191,7 @@ rulesSelector: {}
 ##
 rules:
   specifiedInValues: true
-  ## What additional rules to be added to the ConfigMap
+  ## What additional rules to be added to the CRD
   ## You can use this together with `rulesSelector`
   additionalLabels: {}
   #  prometheus: example-rules

@@ -17,7 +17,6 @@ package framework
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -81,7 +80,7 @@ func (f *Framework) MakeAlertmanagerService(name, group string, serviceType v1.S
 		Spec: v1.ServiceSpec{
 			Type: serviceType,
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name:       "web",
 					Port:       9093,
 					TargetPort: intstr.FromString("web"),
@@ -279,8 +278,12 @@ func (f *Framework) GetSilences(ns, n string) ([]amAPISil, error) {
 	return getSilencesResponse.Data, nil
 }
 
-func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName string, expectedString string) error {
-	return wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
+// WaitForAlertmanagerConfigToContainString retrieves the Alertmanager
+// configuration via the Alertmanager's API and checks if it contains the given
+// string.
+func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expectedString string) error {
+	var pollError error
+	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
 		config, err := f.GetAlertmanagerConfig(ns, "alertmanager-"+amName+"-0")
 		if err != nil {
 			return false, err
@@ -290,10 +293,14 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName string, 
 			return true, nil
 		}
 
-		log.Printf("\n\nExpected:\n\n%#+v\n\nto contain:\n\n%#+v\n\n", config.Data.ConfigYAML, expectedString)
-
 		return false, nil
 	})
+
+	if err != nil {
+		return fmt.Errorf("failed to wait for alertmanager config to contain %q: %v: %v", expectedString, err, pollError)
+	}
+
+	return nil
 }
 
 type amAPICreateSilResp struct {
@@ -329,9 +336,8 @@ type amAPIStatusData struct {
 func (s *amAPIStatusData) getAmountPeers() int {
 	if s.MeshStatus != nil {
 		return len(s.MeshStatus.Peers)
-	} else {
-		return len(s.ClusterStatus.Peers)
 	}
+	return len(s.ClusterStatus.Peers)
 }
 
 type clusterStatus struct {

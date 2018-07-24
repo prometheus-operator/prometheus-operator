@@ -67,7 +67,7 @@ Parameter | Description | Default
 `routePrefix` | Prefix used to register routes, overriding externalUrl route | `/`
 `rules` | Prometheus alerting & recording rules | `{}`
 `ruleNamespaceSelector` | Namespaces to be selected for PrometheusRules discovery | `{}`
-`rulesSelector` | Rules ConfigMap selector | `{}`
+`rulesSelector` | Rules CRD selector | `{}`
 `secrets` | List of Secrets in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods. | `{}`
 `service.annotations` | Annotations to be added to the Prometheus Service | `{}`
 `service.clusterIP` | Cluster-internal IP address for Prometheus Service | `""`

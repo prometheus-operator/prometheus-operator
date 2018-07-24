@@ -221,7 +221,7 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 	}
 
 	buckets := []map[string]string{
-		map[string]string{},
+		{},
 	}
 	currBucketIndex := 0
 	sortedNames := sortKeyesOfStringMap(ruleFiles)

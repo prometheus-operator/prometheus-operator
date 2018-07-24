@@ -97,10 +97,12 @@ func (c *Operator) getRuleCMs(ns string, cmLabelSelector *metav1.LabelSelector) 
 	}
 
 	configMaps := []*v1.ConfigMap{}
-
 	err = cache.ListAllByNamespace(c.cmapInf.GetIndexer(), ns, cmSelector, func(obj interface{}) {
 		configMaps = append(configMaps, obj.(*v1.ConfigMap))
 	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "list ConfigMaps for namespace %q", ns)
+	}
 
 	// If a user sets the RuleSelector property of a Prometheus custom resource
 	// to an empty object (`{}`), all config maps in that namespace will be

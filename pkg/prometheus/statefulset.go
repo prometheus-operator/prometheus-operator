@@ -33,7 +33,7 @@ import (
 
 const (
 	governingServiceName     = "prometheus-operated"
-	DefaultPrometheusVersion = "v2.3.1"
+	DefaultPrometheusVersion = "v2.3.2"
 	DefaultThanosVersion     = "v0.1.0-rc.2"
 	defaultRetention         = "24h"
 	storageDir               = "/prometheus"
@@ -72,6 +72,8 @@ var (
 		"v1.8.0",
 		"v2.0.0",
 		"v2.2.1",
+		"v2.3.1",
+		"v2.3.2",
 	}
 )
 
@@ -252,7 +254,7 @@ func makeConfigSecret(p *monitoringv1.Prometheus, config Config) *v1.Secret {
 			},
 		},
 		Data: map[string][]byte{
-			configFilename: []byte{},
+			configFilename: {},
 		},
 	}
 }
@@ -296,7 +298,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 	promArgs := []string{
 		"-web.console.templates=/etc/prometheus/consoles",
-		"-web.console.libraries=/etc/prometheus/console-libraries",
+		"-web.console.libraries=/etc/prometheus/console_libraries",
 	}
 
 	var securityContext *v1.PodSecurityContext
@@ -398,7 +400,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 	localReloadURL := &url.URL{
 		Scheme: "http",
-		Host:   "localhost:9090",
+		Host:   c.LocalHost + ":9090",
 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
@@ -487,6 +489,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	}
 
 	configReloadArgs := []string{
+		fmt.Sprintf("--log-format=%s", c.LogFormat),
 		fmt.Sprintf("--reload-url=%s", localReloadURL),
 		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
 		fmt.Sprintf("--config-envsubst-file=%s", path.Join(confOutDir, configEnvsubstFilename)),
@@ -602,6 +605,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 		thanosArgs := []string{"sidecar"}
 
+		thanosArgs = append(thanosArgs, fmt.Sprintf("--prometheus.url=http://%s:9090", c.LocalHost))
 		thanosArgs = append(thanosArgs, fmt.Sprintf("--tsdb.path=%s", storageDir))
 		if p.Spec.Thanos.Peers != nil {
 			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.peers=%s", *p.Spec.Thanos.Peers))

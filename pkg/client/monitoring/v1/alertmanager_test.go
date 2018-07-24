@@ -26,7 +26,7 @@ import (
 
 // TestAlertmanagerUnstructuredTimestamps ensures that an Alertmanager with many
 // default values can be converted into an Unstructured which would be valid to
-// POST (this is primarily to ensure that creationTimestamp is ommitted).
+// POST (this is primarily to ensure that creationTimestamp is omitted).
 func TestAlertmanagerUnstructuredTimestamps(t *testing.T) {
 	p := &Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{

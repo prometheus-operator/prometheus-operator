@@ -45,7 +45,7 @@ type Framework struct {
 	DefaultTimeout    time.Duration
 }
 
-// Setup setups a test framework and returns it.
+// New setups a test framework and returns it.
 func New(ns, kubeconfig, opImage string) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
@@ -165,6 +165,26 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 	}
 	f.OperatorPod = &pl.Items[0]
 
+	err = k8sutil.WaitForCRDReady(f.MonClientV1.Prometheuses(v1.NamespaceAll).List)
+	if err != nil {
+		return errors.Wrap(err, "Prometheus CRD not ready: %v\n")
+	}
+
+	err = k8sutil.WaitForCRDReady(f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List)
+	if err != nil {
+		return errors.Wrap(err, "ServiceMonitor CRD not ready: %v\n")
+	}
+
+	err = k8sutil.WaitForCRDReady(f.MonClientV1.PrometheusRules(v1.NamespaceAll).List)
+	if err != nil {
+		return errors.Wrap(err, "PrometheusRule CRD not ready: %v\n")
+	}
+
+	err = k8sutil.WaitForCRDReady(f.MonClientV1.Alertmanagers(v1.NamespaceAll).List)
+	if err != nil {
+		return errors.Wrap(err, "Alertmanager CRD not ready: %v\n")
+	}
+
 	return nil
 }
 
@@ -177,6 +197,20 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 
 	if finalizerFn, err := CreateRoleBinding(kubeClient, ns, "../framework/ressources/prometheus-role-binding.yml"); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus role binding"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+}
+
+func (ctx *TestCtx) SetupPrometheusRBACGlobal(t *testing.T, ns string, kubeClient kubernetes.Interface) {
+	if finalizerFn, err := CreateServiceAccount(kubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	if finalizerFn, err := CreateClusterRoleBinding(kubeClient, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to create prometheus cluster role binding"))
 	} else {
 		ctx.AddFinalizerFn(finalizerFn)
 	}
@@ -195,9 +229,6 @@ func (f *Framework) Teardown() error {
 	if err := f.KubeClient.Extensions().Deployments(f.Namespace.Name).Delete("prometheus-operator", nil); err != nil {
 		return err
 	}
-	if err := DeleteNamespace(f.KubeClient, f.Namespace.Name); err != nil {
-		return err
-	}
 
-	return nil
+	return DeleteNamespace(f.KubeClient, f.Namespace.Name)
 }

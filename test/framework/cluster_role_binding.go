@@ -55,11 +55,7 @@ func DeleteClusterRoleBinding(kubeClient kubernetes.Interface, relativePath stri
 		return err
 	}
 
-	if err := kubeClient.RbacV1().ClusterRoleBindings().Delete(clusterRoleBinding.Name, &metav1.DeleteOptions{}); err != nil {
-		return err
-	}
-
-	return nil
+	return kubeClient.RbacV1().ClusterRoleBindings().Delete(clusterRoleBinding.Name, &metav1.DeleteOptions{})
 }
 
 func parseClusterRoleBindingYaml(relativePath string) (*rbacv1.ClusterRoleBinding, error) {

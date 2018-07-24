@@ -40,7 +40,7 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	res := yaml.MapSlice{}
 	ks := make([]string, 0)
 
-	for k, _ := range m {
+	for k := range m {
 		ks = append(ks, k)
 	}
 	sort.Strings(ks)
@@ -373,15 +373,15 @@ func generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, 
 
 	// Relabel namespace and pod and service labels into proper labels.
 	relabelings = append(relabelings, []yaml.MapSlice{
-		yaml.MapSlice{
+		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
 			{Key: "target_label", Value: "namespace"},
 		},
-		yaml.MapSlice{
+		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_name"}},
 			{Key: "target_label", Value: "pod"},
 		},
-		yaml.MapSlice{
+		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
 			{Key: "target_label", Value: "service"},
 		},
@@ -491,7 +491,7 @@ func k8sSDWithNamespaces(namespaces []string) yaml.MapItem {
 	return yaml.MapItem{
 		Key: "kubernetes_sd_configs",
 		Value: []yaml.MapSlice{
-			yaml.MapSlice{
+			{
 				{
 					Key:   "role",
 					Value: "endpoints",
@@ -514,7 +514,7 @@ func k8sSDAllNamespaces() yaml.MapItem {
 	return yaml.MapItem{
 		Key: "kubernetes_sd_configs",
 		Value: []yaml.MapSlice{
-			yaml.MapSlice{
+			{
 				{
 					Key:   "role",
 					Value: "endpoints",
@@ -572,7 +572,7 @@ func generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoi
 	} else if am.Port.IntVal != 0 {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_container_port_number"}},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
 			{Key: "regex", Value: am.Port.String()},
 		})
 	}

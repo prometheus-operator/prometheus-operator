@@ -53,11 +53,7 @@ func DeleteClusterRole(kubeClient kubernetes.Interface, relativePath string) err
 		return err
 	}
 
-	if err := kubeClient.RbacV1().ClusterRoles().Delete(clusterRole.Name, &metav1.DeleteOptions{}); err != nil {
-		return err
-	}
-
-	return nil
+	return kubeClient.RbacV1().ClusterRoles().Delete(clusterRole.Name, &metav1.DeleteOptions{})
 }
 
 func parseClusterRoleYaml(relativePath string) (*rbacv1.ClusterRole, error) {

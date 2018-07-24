@@ -119,11 +119,16 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         container.withPorts(containerPort.newNamed('http', targetPort)) +
         container.withArgs([
           '--kubelet-service=kube-system/kubelet',
+          # Prometheus Operator is run with a read-only root file system. By
+          # default glog saves logfiles to /tmp. Make it log to stderr instead.
+          '-logtostderr=true',
           '--config-reloader-image=' + $._config.imageRepos.configmapReloader + ':' + $._config.versions.configmapReloader,
           '--prometheus-config-reloader=' + $._config.imageRepos.prometheusConfigReloader + ':' + $._config.versions.prometheusOperator,
         ]) +
-        container.mixin.resources.withRequests({ cpu: '100m', memory: '50Mi' }) +
-        container.mixin.resources.withLimits({ cpu: '200m', memory: '100Mi' });
+        container.mixin.securityContext.withAllowPrivilegeEscalation(false) +
+        container.mixin.securityContext.withReadOnlyRootFilesystem(true) +
+        container.mixin.resources.withRequests({ cpu: '100m', memory: '100Mi' }) +
+        container.mixin.resources.withLimits({ cpu: '200m', memory: '200Mi' });
 
       deployment.new('prometheus-operator', 1, operatorContainer, podLabels) +
       deployment.mixin.metadata.withNamespace($._config.namespace) +

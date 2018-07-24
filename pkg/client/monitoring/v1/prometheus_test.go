@@ -26,7 +26,7 @@ import (
 
 // TestPrometheusUnstructuredTimestamps ensures that a Prometheus with many
 // default values can be converted into an Unstructured which would be valid to
-// POST (this is primarily to ensure that creationTimestamp is ommitted).
+// POST (this is primarily to ensure that creationTimestamp is omitted).
 func TestPrometheusUnstructuredTimestamps(t *testing.T) {
 	p := &Prometheus{
 		ObjectMeta: metav1.ObjectMeta{

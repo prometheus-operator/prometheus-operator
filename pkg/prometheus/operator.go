@@ -103,7 +103,7 @@ func (labels *Labels) Merge(otherLabels map[string]string) map[string]string {
 	return mergedLabels
 }
 
-// Implement the flag.Set interface
+// Set implements the flag.Set interface.
 func (labels *Labels) Set(value string) error {
 	m := map[string]string{}
 	if value != "" {
@@ -135,7 +135,9 @@ type Config struct {
 	CrdKinds                     monitoringv1.CrdKinds
 	EnableValidation             bool
 	DisableAutoUserGroup         bool
+	LocalHost                    string
 	LogLevel                     string
+	LogFormat                    string
 	ManageCRDs                   bool
 }
 
@@ -908,10 +910,10 @@ func loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySele
 					return c, nil
 				}
 
-				return nil, fmt.Errorf("key %v could not be found in Secret %v.", additionalScrapeConfigs.Key, additionalScrapeConfigs.Name)
+				return nil, fmt.Errorf("key %v could not be found in Secret %v", additionalScrapeConfigs.Key, additionalScrapeConfigs.Name)
 			}
 		}
-		return nil, fmt.Errorf("secret %v could not be found.", additionalScrapeConfigs.Name)
+		return nil, fmt.Errorf("secret %v could not be found", additionalScrapeConfigs.Name)
 	}
 	return nil, nil
 }
@@ -927,7 +929,7 @@ func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (B
 			if u, ok := secret.Data[basicAuth.Username.Key]; ok {
 				username = string(u)
 			} else {
-				return BasicAuthCredentials{}, fmt.Errorf("Secret username key %q in secret %q not found.", basicAuth.Username.Key, secret.Name)
+				return BasicAuthCredentials{}, fmt.Errorf("secret username key %q in secret %q not found", basicAuth.Username.Key, secret.Name)
 			}
 
 		}
@@ -937,7 +939,7 @@ func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (B
 			if p, ok := secret.Data[basicAuth.Password.Key]; ok {
 				password = string(p)
 			} else {
-				return BasicAuthCredentials{}, fmt.Errorf("Secret password key %q in secret %q not found.", basicAuth.Password.Key, secret.Name)
+				return BasicAuthCredentials{}, fmt.Errorf("secret password key %q in secret %q not found", basicAuth.Password.Key, secret.Name)
 			}
 
 		}
@@ -947,50 +949,58 @@ func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (B
 	}
 
 	if username == "" && password == "" {
-		return BasicAuthCredentials{}, fmt.Errorf("BasicAuth username and password secret not found.")
+		return BasicAuthCredentials{}, fmt.Errorf("basic auth username and password secret not found")
 	}
 
 	return BasicAuthCredentials{username: username, password: password}, nil
 
 }
 
-func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, remoteReads []monitoringv1.RemoteReadSpec, remoteWrites []monitoringv1.RemoteWriteSpec, s *v1.SecretList) (map[string]BasicAuthCredentials, error) {
+func (c *Operator) loadBasicAuthSecrets(mons map[string]*monitoringv1.ServiceMonitor, remoteReads []monitoringv1.RemoteReadSpec, remoteWrites []monitoringv1.RemoteWriteSpec, SecretsInPromNS *v1.SecretList) (map[string]BasicAuthCredentials, error) {
+	sMonSecretMap := make(map[string]*v1.SecretList)
+	for _, mon := range mons {
+		smNamespace := mon.Namespace
+		if sMonSecretMap[smNamespace] == nil {
+			msClient := c.kclient.CoreV1().Secrets(smNamespace)
+			listSecrets, err := msClient.List(metav1.ListOptions{})
+
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to retrieve secrets in namespace '%v' for servicemonitor '%v'", smNamespace, mon.Name)
+			}
+			sMonSecretMap[smNamespace] = listSecrets
+		}
+	}
 
 	secrets := map[string]BasicAuthCredentials{}
-
 	for _, mon := range mons {
-
 		for i, ep := range mon.Spec.Endpoints {
-
 			if ep.BasicAuth != nil {
-
-				if credentials, err := loadBasicAuthSecret(ep.BasicAuth, s); err != nil {
-					return nil, fmt.Errorf("Could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
-				} else {
-					secrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = credentials
+				credentials, err := loadBasicAuthSecret(ep.BasicAuth, sMonSecretMap[mon.Namespace])
+				if err != nil {
+					return nil, fmt.Errorf("could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
 				}
-
+				secrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = credentials
 			}
 		}
 	}
 
 	for i, remote := range remoteReads {
 		if remote.BasicAuth != nil {
-			if credentials, err := loadBasicAuthSecret(remote.BasicAuth, s); err != nil {
-				return nil, fmt.Errorf("Could not generate basicAuth for remote_read config %d. %s", i, err)
-			} else {
-				secrets[fmt.Sprintf("remoteRead/%d", i)] = credentials
+			credentials, err := loadBasicAuthSecret(remote.BasicAuth, SecretsInPromNS)
+			if err != nil {
+				return nil, fmt.Errorf("could not generate basicAuth for remote_read config %d. %s", i, err)
 			}
+			secrets[fmt.Sprintf("remoteRead/%d", i)] = credentials
 		}
 	}
 
 	for i, remote := range remoteWrites {
 		if remote.BasicAuth != nil {
-			if credentials, err := loadBasicAuthSecret(remote.BasicAuth, s); err != nil {
-				return nil, fmt.Errorf("Could not generate basicAuth for remote_write config %d. %s", i, err)
-			} else {
-				secrets[fmt.Sprintf("remoteWrite/%d", i)] = credentials
+			credentials, err := loadBasicAuthSecret(remote.BasicAuth, SecretsInPromNS)
+			if err != nil {
+				return nil, fmt.Errorf("could not generate basicAuth for remote_write config %d. %s", i, err)
 			}
+			secrets[fmt.Sprintf("remoteWrite/%d", i)] = credentials
 		}
 	}
 
@@ -1005,24 +1015,22 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	SecretsInPromNS, err := sClient.List(metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
 
-	listSecrets, err := sClient.List(metav1.ListOptions{})
+	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, SecretsInPromNS)
 
 	if err != nil {
 		return err
 	}
 
-	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, listSecrets)
-
-	if err != nil {
-		return err
-	}
-
-	additionalScrapeConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalScrapeConfigs, listSecrets)
+	additionalScrapeConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional scrape configs from Secret failed")
 	}
-	additionalAlertManagerConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertManagerConfigs, listSecrets)
+	additionalAlertManagerConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
 	}
@@ -1061,9 +1069,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		if bytes.Equal(curConfig, generatedConf) {
 			level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret skipped, no configuration change")
 			return nil
-		} else {
-			level.Debug(c.logger).Log("msg", "current Prometheus configuration has changed")
 		}
+		level.Debug(c.logger).Log("msg", "current Prometheus configuration has changed")
 	} else {
 		level.Debug(c.logger).Log("msg", "no current Prometheus configuration secret found", "currentConfigFound", curConfigFound)
 	}
@@ -1109,7 +1116,7 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 	}
 
 	serviceMonitors := []string{}
-	for k, _ := range res {
+	for k := range res {
 		serviceMonitors = append(serviceMonitors, k)
 	}
 	level.Debug(c.logger).Log("msg", "selected ServiceMonitors", "servicemonitors", strings.Join(serviceMonitors, ","), "namespace", p.Namespace, "prometheus", p.Name)

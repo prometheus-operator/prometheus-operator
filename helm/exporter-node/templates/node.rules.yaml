@@ -29,7 +29,7 @@ groups:
         or node-exporters have disappeared from discovery
       summary: Prometheus could not scrape a node-exporter
   - alert: NodeDiskRunningFull
-    expr: predict_linear(node_filesystem_free[6h], 3600 * 24) < 0
+    expr: predict_linear(node_filesystem_free{job="node-exporter",mountpoint!~"^/etc/(?:resolv.conf|hosts|hostname)$"}[6h], 3600 * 24) < 0 and on(instance) up{job="node-exporter"}
     for: 30m
     labels:
       severity: warning
@@ -38,7 +38,7 @@ groups:
         full within the next 24 hours (mounted at {{`{{$labels.mountpoint}}`}})
       summary: Node disk is running full within 24 hours
   - alert: NodeDiskRunningFull
-    expr: predict_linear(node_filesystem_free[30m], 3600 * 2) < 0
+    expr: predict_linear(node_filesystem_free{job="node-exporter",mountpoint!~"^/etc/(?:resolv.conf|hosts|hostname)$"}[30m], 3600 * 2) < 0 and on(instance) up{job="node-exporter"}
     for: 10m
     labels:
       severity: critical

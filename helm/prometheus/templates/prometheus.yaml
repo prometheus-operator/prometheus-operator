@@ -16,10 +16,21 @@ metadata:
 {{- end }}
   name: {{ template "prometheus.fullname" . }}
 spec:
-{{- if .Values.labels }}
+{{- if or .Values.podMetadata.annotations .Values.podMetadata.labels .Values.labels }}
   podMetadata:
+{{- if .Values.podMetadata.annotations }}
+    annotations:
+{{ toYaml .Values.podMetadata.annotations | indent 6 }}
+{{- end }}
+{{- if or .Values.podMetadata.labels .Values.labels }}
     labels:
+{{- if .Values.labels }}
 {{ toYaml .Values.labels | indent 6 }}
+{{- end }}
+{{- if .Values.podMetadata.labels }}
+{{ toYaml .Values.podMetadata.labels | indent 6 }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- if .Values.alertingEndpoints }}
   alerting:
@@ -95,7 +106,6 @@ spec:
 {{- else }}
   ruleSelector:
     matchLabels:
-      role: alert-rules
       prometheus: {{ .Values.prometheusLabelValue | default .Release.Name | quote }}
 {{- end }}
 {{- if .Values.storageSpec }}
