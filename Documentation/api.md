@@ -81,7 +81,7 @@ AlertmanagerEndpoints defines a selection of a single Endpoints object containin
 
 ## AlertmanagerList
 
-A list of Alertmanagers.
+AlertmanagerList is a list of Alertmanagers.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -92,7 +92,7 @@ A list of Alertmanagers.
 
 ## AlertmanagerSpec
 
-Specification of the desired behavior of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -121,7 +121,7 @@ Specification of the desired behavior of the Alertmanager cluster. More info: ht
 
 ## AlertmanagerStatus
 
-Most recent observed status of the Alertmanager cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -168,7 +168,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 
 ## NamespaceSelector
 
-A selector for selecting namespaces either selecting all namespaces or a list of namespaces.
+NamespaceSelector is a selector for selecting either all namespaces or a list of namespaces.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -213,7 +213,7 @@ PrometheusRule defines alerting rules for a Prometheus instance
 
 ## PrometheusRuleList
 
-A list of PrometheusRules.
+PrometheusRuleList is a list of PrometheusRules.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -234,7 +234,7 @@ PrometheusRuleSpec contains specification parameters for a Rule.
 
 ## PrometheusSpec
 
-Specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -255,7 +255,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
-| ruleSelector | A selector to select which PrometheusRules to mount for loading alerting rules from. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
+| ruleSelector | A selector to select which PrometheusRules to mount for loading alerting rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus Operator will migrate any legacy rule config maps to PrometheusRule custom resources selected by RuleSelector. Make sure it does not match any config maps that you do not want to be migrated. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | ruleNamespaceSelector | Namespaces to be selected for PrometheusRules discovery. If unspecified, only the same namespace as the Prometheus object is in is used. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | alerting | Define details regarding alerting. | *[AlertingSpec](#alertingspec) | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
@@ -277,7 +277,7 @@ Specification of the desired behavior of the Prometheus cluster. More info: http
 
 ## PrometheusStatus
 
-Most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -397,7 +397,7 @@ ServiceMonitor defines monitoring for a set of services.
 
 ## ServiceMonitorList
 
-A list of ServiceMonitors.
+ServiceMonitorList is a list of ServiceMonitors.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -460,7 +460,7 @@ ThanosGCSSpec defines parameters for use of Google Cloud Storage (GCS) with Than
 
 ## ThanosS3Spec
 
-ThanosSpec defines parameters for of AWS Simple Storage Service (S3) with Thanos. (S3 compatible services apply as well)
+ThanosS3Spec defines parameters for of AWS Simple Storage Service (S3) with Thanos. (S3 compatible services apply as well)
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
