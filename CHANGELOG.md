@@ -2,6 +2,10 @@
 
 * [CHANGE] Deprecate specification of Prometheus rules via ConfigMaps in favor of `PrometheusRule` CRDs
 
+## 0.22.2 / 2018-07-24
+
+[BUGFIX] Do not migrate rule config map for Prometheus statefulset on rule config map to PrometheusRule migration (#1679)
+
 ## 0.22.1 / 2018-07-19
 
 * [ENHANCEMENT] Enable operation when CRDs are created externally (#1640)
