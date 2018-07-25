@@ -30,7 +30,7 @@ manifests: vendor example.jsonnet build.sh
 	rm -rf manifests
 	./build.sh
 
-vendor: $(JB_BINARY) jsonnetfile.json
+vendor: $(JB_BINARY) jsonnetfile.json jsonnetfile.lock.json
 	rm -rf vendor
 	$(JB_BINARY) install
 

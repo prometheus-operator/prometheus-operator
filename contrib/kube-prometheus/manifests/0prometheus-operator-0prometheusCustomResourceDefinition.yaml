@@ -23,8 +23,8 @@ spec:
             submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
           type: string
         spec:
-          description: 'PrometheusSpec is a specification of the desired behavior
-            of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
+          description: 'Specification of the desired behavior of the Prometheus cluster.
+            More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
           properties:
             additionalAlertManagerConfigs:
               description: SecretKeySelector selects a key of a Secret.
@@ -671,76 +671,6 @@ spec:
                   type: array
               required:
               - alertmanagers
-            apiserverConfig:
-              description: 'APIServerConfig defines a host and auth methods to access
-                apiserver. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config'
-              properties:
-                basicAuth:
-                  description: 'BasicAuth allow an endpoint to authenticate over basic
-                    authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
-                  properties:
-                    password:
-                      description: SecretKeySelector selects a key of a Secret.
-                      properties:
-                        key:
-                          description: The key of the secret to select from.  Must
-                            be a valid secret key.
-                          type: string
-                        name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                          type: string
-                        optional:
-                          description: Specify whether the Secret or it's key must
-                            be defined
-                          type: boolean
-                      required:
-                      - key
-                    username:
-                      description: SecretKeySelector selects a key of a Secret.
-                      properties:
-                        key:
-                          description: The key of the secret to select from.  Must
-                            be a valid secret key.
-                          type: string
-                        name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                          type: string
-                        optional:
-                          description: Specify whether the Secret or it's key must
-                            be defined
-                          type: boolean
-                      required:
-                      - key
-                bearerToken:
-                  description: Bearer token for accessing apiserver.
-                  type: string
-                bearerTokenFile:
-                  description: File to read bearer token for accessing apiserver.
-                  type: string
-                host:
-                  description: Host of apiserver. A valid string consisting of a hostname
-                    or IP followed by an optional port number
-                  type: string
-                tlsConfig:
-                  description: TLSConfig specifies TLS configuration parameters.
-                  properties:
-                    caFile:
-                      description: The CA cert to use for the targets.
-                      type: string
-                    certFile:
-                      description: The client cert file for the targets.
-                      type: string
-                    insecureSkipVerify:
-                      description: Disable target certificate validation.
-                      type: boolean
-                    keyFile:
-                      description: The client key file for the targets.
-                      type: string
-                    serverName:
-                      description: Used to verify the hostname for the targets.
-                      type: string
-              required:
-              - host
             baseImage:
               description: Base image to use for a Prometheus deployment.
               type: string
@@ -2932,7 +2862,7 @@ spec:
                   description: Peers is a DNS name for Thanos to discover peers through.
                   type: string
                 s3:
-                  description: ThanosS3Spec defines parameters for of AWS Simple Storage
+                  description: ThanosSpec defines parameters for of AWS Simple Storage
                     Service (S3) with Thanos. (S3 compatible services apply as well)
                   properties:
                     accessKey:
@@ -3031,9 +2961,9 @@ spec:
               description: Version of Prometheus to be deployed.
               type: string
         status:
-          description: 'PrometheusStatus is the most recent observed status of the
-            Prometheus cluster. Read-only. Not included when requesting from the apiserver,
-            only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
+          description: 'Most recent observed status of the Prometheus cluster. Read-only.
+            Not included when requesting from the apiserver, only from the Prometheus
+            Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
           properties:
             availableReplicas:
               description: Total number of available pods (ready for at least minReadySeconds)
