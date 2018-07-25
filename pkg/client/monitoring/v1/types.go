@@ -258,6 +258,8 @@ type ThanosGCSSpec struct {
 	// Google Cloud Storage bucket name for stored blocks. If empty it won't
 	// store any block inside Google Cloud Storage.
 	Bucket *string `json:"bucket,omitempty"`
+	// Secret to access our Bucket.
+	SecretKey *v1.SecretKeySelector `json:"credentials,omitempty"`
 }
 
 // ThanosS3Spec defines parameters for of AWS Simple Storage Service (S3) with

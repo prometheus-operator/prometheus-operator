@@ -2109,10 +2109,17 @@ func schema_pkg_client_monitoring_v1_TLSConfig(ref common.ReferenceCallback) com
 							Format:      "",
 						},
 					},
+					"credentials": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Secret to access our Bucket.",
+							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
+						},
+					},
 				},
 			},
 		},
-		Dependencies: []string{},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.SecretKeySelector"},
 	}
 }
 
