@@ -19,3 +19,12 @@ rules:
   verbs:
   - get
   - update
+- apiGroups:
+  - apps
+  resourceNames:
+  - kube-state-metrics
+  resources:
+  - deployments
+  verbs:
+  - get
+  - update
