@@ -628,7 +628,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				thanosArgs = append(thanosArgs, fmt.Sprintf("--gcs.bucket=%s", *p.Spec.Thanos.GCS.Bucket))
 			}
 			if p.Spec.Thanos.GCS.SecretKey != nil {
-				secretFileName := "service-account.json.json"
+				secretFileName := "service-account.json"
 				if p.Spec.Thanos.GCS.SecretKey.Name != "" {
 					secretFileName = p.Spec.Thanos.GCS.SecretKey.Name
 				}
