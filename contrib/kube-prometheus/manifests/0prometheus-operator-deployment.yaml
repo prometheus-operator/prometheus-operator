@@ -18,7 +18,6 @@ spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - -logtostderr=true
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
         - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.22.2
         image: quay.io/coreos/prometheus-operator:v0.22.2
@@ -29,13 +28,10 @@ spec:
         resources:
           limits:
             cpu: 200m
-            memory: 200Mi
+            memory: 100Mi
           requests:
             cpu: 100m
-            memory: 100Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
+            memory: 50Mi
       nodeSelector:
         beta.kubernetes.io/os: linux
       securityContext:

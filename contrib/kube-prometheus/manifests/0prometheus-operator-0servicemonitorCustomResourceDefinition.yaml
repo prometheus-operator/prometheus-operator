@@ -169,7 +169,7 @@ spec:
               description: The label to use to retrieve the job name from.
               type: string
             namespaceSelector:
-              description: NamespaceSelector is a selector for selecting either all
+              description: A selector for selecting namespaces either selecting all
                 namespaces or a list of namespaces.
               properties:
                 any:
