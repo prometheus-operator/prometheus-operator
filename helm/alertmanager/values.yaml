@@ -64,7 +64,7 @@ additionalRulesLabels: {}
 ##
 image:
   repository: quay.io/prometheus/alertmanager
-  tag: v0.14.0
+  tag: v0.15.1
 
 ## Labels to be added to the Alertmanager
 ##
