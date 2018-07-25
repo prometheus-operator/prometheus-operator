@@ -2885,6 +2885,9 @@ spec:
                     bucket:
                       description: S3-Compatible API bucket name for stored blocks.
                       type: string
+                    encryptsse:
+                      description: Whether to use Server Side Encryption
+                      type: boolean
                     endpoint:
                       description: S3-Compatible API endpoint for stored blocks.
                       type: string

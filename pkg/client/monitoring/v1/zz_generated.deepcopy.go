@@ -1103,6 +1103,15 @@ func (in *ThanosS3Spec) DeepCopyInto(out *ThanosS3Spec) {
 			**out = **in
 		}
 	}
+	if in.EncryptSSE != nil {
+		in, out := &in.EncryptSSE, &out.EncryptSSE
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(bool)
+			**out = **in
+		}
+	}
 	return
 }
 
