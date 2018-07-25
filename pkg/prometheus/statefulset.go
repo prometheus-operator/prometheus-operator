@@ -642,6 +642,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					},
 				})
 			}
+			if p.Spec.Thanos.S3.EncryptSSE != nil && *p.Spec.Thanos.S3.EncryptSSE {
+				thanosArgs = append(thanosArgs, "--s3.encrypt-sse")
+			}
 			if p.Spec.Thanos.S3.SecretKey != nil {
 				envVars = append(envVars, v1.EnvVar{
 					Name: "S3_SECRET_KEY",

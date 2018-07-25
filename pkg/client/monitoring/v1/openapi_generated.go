@@ -2182,6 +2182,13 @@ func schema_pkg_client_monitoring_v1_ThanosS3Spec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"encryptsse": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Whether to use Server Side Encryption",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
