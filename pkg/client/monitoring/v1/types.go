@@ -276,6 +276,8 @@ type ThanosS3Spec struct {
 	Insecure *bool `json:"insecure,omitempty"`
 	// Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used.
 	SignatureVersion2 *bool `json:"signatureVersion2,omitempty"`
+	// Whether to use Server Side Encryption
+	EncryptSSE *bool `json:"encryptsse,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.
