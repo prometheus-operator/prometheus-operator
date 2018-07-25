@@ -632,10 +632,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				if p.Spec.Thanos.GCS.SecretKey.Name != "" {
 					secretFileName = p.Spec.Thanos.GCS.SecretKey.Name
 				}
-				secretDir := "/var/run/secrets/prometheus.io/" + p.Spec.Thanos.GCS.SecretKey.Key
+				secretDir := path.Join("/var/run/secrets/prometheus.io", p.Spec.Thanos.GCS.SecretKey.Key)
 				envVars = append(envVars, v1.EnvVar{
 					Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-					Value: secretDir + "/" + secretFileName,
+					Value: path.Join(secretDir, secretFileName),
 				})
 				volumeName := "secret-" + p.Spec.Thanos.GCS.SecretKey.Key
 				volumes = append(volumes, v1.Volume{
