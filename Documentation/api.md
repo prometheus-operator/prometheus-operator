@@ -471,6 +471,7 @@ ThanosGCSSpec defines parameters for use of Google Cloud Storage (GCS) with Than
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | bucket | Google Cloud Storage bucket name for stored blocks. If empty it won't store any block inside Google Cloud Storage. | *string | false |
+| credentials | Secret to access our Bucket. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 
 [Back to TOC](#table-of-contents)
 
