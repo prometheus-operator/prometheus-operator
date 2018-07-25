@@ -44,6 +44,7 @@ The following tables lists the configurable parameters of the alertmanager chart
 Parameter | Description | Default
 --- | --- | ---
 `config` | Alertmanager configuration directives | `{}`
+`configFromSecret` | Alertmanager configuration directives read from external Secret reference by name | `""`
 `externalUrl` | External URL at which Alertmanager will be reachable | `""`
 `routePrefix` | Prefix used to register routes | `"/"`
 `image.repository` | Image | `quay.io/prometheus/alertmanager`
