@@ -28,6 +28,7 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
+		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.APIServerConfig":       schema_pkg_client_monitoring_v1_APIServerConfig(ref),
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertingSpec":          schema_pkg_client_monitoring_v1_AlertingSpec(ref),
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.Alertmanager":          schema_pkg_client_monitoring_v1_Alertmanager(ref),
 		"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertmanagerEndpoints": schema_pkg_client_monitoring_v1_AlertmanagerEndpoints(ref),
@@ -288,6 +289,54 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                                       schema_pkg_apis_meta_v1_Timestamp(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                                        schema_pkg_apis_meta_v1_TypeMeta(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                                      schema_pkg_apis_meta_v1_WatchEvent(ref),
+	}
+}
+
+func schema_pkg_client_monitoring_v1_APIServerConfig(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIServerConfig defines a host and auth methods to access apiserver. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config",
+				Properties: map[string]spec.Schema{
+					"host": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Host of apiserver. A valid string consisting of a hostname or IP followed by an optional port number",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"basicAuth": {
+						SchemaProps: spec.SchemaProps{
+							Description: "BasicAuth allow an endpoint to authenticate over basic authentication",
+							Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.BasicAuth"),
+						},
+					},
+					"bearerToken": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Bearer token for accessing apiserver.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"bearerTokenFile": {
+						SchemaProps: spec.SchemaProps{
+							Description: "File to read bearer token for accessing apiserver.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"tlsConfig": {
+						SchemaProps: spec.SchemaProps{
+							Description: "TLS Config to use for accessing apiserver.",
+							Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"),
+						},
+					},
+				},
+				Required: []string{"host"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.TLSConfig"},
 	}
 }
 
@@ -1363,6 +1412,12 @@ func schema_pkg_client_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback
 							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
+					"apiserverConfig": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIServerConfig allows specifying a host and auth methods to access apiserver. If left empty, Prometheus is assumed to run inside of the cluster and will discover API servers automatically and use the pod's CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.",
+							Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.APIServerConfig"),
+						},
+					},
 					"thanos": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Thanos configuration allows configuring various aspects of a Prometheus server in a Thanos environment.\n\nThis section is experimental, it may change significantly without deprecation notice in any release.\n\nThis is experimental and may change significantly without backward compatibility in any release.",
@@ -1373,7 +1428,7 @@ func schema_pkg_client_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback
 			},
 		},
 		Dependencies: []string{
-			"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertingSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteReadSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteWriteSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.APIServerConfig", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.AlertingSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteReadSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RemoteWriteSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.StorageSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
