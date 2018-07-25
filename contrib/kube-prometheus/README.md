@@ -362,6 +362,8 @@ Should the Prometheus `/targets` page show kubelet targets, but not able to succ
 
 As described in the [prerequisites](#prerequisites) section, in order to retrieve metrics from the kubelet token authentication and authorization must be enabled. Some Kubernetes setup tools do not enable this by default.
 
+If you are using Google's GKE product, see [docs/GKE-cadvisor-support.md].
+
 #### Authentication problem
 
 The Prometheus `/targets` page will show the kubelet job with the error `403 Unauthorized`, when token authentication is not enabled. Ensure, that the `--authentication-token-webhook=true` flag is enabled on all kubelet configurations.

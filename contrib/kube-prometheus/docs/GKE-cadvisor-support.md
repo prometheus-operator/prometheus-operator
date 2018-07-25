@@ -1,7 +1,21 @@
-# Kubelet / cAdvisor special configuration updates for GKE 
+# Kubelet / cAdvisor special configuration updates for GKE
 
-In order to allow Prometheus to access the endpoints provided by the kubelet/cAdvisor on GKE we have to downgrade the scheme to HTTP (from HTTPS).
+Prior to GKE 1.11, the kubelet does not support token
+authentication. Until it does, Prometheus must use HTTP (not HTTPS)
+for scraping.
 
+You can configure this behavior through kube-prometheus with:
+```
+local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') +
+    (import 'kube-prometheus/kube-prometheus-insecure-kubelet.libsonnet') +
+	{
+        _config+:: {
+		# ... config here
+		}
+    };
+```
+
+Or, you can patch and re-apply your existing manifests with:
 
 On linux:
 
@@ -10,9 +24,9 @@ sed -i -e 's/https/http/g' \
 contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kubelet.yaml
 ```
 
-On MacOs: 
+On MacOs:
 
-``` 
+```
 sed -i '' -e 's/https/http/g' \
 contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kubelet.yaml
 ```
