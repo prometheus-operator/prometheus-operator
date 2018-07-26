@@ -14,7 +14,7 @@ metadata:
 {{- if .Values.labels }}
 {{ toYaml .Values.labels | indent 4 }}
 {{- end }}
-  name: {{ template "prometheus.fullname" . }}
+  name: {{ default (include "prometheus.fullname" .) .Values.prometheusLabelValue }}
 spec:
 {{- if .Values.labels }}
   podMetadata:
