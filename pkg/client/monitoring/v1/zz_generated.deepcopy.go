@@ -1076,6 +1076,15 @@ func (in *ThanosGCSSpec) DeepCopyInto(out *ThanosGCSSpec) {
 			**out = **in
 		}
 	}
+	if in.SecretKey != nil {
+		in, out := &in.SecretKey, &out.SecretKey
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	return
 }
 
