@@ -2858,22 +2858,6 @@ spec:
                       description: Google Cloud Storage bucket name for stored blocks.
                         If empty it won't store any block inside Google Cloud Storage.
                       type: string
-                    credentials:
-                      description: SecretKeySelector selects a key of a Secret.
-                      properties:
-                        key:
-                          description: The key of the secret to select from.  Must
-                            be a valid secret key.
-                          type: string
-                        name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                          type: string
-                        optional:
-                          description: Specify whether the Secret or it's key must
-                            be defined
-                          type: boolean
-                      required:
-                      - key
                 peers:
                   description: Peers is a DNS name for Thanos to discover peers through.
                   type: string
