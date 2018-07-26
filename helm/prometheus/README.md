@@ -49,7 +49,7 @@ Parameter | Description | Default
 `externalUrl` | External URL at which Prometheus will be reachable | `""`
 `routePrefix` | Prefix used to register routes | `"/"`
 `image.repository` | Image | `quay.io/prometheus/prometheus`
-`image.tag` | Image tag | `v2.2.1`
+`image.tag` | Image tag | `v2.3.2`
 `ingress.enabled` | If true, Prometheus Ingress will be created | `false`
 `ingress.annotations` | Annotations for Prometheus Ingress` | `{}`
 `ingress.labels` | Labels for Prometheus Ingress | `{}`
@@ -74,7 +74,7 @@ Parameter | Description | Default
 `service.externalIPs` | List of external IP addresses at which the Prometheus Service will be available | `[]`
 `service.loadBalancerIP` | External IP address to assign to Prometheus Service | `""`
 `service.loadBalancerSourceRanges` | List of client IPs allowed to access Prometheus Service | `[]`
-`service.nodePort` | Port to expose Prometheus Service on each node | `39090`
+`service.ports` | Ports definitions to expose Prometheus Service | `[]`
 `service.type` | Prometheus Service type | `ClusterIP`
 `serviceMonitors` | ServiceMonitor crd resources to create & be scraped by this Prometheus instance | `[]`
 `serviceMonitorsSelector` | ServiceMonitor ConfigMap selector | `{}`

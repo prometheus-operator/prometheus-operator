@@ -168,10 +168,25 @@ service:
   ##
   loadBalancerSourceRanges: []
 
-  ## Port to expose on each node
-  ## Only used if service.type is 'NodePort'
+  ## Port definitions
   ##
-  nodePort: 30903
+  ports: []
+    ## Name of the port so that endpoints can be disambiguated
+    # - name: http
+
+      ## Port protocol
+      # protocol: TCP
+
+      ## Port targeted by the service
+      # port: 9093
+
+      ## Target port to the backend Pods
+      ## It is set to the same value as the port by default
+      # targetPort: 9093
+
+      ## Port to expose on each node (optional)
+      ## If defined, service.type must be set as 'NodePort'
+      # nodePort: 30903
 
   ## Service type
   ##

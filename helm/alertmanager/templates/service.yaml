@@ -19,23 +19,24 @@ spec:
   clusterIP: "{{ .Values.service.clusterIP }}"
 {{- if .Values.service.externalIPs }}
   externalIPs:
-{{ toYaml .Values.service.externalIPs | indent 4 }}
+{{ toYaml .Values.service.externalIPs | indent 2 }}
 {{- end }}
 {{- if .Values.service.loadBalancerIP }}
   loadBalancerIP: "{{ .Values.service.loadBalancerIP }}"
 {{- end }}
 {{- if .Values.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
-{{ toYaml .Values.service.loadBalancerSourceRanges | indent 4 }}
+{{ toYaml .Values.service.loadBalancerSourceRanges | indent 2 }}
 {{- end }}
   ports:
-    - name: http
-    {{- if eq .Values.service.type "NodePort" }}
-      nodePort: {{ .Values.service.nodePort }}
-    {{- end }}
-      port: 9093
-      targetPort: 9093
-      protocol: TCP
+{{- if .Values.service.ports }}
+{{ toYaml .Values.service.ports | indent 2 }}
+{{- else }}
+  - name: http
+    port: 9093
+    targetPort: 9093
+    protocol: TCP
+{{- end }}
   selector:
     alertmanager: {{ .Release.Name }}
     app: {{ template "alertmanager.name" . }}

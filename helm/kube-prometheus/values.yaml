@@ -144,10 +144,25 @@ alertmanager:
     ##
     loadBalancerSourceRanges: []
 
-    ## Port to expose on each node
-    ## Only used if service.type is 'NodePort'
+    ## Port definitions
     ##
-    nodePort: 30903
+    ports: []
+      ## Name of the port so that endpoints can be disambiguated
+      # - name: http
+
+        ## Port protocol
+        # protocol: TCP
+
+        ## Port targeted by the service
+        # port: 9093
+
+        ## Target port to the backend Pods
+        ## It is set to the same value as the port by default
+        # targetPort: 9093
+
+        ## Port to expose on each node (optional)
+        ## If defined, service.type must be set as 'NodePort'
+        # nodePort: 30903
 
     ## Service type
     ##
@@ -192,7 +207,7 @@ prometheus:
   ##
   image:
     repository: quay.io/prometheus/prometheus
-    tag: v2.2.1
+    tag: v2.3.2
 
   ingress:
     ## If true, Prometheus Ingress will be created
@@ -322,10 +337,25 @@ prometheus:
     ##
     loadBalancerSourceRanges: []
 
-    ## Port to expose on each node
-    ## Only used if service.type is 'NodePort'
+    ## Port definitions
     ##
-    nodePort: 30900
+    ports: []
+      ## Name of the port so that endpoints can be disambiguated
+      # - name: http
+
+        ## Port protocol
+        # protocol: TCP
+
+        ## Port targeted by the service
+        # port: 9090
+
+        ## Target port to the backend Pods
+        ## It is set to the same value as the port by default
+        # targetPort: 9090
+
+        ## Port to expose on each node (optional)
+        ## If defined, service.type must be set as 'NodePort'
+        # nodePort: 30900
 
     ## Service type
     ##
