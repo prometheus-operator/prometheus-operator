@@ -202,7 +202,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 			ListFunc:  mclient.MonitoringV1().Prometheuses(c.config.Namespace).List,
 			WatchFunc: mclient.MonitoringV1().Prometheuses(c.config.Namespace).Watch,
 		},
-		&monitoringv1.Prometheus{}, resyncPeriod, cache.Indexers{},
+		&monitoringv1.Prometheus{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleAddPrometheus,
@@ -215,7 +215,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 			ListFunc:  mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).List,
 			WatchFunc: mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).Watch,
 		},
-		&monitoringv1.ServiceMonitor{}, resyncPeriod, cache.Indexers{},
+		&monitoringv1.ServiceMonitor{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.smonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleSmonAdd,
@@ -228,7 +228,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 			ListFunc:  mclient.MonitoringV1().PrometheusRules(c.config.Namespace).List,
 			WatchFunc: mclient.MonitoringV1().PrometheusRules(c.config.Namespace).Watch,
 		},
-		&monitoringv1.PrometheusRule{}, resyncPeriod, cache.Indexers{},
+		&monitoringv1.PrometheusRule{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.ruleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleRuleAdd,
@@ -238,7 +238,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 	c.cmapInf = cache.NewSharedIndexInformer(
 		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", c.config.Namespace, fields.Everything()),
-		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{},
+		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleConfigMapAdd,
@@ -247,7 +247,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	})
 	c.secrInf = cache.NewSharedIndexInformer(
 		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "secrets", c.config.Namespace, fields.Everything()),
-		&v1.Secret{}, resyncPeriod, cache.Indexers{},
+		&v1.Secret{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.secrInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleSecretAdd,
@@ -257,7 +257,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 	c.ssetInf = cache.NewSharedIndexInformer(
 		cache.NewListWatchFromClient(c.kclient.AppsV1beta2().RESTClient(), "statefulsets", c.config.Namespace, fields.Everything()),
-		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{},
+		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleAddStatefulSet,
