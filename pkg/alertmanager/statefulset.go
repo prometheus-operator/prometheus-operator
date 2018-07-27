@@ -34,6 +34,7 @@ import (
 const (
 	governingServiceName   = "alertmanager-operated"
 	defaultVersion         = "v0.15.1"
+	defaultRetention       = "120h"
 	secretsDir             = "/etc/alertmanager/secrets/"
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
@@ -62,6 +63,9 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 	intZero := int32(0)
 	if am.Spec.Replicas != nil && *am.Spec.Replicas < 0 {
 		am.Spec.Replicas = &intZero
+	}
+	if am.Spec.Retention == "" {
+		am.Spec.Retention = defaultRetention
 	}
 	if am.Spec.Resources.Requests == nil {
 		am.Spec.Resources.Requests = v1.ResourceList{}
@@ -182,6 +186,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		fmt.Sprintf("--config.file=%s", alertmanagerConfFile),
 		fmt.Sprintf("--cluster.listen-address=$(POD_IP):%d", 6783),
 		fmt.Sprintf("--storage.path=%s", alertmanagerStorageDir),
+		fmt.Sprintf("--data.retention=%s", a.Spec.Retention),
 	}
 
 	if a.Spec.ListenLocal {

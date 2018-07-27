@@ -2095,7 +2095,8 @@ spec:
                     value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                   type: object
             retention:
-              description: Time duration Prometheus shall retain data for.
+              description: Time duration Prometheus shall retain data for. Default
+                is '24h'.
               type: string
             routePrefix:
               description: The route prefix Prometheus registers HTTP handlers for.
