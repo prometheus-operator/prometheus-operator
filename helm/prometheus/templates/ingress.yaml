@@ -27,7 +27,7 @@ spec:
           - path: "{{ $routePrefix }}"
             backend:
               serviceName: "{{ $serviceName }}"
-              servicePort: 9090
+              servicePort: {{ .Values.service.port }}
     {{- end -}}              
 {{- if .Values.ingress.tls }}
   tls:

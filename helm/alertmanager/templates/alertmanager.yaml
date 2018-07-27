@@ -18,7 +18,7 @@ spec:
 {{- else if .Values.ingress.enabled }}
   externalUrl: "http://{{ index .Values.ingress.hosts 0 }}{{ .Values.routePrefix }}"
 {{- else }}
-  externalUrl: http://{{ template "alertmanager.fullname" . }}.{{ .Release.Namespace }}:9093
+  externalUrl: http://{{ template "alertmanager.fullname" . }}.{{ .Release.Namespace }}:{{ .Values.service.port }}
 {{- end }}
 {{- if .Values.nodeSelector }}
   nodeSelector:

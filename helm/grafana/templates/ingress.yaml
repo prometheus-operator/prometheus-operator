@@ -27,7 +27,7 @@ spec:
           - path: "{{ $routePrefix }}"
             backend:
               serviceName: {{ printf "%s-%s" $releaseName "grafana" | trunc 63 }}
-              servicePort: 80
+              servicePort: {{ .Values.service.port }}
     {{- end -}}              
 {{- if .Values.ingress.tls }}
   tls:
