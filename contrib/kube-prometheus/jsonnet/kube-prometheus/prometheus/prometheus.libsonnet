@@ -69,7 +69,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: namespace }]);
         
       local roleBindigList = k.rbac.v1.roleBindingList;
-      roleBindigList.new([newSpecificRoleBinding(x) for x in $._config.prometheus.roleSpecificNamespaces]),
+      roleBindigList.new([newSpecificRoleBinding(x) for x in $._config.prometheus.namespaces]),
     clusterRole:
       local clusterRole = k.rbac.v1.clusterRole;
       local policyRule = clusterRole.rulesType;
@@ -142,7 +142,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         role.withRules(coreRule);
         
       local roleList = k.rbac.v1.roleList;
-      roleList.new([newSpecificRole(x) for x in $._config.prometheus.roleSpecificNamespaces]),
+      roleList.new([newSpecificRole(x) for x in $._config.prometheus.namespaces]),
     prometheus:
       local container = k.core.v1.pod.mixin.spec.containersType;
       local resourceRequirements = container.mixin.resourcesType;
