@@ -21,6 +21,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       replicas: 2,
       rules: {},
       renderedRules: {},
+      namespaces: ["default", "kube-system",$._config.namespace],
     },
   },
 
@@ -55,16 +56,20 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           groups: $._config.prometheus.rules.groups,
         },
       },
-    roleBindingDefault:
+    roleBindingSpecificNamespace:
       local roleBinding = k.rbac.v1.roleBinding;
 
-      roleBinding.new() +
-      roleBinding.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
-      roleBinding.mixin.metadata.withNamespace('default') +
-      roleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
-      roleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
-      roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
-      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
+      local newSpecificRoleBinding(namespace) =   
+        roleBinding.new() +
+        roleBinding.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
+        roleBinding.mixin.metadata.withNamespace(namespace) +
+        roleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
+        roleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
+        roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
+        roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: namespace }]);
+        
+      local roleBindigList = k.rbac.v1.roleBindingList;
+      roleBindigList.new([newSpecificRoleBinding(x) for x in $._config.prometheus.namespaces]),
     clusterRole:
       local clusterRole = k.rbac.v1.clusterRole;
       local policyRule = clusterRole.rulesType;
@@ -108,16 +113,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       roleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name + '-config') +
       roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
       roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
-    roleBindingNamespace:
-      local roleBinding = k.rbac.v1.roleBinding;
-
-      roleBinding.new() +
-      roleBinding.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
-      roleBinding.mixin.metadata.withNamespace($._config.namespace) +
-      roleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
-      roleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
-      roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
-      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
     clusterRoleBinding:
       local clusterRoleBinding = k.rbac.v1.clusterRoleBinding;
 
@@ -127,10 +122,9 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       clusterRoleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
       clusterRoleBinding.mixin.roleRef.mixinInstance({ kind: 'ClusterRole' }) +
       clusterRoleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
-    roleKubeSystem:
+    roleSpecificNamespace:
       local role = k.rbac.v1.role;
       local policyRule = role.rulesType;
-
       local coreRule = policyRule.new() +
                        policyRule.withApiGroups(['']) +
                        policyRule.withResources([
@@ -140,57 +134,15 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                          'pods',
                        ]) +
                        policyRule.withVerbs(['get', 'list', 'watch']);
-
-      role.new() +
-      role.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
-      role.mixin.metadata.withNamespace('kube-system') +
-      role.withRules(coreRule),
-    roleDefault:
-      local role = k.rbac.v1.role;
-      local policyRule = role.rulesType;
-
-      local coreRule = policyRule.new() +
-                       policyRule.withApiGroups(['']) +
-                       policyRule.withResources([
-                         'nodes',
-                         'services',
-                         'endpoints',
-                         'pods',
-                       ]) +
-                       policyRule.withVerbs(['get', 'list', 'watch']);
-
-      role.new() +
-      role.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
-      role.mixin.metadata.withNamespace('default') +
-      role.withRules(coreRule),
-    roleBindingKubeSystem:
-      local roleBinding = k.rbac.v1.roleBinding;
-
-      roleBinding.new() +
-      roleBinding.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
-      roleBinding.mixin.metadata.withNamespace('kube-system') +
-      roleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
-      roleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
-      roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
-      roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
-    roleNamespace:
-      local role = k.rbac.v1.role;
-      local policyRule = role.rulesType;
-
-      local coreRule = policyRule.new() +
-                       policyRule.withApiGroups(['']) +
-                       policyRule.withResources([
-                         'nodes',
-                         'services',
-                         'endpoints',
-                         'pods',
-                       ]) +
-                       policyRule.withVerbs(['get', 'list', 'watch']);
-
-      role.new() +
-      role.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
-      role.mixin.metadata.withNamespace($._config.namespace) +
-      role.withRules(coreRule),
+                      
+      local newSpecificRole(namespace) =                 
+        role.new() +
+        role.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
+        role.mixin.metadata.withNamespace(namespace) +
+        role.withRules(coreRule);
+        
+      local roleList = k.rbac.v1.roleList;
+      roleList.new([newSpecificRole(x) for x in $._config.prometheus.namespaces]),
     prometheus:
       local container = k.core.v1.pod.mixin.spec.containersType;
       local resourceRequirements = container.mixin.resourcesType;
