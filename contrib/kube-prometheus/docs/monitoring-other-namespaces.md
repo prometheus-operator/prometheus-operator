@@ -1,5 +1,5 @@
 # Monitoring other Kubernetes Namespaces
-This guide will help you monitor applications in other Namespaces, which is only enabled for the `Default` Namespace during Install.
+This guide will help you monitor applications in other Namespaces. By default the RBAC rules are only enabled for the `Default` and `kube-system` Namespace during Install.
 
 # Setup
 You have to give the list of the Namespaces that you want to be able to monitor.
@@ -12,7 +12,7 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
     namespace: 'monitoring',
 
     prometheus+:: {
-      roleSpecificNamespaces: ["foo"],
+      namespaces: ["default", "kube-system","foo"],
     },
   },
 };
