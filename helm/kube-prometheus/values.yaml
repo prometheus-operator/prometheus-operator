@@ -149,6 +149,10 @@ alertmanager:
     ##
     nodePort: 30903
 
+    ## The incoming port of the service
+    ##
+    port: 9093
+
     ## Service type
     ##
     type: ClusterIP
@@ -326,6 +330,10 @@ prometheus:
     ## Only used if service.type is 'NodePort'
     ##
     nodePort: 30900
+
+    ## The incoming port of the service
+    ##
+    port: 9090 
 
     ## Service type
     ##
