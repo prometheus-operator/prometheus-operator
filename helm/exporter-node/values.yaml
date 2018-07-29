@@ -46,6 +46,11 @@ tolerations:
 - effect: NoSchedule
   operator: Exists
 
+## Node Selector to constrain pods to run on particular nodes
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+##
+nodeSelector: []
+
 ## If true, create & use RBAC resources resp. Pod Security Policies
 ##
 global:
