@@ -258,6 +258,8 @@ type ThanosGCSSpec struct {
 	// Google Cloud Storage bucket name for stored blocks. If empty it won't
 	// store any block inside Google Cloud Storage.
 	Bucket *string `json:"bucket,omitempty"`
+	// Secret to access our Bucket.
+	SecretKey *v1.SecretKeySelector `json:"credentials,omitempty"`
 }
 
 // ThanosS3Spec defines parameters for of AWS Simple Storage Service (S3) with
@@ -276,6 +278,8 @@ type ThanosS3Spec struct {
 	Insecure *bool `json:"insecure,omitempty"`
 	// Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used.
 	SignatureVersion2 *bool `json:"signatureVersion2,omitempty"`
+	// Whether to use Server Side Encryption
+	EncryptSSE *bool `json:"encryptsse,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.

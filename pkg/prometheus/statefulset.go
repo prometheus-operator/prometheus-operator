@@ -614,13 +614,46 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			thanosArgs = append(thanosArgs, fmt.Sprintf("--log.level=%s", p.Spec.LogLevel))
 		}
 
+		thanosVolumeMounts := []v1.VolumeMount{
+			{
+				Name:      volName,
+				MountPath: storageDir,
+				SubPath:   subPathForStorage(p.Spec.Storage),
+			},
+		}
+
+		envVars := []v1.EnvVar{}
 		if p.Spec.Thanos.GCS != nil {
 			if p.Spec.Thanos.GCS.Bucket != nil {
 				thanosArgs = append(thanosArgs, fmt.Sprintf("--gcs.bucket=%s", *p.Spec.Thanos.GCS.Bucket))
 			}
+			if p.Spec.Thanos.GCS.SecretKey != nil {
+				secretFileName := "service-account.json"
+				if p.Spec.Thanos.GCS.SecretKey.Name != "" {
+					secretFileName = p.Spec.Thanos.GCS.SecretKey.Name
+				}
+				secretDir := path.Join("/var/run/secrets/prometheus.io", p.Spec.Thanos.GCS.SecretKey.Key)
+				envVars = append(envVars, v1.EnvVar{
+					Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+					Value: path.Join(secretDir, secretFileName),
+				})
+				volumeName := "secret-" + p.Spec.Thanos.GCS.SecretKey.Key
+				volumes = append(volumes, v1.Volume{
+					Name: volumeName,
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: p.Spec.Thanos.GCS.SecretKey.Key,
+						},
+					},
+				})
+				thanosVolumeMounts = append(thanosVolumeMounts, v1.VolumeMount{
+					Name:      volumeName,
+					ReadOnly:  true,
+					MountPath: secretDir,
+				})
+			}
 		}
 
-		envVars := []v1.EnvVar{}
 		if p.Spec.Thanos.S3 != nil {
 			if p.Spec.Thanos.S3.Bucket != nil {
 				thanosArgs = append(thanosArgs, fmt.Sprintf("--s3.bucket=%s", *p.Spec.Thanos.S3.Bucket))
@@ -642,6 +675,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					},
 				})
 			}
+			if p.Spec.Thanos.S3.EncryptSSE != nil && *p.Spec.Thanos.S3.EncryptSSE {
+				thanosArgs = append(thanosArgs, "--s3.encrypt-sse")
+			}
 			if p.Spec.Thanos.S3.SecretKey != nil {
 				envVars = append(envVars, v1.EnvVar{
 					Name: "S3_SECRET_KEY",
@@ -650,14 +686,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					},
 				})
 			}
-		}
-
-		thanosVolumeMounts := []v1.VolumeMount{
-			{
-				Name:      volName,
-				MountPath: storageDir,
-				SubPath:   subPathForStorage(p.Spec.Storage),
-			},
 		}
 
 		c := v1.Container{

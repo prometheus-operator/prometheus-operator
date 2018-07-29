@@ -23,8 +23,8 @@ spec:
             submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
           type: string
         spec:
-          description: 'AlertmanagerSpec is a specification of the desired behavior
-            of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
+          description: 'Specification of the desired behavior of the Alertmanager
+            cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
           properties:
             affinity:
               description: Affinity is a group of affinity scheduling rules.
@@ -2372,9 +2372,9 @@ spec:
               description: Version the cluster should be on.
               type: string
         status:
-          description: 'AlertmanagerStatus is the most recent observed status of the
-            Alertmanager cluster. Read-only. Not included when requesting from the
-            apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
+          description: 'Most recent observed status of the Alertmanager cluster. Read-only.
+            Not included when requesting from the apiserver, only from the Prometheus
+            Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
           properties:
             availableReplicas:
               description: Total number of available pods (ready for at least minReadySeconds)

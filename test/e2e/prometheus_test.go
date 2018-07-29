@@ -749,7 +749,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 		MaxExpectedChanges int
 	}{
 		{
-			Name: "crd",
+			Name: "prometheus",
 			Getter: func(prometheusName string) (versionedResource, error) {
 				return framework.
 					MonClientV1.
@@ -781,7 +781,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					Secrets(ns).
 					Get("prometheus-"+prometheusName, metav1.GetOptions{})
 			},
-			MaxExpectedChanges: 1,
+			MaxExpectedChanges: 2,
 		},
 		{
 			Name: "statefulset",
@@ -797,13 +797,23 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 			MaxExpectedChanges: 3,
 		},
 		{
-			Name: "service",
+			Name: "service-operated",
 			Getter: func(prometheusName string) (versionedResource, error) {
 				return framework.
 					KubeClient.
 					CoreV1().
 					Services(ns).
 					Get("prometheus-operated", metav1.GetOptions{})
+			},
+			MaxExpectedChanges: 1,
+		},
+		{
+			Name: "serviceMonitor",
+			Getter: func(prometheusName string) (versionedResource, error) {
+				return framework.
+					MonClientV1.
+					ServiceMonitors(ns).
+					Get(prometheusName, metav1.GetOptions{})
 			},
 			MaxExpectedChanges: 1,
 		},
@@ -847,16 +857,26 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pSVC := framework.MakePrometheusService(prometheus.Name, "not-relevant", v1.ServiceTypeClusterIP)
+	pSVC := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
 	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, pSVC); err != nil {
 		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
 	} else {
 		testCTX.AddFinalizerFn(finalizerFn)
 	}
 
+	s := framework.MakeBasicServiceMonitor(name)
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(s); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
 	err := framework.WaitForPrometheusFiringAlert(prometheus.Namespace, pSVC.Name, alertName)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	err = isDiscoveryWorking(ns, pSVC.Name, prometheus.Name)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
 	}
 
 	if err := framework.DeletePrometheusAndWaitUntilGone(ns, name); err != nil {
@@ -954,7 +974,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 		t.Fatal("Generated Secret could not be retrieved: ", err)
 	}
 
-	err = wait.Poll(time.Second, 18*time.Minute, isDiscoveryWorking(ns, svc.Name, prometheusName))
+	err = isDiscoveryWorking(ns, svc.Name, prometheusName)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
 	}
@@ -1090,7 +1110,7 @@ func TestPrometheusDiscoverTargetPort(t *testing.T) {
 		t.Fatal("Generated Secret could not be retrieved: ", err)
 	}
 
-	err = wait.Poll(time.Second, 3*time.Minute, isDiscoveryWorking(ns, svc.Name, prometheusName))
+	err = isDiscoveryWorking(ns, svc.Name, prometheusName)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
 	}
@@ -1353,11 +1373,13 @@ func TestPrometheusGetBasicAuthSecret(t *testing.T) {
 
 }
 
-func isDiscoveryWorking(ns, svcName, prometheusName string) func() (bool, error) {
-	return func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(prometheusName))
-		if err != nil {
-			return false, err
+func isDiscoveryWorking(ns, svcName, prometheusName string) error {
+	var loopErr error
+
+	err := wait.Poll(time.Second, 5*framework.DefaultTimeout, func() (bool, error) {
+		pods, loopErr := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(prometheusName))
+		if loopErr != nil {
+			return false, loopErr
 		}
 		if 1 != len(pods.Items) {
 			return false, nil
@@ -1365,25 +1387,31 @@ func isDiscoveryWorking(ns, svcName, prometheusName string) func() (bool, error)
 		podIP := pods.Items[0].Status.PodIP
 		expectedTargets := []string{fmt.Sprintf("http://%s:9090/metrics", podIP)}
 
-		activeTargets, err := framework.GetActiveTargets(ns, svcName)
-		if err != nil {
-			return false, err
+		activeTargets, loopErr := framework.GetActiveTargets(ns, svcName)
+		if loopErr != nil {
+			return false, loopErr
 		}
 
-		if !assertExpectedTargets(activeTargets, expectedTargets) {
+		if loopErr = assertExpectedTargets(activeTargets, expectedTargets); loopErr != nil {
 			return false, nil
 		}
 
-		working, err := basicQueryWorking(ns, svcName)
-		if err != nil {
-			return false, err
+		working, loopErr := basicQueryWorking(ns, svcName)
+		if loopErr != nil {
+			return false, loopErr
 		}
 		if !working {
 			return false, nil
 		}
 
 		return true, nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for Prometheus to discover targets failed: %v: %v", err, loopErr)
 	}
+
+	return nil
 }
 
 type resultVector struct {
@@ -1452,9 +1480,7 @@ func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) fu
 	}
 }
 
-func assertExpectedTargets(targets []*testFramework.Target, expectedTargets []string) bool {
-	log.Printf("Expected Targets: %#+v\n", expectedTargets)
-
+func assertExpectedTargets(targets []*testFramework.Target, expectedTargets []string) error {
 	existingTargets := []string{}
 
 	for _, t := range targets {
@@ -1465,11 +1491,13 @@ func assertExpectedTargets(targets []*testFramework.Target, expectedTargets []st
 	sort.Strings(existingTargets)
 
 	if !reflect.DeepEqual(expectedTargets, existingTargets) {
-		log.Printf("Existing Targets: %#+v\n", existingTargets)
-		return false
+		return fmt.Errorf(
+			"expected targets %q but got %q", strings.Join(expectedTargets, ","),
+			strings.Join(existingTargets, ","),
+		)
 	}
 
-	return true
+	return nil
 }
 
 func assertExpectedAlertmanagerTargets(ams []*alertmanagerTarget, expectedTargets []string) bool {

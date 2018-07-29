@@ -471,6 +471,7 @@ ThanosGCSSpec defines parameters for use of Google Cloud Storage (GCS) with Than
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | bucket | Google Cloud Storage bucket name for stored blocks. If empty it won't store any block inside Google Cloud Storage. | *string | false |
+| credentials | Secret to access our Bucket. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -486,6 +487,7 @@ ThanosS3Spec defines parameters for of AWS Simple Storage Service (S3) with Than
 | secretKey | SecretKey for an S3-Compatible API. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 | insecure | Whether to use an insecure connection with an S3-Compatible API. | *bool | false |
 | signatureVersion2 | Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used. | *bool | false |
+| encryptsse | Whether to use Server Side Encryption | *bool | false |
 
 [Back to TOC](#table-of-contents)
 

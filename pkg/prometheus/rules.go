@@ -53,7 +53,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 
 	newConfigMaps, err := makeRulesConfigMaps(p, rules)
 	if err != nil {
-		errors.Wrap(err, "failed to make rules config maps")
+		return nil, errors.Wrap(err, "failed to make rules config maps")
 	}
 
 	newConfigMapNames := []string{}

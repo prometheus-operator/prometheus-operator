@@ -1076,6 +1076,15 @@ func (in *ThanosGCSSpec) DeepCopyInto(out *ThanosGCSSpec) {
 			**out = **in
 		}
 	}
+	if in.SecretKey != nil {
+		in, out := &in.SecretKey, &out.SecretKey
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	return
 }
 
@@ -1139,6 +1148,15 @@ func (in *ThanosS3Spec) DeepCopyInto(out *ThanosS3Spec) {
 	}
 	if in.SignatureVersion2 != nil {
 		in, out := &in.SignatureVersion2, &out.SignatureVersion2
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(bool)
+			**out = **in
+		}
+	}
+	if in.EncryptSSE != nil {
+		in, out := &in.EncryptSSE, &out.EncryptSSE
 		if *in == nil {
 			*out = nil
 		} else {

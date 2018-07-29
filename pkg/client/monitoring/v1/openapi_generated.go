@@ -2129,10 +2129,17 @@ func schema_pkg_client_monitoring_v1_ThanosGCSSpec(ref common.ReferenceCallback)
 							Format:      "",
 						},
 					},
+					"credentials": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Secret to access our Bucket.",
+							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
+						},
+					},
 				},
 			},
 		},
-		Dependencies: []string{},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.SecretKeySelector"},
 	}
 }
 
@@ -2178,6 +2185,13 @@ func schema_pkg_client_monitoring_v1_ThanosS3Spec(ref common.ReferenceCallback) 
 					"signatureVersion2": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"encryptsse": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Whether to use Server Side Encryption",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
