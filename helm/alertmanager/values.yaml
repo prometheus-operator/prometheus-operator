@@ -134,6 +134,10 @@ replicaCount: 1
 ## The value "" will disable pod anti-affinity so that no anti-affinity rules will be configured.
 podAntiAffinity: "soft"
 
+## Pod anti-affinity topologyKey determines how pods are distributed in the cluster. 
+## The default value "kubernetes.io/hostname" means that pods will be distributed across nodes
+podAntiAffinityTopologyKey: kubernetes.io/hostname
+
 ## Resource limits & requests
 ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
 ##
