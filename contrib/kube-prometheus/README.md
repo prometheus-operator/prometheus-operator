@@ -28,6 +28,10 @@ This stack is meant for cluster monitoring, so it is pre-configured to collect m
     * [Containerized Installing and Compiling](#containerized-installing-and-compiling)
 * [Configuration](#configuration)
 * [Customization](#customization)
+    * [Cluster Creation Tools](cluster-creation-tools)
+    * [NodePorts](nodeports)
+    * [Prometheus Object Name](prometheus-object-name)
+    * [node-exporter DaemonSet namespace](node-exporter-daemonset-namespace)
     * [Alertmanager configuration](#alertmanager-configuration)
     * [Static etcd configuration](#static-etcd-configuration)
     * [Customizing Prometheus alerting/recording rules and Grafana dashboards](#customizing-prometheus-alertingrecording-rules-and-grafana-dashboards)
@@ -223,6 +227,8 @@ The grafana definition is located in a different project (https://github.com/bra
 
 Jsonnet is a turing complete language, any logic can be reflected in it. It also has powerful merge functionalities, allowing sophisticated customizations of any kind simply by merging it into the object the library provides.
 
+### Cluster Creation Tools
+
 A common example is that not all Kubernetes clusters are created exactly the same way, meaning the configuration to monitor them may be slightly different. For [kubeadm](examples/jsonnet-snippets/kubeadm.jsonnet) and [bootkube](examples/jsonnet-snippets/bootkube.jsonnet) and [kops](examples/jsonnet-snippets/kops.jsonnet) clusters there are mixins available to easily configure these:
 
 kubeadm:
@@ -249,6 +255,8 @@ kops:
 (import 'kube-prometheus/kube-prometheus-kops.libsonnet')
 ```
 
+### NodePorts
+
 Another mixin that may be useful for exploring the stack is to expose the UIs of Prometheus, Alertmanager and Grafana on NodePorts:
 
 [embedmd]:# (examples/jsonnet-snippets/node-ports.jsonnet)
@@ -256,6 +264,8 @@ Another mixin that may be useful for exploring the stack is to expose the UIs of
 (import 'kube-prometheus/kube-prometheus.libsonnet') +
 (import 'kube-prometheus/kube-prometheus-node-ports.libsonnet')
 ```
+
+### Prometheus Object Name
 
 To give another customization example, the name of the `Prometheus` object provided by this library can be overridden:
 
@@ -271,6 +281,8 @@ To give another customization example, the name of the `Prometheus` object provi
    },
  }).prometheus.prometheus
 ```
+
+### node-exporter DaemonSet namespace
 
 Standard Kubernetes manifests are all written using [ksonnet-lib](https://github.com/ksonnet/ksonnet-lib/), so they can be modified with the mixins supplied by ksonnet-lib. For example to override the namespace of the node-exporter DaemonSet:
 
