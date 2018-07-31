@@ -76,7 +76,7 @@ $ jb install github.com/coreos/prometheus-operator/contrib/kube-prometheus/jsonn
 
 > `jb` can be installed with `go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb`
 
-You may wish to not use ksonnet and simply render the generated manifests to files on disk, this can be done with:
+You may wish to not use ksonnet and simply render the generated manifests to files on disk, this can be done by running `build.sh` with [example.jsonnet](example.jsonnet):
 
 [embedmd]:# (example.jsonnet)
 ```jsonnet
@@ -99,7 +99,7 @@ This renders all manifests in a json structure of `{filename: manifest-content}`
 
 ### Compiling
 
-To compile the above and get each manifest in a separate file on disk use the following script:
+To compile the above and get each manifest in a separate file on disk use the following [build.sh](build.sh) script (i.e. `./build.sh example.jsonnet`):
 
 [embedmd]:# (build.sh)
 ```sh
@@ -183,7 +183,7 @@ The grafana definition is located in a different project (https://github.com/bra
 
 Jsonnet is a turing complete language, any logic can be reflected in it. It also has powerful merge functionalities, allowing sophisticated customizations of any kind simply by merging it into the object the library provides.
 
-A common example is that not all Kubernetes clusters are created exactly the same way, meaning the configuration to monitor them may be slightly different. For [kubeadm]() and [bootkube]() clusters there are mixins available to easily configure these:
+A common example is that not all Kubernetes clusters are created exactly the same way, meaning the configuration to monitor them may be slightly different. For [kubeadm](examples/jsonnet-snippets/kubeadm.jsonnet) and [bootkube](examples/jsonnet-snippets/bootkube.jsonnet) and [kops](examples/jsonnet-snippets/kops.jsonnet) clusters there are mixins available to easily configure these:
 
 kubeadm:
 
@@ -217,7 +217,7 @@ Another mixin that may be useful for exploring the stack is to expose the UIs of
 (import 'kube-prometheus/kube-prometheus-node-ports.libsonnet')
 ```
 
-For example the name of the `Prometheus` object provided by this library can be overridden:
+To give another customization example, the name of the `Prometheus` object provided by this library can be overridden:
 
 [embedmd]:# (examples/prometheus-name-override.jsonnet)
 ```jsonnet
@@ -331,7 +331,7 @@ See [exposing Prometheus/Alertmanager/Grafana](docs/exposing-prometheus-alertman
 
 ## Minikube Example
 
-To use an easy to reproduce example, let's take the minikube setup as demonstrated in [prerequisites](#Prerequisites). It is a kubeadm cluster (as we use the kubeadm bootstrapper) and because we would like easy access to our Prometheus, Alertmanager and Grafana UI we want the services to be exposed as NodePort type services:
+To use an easy to reproduce example, let's take the minikube setup as demonstrated in [Prerequisites](#prerequisites). It is a kubeadm cluster (as we use the kubeadm bootstrapper) and because we would like easy access to our Prometheus, Alertmanager and Grafana UI we want the services to be exposed as NodePort type services:
 
 > Note that NodePort type services is likely not a good idea for your production use case, it is only used for demonstration purposes here.
 
@@ -362,7 +362,7 @@ local kp =
 
 Should the Prometheus `/targets` page show kubelet targets, but not able to successfully scrape the metrics, then most likely it is a problem with the authentication and authorization setup of the kubelets.
 
-As described in the [prerequisites](#prerequisites) section, in order to retrieve metrics from the kubelet token authentication and authorization must be enabled. Some Kubernetes setup tools do not enable this by default.
+As described in the [Prerequisites](#prerequisites) section, in order to retrieve metrics from the kubelet token authentication and authorization must be enabled. Some Kubernetes setup tools do not enable this by default.
 
 If you are using Google's GKE product, see [docs/GKE-cadvisor-support.md].
 
