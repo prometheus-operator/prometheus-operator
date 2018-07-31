@@ -27,11 +27,13 @@ This stack is meant for cluster monitoring, so it is pre-configured to collect m
 * [Configuration](#configuration)
 * [Customization](#customization)
     * [Alertmanager configuration](#alertmanager-configuration)
+    * [Static etcd configuration](#static-etcd-configuration)
     * [Customizing Prometheus alerting/recording rules and Grafana dashboards](#customizing-prometheus-alertingrecording-rules-and-grafana-dashboards)
     * [Exposing Prometheus/Alermanager/Grafana via Ingress](#exposing-prometheusalermanagergrafana-via-ingress)
 * [Minikube Example](#minikube-example)
 * [Troubleshooting](#troubleshooting)
     * [Error retrieving kubelet metrics](#error-retrieving-kubelet-metrics)
+    * [kube-state-metrics resource usage](#kube-state-metrics-resource-usage)
 
 ## Prerequisites
 
