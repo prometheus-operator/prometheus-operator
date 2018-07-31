@@ -23,7 +23,9 @@ This stack is meant for cluster monitoring, so it is pre-configured to collect m
     * [minikube](#minikube)
 * [Quickstart](#quickstart)
 * [Usage](#usage)
+    * [Installing](#installing)
     * [Compiling](#compiling)
+    * [Containerized Installing and Compiling](#containerized-installing-and-compiling)
 * [Configuration](#configuration)
 * [Customization](#customization)
     * [Alertmanager configuration](#alertmanager-configuration)
@@ -69,19 +71,27 @@ $ kubectl delete -f manifests/ || true
 
 ## Usage
 
+### Installing
+
 The content of this project consists of a set of [jsonnet](http://jsonnet.org/) files making up a library to be consumed.
 
 Install this library in your own project with [jsonnet-bundler](https://github.com/jsonnet-bundler/jsonnet-bundler#install):
-
 ```
 $ mkdir my-kube-prometheus; cd my-kube-prometheus
-$ jb init
-$ jb install github.com/coreos/prometheus-operator/contrib/kube-prometheus/jsonnet/kube-prometheus
+$ jb init  # Creates the initial/empty `jsonnetfile.json`
+$ jb install github.com/coreos/prometheus-operator/contrib/kube-prometheus/jsonnet/kube-prometheus  # Creates `vendor/` & `jsonnetfile.lock.json`, and fills in `jsonnetfile.json`
 ```
 
 > `jb` can be installed with `go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb`
 
-You may wish to not use ksonnet and simply render the generated manifests to files on disk, this can be done by running `build.sh` with [example.jsonnet](example.jsonnet):
+> An e.g. of how to install a given version of this library: `jb install github.com/coreos/prometheus-operator/contrib/kube-prometheus/jsonnet/kube-prometheus/@v0.22.0`
+
+### Compiling
+
+You may wish to not use ksonnet/jsonnet and simply render the generated manifests to files on disk (in which case you still don't need a copy of this entire repository, but rather only a copy of a few select files).
+This can be done e.g. by running `./build.sh example.jsonnet`.
+
+Here's [example.jsonnet](example.jsonnet):
 
 [embedmd]:# (example.jsonnet)
 ```jsonnet
@@ -100,15 +110,14 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
 { ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
 ```
 
-This renders all manifests in a json structure of `{filename: manifest-content}`.
-
-### Compiling
-
-To compile the above and get each manifest in a separate file on disk use the following [build.sh](build.sh) script (i.e. `./build.sh example.jsonnet`):
+And here's the [build.sh](build.sh) script (this renders all manifests in a json structure of `{filename: manifest-content}`):
 
 [embedmd]:# (build.sh)
 ```sh
 #!/usr/bin/env bash
+
+# This script uses arg $1 (name of *.jsonnet file to use) to generate the manifests/*.yaml files.
+
 set -e
 set -x
 # only exit with zero if all commands of the pipeline exit successfully
@@ -123,11 +132,37 @@ jsonnet -J vendor -m manifests "${1-example.jsonnet}" | xargs -I{} sh -c 'cat {}
 
 ```
 
-> Note you need `jsonnet` and `gojsonyaml` (`go get github.com/brancz/gojsontoyaml`) installed. If you just want json output, not yaml, then you can skip the pipe and everything afterwards.
+> Note you need `jsonnet` and `gojsontoyaml` (`go get github.com/brancz/gojsontoyaml`) installed. If you just want json output, not yaml, then you can skip the pipe and everything afterwards.
 
 This script reads each key of the generated json and uses that as the file name, and writes the value of that key to that file.
 
-> You can also run this script executing the command `make generate-raw` from kube-prometheus base directory of this repository but the above option it is recommended so that you run it in your own infrastructure repository.
+### Containerized Installing and Compiling
+
+If you don't care to have `jb` or `jsonnet` or `gojsontoyaml` installed, then build the `po-jsonnet` Docker image (this is something you'll need a copy of this repository for). Do the following from this `kube-prometheus` directory:
+```
+$ make ../../hack/jsonnet-docker-image
+```
+
+Then you can do commands such as the following:
+```
+docker run \
+	--rm \
+	-v `pwd`:`pwd` \
+	--workdir `pwd` \
+	po-jsonnet jb init
+
+docker run \
+	--rm \
+	-v `pwd`:`pwd` \
+	--workdir `pwd` \
+	po-jsonnet jb install github.com/coreos/prometheus-operator/contrib/kube-prometheus/jsonnet/kube-prometheus
+
+docker run \
+	--rm \
+	-v `pwd`:`pwd` \
+	--workdir `pwd` \
+	po-jsonnet ./build.sh example.jsonnet
+```
 
 ## Configuration
 
