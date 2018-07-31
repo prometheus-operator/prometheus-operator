@@ -54,12 +54,17 @@ $ minikube delete && minikube start --kubernetes-version=v1.10.1 --memory=4096 -
 
 ## Quickstart
 
-Although this project is intended to be used as a library, a compiled version of the Kubernetes manifests generated with this library is checked into this repository in order to try the content out quickly.
+This project is intended to be used as a library (i.e. the intent is not for you to create your own customized copy of this repository).
 
-Simply create the stack:
-
+Though a compiled version of the Kubernetes manifests generated with this library is checked into this repository in order to try the content out quickly.
+ * Simply create the stack:
 ```
-$ kubectl create -f manifests/
+$ kubectl create -f manifests/ || true
+$ kubectl create -f manifests/ 2>/dev/null || true  # This command sometimes may need to be done twice
+```
+ * And to teardown the stack:
+```
+$ kubectl delete -f manifests/ || true
 ```
 
 ## Usage
