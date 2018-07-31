@@ -697,14 +697,72 @@ func (c *Operator) enqueue(obj interface{}) {
 	c.queue.Add(key)
 }
 
-// enqueueForNamespace enqueues all Prometheus object keys that belong to the given namespace.
-func (c *Operator) enqueueForNamespace(ns string) {
-	cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
+// enqueueForNamespace enqueues all Prometheus object keys that belong to the
+// given namespace or select objects in the given namespace.
+func (c *Operator) enqueueForNamespace(nsName string) {
+	nsObject, exists, err := c.nsInf.GetStore().GetByKey(nsName)
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "get namespace to enqueue Prometheus instances failed",
+			"err", err,
+		)
+		return
+	}
+
+	if !exists {
+		level.Error(c.logger).Log(
+			"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
+			"err", err,
+		)
+		return
+	}
+
+	ns := nsObject.(*v1.Namespace)
+
+	err = cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
+		// Check for Prometheus instances in the NS
 		p := obj.(*monitoringv1.Prometheus)
-		if p.Namespace == ns {
+		if p.Namespace == ns.Name {
 			c.enqueue(p)
+			return
+		}
+
+		// Check for Prometheus instances selecting ServiceMonitors in the NS
+		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
+				"err", err,
+			)
+			return
+		}
+
+		if smNSSelector.Matches(labels.Set(ns.Labels)) {
+			c.enqueue(p)
+			return
+		}
+
+		// Check for Prometheus instances selecting PrometheusRules in the NS
+		ruleNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("failed to convert RuleNamespaceSelector of %q to selector", p.Name),
+				"err", err,
+			)
+			return
+		}
+
+		if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
+			c.enqueue(p)
+			return
 		}
 	})
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "listing all Prometheus instances from cache failed",
+			"err", err,
+		)
+	}
 }
 
 // worker runs a worker thread that just dequeues items, processes them, and marks them done.
