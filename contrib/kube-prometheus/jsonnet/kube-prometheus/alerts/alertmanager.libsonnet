@@ -11,7 +11,7 @@
               summary: 'Configuration out of sync',
             },
             expr: |||
-              count_values("config_hash", alertmanager_config_hash{%(alertmanagerSelector)s}) BY (service) / ON(service) GROUP_LEFT() label_replace(prometheus_operator_alertmanager_spec_replicas{%(prometheusOperatorSelector)s}, "service", "alertmanager-$1", "alertmanager", "(.*)") != 1
+              count_values("config_hash", alertmanager_config_hash{%(alertmanagerSelector)s}) BY (service, namespace) / ON(service, namespace) GROUP_LEFT() label_replace(prometheus_operator_alertmanager_spec_replicas{%(prometheusOperatorSelector)s}, "service", "alertmanager-$1", "alertmanager", "(.*)") != 1
             ||| % $._config,
             'for': '5m',
             labels: {
@@ -25,7 +25,7 @@
               summary: 'Alertmanager down or missing',
             },
             expr: |||
-              label_replace(prometheus_operator_alertmanager_spec_replicas{%(prometheusOperatorSelector)s}, "job", "alertmanager-$1", "alertmanager", "(.*)") / ON(job) GROUP_RIGHT() sum(up{%(alertmanagerSelector)s}) BY (job) != 1
+              label_replace(prometheus_operator_alertmanager_spec_replicas{%(prometheusOperatorSelector)s}, "job", "alertmanager-$1", "alertmanager", "(.*)") / ON(job, namespace) GROUP_RIGHT() sum(up{%(alertmanagerSelector)s}) BY (job, namespace) != 1
             ||| % $._config,
             'for': '5m',
             labels: {
