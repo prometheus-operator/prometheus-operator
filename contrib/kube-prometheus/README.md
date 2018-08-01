@@ -383,30 +383,9 @@ See [exposing Prometheus/Alertmanager/Grafana](docs/exposing-prometheus-alertman
 
 ## Minikube Example
 
-To use an easy to reproduce example, let's take the minikube setup as demonstrated in [Prerequisites](#prerequisites). It is a kubeadm cluster (as we use the kubeadm bootstrapper) and because we would like easy access to our Prometheus, Alertmanager and Grafana UI we want the services to be exposed as NodePort type services:
+To use an easy to reproduce example, see [minikube.jsonnet](examples/minikube.jsonnet), which uses the minikube setup as demonstrated in [Prerequisites](#prerequisites). Because we would like easy access to our Prometheus, Alertmanager and Grafana UIs, `minikube.jsonnet` exposes the services as NodePort type services.
 
 > Note that NodePort type services is likely not a good idea for your production use case, it is only used for demonstration purposes here.
-
-[embedmd]:# (examples/minikube.jsonnet)
-```jsonnet
-local kp =
-  (import 'kube-prometheus/kube-prometheus.libsonnet') +
-  (import 'kube-prometheus/kube-prometheus-kubeadm.libsonnet') +
-  (import 'kube-prometheus/kube-prometheus-node-ports.libsonnet') +
-  {
-    _config+:: {
-      namespace: 'monitoring',
-    },
-  };
-
-{ ['00namespace-' + name]: kp.kubePrometheus[name] for name in std.objectFields(kp.kubePrometheus) } +
-{ ['0prometheus-operator-' + name]: kp.prometheusOperator[name] for name in std.objectFields(kp.prometheusOperator) } +
-{ ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) } +
-{ ['kube-state-metrics-' + name]: kp.kubeStateMetrics[name] for name in std.objectFields(kp.kubeStateMetrics) } +
-{ ['alertmanager-' + name]: kp.alertmanager[name] for name in std.objectFields(kp.alertmanager) } +
-{ ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
-{ ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
-```
 
 ## Troubleshooting
 
