@@ -126,17 +126,30 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 > match. If you're working from a fork, just add the forked repo as a remote and
 > pull against your local coreos checkout before running tests.
 
-1. Running *unit tests*:
-  1. `make test-unit`
-1. Running *end-to-end* tests on local minikube cluster:
-  1. `minikube start --kubernetes-version=v1.10.0 --memory=4096 --extra-config=apiserver.Authorization.Mode=RBAC`
-  2. `eval $(minikube docker-env) && make image` - build Prometheus Operator docker image on minikube's docker
-  3. `make test-e2e`
-  
+#### Running *unit tests*:
+`make test-unit`
+
+#### Running *end-to-end* tests on local minikube cluster:
+1. `minikube start --kubernetes-version=v1.10.0 --memory=4096
+    --extra-config=apiserver.Authorization.Mode=RBAC`
+2. `eval $(minikube docker-env) && make image` - build Prometheus Operator
+    docker image on minikube's docker
+3. `make test-e2e`
+
+
+## Contributing
+
+Many files (documentation, manifests, ...) in this repository are
+auto-generated. E.g. `bundle.yaml` originates from the _Jsonnet_ files in
+`/jsonnet/prometheus-operator`. Before proposing a pull request:
+
+1. Commit your changes.
+2. Run `make generate-in-docker`.
+3. Commit the generated changes.
 
 
 ## Security
 
-If you found a security vulnerability related to the Prometheus Operator, please
+If you find a security vulnerability related to the Prometheus Operator, please
 do not report it by opening a GitHub issue, but instead please send an e-mail to
 the maintainers of the project found in the [OWNERS](OWNERS) file.

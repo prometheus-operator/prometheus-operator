@@ -1295,7 +1295,10 @@ func TestPrometheusGetBasicAuthSecret(t *testing.T) {
 	}
 	testNamespace := ctx.CreateNamespace(t, framework.KubeClient)
 
-	testFramework.AddLabelsToNamespace(framework.KubeClient, testNamespace, maptest)
+	err := testFramework.AddLabelsToNamespace(framework.KubeClient, testNamespace, maptest)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	simple, err := testFramework.MakeDeployment("../../test/framework/ressources/basic-auth-app-deployment.yaml")
 	if err != nil {
