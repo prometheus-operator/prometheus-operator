@@ -5,7 +5,7 @@ This guide will help you monitor applications in other Namespaces. By default th
 You have to give the list of the Namespaces that you want to be able to monitor.
 This is done in the variable `prometheus.roleSpecificNamespaces`. You usually set this in your `.jsonnet` file when building the manifests.
 
-Ex to create the needed `Role` and `Rolebindig` for the Namespace `foo` : 
+Example to create the needed `Role` and `Rolebindig` for the Namespace `foo` : 
 ```
 local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
   _config+:: {

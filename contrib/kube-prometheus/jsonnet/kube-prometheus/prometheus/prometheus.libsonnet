@@ -56,7 +56,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           groups: $._config.prometheus.rules.groups,
         },
       },
-    roleBindingSpecificNamespace:
+    roleBindingSpecificNamespaces:
       local roleBinding = k.rbac.v1.roleBinding;
 
       local newSpecificRoleBinding(namespace) =   
@@ -122,7 +122,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       clusterRoleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
       clusterRoleBinding.mixin.roleRef.mixinInstance({ kind: 'ClusterRole' }) +
       clusterRoleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]),
-    roleSpecificNamespace:
+    roleSpecificNamespaces:
       local role = k.rbac.v1.role;
       local policyRule = role.rulesType;
       local coreRule = policyRule.new() +
