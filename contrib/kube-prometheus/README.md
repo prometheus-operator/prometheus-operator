@@ -343,35 +343,9 @@ In the above example the configuration has been inlined, but can just as well be
 ```
 ### Static etcd configuration
 
-In order to configure a static etcd cluster to scrape there is a simple mixin prepared, so only the IPs and certificate information need to be configured. Simply append the `kube-prometheus/kube-prometheus-static-etcd.libsonnet` mixin to the rest of the configuration, and configure the `ips` to be the IPs to scrape, and the `clientCA`, `clientKey` and `clientCert` to values that are valid to scrape etcd metrics with.
+In order to configure a static etcd cluster to scrape there is a simple [kube-prometheus-static-etcd.libsonnet](jsonnet/kube-prometheus/kube-prometheus-static-etcd.libsonnet) mixin prepared - see [etcd.jsonnet](examples/etcd.jsonnet) for an example of how to use that mixin, and [Monitoring external etcd](docs/monitoring-external-etcd.md) for more information.
 
-Most likely these certificates are generated somewhere in an infrastructure repository, so using the jsonnet `importstr` function can be useful here. All the sensitive information on the certificates will end up in a Kubernetes Secret.
-
-[embedmd]:# (examples/etcd.jsonnet)
-```jsonnet
-local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') +
-           (import 'kube-prometheus/kube-prometheus-static-etcd.libsonnet') + {
-  _config+:: {
-    namespace: 'monitoring',
-
-    etcd+:: {
-      ips: ['127.0.0.1'],
-      clientCA: importstr 'etcd-client-ca.crt',
-      clientKey: importstr 'etcd-client.key',
-      clientCert: importstr 'etcd-client.crt',
-      serverName: 'etcd.my-cluster.local',
-    },
-  },
-};
-
-{ ['00namespace-' + name]: kp.kubePrometheus[name] for name in std.objectFields(kp.kubePrometheus) } +
-{ ['0prometheus-operator-' + name]: kp.prometheusOperator[name] for name in std.objectFields(kp.prometheusOperator) } +
-{ ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) } +
-{ ['kube-state-metrics-' + name]: kp.kubeStateMetrics[name] for name in std.objectFields(kp.kubeStateMetrics) } +
-{ ['alertmanager-' + name]: kp.alertmanager[name] for name in std.objectFields(kp.alertmanager) } +
-{ ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
-{ ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
-```
+> Note that monitoring etcd in minikube is currently not possible because of how etcd is setup. (minikube's etcd binds to 127.0.0.1:2379 only, and within host networking namespace.)
 
 ### Customizing Prometheus alerting/recording rules and Grafana dashboards
 
@@ -384,8 +358,6 @@ See [exposing Prometheus/Alertmanager/Grafana](docs/exposing-prometheus-alertman
 ## Minikube Example
 
 To use an easy to reproduce example, see [minikube.jsonnet](examples/minikube.jsonnet), which uses the minikube setup as demonstrated in [Prerequisites](#prerequisites). Because we would like easy access to our Prometheus, Alertmanager and Grafana UIs, `minikube.jsonnet` exposes the services as NodePort type services.
-
-> Note that NodePort type services is likely not a good idea for your production use case, it is only used for demonstration purposes here.
 
 ## Troubleshooting
 
