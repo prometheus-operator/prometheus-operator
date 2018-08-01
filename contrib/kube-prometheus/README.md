@@ -53,9 +53,11 @@ $ minikube delete && minikube start --kubernetes-version=v1.10.1 --memory=4096 -
 
 ## Quickstart
 
-Although this project is intended to be used as a library, a compiled version of the Kubernetes manifests generated with this library is checked into this repository in order to try the content out quickly.
+This project is intended to be used as a library, but for a quickstart a compiled version of the Kubernetes manifests generated with this library is checked into this repository.
 
-Simply create the stack:
+For any customization we recommend reading the [Usage](#Usage) section, to understand how to compile this stack using jsonnet.
+
+To try out the stack un-customized run:
 
 ```
 $ kubectl create -f manifests/
@@ -65,17 +67,26 @@ $ kubectl create -f manifests/
 
 The content of this project consists of a set of [jsonnet](http://jsonnet.org/) files making up a library to be consumed.
 
-Install this library in your own project with [jsonnet-bundler](https://github.com/jsonnet-bundler/jsonnet-bundler#install):
+Create a new project, and install kube-prometheus as a library with [jsonnet-bundler](https://github.com/jsonnet-bundler/jsonnet-bundler#install) (the jsonnet package manager):
 
-```
+```bash
+# install jsonnet-bundler, if you haven't already
+$ go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
+# create a directory to hold your jsonnet project
 $ mkdir my-kube-prometheus; cd my-kube-prometheus
+# initialize your new project with jsonnet-bundler
 $ jb init
+# install the kube-prometheus dependency
 $ jb install github.com/coreos/prometheus-operator/contrib/kube-prometheus/jsonnet/kube-prometheus
 ```
 
-> `jb` can be installed with `go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb`
+In order to update the kube-prometheus dependency, simply use the jsonnet-bundler update functionality:
 
-You may wish to not use ksonnet and simply render the generated manifests to files on disk, this can be done with:
+```bash
+$ jb update
+```
+
+Then you need a jsonnet file to execute, which will render all the Kubernetes manifests. The following is what is used to generate the manifests checked in to the `manifests/` directory. For this example it is assumed, that the following content is written into a file called `example.jsonnet` in your project.
 
 [embedmd]:# (example.jsonnet)
 ```jsonnet
@@ -98,7 +109,9 @@ This renders all manifests in a json structure of `{filename: manifest-content}`
 
 ### Compiling
 
-To compile the above and get each manifest in a separate file on disk use the following script:
+To compile the above and get each manifest in a separate file on disk use the following script. It is assumed for this guide, that the content of this script is located in `build.sh` in your project. This script by default runs the `example.jsonnet` file, but it can be overwritten by the first argument passed (for example if you want your jsonnet file to be named `main.jsonnet` instead of `example.jsonnet`, then you would compile everything with `./build.sh main.jsonnet`):
+
+> Note you need `jsonnet` and `gojsonyaml` (`go get github.com/brancz/gojsontoyaml`) installed. If you just want json output, not yaml, then you can skip the pipe and everything afterwards, as mentioned in the comment.
 
 [embedmd]:# (build.sh)
 ```sh
@@ -117,15 +130,13 @@ jsonnet -J vendor -m manifests "${1-example.jsonnet}" | xargs -I{} sh -c 'cat {}
 
 ```
 
-> Note you need `jsonnet` and `gojsonyaml` (`go get github.com/brancz/gojsontoyaml`) installed. If you just want json output, not yaml, then you can skip the pipe and everything afterwards.
-
-This script reads each key of the generated json and uses that as the file name, and writes the value of that key to that file.
-
-> You can also run this script executing the command `make generate-raw` from kube-prometheus base directory of this repository but the above option it is recommended so that you run it in your own infrastructure repository.
+This script runs the jsonnet code, then reads each key of the generated json and uses that as the file name, and writes the value of that key to that file, and converts each json manifest to yaml.
 
 ## Configuration
 
-A hidden `_config` field is located at the top level of the object this library provides. These are the available fields with their respective default values:
+Jsonnet has the concept of hidden fields. These are fields, that are not going to be rendered in a result. This is used to configure the kube-prometheus components in jsonnet. In the example jsonnet code of the above [Usage section](#Usage), you can see an example of this, where the `namespace` is being configured to be `monitoring`. In order to not override the whole object, use the `+::` construct of jsonnet, to merge objects, this way you can override individual settings, but retain all other settings and defaults.
+
+These are the available fields with their respective default values:
 
 ```
 {
@@ -133,10 +144,10 @@ A hidden `_config` field is located at the top level of the object this library 
         namespace: "default",
 
         versions+:: {
-            alertmanager: "v0.14.0",
+            alertmanager: "v0.15.0",
             nodeExporter: "v0.15.2",
-            kubeStateMetrics: "v1.3.0",
-            kubeRbacProxy: "v0.3.0",
+            kubeStateMetrics: "v1.3.1",
+            kubeRbacProxy: "v0.3.1",
             addonResizer: "1.0",
             prometheusOperator: "v0.18.1",
             prometheus: "v2.2.1",
@@ -153,30 +164,61 @@ A hidden `_config` field is located at the top level of the object this library 
         },
 
         prometheus+:: {
+            names: 'k8s',
             replicas: 2,
             rules: {},
         },
 
         alertmanager+:: {
-            config: alertmanagerConfig,
-            replicas: 3,
+          name: 'main',
+          config: |||
+            global:
+              resolve_timeout: 5m
+            route:
+              group_by: ['job']
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 12h
+              receiver: 'null'
+              routes:
+              - match:
+                  alertname: DeadMansSwitch
+                receiver: 'null'
+            receivers:
+            - name: 'null'
+          |||,
+          replicas: 3,
+        },
+
+        kubeStateMetrics+:: {
+          collectors: '',  // empty string gets a default set
+          scrapeInterval: '30s',
+          scrapeTimeout: '30s',
+
+          baseCPU: '100m',
+          baseMemory: '150Mi',
+          cpuPerNode: '2m',
+          memoryPerNode: '30Mi',
         },
 	},
 }
 ```
 
-The grafana definition is located in a different project (https://github.com/brancz/kubernetes-grafana), but needed configuration can be customized from the same file. F.e. to allow anonymous access to grafana, add the `_config` section:
+The grafana definition is located in a different project (https://github.com/brancz/kubernetes-grafana), but needed configuration can be customized from the same top level `_config` field. For example to allow anonymous access to grafana, add the `_config` section:
 
 ```
-      grafana+:: {
-        config: {
-          sections: {
-            "auth.anonymous": {enabled: true},
-          },
+{
+    _config+:: {
+        grafana+:: {
+            config: {
+                sections: {
+                    "auth.anonymous": {enabled: true},
+                },
+            },
         },
-      },
+    },
+}
 ```
-
 
 ## Customization
 
