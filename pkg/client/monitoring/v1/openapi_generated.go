@@ -593,6 +593,13 @@ func schema_pkg_client_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallba
 							Format:      "int32",
 						},
 					},
+					"retention": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Time duration Alertmanager shall retain data for. Default is '120h'.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"storage": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Storage is the definition of how storage will be used by the Alertmanager instances.",
@@ -1210,7 +1217,7 @@ func schema_pkg_client_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback
 					},
 					"retention": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Time duration Prometheus shall retain data for.",
+							Description: "Time duration Prometheus shall retain data for. Default is '24h'.",
 							Type:        []string{"string"},
 							Format:      "",
 						},

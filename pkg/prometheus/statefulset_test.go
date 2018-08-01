@@ -387,3 +387,41 @@ func TestThanosTagAndVersion(t *testing.T) {
 		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 	}
 }
+
+func TestRetention(t *testing.T) {
+	tests := []struct {
+		version              string
+		specRetention        string
+		expectedRetentionArg string
+	}{
+		{"v1.8.2", "", "-storage.local.retention=24h"},
+		{"v1.8.2", "1d", "-storage.local.retention=1d"},
+		{"v2.3.1", "", "--storage.tsdb.retention=24h"},
+		{"v2.3.1", "1d", "--storage.tsdb.retention=1d"},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSet(monitoringv1.Prometheus{
+			Spec: monitoringv1.PrometheusSpec{
+				Version:   test.version,
+				Retention: test.specRetention,
+			},
+		}, "", defaultTestConfig, nil, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		promArgs := sset.Spec.Template.Spec.Containers[0].Args
+		found := false
+		for _, flag := range promArgs {
+			if flag == test.expectedRetentionArg {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			t.Fatalf("expected Prometheus args to contain %v, but got %v", test.expectedRetentionArg, promArgs)
+		}
+	}
+}

@@ -4792,7 +4792,7 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "100 - (avg by (cpu) (irate(node_cpu{job=\"node-exporter\", mode=\"idle\", instance=\"$instance\"}[5m])) * 100)\n",
+                                  "expr": "1 - (avg by (cpu) (irate(node_cpu{job=\"node-exporter\", mode=\"idle\", instance=\"$instance\"}[5m])))\n",
                                   "format": "time_series",
                                   "intervalFactor": 10,
                                   "legendFormat": "{{cpu}}",
@@ -4822,18 +4822,18 @@ items:
                           },
                           "yaxes": [
                               {
-                                  "format": "percent",
+                                  "format": "percentunit",
                                   "label": null,
                                   "logBase": 1,
-                                  "max": 100,
+                                  "max": 1,
                                   "min": 0,
                                   "show": true
                               },
                               {
-                                  "format": "percent",
+                                  "format": "percentunit",
                                   "label": null,
                                   "logBase": 1,
-                                  "max": 100,
+                                  "max": 1,
                                   "min": 0,
                                   "show": true
                               }
@@ -4883,21 +4883,21 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "node_load1{job=\"node-exporter\", instance=\"$instance\"} * 100",
+                                  "expr": "max(node_load1{job=\"node-exporter\", instance=\"$instance\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "load 1m",
                                   "refId": "A"
                               },
                               {
-                                  "expr": "node_load5{job=\"node-exporter\", instance=\"$instance\"} * 100",
+                                  "expr": "max(node_load5{job=\"node-exporter\", instance=\"$instance\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "load 5m",
                                   "refId": "B"
                               },
                               {
-                                  "expr": "node_load15{job=\"node-exporter\", instance=\"$instance\"} * 100",
+                                  "expr": "max(node_load15{job=\"node-exporter\", instance=\"$instance\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "load 15m",
@@ -4927,7 +4927,7 @@ items:
                           },
                           "yaxes": [
                               {
-                                  "format": "percent",
+                                  "format": "percentunit",
                                   "label": null,
                                   "logBase": 1,
                                   "max": null,
@@ -4935,7 +4935,7 @@ items:
                                   "show": true
                               },
                               {
-                                  "format": "percent",
+                                  "format": "percentunit",
                                   "label": null,
                                   "logBase": 1,
                                   "max": null,
@@ -5002,28 +5002,28 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "node_memory_MemTotal{job=\"node-exporter\", instance=\"$instance\"}\n- node_memory_MemFree{job=\"node-exporter\", instance=\"$instance\"}\n- node_memory_Buffers{job=\"node-exporter\", instance=\"$instance\"}\n- node_memory_Cached{job=\"node-exporter\", instance=\"$instance\"}\n",
+                                  "expr": "max(\n  node_memory_MemTotal{job=\"node-exporter\", instance=\"$instance\"}\n  - node_memory_MemFree{job=\"node-exporter\", instance=\"$instance\"}\n  - node_memory_Buffers{job=\"node-exporter\", instance=\"$instance\"}\n  - node_memory_Cached{job=\"node-exporter\", instance=\"$instance\"}\n)\n",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "memory used",
                                   "refId": "A"
                               },
                               {
-                                  "expr": "node_memory_Buffers{job=\"node-exporter\", instance=\"$instance\"}",
+                                  "expr": "max(node_memory_Buffers{job=\"node-exporter\", instance=\"$instance\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "memory buffers",
                                   "refId": "B"
                               },
                               {
-                                  "expr": "node_memory_Cached{job=\"node-exporter\", instance=\"$instance\"}",
+                                  "expr": "max(node_memory_Cached{job=\"node-exporter\", instance=\"$instance\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "memory cached",
                                   "refId": "C"
                               },
                               {
-                                  "expr": "node_memory_MemFree{job=\"node-exporter\", instance=\"$instance\"}",
+                                  "expr": "max(node_memory_MemFree{job=\"node-exporter\", instance=\"$instance\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "memory free",
@@ -5131,7 +5131,7 @@ items:
                           "tableColumn": "",
                           "targets": [
                               {
-                                  "expr": "(\n  node_memory_MemTotal{job=\"node-exporter\", instance=\"$instance\"}\n- node_memory_MemFree{job=\"node-exporter\", instance=\"$instance\"}\n- node_memory_Buffers{job=\"node-exporter\", instance=\"$instance\"}\n- node_memory_Cached{job=\"node-exporter\", instance=\"$instance\"}\n) * 100\n  /\nnode_memory_MemTotal{job=\"node-exporter\", instance=\"$instance\"}\n",
+                                  "expr": "max(\n  (\n    (\n      node_memory_MemTotal{job=\"node-exporter\", instance=\"$instance\"}\n    - node_memory_MemFree{job=\"node-exporter\", instance=\"$instance\"}\n    - node_memory_Buffers{job=\"node-exporter\", instance=\"$instance\"}\n    - node_memory_Cached{job=\"node-exporter\", instance=\"$instance\"}\n    )\n    / node_memory_MemTotal{job=\"node-exporter\", instance=\"$instance\"}\n  ) * 100)\n",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": ""
@@ -5215,21 +5215,21 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum by (instance) (rate(node_disk_bytes_read{job=\"node-exporter\", instance=\"$instance\"}[2m]))",
+                                  "expr": "max(rate(node_disk_bytes_read{job=\"node-exporter\", instance=\"$instance\"}[2m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "read",
                                   "refId": "A"
                               },
                               {
-                                  "expr": "sum by (instance) (rate(node_disk_bytes_written{job=\"node-exporter\", instance=\"$instance\"}[2m]))",
+                                  "expr": "max(rate(node_disk_bytes_written{job=\"node-exporter\", instance=\"$instance\"}[2m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "written",
                                   "refId": "B"
                               },
                               {
-                                  "expr": "sum by (instance) (rate(node_disk_io_time_ms{job=\"node-exporter\",  instance=\"$instance\"}[2m]))",
+                                  "expr": "max(rate(node_disk_io_time_ms{job=\"node-exporter\",  instance=\"$instance\"}[2m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "io time",
@@ -5414,7 +5414,7 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "rate(node_network_receive_bytes{job=\"node-exporter\", instance=\"$instance\", device!\u007e\"lo\"}[5m])",
+                                  "expr": "max(rate(node_network_receive_bytes{job=\"node-exporter\", instance=\"$instance\", device!\u007e\"lo\"}[5m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{device}}",
@@ -5505,7 +5505,7 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "rate(node_network_transmit_bytes{job=\"node-exporter\", instance=\"$instance\", device!\u007e\"lo\"}[5m])",
+                                  "expr": "max(rate(node_network_transmit_bytes{job=\"node-exporter\", instance=\"$instance\", device!\u007e\"lo\"}[5m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{device}}",

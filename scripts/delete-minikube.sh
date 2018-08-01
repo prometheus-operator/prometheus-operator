@@ -11,5 +11,4 @@ set -x
 export KUBECONFIG=$HOME/.kube/config
 
 minikube version
-sudo minikube stop
 sudo minikube delete
