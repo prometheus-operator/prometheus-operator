@@ -1915,12 +1915,12 @@ items:
 
                           ],
                           "spaceLength": 10,
-                          "span": 3,
+                          "span": 2,
                           "stack": false,
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum(kube_pod_container_resource_requests_cpu_cores) / sum(node:node_num_cpu:sum)",
+                                  "expr": ":node_cpu_utilisation:avg1m",
                                   "format": "time_series",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -1930,7 +1930,7 @@ items:
                           "thresholds": "70,80",
                           "timeFrom": null,
                           "timeShift": null,
-                          "title": "CPU Requests Commitment",
+                          "title": "CPU Utilisation",
                           "tooltip": {
                               "shared": true,
                               "sort": 0,
@@ -1999,12 +1999,12 @@ items:
 
                           ],
                           "spaceLength": 10,
-                          "span": 3,
+                          "span": 2,
                           "stack": false,
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum(kube_pod_container_resource_limits_cpu_cores) / sum(node:node_num_cpu:sum)",
+                                  "expr": "sum(kube_pod_container_resource_requests_cpu_cores) / sum(node:node_num_cpu:sum)",
                                   "format": "time_series",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -2014,7 +2014,7 @@ items:
                           "thresholds": "70,80",
                           "timeFrom": null,
                           "timeShift": null,
-                          "title": "CPU Limits Commitment",
+                          "title": "CPU Requests Commitment",
                           "tooltip": {
                               "shared": true,
                               "sort": 0,
@@ -2083,12 +2083,12 @@ items:
 
                           ],
                           "spaceLength": 10,
-                          "span": 3,
+                          "span": 2,
                           "stack": false,
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum(kube_pod_container_resource_requests_memory_bytes) / sum(node_memory_MemTotal)",
+                                  "expr": "sum(kube_pod_container_resource_limits_cpu_cores) / sum(node:node_num_cpu:sum)",
                                   "format": "time_series",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -2098,7 +2098,7 @@ items:
                           "thresholds": "70,80",
                           "timeFrom": null,
                           "timeShift": null,
-                          "title": "Memory Requests Commitment",
+                          "title": "CPU Limits Commitment",
                           "tooltip": {
                               "shared": true,
                               "sort": 0,
@@ -2167,7 +2167,175 @@ items:
 
                           ],
                           "spaceLength": 10,
-                          "span": 3,
+                          "span": 2,
+                          "stack": false,
+                          "steppedLine": false,
+                          "targets": [
+                              {
+                                  "expr": ":node_memory_utilisation:",
+                                  "format": "time_series",
+                                  "instant": true,
+                                  "intervalFactor": 2,
+                                  "refId": "A"
+                              }
+                          ],
+                          "thresholds": "70,80",
+                          "timeFrom": null,
+                          "timeShift": null,
+                          "title": "Memory Utilisation",
+                          "tooltip": {
+                              "shared": true,
+                              "sort": 0,
+                              "value_type": "individual"
+                          },
+                          "type": "singlestat",
+                          "xaxis": {
+                              "buckets": null,
+                              "mode": "time",
+                              "name": null,
+                              "show": true,
+                              "values": [
+
+                              ]
+                          },
+                          "yaxes": [
+                              {
+                                  "format": "short",
+                                  "label": null,
+                                  "logBase": 1,
+                                  "max": null,
+                                  "min": 0,
+                                  "show": true
+                              },
+                              {
+                                  "format": "short",
+                                  "label": null,
+                                  "logBase": 1,
+                                  "max": null,
+                                  "min": null,
+                                  "show": false
+                              }
+                          ]
+                      },
+                      {
+                          "aliasColors": {
+
+                          },
+                          "bars": false,
+                          "dashLength": 10,
+                          "dashes": false,
+                          "datasource": "$datasource",
+                          "fill": 1,
+                          "format": "percentunit",
+                          "id": 4,
+                          "legend": {
+                              "avg": false,
+                              "current": false,
+                              "max": false,
+                              "min": false,
+                              "show": true,
+                              "total": false,
+                              "values": false
+                          },
+                          "lines": true,
+                          "linewidth": 1,
+                          "links": [
+
+                          ],
+                          "nullPointMode": "null as zero",
+                          "percentage": false,
+                          "pointradius": 5,
+                          "points": false,
+                          "renderer": "flot",
+                          "seriesOverrides": [
+
+                          ],
+                          "spaceLength": 10,
+                          "span": 2,
+                          "stack": false,
+                          "steppedLine": false,
+                          "targets": [
+                              {
+                                  "expr": "sum(kube_pod_container_resource_requests_memory_bytes) / sum(node_memory_MemTotal)",
+                                  "format": "time_series",
+                                  "instant": true,
+                                  "intervalFactor": 2,
+                                  "refId": "A"
+                              }
+                          ],
+                          "thresholds": "70,80",
+                          "timeFrom": null,
+                          "timeShift": null,
+                          "title": "Memory Requests Commitment",
+                          "tooltip": {
+                              "shared": true,
+                              "sort": 0,
+                              "value_type": "individual"
+                          },
+                          "type": "singlestat",
+                          "xaxis": {
+                              "buckets": null,
+                              "mode": "time",
+                              "name": null,
+                              "show": true,
+                              "values": [
+
+                              ]
+                          },
+                          "yaxes": [
+                              {
+                                  "format": "short",
+                                  "label": null,
+                                  "logBase": 1,
+                                  "max": null,
+                                  "min": 0,
+                                  "show": true
+                              },
+                              {
+                                  "format": "short",
+                                  "label": null,
+                                  "logBase": 1,
+                                  "max": null,
+                                  "min": null,
+                                  "show": false
+                              }
+                          ]
+                      },
+                      {
+                          "aliasColors": {
+
+                          },
+                          "bars": false,
+                          "dashLength": 10,
+                          "dashes": false,
+                          "datasource": "$datasource",
+                          "fill": 1,
+                          "format": "percentunit",
+                          "id": 5,
+                          "legend": {
+                              "avg": false,
+                              "current": false,
+                              "max": false,
+                              "min": false,
+                              "show": true,
+                              "total": false,
+                              "values": false
+                          },
+                          "lines": true,
+                          "linewidth": 1,
+                          "links": [
+
+                          ],
+                          "nullPointMode": "null as zero",
+                          "percentage": false,
+                          "pointradius": 5,
+                          "points": false,
+                          "renderer": "flot",
+                          "seriesOverrides": [
+
+                          ],
+                          "spaceLength": 10,
+                          "span": 2,
                           "stack": false,
                           "steppedLine": false,
                           "targets": [
@@ -2238,7 +2406,7 @@ items:
                           "dashes": false,
                           "datasource": "$datasource",
                           "fill": 10,
-                          "id": 4,
+                          "id": 6,
                           "legend": {
                               "avg": false,
                               "current": false,
@@ -2336,7 +2504,7 @@ items:
                           "dashes": false,
                           "datasource": "$datasource",
                           "fill": 1,
-                          "id": 5,
+                          "id": 7,
                           "legend": {
                               "avg": false,
                               "current": false,
@@ -2603,7 +2771,7 @@ items:
                           "dashes": false,
                           "datasource": "$datasource",
                           "fill": 10,
-                          "id": 6,
+                          "id": 8,
                           "legend": {
                               "avg": false,
                               "current": false,
@@ -2701,7 +2869,7 @@ items:
                           "dashes": false,
                           "datasource": "$datasource",
                           "fill": 1,
-                          "id": 7,
+                          "id": 9,
                           "legend": {
                               "avg": false,
                               "current": false,
@@ -4792,11 +4960,25 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "1 - (avg by (cpu) (irate(node_cpu{job=\"node-exporter\", mode=\"idle\", instance=\"$instance\"}[5m])))\n",
+                                  "expr": "max(node_load1{job=\"node-exporter\", instance=\"$instance\"})",
                                   "format": "time_series",
-                                  "intervalFactor": 10,
-                                  "legendFormat": "{{cpu}}",
+                                  "intervalFactor": 2,
+                                  "legendFormat": "load 1m",
                                   "refId": "A"
+                              },
+                              {
+                                  "expr": "max(node_load5{job=\"node-exporter\", instance=\"$instance\"})",
+                                  "format": "time_series",
+                                  "intervalFactor": 2,
+                                  "legendFormat": "load 5m",
+                                  "refId": "B"
+                              },
+                              {
+                                  "expr": "max(node_load15{job=\"node-exporter\", instance=\"$instance\"})",
+                                  "format": "time_series",
+                                  "intervalFactor": 2,
+                                  "legendFormat": "load 15m",
+                                  "refId": "C"
                               }
                           ],
                           "thresholds": [
@@ -4804,7 +4986,7 @@ items:
                           ],
                           "timeFrom": null,
                           "timeShift": null,
-                          "title": "Idle CPU",
+                          "title": "System load",
                           "tooltip": {
                               "shared": true,
                               "sort": 0,
@@ -4825,16 +5007,16 @@ items:
                                   "format": "percentunit",
                                   "label": null,
                                   "logBase": 1,
-                                  "max": 1,
-                                  "min": 0,
+                                  "max": null,
+                                  "min": null,
                                   "show": true
                               },
                               {
                                   "format": "percentunit",
                                   "label": null,
                                   "logBase": 1,
-                                  "max": 1,
-                                  "min": 0,
+                                  "max": null,
+                                  "min": null,
                                   "show": true
                               }
                           ]
@@ -4883,25 +5065,11 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "max(node_load1{job=\"node-exporter\", instance=\"$instance\"})",
+                                  "expr": "avg by (cpu) (irate(node_cpu{job=\"node-exporter\", mode!=\"idle\", instance=\"$instance\"}[5m])) * 100",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": "load 1m",
+                                  "legendFormat": "{{cpu}}",
                                   "refId": "A"
-                              },
-                              {
-                                  "expr": "max(node_load5{job=\"node-exporter\", instance=\"$instance\"})",
-                                  "format": "time_series",
-                                  "intervalFactor": 2,
-                                  "legendFormat": "load 5m",
-                                  "refId": "B"
-                              },
-                              {
-                                  "expr": "max(node_load15{job=\"node-exporter\", instance=\"$instance\"})",
-                                  "format": "time_series",
-                                  "intervalFactor": 2,
-                                  "legendFormat": "load 15m",
-                                  "refId": "C"
                               }
                           ],
                           "thresholds": [
@@ -4971,6 +5139,191 @@ items:
 
                           },
                           "id": 4,
+                          "legend": {
+                              "alignAsTable": "true",
+                              "avg": "true",
+                              "current": "true",
+                              "max": "false",
+                              "min": "false",
+                              "rightSide": "true",
+                              "show": "true",
+                              "total": "false",
+                              "values": "true"
+                          },
+                          "lines": true,
+                          "linewidth": 1,
+                          "links": [
+
+                          ],
+                          "nullPointMode": "null",
+                          "percentage": false,
+                          "pointradius": 5,
+                          "points": false,
+                          "renderer": "flot",
+                          "repeat": null,
+                          "seriesOverrides": [
+
+                          ],
+                          "spaceLength": 10,
+                          "span": 6,
+                          "stack": false,
+                          "steppedLine": false,
+                          "targets": [
+                              {
+                                  "expr": "avg (sum by (cpu) (irate(node_cpu{job=\"node-exporter\", mode!=\"idle\", instance=\"$instance\"}[2m])) ) * 100\n",
+                                  "format": "time_series",
+                                  "intervalFactor": 10,
+                                  "legendFormat": "{{ cpu }}",
+                                  "refId": "A"
+                              }
+                          ],
+                          "thresholds": [
+
+                          ],
+                          "timeFrom": null,
+                          "timeShift": null,
+                          "title": "CPU Utilizaion",
+                          "tooltip": {
+                              "shared": true,
+                              "sort": 0,
+                              "value_type": "individual"
+                          },
+                          "type": "graph",
+                          "xaxis": {
+                              "buckets": null,
+                              "mode": "time",
+                              "name": null,
+                              "show": true,
+                              "values": [
+
+                              ]
+                          },
+                          "yaxes": [
+                              {
+                                  "format": "percent",
+                                  "label": null,
+                                  "logBase": 1,
+                                  "max": 100,
+                                  "min": 0,
+                                  "show": true
+                              },
+                              {
+                                  "format": "percent",
+                                  "label": null,
+                                  "logBase": 1,
+                                  "max": 100,
+                                  "min": 0,
+                                  "show": true
+                              }
+                          ]
+                      },
+                      {
+                          "cacheTimeout": null,
+                          "colorBackground": false,
+                          "colorValue": false,
+                          "colors": [
+                              "rgba(50, 172, 45, 0.97)",
+                              "rgba(237, 129, 40, 0.89)",
+                              "rgba(245, 54, 54, 0.9)"
+                          ],
+                          "datasource": "$datasource",
+                          "format": "percent",
+                          "gauge": {
+                              "maxValue": 100,
+                              "minValue": 0,
+                              "show": true,
+                              "thresholdLabels": false,
+                              "thresholdMarkers": true
+                          },
+                          "gridPos": {
+
+                          },
+                          "id": 5,
+                          "interval": null,
+                          "links": [
+
+                          ],
+                          "mappingType": 1,
+                          "mappingTypes": [
+                              {
+                                  "name": "value to text",
+                                  "value": 1
+                              },
+                              {
+                                  "name": "range to text",
+                                  "value": 2
+                              }
+                          ],
+                          "maxDataPoints": 100,
+                          "nullPointMode": "connected",
+                          "nullText": null,
+                          "postfix": "",
+                          "postfixFontSize": "50%",
+                          "prefix": "",
+                          "prefixFontSize": "50%",
+                          "rangeMaps": [
+                              {
+                                  "from": "null",
+                                  "text": "N/A",
+                                  "to": "null"
+                              }
+                          ],
+                          "span": 3,
+                          "sparkline": {
+                              "fillColor": "rgba(31, 118, 189, 0.18)",
+                              "full": false,
+                              "lineColor": "rgb(31, 120, 193)",
+                              "show": false
+                          },
+                          "tableColumn": "",
+                          "targets": [
+                              {
+                                  "expr": "avg(sum by (cpu) (irate(node_cpu{job=\"node-exporter\", mode!=\"idle\", instance=\"$instance\"}[2m]))) * 100\n",
+                                  "format": "time_series",
+                                  "intervalFactor": 2,
+                                  "legendFormat": ""
+                              }
+                          ],
+                          "thresholds": "80, 90",
+                          "title": "CPU Usage",
+                          "type": "singlestat",
+                          "valueFontSize": "80%",
+                          "valueMaps": [
+                              {
+                                  "op": "=",
+                                  "text": "N/A",
+                                  "value": "null"
+                              }
+                          ],
+                          "valueName": "current"
+                      }
+                  ],
+                  "repeat": null,
+                  "repeatIteration": null,
+                  "repeatRowId": null,
+                  "showTitle": false,
+                  "title": "Dashboard Row",
+                  "titleSize": "h6",
+                  "type": "row"
+              },
+              {
+                  "collapse": false,
+                  "collapsed": false,
+                  "height": "250px",
+                  "panels": [
+                      {
+                          "aliasColors": {
+
+                          },
+                          "bars": false,
+                          "dashLength": 10,
+                          "dashes": false,
+                          "datasource": "$datasource",
+                          "fill": 1,
+                          "gridPos": {
+
+                          },
+                          "id": 6,
                           "legend": {
                               "alignAsTable": false,
                               "avg": false,
@@ -5091,7 +5444,7 @@ items:
                           "gridPos": {
 
                           },
-                          "id": 5,
+                          "id": 7,
                           "interval": null,
                           "links": [
 
@@ -5176,7 +5529,7 @@ items:
                           "gridPos": {
 
                           },
-                          "id": 6,
+                          "id": 8,
                           "legend": {
                               "alignAsTable": false,
                               "avg": false,
@@ -5297,7 +5650,7 @@ items:
                           "gridPos": {
 
                           },
-                          "id": 7,
+                          "id": 9,
                           "interval": null,
                           "links": [
 
@@ -5382,7 +5735,7 @@ items:
                           "gridPos": {
 
                           },
-                          "id": 8,
+                          "id": 10,
                           "legend": {
                               "alignAsTable": false,
                               "avg": false,
@@ -5473,7 +5826,7 @@ items:
                           "gridPos": {
 
                           },
-                          "id": 9,
+                          "id": 11,
                           "legend": {
                               "alignAsTable": false,
                               "avg": false,
