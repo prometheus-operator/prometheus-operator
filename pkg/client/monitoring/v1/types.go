@@ -78,7 +78,7 @@ type PrometheusSpec struct {
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Number of instances to deploy for a Prometheus deployment.
 	Replicas *int32 `json:"replicas,omitempty"`
-	// Time duration Prometheus shall retain data for.
+	// Time duration Prometheus shall retain data for. Default is '24h'.
 	Retention string `json:"retention,omitempty"`
 	// Log level for Prometheus to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
@@ -606,6 +606,8 @@ type AlertmanagerSpec struct {
 	// eventually make the size of the running cluster equal to the expected
 	// size.
 	Replicas *int32 `json:"replicas,omitempty"`
+	// Time duration Alertmanager shall retain data for. Default is '120h'.
+	Retention string `json:"retention,omitempty"`
 	// Storage is the definition of how storage will be used by the Alertmanager
 	// instances.
 	Storage *StorageSpec `json:"storage,omitempty"`

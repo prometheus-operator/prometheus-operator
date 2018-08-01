@@ -413,6 +413,41 @@ func TestTagAndVersion(t *testing.T) {
 	}
 }
 
+func TestRetention(t *testing.T) {
+	tests := []struct {
+		specRetention     string
+		expectedRetention string
+	}{
+		{"", "120h"},
+		{"1d", "1d"},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+			Spec: monitoringv1.AlertmanagerSpec{
+				Retention: test.specRetention,
+			},
+		}, nil, defaultTestConfig)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		amArgs := sset.Spec.Template.Spec.Containers[0].Args
+		expectedRetentionArg := fmt.Sprintf("--data.retention=%s", test.expectedRetention)
+		found := false
+		for _, flag := range amArgs {
+			if flag == expectedRetentionArg {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			t.Fatalf("expected Alertmanager args to contain %v, but got %v", expectedRetentionArg, amArgs)
+		}
+	}
+}
+
 func sliceContains(slice []string, match string) bool {
 	contains := false
 	for _, s := range slice {
