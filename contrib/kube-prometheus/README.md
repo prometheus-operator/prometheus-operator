@@ -22,12 +22,12 @@ This stack is meant for cluster monitoring, so it is pre-configured to collect m
 * [Prerequisites](#prerequisites)
     * [minikube](#minikube)
 * [Quickstart](#quickstart)
-* [Usage](#usage)
+* [Customizing Kube-Prometheus](#customizing-kube-prometheus)
     * [Installing](#installing)
     * [Compiling](#compiling)
     * [Containerized Installing and Compiling](#containerized-installing-and-compiling)
 * [Configuration](#configuration)
-* [Customization](#customization)
+* [Customization Examples](#customization-examples)
     * [Cluster Creation Tools](#cluster-creation-tools)
     * [NodePorts](#nodeports)
     * [Prometheus Object Name](#prometheus-object-name)
@@ -61,9 +61,9 @@ $ minikube delete && minikube start --kubernetes-version=v1.10.1 --memory=4096 -
 
 ## Quickstart
 
-This project is intended to be used as a library (i.e. the intent is not for you to create your own customized copy of this repository).
+This project is intended to be used as a library (i.e. the intent is not for you to create your own modified copy of this repository).
 
-Though a compiled version of the Kubernetes manifests generated with this library is checked into this repository in order to try the content out quickly.
+Though for a quickstart a compiled version of the Kubernetes manifests generated with this library (specifically with `example.jsonnet`) is checked into this repository in order to try the content out quickly. To try out the stack un-customized run:
  * Simply create the stack:
 ```
 $ kubectl create -f manifests/ || true
@@ -74,22 +74,28 @@ $ kubectl create -f manifests/ 2>/dev/null || true  # This command sometimes may
 $ kubectl delete -f manifests/ || true
 ```
 
-## Usage
+## Customizing Kube-Prometheus
+
+This section describes how to customize the kube-prometheus library.
 
 ### Installing
 
 The content of this project consists of a set of [jsonnet](http://jsonnet.org/) files making up a library to be consumed.
 
-Install this library in your own project with [jsonnet-bundler](https://github.com/jsonnet-bundler/jsonnet-bundler#install):
+Install this library in your own project with [jsonnet-bundler](https://github.com/jsonnet-bundler/jsonnet-bundler#install) (the jsonnet package manager):
 ```
 $ mkdir my-kube-prometheus; cd my-kube-prometheus
 $ jb init  # Creates the initial/empty `jsonnetfile.json`
+# Install the kube-prometheus dependency
 $ jb install github.com/coreos/prometheus-operator/contrib/kube-prometheus/jsonnet/kube-prometheus  # Creates `vendor/` & `jsonnetfile.lock.json`, and fills in `jsonnetfile.json`
 ```
 
 > `jb` can be installed with `go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb`
 
 > An e.g. of how to install a given version of this library: `jb install github.com/coreos/prometheus-operator/contrib/kube-prometheus/jsonnet/kube-prometheus/@v0.22.0`
+
+In order to update the kube-prometheus dependency, simply use the jsonnet-bundler update functionality:
+`$ jb update`
 
 ### Compiling
 
@@ -137,9 +143,9 @@ jsonnet -J vendor -m manifests "${1-example.jsonnet}" | xargs -I{} sh -c 'cat {}
 
 ```
 
-> Note you need `jsonnet` (`go get github.com/google/go-jsonnet/jsonnet`) and `gojsontoyaml` (`go get github.com/brancz/gojsontoyaml`) installed. If you just want json output, not yaml, then you can skip the pipe and everything afterwards.
+> Note you need `jsonnet` (`go get github.com/google/go-jsonnet/jsonnet`) and `gojsontoyaml` (`go get github.com/brancz/gojsontoyaml`) installed to run `build.sh`. If you just want json output, not yaml, then you can skip the pipe and everything afterwards.
 
-This script reads each key of the generated json and uses that as the file name, and writes the value of that key to that file.
+This script runs the jsonnet code, then reads each key of the generated json and uses that as the file name, and writes the value of that key to that file, and converts each json manifest to yaml.
 
 ### Containerized Installing and Compiling
 
@@ -171,48 +177,76 @@ docker run \
 
 ## Configuration
 
-A hidden `_config` field is located at the top level of the object this library provides. These are the available fields with their respective default values:
+Jsonnet has the concept of hidden fields. These are fields, that are not going to be rendered in a result. This is used to configure the kube-prometheus components in jsonnet. In the example jsonnet code of the above [Usage section](#Usage), you can see an example of this, where the `namespace` is being configured to be `monitoring`. In order to not override the whole object, use the `+::` construct of jsonnet, to merge objects, this way you can override individual settings, but retain all other settings and defaults.
 
+These are the available fields with their respective default values:
 ```
 {
 	_config+:: {
-        namespace: "default",
+    namespace: "default",
 
-        versions+:: {
-            alertmanager: "v0.14.0",
-            nodeExporter: "v0.15.2",
-            kubeStateMetrics: "v1.3.0",
-            kubeRbacProxy: "v0.3.0",
-            addonResizer: "1.0",
-            prometheusOperator: "v0.18.1",
-            prometheus: "v2.2.1",
-        },
+    versions+:: {
+        alertmanager: "v0.15.0",
+        nodeExporter: "v0.15.2",
+        kubeStateMetrics: "v1.3.1",
+        kubeRbacProxy: "v0.3.1",
+        addonResizer: "1.0",
+        prometheusOperator: "v0.18.1",
+        prometheus: "v2.2.1",
+    },
 
-        imageRepos+:: {
-            prometheus: "quay.io/prometheus/prometheus",
-            alertmanager: "quay.io/prometheus/alertmanager",
-            kubeStateMetrics: "quay.io/coreos/kube-state-metrics",
-            kubeRbacProxy: "quay.io/coreos/kube-rbac-proxy",
-            addonResizer: "quay.io/coreos/addon-resizer",
-            nodeExporter: "quay.io/prometheus/node-exporter",
-            prometheusOperator: "quay.io/coreos/prometheus-operator",
-        },
+    imageRepos+:: {
+        prometheus: "quay.io/prometheus/prometheus",
+        alertmanager: "quay.io/prometheus/alertmanager",
+        kubeStateMetrics: "quay.io/coreos/kube-state-metrics",
+        kubeRbacProxy: "quay.io/coreos/kube-rbac-proxy",
+        addonResizer: "quay.io/coreos/addon-resizer",
+        nodeExporter: "quay.io/prometheus/node-exporter",
+        prometheusOperator: "quay.io/coreos/prometheus-operator",
+    },
 
-        prometheus+:: {
-            replicas: 2,
-            rules: {},
-        },
+    prometheus+:: {
+        names: 'k8s',
+        replicas: 2,
+        rules: {},
+    },
 
-        alertmanager+:: {
-            config: alertmanagerConfig,
-            replicas: 3,
-        },
+    alertmanager+:: {
+      name: 'main',
+      config: |||
+        global:
+          resolve_timeout: 5m
+        route:
+          group_by: ['job']
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 12h
+          receiver: 'null'
+          routes:
+          - match:
+              alertname: DeadMansSwitch
+            receiver: 'null'
+        receivers:
+        - name: 'null'
+      |||,
+      replicas: 3,
+    },
+
+    kubeStateMetrics+:: {
+      collectors: '',  // empty string gets a default set
+      scrapeInterval: '30s',
+      scrapeTimeout: '30s',
+
+      baseCPU: '100m',
+      baseMemory: '150Mi',
+      cpuPerNode: '2m',
+      memoryPerNode: '30Mi',
+    },
 	},
 }
 ```
 
-The grafana definition is located in a different project (https://github.com/brancz/kubernetes-grafana), but needed configuration can be customized from the same file. F.e. to allow anonymous access to grafana, add the `_config` section:
-
+The grafana definition is located in a different project (https://github.com/brancz/kubernetes-grafana), but needed configuration can be customized from the same top level `_config` field. For example to allow anonymous access to grafana, add the following `_config` section:
 ```
       grafana+:: {
         config: {
@@ -223,8 +257,7 @@ The grafana definition is located in a different project (https://github.com/bra
       },
 ```
 
-
-## Customization
+## Customization Examples
 
 Jsonnet is a turing complete language, any logic can be reflected in it. It also has powerful merge functionalities, allowing sophisticated customizations of any kind simply by merging it into the object the library provides.
 
