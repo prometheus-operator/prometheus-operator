@@ -32,6 +32,7 @@ This stack is meant for cluster monitoring, so it is pre-configured to collect m
 * [Minikube Example](#minikube-example)
 * [Troubleshooting](#troubleshooting)
     * [Error retrieving kubelet metrics](#error-retrieving-kubelet-metrics)
+* [Contributing](#contributing)
 
 ## Prerequisites
 
@@ -391,3 +392,15 @@ config. They default to:
       memoryPerNode: '30Mi',
     }
 ```
+
+## Contributing
+
+All `.yaml` files in the `/manifests` folder are generated via
+[Jsonnet](https://jsonnet.org/). Contributing changes will most likely include
+the following process:
+
+1. Make your changes in the respective `*.jsonnet` file.
+2. Commit your changes (This is currently necessary due to our vendoring
+   process. This is likely to change in the future).
+3. Generate dependent `*.yaml` files: `make generate-in-docker`.
+4. Commit the generated changes.
