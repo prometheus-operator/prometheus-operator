@@ -167,6 +167,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           baseImage: $._config.imageRepos.prometheus,
           serviceAccountName: 'prometheus-' + $._config.prometheus.name,
           serviceMonitorSelector: selector.withMatchExpressions({ key: 'k8s-app', operator: 'Exists' }),
+          serviceMonitorNamespaceSelector: selector.withMatchExpressions({ key: 'prometheus', operator: 'In', values: ['yes', 'true'] }),
           nodeSelector: { 'beta.kubernetes.io/os': 'linux' },
           ruleSelector: selector.withMatchLabels({
             role: 'alert-rules',
