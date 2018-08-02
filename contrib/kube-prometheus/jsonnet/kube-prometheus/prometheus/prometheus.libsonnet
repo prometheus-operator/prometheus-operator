@@ -66,7 +66,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         roleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
         roleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
         roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
-        roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: namespace }]);
+        roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]);
         
       local roleBindigList = k.rbac.v1.roleBindingList;
       roleBindigList.new([newSpecificRoleBinding(x) for x in $._config.prometheus.namespaces]),
