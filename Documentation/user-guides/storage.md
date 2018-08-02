@@ -37,17 +37,13 @@ kind: Prometheus
 metadata:
   name: persisted
 spec:
-  replicas: 1
-  resources:
   storage:
     volumeClaimTemplate:
-      metadata:
-        annotations:
-          annotation1: foo
       spec:
+        storageClassName: ssd
         resources:
           requests:
-            storage: 1Gi
+            storage: 40Gi
 ```
 
 > The full documentation of the `storage` field can be found in the [API documentation][api-doc].
