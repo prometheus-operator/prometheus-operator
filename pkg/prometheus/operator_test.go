@@ -29,23 +29,23 @@ func TestListOptions(t *testing.T) {
 	}
 }
 
-func TestCreateStatefulSetChecksum(t *testing.T) {
+func TestCreateStatefulSetInputHash(t *testing.T) {
 	p1 := monitoringv1.Prometheus{}
 	p1.Spec.Version = "v1.7.0"
 	p2 := monitoringv1.Prometheus{}
 	p2.Spec.Version = "v1.7.2"
 	c := Config{}
 
-	p1Checksum, err := createSSetInputChecksum(p1, c, []string{})
+	p1Hash, err := createSSetInputHash(p1, c, []string{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	p2Checksum, err := createSSetInputChecksum(p2, c, []string{})
+	p2Hash, err := createSSetInputHash(p2, c, []string{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if p1Checksum == p2Checksum {
-		t.Fatal("expected two different Prometheus CRDs to result in two different checksums but got equal checksums")
+	if p1Hash == p2Hash {
+		t.Fatal("expected two different Prometheus CRDs to result in two different hash but got equal hash")
 	}
 }

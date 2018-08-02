@@ -16,7 +16,6 @@ package e2e
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"testing"
@@ -277,12 +276,9 @@ receivers:
 	}
 
 	firstExpectedString := "firstConfigWebHook"
-	log.Println("waiting for first expected config")
 	if err := framework.WaitForAlertmanagerConfigToContainString(ns, alertmanager.Name, firstExpectedString); err != nil {
-		t.Fatal(err)
+		t.Fatal(errors.Wrap(err, "failed to wait for first expected config"))
 	}
-	log.Println("first expected config found")
-
 	cfg.Data["alertmanager.yaml"] = []byte(secondConfig)
 
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(cfg); err != nil {
@@ -291,11 +287,9 @@ receivers:
 
 	secondExpectedString := "secondConfigWebHook"
 
-	log.Println("waiting for second expected config")
 	if err := framework.WaitForAlertmanagerConfigToContainString(ns, alertmanager.Name, secondExpectedString); err != nil {
-		t.Fatal(err)
+		t.Fatal(errors.Wrap(err, "failed to wait for second expected config"))
 	}
-	log.Println("second expected config found")
 }
 
 func TestAlertmanagerZeroDowntimeRollingDeployment(t *testing.T) {

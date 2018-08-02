@@ -31,7 +31,7 @@ import (
 )
 
 func main() {
-	var ruleConfigMapName = flag.String("rule-config-map", "", "path to rule config map")
+	var ruleConfigMapName = flag.String("rule-config-map", "", "path to rule ConfigMap")
 	var ruleCRDSDestination = flag.String("rule-crds-destination", "", "destination new crds should be created in")
 	flag.Parse()
 
@@ -67,7 +67,7 @@ func main() {
 
 	ruleFiles, err := prometheus.CMToRule(&configMap)
 	if err != nil {
-		log.Fatalf("failed to transform config map to rule file crds: %v", err.Error())
+		log.Fatalf("failed to transform ConfigMap to rule file crds: %v", err.Error())
 	}
 
 	for _, ruleFile := range ruleFiles {

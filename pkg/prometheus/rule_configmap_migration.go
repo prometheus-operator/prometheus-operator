@@ -105,10 +105,10 @@ func (c *Operator) getRuleCMs(ns string, cmLabelSelector *metav1.LabelSelector) 
 	}
 
 	// If a user sets the RuleSelector property of a Prometheus custom resource
-	// to an empty object (`{}`), all config maps in that namespace will be
-	// selected for migration, including the Prometheus config map used to mount
+	// to an empty object (`{}`), all ConfigMaps in that namespace will be
+	// selected for migration, including the Prometheus ConfigMap used to mount
 	// all PrometheusRules into the Prometheus statefulset. The following filters
-	// this config map out.
+	// this ConfigMap out.
 	cmsNotGeneratedByPO := []*v1.ConfigMap{}
 	for _, cm := range configMaps {
 		migrate := true
@@ -127,7 +127,7 @@ func (c *Operator) getRuleCMs(ns string, cmLabelSelector *metav1.LabelSelector) 
 	return cmsNotGeneratedByPO, nil
 }
 
-// CMToRule takes a rule config map and transforms it to possibly multiple
+// CMToRule takes a rule ConfigMap and transforms it to possibly multiple
 // rule file crds. It is used in `cmd/po-rule-cm-to-rule-file-crds`. Thereby it
 // needs to be public.
 func CMToRule(cm *v1.ConfigMap) ([]monitoringv1.PrometheusRule, error) {

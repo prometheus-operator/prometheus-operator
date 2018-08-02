@@ -44,7 +44,7 @@ func (f *Framework) WaitForConfigMapExist(ns, name string) (*v1.ConfigMap, error
 		return true, nil
 	})
 
-	return configMap, errors.Wrapf(err, "waiting for config map '%v' in namespace '%v'", name, ns)
+	return configMap, errors.Wrapf(err, "waiting for ConfigMap '%v' in namespace '%v'", name, ns)
 }
 
 func (f *Framework) WaitForConfigMapNotExist(ns, name string) error {
@@ -65,5 +65,5 @@ func (f *Framework) WaitForConfigMapNotExist(ns, name string) error {
 		return false, nil
 	})
 
-	return errors.Wrapf(err, "waiting for config map '%v' in namespace '%v' to not exist", name, ns)
+	return errors.Wrapf(err, "waiting for ConfigMap '%v' in namespace '%v' to not exist", name, ns)
 }
