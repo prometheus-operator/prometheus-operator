@@ -29,7 +29,7 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("ShouldSplitUpLargeSmallIntoTwo", shouldSplitUpLargeSmallIntoTwo)
 }
 
-// makeRulesConfigMaps should return at least one config map even if it is empty
+// makeRulesConfigMaps should return at least one ConfigMap even if it is empty
 // when there are no rules. Otherwise adding a rule to a Prometheus without rules
 // would change the statefulset definition and thereby force Prometheus to
 // restart.
@@ -43,12 +43,12 @@ func shouldReturnAtLeastOneConfigMap(t *testing.T) {
 	}
 
 	if len(configMaps) != 1 {
-		t.Fatalf("expected one config maps but got %v", len(configMaps))
+		t.Fatalf("expected one ConfigMaps but got %v", len(configMaps))
 	}
 }
 
 func shouldErrorOnTooLargeRuleFile(t *testing.T) {
-	expectedError := "rule file 'my-rule-file' is too large for a single Kubernetes config map"
+	expectedError := "rule file 'my-rule-file' is too large for a single Kubernetes ConfigMap"
 	p := &monitoringv1.Prometheus{}
 	ruleFiles := map[string]string{}
 
@@ -73,46 +73,11 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 	}
 
 	if len(configMaps) != 2 {
-		t.Fatalf("expected rule files to be split up into two config maps, but got '%v' instead", len(configMaps))
+		t.Fatalf("expected rule files to be split up into two ConfigMaps, but got '%v' instead", len(configMaps))
 	}
 
 	if configMaps[0].Data["my-rule-file-1"] != ruleFiles["my-rule-file-1"] &&
 		configMaps[1].Data["my-rule-file-2"] != ruleFiles["my-rule-file-2"] {
-		t.Fatal("expected config map data to match rule file content")
-	}
-}
-
-func TestChecksumConfigMaps(t *testing.T) {
-	configMapsAsc := []v1.ConfigMap{
-		{
-			Data: map[string]string{
-				"key1a": "value1a",
-				"key1b": "value1b",
-			},
-		},
-		{
-			Data: map[string]string{
-				"key2a": "value2a",
-				"key2b": "value2b",
-			},
-		},
-	}
-	configMapsDesc := []v1.ConfigMap{
-		{
-			Data: map[string]string{
-				"key2b": "value2b",
-				"key2a": "value2a",
-			},
-		},
-		{
-			Data: map[string]string{
-				"key1b": "value1b",
-				"key1a": "value1a",
-			},
-		},
-	}
-
-	if checksumConfigMaps(configMapsAsc) != checksumConfigMaps(configMapsDesc) {
-		t.Fatal("expected two config map slices with the same keys and values in different order to have same checksum")
+		t.Fatal("expected ConfigMap data to match rule file content")
 	}
 }

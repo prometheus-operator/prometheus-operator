@@ -311,6 +311,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:0de0f377aeccd41384e883c59c6f184c9db01c96db33a2724a1eaadd60f92629"
+  name = "github.com/mitchellh/hashstructure"
+  packages = ["."]
+  pruneopts = ""
+  revision = "2bca23e0e452137f789efbc8610126fd8b94f73b"
+
+[[projects]]
   digest = "1:0c0ff2a89c1bb0d01887e1dac043ad7efbf3ec77482ef058ac423d13497e16fd"
   name = "github.com/modern-go/concurrent"
   packages = ["."]
@@ -714,6 +722,7 @@
     "github.com/hashicorp/go-version",
     "github.com/improbable-eng/thanos/pkg/reloader",
     "github.com/kylelemons/godebug/pretty",
+    "github.com/mitchellh/hashstructure",
     "github.com/oklog/run",
     "github.com/pkg/errors",
     "github.com/prometheus/client_golang/prometheus",

@@ -16,8 +16,6 @@ package prometheus
 
 import (
 	"bytes"
-	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -29,6 +27,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/mitchellh/hashstructure"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1beta2"
@@ -930,14 +929,14 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "retrieving statefulset failed")
 	}
 
-	newSSetInputChecksum, err := createSSetInputChecksum(*p, c.config, ruleConfigMapNames)
+	newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames)
 	if err != nil {
 		return err
 	}
 
 	if !exists {
 		level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
-		sset, err := makeStatefulSet(*p, "", &c.config, ruleConfigMapNames, newSSetInputChecksum)
+		sset, err := makeStatefulSet(*p, "", &c.config, ruleConfigMapNames, newSSetInputHash)
 		if err != nil {
 			return errors.Wrap(err, "making statefulset failed")
 		}
@@ -949,13 +948,13 @@ func (c *Operator) sync(key string) error {
 		return nil
 	}
 
-	oldSSetInputChecksum := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputChecksumName]
-	if newSSetInputChecksum == oldSSetInputChecksum {
+	oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
+	if newSSetInputHash == oldSSetInputHash {
 		level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
 
-	sset, err := makeStatefulSet(*p, obj.(*appsv1.StatefulSet).Spec.PodManagementPolicy, &c.config, ruleConfigMapNames, newSSetInputChecksum)
+	sset, err := makeStatefulSet(*p, obj.(*appsv1.StatefulSet).Spec.PodManagementPolicy, &c.config, ruleConfigMapNames, newSSetInputHash)
 	if err != nil {
 		return errors.Wrap(err, "making statefulset failed")
 	}
@@ -968,19 +967,23 @@ func (c *Operator) sync(key string) error {
 	return nil
 }
 
-func createSSetInputChecksum(p monitoringv1.Prometheus, c Config, ruleConfigMapNames []string) (string, error) {
-	json, err := json.Marshal(
-		struct {
-			P monitoringv1.Prometheus
-			C Config
-			R []string
-		}{p, c, ruleConfigMapNames},
+func createSSetInputHash(p monitoringv1.Prometheus, c Config, ruleConfigMapNames []string) (string, error) {
+	hash, err := hashstructure.Hash(struct {
+		P monitoringv1.Prometheus
+		C Config
+		R []string `hash:"set"`
+	}{p, c, ruleConfigMapNames},
+		nil,
 	)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to marshal Prometheus CRD and config to json")
+		return "", errors.Wrap(
+			err,
+			"failed to calculate combined hash of Prometheus CRD, config and"+
+				" rule ConfigMap names",
+		)
 	}
 
-	return fmt.Sprintf("%x", md5.Sum(json)), nil
+	return fmt.Sprintf("%d", hash), nil
 }
 
 func ListOptions(name string) metav1.ListOptions {

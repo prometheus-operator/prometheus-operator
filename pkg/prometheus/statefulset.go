@@ -43,7 +43,7 @@ const (
 	secretsDir               = "/etc/prometheus/secrets/"
 	configFilename           = "prometheus.yaml"
 	configEnvsubstFilename   = "prometheus.env.yaml"
-	sSetInputChecksumName    = "prometheus-operator-input-checksum"
+	sSetInputHashName        = "prometheus-operator-input-hash"
 )
 
 var (
@@ -82,7 +82,7 @@ func makeStatefulSet(
 	previousPodManagementPolicy appsv1.PodManagementPolicyType,
 	config *Config,
 	ruleConfigMapNames []string,
-	inputChecksum string,
+	inputHash string,
 ) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
@@ -162,10 +162,10 @@ func makeStatefulSet(
 
 	if statefulset.ObjectMeta.Annotations == nil {
 		statefulset.ObjectMeta.Annotations = map[string]string{
-			sSetInputChecksumName: inputChecksum,
+			sSetInputHashName: inputHash,
 		}
 	} else {
-		statefulset.ObjectMeta.Annotations[sSetInputChecksumName] = inputChecksum
+		statefulset.ObjectMeta.Annotations[sSetInputHashName] = inputHash
 	}
 
 	if p.Spec.ImagePullSecrets != nil && len(p.Spec.ImagePullSecrets) > 0 {
@@ -213,27 +213,6 @@ func makeEmptyConfigurationSecret(p *monitoringv1.Prometheus, config Config) (*v
 	}
 
 	return s, nil
-}
-
-type ConfigMapReference struct {
-	Key      string `json:"key"`
-	Checksum string `json:"checksum"`
-}
-
-type ConfigMapReferenceList struct {
-	Items []*ConfigMapReference `json:"items"`
-}
-
-func (l *ConfigMapReferenceList) Len() int {
-	return len(l.Items)
-}
-
-func (l *ConfigMapReferenceList) Less(i, j int) bool {
-	return l.Items[i].Key < l.Items[j].Key
-}
-
-func (l *ConfigMapReferenceList) Swap(i, j int) {
-	l.Items[i], l.Items[j] = l.Items[j], l.Items[i]
 }
 
 func makeConfigSecret(p *monitoringv1.Prometheus, config Config) *v1.Secret {

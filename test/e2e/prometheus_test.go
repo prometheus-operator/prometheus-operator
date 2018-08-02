@@ -501,7 +501,7 @@ groups:
 		},
 	}
 	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(&cm); err != nil {
-		t.Fatalf("failed to create legacy rule config map: %v", err.Error())
+		t.Fatalf("failed to create legacy rule ConfigMap: %v", err.Error())
 	}
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
@@ -522,7 +522,7 @@ groups:
 	}
 
 	if err := framework.WaitForRule(ns, cm.Name+"-"+ruleFileName); err != nil {
-		t.Fatalf("waiting for rule config map to be converted to rule file crd: %v", err)
+		t.Fatalf("waiting for rule ConfigMap to be converted to rule file crd: %v", err)
 	}
 
 	if err := framework.WaitForPrometheusFiringAlert(ns, pSVC.Name, alertName); err != nil {
@@ -702,7 +702,7 @@ func TestPrometheusRulesExceedingConfigMapLimit(t *testing.T) {
 }
 
 // generateHugePrometheusRule returns a Prometheus rule instance that would fill
-// more than half of the space of a Kubernetes config map.
+// more than half of the space of a Kubernetes ConfigMap.
 func generateHugePrometheusRule(ns, identifier string) monitoringv1.PrometheusRule {
 	alertName := "my-alert"
 	groups := []monitoringv1.RuleGroup{
@@ -767,7 +767,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					ConfigMaps(ns).
 					Get("prometheus-"+prometheusName+"-rulefiles-0", metav1.GetOptions{})
 			},
-			// The Prometheus Operator first creates the config map for the
+			// The Prometheus Operator first creates the ConfigMap for the
 			// given Prometheus stateful set and then updates it with the matching
 			// Prometheus rules.
 			MaxExpectedChanges: 2,

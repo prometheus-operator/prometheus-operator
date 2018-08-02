@@ -102,7 +102,7 @@ type PrometheusSpec struct {
 	Storage *StorageSpec `json:"storage,omitempty"`
 	// A selector to select which PrometheusRules to mount for loading alerting
 	// rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus
-	// Operator will migrate any legacy rule config maps to PrometheusRule custom
+	// Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom
 	// resources selected by RuleSelector. Make sure it does not match any config
 	// maps that you do not want to be migrated.
 	RuleSelector *metav1.LabelSelector `json:"ruleSelector,omitempty"`
