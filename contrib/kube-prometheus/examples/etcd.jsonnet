@@ -21,7 +21,7 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') +
       clientKey: importstr '/path-on-your-work-machine/etcd-client.key',
       clientCert: importstr '/path-on-your-work-machine/etcd-client.crt',
 
-      // A valid name for the certificate.
+      // A valid name (DNS or Subject Alternative Name) for the etcd certificate.
       serverName: 'etcd.my-cluster.local',
 
       // TODO: enhance kube-prometheus-static-etcd.libsonnet to allow 'insecureSkipVerify: true' to be specified here (as an alternative to specifying a value for 'serverName').
