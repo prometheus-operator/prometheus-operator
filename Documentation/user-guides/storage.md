@@ -15,6 +15,7 @@ This document assumes a basic understanding of PersisentVolumes, PersisentVolume
 
 Automatic provisioning of storage requires a `StorageClass`.
 
+[embedmd]:# (../../example/storage/storageclass.yaml)
 ```yaml
 apiVersion: storage.k8s.io/v1beta1
 kind: StorageClass
@@ -31,6 +32,7 @@ For best results, use volumes that have high I/O throughput. These examples use 
 
 The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource.
 
+[embedmd]:# (../../example/storage/persisted-prometheus.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
