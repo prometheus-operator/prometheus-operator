@@ -5,8 +5,13 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') +
 
     // Reference info: https://github.com/coreos/prometheus-operator/blob/master/contrib/kube-prometheus/README.md#static-etcd-configuration
     etcd+:: {
-      // Configure this to be the IP(s) to scrape - i.e. your etcd node(s) (use commans to separate multiple values).
+      // Configure this to be the IP(s) to scrape - i.e. your etcd node(s) (use commas to separate multiple values).
       ips: ['127.0.0.1'],
+
+      // Reference info:
+      //  * https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitorspec (has endpoints)
+      //  * https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint (has tlsConfig)
+      //  * https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#tlsconfig (has: caFile, certFile, keyFile, serverName, & insecureSkipVerify)
 
       // Set these three variables to values that are valid to scrape etcd metrics with (check the apiserver container).
       // Most likely these certificates are generated somewhere in an infrastructure repository, so using the jsonnet `importstr` function can
@@ -16,7 +21,7 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') +
       clientKey: importstr '/path-on-your-work-machine/etcd-client.key',
       clientCert: importstr '/path-on-your-work-machine/etcd-client.crt',
 
-      // A valid name for the certificate
+      // A valid name for the certificate.
       serverName: 'etcd.my-cluster.local',
 
       // TODO: enhance kube-prometheus-static-etcd.libsonnet to allow 'insecureSkipVerify: true' to be specified here (as an alternative to specifying a value for 'serverName').
