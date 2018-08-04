@@ -1216,6 +1216,7 @@ func (in *ThanosSpec) DeepCopyInto(out *ThanosSpec) {
 			**out = **in
 		}
 	}
+	in.Resources.DeepCopyInto(&out.Resources)
 	if in.GCS != nil {
 		in, out := &in.GCS, &out.GCS
 		if *in == nil {

@@ -2245,6 +2245,12 @@ func schema_pkg_client_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) co
 							Format:      "",
 						},
 					},
+					"resources": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Resources defines the resource requirements for the Thanos sidecar. If not provided, no requests/limits will be set",
+							Ref:         ref("k8s.io/api/core/v1.ResourceRequirements"),
+						},
+					},
 					"gcs": {
 						SchemaProps: spec.SchemaProps{
 							Description: "GCS configures use of GCS in Thanos.",
@@ -2261,7 +2267,7 @@ func schema_pkg_client_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosGCSSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosS3Spec"},
+			"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosGCSSpec", "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.ThanosS3Spec", "k8s.io/api/core/v1.ResourceRequirements"},
 	}
 }
 
