@@ -687,6 +687,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			},
 			Env:          envVars,
 			VolumeMounts: thanosVolumeMounts,
+			Resources:    p.Spec.Thanos.Resources,
 		}
 
 		additionalContainers = append(additionalContainers, c)
