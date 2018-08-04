@@ -8,7 +8,6 @@ metadata:
 spec:
   endpoints:
   - port: http
-    honorLabels: true
   selector:
     matchLabels:
       k8s-app: prometheus-operator
