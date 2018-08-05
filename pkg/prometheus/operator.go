@@ -562,7 +562,7 @@ func (c *Operator) handleRuleAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule added")
-		c.triggerByCounterVec.WithLabelValues(monitoringv1.ServiceMonitorsKind, "add").Inc()
+		c.triggerByCounterVec.WithLabelValues(monitoringv1.PrometheusRuleKind, "add").Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -577,7 +577,7 @@ func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 	o, ok := c.getObject(cur)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule updated")
-		c.triggerByCounterVec.WithLabelValues(monitoringv1.ServiceMonitorsKind, "update").Inc()
+		c.triggerByCounterVec.WithLabelValues(monitoringv1.PrometheusRuleKind, "update").Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -588,7 +588,7 @@ func (c *Operator) handleRuleDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "PrometheusRule deleted")
-		c.triggerByCounterVec.WithLabelValues(monitoringv1.ServiceMonitorsKind, "delete").Inc()
+		c.triggerByCounterVec.WithLabelValues(monitoringv1.PrometheusRuleKind, "delete").Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
