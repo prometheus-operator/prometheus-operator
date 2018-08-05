@@ -694,7 +694,7 @@ spec:
           `{{$labels.service}}` are out of sync.
         summary: Configuration out of sync
       expr: |
-        count_values("config_hash", alertmanager_config_hash{job="alertmanager-main"}) BY (service, namespace) / ON(service, namespace) GROUP_LEFT() label_replace(prometheus_operator_alertmanager_spec_replicas{job="prometheus-operator"}, "service", "alertmanager-$1", "alertmanager", "(.*)") != 1
+        count_values("config_hash", alertmanager_config_hash{job="alertmanager-main"}) BY (service) / ON(service) GROUP_LEFT() label_replace(prometheus_operator_alertmanager_spec_replicas{job="prometheus-operator"}, "service", "alertmanager-$1", "alertmanager", "(.*)") != 1
       for: 5m
       labels:
         severity: critical
@@ -704,7 +704,7 @@ spec:
           disappeared from discovery.
         summary: Alertmanager down or missing
       expr: |
-        label_replace(prometheus_operator_alertmanager_spec_replicas{job="prometheus-operator"}, "job", "alertmanager-$1", "alertmanager", "(.*)") / ON(job, namespace) GROUP_RIGHT() sum(up{job="alertmanager-main"}) BY (job, namespace) != 1
+        label_replace(prometheus_operator_alertmanager_spec_replicas{job="prometheus-operator"}, "job", "alertmanager-$1", "alertmanager", "(.*)") / ON(job) GROUP_RIGHT() sum(up{job="alertmanager-main"}) BY (job) != 1
       for: 5m
       labels:
         severity: warning
