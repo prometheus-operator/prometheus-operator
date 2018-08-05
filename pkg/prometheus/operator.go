@@ -699,34 +699,44 @@ func (c *Operator) enqueue(obj interface{}) {
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(nsName string) {
-	nsObject, exists, err := c.nsInf.GetStore().GetByKey(nsName)
-	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "get namespace to enqueue Prometheus instances failed",
-			"err", err,
-		)
-		return
+	// This variable is only accessed if the operator is watching all namespaces.
+	var ns *v1.Namespace
+	// If the operator is watching all namespaces, then it is running the namespace informer
+	// and can search for the namespace object in the cache.
+	if c.config.Namespace == v1.NamespaceAll {
+		nsObject, exists, err := c.nsInf.GetStore().GetByKey(nsName)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", "get namespace to enqueue Prometheus instances failed",
+				"err", err,
+			)
+			return
+		}
+		if !exists {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
+				"err", err,
+			)
+			return
+		}
+		ns = nsObject.(*v1.Namespace)
 	}
 
-	if !exists {
-		level.Error(c.logger).Log(
-			"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
-			"err", err,
-		)
-		return
-	}
-
-	ns := nsObject.(*v1.Namespace)
-
-	err = cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
-		// Check for Prometheus instances in the NS
+	err := cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
+		// Check for Prometheus instances in the NS.
 		p := obj.(*monitoringv1.Prometheus)
-		if p.Namespace == ns.Name {
+		if p.Namespace == nsName {
 			c.enqueue(p)
 			return
 		}
 
-		// Check for Prometheus instances selecting ServiceMonitors in the NS
+		// If the operator is only watching one namespace, then it is not possible to
+		// act on a ServiceMonitor or Rule in different namespace, so return early.
+		if c.config.Namespace != v1.NamespaceAll {
+			return
+		}
+
+		// Check for Prometheus instances selecting ServiceMonitors in the NS.
 		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
 		if err != nil {
 			level.Error(c.logger).Log(
@@ -741,7 +751,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 			return
 		}
 
-		// Check for Prometheus instances selecting PrometheusRules in the NS
+		// Check for Prometheus instances selecting PrometheusRules in the NS.
 		ruleNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
 		if err != nil {
 			level.Error(c.logger).Log(
@@ -1262,9 +1272,10 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 			return nil, err
 		}
 
-		cache.ListAll(c.nsInf.GetStore(), servMonNSSelector, func(obj interface{}) {
-			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
-		})
+		namespaces, err = c.listNamespaces(servMonNSSelector)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select ServiceMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
@@ -1285,6 +1296,24 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 	level.Debug(c.logger).Log("msg", "selected ServiceMonitors", "servicemonitors", strings.Join(serviceMonitors, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	return res, nil
+}
+
+// listNamespaces lists all the namespaces that match the provided selector.
+// If the operator is watching a single namespace rather than all namespaces,
+// then this func returns only the watched namespace, since all reconciliation
+// must occur in this namespace.
+func (c *Operator) listNamespaces(selector labels.Selector) ([]string, error) {
+	if c.config.Namespace != v1.NamespaceAll {
+		return []string{c.config.Namespace}, nil
+	}
+	var ns []string
+	err := cache.ListAll(c.nsInf.GetStore(), selector, func(obj interface{}) {
+		ns = append(ns, obj.(*v1.Namespace).Name)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list namespaces")
+	}
+	return ns, nil
 }
 
 func (c *Operator) createCRDs() error {
