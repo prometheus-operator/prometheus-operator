@@ -17,6 +17,7 @@ package prometheus
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -224,13 +225,21 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 	}
 	currBucketIndex := 0
 
-	for filename, filecontent := range ruleFiles {
-		// If rule file doesn't fit into current bucket, create new bucket
-		if bucketSize(buckets[currBucketIndex])+len(filecontent) > maxConfigMapDataSize {
+	// To make bin packing algorithm deterministic, sort ruleFiles filenames and
+	// iterate over filenames instead of ruleFiles map (not deterministic).
+	fileNames := []string{}
+	for n := range ruleFiles {
+		fileNames = append(fileNames, n)
+	}
+	sort.Strings(fileNames)
+
+	for _, filename := range fileNames {
+		// If rule file doesn't fit into current bucket, create new bucket.
+		if bucketSize(buckets[currBucketIndex])+len(ruleFiles[filename]) > maxConfigMapDataSize {
 			buckets = append(buckets, map[string]string{})
 			currBucketIndex++
 		}
-		buckets[currBucketIndex][filename] = filecontent
+		buckets[currBucketIndex][filename] = ruleFiles[filename]
 	}
 
 	ruleFileConfigMaps := []v1.ConfigMap{}

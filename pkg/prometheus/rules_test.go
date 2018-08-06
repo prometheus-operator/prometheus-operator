@@ -64,8 +64,8 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 	p := &monitoringv1.Prometheus{}
 	ruleFiles := map[string]string{}
 
-	ruleFiles["my-rule-file-1"] = strings.Repeat("a", maxConfigMapDataSize)
-	ruleFiles["my-rule-file-2"] = "a"
+	ruleFiles["first"] = strings.Repeat("a", maxConfigMapDataSize)
+	ruleFiles["second"] = "a"
 
 	configMaps, err := makeRulesConfigMaps(p, ruleFiles)
 	if err != nil {
@@ -76,8 +76,7 @@ func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 		t.Fatalf("expected rule files to be split up into two ConfigMaps, but got '%v' instead", len(configMaps))
 	}
 
-	if configMaps[0].Data["my-rule-file-1"] != ruleFiles["my-rule-file-1"] &&
-		configMaps[1].Data["my-rule-file-2"] != ruleFiles["my-rule-file-2"] {
+	if configMaps[0].Data["first"] != ruleFiles["first"] || configMaps[1].Data["second"] != ruleFiles["second"] {
 		t.Fatal("expected ConfigMap data to match rule file content")
 	}
 }
