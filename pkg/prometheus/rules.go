@@ -142,9 +142,10 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 			return namespaces, errors.Wrap(err, "convert rule namespace label selector to selector")
 		}
 
-		cache.ListAll(c.nsInf.GetStore(), ruleNamespaceSelector, func(obj interface{}) {
-			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
-		})
+		namespaces, err = c.listNamespaces(ruleNamespaceSelector)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	level.Debug(c.logger).Log(
