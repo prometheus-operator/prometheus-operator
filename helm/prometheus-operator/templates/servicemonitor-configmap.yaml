@@ -25,3 +25,4 @@ data:
         endpoints:
         - port: http
           interval: 30s
+          honorLabels: true
