@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"io/ioutil"
 	"log"
@@ -22,12 +23,14 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYAML "k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/ghodss/yaml"
+	"github.com/pkg/errors"
 )
 
 func main() {
@@ -65,7 +68,7 @@ func main() {
 		log.Fatalf("failed to decode manifest: %v", err.Error())
 	}
 
-	ruleFiles, err := prometheus.CMToRule(&configMap)
+	ruleFiles, err := CMToRule(&configMap)
 	if err != nil {
 		log.Fatalf("failed to transform ConfigMap to rule file crds: %v", err.Error())
 	}
@@ -81,4 +84,41 @@ func main() {
 			log.Fatalf("failed to write yaml manifest for rule file '%v': %v", ruleFile.Name, err.Error())
 		}
 	}
+}
+
+// CMToRule takes a rule ConfigMap and transforms it to possibly multiple
+// rule file crds. It is used in `cmd/po-rule-cm-to-rule-file-crds`. Thereby it
+// needs to be public.
+func CMToRule(cm *v1.ConfigMap) ([]monitoringv1.PrometheusRule, error) {
+	rules := []monitoringv1.PrometheusRule{}
+
+	for name, content := range cm.Data {
+		ruleSpec := monitoringv1.PrometheusRuleSpec{}
+
+		if err := k8sYAML.NewYAMLOrJSONDecoder(bytes.NewBufferString(content), 1000).Decode(&ruleSpec); err != nil {
+			return []monitoringv1.PrometheusRule{}, errors.Wrapf(
+				err,
+				"unmarshal rules file %v in  configmap '%v' in namespace '%v'",
+				name, cm.Name, cm.Namespace,
+			)
+		}
+
+		rule := monitoringv1.PrometheusRule{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       monitoringv1.PrometheusRuleKind,
+				APIVersion: monitoringv1.Group + "/" + monitoringv1.Version,
+			},
+
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      cm.Name + "-" + name,
+				Namespace: cm.Namespace,
+				Labels:    cm.Labels,
+			},
+			Spec: ruleSpec,
+		}
+
+		rules = append(rules, rule)
+	}
+
+	return rules, nil
 }
