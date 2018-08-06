@@ -471,65 +471,6 @@ func TestPrometheusReloadRules(t *testing.T) {
 	}
 }
 
-func TestPrometheusRuleConfigMapMigration(t *testing.T) {
-	t.Parallel()
-
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
-
-	name := "my-prometheus"
-	ruleFileName := "my-alerting-rule-file"
-	alertName := "ExampleAlert"
-
-	cm := v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "old-rule-file",
-			Labels: map[string]string{
-				"role": "rulefile",
-			},
-		},
-		Data: map[string]string{
-			ruleFileName: fmt.Sprintf(`
-groups:
-- name: ./alerting.rules
-  rules:
-  - alert: %v
-    expr: vector(1)
-`, alertName),
-		},
-	}
-	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(&cm); err != nil {
-		t.Fatalf("failed to create legacy rule ConfigMap: %v", err.Error())
-	}
-
-	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.RuleSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"role": "rulefile",
-		},
-	}
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
-		t.Fatal(err)
-	}
-
-	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, pSVC); err != nil {
-		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
-
-	if err := framework.WaitForRule(ns, cm.Name+"-"+ruleFileName); err != nil {
-		t.Fatalf("waiting for rule ConfigMap to be converted to rule file crd: %v", err)
-	}
-
-	if err := framework.WaitForPrometheusFiringAlert(ns, pSVC.Name, alertName); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestPrometheusMultiplePrometheusRulesSameNS(t *testing.T) {
 	t.Parallel()
 
