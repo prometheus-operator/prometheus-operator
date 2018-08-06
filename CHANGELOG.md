@@ -1,9 +1,9 @@
-# Upcoming
+## 0.23.0 / 2018-08-06
 
+* [CHANGE] Deprecate specification of Prometheus rules via ConfigMaps in favor of `PrometheusRule` CRDs
 * [FEATURE] Introduce new flag to control logging format (#1475)
 * [FEATURE] Ensure Prometheus Operator container runs as `nobody` user by default (#1393)
 * [BUGFIX] Fix reconciliation of Prometheus StatefulSets due to ServiceMonitors and PrometheusRules changes when a single namespace is being watched (#1749)
-* [CHANGE] Deprecate specification of Prometheus rules via ConfigMaps in favor of `PrometheusRule` CRDs
 
 ## 0.22.2 / 2018-07-24
 
