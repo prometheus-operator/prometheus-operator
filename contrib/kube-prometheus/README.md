@@ -63,7 +63,7 @@ $ minikube delete && minikube start --kubernetes-version=v1.10.1 --memory=4096 -
 
 This project is intended to be used as a library (i.e. the intent is not for you to create your own modified copy of this repository).
 
-Though for a quickstart a compiled version of the Kubernetes manifests generated with this library (specifically with `example.jsonnet`) is checked into this repository in order to try the content out quickly. To try out the stack un-customized run:
+Though for a quickstart a compiled version of the Kubernetes [manifests](manifests) generated with this library (specifically with `example.jsonnet`) is checked into this repository in order to try the content out quickly. To try out the stack un-customized run:
  * Simply create the stack:
 ```
 $ kubectl create -f manifests/ || true
@@ -76,7 +76,9 @@ $ kubectl delete -f manifests/ || true
 
 ## Customizing Kube-Prometheus
 
-This section describes how to customize the kube-prometheus library.
+This section:
+ * describes how to customize the kube-prometheus library via compiling the kube-prometheus manifests yourself (as an alternative to the [Quickstart section](#Quickstart)).
+ * still doesn't require you to make a copy of this entire repository, but rather only a copy of a few select files.
 
 ### Installing
 
@@ -99,8 +101,7 @@ In order to update the kube-prometheus dependency, simply use the jsonnet-bundle
 
 ### Compiling
 
-You may wish to not use ksonnet/jsonnet and simply render the generated manifests to files on disk (in which case you still don't need a copy of this entire repository, but rather only a copy of a few select files).
-This can be done e.g. by running `./build.sh example.jsonnet`.
+e.g. of how to compile the manifests: `./build.sh example.jsonnet`
 
 Here's [example.jsonnet](example.jsonnet):
 
@@ -121,7 +122,7 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
 { ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
 ```
 
-And here's the [build.sh](build.sh) script (this renders all manifests in a json structure of `{filename: manifest-content}`):
+And here's the [build.sh](build.sh) script (which uses `vendor/` to render all manifests in a json structure of `{filename: manifest-content}`):
 
 [embedmd]:# (build.sh)
 ```sh
