@@ -388,6 +388,50 @@ func TestThanosTagAndVersion(t *testing.T) {
 	}
 }
 
+func TestThanosResourcesNotSet(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{},
+		},
+	}, appsv1.OrderedReadyPodManagement, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	res := sset.Spec.Template.Spec.Containers[2].Resources
+	if res.Limits != nil || res.Requests != nil {
+		t.Fatalf("Unexpected resources defined. \n\nExpected: nil\n\nGot: %v, %v", res.Limits, res.Requests)
+	}
+}
+
+func TestThanosResourcesSet(t *testing.T) {
+	expected := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("125m"),
+			v1.ResourceMemory: resource.MustParse("75Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+	}
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				Resources: expected,
+			},
+		},
+	}, appsv1.OrderedReadyPodManagement, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	actual := sset.Spec.Template.Spec.Containers[2].Resources
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("Unexpected resources defined. \n\nExpected: %v\n\nGot: %v", expected, actual)
+	}
+}
+
 func TestRetention(t *testing.T) {
 	tests := []struct {
 		version              string

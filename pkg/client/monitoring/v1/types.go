@@ -245,6 +245,9 @@ type ThanosSpec struct {
 	Tag *string `json:"tag,omitempty"`
 	// Thanos base image if other than default.
 	BaseImage *string `json:"baseImage,omitempty"`
+	// Resources defines the resource requirements for the Thanos sidecar.
+	// If not provided, no requests/limits will be set
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// GCS configures use of GCS in Thanos.
 	GCS *ThanosGCSSpec `json:"gcs,omitempty"`
 	// S3 configures use of S3 in Thanos.

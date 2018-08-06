@@ -502,6 +502,7 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | version | Version describes the version of Thanos to use. | *string | false |
 | tag | Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`. | *string | false |
 | baseImage | Thanos base image if other than default. | *string | false |
+| resources | Resources defines the resource requirements for the Thanos sidecar. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
 | gcs | GCS configures use of GCS in Thanos. | *[ThanosGCSSpec](#thanosgcsspec) | false |
 | s3 | S3 configures use of S3 in Thanos. | *[ThanosS3Spec](#thanoss3spec) | false |
 
