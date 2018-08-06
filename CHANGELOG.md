@@ -1,5 +1,8 @@
 # Upcoming
 
+* [FEATURE] Introduce new flag to control logging format (#1475)
+* [FEATURE] Ensure Prometheus Operator container runs as `nobody` user by default (#1393)
+* [BUGFIX] Fix reconciliation of Prometheus StatefulSets due to ServiceMonitors and PrometheusRules changes when a single namespace is being watched (#1749)
 * [CHANGE] Deprecate specification of Prometheus rules via ConfigMaps in favor of `PrometheusRule` CRDs
 
 ## 0.22.2 / 2018-07-24
@@ -31,7 +34,7 @@
 
 With this release we introduce a new Custom Resource Definition - the
 `PrometheusRule` CRD. It addresses the need for rule syntax validation and rule
-selection accross namespaces. `PrometheusRule` replaces the configuration of
+selection across namespaces. `PrometheusRule` replaces the configuration of
 Prometheus rules via K8s ConfigMaps. There are two migration paths:
 
 1. Automated live migration: If the Prometheus Operator finds Kubernetes
@@ -79,7 +82,7 @@ Some changes cause Prometheus and Alertmanager clusters to be redeployed. If you
 * [FEATURE] Allow configuring Prometheus and Alertmanager servers to listen on loopback interface, allowing proxies to be the ingress point of those Pods.
 * [FEATURE] Allow configuring additional containers in Prometheus and Alertmanager Pods.
 * [FEATURE] Add ability to whitelist Kubernetes labels to become Prometheus labels.
-* [FEATURE] Allow specifying additonal secrets for Alertmanager Pods to mount.
+* [FEATURE] Allow specifying additional secrets for Alertmanager Pods to mount.
 * [FEATURE] Allow specifying `bearer_token_file` for Alertmanger configurations of Prometheus objects in order to authenticate with Alertmanager.
 * [FEATURE] Allow specifying TLS configuration for Alertmanger configurations of Prometheus objects.
 * [FEATURE] Add metrics for reconciliation errors: `prometheus_operator_alertmanager_reconcile_errors_total` and `prometheus_operator_prometheus_reconcile_errors_total`.
@@ -114,7 +117,7 @@ This release adds validations as a beta feature. It will only be installed on ne
 * [FEATURE] Add ability to specify log level.
 * [FEATURE] Add support for dropping metrics at scrape time.
 * [ENHANCEMENT] Ensure that resource limit can't make Pods unschedulable.
-* [ENHANCEMENT] Allow configuring emtpyDir volumess
+* [ENHANCEMENT] Allow configuring emtpyDir volumes
 * [BUGFIX] Use `--storage.tsdb.no-lockfile` for Prometheus 2.0.
 * [BUGFIX] Fix Alertmanager default storage.path.
 
