@@ -21,11 +21,12 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') +
       clientKey: importstr '/path-on-your-work-machine/etcd-client.key',
       clientCert: importstr '/path-on-your-work-machine/etcd-client.crt',
 
-      // A valid name (DNS or Subject Alternative Name) for the etcd certificate.
-      serverName: 'etcd.my-cluster.local',
+      // A valid name (DNS or Subject Alternative Name) that the client (i.e. prometheus) will use to verify the etcd TLS certificate.
+      serverName: 'etcd.my-cluster.local', // a real-life e.g. value is "etcd.kube-system.svc.cluster.local"
 
-      // TODO: enhance kube-prometheus-static-etcd.libsonnet to allow 'insecureSkipVerify: true' to be specified here (as an alternative to specifying a value for 'serverName').
-      // Note that insecureSkipVerify is only to be used if you cannot use a Subject Alternative Name.
+      // TODO: prometheus-operator issue #1755 ("kube-prometheus: re-introduce insecureSkipVerify for etcd monitoring") will enhance kube-prometheus-static-etcd.libsonnet
+      //       to allow 'insecureSkipVerify: true' to be specified here (as an alternative to specifying a value for 'serverName').
+      // Note that once that issue #1755 is resolved, insecureSkipVerify is only to be used if you cannot use a Subject Alternative Name.
 
       // In case you have generated the etcd certificate with kube-aws:
       //  * If you only have one etcd node, you can use the value from 'etcd.internalDomainName' (specified in your kube-aws cluster.yaml) as the value for 'serverName'.
