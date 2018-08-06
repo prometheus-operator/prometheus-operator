@@ -13,13 +13,13 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') +
       //  * https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint (has tlsConfig)
       //  * https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#tlsconfig (has: caFile, certFile, keyFile, serverName, & insecureSkipVerify)
 
-      // Set these three variables to values that are valid to scrape etcd metrics with (check the apiserver container).
+      // Set these three variables to the fully qualified directory path on your work machine to the certificate files that are valid to scrape etcd metrics with (check the apiserver container).
       // Most likely these certificates are generated somewhere in an infrastructure repository, so using the jsonnet `importstr` function can
       // be useful here. (Kube-aws stores these three files inside the credential folder.)
       // All the sensitive information on the certificates will end up in a Kubernetes Secret.
-      clientCA: importstr '/path-on-your-work-machine/etcd-client-ca.crt',
-      clientKey: importstr '/path-on-your-work-machine/etcd-client.key',
-      clientCert: importstr '/path-on-your-work-machine/etcd-client.crt',
+      clientCA: importstr 'etcd-client-ca.crt',
+      clientKey: importstr 'etcd-client.key',
+      clientCert: importstr 'etcd-client.crt',
 
       // A valid name (DNS or Subject Alternative Name) that the client (i.e. prometheus) will use to verify the etcd TLS certificate.
       serverName: 'etcd.my-cluster.local', // a real-life e.g. value is "etcd.kube-system.svc.cluster.local"
