@@ -101,7 +101,7 @@ Custom service monitors can be added in values.yaml in the `serviceMonitors` sec
 #### Example service monitor
 
 
-This example Service Monitor will monitor applications matching `app: nginx-ingress`. The port `metrics` will be scraped with the path `/merics`. The endpoint will be scraped every 30 seconds.
+This example Service Monitor will monitor applications matching `app: nginx-ingress`. The port `metrics` will be scraped with the path `/metrics`. The endpoint will be scraped every 30 seconds.
 
 ```
 serviceMonitors:
