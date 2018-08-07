@@ -131,7 +131,7 @@
             },
           },
           {
-            alert: 'PrometheusTargetScapesDuplicate',
+            alert: 'PrometheusTargetScrapesDuplicate',
             annotations: {
               description: '{{$labels.namespace}}/{{$labels.pod}} has many samples rejected due to duplicate timestamps but different values',
               summary: 'Prometheus has many samples rejected',
