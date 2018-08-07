@@ -23,6 +23,9 @@ spec:
       prometheus: k8s
       role: alert-rules
   serviceAccountName: prometheus-k8s
+  serviceMonitorNamespaceSelector:
+    matchExpressions:
+    - {}
   serviceMonitorSelector:
     matchExpressions:
     - key: k8s-app
