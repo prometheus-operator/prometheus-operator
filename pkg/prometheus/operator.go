@@ -917,6 +917,8 @@ func (c *Operator) sync(key string) error {
 		if _, err := c.kclient.Core().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
 			return errors.Wrap(err, "creating empty config file failed")
 		}
+	}
+	if !apierrors.IsNotFound(err) && err != nil {
 		return err
 	}
 

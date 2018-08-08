@@ -88,6 +88,22 @@ func TestPrometheusScaleUpDownCluster(t *testing.T) {
 	}
 }
 
+func TestPrometheusNoServiceMonitorSelector(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "test"
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ServiceMonitorSelector = nil
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestPrometheusVersionMigration(t *testing.T) {
 	t.Parallel()
 
