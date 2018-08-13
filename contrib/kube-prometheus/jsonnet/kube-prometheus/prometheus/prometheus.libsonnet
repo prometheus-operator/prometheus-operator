@@ -21,7 +21,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       replicas: 2,
       rules: {},
       renderedRules: {},
-      namespaces: ["default", "kube-system",$._config.namespace],
+      namespaces: ['default', 'kube-system', $._config.namespace],
     },
   },
 
@@ -59,7 +59,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     roleBindingSpecificNamespaces:
       local roleBinding = k.rbac.v1.roleBinding;
 
-      local newSpecificRoleBinding(namespace) =   
+      local newSpecificRoleBinding(namespace) =
         roleBinding.new() +
         roleBinding.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
         roleBinding.mixin.metadata.withNamespace(namespace) +
@@ -67,7 +67,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         roleBinding.mixin.roleRef.withName('prometheus-' + $._config.prometheus.name) +
         roleBinding.mixin.roleRef.mixinInstance({ kind: 'Role' }) +
         roleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-' + $._config.prometheus.name, namespace: $._config.namespace }]);
-        
+
       local roleBindigList = k.rbac.v1.roleBindingList;
       roleBindigList.new([newSpecificRoleBinding(x) for x in $._config.prometheus.namespaces]),
     clusterRole:
@@ -134,13 +134,13 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                          'pods',
                        ]) +
                        policyRule.withVerbs(['get', 'list', 'watch']);
-                      
-      local newSpecificRole(namespace) =                 
+
+      local newSpecificRole(namespace) =
         role.new() +
         role.mixin.metadata.withName('prometheus-' + $._config.prometheus.name) +
         role.mixin.metadata.withNamespace(namespace) +
         role.withRules(coreRule);
-        
+
       local roleList = k.rbac.v1.roleList;
       roleList.new([newSpecificRole(x) for x in $._config.prometheus.namespaces]),
     prometheus:
@@ -166,8 +166,8 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           version: $._config.versions.prometheus,
           baseImage: $._config.imageRepos.prometheus,
           serviceAccountName: 'prometheus-' + $._config.prometheus.name,
-          serviceMonitorSelector: selector.withMatchExpressions({ key: 'k8s-app', operator: 'Exists' }),
-          serviceMonitorNamespaceSelector: selector.withMatchExpressions({}),
+          serviceMonitorSelector: {},
+          serviceMonitorNamespaceSelector: {},
           nodeSelector: { 'beta.kubernetes.io/os': 'linux' },
           ruleSelector: selector.withMatchLabels({
             role: 'alert-rules',
