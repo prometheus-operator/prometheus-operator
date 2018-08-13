@@ -288,6 +288,32 @@ In the above example the configuration has been inlined, but can just as well be
    },
  }).alertmanager.secret
 ```
+
+### Adding additional namespaces to monitor
+
+In order to monitor additional namespaces, the Prometheus server requires the appropriate `Role` and `RoleBinding` to be able to discover targets from that namespace. By default the Prometheus server is limited to the three namespaces it requires: default, kube-system and the namespace you configure the stack to run in via `$._config.namespace`. This is specified in `$._config.prometheus.namespaces`, to add new namespaces to monitor, simply append the additional namespaces:
+
+[embedmd]:# (examples/additional-namespaces.jsonnet)
+```jsonnet
+local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
+  _config+:: {
+    namespace: 'monitoring',
+
+    prometheus+:: {
+      namespaces+: ['my-namespace', 'my-second-namespace'],
+    },
+  },
+};
+
+{ ['00namespace-' + name]: kp.kubePrometheus[name] for name in std.objectFields(kp.kubePrometheus) } +
+{ ['0prometheus-operator-' + name]: kp.prometheusOperator[name] for name in std.objectFields(kp.prometheusOperator) } +
+{ ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) } +
+{ ['kube-state-metrics-' + name]: kp.kubeStateMetrics[name] for name in std.objectFields(kp.kubeStateMetrics) } +
+{ ['alertmanager-' + name]: kp.alertmanager[name] for name in std.objectFields(kp.alertmanager) } +
+{ ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
+{ ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
+```
+
 ### Static etcd configuration
 
 In order to configure a static etcd cluster to scrape there is a simple mixin prepared, so only the IPs and certificate information need to be configured. Simply append the `kube-prometheus/kube-prometheus-static-etcd.libsonnet` mixin to the rest of the configuration, and configure the `ips` to be the IPs to scrape, and the `clientCA`, `clientKey` and `clientCert` to values that are valid to scrape etcd metrics with.
