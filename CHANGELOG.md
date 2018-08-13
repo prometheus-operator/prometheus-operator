@@ -1,3 +1,7 @@
+## 0.23.1 / 2018-08-13
+
+* [BUGFIX] Fix high CPU usage of Prometheus Operator when annotating Prometheus resource (#1785)
+
 ## 0.23.0 / 2018-08-06
 
 * [CHANGE] Deprecate specification of Prometheus rules via ConfigMaps in favor of `PrometheusRule` CRDs
