@@ -54,8 +54,21 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	require.NoError(t, err)
 
-	if !reflect.DeepEqual(labels, sset.Labels) || !reflect.DeepEqual(annotations, sset.Annotations) {
-		t.Fatal("Labels or Annotations are not properly being propagated to the StatefulSet")
+	if !reflect.DeepEqual(labels, sset.Labels) {
+		fmt.Println(pretty.Compare(labels, sset.Labels))
+		t.Fatal("Labels are not properly being propagated to the StatefulSet")
+	}
+
+	expectedAnnotations := map[string]string{
+		"prometheus-operator-input-hash": "",
+	}
+	for k, v := range annotations {
+		expectedAnnotations[k] = v
+	}
+
+	if !reflect.DeepEqual(expectedAnnotations, sset.Annotations) {
+		fmt.Println(pretty.Compare(expectedAnnotations, sset.Annotations))
+		t.Fatal("Annotations are not properly being propagated to the StatefulSet")
 	}
 }
 

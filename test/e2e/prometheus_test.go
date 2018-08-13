@@ -693,6 +693,12 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 	name := "test"
 	prometheus := framework.MakeBasicPrometheus(ns, name, name, 1)
 
+	// Adding an annotation to Prometheus lead to high CPU usage in the past
+	// updating the Prometheus StatefulSet in a loop (See
+	// https://github.com/coreos/prometheus-operator/issues/1659). Added here to
+	// prevent a regression.
+	prometheus.Annotations["test-annotation"] = "test-value"
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	type versionedResource interface {

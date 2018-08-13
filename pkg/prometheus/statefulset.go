@@ -84,6 +84,12 @@ func makeStatefulSet(
 	ruleConfigMapNames []string,
 	inputHash string,
 ) (*appsv1.StatefulSet, error) {
+	// p is passed in by value, not by reference. But p contains references like
+	// to annotation map, that do not get copied on function invocation. Ensure to
+	// prevent side effects before editing p by creating a deep copy. For more
+	// details see https://github.com/coreos/prometheus-operator/issues/1659.
+	p = *p.DeepCopy()
+
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
