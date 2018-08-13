@@ -170,6 +170,10 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 }
 
 func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.StatefulSetSpec, error) {
+	// Before editing 'a' create deep copy, to prevent side effects. For more
+	// details see https://github.com/coreos/prometheus-operator/issues/1659
+	a = a.DeepCopy()
+
 	tag := a.Spec.Version
 	if a.Spec.Tag != "" {
 		tag = a.Spec.Tag

@@ -88,6 +88,22 @@ func TestPrometheusScaleUpDownCluster(t *testing.T) {
 	}
 }
 
+func TestPrometheusNoServiceMonitorSelector(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "test"
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ServiceMonitorSelector = nil
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestPrometheusVersionMigration(t *testing.T) {
 	t.Parallel()
 
@@ -676,6 +692,12 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 
 	name := "test"
 	prometheus := framework.MakeBasicPrometheus(ns, name, name, 1)
+
+	// Adding an annotation to Prometheus lead to high CPU usage in the past
+	// updating the Prometheus StatefulSet in a loop (See
+	// https://github.com/coreos/prometheus-operator/issues/1659). Added here to
+	// prevent a regression.
+	prometheus.Annotations["test-annotation"] = "test-value"
 
 	ctx, cancel := context.WithCancel(context.Background())
 

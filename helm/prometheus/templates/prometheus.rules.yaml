@@ -92,7 +92,7 @@ groups:
       description: "Prometheus {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod}}`}} isn't ingesting samples."
       summary: "Prometheus isn't ingesting samples"
 
-  - alert: PrometheusTargetScapesDuplicate
+  - alert: PrometheusTargetScrapesDuplicate
     expr: increase(prometheus_target_scrapes_sample_duplicate_timestamp_total[5m]) > 0
     for: 10m
     labels:
