@@ -8,6 +8,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       clientKey: null,
       clientCert: null,
       serverName: null,
+      insecureSkipVerify: null,
     },
   },
   prometheus+:: {
@@ -65,7 +66,8 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                 caFile: '/etc/prometheus/secrets/kube-etcd-client-certs/etcd-client-ca.crt',
                 keyFile: '/etc/prometheus/secrets/kube-etcd-client-certs/etcd-client.key',
                 certFile: '/etc/prometheus/secrets/kube-etcd-client-certs/etcd-client.crt',
-                serverName: $._config.etcd.serverName,
+                [if $._config.etcd.serverName != null then 'serverName']: $._config.etcd.serverName,
+                [if $._config.etcd.insecureSkipVerify != null then 'insecureSkipVerify']: $._config.etcd.insecureSkipVerify,
               },
             },
           ],
