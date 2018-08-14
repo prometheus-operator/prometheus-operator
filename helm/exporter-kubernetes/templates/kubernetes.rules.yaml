@@ -64,7 +64,8 @@ groups:
         for {{`{{$labels.verb}}`}} {{`{{$labels.resource}}`}}
       summary: API server high latency
   - alert: APIServerErrorsHigh
-    expr: rate(apiserver_request_count{code=~"^(?:5..)$"}[5m]) / rate(apiserver_request_count[5m])
+    expr: sum(rate(apiserver_request_count{code=~"^(?:5..)$"}[5m])) without(instance, pod)
+      / sum(rate(apiserver_request_count[5m])) without(instance, pod)
       * 100 > 2
     for: 10m
     labels:
@@ -73,7 +74,8 @@ groups:
       description: API server returns errors for {{`{{ $value }}`}}% of requests
       summary: API server request errors
   - alert: APIServerErrorsHigh
-    expr: rate(apiserver_request_count{code=~"^(?:5..)$"}[5m]) / rate(apiserver_request_count[5m])
+    expr: sum(rate(apiserver_request_count{code=~"^(?:5..)$"}[5m])) without(instance, pod)
+      / sum(rate(apiserver_request_count[5m])) without(instance, pod)
       * 100 > 5
     for: 10m
     labels:
