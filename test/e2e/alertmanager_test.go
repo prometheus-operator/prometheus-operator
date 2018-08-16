@@ -90,7 +90,7 @@ func TestAlertmanagerVersionMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.15.0-rc.1"
+	am.Spec.Version = "v0.15.2"
 	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
 		t.Fatal(err)
 	}
@@ -133,7 +133,7 @@ func TestMeshInitialization(t *testing.T) {
 
 	// Starting with Alertmanager v0.15.0 hashicorp/memberlist is used for HA.
 	// Make sure both memberlist as well as mesh (< 0.15.0) work
-	amVersions := []string{"v0.14.0", "v0.15.0-rc.1"}
+	amVersions := []string{"v0.14.0", "v0.15.2"}
 
 	for _, v := range amVersions {
 		version := v
@@ -179,7 +179,6 @@ func TestAlertmanagerClusterGossipSilences(t *testing.T) {
 
 	amClusterSize := 3
 	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
-	alertmanager.Spec.Version = "v0.15.0-rc.1"
 
 	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
 		t.Fatal(err)

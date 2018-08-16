@@ -8,7 +8,7 @@
                     "subdir": "contrib/kube-prometheus/jsonnet/kube-prometheus"
                 }
             },
-            "version": "cfb1c0ac6c458401cf47390a35d48b707612af0a"
+            "version": "7a050d711ce4c4704bef5f139aacefb2b75f8cf3"
         },
         {
             "name": "ksonnet",
@@ -48,7 +48,7 @@
                     "subdir": "grafana-builder"
                 }
             },
-            "version": "a17504d81e2ab5b29d97c77faf72b8d7644bbabf"
+            "version": "8c4610783991b82ff12e485d24ac4f82d8839743"
         },
         {
             "name": "grafana",
@@ -78,7 +78,7 @@
                     "subdir": "Documentation/etcd-mixin"
                 }
             },
-            "version": "3c89938adf2988a2a2f6bb031cb075ae38ae1d0e"
+            "version": "2a6bc7d1130d2fa3336af5ffa2bcf82d760c945e"
         }
     ]
 }
