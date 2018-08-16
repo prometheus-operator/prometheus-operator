@@ -73,14 +73,26 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local sysVolume = volume.fromHostPath(sysVolumeName, '/sys');
       local sysVolumeMount = containerVolumeMount.new(sysVolumeName, '/host/sys');
 
+      local rootVolumeName = 'root';
+      local rootVolume = volume.fromHostPath(rootVolumeName, '/root');
+      local rootVolumeMount = containerVolumeMount.new(rootVolumeName, '/host/root').
+        withMountPropagation('HostToContainer').
+        withReadOnly(true);
+
       local nodeExporter =
         container.new('node-exporter', $._config.imageRepos.nodeExporter + ':' + $._config.versions.nodeExporter) +
         container.withArgs([
           '--web.listen-address=127.0.0.1:9101',
           '--path.procfs=/host/proc',
           '--path.sysfs=/host/sys',
+
+          // The following settings have been taken from
+          // https://github.com/prometheus/node_exporter/blob/0662673/collector/filesystem_linux.go#L30-L31
+          // Once node exporter is being released with those settings, this can be removed.
+          '--collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+)($|/)',
+          '--collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|cgroup|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|mqueue|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|sysfs|tracefs)$',
         ]) +
-        container.withVolumeMounts([procVolumeMount, sysVolumeMount]) +
+        container.withVolumeMounts([procVolumeMount, sysVolumeMount, rootVolumeMount]) +
         container.mixin.resources.withRequests({ cpu: '102m', memory: '180Mi' }) +
         container.mixin.resources.withLimits({ cpu: '102m', memory: '180Mi' });
 
@@ -105,7 +117,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       daemonset.mixin.spec.template.spec.withTolerations([masterToleration]) +
       daemonset.mixin.spec.template.spec.withNodeSelector({ 'beta.kubernetes.io/os': 'linux' }) +
       daemonset.mixin.spec.template.spec.withContainers(c) +
-      daemonset.mixin.spec.template.spec.withVolumes([procVolume, sysVolume]) +
+      daemonset.mixin.spec.template.spec.withVolumes([procVolume, sysVolume, rootVolume]) +
       daemonset.mixin.spec.template.spec.securityContext.withRunAsNonRoot(true) +
       daemonset.mixin.spec.template.spec.securityContext.withRunAsUser(65534) +
       daemonset.mixin.spec.template.spec.withServiceAccountName('node-exporter') +
