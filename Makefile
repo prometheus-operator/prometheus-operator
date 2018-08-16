@@ -19,6 +19,11 @@ pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 .PHONY: all
 all: format generate build test
 
+.PHONY: clean
+clean:
+	# Remove all files and directories ignored by git.
+	git clean -Xfd .
+
 
 ############
 # Building #
