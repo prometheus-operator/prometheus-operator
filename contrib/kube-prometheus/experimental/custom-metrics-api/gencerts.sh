@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# exit immediately when a command fails
+set -e
+# only exit with zero if all commands of the pipeline exit successfully
+set -o pipefail
+# error on unset variables
+set -u
 
 # Detect if we are on mac or should use GNU base64 options
 case $(uname) in
