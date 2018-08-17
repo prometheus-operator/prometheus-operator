@@ -196,7 +196,7 @@ rules:
   additionalLabels: {}
   #  prometheus: example-rules
   #  application: etcd
-  value: {}
+  value: []
 
 ## List of Secrets in the same namespace as the Prometheus
 ## object, which shall be mounted into the Prometheus Pods.
