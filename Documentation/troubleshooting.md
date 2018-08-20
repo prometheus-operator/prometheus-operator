@@ -47,4 +47,28 @@ When creating/deleting/modifying `ServiceMonitor` objects it is sometimes not as
 kubectl -n monitoring get secret prometheus-k8s -ojson | jq -r '.data["prometheus.yaml"]' | base64 -d | grep "my-service-monitor"
 ```
 
+### Prometheus kubelet metrics server returned HTTP status 403 Forbidden
+
+Prometheus is installed, all looks good, however the `Targets` are all showing as down. All permissions seem to be good, yet no joy. Prometheus pulling metrics from all namespaces expect kube-system, and Prometheus has access to all namespaces including kube-system.
+
+#### Did you check the webhooks?
+
+Issue has been resolved by amending the webhooks to use `0.0.0.0` instead of `127.0.0.1`. Follow the below commands and it will update the webhooks which allows connections to all `clusterIP's`  in all `namespaces` and not just `127.0.0.1`.
+
+**Update the kubelet service to include webhook and restart:**
+```
+KUBEADM_SYSTEMD_CONF=/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+sed -e "/cadvisor-port=0/d" -i "$KUBEADM_SYSTEMD_CONF"
+if ! grep -q "authentication-token-webhook=true" "$KUBEADM_SYSTEMD_CONF"; then
+  sed -e "s/--authorization-mode=Webhook/--authentication-token-webhook=true --authorization-mode=Webhook/" -i "$KUBEADM_SYSTEMD_CONF"
+fi
+systemctl daemon-reload
+systemctl restart kubelet
+```
+
+**Modify the kube controller and kube scheduler to allow for reading data:**
+```
+sed -e "s/- --address=127.0.0.1/- --address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-controller-manager.yaml
+sed -e "s/- --address=127.0.0.1/- --address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-scheduler.yaml
+```
 
