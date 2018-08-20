@@ -24,6 +24,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/coreos/prometheus-operator/pkg/listwatch"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -136,7 +137,7 @@ type Config struct {
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string
 	ThanosDefaultBaseImage       string
-	Namespace                    string
+	Namespaces                   []string
 	Labels                       Labels
 	CrdGroup                     string
 	CrdKinds                     monitoringv1.CrdKinds
@@ -203,10 +204,12 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	}
 
 	c.promInf = cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc:  mclient.MonitoringV1().Prometheuses(c.config.Namespace).List,
-			WatchFunc: mclient.MonitoringV1().Prometheuses(c.config.Namespace).Watch,
-		},
+		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+			return &cache.ListWatch{
+				ListFunc:  mclient.MonitoringV1().Prometheuses(namespace).List,
+				WatchFunc: mclient.MonitoringV1().Prometheuses(namespace).Watch,
+			}
+		}),
 		&monitoringv1.Prometheus{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -216,10 +219,12 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	})
 
 	c.smonInf = cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc:  mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).List,
-			WatchFunc: mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).Watch,
-		},
+		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+			return &cache.ListWatch{
+				ListFunc:  mclient.MonitoringV1().ServiceMonitors(namespace).List,
+				WatchFunc: mclient.MonitoringV1().ServiceMonitors(namespace).Watch,
+			}
+		}),
 		&monitoringv1.ServiceMonitor{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.smonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -229,10 +234,12 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	})
 
 	c.ruleInf = cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc:  mclient.MonitoringV1().PrometheusRules(c.config.Namespace).List,
-			WatchFunc: mclient.MonitoringV1().PrometheusRules(c.config.Namespace).Watch,
-		},
+		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+			return &cache.ListWatch{
+				ListFunc:  mclient.MonitoringV1().PrometheusRules(namespace).List,
+				WatchFunc: mclient.MonitoringV1().PrometheusRules(namespace).Watch,
+			}
+		}),
 		&monitoringv1.PrometheusRule{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.ruleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -242,7 +249,9 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	})
 
 	c.cmapInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", c.config.Namespace, fields.Everything()),
+		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+			return cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", namespace, fields.Everything())
+		}),
 		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -251,7 +260,9 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		UpdateFunc: c.handleConfigMapUpdate,
 	})
 	c.secrInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "secrets", c.config.Namespace, fields.Everything()),
+		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+			return cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "secrets", namespace, fields.Everything())
+		}),
 		&v1.Secret{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.secrInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -261,7 +272,9 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	})
 
 	c.ssetInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.AppsV1beta2().RESTClient(), "statefulsets", c.config.Namespace, fields.Everything()),
+		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+			return cache.NewListWatchFromClient(c.kclient.AppsV1beta2().RESTClient(), "statefulsets", namespace, fields.Everything())
+		}),
 		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -270,9 +283,19 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		UpdateFunc: c.handleStatefulSetUpdate,
 	})
 
+	// nsResyncPeriod is used to control how often the namespace informer should resync.
+	// If the unprivileged ListerWatcher is used, then the informer must resync more often because
+	// it cannot watch for namespace changes.
+	nsResyncPeriod := 15 * time.Second
+	// If the only namespace is v1.NamespaceAll, then the client must be privileged
+	// and a regular cache.ListWatch will be used. In this case watching works and we do not need
+	// to resync so frequently.
+	if listwatch.IsAllNamespaces(c.config.Namespaces) {
+		nsResyncPeriod = resyncPeriod
+	}
 	c.nsInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "namespaces", metav1.NamespaceAll, fields.Everything()),
-		&v1.Namespace{}, resyncPeriod, cache.Indexers{},
+		listwatch.NewUnprivilegedNamespaceListWatchFromClient(c.kclient.Core().RESTClient(), c.config.Namespaces, fields.Everything()),
+		&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
 	)
 
 	return c, nil
@@ -340,9 +363,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.cmapInf.Run(stopc)
 	go c.secrInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
-	if c.config.Namespace == v1.NamespaceAll {
-		go c.nsInf.Run(stopc)
-	}
+	go c.nsInf.Run(stopc)
 
 	if c.kubeletSyncEnabled {
 		go c.reconcileNodeEndpoints(stopc)
@@ -699,40 +720,28 @@ func (c *Operator) enqueue(obj interface{}) {
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(nsName string) {
-	// This variable is only accessed if the operator is watching all namespaces.
-	var ns *v1.Namespace
-	// If the operator is watching all namespaces, then it is running the namespace informer
-	// and can search for the namespace object in the cache.
-	if c.config.Namespace == v1.NamespaceAll {
-		nsObject, exists, err := c.nsInf.GetStore().GetByKey(nsName)
-		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", "get namespace to enqueue Prometheus instances failed",
-				"err", err,
-			)
-			return
-		}
-		if !exists {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
-				"err", err,
-			)
-			return
-		}
-		ns = nsObject.(*v1.Namespace)
+	nsObject, exists, err := c.nsInf.GetStore().GetByKey(nsName)
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "get namespace to enqueue Prometheus instances failed",
+			"err", err,
+		)
+		return
 	}
+	if !exists {
+		level.Error(c.logger).Log(
+			"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
+			"err", err,
+		)
+		return
+	}
+	ns := nsObject.(*v1.Namespace)
 
-	err := cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
+	err = cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
 		// Check for Prometheus instances in the NS.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
 			c.enqueue(p)
-			return
-		}
-
-		// If the operator is only watching one namespace, then it is not possible to
-		// act on a ServiceMonitor or Rule in different namespace, so return early.
-		if c.config.Namespace != v1.NamespaceAll {
 			return
 		}
 
@@ -1268,7 +1277,7 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 			return nil, err
 		}
 
-		namespaces, err = c.listNamespaces(servMonNSSelector)
+		namespaces, err = c.listMatchingNamespaces(servMonNSSelector)
 		if err != nil {
 			return nil, err
 		}
@@ -1294,14 +1303,8 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 	return res, nil
 }
 
-// listNamespaces lists all the namespaces that match the provided selector.
-// If the operator is watching a single namespace rather than all namespaces,
-// then this func returns only the watched namespace, since all reconciliation
-// must occur in this namespace.
-func (c *Operator) listNamespaces(selector labels.Selector) ([]string, error) {
-	if c.config.Namespace != v1.NamespaceAll {
-		return []string{c.config.Namespace}, nil
-	}
+// listMatchingNamespaces lists all the namespaces that match the provided selector.
+func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, error) {
 	var ns []string
 	err := cache.ListAll(c.nsInf.GetStore(), selector, func(obj interface{}) {
 		ns = append(ns, obj.(*v1.Namespace).Name)
@@ -1345,9 +1348,24 @@ func (c *Operator) createCRDs() error {
 		name     string
 		listFunc func(opts metav1.ListOptions) (runtime.Object, error)
 	}{
-		{"Prometheus", c.mclient.MonitoringV1().Prometheuses(c.config.Namespace).List},
-		{"ServiceMonitor", c.mclient.MonitoringV1().ServiceMonitors(c.config.Namespace).List},
-		{"PrometheusRule", c.mclient.MonitoringV1().PrometheusRules(c.config.Namespace).List},
+		{
+			"Prometheus",
+			listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+				return &cache.ListWatch{ListFunc: c.mclient.MonitoringV1().Prometheuses(namespace).List}
+			}).List,
+		},
+		{
+			"ServiceMonitor",
+			listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+				return &cache.ListWatch{ListFunc: c.mclient.MonitoringV1().ServiceMonitors(namespace).List}
+			}).List,
+		},
+		{
+			"PrometheusRule",
+			listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+				return &cache.ListWatch{ListFunc: c.mclient.MonitoringV1().PrometheusRules(namespace).List}
+			}).List,
+		},
 	}
 
 	for _, crdListFunc := range crdListFuncs {

@@ -23,6 +23,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/coreos/prometheus-operator/pkg/listwatch"
 	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
 	"github.com/go-kit/kit/log"
@@ -72,7 +73,7 @@ type Config struct {
 	LocalHost                    string
 	ConfigReloaderImage          string
 	AlertmanagerDefaultBaseImage string
-	Namespace                    string
+	Namespaces                   []string
 	Labels                       prometheusoperator.Labels
 	CrdKinds                     monitoringv1.CrdKinds
 	CrdGroup                     string
@@ -114,7 +115,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 			LocalHost:                    c.LocalHost,
 			ConfigReloaderImage:          c.ConfigReloaderImage,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
-			Namespace:                    c.Namespace,
+			Namespaces:                   c.Namespaces,
 			CrdGroup:                     c.CrdGroup,
 			CrdKinds:                     c.CrdKinds,
 			Labels:                       c.Labels,
@@ -125,17 +126,20 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 	}
 
 	o.alrtInf = cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc:  o.mclient.MonitoringV1().Alertmanagers(o.config.Namespace).List,
-			WatchFunc: o.mclient.MonitoringV1().Alertmanagers(o.config.Namespace).Watch,
-		},
+		listwatch.MultiNamespaceListerWatcher(o.config.Namespaces, func(namespace string) cache.ListerWatcher {
+			return &cache.ListWatch{
+				ListFunc:  o.mclient.MonitoringV1().Alertmanagers(namespace).List,
+				WatchFunc: o.mclient.MonitoringV1().Alertmanagers(namespace).Watch,
+			}
+		}),
 		&monitoringv1.Alertmanager{}, resyncPeriod, cache.Indexers{},
 	)
 	o.ssetInf = cache.NewSharedIndexInformer(
-		cache.NewListWatchFromClient(o.kclient.AppsV1beta2().RESTClient(), "statefulsets", o.config.Namespace, fields.Everything()),
+		listwatch.MultiNamespaceListerWatcher(o.config.Namespaces, func(namespace string) cache.ListerWatcher {
+			return cache.NewListWatchFromClient(o.kclient.AppsV1beta2().RESTClient(), "statefulsets", namespace, fields.Everything())
+		}),
 		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
-
 	o.alrtInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    o.handleAlertmanagerAdd,
 		DeleteFunc: o.handleAlertmanagerDelete,
@@ -571,7 +575,12 @@ func (c *Operator) createCRDs() error {
 		name     string
 		listFunc func(opts metav1.ListOptions) (runtime.Object, error)
 	}{
-		{"Alertmanager", c.mclient.MonitoringV1().Alertmanagers(c.config.Namespace).List},
+		{
+			"Alertmanager",
+			listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+				return &cache.ListWatch{ListFunc: c.mclient.MonitoringV1().Alertmanagers(namespace).List}
+			}).List,
+		},
 	}
 
 	for _, crdListFunc := range crdListFuncs {
