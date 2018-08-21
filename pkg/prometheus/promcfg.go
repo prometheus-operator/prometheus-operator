@@ -183,13 +183,15 @@ func (cg *configGenerator) generateConfig(
 		Value: append(scrapeConfigs, additionalScrapeConfigsYaml...),
 	})
 
-	var additionalAlertManagerConfigsYaml []yaml.MapSlice
+	var additionalAlertManagerConfigsYaml yaml.MapSlice
 	err = yaml.Unmarshal([]byte(additionalAlertManagerConfigs), &additionalAlertManagerConfigsYaml)
 	if err != nil {
+		fmt.Println(string(additionalAlertManagerConfigs))
 		return nil, errors.Wrap(err, "unmarshalling additional alert manager configs failed")
 	}
-
-	alertmanagerConfigs = append(alertmanagerConfigs, additionalAlertManagerConfigsYaml...)
+	if len(additionalAlertManagerConfigsYaml) > 0 {
+		alertmanagerConfigs = append(alertmanagerConfigs, additionalAlertManagerConfigsYaml)
+	}
 
 	var alertRelabelConfigs []yaml.MapSlice
 
