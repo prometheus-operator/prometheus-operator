@@ -140,16 +140,6 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		}),
 		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
-	o.alrtInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    o.handleAlertmanagerAdd,
-		DeleteFunc: o.handleAlertmanagerDelete,
-		UpdateFunc: o.handleAlertmanagerUpdate,
-	})
-	o.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    o.handleStatefulSetAdd,
-		DeleteFunc: o.handleStatefulSetDelete,
-		UpdateFunc: o.handleStatefulSetUpdate,
-	})
 
 	return o, nil
 }
@@ -164,6 +154,45 @@ func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
 		c.statefulsetErrors,
 		NewAlertmanagerCollector(c.alrtInf.GetStore()),
 	)
+}
+
+// waitForCacheSync waits for the informers' caches to be synced.
+func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
+	ok := true
+	informers := []struct {
+		name     string
+		informer cache.SharedIndexInformer
+	}{
+		{"Alertmanager", c.alrtInf},
+		{"StatefulSet", c.ssetInf},
+	}
+	for _, inf := range informers {
+		if !cache.WaitForCacheSync(stopc, inf.informer.HasSynced) {
+			level.Error(c.logger).Log("msg", fmt.Sprintf("failed to sync %s cache", inf.name))
+			ok = false
+		} else {
+			level.Debug(c.logger).Log("msg", fmt.Sprintf("successfully synced %s cache", inf.name))
+		}
+	}
+	if !ok {
+		return errors.New("failed to sync caches")
+	}
+	level.Info(c.logger).Log("msg", "successfully synced all caches")
+	return nil
+}
+
+// addHandlers adds the eventhandlers to the informers.
+func (c *Operator) addHandlers() {
+	c.alrtInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleAlertmanagerAdd,
+		DeleteFunc: c.handleAlertmanagerDelete,
+		UpdateFunc: c.handleAlertmanagerUpdate,
+	})
+	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleStatefulSetAdd,
+		DeleteFunc: c.handleStatefulSetDelete,
+		UpdateFunc: c.handleStatefulSetUpdate,
+	})
 }
 
 // Run the controller.
@@ -202,6 +231,10 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 
 	go c.alrtInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
+	if err := c.waitForCacheSync(stopc); err != nil {
+		return err
+	}
+	c.addHandlers()
 
 	<-stopc
 	return nil
