@@ -29,10 +29,13 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// NewUnprivilegedNamespaceListWatchFromClient mimics cache.NewListWatchFromClient.
-// It allows for the creation of a cache.ListWatch for namespaces from a client that does not have `List` privileges.
-// If the slice of namespaces contains only v1.NamespaceAll, then this func assumes that the client
-// has List and Watch privileges and returns a regular cache.ListWatch, since there is no other way to get all namespaces.
+// NewUnprivilegedNamespaceListWatchFromClient mimics
+// cache.NewListWatchFromClient.
+// It allows for the creation of a cache.ListWatch for namespaces from a client
+// that does not have `List` privileges. If the slice of namespaces contains
+// only v1.NamespaceAll, then this func assumes that the client has List and
+// Watch privileges and returns a regular cache.ListWatch, since there is no
+// other way to get all namespaces.
 func NewUnprivilegedNamespaceListWatchFromClient(c cache.Getter, namespaces []string, fieldSelector fields.Selector) *cache.ListWatch {
 	optionsModifier := func(options *metav1.ListOptions) {
 		options.FieldSelector = fieldSelector.String()
@@ -40,13 +43,17 @@ func NewUnprivilegedNamespaceListWatchFromClient(c cache.Getter, namespaces []st
 	return NewFilteredUnprivilegedNamespaceListWatchFromClient(c, namespaces, optionsModifier)
 }
 
-// NewFilteredUnprivilegedNamespaceListWatchFromClient mimics cache.NewUnprivilegedNamespaceListWatchFromClient.
-// It allows for the creation of a cache.ListWatch for namespaces from a client that does not have `List` privileges.
-// If the slice of namespaces contains only v1.NamespaceAll, then this func assumes that the client
-// has List and Watch privileges and returns a regular cache.ListWatch, since there is no other way to get all namespaces.
+// NewFilteredUnprivilegedNamespaceListWatchFromClient mimics
+// cache.NewUnprivilegedNamespaceListWatchFromClient.
+// It allows for the creation of a cache.ListWatch for namespaces from a client
+// that does not have `List` privileges. If the slice of namespaces contains
+// only v1.NamespaceAll, then this func assumes that the client has List and
+// Watch privileges and returns a regular cache.ListWatch, since there is no
+// other way to get all namespaces.
 func NewFilteredUnprivilegedNamespaceListWatchFromClient(c cache.Getter, namespaces []string, optionsModifier func(options *metav1.ListOptions)) *cache.ListWatch {
-	// If the only namespace given is `v1.NamespaceAll`, then this cache.ListWatch must be privileged.
-	// In this case, return a regular cache.ListWatch.
+	// If the only namespace given is `v1.NamespaceAll`, then this
+	// cache.ListWatch must be privileged. In this case, return a regular
+	// cache.ListWatch.
 	if IsAllNamespaces(namespaces) {
 		return cache.NewFilteredListWatchFromClient(c, "namespaces", metav1.NamespaceAll, optionsModifier)
 	}
@@ -69,17 +76,20 @@ func NewFilteredUnprivilegedNamespaceListWatchFromClient(c cache.Getter, namespa
 		return list, nil
 	}
 	watchFunc := func(_ metav1.ListOptions) (watch.Interface, error) {
-		// Since the client does not have Watch privileges, do not actually watch anything.
-		// Use a watch.FakeWatcher here to implement watch.Interface but not send any events.
+		// Since the client does not have Watch privileges, do not
+		// actually watch anything. Use a watch.FakeWatcher here to
+		// implement watch.Interface but not send any events.
 		return watch.NewFake(), nil
 	}
 	return &cache.ListWatch{ListFunc: listFunc, WatchFunc: watchFunc}
 }
 
-// MultiNamespaceListerWatcher takes a list of namespaces and a cache.ListerWatcher generator func
-// and returns a single cache.ListerWatcher capable of operating on multiple namespaces.
+// MultiNamespaceListerWatcher takes a list of namespaces and a
+// cache.ListerWatcher generator func and returns a single cache.ListerWatcher
+// capable of operating on multiple namespaces.
 func MultiNamespaceListerWatcher(namespaces []string, f func(string) cache.ListerWatcher) cache.ListerWatcher {
-	// If there is only one namespace then there is no need to create a proxy.
+	// If there is only one namespace then there is no need to create a
+	// proxy.
 	if len(namespaces) == 1 {
 		return f(namespaces[0])
 	}
@@ -125,8 +135,8 @@ func (mlw multiListerWatcher) List(options metav1.ListOptions) (runtime.Object, 
 }
 
 // Watch implements the ListerWatcher interface.
-// It returns a watch.Interface that combines the output from the watch.Interface
-// of every cache.ListerWatcher into a single result chan.
+// It returns a watch.Interface that combines the output from the
+// watch.Interface of every cache.ListerWatcher into a single result chan.
 func (mlw multiListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
 	resourceVersions := make([]string, len(mlw))
 	// Allow resource versions to be "".
@@ -149,8 +159,9 @@ type multiWatch struct {
 	stoppers []func()
 }
 
-// newMultiWatch returns a new multiWatch or an error if one of the underlying Watch funcs errored.
-// The length of []cache.ListerWatcher and []string must match.
+// newMultiWatch returns a new multiWatch or an error if one of the underlying
+// Watch funcs errored. The length of []cache.ListerWatcher and []string must
+// match.
 func newMultiWatch(lws []cache.ListerWatcher, resourceVersions []string, options metav1.ListOptions) (*multiWatch, error) {
 	ch := make(chan watch.Event)
 	var stoppers []func()
@@ -181,8 +192,7 @@ func (mw *multiWatch) ResultChan() <-chan watch.Event {
 }
 
 // Stop implements the watch.Interface interface.
-// It stops all of the underlying watch.Interfaces and closes
-// the backing chan.
+// It stops all of the underlying watch.Interfaces and closes the backing chan.
 // Can safely be called more than once.
 func (mw *multiWatch) Stop() {
 	mw.mu.Lock()

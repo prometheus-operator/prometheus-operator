@@ -263,8 +263,8 @@ func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
 	return o, true
 }
 
-// enqueue adds a key to the queue. If obj is a key already it gets added directly.
-// Otherwise, the key is extracted via keyFunc.
+// enqueue adds a key to the queue. If obj is a key already it gets added
+// directly. Otherwise, the key is extracted via keyFunc.
 func (c *Operator) enqueue(obj interface{}) {
 	if obj == nil {
 		return
@@ -281,7 +281,8 @@ func (c *Operator) enqueue(obj interface{}) {
 	c.queue.Add(key)
 }
 
-// enqueueForNamespace enqueues all Alertmanager object keys that belong to the given namespace.
+// enqueueForNamespace enqueues all Alertmanager object keys that belong to the
+// given namespace.
 func (c *Operator) enqueueForNamespace(ns string) {
 	cache.ListAll(c.alrtInf.GetStore(), labels.Everything(), func(obj interface{}) {
 		am := obj.(*monitoringv1.Alertmanager)
@@ -291,8 +292,9 @@ func (c *Operator) enqueueForNamespace(ns string) {
 	})
 }
 
-// worker runs a worker thread that just dequeues items, processes them, and marks them done.
-// It enforces that the syncHandler is never invoked concurrently with the same key.
+// worker runs a worker thread that just dequeues items, processes them
+// and marks them done. It enforces that the syncHandler is never invoked
+// concurrently with the same key.
 func (c *Operator) worker() {
 	for c.processNextWorkItem() {
 	}
@@ -420,14 +422,18 @@ func (c *Operator) sync(key string) error {
 		return err
 	}
 	if !exists {
-		// TODO(fabxc): we want to do server side deletion due to the variety of
-		// resources we create.
+		// TODO(fabxc): we want to do server side deletion due to the
+		// variety of resources we create.
 		// Doing so just based on the deletion event is not reliable, so
-		// we have to garbage collect the controller-created resources in some other way.
+		// we have to garbage collect the controller-created resources
+		// in some other way.
 		//
-		// Let's rely on the index key matching that of the created configmap and replica
-		// set for now. This does not work if we delete Alertmanager resources as the
-		// controller is not running – that could be solved via garbage collection later.
+		// Let's rely on the index key matching that of the created
+		// configmap and replica
+		// set for now. This does not work if we delete Alertmanager
+		// resources as the
+		// controller is not running – that could be solved via garbage
+		// collection later.
 		return c.destroyAlertmanager(key)
 	}
 
@@ -504,7 +510,8 @@ func AlertmanagerStatus(kclient kubernetes.Interface, a *monitoringv1.Alertmanag
 		}
 		if ready {
 			res.AvailableReplicas++
-			// TODO(fabxc): detect other fields of the pod template that are mutable.
+			// TODO(fabxc): detect other fields of the pod template
+			// that are mutable.
 			if needsUpdate(&pod, sset.Spec.Template) {
 				oldPods = append(oldPods, pod)
 			} else {
@@ -533,7 +540,8 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	return false
 }
 
-// TODO(brancz): Remove this function once Kubernetes 1.7 compatibility is dropped.
+// TODO(brancz): Remove this function once Kubernetes 1.7 compatibility is
+// dropped.
 // Starting with Kubernetes 1.8 OwnerReferences are properly handled for CRDs.
 func (c *Operator) destroyAlertmanager(key string) error {
 	ssetKey := alertmanagerKeyToStatefulSetKey(key)
@@ -556,8 +564,8 @@ func (c *Operator) destroyAlertmanager(key string) error {
 
 	podClient := c.kclient.Core().Pods(sset.Namespace)
 
-	// TODO(fabxc): temporary solution until StatefulSet status provides necessary info to know
-	// whether scale-down completed.
+	// TODO(fabxc): temporary solution until StatefulSet status provides
+	// necessary info to know whether scale-down completed.
 	for {
 		pods, err := podClient.List(ListOptions(alertmanagerNameFromStatefulSetName(sset.Name)))
 		if err != nil {

@@ -72,10 +72,10 @@ type Operator struct {
 
 	statefulsetErrors prometheus.Counter
 
-	// triggerByCounterVec is a set of counters keeping track of the amount of
-	// times Prometheus Operator was triggered to reconcile its created objects. It
-	// is split in the dimensions of Kubernetes objects and corresponding actions
-	// (add, delete, update).
+	// triggerByCounterVec is a set of counters keeping track of the amount
+	// of times Prometheus Operator was triggered to reconcile its created
+	// objects. It is split in the dimensions of Kubernetes objects and
+	// corresponding actions (add, delete, update).
 	triggerByCounterVec *prometheus.CounterVec
 
 	host                   string
@@ -254,13 +254,14 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
-	// nsResyncPeriod is used to control how often the namespace informer should resync.
-	// If the unprivileged ListerWatcher is used, then the informer must resync more often because
-	// it cannot watch for namespace changes.
+	// nsResyncPeriod is used to control how often the namespace informer
+	// should resync. If the unprivileged ListerWatcher is used, then the
+	// informer must resync more often because it cannot watch for
+	// namespace changes.
 	nsResyncPeriod := 15 * time.Second
-	// If the only namespace is v1.NamespaceAll, then the client must be privileged
-	// and a regular cache.ListWatch will be used. In this case watching works and we do not need
-	// to resync so frequently.
+	// If the only namespace is v1.NamespaceAll, then the client must be
+	// privileged and a regular cache.ListWatch will be used. In this case
+	// watching works and we do not need to resync so frequently.
 	if listwatch.IsAllNamespaces(c.config.Namespaces) {
 		nsResyncPeriod = resyncPeriod
 	}
@@ -272,7 +273,8 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	return c, nil
 }
 
-// RegisterMetrics registers Prometheus metrics on the given Prometheus registerer.
+// RegisterMetrics registers Prometheus metrics on the given Prometheus
+// registerer.
 func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
 	c.statefulsetErrors = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_prometheus_reconcile_errors_total",
@@ -738,8 +740,8 @@ func (c *Operator) getObject(obj interface{}) (metav1.Object, bool) {
 	return o, true
 }
 
-// enqueue adds a key to the queue. If obj is a key already it gets added directly.
-// Otherwise, the key is extracted via keyFunc.
+// enqueue adds a key to the queue. If obj is a key already it gets added
+// directly. Otherwise, the key is extracted via keyFunc.
 func (c *Operator) enqueue(obj interface{}) {
 	if obj == nil {
 		return
@@ -784,7 +786,8 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 			return
 		}
 
-		// Check for Prometheus instances selecting ServiceMonitors in the NS.
+		// Check for Prometheus instances selecting ServiceMonitors in
+		// the NS.
 		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
 		if err != nil {
 			level.Error(c.logger).Log(
@@ -799,7 +802,8 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 			return
 		}
 
-		// Check for Prometheus instances selecting PrometheusRules in the NS.
+		// Check for Prometheus instances selecting PrometheusRules in
+		// the NS.
 		ruleNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
 		if err != nil {
 			level.Error(c.logger).Log(
@@ -822,8 +826,9 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 	}
 }
 
-// worker runs a worker thread that just dequeues items, processes them, and marks them done.
-// It enforces that the syncHandler is never invoked concurrently with the same key.
+// worker runs a worker thread that just dequeues items, processes them, and
+// marks them done. It enforces that the syncHandler is never invoked
+// concurrently with the same key.
 func (c *Operator) worker() {
 	for c.processNextWorkItem() {
 	}
@@ -909,8 +914,9 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 
 	level.Debug(c.logger).Log("msg", "update handler", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
-	// Periodic resync may resend the StatefulSet without changes in-between.
-	// Also breaks loops created by updating the resource ourselves.
+	// Periodic resync may resend the StatefulSet without changes
+	// in-between. Also breaks loops created by updating the resource
+	// ourselves.
 	if old.ResourceVersion == cur.ResourceVersion {
 		return
 	}
@@ -945,8 +951,8 @@ func (c *Operator) sync(key string) error {
 		return err
 	}
 
-	// If no service monitor selectors are configured, the user wants to manage
-	// configuration themselves.
+	// If no service monitor selectors are configured, the user wants to
+	// manage configuration themselves.
 	if p.Spec.ServiceMonitorSelector != nil {
 		// We just always regenerate the configuration to be safe.
 		if err := c.createOrUpdateConfigurationSecret(p, ruleConfigMapNames); err != nil {
@@ -1049,9 +1055,9 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-// PrometheusStatus evaluates the current status of a Prometheus deployment with respect
-// to its specified resource object. It return the status and a list of pods that
-// are not updated.
+// PrometheusStatus evaluates the current status of a Prometheus deployment with
+// respect to its specified resource object. It return the status and a list of
+// pods that are not updated.
 func PrometheusStatus(kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
 	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
@@ -1074,7 +1080,8 @@ func PrometheusStatus(kclient kubernetes.Interface, p *monitoringv1.Prometheus) 
 		}
 		if ready {
 			res.AvailableReplicas++
-			// TODO(fabxc): detect other fields of the pod template that are mutable.
+			// TODO(fabxc): detect other fields of the pod template
+			// that are mutable.
 			if needsUpdate(&pod, sset.Spec.Template) {
 				oldPods = append(oldPods, pod)
 			} else {
@@ -1307,7 +1314,7 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 		return nil, err
 	}
 
-	// If 'ServiceMonitorNamespaceSelector' is nil, only check own namespace.
+	// If 'ServiceMonitorNamespaceSelector' is nil only check own namespace.
 	if p.Spec.ServiceMonitorNamespaceSelector == nil {
 		namespaces = append(namespaces, p.Namespace)
 	} else {
@@ -1342,7 +1349,8 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 	return res, nil
 }
 
-// listMatchingNamespaces lists all the namespaces that match the provided selector.
+// listMatchingNamespaces lists all the namespaces that match the provided
+// selector.
 func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, error) {
 	var ns []string
 	err := cache.ListAll(c.nsInf.GetStore(), selector, func(obj interface{}) {
