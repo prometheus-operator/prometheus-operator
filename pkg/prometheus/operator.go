@@ -75,7 +75,8 @@ type Operator struct {
 	// times Prometheus Operator was triggered to reconcile its created objects. It
 	// is split in the dimensions of Kubernetes objects and corresponding actions
 	// (add, delete, update).
-	triggerByCounterVec *prometheus.CounterVec
+	triggerByCounterVec     *prometheus.CounterVec
+	nodeAddressLookupErrors prometheus.Counter
 
 	host                   string
 	kubeletObjectName      string
@@ -292,10 +293,15 @@ func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
 	},
 		[]string{"triggered_by", "action"},
 	)
+	c.nodeAddressLookupErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_node_address_lookup_errors_total",
+		Help: "Number of times a node IP address could not be determined",
+	})
 
 	r.MustRegister(
 		c.statefulsetErrors,
 		c.triggerByCounterVec,
+		c.nodeAddressLookupErrors,
 		NewPrometheusCollector(c.promInf.GetStore()),
 	)
 }
@@ -417,8 +423,6 @@ func (c *Operator) reconcileNodeEndpoints(stopc <-chan struct{}) {
 // nodeAddresses returns the provided node's address, based on the priority:
 // 1. NodeInternalIP
 // 2. NodeExternalIP
-// 3. NodeLegacyHostIP
-// 3. NodeHostName
 //
 // Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go
 func nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) {
@@ -433,10 +437,31 @@ func nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) 
 	if addresses, ok := m[v1.NodeExternalIP]; ok {
 		return addresses[0], m, nil
 	}
-	if addresses, ok := m[v1.NodeHostName]; ok {
-		return addresses[0], m, nil
-	}
 	return "", m, fmt.Errorf("host address unknown")
+}
+
+func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
+	addresses := make([]v1.EndpointAddress, 0)
+	errs := make([]error, 0)
+
+	for _, n := range nodes.Items {
+		address, _, err := nodeAddress(n)
+		if err != nil {
+			errs = append(errs, errors.Wrapf(err, "failed to determine hostname for node (%s)", n.Name))
+			continue
+		}
+		addresses = append(addresses, v1.EndpointAddress{
+			IP: address,
+			TargetRef: &v1.ObjectReference{
+				Kind:       "Node",
+				Name:       n.Name,
+				UID:        n.UID,
+				APIVersion: n.APIVersion,
+			},
+		})
+	}
+
+	return addresses, errs
 }
 
 func (c *Operator) syncNodeEndpoints() error {
@@ -472,21 +497,14 @@ func (c *Operator) syncNodeEndpoints() error {
 		return errors.Wrap(err, "listing nodes failed")
 	}
 
-	for _, n := range nodes.Items {
-		address, _, err := nodeAddress(n)
-		if err != nil {
-			return errors.Wrapf(err, "failed to determine hostname for node (%s)", n.Name)
+	addresses, errs := getNodeAddresses(nodes)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			level.Warn(c.logger).Log("err", err)
 		}
-		eps.Subsets[0].Addresses = append(eps.Subsets[0].Addresses, v1.EndpointAddress{
-			IP: address,
-			TargetRef: &v1.ObjectReference{
-				Kind:       "Node",
-				Name:       n.Name,
-				UID:        n.UID,
-				APIVersion: n.APIVersion,
-			},
-		})
+		c.nodeAddressLookupErrors.Add(float64(len(errs)))
 	}
+	eps.Subsets[0].Addresses = addresses
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
