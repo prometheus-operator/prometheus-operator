@@ -62,6 +62,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
               port: 'metrics',
               interval: '30s',
               scheme: 'https',
+              // Prometheus Operator (and Prometheus) allow us to specify a tlsConfig. This is required as most likely your etcd metrics end points is secure.
               tlsConfig: {
                 caFile: '/etc/prometheus/secrets/kube-etcd-client-certs/etcd-client-ca.crt',
                 keyFile: '/etc/prometheus/secrets/kube-etcd-client-certs/etcd-client.key',
@@ -79,8 +80,8 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         },
       },
     secretEtcdCerts:
+      // Prometheus Operator allows us to mount secrets in the pod. By loading the secrets as files, they can be made available inside the Prometheus pod.
       local secret = k.core.v1.secret;
-
       secret.new('kube-etcd-client-certs', {
         'etcd-client-ca.crt': std.base64($._config.etcd.clientCA),
         'etcd-client.key': std.base64($._config.etcd.clientKey),
@@ -89,6 +90,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       secret.mixin.metadata.withNamespace($._config.namespace),
     prometheus+:
       {
+        // Reference info: https://coreos.com/operators/prometheus/docs/latest/api.html#prometheusspec
         spec+: {
           secrets+: [$.prometheus.secretEtcdCerts.metadata.name],
         },

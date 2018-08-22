@@ -2,119 +2,11 @@
 This guide will help you monitor an external etcd cluster. When the etcd cluster is not hosted inside Kubernetes.
 This is often the case with Kubernetes setups. This approach has been tested with kube-aws but the same principals apply to other tools.
 
-# Step 1 - Make the etcd certificates available to Prometheus pod
-Prometheus Operator (and Prometheus) allow us to specify a tlsConfig. This is required as most likely your etcd metrics end points is secure.
+Note that [etcd.jsonnet](../examples/etcd.jsonnet) & [kube-prometheus-static-etcd.libsonnet](../jsonnet/kube-prometheus/kube-prometheus-static-etcd.libsonnet) (which are described by a section of the [Readme](../README.md#static-etcd-configuration)) do the following:
+ * Put the three etcd TLS client files (CA & cert & key) into a secret in the namespace, and have Prometheus Operator load the secret.
+ * Create the following (to expose etcd metrics - port 2379): a Service, Endpoint, & ServiceMonitor.
 
-## a - Create the secrets in the namespace 
-Prometheus Operator allows us to mount secrets in the pod. By loading the secrets as files, they can be made available inside the Prometheus pod.
-
-`kubectl -n monitoring create secret generic etcd-certs --from-file=CREDENTIAL_PATH/etcd-client.pem --from-file=CREDENTIAL_PATH/etcd-client-key.pem --from-file=CREDENTIAL_PATH/ca.pem`
-
-where CREDENTIAL_PATH is the path to your etcd client credentials on your work machine. 
-(Kube-aws stores them inside the credential folder).
-
-## b - Get Prometheus Operator to load the secret
-In the previous step we have named the secret 'etcd-certs'.
-
-Edit prometheus-operator/contrib/kube-prometheus/manifests/prometheus/prometheus-k8s.yaml and add the secret under the spec of the Prometheus object manifest:
-
-```
-  secrets: 
-  - etcd-certs
-```
-
-The manifest will look like that:
-```
-apiVersion: monitoring.coreos.com/v1
-kind: Prometheus
-metadata:
-  name: k8s
-  labels:
-    prometheus: k8s
-spec:
-  replicas: 2
-  secrets: 
-  - etcd-certs
-  version: v1.7.1
-```
-
-If your Prometheus Operator is already in place, update it:
-
-`kubectl -n monitoring replace -f contrib/kube-prometheus/manifests/prometheus/prometheus-k8s.yaml
-
-# Step 2 - Create the Service, endpoints and ServiceMonitor
-
-The below manifest creates a Service to expose etcd metrics (port 2379)
-
-* Replace `IP_OF_YOUR_ETCD_NODE_[0/1/2]` with the IP addresses of your etcd nodes. If you have more than one node, add them to the same list.
-* Use `#insecureSkipVerify: true` or replace `ETCD_DNS_OR_ALTERNAME_NAME` with a valid name for the certificate. 
-
-In case you have generated the etcd certificated with kube-aws, you will need to use insecureSkipVerify as the valid certificate domain will be different for each etcd node (etcd0, etcd1, etcd2). If you only have one etcd node, you can use the value from `etcd.internalDomainName` speficied in your kube-aws `cluster.yaml`
-
-In this example we use insecureSkipVerify: true as kube-aws default certificates are not valid against the IP. They were created for the DNS. Depending on your use case, you might want to remove this flag or set it to false. (true required for kube-aws if using default certificate generators method)
-
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: etcd-k8s
-  labels:
-    k8s-app: etcd
-spec:
-  type: ClusterIP
-  clusterIP: None
-  ports:
-  - name: api
-    port: 2379
-    protocol: TCP
----
-apiVersion: v1
-kind: Endpoints
-metadata:
-  name: etcd-k8s
-  labels:
-    k8s-app: etcd
-subsets:
-- addresses:
-  - ip: IP_OF_YOUR_ETCD_NODE_0
-    nodeName: etcd0
-  - ip: IP_OF_YOUR_ETCD_NODE_1
-    nodeName: etcd1
-  - ip: IP_OF_YOUR_ETCD_NODE_2
-    nodeName: etcd2
-  ports:
-  - name: api
-    port: 2379
-    protocol: TCP
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: etcd-k8s
-  labels:
-    k8s-app: etcd-k8s
-spec:
-  jobLabel: k8s-app
-  endpoints:
-  - port: api
-    interval: 30s
-    scheme: https
-    tlsConfig:
-      caFile: /etc/prometheus/secrets/etcd-certs/ca.pem
-      certFile: /etc/prometheus/secrets/etcd-certs/etcd-client.pem
-      keyFile: /etc/prometheus/secrets/etcd-certs/etcd-client-key.pem
-      #use insecureSkipVerify only if you cannot use a Subject Alternative Name
-      #insecureSkipVerify: true 
-      serverName: ETCD_DNS_OR_ALTERNAME_NAME
-  selector:
-    matchLabels:
-      k8s-app: etcd
-  namespaceSelector:
-    matchNames:
-    - monitoring
-```
-
-# Step 3: Open the port 
+# Step 1: Open the port
 
 You now need to allow the nodes Prometheus are running on to talk to the etcd on the port 2379 (if 2379 is the port used by etcd to expose the metrics)
 
@@ -128,11 +20,11 @@ With kube-aws, each etcd node has two IP addresses:
 
 For some reason, some etcd node answer to :2379/metrics on the intance IP (eth0), some others on the EIP|ENI address (eth1). See issue https://github.com/kubernetes-incubator/kube-aws/issues/923
 It would be of course much better if we could hit the EPI/ENI all the time as they don't change even if the underlying EC2 intance goes down.
-If specifying the Instance IP (eth0) in the Prometheus Operator ServiceMonitor, and the EC2 intance goes down, one would have to update the ServiceMonitor. 
+If specifying the Instance IP (eth0) in the Prometheus Operator ServiceMonitor, and the EC2 intance goes down, one would have to update the ServiceMonitor.
 
 Another idea woud be to use the DNS entries of etcd, but those are not currently supported for EndPoints objects in Kubernetes.
 
-# Step 4: verify
+# Step 2: verify
 
 Go to the Prometheus UI on :9090/config and check that you have an etcd job entry:
 ```
@@ -142,9 +34,11 @@ Go to the Prometheus UI on :9090/config and check that you have an etcd job entr
   ...
 ```
 
-On the :9090/targets page, you should see "etcd" with the UP state. If not, check the Error column for more information.
+On the :9090/targets page:
+ * You should see "etcd" with the UP state. If not, check the Error column for more information.
+ * If no "etcd" targets are even shown on this page, prometheus isn't attempting to scrape it.
 
-# Step 5: Grafana dashboard
+# Step 3: Grafana dashboard
 
 ## Find a dashboard you like
 
