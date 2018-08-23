@@ -14,6 +14,11 @@ spec:
         sum(rate(container_cpu_usage_seconds_total{job="kubelet", image!=""}[5m])) by (namespace)
       record: namespace:container_cpu_usage_seconds_total:sum_rate
     - expr: |
+        sum by (namespace, pod_name, container_name) (
+          rate(container_cpu_usage_seconds_total{job="kubelet", image!=""}[5m])
+        )
+      record: namespace_pod_name_container_name:container_cpu_usage_seconds_total:sum_rate
+    - expr: |
         sum(container_memory_usage_bytes{job="kubelet", image!=""}) by (namespace)
       record: namespace:container_memory_usage_bytes:sum
     - expr: |
@@ -151,6 +156,12 @@ spec:
         /
         sum(node_memory_MemTotal{job="node-exporter"})
       record: ':node_memory_utilisation:'
+    - expr: |
+        sum(node_memory_MemFree{job="node-exporter"} + node_memory_Cached{job="node-exporter"} + node_memory_Buffers{job="node-exporter"})
+      record: :node_memory_MemFreeCachedBuffers:sum
+    - expr: |
+        sum(node_memory_MemTotal{job="node-exporter"})
+      record: :node_memory_MemTotal:sum
     - expr: |
         sum by (node) (
           (node_memory_MemFree{job="node-exporter"} + node_memory_Cached{job="node-exporter"} + node_memory_Buffers{job="node-exporter"})
@@ -796,10 +807,10 @@ spec:
           }}' is experiencing {{ printf "%0.0f" $value }}% errors.'
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeclienterrors
       expr: |
-        sum(rate(rest_client_requests_total{code!~"2.."}[5m])) by (instance, job) * 100
+        (sum(rate(rest_client_requests_total{code!~"2..|404"}[5m])) by (instance, job)
           /
-        sum(rate(rest_client_requests_total[5m])) by (instance, job)
-          > 1
+        sum(rate(rest_client_requests_total[5m])) by (instance, job))
+        * 100 > 1
       for: 15m
       labels:
         severity: warning
@@ -829,7 +840,7 @@ spec:
           for {{$labels.verb}} {{$labels.resource}}.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapilatencyhigh
       expr: |
-        cluster_quantile:apiserver_request_latencies:histogram_quantile{job="apiserver",quantile="0.99",subresource!="log",verb!~"^(?:WATCH|WATCHLIST|PROXY|CONNECT)$"} > 1
+        cluster_quantile:apiserver_request_latencies:histogram_quantile{job="apiserver",quantile="0.99",subresource!="log",verb!~"^(?:LIST|WATCH|WATCHLIST|PROXY|CONNECT)$"} > 1
       for: 10m
       labels:
         severity: warning
@@ -839,7 +850,7 @@ spec:
           for {{$labels.verb}} {{$labels.resource}}.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapilatencyhigh
       expr: |
-        cluster_quantile:apiserver_request_latencies:histogram_quantile{job="apiserver",quantile="0.99",subresource!="log",verb!~"^(?:WATCH|WATCHLIST|PROXY|CONNECT)$"} > 4
+        cluster_quantile:apiserver_request_latencies:histogram_quantile{job="apiserver",quantile="0.99",subresource!="log",verb!~"^(?:LIST|WATCH|WATCHLIST|PROXY|CONNECT)$"} > 4
       for: 10m
       labels:
         severity: critical

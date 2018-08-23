@@ -223,7 +223,7 @@ spec:
           path: /sys
         name: sys
       - hostPath:
-          path: /root
+          path: /
         name: root
 ```
 

@@ -74,7 +74,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local sysVolumeMount = containerVolumeMount.new(sysVolumeName, '/host/sys');
 
       local rootVolumeName = 'root';
-      local rootVolume = volume.fromHostPath(rootVolumeName, '/root');
+      local rootVolume = volume.fromHostPath(rootVolumeName, '/');
       local rootVolumeMount = containerVolumeMount.new(rootVolumeName, '/host/root').
         withMountPropagation('HostToContainer').
         withReadOnly(true);
