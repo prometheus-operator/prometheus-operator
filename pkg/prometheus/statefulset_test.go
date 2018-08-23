@@ -365,7 +365,7 @@ func TestTagAndVersion(t *testing.T) {
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Tag:     "my-unrelated-tag",
-			Version: "v2.3.1",
+			Version: "v2.3.2",
 		},
 	}, appsv1.OrderedReadyPodManagement, defaultTestConfig, nil, "")
 	if err != nil {
@@ -453,8 +453,8 @@ func TestRetention(t *testing.T) {
 	}{
 		{"v1.8.2", "", "-storage.local.retention=24h"},
 		{"v1.8.2", "1d", "-storage.local.retention=1d"},
-		{"v2.3.1", "", "--storage.tsdb.retention=24h"},
-		{"v2.3.1", "1d", "--storage.tsdb.retention=1d"},
+		{"v2.3.2", "", "--storage.tsdb.retention=24h"},
+		{"v2.3.2", "1d", "--storage.tsdb.retention=1d"},
 	}
 
 	for _, test := range tests {

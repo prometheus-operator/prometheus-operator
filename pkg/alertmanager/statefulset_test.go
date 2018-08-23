@@ -290,7 +290,7 @@ func TestMakeStatefulSetSpecMeshClusterFlags(t *testing.T) {
 		wrongHAPrefix string
 	}{
 		{"v0.14.0", "mesh", "cluster"},
-		{"v0.15.0", "cluster", "mesh"},
+		{"v0.15.2", "cluster", "mesh"},
 	}
 
 	for _, test := range tests {
@@ -326,7 +326,7 @@ func TestMakeStatefulSetSpecPeerFlagPort(t *testing.T) {
 		portNeeded bool
 	}{
 		{"v0.14.0", false},
-		{"v0.15.0", true},
+		{"v0.15.2", true},
 	}
 
 	for _, test := range tests {
@@ -399,7 +399,7 @@ func TestTagAndVersion(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
 			Tag:     "my-unrelated-tag",
-			Version: "v0.15.0",
+			Version: "v0.15.2",
 		},
 	}, nil, defaultTestConfig)
 	if err != nil {

@@ -8,7 +8,7 @@
                     "subdir": "contrib/kube-prometheus/jsonnet/kube-prometheus"
                 }
             },
-            "version": "793d90134afffc41c07d0482794379962f3e14ec"
+            "version": "43d93161ee1d5215a25e6a35582605cf2f4c26dd"
         },
         {
             "name": "ksonnet",
@@ -28,7 +28,7 @@
                     "subdir": ""
                 }
             },
-            "version": "3c341913ddd3882c8f1edc1c20accdbcaaf10525"
+            "version": "a2b417a9aa27d508d1c0b730ace0dff20b3b7bf7"
         },
         {
             "name": "grafonnet",
@@ -48,7 +48,7 @@
                     "subdir": "grafana-builder"
                 }
             },
-            "version": "a17504d81e2ab5b29d97c77faf72b8d7644bbabf"
+            "version": "8c4610783991b82ff12e485d24ac4f82d8839743"
         },
         {
             "name": "grafana",
@@ -58,7 +58,7 @@
                     "subdir": "grafana"
                 }
             },
-            "version": "942cd2349e27c2510c71158ee9ca953df33724f2"
+            "version": "9a20f81c9007e4c7409dd0b3edda1a7a78ad2c63"
         },
         {
             "name": "prometheus-operator",
@@ -68,7 +68,7 @@
                     "subdir": "jsonnet/prometheus-operator"
                 }
             },
-            "version": "82ac49106139eee53f1d76e062782f2e8449dd45"
+            "version": "ba92b2f232ef24684b9dc6bde03b74e1630909a6"
         },
         {
             "name": "etcd-mixin",
@@ -78,7 +78,7 @@
                     "subdir": "Documentation/etcd-mixin"
                 }
             },
-            "version": "6c9a853f04f8e0cde6139f3a9d04d00517407b91"
+            "version": "bdc333359b618b7519660ead7a4ef30288f8d350"
         }
     ]
 }

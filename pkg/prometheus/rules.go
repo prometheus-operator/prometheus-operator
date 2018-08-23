@@ -143,7 +143,7 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 			return namespaces, errors.Wrap(err, "convert rule namespace label selector to selector")
 		}
 
-		namespaces, err = c.listNamespaces(ruleNamespaceSelector)
+		namespaces, err = c.listMatchingNamespaces(ruleNamespaceSelector)
 		if err != nil {
 			return nil, err
 		}
