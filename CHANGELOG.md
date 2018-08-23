@@ -1,3 +1,7 @@
+## 0.23.2 / 2018-08-23
+
+* [BUGFIX] Do not abort kubelet endpoints update due to nodes without IP addresses defined (#1816)
+
 ## 0.23.1 / 2018-08-13
 
 * [BUGFIX] Fix high CPU usage of Prometheus Operator when annotating Prometheus resource (#1785)
