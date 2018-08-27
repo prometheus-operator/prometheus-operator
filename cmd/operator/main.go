@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -55,17 +56,17 @@ const (
 )
 
 var (
-	ns namespaces
+	ns = namespaces{}
 )
 
 type namespaces map[string]struct{}
 
 // Set implements the flagset.Value interface.
 func (n namespaces) Set(value string) error {
-	ns := strings.Split(value, ",")
 	if n == nil {
-		n = namespaces{}
+		return errors.New("expected n of type namespaces to be initialized")
 	}
+	ns := strings.Split(value, ",")
 	for i := range ns {
 		n[ns[i]] = struct{}{}
 	}
