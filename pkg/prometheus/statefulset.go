@@ -588,10 +588,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			thanosTag = *p.Spec.Thanos.Tag
 		}
 
-		thanosArgs := []string{"sidecar"}
+		thanosArgs := []string{
+			"sidecar",
+			fmt.Sprintf("--prometheus.url=http://%s:9090", c.LocalHost),
+			fmt.Sprintf("--tsdb.path=%s", storageDir),
+			fmt.Sprintf("--cluster.address=$(POD_IP):%d", 10900),
+			fmt.Sprintf("--grpc-address=$(POD_IP):%d", 10901),
+		}
 
-		thanosArgs = append(thanosArgs, fmt.Sprintf("--prometheus.url=http://%s:9090", c.LocalHost))
-		thanosArgs = append(thanosArgs, fmt.Sprintf("--tsdb.path=%s", storageDir))
 		if p.Spec.Thanos.Peers != nil {
 			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.peers=%s", *p.Spec.Thanos.Peers))
 		}
@@ -607,7 +611,17 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			},
 		}
 
-		envVars := []v1.EnvVar{}
+		envVars := []v1.EnvVar{
+			{
+				// Necessary for '--cluster.address', '--grpc-address' flags
+				Name: "POD_IP",
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{
+						FieldPath: "status.podIP",
+					},
+				},
+			},
+		}
 		if p.Spec.Thanos.GCS != nil {
 			if p.Spec.Thanos.GCS.Bucket != nil {
 				thanosArgs = append(thanosArgs, fmt.Sprintf("--gcs.bucket=%s", *p.Spec.Thanos.GCS.Bucket))
