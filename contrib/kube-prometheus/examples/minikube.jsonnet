@@ -10,7 +10,7 @@ local kp =
         config: importstr 'alertmanager-config.yaml',
       },
       grafana+:: {
-        config: {
+        config: { // http://docs.grafana.org/installation/configuration/
           sections: {
             // Do not require grafana users to login/authenticate
             "auth.anonymous": {enabled: true},
