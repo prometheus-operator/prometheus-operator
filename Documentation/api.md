@@ -119,7 +119,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | secrets | Secrets is a list of Secrets in the same namespace as the Alertmanager object, which shall be mounted into the Alertmanager Pods. The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>. | []string | false |
 | logLevel | Log level for Alertmanager to be configured with. | string | false |
 | replicas | Size is the expected size of the alertmanager cluster. The controller will eventually make the size of the running cluster equal to the expected size. | *int32 | false |
-| retention | Time duration Alertmanager shall retain data for. Default is '120h'. | string | false |
+| retention | Time duration Alertmanager shall retain data for. Default is '120h', and must match the regular expression `[0-9]+(mssmhdwy)` (milliseconds seconds minutes hours days weeks years). | string | false |
 | storage | Storage is the definition of how storage will be used by the Alertmanager instances. | *[StorageSpec](#storagespec) | false |
 | externalUrl | The external URL the Alertmanager instances will be available under. This is necessary to generate correct URLs. This is necessary if Alertmanager is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Alertmanager registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
@@ -263,7 +263,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | baseImage | Base image to use for a Prometheus deployment. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | false |
 | replicas | Number of instances to deploy for a Prometheus deployment. | *int32 | false |
-| retention | Time duration Prometheus shall retain data for. Default is '24h'. | string | false |
+| retention | Time duration Prometheus shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(mssmhdwy)` (milliseconds seconds minutes hours days weeks years). | string | false |
 | logLevel | Log level for Prometheus to be configured with. | string | false |
 | scrapeInterval | Interval between consecutive scrapes. | string | false |
 | evaluationInterval | Interval between consecutive evaluations. | string | false |
@@ -440,13 +440,14 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 ## StorageSpec
 
 StorageSpec defines the configured storage for a group Prometheus servers.
+If neither `emptyDir` nor `volumeClaimTemplate` is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) will be used.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| class | Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses DEPRECATED | string | false |
+| class | Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses (DEPRECATED - instead use `volumeClaimTemplate.spec.storageClassName`) | string | false |
 | emptyDir | EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir | *[v1.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#emptydirvolumesource-v1-core) | false |
-| selector | A label query over volumes to consider for binding. DEPRECATED | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
-| resources | Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources DEPRECATED | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
+| selector | A label query over volumes to consider for binding. (DEPRECATED - instead use `volumeClaimTemplate.spec.selector`) | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
+| resources | Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources (DEPRECATED - instead use `volumeClaimTemplate.spec.resources`) | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
 | volumeClaimTemplate | A PVC spec to be used by the Prometheus StatefulSets. | [v1.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#persistentvolumeclaim-v1-core) | false |
 
 [Back to TOC](#table-of-contents)
