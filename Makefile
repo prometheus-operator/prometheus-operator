@@ -91,7 +91,7 @@ generate-in-docker: hack/jsonnet-docker-image
 	--rm \
 	-u=$(shell id -u $(USER)):$(shell id -g $(USER)) \
 	-v `pwd`:/go/src/github.com/coreos/prometheus-operator \
-	po-jsonnet make generate
+	po-jsonnet make $(MFLAGS) generate
 
 .PHONY: kube-prometheus
 kube-prometheus:
