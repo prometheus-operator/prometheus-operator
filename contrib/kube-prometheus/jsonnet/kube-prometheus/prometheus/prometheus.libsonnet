@@ -22,6 +22,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       rules: {},
       renderedRules: {},
       namespaces: ['default', 'kube-system', $._config.namespace],
+      externalUrl: null,
     },
   },
 
@@ -183,7 +184,9 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
               },
             ],
           },
-        },
+        } + if $._config.prometheus.externalUrl != null then {
+          externalUrl: $._config.prometheus.externalUrl,
+        } else {},
       },
     serviceMonitor:
       {
