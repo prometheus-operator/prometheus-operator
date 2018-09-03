@@ -557,12 +557,12 @@ type RuleGroup struct {
 // Rule describes an alerting or recording rule.
 // +k8s:openapi-gen=true
 type Rule struct {
-	Record      string            `json:"record,omitempty"`
-	Alert       string            `json:"alert,omitempty"`
-	Expr        string            `json:"expr"`
-	For         string            `json:"for,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
+	Record      string             `json:"record,omitempty"`
+	Alert       string             `json:"alert,omitempty"`
+	Expr        intstr.IntOrString `json:"expr"`
+	For         string             `json:"for,omitempty"`
+	Labels      map[string]string  `json:"labels,omitempty"`
+	Annotations map[string]string  `json:"annotations,omitempty"`
 }
 
 // Alertmanager describes an Alertmanager cluster.

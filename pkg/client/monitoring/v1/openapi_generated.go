@@ -1803,8 +1803,7 @@ func schema_pkg_client_monitoring_v1_Rule(ref common.ReferenceCallback) common.O
 					},
 					"expr": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Ref: ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
 						},
 					},
 					"for": {
@@ -1843,7 +1842,8 @@ func schema_pkg_client_monitoring_v1_Rule(ref common.ReferenceCallback) common.O
 				Required: []string{"expr"},
 			},
 		},
-		Dependencies: []string{},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
 	}
 }
 
