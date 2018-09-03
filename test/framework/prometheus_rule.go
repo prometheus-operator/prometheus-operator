@@ -21,6 +21,7 @@ import (
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -55,7 +56,7 @@ func (f *Framework) MakeAndCreateFiringRule(ns, name, alertName string) (monitor
 			Rules: []monitoringv1.Rule{
 				{
 					Alert: alertName,
-					Expr:  "vector(1)",
+					Expr:  intstr.FromString("vector(1)"),
 				},
 			},
 		},

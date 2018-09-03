@@ -471,7 +471,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 			Rules: []monitoringv1.Rule{
 				{
 					Alert: secondAlertName,
-					Expr:  "vector(1)",
+					Expr:  intstr.FromString("vector(1)"),
 				},
 			},
 		},
@@ -672,7 +672,7 @@ func generateHugePrometheusRule(ns, identifier string) monitoringv1.PrometheusRu
 	for i := 0; i < 12000; i++ {
 		groups[0].Rules = append(groups[0].Rules, monitoringv1.Rule{
 			Alert: alertName + "-" + identifier,
-			Expr:  "vector(1)",
+			Expr:  intstr.FromString("vector(1)"),
 		})
 	}
 	rule := framework.MakeBasicRule(ns, "prometheus-rule-"+identifier, groups)
