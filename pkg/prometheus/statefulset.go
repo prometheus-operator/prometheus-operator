@@ -722,8 +722,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	if p.Spec.Tag != "" {
 		prometheusImage = fmt.Sprintf("%s:%s", p.Spec.BaseImage, p.Spec.Tag)
 	}
-	if p.Spec.Sha != "" {
-		prometheusImage = fmt.Sprintf("%s@sha256:%s", p.Spec.BaseImage, p.Spec.Sha)
+	if p.Spec.SHA != "" {
+		prometheusImage = fmt.Sprintf("%s@sha256:%s", p.Spec.BaseImage, p.Spec.SHA)
 	}
 
 	return &appsv1.StatefulSetSpec{

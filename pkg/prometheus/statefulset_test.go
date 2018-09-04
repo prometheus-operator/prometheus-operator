@@ -380,7 +380,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 
 	sset, err = makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
-			Sha:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+			SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 			Tag:     "my-unrelated-tag",
 			Version: "v2.3.2",
 		},

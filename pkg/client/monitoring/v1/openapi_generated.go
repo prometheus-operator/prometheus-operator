@@ -1183,7 +1183,7 @@ func schema_pkg_client_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback
 					},
 					"sha": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Sha of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image.",
+							Description: "SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image.",
 							Type:        []string{"string"},
 							Format:      "",
 						},

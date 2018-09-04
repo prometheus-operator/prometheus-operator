@@ -67,9 +67,9 @@ type PrometheusSpec struct {
 	Version string `json:"version,omitempty"`
 	// Tag of Prometheus container image to be deployed. Defaults to the value of `version`.
 	Tag string `json:"tag,omitempty"`
-	// Sha of Prometheus container image to be deployed. Defaults to the value of `version`.
+	// SHA of Prometheus container image to be deployed. Defaults to the value of `version`.
 	// Similar to a tag, but the sha explicitly deploys an immutable container image.
-	Sha string `json:"sha,omitempty"`
+	SHA string `json:"sha,omitempty"`
 	// When a Prometheus deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
 	Paused bool `json:"paused,omitempty"`

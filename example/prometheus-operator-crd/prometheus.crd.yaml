@@ -2377,7 +2377,7 @@ spec:
                     are ANDed.
                   type: object
             sha:
-              description: Sha of Prometheus container image to be deployed. Defaults
+              description: SHA of Prometheus container image to be deployed. Defaults
                 to the value of `version`. Similar to a tag, but the sha explicitly
                 deploys an immutable container image.
               type: string
