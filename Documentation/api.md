@@ -259,6 +259,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | serviceMonitorNamespaceSelector | Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | version | Version of Prometheus to be deployed. | string | false |
 | tag | Tag of Prometheus container image to be deployed. Defaults to the value of `version`. | string | false |
+| sha | Sha of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image. | string | false |
 | paused | When a Prometheus deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
 | baseImage | Base image to use for a Prometheus deployment. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | false |

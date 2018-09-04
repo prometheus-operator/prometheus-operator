@@ -714,9 +714,16 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h", "--storage.tsdb.max-block-duration=2h")
 	}
 
+	// Version is used by default.
+	// If the tag is specified, we use the tag to identify the container image.
+	// If the sha is specified, we use the sha to identify the container image,
+	// as it has even stronger immutable guarantees to identify the image.
 	prometheusTag := p.Spec.Version
 	if p.Spec.Tag != "" {
 		prometheusTag = p.Spec.Tag
+	}
+	if p.Spec.Sha != "" {
+		prometheusTag = p.Spec.Sha
 	}
 
 	return &appsv1.StatefulSetSpec{

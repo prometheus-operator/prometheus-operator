@@ -1181,6 +1181,13 @@ func schema_pkg_client_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback
 							Format:      "",
 						},
 					},
+					"sha": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Sha of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"paused": {
 						SchemaProps: spec.SchemaProps{
 							Description: "When a Prometheus deployment is paused, no actions except for deletion will be performed on the underlying objects.",
