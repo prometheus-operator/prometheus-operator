@@ -78,7 +78,8 @@ type PrometheusSpec struct {
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Number of instances to deploy for a Prometheus deployment.
 	Replicas *int32 `json:"replicas,omitempty"`
-	// Time duration Prometheus shall retain data for. Default is '24h'.
+	// Time duration Prometheus shall retain data for. Default is '24h',
+	// and must match the regular expression `[0-9]+(mssmhdwy)` (milliseconds seconds minutes hours days weeks years).
 	Retention string `json:"retention,omitempty"`
 	// Log level for Prometheus to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
@@ -214,21 +215,22 @@ type AlertingSpec struct {
 }
 
 // StorageSpec defines the configured storage for a group Prometheus servers.
+// If neither `emptyDir` nor `volumeClaimTemplate` is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) will be used.
 // +k8s:openapi-gen=true
 type StorageSpec struct {
 	// Name of the StorageClass to use when requesting storage provisioning. More
 	// info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
-	// DEPRECATED
+	// (DEPRECATED - instead use `volumeClaimTemplate.spec.storageClassName`)
 	Class string `json:"class,omitempty"`
 	// EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More
 	// info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
 	EmptyDir *v1.EmptyDirVolumeSource `json:"emptyDir,omitempty"`
 	// A label query over volumes to consider for binding.
-	// DEPRECATED
+	// (DEPRECATED - instead use `volumeClaimTemplate.spec.selector`)
 	Selector *metav1.LabelSelector `json:"selector,omitempty"`
 	// Resources represents the minimum resources the volume should have. More
 	// info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources
-	// DEPRECATED
+	// (DEPRECATED - instead use `volumeClaimTemplate.spec.resources`)
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// A PVC spec to be used by the Prometheus StatefulSets.
 	VolumeClaimTemplate v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
@@ -609,7 +611,8 @@ type AlertmanagerSpec struct {
 	// eventually make the size of the running cluster equal to the expected
 	// size.
 	Replicas *int32 `json:"replicas,omitempty"`
-	// Time duration Alertmanager shall retain data for. Default is '120h'.
+	// Time duration Alertmanager shall retain data for. Default is '120h',
+	// and must match the regular expression `[0-9]+(mssmhdwy)` (milliseconds seconds minutes hours days weeks years).
 	Retention string `json:"retention,omitempty"`
 	// Storage is the definition of how storage will be used by the Alertmanager
 	// instances.

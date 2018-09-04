@@ -2096,7 +2096,8 @@ spec:
                   type: object
             retention:
               description: Time duration Prometheus shall retain data for. Default
-                is '24h'.
+                is '24h', and must match the regular expression `[0-9]+(mssmhdwy)`
+                (milliseconds seconds minutes hours days weeks years).
               type: string
             routePrefix:
               description: The route prefix Prometheus registers HTTP handlers for.
@@ -2377,12 +2378,14 @@ spec:
                   type: object
             storage:
               description: StorageSpec defines the configured storage for a group
-                Prometheus servers.
+                Prometheus servers. If neither `emptyDir` nor `volumeClaimTemplate`
+                is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir)
+                will be used.
               properties:
                 class:
                   description: 'Name of the StorageClass to use when requesting storage
                     provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
-                    DEPRECATED'
+                    (DEPRECATED - instead use `volumeClaimTemplate.spec.storageClassName`)'
                   type: string
                 emptyDir:
                   description: Represents an empty directory for a pod. Empty directory

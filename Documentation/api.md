@@ -439,8 +439,7 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 
 ## StorageSpec
 
-StorageSpec defines the configured storage for a group Prometheus servers.
-If neither `emptyDir` nor `volumeClaimTemplate` is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) will be used.
+StorageSpec defines the configured storage for a group Prometheus servers. If neither `emptyDir` nor `volumeClaimTemplate` is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) will be used.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
