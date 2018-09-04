@@ -79,7 +79,7 @@ type PrometheusSpec struct {
 	// Number of instances to deploy for a Prometheus deployment.
 	Replicas *int32 `json:"replicas,omitempty"`
 	// Time duration Prometheus shall retain data for. Default is '24h',
-	// and must match the regular expression `[0-9]+(mssmhdwy)` (milliseconds seconds minutes hours days weeks years).
+	// and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).
 	Retention string `json:"retention,omitempty"`
 	// Log level for Prometheus to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
@@ -612,7 +612,7 @@ type AlertmanagerSpec struct {
 	// size.
 	Replicas *int32 `json:"replicas,omitempty"`
 	// Time duration Alertmanager shall retain data for. Default is '120h',
-	// and must match the regular expression `[0-9]+(mssmhdwy)` (milliseconds seconds minutes hours days weeks years).
+	// and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).
 	Retention string `json:"retention,omitempty"`
 	// Storage is the definition of how storage will be used by the Alertmanager
 	// instances.
