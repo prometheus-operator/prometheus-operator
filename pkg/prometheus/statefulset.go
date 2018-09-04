@@ -718,12 +718,12 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	// If the tag is specified, we use the tag to identify the container image.
 	// If the sha is specified, we use the sha to identify the container image,
 	// as it has even stronger immutable guarantees to identify the image.
-	prometheusTag := p.Spec.Version
+	prometheusImage := fmt.Sprintf("%s:%s", p.Spec.BaseImage, p.Spec.Version)
 	if p.Spec.Tag != "" {
-		prometheusTag = p.Spec.Tag
+		prometheusImage = fmt.Sprintf("%s:%s", p.Spec.BaseImage, p.Spec.Tag)
 	}
 	if p.Spec.Sha != "" {
-		prometheusTag = p.Spec.Sha
+		prometheusImage = fmt.Sprintf("%s@sha256:%s", p.Spec.BaseImage, p.Spec.Sha)
 	}
 
 	return &appsv1.StatefulSetSpec{
@@ -745,7 +745,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				Containers: append([]v1.Container{
 					{
 						Name:           "prometheus",
-						Image:          fmt.Sprintf("%s:%s", p.Spec.BaseImage, prometheusTag),
+						Image:          prometheusImage,
 						Ports:          ports,
 						Args:           promArgs,
 						VolumeMounts:   promVolumeMounts,

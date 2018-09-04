@@ -380,7 +380,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 
 	sset, err = makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
-			Sha:     "1809f7cd0c75acf34f56d8c19782b99c6b5fcd14128a3cc79aca38a4f94af3ff",
+			Sha:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 			Tag:     "my-unrelated-tag",
 			Version: "v2.3.2",
 		},
@@ -390,7 +390,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 	}
 
 	image = sset.Spec.Template.Spec.Containers[0].Image
-	expected = "quay.io/prometheus/prometheus:1809f7cd0c75acf34f56d8c19782b99c6b5fcd14128a3cc79aca38a4f94af3ff"
+	expected = "quay.io/prometheus/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
 	if image != expected {
 		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 	}
