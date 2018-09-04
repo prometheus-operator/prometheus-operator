@@ -21,6 +21,7 @@ rules:
   - services
   - endpoints
   - pods
+  - ingresses
   verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources:
