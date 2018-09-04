@@ -595,7 +595,7 @@ func schema_pkg_client_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallba
 					},
 					"retention": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Time duration Alertmanager shall retain data for. Default is '120h'.",
+							Description: "Time duration Alertmanager shall retain data for. Default is '120h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -1217,7 +1217,7 @@ func schema_pkg_client_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback
 					},
 					"retention": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Time duration Prometheus shall retain data for. Default is '24h'.",
+							Description: "Time duration Prometheus shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2034,11 +2034,11 @@ func schema_pkg_client_monitoring_v1_StorageSpec(ref common.ReferenceCallback) c
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "StorageSpec defines the configured storage for a group Prometheus servers.",
+				Description: "StorageSpec defines the configured storage for a group Prometheus servers. If neither `emptyDir` nor `volumeClaimTemplate` is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) will be used.",
 				Properties: map[string]spec.Schema{
 					"class": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses DEPRECATED",
+							Description: "Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses (DEPRECATED - instead use `volumeClaimTemplate.spec.storageClassName`)",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2051,13 +2051,13 @@ func schema_pkg_client_monitoring_v1_StorageSpec(ref common.ReferenceCallback) c
 					},
 					"selector": {
 						SchemaProps: spec.SchemaProps{
-							Description: "A label query over volumes to consider for binding. DEPRECATED",
+							Description: "A label query over volumes to consider for binding. (DEPRECATED - instead use `volumeClaimTemplate.spec.selector`)",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 						},
 					},
 					"resources": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources DEPRECATED",
+							Description: "Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources (DEPRECATED - instead use `volumeClaimTemplate.spec.resources`)",
 							Ref:         ref("k8s.io/api/core/v1.ResourceRequirements"),
 						},
 					},
