@@ -8,7 +8,7 @@ replicaCount: 1
 global:
   rbacEnable: true
   pspEnable: true
-  
+
   # Reference to one or more secrets to be used when pulling images
   imagePullSecrets: []
   #  - name: "image-pull-secret"
@@ -16,7 +16,7 @@ global:
 kube_state_metrics:
   image:
     repository: gcr.io/google_containers/kube-state-metrics
-    tag: v1.2.0
+    tag: v1.4.0
     pullPolicy: IfNotPresent
   service:
     name: kube-state-metrics

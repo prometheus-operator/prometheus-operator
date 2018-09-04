@@ -21,7 +21,7 @@ deployKubeState: True
 global:
   rbacEnable: true
   pspEnable: true
-  
+
   # Reference to one or more secrets to be used when pulling images
   imagePullSecrets: []
   #  - name: "image-pull-secret"
@@ -57,7 +57,7 @@ alertmanager:
   ##
   image:
     repository: quay.io/prometheus/alertmanager
-    tag: v0.15.1
+    tag: v0.15.2
 
   ingress:
     ## If true, Alertmanager Ingress will be created
@@ -192,7 +192,7 @@ prometheus:
   ##
   image:
     repository: quay.io/prometheus/prometheus
-    tag: v2.2.1
+    tag: v2.3.2
 
   ingress:
     ## If true, Prometheus Ingress will be created

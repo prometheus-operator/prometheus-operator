@@ -49,7 +49,7 @@ Parameter | Description | Default
 `externalUrl` | External URL at which Prometheus will be reachable | `""`
 `routePrefix` | Prefix used to register routes | `"/"`
 `image.repository` | Image | `quay.io/prometheus/prometheus`
-`image.tag` | Image tag | `v2.2.1`
+`image.tag` | Image tag | `v2.3.2`
 `ingress.enabled` | If true, Prometheus Ingress will be created | `false`
 `ingress.annotations` | Annotations for Prometheus Ingress` | `{}`
 `ingress.labels` | Labels for Prometheus Ingress | `{}`

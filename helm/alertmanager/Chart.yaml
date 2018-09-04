@@ -8,9 +8,9 @@ name: alertmanager
 sources:
   - https://github.com/coreos/prometheus-operator
   - https://github.com/prometheus/alertmanager
-version: 0.1.7
-appVersion: "0.15.1"
-home: https://github.com/prometheus/alertmanager 
+version: 0.1.8
+appVersion: "0.15.2"
+home: https://github.com/prometheus/alertmanager
 keywords:
 - alertmanager
 - monitoring
