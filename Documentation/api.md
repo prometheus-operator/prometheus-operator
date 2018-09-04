@@ -382,7 +382,7 @@ Rule describes an alerting or recording rule.
 | ----- | ----------- | ------ | -------- |
 | record |  | string | false |
 | alert |  | string | false |
-| expr |  | string | true |
+| expr |  | intstr.IntOrString | true |
 | for |  | string | false |
 | labels |  | map[string]string | false |
 | annotations |  | map[string]string | false |
