@@ -14,3 +14,5 @@ RUN go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 
 RUN mkdir -p /go/src/github.com/coreos/prometheus-operator
 WORKDIR /go/src/github.com/coreos/prometheus-operator
+
+RUN chmod -R 777 /go
