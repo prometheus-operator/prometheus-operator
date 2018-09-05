@@ -2376,6 +2376,11 @@ spec:
                     "In", and the values array contains only "value". The requirements
                     are ANDed.
                   type: object
+            sha:
+              description: SHA of Prometheus container image to be deployed. Defaults
+                to the value of `version`. Similar to a tag, but the sha explicitly
+                deploys an immutable container image.
+              type: string
             storage:
               description: StorageSpec defines the configured storage for a group
                 Prometheus servers. If neither `emptyDir` nor `volumeClaimTemplate`
