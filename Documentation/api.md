@@ -113,7 +113,8 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | ----- | ----------- | ------ | -------- |
 | podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
 | version | Version the cluster should be on. | string | false |
-| tag | Tag of Alertmanager container image to be deployed. Defaults to the value of `version`. | string | false |
+| tag | Tag of Alertmanager container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. | string | false |
+| sha | SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. | string | false |
 | baseImage | Base image that is used to deploy pods, without tag. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Alertmanager object, which shall be mounted into the Alertmanager Pods. The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>. | []string | false |
@@ -258,8 +259,8 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | serviceMonitorSelector | ServiceMonitors to be selected for target discovery. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | serviceMonitorNamespaceSelector | Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | version | Version of Prometheus to be deployed. | string | false |
-| tag | Tag of Prometheus container image to be deployed. Defaults to the value of `version`. | string | false |
-| sha | SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image. | string | false |
+| tag | Tag of Prometheus container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. | string | false |
+| sha | SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. | string | false |
 | paused | When a Prometheus deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
 | baseImage | Base image to use for a Prometheus deployment. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | false |
@@ -501,7 +502,8 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | ----- | ----------- | ------ | -------- |
 | peers | Peers is a DNS name for Thanos to discover peers through. | *string | false |
 | version | Version describes the version of Thanos to use. | *string | false |
-| tag | Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`. | *string | false |
+| tag | Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. | *string | false |
+| sha | SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. | *string | false |
 | baseImage | Thanos base image if other than default. | *string | false |
 | resources | Resources defines the resource requirements for the Thanos sidecar. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
 | gcs | GCS configures use of GCS in Thanos. | *[ThanosGCSSpec](#thanosgcsspec) | false |

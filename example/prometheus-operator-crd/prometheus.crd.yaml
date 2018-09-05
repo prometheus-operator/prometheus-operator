@@ -2378,8 +2378,9 @@ spec:
                   type: object
             sha:
               description: SHA of Prometheus container image to be deployed. Defaults
-                to the value of `version`. Similar to a tag, but the sha explicitly
-                deploys an immutable container image.
+                to the value of `version`. Similar to a tag, but the SHA explicitly
+                deploys an immutable container image. Version and Tag are ignored
+                if SHA is set.
               type: string
             storage:
               description: StorageSpec defines the configured storage for a group
@@ -2921,7 +2922,7 @@ spec:
                           type: string
             tag:
               description: Tag of Prometheus container image to be deployed. Defaults
-                to the value of `version`.
+                to the value of `version`. Version is ignored if Tag is set.
               type: string
             thanos:
               description: ThanosSpec defines parameters for a Prometheus server within
@@ -3024,9 +3025,16 @@ spec:
                       description: Whether to use S3 Signature Version 2; otherwise
                         Signature Version 4 will be used.
                       type: boolean
+                sha:
+                  description: SHA of Thanos container image to be deployed. Defaults
+                    to the value of `version`. Similar to a tag, but the SHA explicitly
+                    deploys an immutable container image. Version and Tag are ignored
+                    if SHA is set.
+                  type: string
                 tag:
                   description: Tag of Thanos sidecar container image to be deployed.
-                    Defaults to the value of `version`.
+                    Defaults to the value of `version`. Version is ignored if Tag
+                    is set.
                   type: string
                 version:
                   description: Version describes the version of Thanos to use.

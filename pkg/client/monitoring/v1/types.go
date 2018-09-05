@@ -66,9 +66,11 @@ type PrometheusSpec struct {
 	// Version of Prometheus to be deployed.
 	Version string `json:"version,omitempty"`
 	// Tag of Prometheus container image to be deployed. Defaults to the value of `version`.
+	// Version is ignored if Tag is set.
 	Tag string `json:"tag,omitempty"`
 	// SHA of Prometheus container image to be deployed. Defaults to the value of `version`.
-	// Similar to a tag, but the sha explicitly deploys an immutable container image.
+	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
+	// Version and Tag are ignored if SHA is set.
 	SHA string `json:"sha,omitempty"`
 	// When a Prometheus deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
@@ -247,7 +249,12 @@ type ThanosSpec struct {
 	// Version describes the version of Thanos to use.
 	Version *string `json:"version,omitempty"`
 	// Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`.
+	// Version is ignored if Tag is set.
 	Tag *string `json:"tag,omitempty"`
+	// SHA of Thanos container image to be deployed. Defaults to the value of `version`.
+	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
+	// Version and Tag are ignored if SHA is set.
+	SHA *string `json:"sha,omitempty"`
 	// Thanos base image if other than default.
 	BaseImage *string `json:"baseImage,omitempty"`
 	// Resources defines the resource requirements for the Thanos sidecar.
@@ -597,7 +604,12 @@ type AlertmanagerSpec struct {
 	// Version the cluster should be on.
 	Version string `json:"version,omitempty"`
 	// Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.
+	// Version is ignored if Tag is set.
 	Tag string `json:"tag,omitempty"`
+	// SHA of Thanos container image to be deployed. Defaults to the value of `version`.
+	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
+	// Version and Tag are ignored if SHA is set.
+	SHA string `json:"sha,omitempty"`
 	// Base image that is used to deploy pods, without tag.
 	BaseImage string `json:"baseImage,omitempty"`
 	// An optional list of references to secrets in the same namespace

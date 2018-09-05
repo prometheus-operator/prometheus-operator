@@ -395,21 +395,41 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 	}
 }
 
-func TestTagAndVersion(t *testing.T) {
-	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
-		Spec: monitoringv1.AlertmanagerSpec{
-			Tag:     "my-unrelated-tag",
-			Version: "v0.15.2",
-		},
-	}, nil, defaultTestConfig)
-	if err != nil {
-		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-	}
+func TestSHAAndTagAndVersion(t *testing.T) {
+	{
+		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+			Spec: monitoringv1.AlertmanagerSpec{
+				Tag:     "my-unrelated-tag",
+				Version: "v0.15.2",
+			},
+		}, nil, defaultTestConfig)
+		if err != nil {
+			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+		}
 
-	image := sset.Spec.Template.Spec.Containers[0].Image
-	expected := "quay.io/prometheus/alertmanager:my-unrelated-tag"
-	if image != expected {
-		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
+		image := sset.Spec.Template.Spec.Containers[0].Image
+		expected := "quay.io/prometheus/alertmanager:my-unrelated-tag"
+		if image != expected {
+			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
+		}
+	}
+	{
+		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+			Spec: monitoringv1.AlertmanagerSpec{
+				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+				Tag:     "my-unrelated-tag",
+				Version: "v0.15.2",
+			},
+		}, nil, defaultTestConfig)
+		if err != nil {
+			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+		}
+
+		image := sset.Spec.Template.Spec.Containers[0].Image
+		expected := "quay.io/prometheus/alertmanager@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
+		if image != expected {
+			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
+		}
 	}
 }
 
