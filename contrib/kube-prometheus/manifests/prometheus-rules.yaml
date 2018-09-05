@@ -781,10 +781,10 @@ spec:
       annotations:
         message: Based on recent sampling, the persistent volume claimed by {{ $labels.persistentvolumeclaim
           }} in namespace {{ $labels.namespace }} is expected to fill up within four
-          days.
+          days. Currently {{ $value }} bytes are available.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepersistentvolumefullinfourdays
       expr: |
-        predict_linear(kubelet_volume_stats_available_bytes{job="kubelet"}[1h], 4 * 24 * 3600) < 0
+        kubelet_volume_stats_available_bytes{job="kubelet"} and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet"}[6h], 4 * 24 * 3600) < 0
       for: 5m
       labels:
         severity: critical
@@ -954,21 +954,19 @@ spec:
     rules:
     - alert: NodeDiskRunningFull
       annotations:
-        description: device {{$labels.device}} on node {{$labels.instance}} is running
-          full within the next 24 hours (mounted at {{$labels.mountpoint}})
-        summary: Node disk is running full within 24 hours
+        message: Device {{ $labels.device }} of node-exporter {{ $labels.namespace
+          }}/{{ $labels.pod }} is running full within the next 24 hours.
       expr: |
-        predict_linear(node_filesystem_free{job="node-exporter",mountpoint!~"^/etc/(?:resolv.conf|hosts|hostname)$"}[6h], 3600 * 24) < 0 and on(instance) up{job="node-exporter"}
+        (node:node_filesystem_usage: > 0.85) and (predict_linear(node:node_filesystem_avail:[6h], 3600 * 24) < 0)
       for: 30m
       labels:
         severity: warning
     - alert: NodeDiskRunningFull
       annotations:
-        description: device {{$labels.device}} on node {{$labels.instance}} is running
-          full within the next 2 hours (mounted at {{$labels.mountpoint}})
-        summary: Node disk is running full within 2 hours
+        message: Device {{ $labels.device }} of node-exporter {{ $labels.namespace
+          }}/{{ $labels.pod }} is running full within the next 2 hours.
       expr: |
-        predict_linear(node_filesystem_free{job="node-exporter",mountpoint!~"^/etc/(?:resolv.conf|hosts|hostname)$"}[30m], 3600 * 2) < 0 and on(instance) up{job="node-exporter"}
+        (node:node_filesystem_usage: > 0.85) and (predict_linear(node:node_filesystem_avail:[30m], 3600 * 2) < 0)
       for: 10m
       labels:
         severity: critical
