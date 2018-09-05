@@ -540,7 +540,14 @@ func schema_pkg_client_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallba
 					},
 					"tag": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.",
+							Description: "Tag of Alertmanager container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"sha": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image. Version anmaked Tag are ignored if SHA is set.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -1176,14 +1183,14 @@ func schema_pkg_client_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback
 					},
 					"tag": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Tag of Prometheus container image to be deployed. Defaults to the value of `version`.",
+							Description: "Tag of Prometheus container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"sha": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image.",
+							Description: "SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2240,7 +2247,14 @@ func schema_pkg_client_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) co
 					},
 					"tag": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`.",
+							Description: "Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"sha": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
