@@ -547,7 +547,7 @@ func schema_pkg_client_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallba
 					},
 					"sha": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image. Version anmaked Tag are ignored if SHA is set.",
+							Description: "SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -1190,7 +1190,7 @@ func schema_pkg_client_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback
 					},
 					"sha": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set.",
+							Description: "SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2254,7 +2254,7 @@ func schema_pkg_client_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) co
 					},
 					"sha": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the sha explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set.",
+							Description: "SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set.",
 							Type:        []string{"string"},
 							Format:      "",
 						},

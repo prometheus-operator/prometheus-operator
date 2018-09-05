@@ -1797,8 +1797,8 @@ spec:
               type: string
             sha:
               description: SHA of Thanos container image to be deployed. Defaults
-                to the value of `version`. Similar to a tag, but the sha explicitly
-                deploys an immutable container image. Version anmaked Tag are ignored
+                to the value of `version`. Similar to a tag, but the SHA explicitly
+                deploys an immutable container image. Version and Tag are ignored
                 if SHA is set.
               type: string
             storage:

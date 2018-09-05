@@ -2378,7 +2378,7 @@ spec:
                   type: object
             sha:
               description: SHA of Prometheus container image to be deployed. Defaults
-                to the value of `version`. Similar to a tag, but the sha explicitly
+                to the value of `version`. Similar to a tag, but the SHA explicitly
                 deploys an immutable container image. Version and Tag are ignored
                 if SHA is set.
               type: string
@@ -3027,7 +3027,7 @@ spec:
                       type: boolean
                 sha:
                   description: SHA of Thanos container image to be deployed. Defaults
-                    to the value of `version`. Similar to a tag, but the sha explicitly
+                    to the value of `version`. Similar to a tag, but the SHA explicitly
                     deploys an immutable container image. Version and Tag are ignored
                     if SHA is set.
                   type: string

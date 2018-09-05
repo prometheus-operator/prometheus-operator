@@ -69,7 +69,7 @@ type PrometheusSpec struct {
 	// Version is ignored if Tag is set.
 	Tag string `json:"tag,omitempty"`
 	// SHA of Prometheus container image to be deployed. Defaults to the value of `version`.
-	// Similar to a tag, but the sha explicitly deploys an immutable container image.
+	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
 	// Version and Tag are ignored if SHA is set.
 	SHA string `json:"sha,omitempty"`
 	// When a Prometheus deployment is paused, no actions except for deletion
@@ -252,7 +252,7 @@ type ThanosSpec struct {
 	// Version is ignored if Tag is set.
 	Tag *string `json:"tag,omitempty"`
 	// SHA of Thanos container image to be deployed. Defaults to the value of `version`.
-	// Similar to a tag, but the sha explicitly deploys an immutable container image.
+	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
 	// Version and Tag are ignored if SHA is set.
 	SHA *string `json:"sha,omitempty"`
 	// Thanos base image if other than default.
@@ -607,8 +607,8 @@ type AlertmanagerSpec struct {
 	// Version is ignored if Tag is set.
 	Tag string `json:"tag,omitempty"`
 	// SHA of Thanos container image to be deployed. Defaults to the value of `version`.
-	// Similar to a tag, but the sha explicitly deploys an immutable container image.
-	// Version anmaked Tag are ignored if SHA is set.
+	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
+	// Version and Tag are ignored if SHA is set.
 	SHA string `json:"sha,omitempty"`
 	// Base image that is used to deploy pods, without tag.
 	BaseImage string `json:"baseImage,omitempty"`
