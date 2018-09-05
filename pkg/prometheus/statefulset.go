@@ -583,9 +583,16 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			thanosBaseImage = *p.Spec.Thanos.BaseImage
 		}
 
-		thanosTag := *p.Spec.Thanos.Version
+		// Version is used by default.
+		// If the tag is specified, we use the tag to identify the container image.
+		// If the sha is specified, we use the sha to identify the container image,
+		// as it has even stronger immutable guarantees to identify the image.
+		thanosImage := fmt.Sprintf("%s:%s", thanosBaseImage, *p.Spec.Thanos.Version)
 		if p.Spec.Thanos.Tag != nil {
-			thanosTag = *p.Spec.Thanos.Tag
+			thanosImage = fmt.Sprintf("%s:%s", thanosBaseImage, *p.Spec.Thanos.Tag)
+		}
+		if p.Spec.Thanos.SHA != nil {
+			thanosImage = fmt.Sprintf("%s@sha256:%s", thanosBaseImage, *p.Spec.Thanos.SHA)
 		}
 
 		thanosArgs := []string{
@@ -689,7 +696,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 		c := v1.Container{
 			Name:  "thanos-sidecar",
-			Image: thanosBaseImage + ":" + thanosTag,
+			Image: thanosImage,
 			Args:  thanosArgs,
 			Ports: []v1.ContainerPort{
 				{
