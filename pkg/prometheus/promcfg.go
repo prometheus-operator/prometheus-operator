@@ -403,6 +403,10 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
 			{Key: "target_label", Value: "service"},
 		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_node_name"}},
+			{Key: "target_label", Value: "node"},
+		},
 	}...)
 
 	// Relabel targetLabels from Service onto target.
