@@ -907,7 +907,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "utc",
+          "timezone": "",
           "title": "K8s / USE Method / Cluster",
           "uid": "a6e7d1362e1ddbb79db21d5bb40d7137",
           "version": 0
@@ -1850,7 +1850,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "utc",
+          "timezone": "",
           "title": "K8s / USE Method / Node",
           "uid": "4ac4f123aae0ff6dbaf4f4f66120033b",
           "version": 0
@@ -3178,7 +3178,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "utc",
+          "timezone": "",
           "title": "K8s / Compute Resources / Cluster",
           "uid": "efa86fd1d0c121a26444b636a3f509a8",
           "version": 0
@@ -4017,7 +4017,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "utc",
+          "timezone": "",
           "title": "K8s / Compute Resources / Namespace",
           "uid": "85a562078cdf77779eaa1add43ccec1e",
           "version": 0
@@ -4883,7 +4883,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "utc",
+          "timezone": "",
           "title": "K8s / Compute Resources / Pod",
           "uid": "6581e46e4e5c7ba40a07646395ef7b23",
           "version": 0
@@ -6001,7 +6001,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "browser",
+          "timezone": "",
           "title": "Nodes",
           "uid": "fa49a4706d07a042595b664c87fb33ea",
           "version": 0
@@ -6485,7 +6485,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "browser",
+          "timezone": "",
           "title": "Pods",
           "uid": "ab4f13a9892a76a4d21ce8c2445bf4ea",
           "version": 0
@@ -7335,7 +7335,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "browser",
+          "timezone": "",
           "title": "StatefulSets",
           "uid": "a31c1f46e6f727cb37c0d731a7245005",
           "version": 0
