@@ -8,6 +8,7 @@
             alert: 'AlertmanagerConfigInconsistent',
             annotations: {
               description: 'The configuration of the instances of the Alertmanager cluster `{{$labels.service}}` are out of sync.',
+              runbook_url: '',
               summary: 'Configuration out of sync',
             },
             expr: |||
@@ -22,6 +23,7 @@
             alert: 'AlertmanagerDownOrMissing',
             annotations: {
               description: 'An unexpected number of Alertmanagers are scraped or Alertmanagers disappeared from discovery.',
+              runbook_url: '',
               summary: 'Alertmanager down or missing',
             },
             expr: |||
@@ -36,6 +38,7 @@
             alert: 'AlertmanagerFailedReload',
             annotations: {
               description: "Reloading Alertmanager's configuration has failed for {{ $labels.namespace }}/{{ $labels.pod}}.",
+              runbook_url: '',
               summary: "Alertmanager's configuration reload failed",
             },
             expr: |||

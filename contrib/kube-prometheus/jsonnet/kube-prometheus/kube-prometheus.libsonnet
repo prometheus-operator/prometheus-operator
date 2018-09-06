@@ -35,15 +35,38 @@ local configMapList = k.core.v1.configMapList;
     prometheusOperatorSelector: 'job="prometheus-operator"',
 
     jobs: {
-      Kubelet: $._config.kubeletSelector,
-      KubeScheduler: $._config.kubeSchedulerSelector,
-      KubeControllerManager: $._config.kubeControllerManagerSelector,
-      KubeAPI: $._config.kubeApiserverSelector,
-      KubeStateMetrics: $._config.kubeStateMetricsSelector,
-      NodeExporter: $._config.nodeExporterSelector,
-      Alertmanager: $._config.alertmanagerSelector,
-      Prometheus: $._config.prometheusSelector,
-      PrometheusOperator: $._config.prometheusOperatorSelector,
+      Kubelet: {
+        selector: $._config.kubeletSelector,
+      },
+      KubeScheduler: {
+        selector: $._config.kubeSchedulerSelector,
+      },
+      KubeControllerManager: {
+        selector: $._config.kubeControllerManagerSelector,
+      },
+      KubeAPI: {
+        selector: $._config.kubeApiserverSelector,
+      },
+      KubeStateMetrics: {
+        selector: $._config.kubeStateMetricsSelector,
+        absent_runbook_url: '',
+      },
+      NodeExporter: {
+        selector: $._config.nodeExporterSelector,
+        absent_runbook_url: '',
+      },
+      Alertmanager: {
+        selector: $._config.alertmanagerSelector,
+        absent_runbook_url: '',
+      },
+      Prometheus: {
+        selector: $._config.prometheusSelector,
+        absent_runbook_url: '',
+      },
+      PrometheusOperator: {
+        selector: $._config.prometheusOperatorSelector,
+        absent_runbook_url: '',
+      },
     },
 
     prometheus+:: {
