@@ -318,7 +318,7 @@ func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
 	return rt.Data.ActiveTargets, nil
 }
 
-func (f *Framework) checkPrometheusFiringAlert(ns, svcName, alertName string) (bool, error) {
+func (f *Framework) CheckPrometheusFiringAlert(ns, svcName, alertName string) (bool, error) {
 	response, err := f.QueryPrometheusSVC(
 		ns,
 		svcName,
@@ -351,7 +351,7 @@ func (f *Framework) WaitForPrometheusFiringAlert(ns, svcName, alertName string) 
 
 	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
 		var firing bool
-		firing, loopError = f.checkPrometheusFiringAlert(ns, svcName, alertName)
+		firing, loopError = f.CheckPrometheusFiringAlert(ns, svcName, alertName)
 		return firing, nil
 	})
 

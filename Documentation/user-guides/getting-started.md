@@ -92,6 +92,7 @@ rules:
   resources:
   - namespaces
   verbs:
+  - get
   - list
   - watch
 ---

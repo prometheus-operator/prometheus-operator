@@ -181,10 +181,9 @@ test-unit:
 	@go test $(TEST_RUN_ARGS) -short $(pkgs)
 
 .PHONY: test-e2e
-test-e2e: NAMESPACE?=po-e2e-$(shell LC_ALL=C tr -dc a-z0-9 < /dev/urandom | head -c 13 ; echo '')
 test-e2e: KUBECONFIG?=$(HOME)/.kube/config
 test-e2e:
-	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) --namespace=$(NAMESPACE)
+	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG)
 
 .PHONY: test-e2e-helm
 test-e2e-helm:

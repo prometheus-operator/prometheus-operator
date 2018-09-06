@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -40,13 +41,11 @@ type Framework struct {
 	MonClientV1alpha1 monitoringv1alpha1.MonitoringV1alpha1Interface
 	HTTPClient        *http.Client
 	MasterHost        string
-	Namespace         *v1.Namespace
-	OperatorPod       *v1.Pod
 	DefaultTimeout    time.Duration
 }
 
 // New setups a test framework and returns it.
-func New(ns, kubeconfig, opImage string) (*Framework, error) {
+func New(kubeconfig, opImage string) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
@@ -72,39 +71,28 @@ func New(ns, kubeconfig, opImage string) (*Framework, error) {
 		return nil, errors.Wrap(err, "creating v1alpha1 monitoring client failed")
 	}
 
-	namespace, err := CreateNamespace(cli, ns)
-	if err != nil {
-		return nil, err
-	}
-
 	f := &Framework{
 		MasterHost:        config.Host,
 		KubeClient:        cli,
 		MonClientV1:       mClientV1,
 		MonClientV1alpha1: mClientV1alpha1,
 		HTTPClient:        httpc,
-		Namespace:         namespace,
 		DefaultTimeout:    time.Minute,
-	}
-
-	err = f.Setup(opImage)
-	if err != nil {
-		return nil, errors.Wrap(err, "setup test environment failed")
 	}
 
 	return f, nil
 }
 
-func (f *Framework) Setup(opImage string) error {
-	if err := f.setupPrometheusOperator(opImage); err != nil {
-		return errors.Wrap(err, "setup prometheus operator failed")
-	}
-
-	return nil
-}
-
-func (f *Framework) setupPrometheusOperator(opImage string) error {
-	if _, err := CreateServiceAccount(f.KubeClient, f.Namespace.Name, "../../example/rbac/prometheus-operator/prometheus-operator-service-account.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+// CreatePrometheusOperator creates a Prometheus Operator Kubernetes Deployment
+// inside the specified namespace using the specified operator image. In addition
+// one can specify the namespaces to watch, which defaults to all namespaces.
+func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespacesToWatch []string) error {
+	_, err := CreateServiceAccount(
+		f.KubeClient,
+		ns,
+		"../../example/rbac/prometheus-operator/prometheus-operator-service-account.yaml",
+	)
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "failed to create prometheus operator service account")
 	}
 
@@ -112,12 +100,8 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 		return errors.Wrap(err, "failed to create prometheus cluster role")
 	}
 
-	if _, err := CreateClusterRoleBinding(f.KubeClient, f.Namespace.Name, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+	if _, err := CreateClusterRoleBinding(f.KubeClient, ns, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "failed to create prometheus cluster role binding")
-	}
-
-	if err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "failed to create prometheus cluster role")
 	}
 
 	deploy, err := MakeDeployment("../../example/rbac/prometheus-operator/prometheus-operator-deployment.yaml")
@@ -148,22 +132,23 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=all")
 
-	err = CreateDeployment(f.KubeClient, f.Namespace.Name, deploy)
+	for _, ns := range namespacesToWatch {
+		deploy.Spec.Template.Spec.Containers[0].Args = append(
+			deploy.Spec.Template.Spec.Containers[0].Args,
+			fmt.Sprintf("--namespaces=%v", ns),
+		)
+	}
+
+	err = CreateDeployment(f.KubeClient, ns, deploy)
 	if err != nil {
 		return err
 	}
 
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(deploy.Spec.Template.ObjectMeta.Labels)).String()}
-	err = WaitForPodsReady(f.KubeClient, f.Namespace.Name, f.DefaultTimeout, 1, opts)
+	err = WaitForPodsReady(f.KubeClient, ns, f.DefaultTimeout, 1, opts)
 	if err != nil {
 		return errors.Wrap(err, "failed to wait for prometheus operator to become ready")
 	}
-
-	pl, err := f.KubeClient.Core().Pods(f.Namespace.Name).List(opts)
-	if err != nil {
-		return err
-	}
-	f.OperatorPod = &pl.Items[0]
 
 	err = k8sutil.WaitForCRDReady(f.MonClientV1.Prometheuses(v1.NamespaceAll).List)
 	if err != nil {
@@ -189,6 +174,9 @@ func (f *Framework) setupPrometheusOperator(opImage string) error {
 }
 
 func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kubernetes.Interface) {
+	if err := CreateClusterRole(kubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+		t.Fatalf("failed to create prometheus cluster role: %v", err)
+	}
 	if finalizerFn, err := CreateServiceAccount(kubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
 	} else {
@@ -203,6 +191,9 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 }
 
 func (ctx *TestCtx) SetupPrometheusRBACGlobal(t *testing.T, ns string, kubeClient kubernetes.Interface) {
+	if err := CreateClusterRole(kubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+		t.Fatalf("failed to create prometheus cluster role: %v", err)
+	}
 	if finalizerFn, err := CreateServiceAccount(kubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus service account"))
 	} else {
@@ -214,21 +205,4 @@ func (ctx *TestCtx) SetupPrometheusRBACGlobal(t *testing.T, ns string, kubeClien
 	} else {
 		ctx.AddFinalizerFn(finalizerFn)
 	}
-}
-
-// Teardown tears down a previously initialized test environment.
-func (f *Framework) Teardown() error {
-	if err := f.KubeClient.Core().Services(f.Namespace.Name).Delete("prometheus-operated", nil); err != nil && !k8sutil.IsResourceNotFoundError(err) {
-		return err
-	}
-
-	if err := f.KubeClient.Core().Services(f.Namespace.Name).Delete("alertmanager-operated", nil); err != nil && !k8sutil.IsResourceNotFoundError(err) {
-		return err
-	}
-
-	if err := f.KubeClient.Extensions().Deployments(f.Namespace.Name).Delete("prometheus-operator", nil); err != nil {
-		return err
-	}
-
-	return DeleteNamespace(f.KubeClient, f.Namespace.Name)
 }

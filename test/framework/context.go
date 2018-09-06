@@ -42,7 +42,7 @@ func (f *Framework) NewTestCtx(t *testing.T) TestCtx {
 		"test",
 	)
 
-	id := prefix + "-" + strconv.FormatInt(time.Now().Unix(), 10)
+	id := prefix + "-" + strconv.FormatInt(time.Now().Unix(), 36)
 	return TestCtx{
 		ID: id,
 	}

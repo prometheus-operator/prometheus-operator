@@ -32,7 +32,7 @@ import (
 	testFramework "github.com/coreos/prometheus-operator/test/framework"
 )
 
-func TestAlertmanagerCreateDeleteCluster(t *testing.T) {
+func testAMCreateDeleteCluster(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -51,7 +51,7 @@ func TestAlertmanagerCreateDeleteCluster(t *testing.T) {
 	}
 }
 
-func TestAlertmanagerScaling(t *testing.T) {
+func testAMScaling(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -74,7 +74,7 @@ func TestAlertmanagerScaling(t *testing.T) {
 	}
 }
 
-func TestAlertmanagerVersionMigration(t *testing.T) {
+func testAMVersionMigration(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -101,7 +101,7 @@ func TestAlertmanagerVersionMigration(t *testing.T) {
 	}
 }
 
-func TestExposingAlertmanagerWithKubernetesAPI(t *testing.T) {
+func testAMExposingWithKubernetesAPI(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -128,7 +128,7 @@ func TestExposingAlertmanagerWithKubernetesAPI(t *testing.T) {
 	}
 }
 
-func TestMeshInitialization(t *testing.T) {
+func testAMMeshInitialization(t *testing.T) {
 	t.Parallel()
 
 	// Starting with Alertmanager v0.15.0 hashicorp/memberlist is used for HA.
@@ -170,7 +170,7 @@ func TestMeshInitialization(t *testing.T) {
 	}
 }
 
-func TestAlertmanagerClusterGossipSilences(t *testing.T) {
+func testAMClusterGossipSilences(t *testing.T) {
 	t.Parallel()
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
@@ -218,7 +218,7 @@ func TestAlertmanagerClusterGossipSilences(t *testing.T) {
 	}
 }
 
-func TestAlertmanagerReloadConfig(t *testing.T) {
+func testAMReloadConfig(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -291,7 +291,7 @@ receivers:
 	}
 }
 
-func TestAlertmanagerZeroDowntimeRollingDeployment(t *testing.T) {
+func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
