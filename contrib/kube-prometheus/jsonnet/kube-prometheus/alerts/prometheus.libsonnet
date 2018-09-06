@@ -8,6 +8,7 @@
             alert: 'PrometheusConfigReloadFailed',
             annotations: {
               description: "Reloading Prometheus' configuration has failed for {{$labels.namespace}}/{{$labels.pod}}",
+              runbook_url: '',
               summary: "Reloading Promehteus' configuration failed",
             },
             expr: |||
@@ -22,6 +23,7 @@
             alert: 'PrometheusNotificationQueueRunningFull',
             annotations: {
               description: "Prometheus' alert notification queue is running full for {{$labels.namespace}}/{{ $labels.pod}}",
+              runbook_url: '',
               summary: "Prometheus' alert notification queue is running full",
             },
             expr: |||
@@ -36,7 +38,8 @@
             alert: 'PrometheusErrorSendingAlerts',
             annotations: {
               description: 'Errors while sending alerts from Prometheus {{$labels.namespace}}/{{ $labels.pod}} to Alertmanager {{$labels.Alertmanager}}',
-              summary: 'Errors while sending alert from Prometheus',
+              runbook_url: '',
+              summary: 'Errors while sending alerts from Prometheus',
             },
             expr: |||
               rate(prometheus_notifications_errors_total{%(prometheusSelector)s}[5m]) / rate(prometheus_notifications_sent_total{%(prometheusSelector)s}[5m]) > 0.01
@@ -50,6 +53,7 @@
             alert: 'PrometheusErrorSendingAlerts',
             annotations: {
               description: 'Errors while sending alerts from Prometheus {{$labels.namespace}}/{{ $labels.pod}} to Alertmanager {{$labels.Alertmanager}}',
+              runbook_url: '',
               summary: 'Errors while sending alerts from Prometheus',
             },
             expr: |||
@@ -64,6 +68,7 @@
             alert: 'PrometheusNotConnectedToAlertmanagers',
             annotations: {
               description: 'Prometheus {{ $labels.namespace }}/{{ $labels.pod}} is not connected to any Alertmanagers',
+              runbook_url: '',
               summary: 'Prometheus is not connected to any Alertmanagers',
             },
             expr: |||
@@ -78,6 +83,7 @@
             alert: 'PrometheusTSDBReloadsFailing',
             annotations: {
               description: '{{$labels.job}} at {{$labels.instance}} had {{$value | humanize}} reload failures over the last four hours.',
+              runbook_url: '',
               summary: 'Prometheus has issues reloading data blocks from disk',
             },
             expr: |||
@@ -92,6 +98,7 @@
             alert: 'PrometheusTSDBCompactionsFailing',
             annotations: {
               description: '{{$labels.job}} at {{$labels.instance}} had {{$value | humanize}} compaction failures over the last four hours.',
+              runbook_url: '',
               summary: 'Prometheus has issues compacting sample blocks',
             },
             expr: |||
@@ -106,6 +113,7 @@
             alert: 'PrometheusTSDBWALCorruptions',
             annotations: {
               description: '{{$labels.job}} at {{$labels.instance}} has a corrupted write-ahead log (WAL).',
+              runbook_url: '',
               summary: 'Prometheus write-ahead log is corrupted',
             },
             expr: |||
@@ -120,6 +128,7 @@
             alert: 'PrometheusNotIngestingSamples',
             annotations: {
               description: "Prometheus {{ $labels.namespace }}/{{ $labels.pod}} isn't ingesting samples.",
+              runbook_url: '',
               summary: "Prometheus isn't ingesting samples",
             },
             expr: |||
@@ -134,6 +143,7 @@
             alert: 'PrometheusTargetScrapesDuplicate',
             annotations: {
               description: '{{$labels.namespace}}/{{$labels.pod}} has many samples rejected due to duplicate timestamps but different values',
+              runbook_url: '',
               summary: 'Prometheus has many samples rejected',
             },
             expr: |||
