@@ -1,4 +1,4 @@
-FROM golang:1.10-stretch
+FROM golang:1.11-stretch
 
 ENV JSONNET_VERSION 0.10.0
 
