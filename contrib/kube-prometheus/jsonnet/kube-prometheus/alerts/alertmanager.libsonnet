@@ -21,7 +21,7 @@
           {
             alert: 'AlertmanagerDownOrMissing',
             annotations: {
-              description: 'An unexpected number of Alertmanagers are scraped or Alertmanagers disappeared from discovery.',
+              description: 'An unexpected number of Alertmanagers were scraped or disappeared from discovery.',
               summary: 'Alertmanager down or missing',
             },
             expr: |||
