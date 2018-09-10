@@ -188,6 +188,8 @@ type PrometheusSpec struct {
 	// This is experimental and may change significantly without backward
 	// compatibility in any release.
 	Thanos *ThanosSpec `json:"thanos,omitempty"`
+	// Priority class assigned to the Pods
+	PriorityClassName string `json:"priorityClassName,omitempty"`
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not
@@ -665,6 +667,8 @@ type AlertmanagerSpec struct {
 	// Containers allows injecting additional containers. This is meant to
 	// allow adding an authentication proxy to an Alertmanager pod.
 	Containers []v1.Container `json:"containers,omitempty"`
+	// Priority class assigned to the Pods
+	PriorityClassName string `json:"priorityClassName,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.
