@@ -713,7 +713,22 @@ func schema_pkg_client_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallba
 							Format:      "",
 						},
 					},
+					"AdditionalPeers": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 				},
+				Required: []string{"AdditionalPeers"},
 			},
 		},
 		Dependencies: []string{
