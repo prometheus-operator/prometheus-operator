@@ -669,6 +669,8 @@ type AlertmanagerSpec struct {
 	Containers []v1.Container `json:"containers,omitempty"`
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
+	// AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.
+	AdditionalPeers []string `json:"additionalPeers,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.
