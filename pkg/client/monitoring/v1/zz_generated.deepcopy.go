@@ -239,6 +239,11 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.AdditionalPeers != nil {
+		in, out := &in.AdditionalPeers, &out.AdditionalPeers
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

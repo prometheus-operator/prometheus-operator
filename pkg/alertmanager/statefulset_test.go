@@ -352,6 +352,31 @@ func TestMakeStatefulSetSpecPeerFlagPort(t *testing.T) {
 	}
 }
 
+func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
+	a := monitoringv1.Alertmanager{}
+	a.Spec.Version = "v0.15.2"
+	replicas := int32(1)
+	a.Spec.Replicas = &replicas
+	a.Spec.AdditionalPeers = []string{"example.com"}
+
+	statefulSet, err := makeStatefulSetSpec(&a, Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	peerFound := false
+	amArgs := statefulSet.Template.Spec.Containers[0].Args
+	for _, arg := range amArgs {
+		if strings.Contains(arg, "example.com") {
+			peerFound = true
+		}
+	}
+
+	if !peerFound {
+		t.Fatal("Additional peers were not found.")
+	}
+}
+
 func TestAdditionalSecretsMounted(t *testing.T) {
 	secrets := []string{"secret1", "secret2"}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{

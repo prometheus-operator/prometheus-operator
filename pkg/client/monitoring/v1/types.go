@@ -647,6 +647,8 @@ type AlertmanagerSpec struct {
 	// Containers allows injecting additional containers. This is meant to
 	// allow adding an authentication proxy to an Alertmanager pod.
 	Containers []v1.Container `json:"containers,omitempty"`
+	// AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.
+	AdditionalPeers []string
 }
 
 // AlertmanagerList is a list of Alertmanagers.

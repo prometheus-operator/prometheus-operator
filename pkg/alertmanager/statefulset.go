@@ -265,6 +265,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s.%s.svc:6783", prefixedName(a.Name), i, governingServiceName, a.Namespace))
 	}
 
+	for _, peer := range a.Spec.AdditionalPeers {
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s", peer))
+	}
+
 	ports := []v1.ContainerPort{
 		{
 			Name:          "mesh",
