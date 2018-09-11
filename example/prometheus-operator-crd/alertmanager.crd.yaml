@@ -1669,6 +1669,9 @@ spec:
 
                     Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
                   type: string
+            priorityClassName:
+              description: Priority class assigned to the Pods
+              type: string
             replicas:
               description: Size is the expected size of the alertmanager cluster.
                 The controller will eventually make the size of the running cluster

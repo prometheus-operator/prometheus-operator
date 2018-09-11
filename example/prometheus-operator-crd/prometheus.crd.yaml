@@ -1831,6 +1831,9 @@ spec:
 
                     Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
                   type: string
+            priorityClassName:
+              description: Priority class assigned to the Pods
+              type: string
             remoteRead:
               description: If specified, the remote_read spec. This is an experimental
                 feature, it may change in any upcoming release in a breaking way.
