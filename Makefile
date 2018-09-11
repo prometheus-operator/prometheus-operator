@@ -50,6 +50,7 @@ pkg/client/monitoring/v1/zz_generated.deepcopy.go: .header pkg/client/monitoring
 	--logtostderr \
 	--bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" \
 	--output-file-base zz_generated.deepcopy
+	go fmt pkg/client/monitoring/v1/zz_generated.deepcopy.go
 
 pkg/client/monitoring/v1alpha1/zz_generated.deepcopy.go: $(DEEPCOPY_GEN_BINARY)
 	$(DEEPCOPY_GEN_BINARY) \
@@ -59,6 +60,7 @@ pkg/client/monitoring/v1alpha1/zz_generated.deepcopy.go: $(DEEPCOPY_GEN_BINARY)
 	--logtostderr \
 	--bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" \
 	--output-file-base zz_generated.deepcopy
+	go fmt pkg/client/monitoring/v1alpha1/zz_generated.deepcopy.go
 
 .PHONY: image
 image: hack/operator-image hack/prometheus-config-reloader-image
@@ -91,7 +93,7 @@ generate-in-docker: hack/jsonnet-docker-image
 	--rm \
 	-u=$(shell id -u $(USER)):$(shell id -g $(USER)) \
 	-v `pwd`:/go/src/github.com/coreos/prometheus-operator \
-	po-jsonnet make generate
+	po-jsonnet make $(MFLAGS) generate # MFLAGS are the parent make call's flags
 
 .PHONY: kube-prometheus
 kube-prometheus:
@@ -114,6 +116,7 @@ pkg/client/monitoring/v1/openapi_generated.go: pkg/client/monitoring/v1/types.go
 	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1 \
 	-p github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 \
 	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header"
+	go fmt pkg/client/monitoring/v1/openapi_generated.go
 
 bundle.yaml: $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	hack/generate-bundle.sh

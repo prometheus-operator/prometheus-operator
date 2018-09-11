@@ -174,11 +174,18 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	// details see https://github.com/coreos/prometheus-operator/issues/1659
 	a = a.DeepCopy()
 
-	tag := a.Spec.Version
+	// Version is used by default.
+	// If the tag is specified, we use the tag to identify the container image.
+	// If the sha is specified, we use the sha to identify the container image,
+	// as it has even stronger immutable guarantees to identify the image.
+	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Version)
 	if a.Spec.Tag != "" {
-		tag = a.Spec.Tag
+		image = fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Tag)
 	}
-	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, tag)
+	if a.Spec.SHA != "" {
+		image = fmt.Sprintf("%s@sha256:%s", a.Spec.BaseImage, a.Spec.SHA)
+	}
+
 	versionStr := strings.TrimLeft(a.Spec.Version, "v")
 
 	version, err := semver.Parse(versionStr)
@@ -393,6 +400,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			},
 			Spec: v1.PodSpec{
 				NodeSelector:                  a.Spec.NodeSelector,
+				PriorityClassName:             a.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
 				Containers: append([]v1.Container{
 					{

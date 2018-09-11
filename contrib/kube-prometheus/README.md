@@ -250,7 +250,7 @@ These are the available fields with their respective default values:
 The grafana definition is located in a different project (https://github.com/brancz/kubernetes-grafana), but needed configuration can be customized from the same top level `_config` field. For example to allow anonymous access to grafana, add the following `_config` section:
 ```
       grafana+:: {
-        config: {
+        config: { // http://docs.grafana.org/installation/configuration/
           sections: {
             "auth.anonymous": {enabled: true},
           },

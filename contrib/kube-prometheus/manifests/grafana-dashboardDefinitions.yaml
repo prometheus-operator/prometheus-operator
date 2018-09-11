@@ -796,7 +796,7 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum(max(node_filesystem_size{fstype=\u007e\"ext[24]\"} - node_filesystem_avail{fstype=\u007e\"ext[24]\"}) by (device,pod,namespace)) by (pod,namespace) / scalar(sum(max(node_filesystem_size{fstype=\u007e\"ext[24]\"}) by (device,pod,namespace))) * on (namespace, pod) group_left(node) node_namespace_pod:kube_pod_info:\n",
+                                  "expr": "sum(max(node_filesystem_size{fstype=\u007e\"ext[234]|btrfs|xfs|zfs\"} - node_filesystem_avail{fstype=\u007e\"ext[234]|btrfs|xfs|zfs\"}) by (device,pod,namespace)) by (pod,namespace)\n/ scalar(sum(max(node_filesystem_size{fstype=\u007e\"ext[234]|btrfs|xfs|zfs\"}) by (device,pod,namespace)))\n* on (namespace, pod) group_left (node) node_namespace_pod:kube_pod_info:\n",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
@@ -907,7 +907,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "utc",
+          "timezone": "",
           "title": "K8s / USE Method / Cluster",
           "uid": "a6e7d1362e1ddbb79db21d5bb40d7137",
           "version": 0
@@ -1712,10 +1712,10 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "1 - sum(max by (device, node) (node_filesystem_avail{fstype=\u007e\"ext[24]\"})) / sum(max by (device, node) (node_filesystem_size{fstype=\u007e\"ext[24]\"}))",
+                                  "expr": "node:node_filesystem_usage:\n* on (namespace, pod) group_left (node) node_namespace_pod:kube_pod_info:{node=\"$node\"}\n",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": "Disk",
+                                  "legendFormat": "{{device}}",
                                   "legendLink": null,
                                   "step": 10
                               }
@@ -1850,7 +1850,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "utc",
+          "timezone": "",
           "title": "K8s / USE Method / Node",
           "uid": "4ac4f123aae0ff6dbaf4f4f66120033b",
           "version": 0
@@ -2800,7 +2800,7 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum(container_memory_rss) by (namespace)",
+                                  "expr": "sum(container_memory_rss{container_name!=\"\"}) by (namespace)",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{namespace}}",
@@ -3029,7 +3029,7 @@ items:
                           ],
                           "targets": [
                               {
-                                  "expr": "sum(container_memory_rss) by (namespace)",
+                                  "expr": "sum(container_memory_rss{container_name!=\"\"}) by (namespace)",
                                   "format": "table",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -3047,7 +3047,7 @@ items:
                                   "step": 10
                               },
                               {
-                                  "expr": "sum(container_memory_rss) by (namespace) / sum(kube_pod_container_resource_requests_memory_bytes) by (namespace)",
+                                  "expr": "sum(container_memory_rss{container_name!=\"\"}) by (namespace) / sum(kube_pod_container_resource_requests_memory_bytes) by (namespace)",
                                   "format": "table",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -3065,7 +3065,7 @@ items:
                                   "step": 10
                               },
                               {
-                                  "expr": "sum(container_memory_rss) by (namespace) / sum(kube_pod_container_resource_limits_memory_bytes) by (namespace)",
+                                  "expr": "sum(container_memory_rss{container_name!=\"\"}) by (namespace) / sum(kube_pod_container_resource_limits_memory_bytes) by (namespace)",
                                   "format": "table",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -3178,7 +3178,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "utc",
+          "timezone": "",
           "title": "K8s / Compute Resources / Cluster",
           "uid": "efa86fd1d0c121a26444b636a3f509a8",
           "version": 0
@@ -3612,7 +3612,7 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum(container_memory_usage_bytes{namespace=\"$namespace\"}) by (pod_name)",
+                                  "expr": "sum(container_memory_usage_bytes{namespace=\"$namespace\", container_name!=\"\"}) by (pod_name)",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{pod_name}}",
@@ -3841,7 +3841,7 @@ items:
                           ],
                           "targets": [
                               {
-                                  "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\"}, \"pod\", \"$1\", \"pod_name\", \"(.*)\")) by (pod)",
+                                  "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\",container_name!=\"\"}, \"pod\", \"$1\", \"pod_name\", \"(.*)\")) by (pod)",
                                   "format": "table",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -3859,7 +3859,7 @@ items:
                                   "step": 10
                               },
                               {
-                                  "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\"}, \"pod\", \"$1\", \"pod_name\", \"(.*)\")) by (pod) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=\"$namespace\"}) by (pod)",
+                                  "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\",container_name!=\"\"}, \"pod\", \"$1\", \"pod_name\", \"(.*)\")) by (pod) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=\"$namespace\"}) by (pod)",
                                   "format": "table",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -3877,7 +3877,7 @@ items:
                                   "step": 10
                               },
                               {
-                                  "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\"}, \"pod\", \"$1\", \"pod_name\", \"(.*)\")) by (pod) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=\"$namespace\"}) by (pod)",
+                                  "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\",container_name!=\"\"}, \"pod\", \"$1\", \"pod_name\", \"(.*)\")) by (pod) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=\"$namespace\"}) by (pod)",
                                   "format": "table",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -4017,7 +4017,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "utc",
+          "timezone": "",
           "title": "K8s / Compute Resources / Namespace",
           "uid": "85a562078cdf77779eaa1add43ccec1e",
           "version": 0
@@ -4451,7 +4451,7 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\"}) by (container_name)",
+                                  "expr": "sum(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\", container_name!=\"\"}) by (container_name)",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{container_name}}",
@@ -4680,7 +4680,7 @@ items:
                           ],
                           "targets": [
                               {
-                                  "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\"}, \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container)",
+                                  "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\", container_name!=\"\"}, \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container)",
                                   "format": "table",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -4707,7 +4707,7 @@ items:
                                   "step": 10
                               },
                               {
-                                  "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=\"$namespace\", pod=\"$pod\"}) by (container)",
+                                  "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=\"$namespace\", pod=\"$pod\", container_name!=\"\"}) by (container)",
                                   "format": "table",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -4716,7 +4716,7 @@ items:
                                   "step": 10
                               },
                               {
-                                  "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\"}, \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=\"$namespace\", pod=\"$pod\"}) by (container)",
+                                  "expr": "sum(label_replace(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"\"}, \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container) / sum(kube_pod_container_resource_limits_memory_bytes{namespace=\"$namespace\", pod=\"$pod\"}) by (container)",
                                   "format": "table",
                                   "instant": true,
                                   "intervalFactor": 2,
@@ -4883,7 +4883,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "utc",
+          "timezone": "",
           "title": "K8s / Compute Resources / Pod",
           "uid": "6581e46e4e5c7ba40a07646395ef7b23",
           "version": 0
@@ -4914,7 +4914,6 @@ items:
               {
                   "collapse": false,
                   "collapsed": false,
-                  "height": "250px",
                   "panels": [
                       {
                           "aliasColors": {
@@ -5124,7 +5123,6 @@ items:
               {
                   "collapse": false,
                   "collapsed": false,
-                  "height": "250px",
                   "panels": [
                       {
                           "aliasColors": {
@@ -5165,7 +5163,7 @@ items:
 
                           ],
                           "spaceLength": 10,
-                          "span": 6,
+                          "span": 9,
                           "stack": false,
                           "steppedLine": false,
                           "targets": [
@@ -5309,7 +5307,6 @@ items:
               {
                   "collapse": false,
                   "collapsed": false,
-                  "height": "250px",
                   "panels": [
                       {
                           "aliasColors": {
@@ -5515,7 +5512,6 @@ items:
               {
                   "collapse": false,
                   "collapsed": false,
-                  "height": "250px",
                   "panels": [
                       {
                           "aliasColors": {
@@ -5563,7 +5559,7 @@ items:
                               }
                           ],
                           "spaceLength": 10,
-                          "span": 9,
+                          "span": 6,
                           "stack": false,
                           "steppedLine": false,
                           "targets": [
@@ -5630,84 +5626,95 @@ items:
                           ]
                       },
                       {
-                          "cacheTimeout": null,
-                          "colorBackground": false,
-                          "colorValue": false,
-                          "colors": [
-                              "rgba(50, 172, 45, 0.97)",
-                              "rgba(237, 129, 40, 0.89)",
-                              "rgba(245, 54, 54, 0.9)"
-                          ],
-                          "datasource": "$datasource",
-                          "format": "percent",
-                          "gauge": {
-                              "maxValue": 100,
-                              "minValue": 0,
-                              "show": true,
-                              "thresholdLabels": false,
-                              "thresholdMarkers": true
+                          "aliasColors": {
+
                           },
+                          "bars": false,
+                          "dashLength": 10,
+                          "dashes": false,
+                          "datasource": "$datasource",
+                          "fill": 1,
                           "gridPos": {
 
                           },
                           "id": 9,
-                          "interval": null,
+                          "legend": {
+                              "alignAsTable": false,
+                              "avg": false,
+                              "current": false,
+                              "max": false,
+                              "min": false,
+                              "rightSide": false,
+                              "show": true,
+                              "total": false,
+                              "values": false
+                          },
+                          "lines": true,
+                          "linewidth": 1,
                           "links": [
 
                           ],
-                          "mappingType": 1,
-                          "mappingTypes": [
-                              {
-                                  "name": "value to text",
-                                  "value": 1
-                              },
-                              {
-                                  "name": "range to text",
-                                  "value": 2
-                              }
+                          "nullPointMode": "null",
+                          "percentage": false,
+                          "pointradius": 5,
+                          "points": false,
+                          "renderer": "flot",
+                          "repeat": null,
+                          "seriesOverrides": [
+
                           ],
-                          "maxDataPoints": 100,
-                          "nullPointMode": "connected",
-                          "nullText": null,
-                          "postfix": "",
-                          "postfixFontSize": "50%",
-                          "prefix": "",
-                          "prefixFontSize": "50%",
-                          "rangeMaps": [
-                              {
-                                  "from": "null",
-                                  "text": "N/A",
-                                  "to": "null"
-                              }
-                          ],
-                          "span": 3,
-                          "sparkline": {
-                              "fillColor": "rgba(31, 118, 189, 0.18)",
-                              "full": false,
-                              "lineColor": "rgb(31, 120, 193)",
-                              "show": false
-                          },
-                          "tableColumn": "",
+                          "spaceLength": 10,
+                          "span": 6,
+                          "stack": false,
+                          "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "(\n  sum(node_filesystem_size{job=\"node-exporter\", device!=\"rootfs\", instance=\"$instance\"})\n- sum(node_filesystem_avail{job=\"node-exporter\", device!=\"rootfs\", instance=\"$instance\"})\n) * 100\n  /\nsum(node_filesystem_size{job=\"node-exporter\", device!=\"rootfs\", instance=\"$instance\"})\n",
+                                  "expr": "node:node_filesystem_usage:\n",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": ""
+                                  "legendFormat": "{{device}}",
+                                  "refId": "A"
                               }
                           ],
-                          "thresholds": "80, 90",
+                          "thresholds": [
+
+                          ],
+                          "timeFrom": null,
+                          "timeShift": null,
                           "title": "Disk Space Usage",
-                          "type": "singlestat",
-                          "valueFontSize": "80%",
-                          "valueMaps": [
+                          "tooltip": {
+                              "shared": true,
+                              "sort": 0,
+                              "value_type": "individual"
+                          },
+                          "type": "graph",
+                          "xaxis": {
+                              "buckets": null,
+                              "mode": "time",
+                              "name": null,
+                              "show": true,
+                              "values": [
+
+                              ]
+                          },
+                          "yaxes": [
                               {
-                                  "op": "=",
-                                  "text": "N/A",
-                                  "value": "null"
+                                  "format": "percentunit",
+                                  "label": null,
+                                  "logBase": 1,
+                                  "max": null,
+                                  "min": null,
+                                  "show": true
+                              },
+                              {
+                                  "format": "percentunit",
+                                  "label": null,
+                                  "logBase": 1,
+                                  "max": null,
+                                  "min": null,
+                                  "show": true
                               }
-                          ],
-                          "valueName": "current"
+                          ]
                       }
                   ],
                   "repeat": null,
@@ -5721,7 +5728,6 @@ items:
               {
                   "collapse": false,
                   "collapsed": false,
-                  "height": "250px",
                   "panels": [
                       {
                           "aliasColors": {
@@ -5995,7 +6001,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "browser",
+          "timezone": "",
           "title": "Nodes",
           "uid": "fa49a4706d07a042595b664c87fb33ea",
           "version": 0
@@ -6026,7 +6032,6 @@ items:
               {
                   "collapse": false,
                   "collapsed": false,
-                  "height": "250px",
                   "panels": [
                       {
                           "aliasColors": {
@@ -6067,7 +6072,6 @@ items:
 
                           ],
                           "spaceLength": 10,
-                          "span": 12,
                           "stack": false,
                           "steppedLine": false,
                           "targets": [
@@ -6145,7 +6149,6 @@ items:
               {
                   "collapse": false,
                   "collapsed": false,
-                  "height": "250px",
                   "panels": [
                       {
                           "aliasColors": {
@@ -6186,7 +6189,6 @@ items:
 
                           ],
                           "spaceLength": 10,
-                          "span": 12,
                           "stack": false,
                           "steppedLine": false,
                           "targets": [
@@ -6250,7 +6252,6 @@ items:
               {
                   "collapse": false,
                   "collapsed": false,
-                  "height": "250px",
                   "panels": [
                       {
                           "aliasColors": {
@@ -6291,7 +6292,6 @@ items:
 
                           ],
                           "spaceLength": 10,
-                          "span": 12,
                           "stack": false,
                           "steppedLine": false,
                           "targets": [
@@ -6485,7 +6485,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "browser",
+          "timezone": "",
           "title": "Pods",
           "uid": "ab4f13a9892a76a4d21ce8c2445bf4ea",
           "version": 0
@@ -6516,7 +6516,6 @@ items:
               {
                   "collapse": false,
                   "collapsed": false,
-                  "height": "250px",
                   "panels": [
                       {
                           "cacheTimeout": null,
@@ -7101,7 +7100,6 @@ items:
               {
                   "collapse": false,
                   "collapsed": false,
-                  "height": "250px",
                   "panels": [
                       {
                           "aliasColors": {
@@ -7142,7 +7140,6 @@ items:
 
                           ],
                           "spaceLength": 10,
-                          "span": 12,
                           "stack": false,
                           "steppedLine": false,
                           "targets": [
@@ -7338,7 +7335,7 @@ items:
                   "30d"
               ]
           },
-          "timezone": "browser",
+          "timezone": "",
           "title": "StatefulSets",
           "uid": "a31c1f46e6f727cb37c0d731a7245005",
           "version": 0

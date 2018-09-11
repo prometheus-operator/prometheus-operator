@@ -61,8 +61,8 @@ spec:
         - --kubelet-service=kube-system/kubelet
         - --logtostderr=true
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.23.1
-        image: quay.io/coreos/prometheus-operator:v0.23.1
+        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.23.2
+        image: quay.io/coreos/prometheus-operator:v0.23.2
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -610,7 +610,7 @@ spec:
   version: v0.15.2
 ```
 
-Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid configuration mounted through a `Secret`. Note that the `Secret` has to be in the same namespace as the `Alertmanager` resource as well as have the name `alertmanager-<name-of-alertmanager-object` and the key of the configuration is `alertmanager.yaml`.
+Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid configuration mounted through a `Secret`. Note that the `Secret` has to be in the same namespace as the `Alertmanager` resource as well as have the name `alertmanager-<name-of-alertmanager-object>` and the key of the configuration is `alertmanager.yaml`.
 
 ## Outlook
 

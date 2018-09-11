@@ -30,7 +30,7 @@ parameters:
 
 For best results, use volumes that have high I/O throughput. These examples use SSD EBS volumes. Read the Kubernetes [Persistent Volumes][persistent-volumes] documentation to adapt this `StorageClass` to your needs.
 
-The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource.
+The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource (note that if you're using [kube-prometheus](../../contrib/kube-prometheus/), then instead of making the following change to your `Prometheus` resource, see the [prometheus-pvc.jsonnet](../../contrib/kube-prometheus/examples/prometheus-pvc.jsonnet) example).
 
 [embedmd]:# (../../example/storage/persisted-prometheus.yaml)
 ```yaml

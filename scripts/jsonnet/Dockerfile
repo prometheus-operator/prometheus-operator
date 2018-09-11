@@ -1,4 +1,4 @@
-FROM golang:1.10-stretch
+FROM golang:1.11-stretch
 
 ENV JSONNET_VERSION 0.10.0
 
@@ -14,3 +14,5 @@ RUN go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 
 RUN mkdir -p /go/src/github.com/coreos/prometheus-operator
 WORKDIR /go/src/github.com/coreos/prometheus-operator
+
+RUN chmod -R 777 /go
