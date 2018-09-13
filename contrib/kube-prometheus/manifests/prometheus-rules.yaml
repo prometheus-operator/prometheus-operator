@@ -838,7 +838,7 @@ spec:
           the limit of 110.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubelettoomanypods
       expr: |
-        kubelet_running_pod_count{job="kubelet"} > 100
+        kubelet_running_pod_count{job="kubelet"} > 110 * 0.9
       for: 15m
       labels:
         severity: warning
@@ -914,8 +914,8 @@ spec:
         severity: critical
     - alert: AlertmanagerDownOrMissing
       annotations:
-        description: An unexpected number of Alertmanagers are scraped or Alertmanagers
-          disappeared from discovery.
+        description: An unexpected number of Alertmanagers were scraped or disappeared
+          from discovery.
         summary: Alertmanager down or missing
       expr: |
         label_replace(prometheus_operator_alertmanager_spec_replicas{job="prometheus-operator"}, "job", "alertmanager-$1", "alertmanager", "(.*)") / ON(job) GROUP_RIGHT() sum(up{job="alertmanager-main"}) BY (job) != 1
@@ -936,7 +936,7 @@ spec:
     rules:
     - alert: TargetDown
       annotations:
-        description: '{{ $value }}% of {{ $labels.job }} targets are down.'
+        description: '{{ $value }}% of the {{ $labels.job }} targets are down.'
         summary: Targets are down
       expr: 100 * (count(up == 0) BY (job) / count(up) BY (job)) > 10
       for: 10m
@@ -944,7 +944,7 @@ spec:
         severity: warning
     - alert: DeadMansSwitch
       annotations:
-        description: This is a DeadMansSwitch meant to ensure that the entire Alerting
+        description: This is a DeadMansSwitch meant to ensure that the entire alerting
           pipeline is functional.
         summary: Alerting DeadMansSwitch
       expr: vector(1)
@@ -955,7 +955,7 @@ spec:
     - alert: NodeDiskRunningFull
       annotations:
         message: Device {{ $labels.device }} of node-exporter {{ $labels.namespace
-          }}/{{ $labels.pod }} is running full within the next 24 hours.
+          }}/{{ $labels.pod }} will be full within the next 24 hours.
       expr: |
         (node:node_filesystem_usage: > 0.85) and (predict_linear(node:node_filesystem_avail:[6h], 3600 * 24) < 0)
       for: 30m
@@ -964,7 +964,7 @@ spec:
     - alert: NodeDiskRunningFull
       annotations:
         message: Device {{ $labels.device }} of node-exporter {{ $labels.namespace
-          }}/{{ $labels.pod }} is running full within the next 2 hours.
+          }}/{{ $labels.pod }} will be full within the next 2 hours.
       expr: |
         (node:node_filesystem_usage: > 0.85) and (predict_linear(node:node_filesystem_avail:[30m], 3600 * 2) < 0)
       for: 10m
@@ -1068,6 +1068,32 @@ spec:
         summary: Prometheus has many samples rejected
       expr: |
         increase(prometheus_target_scrapes_sample_duplicate_timestamp_total{job="prometheus-k8s"}[5m]) > 0
+      for: 10m
+      labels:
+        severity: warning
+  - name: prometheus-operator
+    rules:
+    - alert: PrometheusOperatorAlertmanagerReconcileErrors
+      annotations:
+        message: Errors while reconciling Alertmanager in {{$labels.namespace}} namespace.
+      expr: |
+        rate(prometheus_operator_alertmanager_reconcile_errors_total{job="prometheus-operator"}[5m]) > 0.01
+      for: 10m
+      labels:
+        severity: warning
+    - alert: PrometheusOperatorPrometheusReconcileErrors
+      annotations:
+        message: Errors while reconciling Prometheus in {{$labels.namespace}} namespace.
+      expr: |
+        rate(prometheus_operator_prometheus_reconcile_errors_total{job="prometheus-operator"}[5m]) > 0.01
+      for: 10m
+      labels:
+        severity: warning
+    - alert: PrometheusOperatorNodeLookupErrors
+      annotations:
+        message: Errors while reconciling Prometheus in {{$labels.namespace}} namespace.
+      expr: |
+        rate(prometheus_operator_node_address_lookup_errors_total{job="prometheus-operator"}[5m]) > 0.01
       for: 10m
       labels:
         severity: warning
