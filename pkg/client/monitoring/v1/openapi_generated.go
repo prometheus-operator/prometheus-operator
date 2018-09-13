@@ -2049,6 +2049,13 @@ func schema_pkg_client_monitoring_v1_ServiceMonitorSpec(ref common.ReferenceCall
 							Ref:         ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.NamespaceSelector"),
 						},
 					},
+					"sampleLimit": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
 				},
 				Required: []string{"endpoints", "selector"},
 			},
