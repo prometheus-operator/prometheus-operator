@@ -991,6 +991,11 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.PodTargetLabels != nil {
+		in, out := &in.PodTargetLabels, &out.PodTargetLabels
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Endpoints != nil {
 		in, out := &in.Endpoints, &out.Endpoints
 		*out = make([]Endpoint, len(*in))
