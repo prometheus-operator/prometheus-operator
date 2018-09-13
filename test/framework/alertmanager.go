@@ -54,6 +54,7 @@ func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *monitori
 		},
 		Spec: monitoringv1.AlertmanagerSpec{
 			Replicas: &replicas,
+			LogLevel: "debug",
 		},
 	}
 }
@@ -255,6 +256,57 @@ func (f *Framework) CreateSilence(ns, n string) (string, error) {
 	return createSilenceResponse.Data.SilenceID, nil
 }
 
+// alert represents an alert that can be posted to the /api/v1/alerts endpoint
+// of an Alertmanager.
+// Taken from github.com/prometheus/common/model/alert.go.Alert.
+type alert struct {
+	// Label value pairs for purpose of aggregation, matching, and disposition
+	// dispatching. This must minimally include an "alertname" label.
+	Labels map[string]string `json:"labels"`
+
+	// Extra key/value information which does not define alert identity.
+	Annotations map[string]string `json:"annotations"`
+
+	// The known time range for this alert. Both ends are optional.
+	StartsAt     time.Time `json:"startsAt,omitempty"`
+	EndsAt       time.Time `json:"endsAt,omitempty"`
+	GeneratorURL string    `json:"generatorURL"`
+}
+
+// SendAlertToAlertmanager sends an alert to the alertmanager in the given
+// namespace (ns) with the given name (n).
+func (f *Framework) SendAlertToAlertmanager(ns, n string, start time.Time) error {
+	alerts := []*alert{&alert{
+		Labels: map[string]string{
+			"alertname": "ExampleAlert", "prometheus": "my-prometheus",
+		},
+		Annotations:  map[string]string{},
+		StartsAt:     start,
+		GeneratorURL: "http://prometheus-test-0:9090/graph?g0.expr=vector%281%29\u0026g0.tab=1",
+	}}
+	b, err := json.Marshal(alerts)
+	if err != nil {
+		return err
+	}
+
+	var postAlertResp amAPIPostAlertResp
+	request := ProxyPostPod(f.KubeClient, ns, n, "web", "api/v1/alerts", string(b))
+	resp, err := request.DoRaw()
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(resp, &postAlertResp); err != nil {
+		return err
+	}
+
+	if postAlertResp.Status != "success" {
+		return errors.Errorf("expected Alertmanager to return 'success' but got %q instead", postAlertResp.Status)
+	}
+
+	return nil
+}
+
 func (f *Framework) GetSilences(ns, n string) ([]amAPISil, error) {
 	var getSilencesResponse amAPIGetSilResp
 
@@ -306,6 +358,10 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expecte
 type amAPICreateSilResp struct {
 	Status string             `json:"status"`
 	Data   amAPICreateSilData `json:"data"`
+}
+
+type amAPIPostAlertResp struct {
+	Status string `json:"status"`
 }
 
 type amAPICreateSilData struct {

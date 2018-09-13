@@ -358,8 +358,6 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
-	alertName := "ExampleAlert"
-
 	whReplicas := int32(1)
 	whdpl := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -472,32 +470,48 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	p := framework.MakeBasicPrometheus(ns, "test", "test", 3)
-	p.Spec.EvaluationInterval = "100ms"
-	framework.AddAlertingToPrometheus(p, ns, alertmanager.Name)
+	// Send alert to each Alertmanager
+	for i := 0; i < int(*alertmanager.Spec.Replicas); i++ {
+		replica := i
+		done := make(chan struct{})
+		errc := make(chan error, 1)
 
-	_, err = framework.MakeAndCreateFiringRule(ns, p.Name, alertName)
-	if err != nil {
-		t.Fatal(err)
-	}
+		defer func() {
+			close(done)
+			select {
+			case err := <-errc:
+				t.Fatal(errors.Wrapf(err, "sending alert to alertmanager %v", replica))
+			default:
+				return
+			}
+		}()
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
-		t.Fatal(err)
-	}
+		go func() {
+			ticker := time.NewTicker(100 * time.Millisecond)
+			start := time.Now()
+			failures := 0
+			for {
+				select {
+				case <-ticker.C:
+					err := framework.SendAlertToAlertmanager(
+						ns,
+						"alertmanager-rolling-deploy-"+strconv.Itoa(replica),
+						start,
+					)
+					if err != nil {
+						failures++
+						// Allow 30 (~3 Seconds) failures during Alertmanager rolling update.
+						if failures > 30 {
+							errc <- err
+							return
+						}
+					}
+				case <-done:
+					return
+				}
 
-	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, pSVC); err != nil {
-		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
-
-	// The Prometheus config reloader reloads Prometheus periodically, not on
-	// alert rule change. Thereby one has to wait for Prometheus actually firing
-	// the alert.
-	err = framework.WaitForPrometheusFiringAlert(p.Namespace, pSVC.Name, alertName)
-	if err != nil {
-		t.Fatal(err)
+			}
+		}()
 	}
 
 	// Wait for alert to propagate
@@ -533,7 +547,7 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	time.Sleep(1 * time.Minute)
+	time.Sleep(time.Minute)
 
 	logs, err = testFramework.GetLogs(framework.KubeClient, ns, podName, "webhook-server")
 	if err != nil {
