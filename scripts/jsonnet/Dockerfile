@@ -8,8 +8,8 @@ RUN cd /tmp && wget https://github.com/google/jsonnet/archive/v${JSONNET_VERSION
     cd jsonnet-${JSONNET_VERSION} && \
     make && mv jsonnet /usr/local/bin && \
     rm -rf /tmp/v${JSONNET_VERSION}.tar.gz /tmp/jsonnet-${JSONNET_VERSION}
-RUN go get github.com/brancz/gojsontoyaml
 RUN go get github.com/campoy/embedmd
+RUN go get github.com/metalmatze/mixtool/cmd/mixtool
 RUN go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 
 RUN mkdir -p /go/src/github.com/coreos/prometheus-operator

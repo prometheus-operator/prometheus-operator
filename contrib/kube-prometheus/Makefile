@@ -23,12 +23,12 @@ generate-in-docker: ../../hack/jsonnet-docker-image
 
 generate: manifests **.md
 
-**.md: $(EMBEDMD_BINARY) $(shell find examples) build.sh example.jsonnet
+**.md: $(EMBEDMD_BINARY) $(shell find examples) example.jsonnet
 	$(EMBEDMD_BINARY) -w `find . -name "*.md" | grep -v vendor`
 
-manifests: vendor example.jsonnet build.sh
+manifests: vendor example.jsonnet
 	rm -rf manifests
-	./build.sh
+	mixtool build -m manifests example.jsonnet
 
 vendor: $(JB_BINARY) jsonnetfile.json jsonnetfile.lock.json
 	rm -rf vendor

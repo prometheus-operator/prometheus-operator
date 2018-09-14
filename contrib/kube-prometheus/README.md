@@ -101,7 +101,11 @@ In order to update the kube-prometheus dependency, simply use the jsonnet-bundle
 
 ### Compiling
 
-e.g. of how to compile the manifests: `./build.sh example.jsonnet`
+Compiling is done with [mixtool](https://github.com/metalmatze/mixtool) which bundles [go-jsonnet](https://github.com/google/go-jsonnet) and adds some more convenience helpers like converting to YAML and linting the output.
+
+> `mixtool` can be installed with `go get -u github.com/metalmatze/mixtool/cmd/mixtool`
+
+Example of how to compile the manifests: `mixtool build -m manifests/ example.jsonnet`
 
 Here's [example.jsonnet](example.jsonnet):
 
@@ -122,35 +126,11 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
 { ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
 ```
 
-And here's the [build.sh](build.sh) script (which uses `vendor/` to render all manifests in a json structure of `{filename: manifest-content}`):
-
-[embedmd]:# (build.sh)
-```sh
-#!/usr/bin/env bash
-
-# This script uses arg $1 (name of *.jsonnet file to use) to generate the manifests/*.yaml files.
-
-set -e
-set -x
-# only exit with zero if all commands of the pipeline exit successfully
-set -o pipefail
-
-# Make sure to start with a clean 'manifests' dir
-rm -rf manifests
-mkdir manifests
-
-                                               # optional, but we would like to generate yaml, not json
-jsonnet -J vendor -m manifests "${1-example.jsonnet}" | xargs -I{} sh -c 'cat {} | gojsontoyaml > {}.yaml; rm -f {}' -- {}
-
-```
-
-> Note you need `jsonnet` (`go get github.com/google/go-jsonnet/jsonnet`) and `gojsontoyaml` (`go get github.com/brancz/gojsontoyaml`) installed to run `build.sh`. If you just want json output, not yaml, then you can skip the pipe and everything afterwards.
-
-This script runs the jsonnet code, then reads each key of the generated json and uses that as the file name, and writes the value of that key to that file, and converts each json manifest to yaml.
+Mixtool compiles the jsonnet code, then uses each key of the generated JSON as the file name where it writes the contents as YAML.
 
 ### Containerized Installing and Compiling
 
-If you don't care to have `jb` nor `jsonnet` nor `gojsontoyaml` installed, then build the `po-jsonnet` Docker image (this is something you'll need a copy of this repository for). Do the following from this `kube-prometheus` directory:
+If you don't care to have `jb` nor `jsonnet` nor `mixtool` installed, then build the `po-jsonnet` Docker image (this is something you'll need a copy of this repository for). Do the following from this `kube-prometheus` directory:
 ```
 $ make ../../hack/jsonnet-docker-image
 ```
@@ -173,7 +153,7 @@ docker run \
 	--rm \
 	-v `pwd`:`pwd` \
 	--workdir `pwd` \
-	po-jsonnet ./build.sh example.jsonnet
+	po-jsonnet mixtool build -m manifests/ example.jsonnet
 ```
 
 ## Configuration
