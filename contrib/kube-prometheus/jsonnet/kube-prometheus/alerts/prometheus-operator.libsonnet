@@ -7,7 +7,7 @@
           {
             alert: 'PrometheusOperatorAlertmanagerReconcileErrors',
             expr: |||
-              rate(prometheus_operator_alertmanager_reconcile_errors_total{%(prometheusOperatorSelector)s}[5m]) > 0.01
+              rate(prometheus_operator_alertmanager_reconcile_errors_total{%(prometheusOperatorSelector)s}[5m]) > 0.1
             ||| % $._config,
             labels: {
               severity: 'warning',
@@ -20,7 +20,7 @@
           {
             alert: 'PrometheusOperatorPrometheusReconcileErrors',
             expr: |||
-              rate(prometheus_operator_prometheus_reconcile_errors_total{%(prometheusOperatorSelector)s}[5m]) > 0.01
+              rate(prometheus_operator_prometheus_reconcile_errors_total{%(prometheusOperatorSelector)s}[5m]) > 0.1
             ||| % $._config,
             labels: {
               severity: 'warning',
@@ -33,7 +33,7 @@
           {
             alert: 'PrometheusOperatorNodeLookupErrors',
             expr: |||
-              rate(prometheus_operator_node_address_lookup_errors_total{%(prometheusOperatorSelector)s}[5m]) > 0.01
+              rate(prometheus_operator_node_address_lookup_errors_total{%(prometheusOperatorSelector)s}[5m]) > 0.1
             ||| % $._config,
             labels: {
               severity: 'warning',
