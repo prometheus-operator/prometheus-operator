@@ -13,7 +13,7 @@
               severity: 'warning',
             },
             annotations: {
-              message: 'Errors while reconciling Alertmanager in {{$labels.namespace}} namespace.',
+              message: 'Errors while reconciling Alertmanager in {{ $labels.namespace }} Namespace.',
             },
             'for': '10m',
           },
@@ -26,7 +26,7 @@
               severity: 'warning',
             },
             annotations: {
-              message: 'Errors while reconciling Prometheus in {{$labels.namespace}} namespace.',
+              message: 'Errors while reconciling Prometheus in {{ $labels.namespace }} Namespace.',
             },
             'for': '10m',
           },
@@ -39,7 +39,7 @@
               severity: 'warning',
             },
             annotations: {
-              message: 'Errors while reconciling Prometheus in {{$labels.namespace}} namespace.',
+              message: 'Errors while reconciling Prometheus in {{ $labels.namespace }} Namespace.',
             },
             'for': '10m',
           },
