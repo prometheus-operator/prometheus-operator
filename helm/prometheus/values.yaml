@@ -265,6 +265,11 @@ serviceMonitors: []
     ##
     # jobLabel: ""
 
+    ## TargetLabels for transfering labels on the Kubernetes Service onto the target
+    ## If no label is specified, it is ignored
+    ##
+    # targetLabels: []
+
     ## Label selector for services to which this ServiceMonitor applies
     ##
     # selector: {}
