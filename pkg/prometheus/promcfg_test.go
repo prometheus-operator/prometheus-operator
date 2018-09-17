@@ -387,7 +387,18 @@ scrape_configs:
     - __meta_kubernetes_namespace
     target_label: namespace
   - source_labels:
-    - __meta_kubernetes_pod_name
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
     target_label: pod
   - source_labels:
     - __meta_kubernetes_service_name
@@ -493,7 +504,18 @@ scrape_configs:
     - __meta_kubernetes_namespace
     target_label: namespace
   - source_labels:
-    - __meta_kubernetes_pod_name
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
     target_label: pod
   - source_labels:
     - __meta_kubernetes_service_name

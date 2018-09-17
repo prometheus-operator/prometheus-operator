@@ -396,7 +396,17 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 			{Key: "target_label", Value: "namespace"},
 		},
 		{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_name"}},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
+			{Key: "separator", Value: ";"},
+			{Key: "regex", Value: "Node;(.*)"},
+			{Key: "replacement", Value: "${1}"},
+			{Key: "target_label", Value: "node"},
+		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
+			{Key: "separator", Value: ";"},
+			{Key: "regex", Value: "Pod;(.*)"},
+			{Key: "replacement", Value: "${1}"},
 			{Key: "target_label", Value: "pod"},
 		},
 		{
