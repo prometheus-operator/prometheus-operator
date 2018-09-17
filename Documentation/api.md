@@ -134,6 +134,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | listenLocal | ListenLocal makes the Alertmanager server listen on loopback, so that it does not bind against the Pod IP. Note this is only for the Alertmanager UI, not the gossip communication. | bool | false |
 | containers | Containers allows injecting additional containers. This is meant to allow adding an authentication proxy to an Alertmanager pod. | []v1.Container | false |
 | priorityClassName | Priority class assigned to the Pods | string | false |
+| additionalPeers | AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster. | []string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -435,6 +436,7 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 | ----- | ----------- | ------ | -------- |
 | jobLabel | The label to use to retrieve the job name from. | string | false |
 | targetLabels | TargetLabels transfers labels on the Kubernetes Service onto the target. | []string | false |
+| podTargetLabels | PodTargetLabels transfers labels on the Kubernetes Pod onto the target. | []string | false |
 | endpoints | A list of endpoints allowed as part of this ServiceMonitor. | [][Endpoint](#endpoint) | true |
 | selector | Selector to select Endpoints objects. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | true |
 | namespaceSelector | Selector to select which namespaces the Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |

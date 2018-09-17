@@ -182,6 +182,12 @@ spec:
                   items:
                     type: string
                   type: array
+            podTargetLabels:
+              description: PodTargetLabels transfers labels on the Kubernetes Pod
+                onto the target.
+              items:
+                type: string
+              type: array
             sampleLimit:
               description: SampleLimit defines per-scrape limit on number of scraped
                 samples that will be accepted.

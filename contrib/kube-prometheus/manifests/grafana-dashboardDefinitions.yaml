@@ -4707,7 +4707,7 @@ items:
                                   "step": 10
                               },
                               {
-                                  "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=\"$namespace\", pod=\"$pod\", container_name!=\"\"}) by (container)",
+                                  "expr": "sum(kube_pod_container_resource_limits_memory_bytes{namespace=\"$namespace\", pod=\"$pod\", container!=\"\"}) by (container)",
                                   "format": "table",
                                   "instant": true,
                                   "intervalFactor": 2,

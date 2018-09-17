@@ -239,6 +239,11 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.AdditionalPeers != nil {
+		in, out := &in.AdditionalPeers, &out.AdditionalPeers
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
@@ -988,6 +993,11 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 	*out = *in
 	if in.TargetLabels != nil {
 		in, out := &in.TargetLabels, &out.TargetLabels
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.PodTargetLabels != nil {
+		in, out := &in.PodTargetLabels, &out.PodTargetLabels
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
