@@ -2038,6 +2038,20 @@ func schema_pkg_client_monitoring_v1_ServiceMonitorSpec(ref common.ReferenceCall
 							},
 						},
 					},
+					"podTargetLabels": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PodTargetLabels transfers labels on the Kubernetes Pod onto the target.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 					"endpoints": {
 						SchemaProps: spec.SchemaProps{
 							Description: "A list of endpoints allowed as part of this ServiceMonitor.",
