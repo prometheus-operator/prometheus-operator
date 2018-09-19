@@ -98,7 +98,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                             policyRule.withResources([
                               'namespaces',
                             ]) +
-                            policyRule.withVerbs(['list', 'watch']);
+                            policyRule.withVerbs(['get', 'list', 'watch']);
 
       local rules = [apiExtensionsRule, monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
 

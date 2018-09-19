@@ -43,7 +43,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func TestPrometheusCreateDeleteCluster(t *testing.T) {
+func testPromCreateDeleteCluster(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -65,7 +65,7 @@ func TestPrometheusCreateDeleteCluster(t *testing.T) {
 	}
 }
 
-func TestPrometheusScaleUpDownCluster(t *testing.T) {
+func testPromScaleUpDownCluster(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -88,7 +88,7 @@ func TestPrometheusScaleUpDownCluster(t *testing.T) {
 	}
 }
 
-func TestPrometheusNoServiceMonitorSelector(t *testing.T) {
+func testPromNoServiceMonitorSelector(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -104,7 +104,7 @@ func TestPrometheusNoServiceMonitorSelector(t *testing.T) {
 	}
 }
 
-func TestPrometheusVersionMigration(t *testing.T) {
+func testPromVersionMigration(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -133,7 +133,7 @@ func TestPrometheusVersionMigration(t *testing.T) {
 	}
 }
 
-func TestPrometheusResourceUpdate(t *testing.T) {
+func testPromResourceUpdate(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -197,7 +197,7 @@ func TestPrometheusResourceUpdate(t *testing.T) {
 	}
 }
 
-func TestPrometheusReloadConfig(t *testing.T) {
+func testPromReloadConfig(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -291,7 +291,7 @@ scrape_configs:
 	}
 }
 
-func TestPrometheusAdditionalScrapeConfig(t *testing.T) {
+func testPromAdditionalScrapeConfig(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -349,7 +349,7 @@ func TestPrometheusAdditionalScrapeConfig(t *testing.T) {
 	}
 }
 
-func TestPrometheusAdditionalAlertManagerConfig(t *testing.T) {
+func testPromAdditionalAlertManagerConfig(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -430,7 +430,7 @@ func TestPrometheusAdditionalAlertManagerConfig(t *testing.T) {
 	}
 }
 
-func TestPrometheusReloadRules(t *testing.T) {
+func testPromReloadRules(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -487,7 +487,7 @@ func TestPrometheusReloadRules(t *testing.T) {
 	}
 }
 
-func TestPrometheusMultiplePrometheusRulesSameNS(t *testing.T) {
+func testPromMultiplePrometheusRulesSameNS(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -526,7 +526,7 @@ func TestPrometheusMultiplePrometheusRulesSameNS(t *testing.T) {
 	}
 }
 
-func TestPrometheusMultiplePrometheusRulesDifferentNS(t *testing.T) {
+func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -582,7 +582,7 @@ func TestPrometheusMultiplePrometheusRulesDifferentNS(t *testing.T) {
 	}
 }
 
-func TestPrometheusRulesExceedingConfigMapLimit(t *testing.T) {
+func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -682,7 +682,7 @@ func generateHugePrometheusRule(ns, identifier string) monitoringv1.PrometheusRu
 
 // Make sure the Prometheus operator only updates the Prometheus config secret
 // and the Prometheus rules configmap on relevant changes
-func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
+func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 	t.Parallel()
 
 	testCTX := framework.NewTestCtx(t)
@@ -870,7 +870,7 @@ func TestPrometheusOnlyUpdatedOnRelevantChanges(t *testing.T) {
 	}
 }
 
-func TestPrometheusWhenDeleteCRDCleanUpViaOwnerReference(t *testing.T) {
+func testPromWhenDeleteCRDCleanUpViaOwnerRef(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -904,7 +904,7 @@ func TestPrometheusWhenDeleteCRDCleanUpViaOwnerReference(t *testing.T) {
 	}
 }
 
-func TestPrometheusDiscovery(t *testing.T) {
+func testPromDiscovery(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -943,7 +943,7 @@ func TestPrometheusDiscovery(t *testing.T) {
 	}
 }
 
-func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
+func testPromAlertmanagerDiscovery(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -994,7 +994,7 @@ func TestPrometheusAlertmanagerDiscovery(t *testing.T) {
 	}
 }
 
-func TestExposingPrometheusWithKubernetesAPI(t *testing.T) {
+func testPromExposingWithKubernetesAPI(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -1021,7 +1021,7 @@ func TestExposingPrometheusWithKubernetesAPI(t *testing.T) {
 	}
 }
 
-func TestPrometheusDiscoverTargetPort(t *testing.T) {
+func testPromDiscoverTargetPort(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -1079,7 +1079,7 @@ func TestPrometheusDiscoverTargetPort(t *testing.T) {
 	}
 }
 
-func TestPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
+func testPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -1135,7 +1135,7 @@ func TestPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 	}
 }
 
-func TestThanos(t *testing.T) {
+func testThanos(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -1236,7 +1236,7 @@ func TestThanos(t *testing.T) {
 	}
 }
 
-func TestPrometheusGetBasicAuthSecret(t *testing.T) {
+func testPromGetBasicAuthSecret(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
@@ -1337,6 +1337,155 @@ func TestPrometheusGetBasicAuthSecret(t *testing.T) {
 		t.Fatal(err)
 	}
 
+}
+
+// testOperatorNSScope tests the multi namespace feature of the Prometheus Operator.
+// It checks whether it ignores rules that are not in the watched namespaces of the
+// Prometheus Operator. The Prometheus Operator internally treats watching a
+// single namespace different than watching multiple namespaces, hence the two
+// sub-tests.
+func testOperatorNSScope(t *testing.T) {
+	name := "test"
+	firtAlertName := "firstAlert"
+	secondAlertName := "secondAlert"
+
+	t.Run("SingleNS", func(t *testing.T) {
+		ctx := framework.NewTestCtx(t)
+		defer ctx.Cleanup(t)
+
+		operatorNS := ctx.CreateNamespace(t, framework.KubeClient)
+		mainNS := ctx.CreateNamespace(t, framework.KubeClient)
+		arbitraryNS := ctx.CreateNamespace(t, framework.KubeClient)
+
+		ctx.SetupPrometheusRBAC(t, mainNS, framework.KubeClient)
+
+		prometheusNamespaceSelector := map[string]string{"prometheus": mainNS}
+
+		// Add labels to namespaces for Prometheus RuleNamespaceSelector.
+		for _, ns := range []string{mainNS, arbitraryNS} {
+			err := testFramework.AddLabelsToNamespace(framework.KubeClient, ns, prometheusNamespaceSelector)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		// Prometheus Operator only watches single namespace mainNS, not arbitraryNS.
+		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{mainNS})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		ruleDef := []struct {
+			NSName    string
+			AlertName string
+		}{{arbitraryNS, secondAlertName}, {mainNS, firtAlertName}}
+
+		for _, r := range ruleDef {
+			_, err := framework.MakeAndCreateFiringRule(r.NSName, name, r.AlertName)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		p := framework.MakeBasicPrometheus(mainNS, name, name, 1)
+		p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
+			MatchLabels: prometheusNamespaceSelector,
+		}
+		p.Spec.EvaluationInterval = "1s"
+		if err := framework.CreatePrometheusAndWaitUntilReady(mainNS, p); err != nil {
+			t.Fatal(err)
+		}
+
+		pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
+		if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, mainNS, pSVC); err != nil {
+			t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
+		} else {
+			ctx.AddFinalizerFn(finalizerFn)
+		}
+
+		err = framework.WaitForPrometheusFiringAlert(p.Namespace, pSVC.Name, firtAlertName)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		firing, err := framework.CheckPrometheusFiringAlert(p.Namespace, pSVC.Name, secondAlertName)
+		if err != nil && !strings.Contains(err.Error(), "expected 1 query result but got 0") {
+			t.Fatal(err)
+		}
+
+		if firing {
+			t.Fatalf("expected alert %q not to fire", secondAlertName)
+		}
+	})
+
+	t.Run("MultiNS", func(t *testing.T) {
+		ctx := framework.NewTestCtx(t)
+		defer ctx.Cleanup(t)
+
+		operatorNS := ctx.CreateNamespace(t, framework.KubeClient)
+		prometheusNS := ctx.CreateNamespace(t, framework.KubeClient)
+		ruleNS := ctx.CreateNamespace(t, framework.KubeClient)
+		arbitraryNS := ctx.CreateNamespace(t, framework.KubeClient)
+
+		ctx.SetupPrometheusRBAC(t, prometheusNS, framework.KubeClient)
+
+		prometheusNamespaceSelector := map[string]string{"prometheus": prometheusNS}
+
+		for _, ns := range []string{ruleNS, arbitraryNS} {
+			err := testFramework.AddLabelsToNamespace(framework.KubeClient, ns, prometheusNamespaceSelector)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		// Prometheus Operator only watches prometheusNS and ruleNS, not arbitraryNS.
+		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{prometheusNS, ruleNS})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		ruleDef := []struct {
+			NSName    string
+			AlertName string
+		}{{arbitraryNS, secondAlertName}, {ruleNS, firtAlertName}}
+
+		for _, r := range ruleDef {
+			_, err := framework.MakeAndCreateFiringRule(r.NSName, name, r.AlertName)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		p := framework.MakeBasicPrometheus(prometheusNS, name, name, 1)
+		p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
+			MatchLabels: prometheusNamespaceSelector,
+		}
+		p.Spec.EvaluationInterval = "1s"
+		if err := framework.CreatePrometheusAndWaitUntilReady(prometheusNS, p); err != nil {
+			t.Fatal(err)
+		}
+
+		pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
+		if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, prometheusNS, pSVC); err != nil {
+			t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
+		} else {
+			ctx.AddFinalizerFn(finalizerFn)
+		}
+
+		err = framework.WaitForPrometheusFiringAlert(p.Namespace, pSVC.Name, firtAlertName)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		firing, err := framework.CheckPrometheusFiringAlert(p.Namespace, pSVC.Name, secondAlertName)
+		if err != nil && !strings.Contains(err.Error(), "expected 1 query result but got 0") {
+			t.Fatal(err)
+		}
+
+		if firing {
+			t.Fatalf("expected alert %q not to fire", secondAlertName)
+		}
+	})
 }
 
 func isDiscoveryWorking(ns, svcName, prometheusName string) error {
