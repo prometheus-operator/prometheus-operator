@@ -41,6 +41,9 @@ spec:
     alertmanagers:
       - namespace: {{ .Release.Namespace }}
         name: {{ printf "%s-alertmanager" .Release.Name | trunc 63 | trimSuffix "-" }}
+        {{- if .Values.alertManagerRoutePrefix }}
+        pathPrefix: "{{ .Values.alertManagerRoutePrefix }}"
+        {{- end }}
         port: http
 {{- end }}
   baseImage: "{{ .Values.image.repository }}"
@@ -138,7 +141,7 @@ spec:
   tolerations:
 {{ toYaml .Values.tolerations | indent 4 }}
 {{- end }}
-  imagePullSecrets: 
+  imagePullSecrets:
 {{ toYaml .Values.global.imagePullSecrets | indent 4 }}
 {{- if .Values.additionalScrapeConfigs }}
   additionalScrapeConfigs:
@@ -154,4 +157,3 @@ spec:
   containers:
 {{ toYaml .Values.sidecarsSpec | indent 4 }}
 {{- end }}
-

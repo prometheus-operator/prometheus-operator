@@ -103,7 +103,7 @@ paused: false
 global:
   rbacEnable: true
   pspEnable: true
-  
+
   # Reference to one or more secrets to be used when pulling images
   imagePullSecrets: []
   #  - name: "image-pull-secret"
@@ -164,6 +164,10 @@ retention: 24h
 ## Useful for proxies that rewrite URLs.
 ##
 routePrefix: /
+
+## Prefix used in alert manager. Alerts will be pushed to this path
+##
+alertManagerRoutePrefix: /
 
 ## Namespaces to be selected for PrometheusRules discovery.
 ## If unspecified, only the same namespace as the Prometheus object is in is used.

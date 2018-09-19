@@ -48,6 +48,7 @@ Parameter | Description | Default
 `externalLabels` | The labels to add to any time series or alerts when communicating with external systems  | `{}`
 `externalUrl` | External URL at which Prometheus will be reachable | `""`
 `routePrefix` | Prefix used to register routes | `"/"`
+`alertManagerRoutePrefix` | Route prefix used in alert manager. Alerts will be pushed to this path | `"/"`
 `image.repository` | Image | `quay.io/prometheus/prometheus`
 `image.tag` | Image tag | `v2.2.1`
 `ingress.enabled` | If true, Prometheus Ingress will be created | `false`
