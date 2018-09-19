@@ -67,7 +67,7 @@
                         "steppedLine": false,
                         "targets": [
                             {
-                                "expr": "sum by(container_name) (container_memory_usage_bytes{pod_name=\"$pod\", container_name=~\"$container\", container_name!=\"POD\"})",
+                                "expr": "sum by(container_name) (container_memory_usage_bytes{pod_name=\"$pod\", namespace="$namespace", container_name=~\"$container\", container_name!=\"POD\"})",
                                 "interval": "10s",
                                 "intervalFactor": 1,
                                 "legendFormat": "Current: {{ container_name }}",
@@ -76,7 +76,7 @@
                                 "step": 15
                             },
                             {
-                                "expr": "kube_pod_container_resource_requests_memory_bytes{pod=\"$pod\", container=~\"$container\"}",
+                                "expr": "kube_pod_container_resource_requests_memory_bytes{pod=\"$pod\", namespace="$namespace", container=~\"$container\"}",
                                 "interval": "10s",
                                 "intervalFactor": 2,
                                 "legendFormat": "Requested: {{ container }}",
@@ -85,7 +85,7 @@
                                 "step": 20
                             },
                             {
-                                "expr": "kube_pod_container_resource_limits_memory_bytes{pod=\"$pod\", container=~\"$container\"}",
+                                "expr": "kube_pod_container_resource_limits_memory_bytes{pod=\"$pod\", namespace="$namespace", container=~\"$container\"}",
                                 "interval": "10s",
                                 "intervalFactor": 2,
                                 "legendFormat": "Limit: {{ container }}",
