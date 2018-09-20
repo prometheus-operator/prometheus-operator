@@ -19,6 +19,8 @@ spec:
         app: {{ template "grafana.fullname" . }}
         release: "{{ .Release.Name }}"
     spec:
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
       containers:
       - name: grafana
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
