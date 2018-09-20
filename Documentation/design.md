@@ -12,6 +12,7 @@ The custom resources that the Prometheus Operator introduces are:
 * `Prometheus`
 * `ServiceMonitor`
 * `Alertmanager`
+* `PrometheusRule`
 
 ## Prometheus
 
@@ -52,3 +53,9 @@ The `Alertmanager` custom resource definition (CRD) declaratively defines a desi
 For each `Alertmanager` resource, the Operator deploys a properly configured `StatefulSet` in the same namespace. The Alertmanager pods are configured to include a `Secret` called `<alertmanager-name>` which holds the used configuration file in the key `alertmanager.yaml`.
 
 When there are two or more configured replicas the operator runs the Alertmanager instances in high availability mode.
+
+## PrometheusRule
+
+The `PrometheusRule` CRD declaratively defines a desired Prometheus rule to be consumed by one or more Prometheus instances. 
+
+Alerts and recording rules can be saved and applied as YAML files, and dynamically loaded without requiring any restart.
