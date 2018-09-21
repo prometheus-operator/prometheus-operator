@@ -187,13 +187,13 @@ These are the available fields with their respective default values:
     namespace: "default",
 
     versions+:: {
-        alertmanager: "v0.15.0",
-        nodeExporter: "v0.15.2",
+        alertmanager: "v0.15.2",
+        nodeExporter: "v0.16.0",
         kubeStateMetrics: "v1.3.1",
         kubeRbacProxy: "v0.3.1",
         addonResizer: "1.0",
-        prometheusOperator: "v0.18.1",
-        prometheus: "v2.2.1",
+        prometheusOperator: "v0.23.2",
+        prometheus: "v2.3.2",
     },
 
     imageRepos+:: {
