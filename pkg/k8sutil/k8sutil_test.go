@@ -14,7 +14,12 @@
 
 package k8sutil
 
-import "testing"
+import (
+	"strings"
+	"testing"
+
+	"k8s.io/apimachinery/pkg/util/validation"
+)
 
 func Test_SanitizeVolumeName(t *testing.T) {
 	cases := []struct {
@@ -40,6 +45,10 @@ func Test_SanitizeVolumeName(t *testing.T) {
 		{
 			name:     "fOo^%#$bar",
 			expected: "foo-bar",
+		},
+		{
+			name:     strings.Repeat("a", validation.DNS1123LabelMaxLength*2),
+			expected: strings.Repeat("a", validation.DNS1123LabelMaxLength),
 		},
 	}
 
