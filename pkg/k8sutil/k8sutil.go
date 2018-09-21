@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strings"
 	"time"
 
 	crdutils "github.com/ant31/crd-validation/pkg"
@@ -29,11 +31,14 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/discovery"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 )
+
+var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
 
 // CustomResourceDefinitionTypeMeta set the default kind/apiversion of CRD
 var CustomResourceDefinitionTypeMeta metav1.TypeMeta = metav1.TypeMeta{
@@ -186,4 +191,15 @@ func NewCustomResourceDefinition(crdKind monitoringv1.CrdKind, group string, lab
 		Plural:                crdKind.Plural,
 		GetOpenAPIDefinitions: monitoringv1.GetOpenAPIDefinitions,
 	})
+}
+
+// SanitizeVolumeName ensures that the given volume name is a valid DNS-1123 label
+// accepted by Kubernetes.
+func SanitizeVolumeName(name string) string {
+	name = strings.ToLower(name)
+	name = invalidDNS1123Characters.ReplaceAllString(name, "-")
+	if len(name) > validation.DNS1123LabelMaxLength {
+		name = name[0:validation.DNS1123LabelMaxLength]
+	}
+	return strings.Trim(name, "-")
 }
