@@ -488,6 +488,9 @@ type Endpoint struct {
 	// BasicAuth allow an endpoint to authenticate over basic authentication
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
+	// RelabelConfigs to apply before scraping.
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<relabel_config>
+	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
