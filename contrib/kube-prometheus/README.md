@@ -74,6 +74,18 @@ $ kubectl create -f manifests/ 2>/dev/null || true  # This command sometimes may
 $ kubectl delete -f manifests/ || true
 ```
 
+### Access the dashboards
+
+Prometheus, Grafana, and Alertmanager dashboards can be accessed after running the quickstart via the following commands:
+
+Prometheus
+
+```shell
+export PROMETHEUS=$(kubectl get pods --namespace monitoring -l "app=prometheus" -o jsonpath="{.items[0].metadata.name}")
+kubectl --namespace monitoring port-forward $PROMETHEUS 3000:3000
+```
+Then access via [http://localhost:3000](http://localhost:3000)
+
 ## Customizing Kube-Prometheus
 
 This section:
