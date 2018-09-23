@@ -373,6 +373,18 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 			}
 		}
 	}
+	if in.RelabelConfigs != nil {
+		in, out := &in.RelabelConfigs, &out.RelabelConfigs
+		*out = make([]*RelabelConfig, len(*in))
+		for i := range *in {
+			if (*in)[i] == nil {
+				(*out)[i] = nil
+			} else {
+				(*out)[i] = new(RelabelConfig)
+				(*in)[i].DeepCopyInto((*out)[i])
+			}
+		}
+	}
 	if in.ProxyURL != nil {
 		in, out := &in.ProxyURL, &out.ProxyURL
 		if *in == nil {
