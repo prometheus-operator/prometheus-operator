@@ -76,32 +76,32 @@ $ kubectl delete -f manifests/ || true
 
 ### Access the dashboards
 
-Prometheus, Grafana, and Alertmanager dashboards can be accessed quickly using `kubectl port-forward` after running the quickstart via the commands below. 
-    
+Prometheus, Grafana, and Alertmanager dashboards can be accessed quickly using `kubectl port-forward` after running the quickstart via the commands below. Kubernetes 1.10 or later is required.
+
 > Note: There are instructions on how to route to these pods behdind an ingress controller in the [Exposing Prometheus/Alermanager/Grafana via Ingress](#exposing-prometheusalermanagergrafana-via-ingress) section.
 
 Prometheus
 
 ```shell
-export PROMETHEUS=$(kubectl get pods --namespace monitoring -l "app=prometheus" -o jsonpath="{.items[0].metadata.name}")
-kubectl --namespace monitoring port-forward $PROMETHEUS 9090:9090
+kubectl --namespace monitoring port-forward svc/prometheus-k8s 9090
 ```
+
 Then access via [http://localhost:9090](http://localhost:9090)
 
 Grafana
 
 ```shell
-export GRAFANA=$(kubectl get pods --namespace monitoring -l "app=grafana" -o jsonpath="{.items[0].metadata.name}")
-kubectl --namespace monitoring port-forward $GRAFANA 3000:3000
+kubectl --namespace monitoring port-forward svc/grafana 3000
 ```
+
 Then access via [http://localhost:3000](http://localhost:3000) and use the default grafana user:password of `admin:admin`.
 
 Alert Manager
 
 ```shell
-export ALERTMGR=$(kubectl get pods --namespace monitoring -l "app=alertmanager" -o jsonpath="{.items[0].metadata.name}")
-kubectl --namespace monitoring port-forward $ALERTMGR 9093:9093
+kubectl --namespace monitoring port-forward svc/alertmanager-main 9093
 ```
+
 Then access via [http://localhost:9093](http://localhost:9093)
 
 ## Customizing Kube-Prometheus
