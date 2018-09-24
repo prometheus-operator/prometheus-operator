@@ -917,6 +917,19 @@ func schema_pkg_client_monitoring_v1_Endpoint(ref common.ReferenceCallback) comm
 							},
 						},
 					},
+					"relabelings": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<relabel_config>",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/coreos/prometheus-operator/pkg/client/monitoring/v1.RelabelConfig"),
+									},
+								},
+							},
+						},
+					},
 					"proxyUrl": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.",

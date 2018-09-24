@@ -719,5 +719,45 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 		},
 	}
 
+	res["servicemonitor5"] = &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testservicemonitor4",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group8",
+			},
+		},
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group":  "group8",
+					"group3": "group9",
+				},
+			},
+			Endpoints: []monitoringv1.Endpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "replace",
+							Regex:        "(.*)",
+							Replacement:  "$1",
+							SourceLabels: []string{"__meta_kubernetes_pod_ready"},
+							TargetLabel:  "pod_ready",
+						},
+						{
+							Action:       "replace",
+							Regex:        "(.*)",
+							Replacement:  "$1",
+							SourceLabels: []string{"__meta_kubernetes_pod_node_name"},
+							TargetLabel:  "nodename",
+						},
+					},
+				},
+			},
+		},
+	}
+
 	return res
 }
