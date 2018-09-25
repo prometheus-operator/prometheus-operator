@@ -402,7 +402,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 func TestThanosTagAndShaAndVersion(t *testing.T) {
 	{
 		thanosTag := "my-unrelated-tag"
-		thanosVersion := "v0.1.0-rc.2"
+		thanosVersion := "v0.1.0"
 		sset, err := makeStatefulSet(monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				Thanos: &monitoringv1.ThanosSpec{

@@ -35,7 +35,7 @@ import (
 const (
 	governingServiceName     = "prometheus-operated"
 	DefaultPrometheusVersion = "v2.4.2"
-	DefaultThanosVersion     = "v0.1.0-rc.2"
+	DefaultThanosVersion     = "v0.1.0"
 	defaultRetention         = "24h"
 	storageDir               = "/prometheus"
 	confDir                  = "/etc/prometheus/config"
@@ -602,7 +602,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		thanosArgs := []string{
 			"sidecar",
 			fmt.Sprintf("--prometheus.url=http://%s:9090", c.LocalHost),
-			fmt.Sprintf("--tsdb.path=%s", storageDir),
+			fmt.Sprintf("--data-dir=%s", storageDir),
 			fmt.Sprintf("--cluster.address=[$(POD_IP)]:%d", 10900),
 			fmt.Sprintf("--grpc-address=[$(POD_IP)]:%d", 10901),
 		}
