@@ -144,12 +144,14 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local roleList = k.rbac.v1.roleList;
       roleList.new([newSpecificRole(x) for x in $._config.prometheus.namespaces]),
     prometheus:
-      local container = k.core.v1.pod.mixin.spec.containersType;
+      local statefulSet = k.apps.v1beta2.statefulSet;
+      local container = statefulSet.mixin.spec.template.spec.containersType;
       local resourceRequirements = container.mixin.resourcesType;
-      local selector = k.apps.v1beta2.deployment.mixin.spec.selectorType;
+      local selector = statefulSet.mixin.spec.selectorType;
 
-      local resources = resourceRequirements.new() +
-                        resourceRequirements.withRequests({ memory: '400Mi' });
+      local resources =
+        resourceRequirements.new() +
+        resourceRequirements.withRequests({ memory: '400Mi' });
 
       {
         apiVersion: 'monitoring.coreos.com/v1',
