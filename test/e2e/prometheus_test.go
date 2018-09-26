@@ -1189,7 +1189,7 @@ func testThanos(t *testing.T) {
 	querierServiceName := "thanos-querier"
 	basicPrometheus := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
 	peerServiceDNS := fmt.Sprintf("%s.%s.svc:10900", peerServiceName, ns)
-	version := "v0.1.0-rc.1"
+	version := "v0.1.0"
 	basicPrometheus.Spec.Thanos = &monitoringv1.ThanosSpec{
 		Peers:   &peerServiceDNS,
 		Version: &version,
