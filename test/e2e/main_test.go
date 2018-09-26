@@ -114,6 +114,7 @@ func testAllNS(t *testing.T) {
 		"AMCreateDeleteCluster":           testAMCreateDeleteCluster,
 		"AMScaling":                       testAMScaling,
 		"AMVersionMigration":              testAMVersionMigration,
+		"AMStorageUpdate":                 testAMStorageUpdate,
 		"AMExposingWithKubernetesAPI":     testAMExposingWithKubernetesAPI,
 		"AMMeshInitialization":            testAMMeshInitialization,
 		"AMClusterGossipSilences":         testAMClusterGossipSilences,
