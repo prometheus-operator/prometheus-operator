@@ -3,7 +3,7 @@ groups:
 - name: alertmanager.rules
   rules:
   - alert: AlertmanagerConfigInconsistent
-    expr: count_values("config_hash", alertmanager_config_hash) BY (service) / ON(service)
+    expr: count_values("config_hash", alertmanager_config_hash) BY (service, namespace) / ON(service, namespace)
       GROUP_LEFT() label_replace(prometheus_operator_alertmanager_spec_replicas, "service",
       "alertmanager-$1", "alertmanager", "(.*)") != 1
     for: 5m
@@ -15,7 +15,7 @@ groups:
       summary: Configuration out of sync
   - alert: AlertmanagerDownOrMissing
     expr: label_replace(prometheus_operator_alertmanager_spec_replicas, "job", "alertmanager-$1",
-      "alertmanager", "(.*)") / ON(job) GROUP_RIGHT() sum(up) BY (job) != 1
+      "alertmanager", "(.*)") / ON(job, namespace) GROUP_RIGHT() sum(up) BY (job, namespace) != 1
     for: 5m
     labels:
       severity: warning
