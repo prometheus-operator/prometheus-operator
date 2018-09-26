@@ -3643,7 +3643,7 @@ items:
                           },
                           "yaxes": [
                               {
-                                  "format": "short",
+                                  "format": "decbytes",
                                   "label": null,
                                   "logBase": 1,
                                   "max": null,
