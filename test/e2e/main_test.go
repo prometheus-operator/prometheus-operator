@@ -126,6 +126,7 @@ func testAllNS(t *testing.T) {
 		"PromNoServiceMonitorSelector":           testPromNoServiceMonitorSelector,
 		"PromVersionMigration":                   testPromVersionMigration,
 		"PromResourceUpdate":                     testPromResourceUpdate,
+		"PromStorageUpdate":                      testPromStorageUpdate,
 		"PromReloadConfig":                       testPromReloadConfig,
 		"PromAdditionalScrapeConfig":             testPromAdditionalScrapeConfig,
 		"PromAdditionalAlertManagerConfig":       testPromAdditionalAlertManagerConfig,

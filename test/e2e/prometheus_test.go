@@ -197,6 +197,63 @@ func testPromResourceUpdate(t *testing.T) {
 	}
 }
 
+func testPromStorageUpdate(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+
+	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		t.Fatal(err)
+	}
+
+	p.Spec.Storage = &monitoringv1.StorageSpec{
+		VolumeClaimTemplate: v1.PersistentVolumeClaim{
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: resource.MustParse("200Mi"),
+					},
+				},
+			},
+		},
+	}
+	_, err := framework.MonClientV1.Prometheuses(ns).Update(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		pods, err := framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+		if err != nil {
+			return false, err
+		}
+
+		if len(pods.Items) != 1 {
+			return false, nil
+		}
+
+		for _, volume := range pods.Items[0].Spec.Volumes {
+			if volume.Name == "prometheus-"+name+"-db" && volume.PersistentVolumeClaim != nil && volume.PersistentVolumeClaim.ClaimName != "" {
+				return true, nil
+			}
+		}
+
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func testPromReloadConfig(t *testing.T) {
 	t.Parallel()
 
