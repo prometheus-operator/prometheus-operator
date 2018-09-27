@@ -254,6 +254,14 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Servi
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: governingServiceName,
+			OwnerReferences: []metav1.OwnerReference{
+				metav1.OwnerReference{
+					Name:       p.GetName(),
+					Kind:       p.Kind,
+					APIVersion: p.APIVersion,
+					UID:        p.GetUID(),
+				},
+			},
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-prometheus": "true",
 			}),
