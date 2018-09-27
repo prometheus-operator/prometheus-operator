@@ -31,6 +31,7 @@ touch "${HOME}"/.kube/config
 
 export KUBECONFIG=$HOME/.kube/config
 minikube version
+minikube addons enable storage-provisioner
 sudo minikube start --vm-driver=none --bootstrapper=localkube --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.Authorization.Mode=RBAC --extra-config=apiserver.feature-gates=CustomResourceSubresources=true
 
 minikube update-context

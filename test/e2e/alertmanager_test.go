@@ -24,11 +24,14 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1beta2"
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"github.com/coreos/prometheus-operator/pkg/alertmanager"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	testFramework "github.com/coreos/prometheus-operator/test/framework"
 )
 
@@ -97,6 +100,62 @@ func testAMVersionMigration(t *testing.T) {
 
 	am.Spec.Version = "v0.14.0"
 	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func testAMStorageUpdate(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+
+	name := "test"
+
+	am := framework.MakeBasicAlertmanager(name, 1)
+
+	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
+		t.Fatal(err)
+	}
+
+	am.Spec.Storage = &monitoringv1.StorageSpec{
+		VolumeClaimTemplate: v1.PersistentVolumeClaim{
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: resource.MustParse("200Mi"),
+					},
+				},
+			},
+		},
+	}
+	_, err := framework.MonClientV1.Alertmanagers(ns).Update(am)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		pods, err := framework.KubeClient.Core().Pods(ns).List(alertmanager.ListOptions(name))
+		if err != nil {
+			return false, err
+		}
+
+		if len(pods.Items) != 1 {
+			return false, nil
+		}
+
+		for _, volume := range pods.Items[0].Spec.Volumes {
+			if volume.Name == "alertmanager-"+name+"-db" && volume.PersistentVolumeClaim != nil && volume.PersistentVolumeClaim.ClaimName != "" {
+				return true, nil
+			}
+		}
+
+		return false, nil
+	})
+
+	if err != nil {
 		t.Fatal(err)
 	}
 }

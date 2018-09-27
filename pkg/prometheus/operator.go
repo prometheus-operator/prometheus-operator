@@ -1038,8 +1038,21 @@ func (c *Operator) sync(key string) error {
 	}
 
 	level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
-	if _, err := ssetClient.Update(sset); err != nil {
-		return errors.Wrap(err, "updating statefulset failed")
+
+	_, err = ssetClient.Update(sset)
+	sErr, ok := err.(*apierrors.StatusError)
+
+	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
+		level.Debug(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet")
+		propagationPolicy := metav1.DeletePropagationForeground
+		if err := ssetClient.Delete(sset.GetName(), &metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
+		}
+		return nil
+	}
+
+	if err != nil {
+		return errors.Wrap(err, "updating StatefulSet failed")
 	}
 
 	return nil
