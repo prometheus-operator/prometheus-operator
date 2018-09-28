@@ -21,8 +21,6 @@ Once installed, the Prometheus Operator provides the following features:
 For an introduction to the Prometheus Operator, see the initial [blog
 post](https://coreos.com/blog/the-prometheus-operator.html).
 
-**Documentation is hosted on [coreos.com](https://coreos.com/operators/prometheus/docs/latest/)**
-
 ## Prometheus Operator vs. kube-prometheus
 
 The Prometheus Operator makes the Prometheus configuration Kubernetes native
