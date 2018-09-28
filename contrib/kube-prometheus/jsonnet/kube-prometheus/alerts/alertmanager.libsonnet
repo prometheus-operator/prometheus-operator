@@ -18,19 +18,6 @@
             },
           },
           {
-            alert: 'AlertmanagerDownOrMissing',
-            annotations: {
-              message: 'An unexpected number of Alertmanagers were scraped or disappeared from discovery.',
-            },
-            expr: |||
-              label_replace(prometheus_operator_alertmanager_spec_replicas{%(prometheusOperatorSelector)s}, "job", "alertmanager-$1", "alertmanager", "(.*)") / ON(job) GROUP_RIGHT() sum(up{%(alertmanagerSelector)s}) BY (job) != 1
-            ||| % $._config,
-            'for': '5m',
-            labels: {
-              severity: 'warning',
-            },
-          },
-          {
             alert: 'AlertmanagerFailedReload',
             annotations: {
               message: "Reloading Alertmanager's configuration has failed for {{ $labels.namespace }}/{{ $labels.pod}}.",
