@@ -685,6 +685,10 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, spec
 			}
 		}
 
+		if spec.BearerToken != "" {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
+		}
+
 		if spec.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
