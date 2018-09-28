@@ -6,7 +6,7 @@
 
 We use [Semantic Versioning](http://semver.org/).
 
-We maintain a separate branch for each minor release, named `release-<major>.<minor>`, e.g. `release-1.1`, `release-2.0`. The `stable` branch is supposed to point to the latest stable release.
+We maintain a separate branch for each minor release, named `release-<major>.<minor>`, e.g. `release-1.1`, `release-2.0`.
 
 The usual flow is to merge new features and changes into the master branch and to merge bug fixes into the latest release branch. Bug fixes are then merged into master from the latest release branch. The master branch should always contain all commits from the latest release branch.
 
@@ -20,7 +20,7 @@ For a patch release, work in the branch of the minor release you want to patch.
 
 For a new major or minor release, create the corresponding release branch based on the master branch.
 
-Bump the version in the `VERSION` file in the root of the repository. Once the version, a number of files have to be re-generated, this is automated with the following make target:
+Bump the version in the `VERSION` file in the root of the repository. Once that's done, a number of files have to be re-generated, this is automated with the following make target:
 
 ```bash
 $ make generate
@@ -48,22 +48,14 @@ Tag the new release with a tag named `v<major>.<minor>.<patch>`, e.g. `v2.1.3`. 
 You can do the tagging on the commandline:
 
 ```bash
-$ git tag -s vx.y.z -m 'vx.y.z'
+$ tag=$(< VERSION) && git tag -s "v${tag}" -m "v${tag}"
 $ git push --tags
 ```
 
 Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to your Github account using the following [procedure](https://help.github.com/articles/generating-a-gpg-key/), you can replace the `-s` flag by `-a` flag of the `git tag` command to only annotate the tag without signing.
 
-Finally build the container image.
+Our CI pipeline will automatically push a new docker image to quay.io.
 
-```bash
-$ make container TAG=vx.y.z
-```
-
-And then push the container image.
-
-```bash
-$ docker push quay.io/coreos/prometheus-operator:vx.y.z
-```
+Go to  https://github.com/coreos/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
 
 Take a breath. You're done releasing.
