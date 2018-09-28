@@ -35,7 +35,7 @@ import (
 const (
 	governingServiceName     = "prometheus-operated"
 	DefaultPrometheusVersion = "v2.4.2"
-	DefaultThanosVersion     = "v0.1.0-rc.2"
+	DefaultThanosVersion     = "v0.1.0"
 	defaultRetention         = "24h"
 	storageDir               = "/prometheus"
 	confDir                  = "/etc/prometheus/config"
