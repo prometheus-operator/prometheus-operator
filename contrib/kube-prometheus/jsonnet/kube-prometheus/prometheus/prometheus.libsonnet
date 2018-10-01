@@ -308,6 +308,13 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
             {
               port: 'http-metrics',
               interval: '30s',
+              metricRelabelings: [
+                {
+                  sourceLabels: ['__name__'],
+                  regex: 'etcd_(debugging|disk|request|server).*',
+                  action: 'drop',
+                },
+              ],
             },
           ],
           selector: {
@@ -356,6 +363,13 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                 serverName: 'kubernetes',
               },
               bearerTokenFile: '/var/run/secrets/kubernetes.io/serviceaccount/token',
+              metricRelabelings: [
+                {
+                  sourceLabels: ['__name__'],
+                  regex: 'etcd_(debugging|disk|request|server).*',
+                  action: 'drop',
+                },
+              ],
             },
           ],
         },
