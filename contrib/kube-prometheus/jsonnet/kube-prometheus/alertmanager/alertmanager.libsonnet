@@ -47,7 +47,11 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     secret:
       local secret = k.core.v1.secret;
 
-      secret.new('alertmanager-' + $._config.alertmanager.name, { 'alertmanager.yaml': std.base64(std.manifestYamlDoc($._config.alertmanager.config)) }) +
+      if std.type($._config.alertmanager.config) == "object" then
+        secret.new('alertmanager-' + $._config.alertmanager.name, { 'alertmanager.yaml': std.base64(std.manifestYamlDoc($._config.alertmanager.config)) })
+      else
+        secret.new('alertmanager-' + $._config.alertmanager.name, { 'alertmanager.yaml': std.base64($._config.alertmanager.config) })
+      + 
       secret.mixin.metadata.withNamespace($._config.namespace),
 
     serviceAccount:
