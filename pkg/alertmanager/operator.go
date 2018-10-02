@@ -442,8 +442,6 @@ func (c *Operator) sync(key string) error {
 		return nil
 	}
 
-	level.Info(c.logger).Log("msg", "sync alertmanager", "key", key)
-
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(am.Namespace)
 	if err = k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(am, c.config)); err != nil {
