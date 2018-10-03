@@ -133,6 +133,7 @@ func init() {
 	flagset.StringVar(&cfg.LogLevel, "log-level", logLevelInfo, fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(availableLogLevels, ", ")))
 	flagset.StringVar(&cfg.LogFormat, "log-format", logFormatLogfmt, fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", ")))
 	flagset.BoolVar(&cfg.ManageCRDs, "manage-crds", true, "Manage all CRDs with the Prometheus Operator.")
+	flagset.BoolVar(&cfg.WatchSecrets, "watch-secrets", true, "Watching secrets with the Prometheus Operator. Disable if you wish to restrict secrets viewing and accept that updating relevant secrets will require manual refreshing of the Operator.")
 	flagset.Parse(os.Args[1:])
 	cfg.Namespaces = ns.asSlice()
 }
