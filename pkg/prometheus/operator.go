@@ -308,10 +308,10 @@ func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 	ok := true
 
 	type informerStruct struct {
-		name	 string
+		name     string
 		informer cache.SharedIndexInformer
 	}
-	informers := []informerStruct {
+	informers := []informerStruct{
 		{"Prometheus", c.promInf},
 		{"ServiceMonitor", c.smonInf},
 		{"PrometheusRule", c.ruleInf},

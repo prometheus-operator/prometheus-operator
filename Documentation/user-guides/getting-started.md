@@ -61,12 +61,6 @@ rules:
   - ""
   resources:
   - configmaps
-  # You may choose to restrict this to the namespaces the Prometheus objects are in instead of all the namespaces
-  # by setting --watch-secrets=false in the operator and configuring the proper RBAC in a Role. The operator will need
-  # access to all verbs for the Secrets in the namespaces that the Prometheus objects are in, and view acces in namespaces
-  # where ServiceMonitors specify Basic Auth configurations.
-  # By doing so, the operator will not watch secrets in all namespaces at the cost of not refreshing the Prometheus configuration
-  # upon relevant secret changes, such as when a Basic Auth secret is altered.
   - secrets
   verbs:
   - '*'
