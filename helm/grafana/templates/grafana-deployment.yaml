@@ -92,8 +92,8 @@ spec:
           emptyDir: {}
           {{- end }}
         - name: grafana-datasources
-          secret:
-            secretName: {{ template "grafana.server.fullname" . }}-datasources
+          configMap:
+            name: {{ template "grafana.server.fullname" . }}-datasources
         - name: grafana-dashboard-provisioner
           configMap:
             name: {{ template "grafana.server.fullname" . }}-dashboard-provisioner
