@@ -108,11 +108,7 @@ into the same ConfigMap for the rest of the default dashboards.
 serverDashboardFiles:
   example-dashboard.json: |-
     {
-      "dashboard": {
-        "annotations:[]
-        ...
-      }
+      "annotations:[]
+      ...
     }
 ```
-
-In both cases, if you're exporting the jsons directly from Grafana, you'll want to wrap it in `{"dashboard": {}}`.
