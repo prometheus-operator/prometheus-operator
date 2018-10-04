@@ -62,36 +62,6 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 12 }}
         {{- end }}
-      - name: grafana-watcher
-        image: {{ .Values.grafanaWatcher.repository }}:{{ .Values.grafanaWatcher.tag }}
-        args:
-          - '--watch-dir=/var/grafana-dashboards'
-          - '--grafana-url=http://127.0.0.1:3000'
-          {{- range .Values.serverDashboardConfigmaps }}
-          - '--watch-dir=/var/additional-dashboards/{{ . }}'
-          {{- end }}
-        env:
-        - name: GRAFANA_USER
-          valueFrom:
-            secretKeyRef:
-              name: {{ template "grafana.server.fullname" . }}
-              key: user
-        - name: GRAFANA_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ template "grafana.server.fullname" . }}
-              key: password
-        {{- if .Values.grafanaWatcher.resources }}
-        resources:
-{{ toYaml .Values.grafanaWatcher.resources | indent 12 }}
-        {{- end }}
-        volumeMounts:
-          - name: grafana-dashboards
-            mountPath: /var/grafana-dashboards
-    {{- range .Values.serverDashboardConfigmaps }}
-          - name: {{ . }}
-            mountPath: /var/additional-dashboards/{{ . }}
-    {{- end }}
     {{- if .Values.nodeSelector }}
       nodeSelector:
     {{ toYaml .Values.nodeSelector | indent 4 }}
