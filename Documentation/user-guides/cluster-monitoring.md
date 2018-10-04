@@ -442,6 +442,11 @@ spec:
   endpoints:
   - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
     interval: 30s
+    metricRelabelings:
+    - action: drop
+      regex: etcd_(debugging|disk|request|server).*
+      sourceLabels:
+      - __name__
     port: https
     scheme: https
     tlsConfig:
@@ -504,6 +509,11 @@ metadata:
 spec:
   endpoints:
   - interval: 30s
+    metricRelabelings:
+    - action: drop
+      regex: etcd_(debugging|disk|request|server).*
+      sourceLabels:
+      - __name__
     port: http-metrics
   jobLabel: k8s-app
   namespaceSelector:
