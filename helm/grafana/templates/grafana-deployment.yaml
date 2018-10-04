@@ -43,6 +43,16 @@ spec:
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/lib/grafana
+        - name: grafana-datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: grafana-dashboard-provisioner
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: grafana-dashboards
+          mountPath: /grafana-dashboard-definitions/0/default-dashboards
+    {{- range .Values.serverDashboardConfigmaps }}
+        - name: {{ . }}
+          mountPath: /grafana-dashboard-definitions/0/{{ . }}
+    {{- end }}
       {{- if .Values.mountGrafanaConfig }}
         - name: grafana-config
           mountPath: /etc/grafana
@@ -81,9 +91,15 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        - name: grafana-datasources
+          secret:
+            secretName: {{ template "grafana.server.fullname" . }}-datasources
+        - name: grafana-dashboard-provisioner
+          configMap:
+            name: {{ template "grafana.server.fullname" . }}-dashboard-provisioner
         - name: grafana-dashboards
           configMap:
-            name: {{ template "grafana.server.fullname" . }}
+            name: {{ template "grafana.server.fullname" . }}-dashboards
       {{- if .Values.mountGrafanaConfig }}
         - name: grafana-config
           hostPath:
