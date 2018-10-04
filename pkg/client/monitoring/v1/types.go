@@ -615,7 +615,7 @@ type AlertmanagerSpec struct {
 	// Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.
 	// Version is ignored if Tag is set.
 	Tag string `json:"tag,omitempty"`
-	// SHA of Thanos container image to be deployed. Defaults to the value of `version`.
+	// SHA of Alertmanager container image to be deployed. Defaults to the value of `version`.
 	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
 	// Version and Tag are ignored if SHA is set.
 	SHA string `json:"sha,omitempty"`
