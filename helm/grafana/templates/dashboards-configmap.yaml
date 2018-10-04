@@ -14,16 +14,3 @@ data:
   {{- if .Values.keepOriginalDashboards }}
 {{ (.Files.Glob "dashboards/*.json").AsConfig | indent 2 }}
   {{- end }}
-  {{- if .Values.dataSource }}
-{{ toYaml .Values.dataSource | indent 2 }}
-  {{- end }}
-  {{- if .Values.keepOriginalDatasources }}
-  prometheus-datasource.json: |+
-    {
-      "access": "proxy",
-      "basicAuth": false,
-      "name": "prometheus",
-      "type": "prometheus",
-      "url": "http://{{ printf "%s" .Release.Name }}:9090"
-    }
-  {{- end }}
