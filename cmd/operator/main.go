@@ -27,18 +27,18 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"golang.org/x/sync/errgroup"
-	"k8s.io/api/core/v1"
-
-	"github.com/coreos/prometheus-operator/pkg/alertmanager"
+	alertmanagercontroller "github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/api"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/coreos/prometheus-operator/pkg/version"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/sync/errgroup"
+	"k8s.io/api/core/v1"
 )
 
 const (
@@ -164,19 +164,13 @@ func Main() int {
 
 	logger.Log("msg", fmt.Sprintf("Starting Prometheus Operator version '%v'.", version.Version))
 
-	r := prometheus.NewRegistry()
-	r.MustRegister(
-		prometheus.NewGoCollector(),
-		prometheus.NewProcessCollector(os.Getpid(), ""),
-	)
-
 	po, err := prometheuscontroller.New(cfg, log.With(logger, "component", "prometheusoperator"))
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating prometheus controller failed: ", err)
 		return 1
 	}
 
-	ao, err := alertmanager.New(cfg, log.With(logger, "component", "alertmanageroperator"))
+	ao, err := alertmanagercontroller.New(cfg, log.With(logger, "component", "alertmanageroperator"))
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
 		return 1
@@ -196,8 +190,39 @@ func Main() int {
 		return 1
 	}
 
-	po.RegisterMetrics(r)
-	ao.RegisterMetrics(r)
+	reconcileErrorsCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "prometheus_operator_reconcile_errors_total",
+		Help: "Number of errors that occurred while reconciling the alertmanager statefulset",
+	}, []string{"controller"})
+
+	triggerByCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "prometheus_operator_triggered_total",
+		Help: "Number of times a Kubernetes object add, delete or update event" +
+			" triggered the Prometheus Operator to reconcile an object",
+	}, []string{"controller", "triggered_by", "action"})
+
+	r := prometheus.NewRegistry()
+	r.MustRegister(
+		prometheus.NewGoCollector(),
+		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
+		reconcileErrorsCounter,
+		triggerByCounter,
+	)
+
+	prometheusLabels := prometheus.Labels{"controller": "prometheus"}
+	po.RegisterMetrics(
+		prometheus.WrapRegistererWith(prometheusLabels, r),
+		reconcileErrorsCounter.MustCurryWith(prometheusLabels),
+		triggerByCounter.MustCurryWith(prometheusLabels),
+	)
+
+	alertmanagerLabels := prometheus.Labels{"controller": "alertmanager"}
+	ao.RegisterMetrics(
+		prometheus.WrapRegistererWith(alertmanagerLabels, r),
+		reconcileErrorsCounter.MustCurryWith(alertmanagerLabels),
+		triggerByCounter.MustCurryWith(prometheusLabels),
+	)
+
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 	mux.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
 	mux.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))

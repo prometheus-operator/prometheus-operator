@@ -23,11 +23,11 @@ import (
 
 var (
 	descPrometheusSpecReplicas = prometheus.NewDesc(
-		"prometheus_operator_prometheus_spec_replicas",
-		"Number of expected Prometheus replicas for the Prometheus object.",
+		"prometheus_operator_spec_replicas",
+		"Number of expected replicas for the object.",
 		[]string{
 			"namespace",
-			"prometheus",
+			"name",
 		}, nil,
 	)
 )

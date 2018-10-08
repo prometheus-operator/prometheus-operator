@@ -50,7 +50,7 @@ const (
 	resyncPeriod = 5 * time.Minute
 )
 
-// Operator manages lify cycle of Alertmanager deployments and
+// Operator manages life cycle of Alertmanager deployments and
 // monitoring configurations.
 type Operator struct {
 	kclient   kubernetes.Interface
@@ -63,7 +63,8 @@ type Operator struct {
 
 	queue workqueue.RateLimitingInterface
 
-	statefulsetErrors prometheus.Counter
+	reconcileErrorsCounter *prometheus.CounterVec
+	triggerByCounter       *prometheus.CounterVec
 
 	config Config
 }
@@ -144,14 +145,13 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 	return o, nil
 }
 
-func (c *Operator) RegisterMetrics(r prometheus.Registerer) {
-	c.statefulsetErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "prometheus_operator_alertmanager_reconcile_errors_total",
-		Help: "Number of errors that occurred while reconciling the alertmanager statefulset",
-	})
+func (c *Operator) RegisterMetrics(r prometheus.Registerer, reconcileErrorsCounter *prometheus.CounterVec, triggerByCounter *prometheus.CounterVec) {
+	c.reconcileErrorsCounter = reconcileErrorsCounter
+	c.triggerByCounter = triggerByCounter
+
+	c.reconcileErrorsCounter.With(prometheus.Labels{}).Add(0)
 
 	r.MustRegister(
-		c.statefulsetErrors,
 		NewAlertmanagerCollector(c.alrtInf.GetStore()),
 	)
 }
@@ -313,7 +313,7 @@ func (c *Operator) processNextWorkItem() bool {
 		return true
 	}
 
-	c.statefulsetErrors.Inc()
+	c.reconcileErrorsCounter.With(prometheus.Labels{}).Inc()
 	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("Sync %q failed", key)))
 	c.queue.AddRateLimited(key)
 
@@ -363,6 +363,7 @@ func (c *Operator) handleAlertmanagerAdd(obj interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Alertmanager added", "key", key)
+	c.triggerByCounter.WithLabelValues(monitoringv1.AlertmanagersKind, "add").Inc()
 	c.enqueue(key)
 }
 
@@ -373,6 +374,7 @@ func (c *Operator) handleAlertmanagerDelete(obj interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Alertmanager deleted", "key", key)
+	c.triggerByCounter.WithLabelValues(monitoringv1.AlertmanagersKind, "delete").Inc()
 	c.enqueue(key)
 }
 
@@ -383,6 +385,7 @@ func (c *Operator) handleAlertmanagerUpdate(old, cur interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Alertmanager updated", "key", key)
+	c.triggerByCounter.WithLabelValues(monitoringv1.AlertmanagersKind, "update").Inc()
 	c.enqueue(key)
 }
 

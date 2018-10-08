@@ -23,11 +23,11 @@ import (
 
 var (
 	descAlertmanagerSpecReplicas = prometheus.NewDesc(
-		"prometheus_operator_alertmanager_spec_replicas",
-		"Number of expected Alertmanager replicas for the Alertmanager object.",
+		"prometheus_operator_spec_replicas",
+		"Number of expected replicas for the object.",
 		[]string{
 			"namespace",
-			"alertmanager",
+			"name",
 		}, nil,
 	)
 )
