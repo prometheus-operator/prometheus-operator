@@ -498,8 +498,8 @@ func TestRetention(t *testing.T) {
 	}{
 		{"v1.8.2", "", "-storage.local.retention=24h"},
 		{"v1.8.2", "1d", "-storage.local.retention=1d"},
-		{"v2.3.2", "", "--storage.tsdb.retention=24h"},
-		{"v2.3.2", "1d", "--storage.tsdb.retention=1d"},
+		{"v2.4.3", "", "--storage.tsdb.retention=24h"},
+		{"v2.4.3", "1d", "--storage.tsdb.retention=1d"},
 	}
 
 	for _, test := range tests {
