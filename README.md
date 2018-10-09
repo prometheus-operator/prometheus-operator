@@ -125,15 +125,16 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 > pull against your local coreos checkout before running tests.
 
 #### Running *unit tests*:
+
 `make test-unit`
 
 #### Running *end-to-end* tests on local minikube cluster:
+
 1. `minikube start --kubernetes-version=v1.10.0 --memory=4096
     --extra-config=apiserver.Authorization.Mode=RBAC`
 2. `eval $(minikube docker-env) && make image` - build Prometheus Operator
     docker image on minikube's docker
 3. `make test-e2e`
-
 
 ## Contributing
 
