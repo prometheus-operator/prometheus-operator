@@ -602,6 +602,13 @@ type Alertmanager struct {
 	Status *AlertmanagerStatus `json:"status,omitempty"`
 }
 
+// CACertBundleSpec is a specification of a secret containing a CA certificate bundle and an optional
+// mount path for it. If the mount path is not specified, it defaults to "/etc/ssl/certs".
+type CACertBundleSpec struct {
+	SecretName string `json:"secret"`
+	MountPath *string `json:"mountPath,omitempty"`
+}
+
 // AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
@@ -629,6 +636,8 @@ type AlertmanagerSpec struct {
 	// object, which shall be mounted into the Alertmanager Pods.
 	// The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.
 	Secrets []string `json:"secrets,omitempty"`
+	// CACertBundle is an optional specification of a secret to pull a CA certificate bundle from.
+	CACertBundle *CACertBundleSpec `json:"caCertBundle,omitempty"`
 	// Log level for Alertmanager to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will

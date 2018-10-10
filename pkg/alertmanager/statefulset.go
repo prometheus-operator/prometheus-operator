@@ -40,6 +40,7 @@ const (
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
 	alertmanagerStorageDir = "/alertmanager"
+	caCertBundlePath       = "/etc/ssl/certs"
 )
 
 var (
@@ -366,6 +367,29 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			MountPath: alertmanagerStorageDir,
 			SubPath:   subPathForStorage(a.Spec.Storage),
 		},
+	}
+
+	if a.Spec.CACertBundle != nil {
+		path := caCertBundlePath
+		if a.Spec.CACertBundle.MountPath != nil {
+			path = *a.Spec.CACertBundle.MountPath
+		}
+
+		volumes = append(volumes, v1.Volume{
+			Name: "ca-bundle",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: a.Spec.CACertBundle.SecretName,
+				},
+			},
+		})
+		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+			Name: "ca-bundle",
+			ReadOnly: true,
+			MountPath: path,
+		})
+			
+			
 	}
 	for _, s := range a.Spec.Secrets {
 		volumes = append(volumes, v1.Volume{

@@ -420,6 +420,78 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 	}
 }
 
+func TestStatefulSetCABundleNoPath(t *testing.T) {
+	caBundle := monitoringv1.CACertBundleSpec{
+		SecretName: "test-ca-bundle",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			CACertBundle: &caBundle,
+		},
+	}, nil, defaultTestConfig)
+	require.NoError(t, err)
+
+	bundleFound := false
+	for _, v := range sset.Spec.Template.Spec.Volumes {
+		if v.Secret != nil {
+			if v.Secret.SecretName == "test-ca-bundle" {
+				bundleFound = true
+			}
+		}
+	}
+	if !bundleFound {
+		t.Errorf("CA bundle volume not found.")
+	}
+
+	bundleFound = false
+	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if v.Name == "ca-bundle" && v.MountPath == caCertBundlePath {
+			bundleFound = true
+		}
+	}
+	if !bundleFound {
+		t.Errorf("CA bundle mount not found in the alertmanager.")
+	}
+}
+
+func TestStatefulSetCABundleExplicitPath(t *testing.T) {
+	path := "/for/test/purposes/only"
+	caBundle := monitoringv1.CACertBundleSpec{
+		SecretName: "test-ca-bundle",
+		MountPath: &path,
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			CACertBundle: &caBundle,
+		},
+	}, nil, defaultTestConfig)
+	require.NoError(t, err)
+
+	bundleFound := false
+	for _, v := range sset.Spec.Template.Spec.Volumes {
+		if v.Secret != nil {
+			if v.Secret.SecretName == "test-ca-bundle" {
+				bundleFound = true
+			}
+		}
+	}
+	if !bundleFound {
+		t.Errorf("CA bundle volume not found.")
+	}
+
+	bundleFound = false
+	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if v.Name == "ca-bundle" && v.MountPath == path {
+			bundleFound = true
+		}
+	}
+	if !bundleFound {
+		t.Errorf("CA bundle mount not found in the alertmanager.")
+	}
+}
+
 func TestSHAAndTagAndVersion(t *testing.T) {
 	{
 		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
