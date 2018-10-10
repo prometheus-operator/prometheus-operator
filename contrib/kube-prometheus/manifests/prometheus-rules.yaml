@@ -947,7 +947,7 @@ spec:
         message: The configuration of the instances of the Alertmanager cluster `{{$labels.service}}`
           are out of sync.
       expr: |
-        count_values("config_hash", alertmanager_config_hash{job="alertmanager-main"}) BY (service) / ON(service) GROUP_LEFT() label_replace(prometheus_operator_alertmanager_spec_replicas{job="prometheus-operator"}, "service", "alertmanager-$1", "alertmanager", "(.*)") != 1
+        count_values("config_hash", alertmanager_config_hash{job="alertmanager-main"}) BY (service) / ON(service) GROUP_LEFT() label_replace(prometheus_operator_spec_replicas{job="prometheus-operator"}, "service", "alertmanager-$1", "alertmanager", "(.*)") != 1
       for: 5m
       labels:
         severity: critical
@@ -1099,20 +1099,12 @@ spec:
         severity: warning
   - name: prometheus-operator
     rules:
-    - alert: PrometheusOperatorAlertmanagerReconcileErrors
+    - alert: PrometheusOperatorReconcileErrors
       annotations:
-        message: Errors while reconciling Alertmanager in {{ $labels.namespace }}
-          Namespace.
+        message: Errors while reconciling {{ $labels.controller }} in {{ $labels.namespace
+          }} Namespace.
       expr: |
-        rate(prometheus_operator_alertmanager_reconcile_errors_total{job="prometheus-operator"}[5m]) > 0.1
-      for: 10m
-      labels:
-        severity: warning
-    - alert: PrometheusOperatorPrometheusReconcileErrors
-      annotations:
-        message: Errors while reconciling Prometheus in {{ $labels.namespace }} Namespace.
-      expr: |
-        rate(prometheus_operator_prometheus_reconcile_errors_total{job="prometheus-operator"}[5m]) > 0.1
+        rate(prometheus_operator_reconcile_errors_total{job="prometheus-operator"}[5m]) > 0.1
       for: 10m
       labels:
         severity: warning

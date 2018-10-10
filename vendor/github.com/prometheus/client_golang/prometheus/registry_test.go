@@ -34,7 +34,22 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// uncheckedCollector wraps a Collector but its Describe method yields no Desc.
+type uncheckedCollector struct {
+	c prometheus.Collector
+}
+
+func (u uncheckedCollector) Describe(_ chan<- *prometheus.Desc) {}
+func (u uncheckedCollector) Collect(c chan<- prometheus.Metric) {
+	u.c.Collect(c)
+}
+
 func testHandler(t testing.TB) {
+	// TODO(beorn7): This test is a bit too "end-to-end". It tests quite a
+	// few moving parts that are not strongly coupled. They could/should be
+	// tested separately. However, the changes planned for v0.10 will
+	// require a major rework of this test anyway, at which time I will
+	// structure it in a better way.
 
 	metricVec := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -209,6 +224,117 @@ metric: <
 	expectedMetricFamilyMergedWithExternalAsProtoCompactText := []byte(`name:"name" help:"docstring" type:COUNTER metric:<label:<name:"constname" value:"constvalue" > label:<name:"labelname" value:"different_val" > counter:<value:42 > > metric:<label:<name:"constname" value:"constvalue" > label:<name:"labelname" value:"val1" > counter:<value:1 > > metric:<label:<name:"constname" value:"constvalue" > label:<name:"labelname" value:"val2" > counter:<value:1 > > 
 `)
 
+	externalMetricFamilyWithInvalidLabelValue := &dto.MetricFamily{
+		Name: proto.String("name"),
+		Help: proto.String("docstring"),
+		Type: dto.MetricType_COUNTER.Enum(),
+		Metric: []*dto.Metric{
+			{
+				Label: []*dto.LabelPair{
+					{
+						Name:  proto.String("constname"),
+						Value: proto.String("\xFF"),
+					},
+					{
+						Name:  proto.String("labelname"),
+						Value: proto.String("different_val"),
+					},
+				},
+				Counter: &dto.Counter{
+					Value: proto.Float64(42),
+				},
+			},
+		},
+	}
+
+	expectedMetricFamilyInvalidLabelValueAsText := []byte(`An error has occurred during metrics gathering:
+
+collected metric "name" { label:<name:"constname" value:"\377" > label:<name:"labelname" value:"different_val" > counter:<value:42 > } has a label named "constname" whose value is not utf8: "\xff"
+`)
+
+	summary := prometheus.NewSummary(prometheus.SummaryOpts{
+		Name: "complex",
+		Help: "A metric to check collisions with _sum and _count.",
+	})
+	summaryAsText := []byte(`# HELP complex A metric to check collisions with _sum and _count.
+# TYPE complex summary
+complex{quantile="0.5"} NaN
+complex{quantile="0.9"} NaN
+complex{quantile="0.99"} NaN
+complex_sum 0
+complex_count 0
+`)
+	histogram := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "complex",
+		Help: "A metric to check collisions with _sun, _count, and _bucket.",
+	})
+	externalMetricFamilyWithBucketSuffix := &dto.MetricFamily{
+		Name: proto.String("complex_bucket"),
+		Help: proto.String("externaldocstring"),
+		Type: dto.MetricType_COUNTER.Enum(),
+		Metric: []*dto.Metric{
+			{
+				Counter: &dto.Counter{
+					Value: proto.Float64(1),
+				},
+			},
+		},
+	}
+	externalMetricFamilyWithBucketSuffixAsText := []byte(`# HELP complex_bucket externaldocstring
+# TYPE complex_bucket counter
+complex_bucket 1
+`)
+	externalMetricFamilyWithCountSuffix := &dto.MetricFamily{
+		Name: proto.String("complex_count"),
+		Help: proto.String("externaldocstring"),
+		Type: dto.MetricType_COUNTER.Enum(),
+		Metric: []*dto.Metric{
+			{
+				Counter: &dto.Counter{
+					Value: proto.Float64(1),
+				},
+			},
+		},
+	}
+	bucketCollisionMsg := []byte(`An error has occurred during metrics gathering:
+
+collected metric named "complex_bucket" collides with previously collected histogram named "complex"
+`)
+	summaryCountCollisionMsg := []byte(`An error has occurred during metrics gathering:
+
+collected metric named "complex_count" collides with previously collected summary named "complex"
+`)
+	histogramCountCollisionMsg := []byte(`An error has occurred during metrics gathering:
+
+collected metric named "complex_count" collides with previously collected histogram named "complex"
+`)
+	externalMetricFamilyWithDuplicateLabel := &dto.MetricFamily{
+		Name: proto.String("broken_metric"),
+		Help: proto.String("The registry should detect the duplicate label."),
+		Type: dto.MetricType_COUNTER.Enum(),
+		Metric: []*dto.Metric{
+			{
+				Label: []*dto.LabelPair{
+					{
+						Name:  proto.String("foo"),
+						Value: proto.String("bar"),
+					},
+					{
+						Name:  proto.String("foo"),
+						Value: proto.String("baz"),
+					},
+				},
+				Counter: &dto.Counter{
+					Value: proto.Float64(2.7),
+				},
+			},
+		},
+	}
+	duplicateLabelMsg := []byte(`An error has occurred during metrics gathering:
+
+collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"foo" value:"baz" > counter:<value:2.7 > } has two or more labels with the same name: foo
+`)
+
 	type output struct {
 		headers map[string]string
 		body    []byte
@@ -226,7 +352,7 @@ metric: <
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8`,
 				},
 				body: []byte{},
 			},
@@ -237,7 +363,7 @@ metric: <
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8`,
 				},
 				body: []byte{},
 			},
@@ -248,7 +374,7 @@ metric: <
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8`,
 				},
 				body: []byte{},
 			},
@@ -270,7 +396,7 @@ metric: <
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8`,
 				},
 				body: expectedMetricFamilyAsText,
 			},
@@ -294,7 +420,7 @@ metric: <
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8`,
 				},
 				body: externalMetricFamilyAsText,
 			},
@@ -337,7 +463,7 @@ metric: <
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8`,
 				},
 				body: []byte{},
 			},
@@ -348,7 +474,7 @@ metric: <
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8`,
 				},
 				body: expectedMetricFamilyAsText,
 			},
@@ -360,7 +486,7 @@ metric: <
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8`,
 				},
 				body: bytes.Join(
 					[][]byte{
@@ -452,6 +578,114 @@ metric: <
 				externalMetricFamilyWithSameName,
 			},
 		},
+		{ // 16
+			headers: map[string]string{
+				"Accept": "application/vnd.google.protobuf;proto=io.prometheus.client.MetricFamily;encoding=compact-text",
+			},
+			out: output{
+				headers: map[string]string{
+					"Content-Type": `text/plain; charset=utf-8`,
+				},
+				body: expectedMetricFamilyInvalidLabelValueAsText,
+			},
+			collector: metricVec,
+			externalMF: []*dto.MetricFamily{
+				externalMetricFamily,
+				externalMetricFamilyWithInvalidLabelValue,
+			},
+		},
+		{ // 17
+			headers: map[string]string{
+				"Accept": "text/plain",
+			},
+			out: output{
+				headers: map[string]string{
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8`,
+				},
+				body: expectedMetricFamilyAsText,
+			},
+			collector: uncheckedCollector{metricVec},
+		},
+		{ // 18
+			headers: map[string]string{
+				"Accept": "text/plain",
+			},
+			out: output{
+				headers: map[string]string{
+					"Content-Type": `text/plain; charset=utf-8`,
+				},
+				body: histogramCountCollisionMsg,
+			},
+			collector: histogram,
+			externalMF: []*dto.MetricFamily{
+				externalMetricFamilyWithCountSuffix,
+			},
+		},
+		{ // 19
+			headers: map[string]string{
+				"Accept": "text/plain",
+			},
+			out: output{
+				headers: map[string]string{
+					"Content-Type": `text/plain; charset=utf-8`,
+				},
+				body: bucketCollisionMsg,
+			},
+			collector: histogram,
+			externalMF: []*dto.MetricFamily{
+				externalMetricFamilyWithBucketSuffix,
+			},
+		},
+		{ // 20
+			headers: map[string]string{
+				"Accept": "text/plain",
+			},
+			out: output{
+				headers: map[string]string{
+					"Content-Type": `text/plain; charset=utf-8`,
+				},
+				body: summaryCountCollisionMsg,
+			},
+			collector: summary,
+			externalMF: []*dto.MetricFamily{
+				externalMetricFamilyWithCountSuffix,
+			},
+		},
+		{ // 21
+			headers: map[string]string{
+				"Accept": "text/plain",
+			},
+			out: output{
+				headers: map[string]string{
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8`,
+				},
+				body: bytes.Join(
+					[][]byte{
+						summaryAsText,
+						externalMetricFamilyWithBucketSuffixAsText,
+					},
+					[]byte{},
+				),
+			},
+			collector: summary,
+			externalMF: []*dto.MetricFamily{
+				externalMetricFamilyWithBucketSuffix,
+			},
+		},
+		{ // 22
+			headers: map[string]string{
+				"Accept": "text/plain",
+			},
+			out: output{
+				headers: map[string]string{
+					"Content-Type": `text/plain; charset=utf-8`,
+				},
+				body: duplicateLabelMsg,
+			},
+			externalMF: []*dto.MetricFamily{
+				externalMetricFamilyWithDuplicateLabel,
+			},
+		},
 	}
 	for i, scenario := range scenarios {
 		registry := prometheus.NewPedanticRegistry()
@@ -466,7 +700,7 @@ metric: <
 		}
 
 		if scenario.collector != nil {
-			registry.Register(scenario.collector)
+			registry.MustRegister(scenario.collector)
 		}
 		writer := httptest.NewRecorder()
 		handler := prometheus.InstrumentHandler("prometheus", promhttp.HandlerFor(gatherer, promhttp.HandlerOpts{}))
@@ -477,7 +711,7 @@ metric: <
 		handler(writer, request)
 
 		for key, value := range scenario.out.headers {
-			if writer.HeaderMap.Get(key) != value {
+			if writer.Header().Get(key) != value {
 				t.Errorf(
 					"%d. expected %q for header %q, got %q",
 					i, value, key, writer.Header().Get(key),
@@ -526,20 +760,21 @@ func TestRegisterWithOrGet(t *testing.T) {
 		},
 		[]string{"foo", "bar"},
 	)
-	if err := prometheus.Register(original); err != nil {
+	var err error
+	if err = prometheus.Register(original); err != nil {
 		t.Fatal(err)
 	}
-	if err := prometheus.Register(equalButNotSame); err == nil {
+	if err = prometheus.Register(equalButNotSame); err == nil {
 		t.Fatal("expected error when registringe equal collector")
 	}
-	existing, err := prometheus.RegisterOrGet(equalButNotSame)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if existing != original {
-		t.Error("expected original collector but got something else")
-	}
-	if existing == equalButNotSame {
-		t.Error("expected original callector but got new one")
+	if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+		if are.ExistingCollector != original {
+			t.Error("expected original collector but got something else")
+		}
+		if are.ExistingCollector == equalButNotSame {
+			t.Error("expected original callector but got new one")
+		}
+	} else {
+		t.Error("unexpected error:", err)
 	}
 }
