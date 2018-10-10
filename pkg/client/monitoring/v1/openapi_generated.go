@@ -2300,6 +2300,18 @@ func schema_pkg_client_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) co
 							Format:      "",
 						},
 					},
+					"clusterAdvertisePort": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"gRPCAdvertisePort": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
 					"version": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Version describes the version of Thanos to use.",

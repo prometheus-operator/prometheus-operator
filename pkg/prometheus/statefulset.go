@@ -611,6 +611,12 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		if p.Spec.Thanos.Peers != nil {
 			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.peers=%s", *p.Spec.Thanos.Peers))
 		}
+		if p.Spec.Thanos.ClusterAdvertisePort != 0 {
+			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.advertise-address=$(NODE_IP):%d", p.Spec.Thanos.ClusterAdvertisePort))
+		}
+		if p.Spec.Thanos.GRPCAdvertisePort != 0 {
+			thanosArgs = append(thanosArgs, fmt.Sprintf("--grpc-advertise-address=$(NODE_IP):%d", p.Spec.Thanos.GRPCAdvertisePort))
+		}
 		if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
 			thanosArgs = append(thanosArgs, fmt.Sprintf("--log.level=%s", p.Spec.LogLevel))
 		}
@@ -630,6 +636,15 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				ValueFrom: &v1.EnvVarSource{
 					FieldRef: &v1.ObjectFieldSelector{
 						FieldPath: "status.podIP",
+					},
+				},
+			},
+			{
+				// Necessary for '--cluster.advertise-address', '--grpc-advertise-address' flags
+				Name: "NODE_IP",
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{
+						FieldPath: "status.hostIP",
 					},
 				},
 			},
@@ -791,9 +806,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				NodeSelector:                  p.Spec.NodeSelector,
 				PriorityClassName:             p.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
-				Volumes:                       volumes,
-				Tolerations:                   p.Spec.Tolerations,
-				Affinity:                      p.Spec.Affinity,
+				Volumes:     volumes,
+				Tolerations: p.Spec.Tolerations,
+				Affinity:    p.Spec.Affinity,
 			},
 		},
 	}, nil

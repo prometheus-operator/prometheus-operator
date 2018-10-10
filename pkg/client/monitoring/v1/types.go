@@ -248,6 +248,11 @@ type StorageSpec struct {
 type ThanosSpec struct {
 	// Peers is a DNS name for Thanos to discover peers through.
 	Peers *string `json:"peers,omitempty"`
+
+	// ClusterAdvertisePort is the port of advertise address for gossip in gossip cluster
+	ClusterAdvertisePort int32 `json:"clusterAdvertisePort,omitempty"`
+	// GRPCAdvertisePort is the port of advertise address for gRPC StoreAPI in gossip cluster
+	GRPCAdvertisePort int32 `json:"gRPCAdvertisePort,omitempty"`
 	// Version describes the version of Thanos to use.
 	Version *string `json:"version,omitempty"`
 	// Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`.
