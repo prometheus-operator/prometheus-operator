@@ -1196,24 +1196,23 @@ func (c *Operator) loadBasicAuthSecrets(
 ) (map[string]BasicAuthCredentials, error) {
 
 	sMonSecretMap := make(map[string]*v1.SecretList)
-	for _, mon := range mons {
-		smNamespace := mon.Namespace
-		if sMonSecretMap[smNamespace] == nil {
-			msClient := c.kclient.CoreV1().Secrets(smNamespace)
-			listSecrets, err := msClient.List(metav1.ListOptions{})
-
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to retrieve secrets in namespace '%v' for servicemonitor '%v'", smNamespace, mon.Name)
-			}
-			sMonSecretMap[smNamespace] = listSecrets
-		}
-	}
-
 	secrets := map[string]BasicAuthCredentials{}
 	for _, mon := range mons {
 		for i, ep := range mon.Spec.Endpoints {
 			if ep.BasicAuth != nil {
-				credentials, err := loadBasicAuthSecret(ep.BasicAuth, sMonSecretMap[mon.Namespace])
+				smNamespace := mon.Namespace
+				// Load namespace's secrets if not previously fetched
+				if sMonSecretMap[smNamespace] == nil {
+					msClient := c.kclient.CoreV1().Secrets(smNamespace)
+					listSecrets, err := msClient.List(metav1.ListOptions{})
+
+					if err != nil {
+						return nil, errors.Wrapf(err, "failed to retrieve secrets in namespace '%v' for servicemonitor '%v'", smNamespace, mon.Name)
+					}
+					sMonSecretMap[smNamespace] = listSecrets
+				}
+
+				credentials, err := loadBasicAuthSecret(ep.BasicAuth, sMonSecretMap[smNamespace])
 				if err != nil {
 					return nil, fmt.Errorf("could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
 				}
