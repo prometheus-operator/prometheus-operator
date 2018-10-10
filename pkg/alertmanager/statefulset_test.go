@@ -459,7 +459,7 @@ func TestStatefulSetCABundleExplicitPath(t *testing.T) {
 	path := "/for/test/purposes/only"
 	caBundle := monitoringv1.CACertBundleSpec{
 		SecretName: "test-ca-bundle",
-		MountPath: &path,
+		MountPath:  &path,
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},

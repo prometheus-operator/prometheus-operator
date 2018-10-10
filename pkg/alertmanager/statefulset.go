@@ -384,12 +384,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			},
 		})
 		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
-			Name: "ca-bundle",
-			ReadOnly: true,
+			Name:      "ca-bundle",
+			ReadOnly:  true,
 			MountPath: path,
 		})
-			
-			
+
 	}
 	for _, s := range a.Spec.Secrets {
 		volumes = append(volumes, v1.Volume{

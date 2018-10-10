@@ -605,8 +605,8 @@ type Alertmanager struct {
 // CACertBundleSpec is a specification of a secret containing a CA certificate bundle and an optional
 // mount path for it. If the mount path is not specified, it defaults to "/etc/ssl/certs".
 type CACertBundleSpec struct {
-	SecretName string `json:"secret"`
-	MountPath *string `json:"mountPath,omitempty"`
+	SecretName string  `json:"secret"`
+	MountPath  *string `json:"mountPath,omitempty"`
 }
 
 // AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info:
