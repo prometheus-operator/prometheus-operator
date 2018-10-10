@@ -17,7 +17,7 @@ spec:
           - k8s
     ports:
     - port: 8080
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       app: kube-state-metrics

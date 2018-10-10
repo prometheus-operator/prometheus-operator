@@ -6,7 +6,7 @@ spec:
   ingress:
   - ports:
     - port: 9090
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       app: prometheus

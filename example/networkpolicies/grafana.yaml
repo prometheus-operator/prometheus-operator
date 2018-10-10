@@ -6,7 +6,7 @@ spec:
   ingress:
   - ports:
     - port: 3000
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       app: grafana
