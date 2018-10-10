@@ -128,7 +128,7 @@ alertmanager:
 
     ## Cluster-internal IP address for Alertmanager Service
     ##
-    clusterIP: ""
+    clusterIP: null
 
     ## List of external IP addresses at which the Alertmanager Service will be available
     ##
@@ -306,7 +306,7 @@ prometheus:
 
     ## Cluster-internal IP address for Prometheus Service
     ##
-    clusterIP: ""
+    clusterIP: null
 
     ## List of external IP addresses at which the Prometheus Service will be available
     ##
