@@ -223,7 +223,7 @@ These are the available fields with their respective default values:
         kubeRbacProxy: "v0.3.1",
         addonResizer: "1.0",
         prometheusOperator: "v0.23.2",
-        prometheus: "v2.3.2",
+        prometheus: "v2.4.3",
     },
 
     imageRepos+:: {

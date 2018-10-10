@@ -565,10 +565,10 @@ spec:
     - alert: KubePodCrashLooping
       annotations:
         message: Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container
-          }}) is restarting {{ printf "%.2f" $value }} times / second.
+          }}) is restarting {{ printf "%.2f" $value }} times / 5 minutes.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepodcrashlooping
       expr: |
-        rate(kube_pod_container_status_restarts_total{job="kube-state-metrics"}[15m]) > 0
+        rate(kube_pod_container_status_restarts_total{job="kube-state-metrics"}[15m]) * 60 * 5 > 0
       for: 1h
       labels:
         severity: critical
@@ -784,6 +784,17 @@ spec:
       for: 15m
       labels:
         severity: warning
+    - alert: CPUThrottlingHigh
+      annotations:
+        message: '{{ printf "%0.0f" $value }}% throttling of CPU in namespace {{ $labels.namespace
+          }} for {{ $labels.container_name }}.'
+        runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-cputhrottlinghigh
+      expr: "100 * sum(increase(container_cpu_cfs_throttled_periods_total[5m])) by
+        (container_name, pod_name, namespace) \n  / \nsum(increase(container_cpu_cfs_periods_total[5m]))
+        by (container_name, pod_name, namespace)\n  > 25 \n"
+      for: 15m
+      labels:
+        severity: warning
   - name: kubernetes-storage
     rules:
     - alert: KubePersistentVolumeUsageCritical
@@ -807,7 +818,13 @@ spec:
           days. Currently {{ $value }} bytes are available.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepersistentvolumefullinfourdays
       expr: |
-        kubelet_volume_stats_available_bytes{job="kubelet"} and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet"}[6h], 4 * 24 * 3600) < 0
+        (
+          kubelet_volume_stats_used_bytes{job="kubelet"}
+            /
+          kubelet_volume_stats_capacity_bytes{job="kubelet"}
+        ) > 0.85
+        and
+        predict_linear(kubelet_volume_stats_available_bytes{job="kubelet"}[6h], 4 * 24 * 3600) < 0
       for: 5m
       labels:
         severity: critical
