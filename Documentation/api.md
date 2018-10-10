@@ -18,6 +18,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerSpec](#alertmanagerspec)
 * [AlertmanagerStatus](#alertmanagerstatus)
 * [BasicAuth](#basicauth)
+* [CACertBundleSpec](#cacertbundlespec)
 * [Endpoint](#endpoint)
 * [NamespaceSelector](#namespaceselector)
 * [Prometheus](#prometheus)
@@ -118,6 +119,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | baseImage | Base image that is used to deploy pods, without tag. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Alertmanager object, which shall be mounted into the Alertmanager Pods. The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>. | []string | false |
+| caCertBundle | CACertBundle is an optional specification of a secret to pull a CA certificate bundle from. | *[CACertBundleSpec](#cacertbundlespec) | false |
 | logLevel | Log level for Alertmanager to be configured with. | string | false |
 | replicas | Size is the expected size of the alertmanager cluster. The controller will eventually make the size of the running cluster equal to the expected size. | *int32 | false |
 | retention | Time duration Alertmanager shall retain data for. Default is '120h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years). | string | false |
@@ -160,6 +162,17 @@ BasicAuth allow an endpoint to authenticate over basic authentication More info:
 | ----- | ----------- | ------ | -------- |
 | username | The secret that contains the username for authenticate | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 | password | The secret that contains the password for authenticate | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+
+[Back to TOC](#table-of-contents)
+
+## CACertBundleSpec
+
+CACertBundleSpec is a specification of a secret containing a CA certificate bundle and an optional mount path for it. If the mount path is not specified, it defaults to \"/etc/ssl/certs\".
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| secret |  | string | true |
+| mountPath |  | *string | false |
 
 [Back to TOC](#table-of-contents)
 
