@@ -220,7 +220,7 @@ func Main() int {
 	ao.RegisterMetrics(
 		prometheus.WrapRegistererWith(alertmanagerLabels, r),
 		reconcileErrorsCounter.MustCurryWith(alertmanagerLabels),
-		triggerByCounter.MustCurryWith(prometheusLabels),
+		triggerByCounter.MustCurryWith(alertmanagerLabels),
 	)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
