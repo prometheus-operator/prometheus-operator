@@ -148,6 +148,7 @@ type Config struct {
 	LogLevel                     string
 	LogFormat                    string
 	ManageCRDs                   bool
+	WatchSecrets                 bool
 }
 
 type BasicAuthCredentials struct {
@@ -296,17 +297,21 @@ func (c *Operator) RegisterMetrics(r prometheus.Registerer, reconcileErrorsCount
 // waitForCacheSync waits for the informers' caches to be synced.
 func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 	ok := true
-	informers := []struct {
+
+	type informerStruct struct {
 		name     string
 		informer cache.SharedIndexInformer
-	}{
+	}
+	informers := []informerStruct{
 		{"Prometheus", c.promInf},
 		{"ServiceMonitor", c.smonInf},
 		{"PrometheusRule", c.ruleInf},
 		{"ConfigMap", c.cmapInf},
-		{"Secret", c.secrInf},
 		{"StatefulSet", c.ssetInf},
 		{"Namespace", c.nsInf},
+	}
+	if c.config.WatchSecrets {
+		informers = append(informers, informerStruct{name: "Secret", informer: c.secrInf})
 	}
 	for _, inf := range informers {
 		if !cache.WaitForCacheSync(stopc, inf.informer.HasSynced) {
@@ -345,11 +350,13 @@ func (c *Operator) addHandlers() {
 		DeleteFunc: c.handleConfigMapDelete,
 		UpdateFunc: c.handleConfigMapUpdate,
 	})
-	c.secrInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleSecretAdd,
-		DeleteFunc: c.handleSecretDelete,
-		UpdateFunc: c.handleSecretUpdate,
-	})
+	if c.config.WatchSecrets {
+		c.secrInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleSecretAdd,
+			DeleteFunc: c.handleSecretDelete,
+			UpdateFunc: c.handleSecretUpdate,
+		})
+	}
 	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleStatefulSetAdd,
 		DeleteFunc: c.handleStatefulSetDelete,
@@ -395,7 +402,9 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.smonInf.Run(stopc)
 	go c.ruleInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
-	go c.secrInf.Run(stopc)
+	if c.config.WatchSecrets {
+		go c.secrInf.Run(stopc)
+	}
 	go c.ssetInf.Run(stopc)
 	go c.nsInf.Run(stopc)
 	if err := c.waitForCacheSync(stopc); err != nil {
@@ -1196,24 +1205,23 @@ func (c *Operator) loadBasicAuthSecrets(
 ) (map[string]BasicAuthCredentials, error) {
 
 	sMonSecretMap := make(map[string]*v1.SecretList)
-	for _, mon := range mons {
-		smNamespace := mon.Namespace
-		if sMonSecretMap[smNamespace] == nil {
-			msClient := c.kclient.CoreV1().Secrets(smNamespace)
-			listSecrets, err := msClient.List(metav1.ListOptions{})
-
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to retrieve secrets in namespace '%v' for servicemonitor '%v'", smNamespace, mon.Name)
-			}
-			sMonSecretMap[smNamespace] = listSecrets
-		}
-	}
-
 	secrets := map[string]BasicAuthCredentials{}
 	for _, mon := range mons {
 		for i, ep := range mon.Spec.Endpoints {
 			if ep.BasicAuth != nil {
-				credentials, err := loadBasicAuthSecret(ep.BasicAuth, sMonSecretMap[mon.Namespace])
+				smNamespace := mon.Namespace
+				// Load namespace's secrets if not previously fetched
+				if sMonSecretMap[smNamespace] == nil {
+					msClient := c.kclient.CoreV1().Secrets(smNamespace)
+					listSecrets, err := msClient.List(metav1.ListOptions{})
+
+					if err != nil {
+						return nil, errors.Wrapf(err, "failed to retrieve secrets in namespace '%v' for servicemonitor '%v'", smNamespace, mon.Name)
+					}
+					sMonSecretMap[smNamespace] = listSecrets
+				}
+
+				credentials, err := loadBasicAuthSecret(ep.BasicAuth, sMonSecretMap[smNamespace])
 				if err != nil {
 					return nil, fmt.Errorf("could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
 				}
