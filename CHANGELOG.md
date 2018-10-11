@@ -1,3 +1,38 @@
+## 0.24.0 / 2018-10-11
+
+This release has a breaking changes for `prometheus_operator_.*` metrics.
+
+`prometheus_operator_alertmanager_reconcile_errors_total` and `prometheus_operator_prometheus_reconcile_errors_total`
+are now combined and called `prometheus_operator_reconcile_errors_total`.
+Instead the metric has a "controller" label which indicates the errors from the Prometheus or Alertmanager controller.
+
+The same happened with `prometheus_operator_alertmanager_spec_replicas` and `prometheus_operator_prometheus_spec_replicas`
+which is now called `prometheus_operator_spec_replicas` and also has the "controller" label.
+
+The `prometheus_operator_triggered_total` metric now has a "controller" label as well and finally instruments the
+Alertmanager controller.
+
+For a full description see: https://github.com/coreos/prometheus-operator/pull/1984#issue-221139702
+
+* [CHANGE] Default to Node Exporter v0.16.0 (#1812)
+* [CHANGE] Update to Go 1.11 (#1855)
+* [CHANGE] Default to Prometheus v2.4.3 (#1929) (#1983)
+* [CHANGE] Default to Thanos v0.1.0 (#1954)
+* [CHANGE] Overhaul metrics while adding triggerBy metric for Alertmanager (#1984)
+* [FEATURE] Add multi namespace support (#1813)
+* [FEATURE] Add SHA field to Prometheus, Alertmanager and Thanos for images (#1847) (#1854)
+* [FEATURE] Add configuration for priority class to be assigned to Pods (#1875)
+* [FEATURE] Configure sampleLimit per ServiceMonitor (#1895)
+* [FEATURE] Add additionalPeers to Alertmanager (#1878)
+* [FEATURE] Add podTargetLabels to ServiceMonitors (#1880)
+* [FEATURE] Relabel target name for Pods (#1896)
+* [FEATURE] Allow configuration of relabel_configs per ServiceMonitor (#1879)
+* [FEATURE] Add illegal update reconciliation by deleting StatefulSet (#1931)
+* [ENHANCEMENT] Set Thanos cluster and grpc ip from pod.ip (#1836)
+* [BUGFIX] Add square brackets around pod IPs for IPv6 support (#1881)
+* [BUGFIX] Allow periods in secret name (#1907)
+* [BUGFIX] Add BearerToken in generateRemoteReadConfig (#1956)
+
 ## 0.23.2 / 2018-08-23
 
 * [BUGFIX] Do not abort kubelet endpoints update due to nodes without IP addresses defined (#1816)
