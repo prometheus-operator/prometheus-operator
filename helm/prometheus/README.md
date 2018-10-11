@@ -58,6 +58,7 @@ Parameter | Description | Default
 `nodeSelector` | Node labels for pod assignment | `{}`
 `paused` | If true, the Operator won't process any Prometheus configuration changes | `false`
 `podAntiAffinity` | If "soft", the scheduler attempts to place Prometheus replicas on different nodes. If "hard" the scheduler is required to place them on different nodes. If "" (empty) then no anti-affinity rules will be configured. | `soft`
+`podAntiAffinityTopologyKey` | TopologyKey determines how Kubernetes will distribute the pods | `kubernetes.io/hostname`
 `prometheusRules` | Prometheus rules | `[templates/prometheus.rules.yaml](templates/prometheus.rules.yaml)`
 `replicaCount` | Number of Prometheus replicas desired | `1`
 `remoteRead` | The remote_read spec configuration for Prometheus | `{}`
