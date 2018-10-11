@@ -34,7 +34,7 @@ spec:
     {{- if eq .Values.service.type "NodePort" }}
       nodePort: {{ .Values.service.nodePort }}
     {{- end }}
-      port: 9090
+      port: {{ .Values.service.port }}
       targetPort: 9090
       protocol: TCP
   selector:
