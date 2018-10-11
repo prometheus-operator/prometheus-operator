@@ -56,7 +56,7 @@ nodeSelector: []
 global:
   rbacEnable: true
   pspEnable: true
-  
+
   # Reference to one or more secrets to be used when pulling images
   imagePullSecrets: []
   #  - name: "image-pull-secret"
@@ -73,6 +73,8 @@ additionalRulesLabels: {}
 
 # deploy node_exporter as a DaemonSet
 enableDaemonSet: true
+# set to monitor exporter from a different namespace
+namespaceSelector:
 # for deployments that have node_exporter deployed outside of the cluster, list
 # their addresses here
 endpoints: []

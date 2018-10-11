@@ -10,7 +10,7 @@ metadata:
     prometheus: {{ .Release.Name }}
     {{- if .Values.additionalServiceMonitorLabels }}
 {{ toYaml .Values.additionalServiceMonitorLabels | indent 4 }}
-    {{- end }}    
+    {{- end }}
   name: {{ template "exporter-node.fullname" . }}
 spec:
   jobLabel: component
@@ -20,7 +20,7 @@ spec:
       component: node-exporter
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace | quote }}
+      - {{ default .Release.Namespace .Values.namespaceSelector | quote }}
   endpoints:
   - port: metrics
     interval: 15s
