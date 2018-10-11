@@ -42,8 +42,6 @@ Parameter | Description | Default
 `image.repository` | Image | `grafana/grafana`
 `image.tag` | Image tag | `4.4.1`
 `extraVars` | Pass extra environment variables to the Grafana container. | `{}`
-`grafanaWatcher.repository` | Image | `quay.io/coreos/grafana-watcher`
-`grafanaWatcher.tag` | Image tag | `v0.0.8`
 `ingress.enabled` | If true, Grafana Ingress will be created | `false`
 `ingress.annotations` | Annotations for Grafana Ingress | `{}`
 `ingress.labels` | Labels for Grafana Ingress | `{}`
@@ -78,8 +76,7 @@ $ helm install coreos/grafana --name my-release -f values.yaml
 
 ## Adding Grafana Dashboards
 
-You can either add new dashboards via `serverDashboardConfigmaps` in `values.yaml`. These can then be
-picked up by Grafana Watcher.
+You can either add new dashboards via `serverDashboardConfigmaps` in `values.yaml`.
 
 ```yaml
 serverDashboardConfigmaps:
@@ -111,12 +108,7 @@ into the same ConfigMap for the rest of the default dashboards.
 serverDashboardFiles:
   example-dashboard.json: |-
     {
-      "dashboard": {
-        "annotations:[]
-        ...
-      }
+      "annotations:[]
+      ...
     }
 ```
-
-In both cases, if you're exporting the jsons directly from Grafana, you'll want to wrap it in `{"dashboard": {}}`
-as stated in [Grafana Watcher's README](https://github.com/coreos/prometheus-operator/tree/master/contrib/grafana-watcher).

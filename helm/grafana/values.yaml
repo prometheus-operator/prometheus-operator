@@ -87,20 +87,6 @@ image:
   repository: grafana/grafana
   tag: 5.0.0
 
-grafanaWatcher:
-  repository: quay.io/coreos/grafana-watcher
-  tag: v0.0.8
-
-  ## Resource limits & requests
-  ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
-  resources: {}
-    #requests:
-    #  memory: "16Mi"
-    #  cpu: "50m"
-    #limits:
-    #  memory: "32Mi"
-    #  cpu: "100m"
-
 storageSpec: {}
 #   class: default
 #   accessMode:

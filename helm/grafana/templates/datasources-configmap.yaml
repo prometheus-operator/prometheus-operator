@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: {{ template "grafana.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "grafana.server.fullname" . }}-datasources
+data:
+  {{- if .Values.dataSource }}
+{{ toYaml .Values.dataSource | indent 2 }}
+  {{- end }}
+  {{- if .Values.keepOriginalDatasources }}
+  prometheus.yaml: |-
+    {
+      "apiVersion": 1,
+      "datasources": [
+        {
+          "access": "proxy",
+          "basicAuth": false,
+          "name": "prometheus",
+          "type": "prometheus",
+          "url": "http://{{ printf "%s" .Release.Name }}:9090"
+        }
+      ]
+    }
+  {{- end }}
