@@ -89,11 +89,7 @@ generate: pkg/client/monitoring/v1/zz_generated.deepcopy.go pkg/client/monitorin
 
 .PHONY: generate-in-docker
 generate-in-docker: hack/jsonnet-docker-image
-	docker run \
-	--rm \
-	-u=$(shell id -u $(USER)):$(shell id -g $(USER)) \
-	-v `pwd`:/go/src/github.com/coreos/prometheus-operator \
-	po-jsonnet make $(MFLAGS) generate # MFLAGS are the parent make call's flags
+	hack/generate-in-docker.sh $(MFLAGS) # MFLAGS are the parent make call's flags
 
 .PHONY: kube-prometheus
 kube-prometheus:
