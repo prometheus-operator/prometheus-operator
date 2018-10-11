@@ -11,7 +11,10 @@ metadata:
 spec:
   accessModes:
     - {{ .Values.storageSpec.accessMode }}
-  storageClassName: {{ .Values.storageSpec.class }}
+  storageClassName: {{ .Values.storageSpec.class | quote }}
+{{- if .Values.storageSpec.volumeName }}
+  volumeName: {{ .Values.storageSpec.volumeName }}
+{{- end }}
   resources:
     requests:
       storage: {{ .Values.storageSpec.resources.requests.storage | quote }}
