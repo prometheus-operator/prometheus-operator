@@ -3,7 +3,7 @@
 replicaCount: 1
 image:
   repository: quay.io/prometheus/node-exporter
-  tag: v0.15.2
+  tag: v0.16.0
   pullPolicy: IfNotPresent
 service:
   type: ClusterIP
@@ -56,7 +56,7 @@ nodeSelector: []
 global:
   rbacEnable: true
   pspEnable: true
-  
+
   # Reference to one or more secrets to be used when pulling images
   imagePullSecrets: []
   #  - name: "image-pull-secret"

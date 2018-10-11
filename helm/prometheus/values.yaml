@@ -43,7 +43,7 @@ additionalRulesLabels: {}
 ##
 image:
   repository: quay.io/prometheus/prometheus
-  tag: v2.2.1
+  tag: v2.3.2
 
 ## Labels to be added to the Prometheus
 ##
@@ -103,7 +103,7 @@ paused: false
 global:
   rbacEnable: true
   pspEnable: true
-  
+
   # Reference to one or more secrets to be used when pulling images
   imagePullSecrets: []
   #  - name: "image-pull-secret"
