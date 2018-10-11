@@ -11,6 +11,10 @@ tolerations: {}
 
 annotations: {}
 
+## Security context when using persistent storage, official image uses 472
+securityContext:
+  fsGroup: 472
+
 ## If true, create a serviceMonitor for grafana
 ##
 selfServiceMonitor: true
