@@ -71,6 +71,7 @@ Parameter | Description | Default
 `kubeletService.enable` | If true, the operator will create a service for scraping kubelets | `true`
 `kubeletService.namespace` | The namespace in which the kubelet service should be created | `kube-system`
 `kubeletService.name` | The name of the kubelet service to be created | `kubelet`
+`limitNamespace` | Limit the interaction of the Prometheus Operator to the release namespace | `false`
 `nodeSelector` | Node labels for pod assignment | `{}`
 `prometheusConfigReloader.repository` | prometheus-config-reloader image | `quay.io/coreos/prometheus-config-reloader`
 `prometheusConfigReloader.tag` | prometheus-config-reloader tag | `v0.0.4`

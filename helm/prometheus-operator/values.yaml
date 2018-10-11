@@ -48,6 +48,9 @@ rbacEnable: true
 ## If true, create Pod Security Policy resources
 pspEnable: true
 
+# Limit the interaction of the Prometheus Operator to the release namespace
+limitNamespace: false
+
 # Reference to one or more secrets to be used when pulling images
 imagePullSecrets: []
 #  - name: "image-pull-secret"
