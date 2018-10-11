@@ -6,7 +6,7 @@ set -o pipefail
 # error on unset variables
 set -u
 
-MFLAGS=${@:-} # MFLAGS are the parent make call's flags (see Makefile)
+MFLAGS=${*:-} # MFLAGS are the parent make call's flags (see Makefile)
 SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 
 # Detect selinux and set docker run volume :Z option so we can write the generated files
@@ -15,8 +15,8 @@ if hash getenforce 2> /dev/null && getenforce | grep 'Enforcing' > /dev/null; th
   VOLUME_OPTIONS=":Z"
 fi
 
-docker run \
+echo docker run \
     --rm \
-    -u=$(id -u $USER):$(id -g $USER) \
-    -v $SCRIPTDIR/..:/go/src/github.com/coreos/prometheus-operator${VOLUME_OPTIONS} \
-    po-jsonnet make $MFLAGS generate
+    -u="$(id -u "$USER")":"$(id -g "$USER")" \
+    -v "${SCRIPTDIR}/..:/go/src/github.com/coreos/prometheus-operator${VOLUME_OPTIONS}" \
+    po-jsonnet make "${MFLAGS}" generate
