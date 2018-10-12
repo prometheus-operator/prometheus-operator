@@ -26,6 +26,12 @@ spec:
           description: 'AlertmanagerSpec is a specification of the desired behavior
             of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status'
           properties:
+            additionalPeers:
+              description: AdditionalPeers allows injecting a set of additional Alertmanagers
+                to peer with to form a highly available cluster.
+              items:
+                type: string
+              type: array
             affinity:
               description: Affinity is a group of affinity scheduling rules.
               properties:
@@ -1668,6 +1674,9 @@ spec:
 
                     Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
                   type: string
+            priorityClassName:
+              description: Priority class assigned to the Pods
+              type: string
             replicas:
               description: Size is the expected size of the alertmanager cluster.
                 The controller will eventually make the size of the running cluster
@@ -1689,7 +1698,8 @@ spec:
                   type: object
             retention:
               description: Time duration Alertmanager shall retain data for. Default
-                is '120h'.
+                is '120h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
+                (milliseconds seconds minutes hours days weeks years).
               type: string
             routePrefix:
               description: The route prefix Alertmanager registers HTTP handlers for.
@@ -1793,14 +1803,22 @@ spec:
               description: ServiceAccountName is the name of the ServiceAccount to
                 use to run the Prometheus Pods.
               type: string
+            sha:
+              description: SHA of Alertmanager container image to be deployed. Defaults
+                to the value of `version`. Similar to a tag, but the SHA explicitly
+                deploys an immutable container image. Version and Tag are ignored
+                if SHA is set.
+              type: string
             storage:
               description: StorageSpec defines the configured storage for a group
-                Prometheus servers.
+                Prometheus servers. If neither `emptyDir` nor `volumeClaimTemplate`
+                is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir)
+                will be used.
               properties:
                 class:
                   description: 'Name of the StorageClass to use when requesting storage
                     provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
-                    DEPRECATED'
+                    (DEPRECATED - instead use `volumeClaimTemplate.spec.storageClassName`)'
                   type: string
                 emptyDir:
                   description: Represents an empty directory for a pod. Empty directory
@@ -2331,7 +2349,7 @@ spec:
                           type: string
             tag:
               description: Tag of Alertmanager container image to be deployed. Defaults
-                to the value of `version`.
+                to the value of `version`. Version is ignored if Tag is set.
               type: string
             tolerations:
               description: If specified, the pod's tolerations.
