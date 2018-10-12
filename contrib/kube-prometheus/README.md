@@ -67,7 +67,12 @@ Though for a quickstart a compiled version of the Kubernetes [manifests](manifes
  * Simply create the stack:
 ```
 $ kubectl create -f manifests/ || true
-$ kubectl create -f manifests/ 2>/dev/null || true  # This command sometimes may need to be done twice
+
+# It can take a few seconds for the above 'create manifests' command to fully create the following resources, so verify the resources are ready before proceeding.
+until kubectl get customresourcedefinitions servicemonitors.monitoring.coreos.com ; do date; sleep 1; echo ""; done
+until kubectl get servicemonitors --all-namespaces ; do date; sleep 1; echo ""; done
+
+$ kubectl create -f manifests/ 2>/dev/null || true  # This command sometimes may need to be done twice (to workaround a race condition).
 ```
  * And to teardown the stack:
 ```
