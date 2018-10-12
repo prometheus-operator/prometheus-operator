@@ -62,7 +62,7 @@ spec:
   - from:
     ports:
     - port: 9093
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       alertmanager: main
@@ -87,7 +87,7 @@ spec:
           - main
     ports:
     - port: 6783
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       alertmanager: main
@@ -108,7 +108,7 @@ spec:
   ingress:
   - ports:
     - port: 3000
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       app: grafana
@@ -128,7 +128,7 @@ spec:
   ingress:
   - ports:
     - port: 9090
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       app: prometheus
@@ -160,7 +160,7 @@ spec:
           - k8s
     ports:
     - port: 9100
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       app: node-exporter
@@ -191,7 +191,7 @@ spec:
           - k8s
     ports:
     - port: 8080
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       app: kube-state-metrics

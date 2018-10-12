@@ -17,7 +17,7 @@ spec:
           - k8s
     ports:
     - port: 9100
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       app: node-exporter
