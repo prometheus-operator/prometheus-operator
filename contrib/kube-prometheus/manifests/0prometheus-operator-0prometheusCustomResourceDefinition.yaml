@@ -1830,6 +1830,9 @@ spec:
 
                     Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
                   type: string
+            priorityClassName:
+              description: Priority class assigned to the Pods
+              type: string
             remoteRead:
               description: If specified, the remote_read spec. This is an experimental
                 feature, it may change in any upcoming release in a breaking way.
@@ -2095,7 +2098,8 @@ spec:
                   type: object
             retention:
               description: Time duration Prometheus shall retain data for. Default
-                is '24h'.
+                is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
+                (milliseconds seconds minutes hours days weeks years).
               type: string
             routePrefix:
               description: The route prefix Prometheus registers HTTP handlers for.
@@ -2374,14 +2378,22 @@ spec:
                     "In", and the values array contains only "value". The requirements
                     are ANDed.
                   type: object
+            sha:
+              description: SHA of Prometheus container image to be deployed. Defaults
+                to the value of `version`. Similar to a tag, but the SHA explicitly
+                deploys an immutable container image. Version and Tag are ignored
+                if SHA is set.
+              type: string
             storage:
               description: StorageSpec defines the configured storage for a group
-                Prometheus servers.
+                Prometheus servers. If neither `emptyDir` nor `volumeClaimTemplate`
+                is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir)
+                will be used.
               properties:
                 class:
                   description: 'Name of the StorageClass to use when requesting storage
                     provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
-                    DEPRECATED'
+                    (DEPRECATED - instead use `volumeClaimTemplate.spec.storageClassName`)'
                   type: string
                 emptyDir:
                   description: Represents an empty directory for a pod. Empty directory
@@ -2912,7 +2924,7 @@ spec:
                           type: string
             tag:
               description: Tag of Prometheus container image to be deployed. Defaults
-                to the value of `version`.
+                to the value of `version`. Version is ignored if Tag is set.
               type: string
             thanos:
               description: ThanosSpec defines parameters for a Prometheus server within
@@ -3015,9 +3027,16 @@ spec:
                       description: Whether to use S3 Signature Version 2; otherwise
                         Signature Version 4 will be used.
                       type: boolean
+                sha:
+                  description: SHA of Thanos container image to be deployed. Defaults
+                    to the value of `version`. Similar to a tag, but the SHA explicitly
+                    deploys an immutable container image. Version and Tag are ignored
+                    if SHA is set.
+                  type: string
                 tag:
                   description: Tag of Thanos sidecar container image to be deployed.
-                    Defaults to the value of `version`.
+                    Defaults to the value of `version`. Version is ignored if Tag
+                    is set.
                   type: string
                 version:
                   description: Version describes the version of Thanos to use.

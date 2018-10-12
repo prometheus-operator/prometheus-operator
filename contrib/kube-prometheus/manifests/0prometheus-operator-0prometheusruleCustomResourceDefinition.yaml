@@ -322,7 +322,9 @@ spec:
                         annotations:
                           type: object
                         expr:
-                          type: string
+                          anyOf:
+                          - type: string
+                          - type: integer
                         for:
                           type: string
                         labels:
