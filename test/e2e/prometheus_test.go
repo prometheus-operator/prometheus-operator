@@ -1075,6 +1075,7 @@ func testPromDiscoverTargetPort(t *testing.T) {
 	group := "servicediscovery-test"
 	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
 
+	targetPort := intstr.FromInt(9090)
 	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(&monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: prometheusName,
@@ -1090,7 +1091,7 @@ func testPromDiscoverTargetPort(t *testing.T) {
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					TargetPort: intstr.FromInt(9090),
+					TargetPort: &targetPort,
 					Interval:   "30s",
 				},
 			},
