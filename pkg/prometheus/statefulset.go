@@ -640,20 +640,20 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			}
 			if p.Spec.Thanos.GCS.SecretKey != nil {
 				secretFileName := "service-account.json"
-				if p.Spec.Thanos.GCS.SecretKey.Name != "" {
-					secretFileName = p.Spec.Thanos.GCS.SecretKey.Name
+				if p.Spec.Thanos.GCS.SecretKey.Key != "" {
+					secretFileName = p.Spec.Thanos.GCS.SecretKey.Key
 				}
-				secretDir := path.Join("/var/run/secrets/prometheus.io", p.Spec.Thanos.GCS.SecretKey.Key)
+				secretDir := path.Join("/var/run/secrets/prometheus.io", p.Spec.Thanos.GCS.SecretKey.Name)
 				envVars = append(envVars, v1.EnvVar{
 					Name:  "GOOGLE_APPLICATION_CREDENTIALS",
 					Value: path.Join(secretDir, secretFileName),
 				})
-				volumeName := "secret-" + p.Spec.Thanos.GCS.SecretKey.Key
+				volumeName := "secret-" + p.Spec.Thanos.GCS.SecretKey.Name
 				volumes = append(volumes, v1.Volume{
 					Name: volumeName,
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
-							SecretName: p.Spec.Thanos.GCS.SecretKey.Key,
+							SecretName: p.Spec.Thanos.GCS.SecretKey.Name,
 						},
 					},
 				})
