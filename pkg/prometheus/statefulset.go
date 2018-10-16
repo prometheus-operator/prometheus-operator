@@ -804,7 +804,11 @@ func configSecretName(name string) string {
 }
 
 func volumeName(name string) string {
-	return fmt.Sprintf("%s-db", prefixedName(name))
+	// full name example: prometheus-releasename-prometheus-db
+	fullName := prefixedName(name) + "-db"
+
+	// after trancate: prometheus-releasename-db
+	return k8sutil.TruncateVolumeName(fullName)
 }
 
 func prefixedName(name string) string {

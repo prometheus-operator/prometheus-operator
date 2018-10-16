@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -202,4 +203,65 @@ func SanitizeVolumeName(name string) string {
 		name = name[0:validation.DNS1123LabelMaxLength]
 	}
 	return strings.Trim(name, "-")
+}
+
+// TruncateVolumeName truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec)
+func TruncateVolumeName(name string) string {
+
+	const NameDelimeter = "-"
+
+	{
+		// Remove duplicate substrings in name:
+		//
+		// example v1:
+		// Source: glusterfs-dynamic-prometheus-release-prometheus-db-prometheus-release-prometheus-0
+		// Result: glusterfs-dynamic-prometheus-release-db-0
+
+		// example v2:
+		// Source: prometheus-releasename-prometheus-db
+		// Result: prometheus-releasename-db
+
+		// find duplicates
+		substings := strings.Split(name, NameDelimeter)
+		sort.Strings(substings)
+
+		duplicates := make([]string, 0, len(substings))
+		for i := 0; i < len(substings)-1; i++ {
+			if len(substings[i]) > 0 && substings[i] == substings[i+1] {
+				duplicates = append(duplicates, substings[i])
+			}
+		}
+
+		// remove substings
+		for i := range duplicates {
+			substr := NameDelimeter + duplicates[i]
+			index := strings.LastIndex(name, substr)
+			if index != -1 {
+				name = name[:index] + name[index+len(substr):]
+			}
+		}
+
+		// remove duplicate delimeters
+		for i := 0; i < len(name)-1; {
+			current := name[i]
+			next := name[i+1]
+
+			if current == next && string(current) == NameDelimeter {
+				name = name[:i] + name[i+1:]
+			} else {
+				i++ // moving to next (not the duplicate)
+			}
+		}
+	}
+
+	if len(name) > validation.DNS1123LabelMaxLength {
+		name = name[:validation.DNS1123LabelMaxLength]
+	}
+
+	// remove  delimeters from the end
+	for len(name) > 0 && string(name[len(name)-1]) == NameDelimeter {
+		name = name[:len(name)-1]
+	}
+
+	return name
 }
