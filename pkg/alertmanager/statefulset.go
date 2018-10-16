@@ -464,8 +464,8 @@ func volumeName(name string) string {
 	// full name example: alertmanager-releasename-alertmanager-db
 	fullName := prefixedName(name) + "-db"
 
-	// after trancate: alertmanager-releasename-db
-	return k8sutil.TruncateVolumeName(fullName)
+	// after sanitization: alertmanager-releasename-db
+	return k8sutil.SanitizeVolumeName(fullName)
 }
 
 func prefixedName(name string) string {

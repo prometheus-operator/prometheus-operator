@@ -807,8 +807,8 @@ func volumeName(name string) string {
 	// full name example: prometheus-releasename-prometheus-db
 	fullName := prefixedName(name) + "-db"
 
-	// after trancate: prometheus-releasename-db
-	return k8sutil.TruncateVolumeName(fullName)
+	// after sanitization: prometheus-releasename-db
+	return k8sutil.SanitizeVolumeName(fullName)
 }
 
 func prefixedName(name string) string {

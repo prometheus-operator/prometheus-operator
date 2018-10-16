@@ -199,14 +199,12 @@ func NewCustomResourceDefinition(crdKind monitoringv1.CrdKind, group string, lab
 func SanitizeVolumeName(name string) string {
 	name = strings.ToLower(name)
 	name = invalidDNS1123Characters.ReplaceAllString(name, "-")
-	if len(name) > validation.DNS1123LabelMaxLength {
-		name = name[0:validation.DNS1123LabelMaxLength]
-	}
-	return strings.Trim(name, "-")
+
+	return truncateVolumeName(name)
 }
 
-// TruncateVolumeName truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec)
-func TruncateVolumeName(name string) string {
+// Truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec)
+func truncateVolumeName(name string) string {
 
 	const NameDelimeter = "-"
 
@@ -258,10 +256,5 @@ func TruncateVolumeName(name string) string {
 		name = name[:validation.DNS1123LabelMaxLength]
 	}
 
-	// remove  delimeters from the end
-	for len(name) > 0 && string(name[len(name)-1]) == NameDelimeter {
-		name = name[:len(name)-1]
-	}
-
-	return name
+	return strings.Trim(name, NameDelimeter)
 }

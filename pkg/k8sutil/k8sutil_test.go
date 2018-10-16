@@ -63,18 +63,18 @@ func Test_SanitizeVolumeName(t *testing.T) {
 
 func TestTruncateVolumeName(t *testing.T) {
 
-	require.Equal(t, "name", TruncateVolumeName("name"))
+	require.Equal(t, "name", truncateVolumeName("name"))
 
 	{
 		// name without duplicates substrings
-		val := TruncateVolumeName(strings.Repeat("a", validation.DNS1123LabelMaxLength+1))
+		val := truncateVolumeName(strings.Repeat("a", validation.DNS1123LabelMaxLength+1))
 		require.Equal(t, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", val)
 		require.True(t, len(val) <= validation.DNS1123LabelMaxLength)
 	}
 
 	{
 		// name with duplicate substrings
-		val := TruncateVolumeName(`glusterfs-dynamic-prometheus-release-prometheus-db-prometheus-release-prometheus-0`)
+		val := truncateVolumeName(`glusterfs-dynamic-prometheus-release-prometheus-db-prometheus-release-prometheus-0`)
 		require.Equal(t, "glusterfs-dynamic-prometheus-release-db-0", val)
 		require.True(t, len(val) <= validation.DNS1123LabelMaxLength)
 	}
@@ -89,14 +89,14 @@ func TestTruncateVolumeName(t *testing.T) {
 			src += strings.Repeat("a", 10)
 		}
 
-		val := TruncateVolumeName(src)
+		val := truncateVolumeName(src)
 		require.Equal(t, "aaaaaaaaaa", val)
 		require.True(t, len(val) <= validation.DNS1123LabelMaxLength)
 	}
 
 	{
 		// '-' in the end of the name
-		val := TruncateVolumeName(`glusterfs-dynamic-prometheus-release-prometheus-db-prometheus-release-prometheus-0-`)
+		val := truncateVolumeName(`glusterfs-dynamic-prometheus-release-prometheus-db-prometheus-release-prometheus-0-`)
 		require.Equal(t, "glusterfs-dynamic-prometheus-release-db-0", val)
 		require.True(t, len(val) <= validation.DNS1123LabelMaxLength)
 	}
@@ -112,7 +112,7 @@ func TestTruncateVolumeName(t *testing.T) {
 		{
 			// name with duplicates delimiters
 			src := `glusterfs` + substr + `dynamic-prometheus-release-veryveryveryveryverylongname-db` + substr + `0`
-			val := TruncateVolumeName(src)
+			val := truncateVolumeName(src)
 			require.Equal(t, "glusterfs-dynamic-prometheus-release-veryveryveryveryverylongna", val)
 			require.True(t, len(val) <= validation.DNS1123LabelMaxLength)
 		}
@@ -123,7 +123,7 @@ func TestTruncateVolumeName(t *testing.T) {
 			part2 := strings.Repeat("b", validation.DNS1123LabelMaxLength/2)
 
 			src := part1 + substr + part2 + substr // example: "a--b--"
-			val := TruncateVolumeName(src)
+			val := truncateVolumeName(src)
 			require.Equal(t, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", val)
 			require.True(t, len(val) <= validation.DNS1123LabelMaxLength)
 		}
