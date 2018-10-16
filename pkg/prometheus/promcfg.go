@@ -104,6 +104,7 @@ func (cg *configGenerator) generateConfig(
 	mons map[string]*v1.ServiceMonitor,
 	basicAuthSecrets map[string]BasicAuthCredentials,
 	additionalScrapeConfigs []byte,
+	additionalAlertRelabelConfigs []byte,
 	additionalAlertManagerConfigs []byte,
 	ruleConfigMapNames []string,
 ) ([]byte, error) {
@@ -202,12 +203,18 @@ func (cg *configGenerator) generateConfig(
 		})
 	}
 
+	var additionalAlertRelabelConfigsYaml []yaml.MapSlice
+	err = yaml.Unmarshal([]byte(additionalAlertRelabelConfigs), &additionalAlertRelabelConfigsYaml)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshalling additional alerting relabel configs failed")
+	}
+
 	cfg = append(cfg, yaml.MapItem{
 		Key: "alerting",
 		Value: yaml.MapSlice{
 			{
 				Key:   "alert_relabel_configs",
-				Value: alertRelabelConfigs,
+				Value: append(alertRelabelConfigs, additionalAlertRelabelConfigsYaml...),
 			},
 			{
 				Key:   "alertmanagers",
