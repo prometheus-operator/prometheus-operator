@@ -25,7 +25,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           repeat_interval: '12h',
           receiver: 'null',
           routes: [
-            { 
+            {
               receiver: 'null',
               match: {
                 alertname: 'DeadMansSwitch',
@@ -35,7 +35,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         },
         receivers: [
           {
-             name: 'null',
+            name: 'null',
           },
         ],
       },
@@ -47,12 +47,12 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     secret:
       local secret = k.core.v1.secret;
 
-      if std.type($._config.alertmanager.config) == "object" then
-        secret.new('alertmanager-' + $._config.alertmanager.name, { 'alertmanager.yaml': std.base64(std.manifestYamlDoc($._config.alertmanager.config)) })
+      if std.type($._config.alertmanager.config) == 'object' then
+        secret.new('alertmanager-' + $._config.alertmanager.name, { 'alertmanager.yaml': std.base64(std.manifestYamlDoc($._config.alertmanager.config)) }) +
+        secret.mixin.metadata.withNamespace($._config.namespace)
       else
-        secret.new('alertmanager-' + $._config.alertmanager.name, { 'alertmanager.yaml': std.base64($._config.alertmanager.config) })
-      + 
-      secret.mixin.metadata.withNamespace($._config.namespace),
+        secret.new('alertmanager-' + $._config.alertmanager.name, { 'alertmanager.yaml': std.base64($._config.alertmanager.config) }) +
+        secret.mixin.metadata.withNamespace($._config.namespace),
 
     serviceAccount:
       local serviceAccount = k.core.v1.serviceAccount;
