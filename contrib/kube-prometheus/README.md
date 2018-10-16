@@ -29,6 +29,7 @@ This stack is meant for cluster monitoring, so it is pre-configured to collect m
 * [Configuration](#configuration)
 * [Customization Examples](#customization-examples)
     * [Cluster Creation Tools](#cluster-creation-tools)
+    * [Internal Registries](#internal-registries)
     * [NodePorts](#nodeports)
     * [Prometheus Object Name](#prometheus-object-name)
     * [node-exporter DaemonSet namespace](#node-exporter-daemonset-namespace)
@@ -323,6 +324,45 @@ kops:
 ```jsonnet
 (import 'kube-prometheus/kube-prometheus.libsonnet') +
 (import 'kube-prometheus/kube-prometheus-kops.libsonnet')
+```
+
+### Internal Registry
+
+Some Kubernetes installations source all their images from an internal registry. kube-prometheus supports this use case and helps the user synchronize every image it uses to the internal registry and generate manifests pointing at the internal registry.
+
+To produce the `docker pull/tag/push` commands that will synchronize upstream images to `internal-registry.com/organization` (after having run the `jb` command to populate the vendor directory):
+
+```shell
+$ jsonnet -J vendor -S --tla-str repository=internal-registry.com/organization sync-to-internal-registry.jsonnet
+docker pull quay.io/coreos/addon-resizer:1.0
+docker tag quay.io/coreos/addon-resizer:1.0 internal-registry.com/organization/addon-resizer:1.0
+docker push internal-registry.com/organization/addon-resizer:1.0
+docker pull quay.io/prometheus/alertmanager:v0.15.2
+docker tag quay.io/prometheus/alertmanager:v0.15.2 internal-registry.com/organization/alertmanager:v0.15.2
+docker push internal-registry.com/organization/alertmanager:v0.15.2
+...
+```
+
+The output of this command can be piped to a shell to be executed by appending `| sh`.
+
+Then to generate manifests with `internal-registry.com/organization`, use the `withImageRepository` mixin:
+
+[embedmd]:# (examples/internal-registry.jsonnet)
+```jsonnet
+local mixin = import 'kube-prometheus/kube-prometheus-config-mixins.libsonnet';
+local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
+  _config+:: {
+    namespace: 'monitoring',
+  },
+} + mixin.withImageRepository('internal-registry.com/organization');
+
+{ ['00namespace-' + name]: kp.kubePrometheus[name] for name in std.objectFields(kp.kubePrometheus) } +
+{ ['0prometheus-operator-' + name]: kp.prometheusOperator[name] for name in std.objectFields(kp.prometheusOperator) } +
+{ ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) } +
+{ ['kube-state-metrics-' + name]: kp.kubeStateMetrics[name] for name in std.objectFields(kp.kubeStateMetrics) } +
+{ ['alertmanager-' + name]: kp.alertmanager[name] for name in std.objectFields(kp.alertmanager) } +
+{ ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
+{ ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
 ```
 
 ### NodePorts
