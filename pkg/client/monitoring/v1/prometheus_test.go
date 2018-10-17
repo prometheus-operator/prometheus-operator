@@ -65,7 +65,8 @@ func TestPrometheusUnstructuredTimestamps(t *testing.T) {
 							"name": "test",
 						},
 						"spec": map[string]interface{}{
-							"resources": map[string]interface{}{},
+							"dataSource": nil,
+							"resources":  map[string]interface{}{},
 						},
 						"status": map[string]interface{}{},
 					},
