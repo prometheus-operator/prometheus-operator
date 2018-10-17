@@ -338,12 +338,16 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
 	}
 
+	configName := a.Spec.ConfigFile
+	if configName == "" {
+		configName = configSecretName(a.Name)
+	}
 	volumes := []v1.Volume{
 		{
 			Name: "config-volume",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: configSecretName(a.Name),
+					SecretName: configName,
 				},
 			},
 		},
