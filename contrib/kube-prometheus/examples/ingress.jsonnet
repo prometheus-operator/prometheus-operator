@@ -11,6 +11,13 @@ local kp =
     _config+:: {
       namespace: 'monitoring',
     },
+    prometheus+:: {
+      prometheus+: {
+        spec+: {
+          externalURL: 'http://prometheus.example.com',
+        },
+      },
+    },
     ingress+:: {
       'prometheus-k8s':
         ingress.new() +
