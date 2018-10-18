@@ -243,6 +243,84 @@ alerting:
 	}
 }
 
+func TestAdditionalAlertRelabelConfigs(t *testing.T) {
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Name:      "alertmanager-main",
+							Namespace: "default",
+							Port:      intstr.FromString("web"),
+						},
+					},
+				},
+			},
+		},
+		nil,
+		map[string]BasicAuthCredentials{},
+		nil,
+		[]byte(`- action: drop
+  source_labels: [__meta_kubernetes_node_name]
+  regex: spot-(.+)
+
+`),
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_node_name
+    regex: spot-(.+)
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: alertmanager-main
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web
+`
+
+	result := string(cfg)
+
+	if expected != result {
+		fmt.Println(pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
 func TestAdditionalAlertmanagers(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
