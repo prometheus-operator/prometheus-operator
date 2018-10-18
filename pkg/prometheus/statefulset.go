@@ -42,6 +42,7 @@ const (
 	confOutDir               = "/etc/prometheus/config_out"
 	rulesDir                 = "/etc/prometheus/rules"
 	secretsDir               = "/etc/prometheus/secrets/"
+	configmapsDir            = "/etc/prometheus/configmaps/"
 	configFilename           = "prometheus.yaml"
 	configEnvsubstFilename   = "prometheus.env.yaml"
 	sSetInputHashName        = "prometheus-operator-input-hash"
@@ -464,6 +465,24 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			Name:      k8sutil.SanitizeVolumeName("secret-" + s),
 			ReadOnly:  true,
 			MountPath: secretsDir + s,
+		})
+	}
+
+	for _, c := range p.Spec.ConfigMaps {
+		volumes = append(volumes, v1.Volume{
+			Name: k8sutil.SanitizeVolumeName("configmap-" + c),
+			VolumeSource: v1.VolumeSource{
+				ConfigMap: &v1.ConfigMapVolumeSource{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: c,
+					},
+				},
+			},
+		})
+		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+			Name:      k8sutil.SanitizeVolumeName("configmap-" + c),
+			ReadOnly:  true,
+			MountPath: configmapsDir + c,
 		})
 	}
 

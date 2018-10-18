@@ -127,11 +127,11 @@ type PrometheusSpec struct {
 	// Secrets is a list of Secrets in the same namespace as the Prometheus
 	// object, which shall be mounted into the Prometheus Pods.
 	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name>.
-	// Secrets changes after initial creation of a Prometheus object are not
-	// reflected in the running Pods. To change the secrets mounted into the
-	// Prometheus Pods, the object must be deleted and recreated with the new list
-	// of secrets.
 	Secrets []string `json:"secrets,omitempty"`
+	// ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
+	// object, which shall be mounted into the Prometheus Pods.
+	// The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name>.
+	ConfigMaps []string `json:"configMaps,omitempty"`
 	// If specified, the pod's scheduling constraints.
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// If specified, the pod's tolerations.
@@ -641,6 +641,10 @@ type AlertmanagerSpec struct {
 	// object, which shall be mounted into the Alertmanager Pods.
 	// The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.
 	Secrets []string `json:"secrets,omitempty"`
+	// ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
+	// object, which shall be mounted into the Alertmanager Pods.
+	// The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name>.
+	ConfigMaps []string `json:"configMaps,omitempty"`
 	// Log level for Alertmanager to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will

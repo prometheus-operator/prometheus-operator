@@ -17,8 +17,9 @@ if hash getenforce 2> /dev/null && getenforce | grep 'Enforcing' > /dev/null; th
   VOLUME_OPTIONS=":Z"
 fi
 
+# shellcheck disable=SC2068
 docker run \
     --rm \
     -u="$(id -u "$USER")":"$(id -g "$USER")" \
     -v "${SCRIPTDIR}/..:/go/src/github.com/coreos/prometheus-operator${VOLUME_OPTIONS}" \
-    po-jsonnet make "${MFLAGS[@]}" generate
+    po-jsonnet make ${MFLAGS[@]} generate
