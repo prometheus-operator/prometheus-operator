@@ -2303,6 +2303,20 @@ func schema_pkg_client_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) co
 							Format:      "",
 						},
 					},
+					"clusterAdvertisePort": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ClusterAdvertisePort is the port of advertise address for gossip in gossip cluster",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"gRPCAdvertisePort": {
+						SchemaProps: spec.SchemaProps{
+							Description: "GRPCAdvertisePort is the port of advertise address for gRPC StoreAPI in gossip cluster",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
 					"version": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Version describes the version of Thanos to use.",

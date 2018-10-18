@@ -514,5 +514,7 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | resources | Resources defines the resource requirements for the Thanos sidecar. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
 | gcs | GCS configures use of GCS in Thanos. | *[ThanosGCSSpec](#thanosgcsspec) | false |
 | s3 | S3 configures use of S3 in Thanos. | *[ThanosS3Spec](#thanoss3spec) | false |
+| clusterAdvertisePort | ClusterAdvertisePort is the port of advertise address for gossip in gossip cluster. Will advertise `NodeIP:ClusterAdvertisePort`, use `service:[type=NodePort, nodePort=ClusterAdvertisePort, externalTrafficPolicy: Local]` to advertise the sidecar, to build a global scale Thanos cluster.[More Info](https://github.com/improbable-eng/thanos/issues/454) | int32 | false |
+| gRPCAdvertisePort | GRPCAdvertisePort is the port of advertise address for gRPC StoreAPI in gossip cluster. Will advertise `NodeIP:GRPCAdvertisePort`, use `service:[type=NodePort, nodePort=GRPCAdvertisePort, externalTrafficPolicy: Local]` to advertise the sidecar, build a global scale Thanos cluster.[More Info](https://github.com/improbable-eng/thanos/issues/454) | int32 | false |
 
 [Back to TOC](#table-of-contents)
