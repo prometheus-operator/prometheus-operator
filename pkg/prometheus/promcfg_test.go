@@ -194,6 +194,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -264,6 +265,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		},
 		nil,
 		map[string]BasicAuthCredentials{},
+		nil,
 		nil,
 		[]byte(`- static_configs:
   - targets:
@@ -354,6 +356,7 @@ func TestTargetLabels(t *testing.T) {
 			},
 		},
 		map[string]BasicAuthCredentials{},
+		nil,
 		nil,
 		nil,
 		nil,
@@ -471,6 +474,7 @@ func TestPodTargetLabels(t *testing.T) {
 			},
 		},
 		map[string]BasicAuthCredentials{},
+		nil,
 		nil,
 		nil,
 		nil,
@@ -601,6 +605,7 @@ func generateTestConfig(version string) ([]byte, error) {
 		},
 		makeServiceMonitors(),
 		map[string]BasicAuthCredentials{},
+		nil,
 		nil,
 		nil,
 		nil,
