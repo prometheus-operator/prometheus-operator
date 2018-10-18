@@ -338,7 +338,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		return nil, errors.Errorf("unsupported Alertmanager major version %s", version)
 	}
 
-	configName := a.Spec.ConfigFile
+	configName := a.Spec.ConfigSecret
 	if configName == "" {
 		configName = configSecretName(a.Name)
 	}

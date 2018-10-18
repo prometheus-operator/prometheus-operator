@@ -629,8 +629,8 @@ type AlertmanagerSpec struct {
 	// object, which shall be mounted into the Alertmanager Pods.
 	// The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>.
 	Secrets []string `json:"secrets,omitempty"`
-	// ConfigFile is the secret file to use for the alertmanager configuration
-	ConfigFile string `json:"configFile,omitempty"`
+	// ConfigSecret is the Kubernetes secret to use for the alertmanager configuration
+	ConfigSecret string `json:"configSecret,omitempty"`
 	// Log level for Alertmanager to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will
