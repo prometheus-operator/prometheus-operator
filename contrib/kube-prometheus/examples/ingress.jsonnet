@@ -20,9 +20,9 @@ local kp =
       },
     },
     grafana+:: {
-      config: {
-        sections: {
-          server: {
+      config+: {
+        sections+: {
+          server+: {
             root_url: 'http://grafana.example.com/',
           },
         },
