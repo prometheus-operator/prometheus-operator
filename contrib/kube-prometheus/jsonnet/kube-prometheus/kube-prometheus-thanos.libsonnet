@@ -57,8 +57,8 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
     thanosPeerService:
       local thanosPeerPort = servicePort.newNamed('cluster', 10900, 'cluster');
       service.new('thanos-peers', { 'thanos-peer': 'true' }, thanosPeerPort) +
+      service.mixin.metadata.withNamespace($._config.namespace) +
       service.mixin.spec.withType('ClusterIP') +
       service.mixin.spec.withClusterIp('None'),
-
   },
 }
