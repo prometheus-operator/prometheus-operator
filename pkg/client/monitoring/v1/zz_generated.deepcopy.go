@@ -182,6 +182,11 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.ConfigMaps != nil {
+		in, out := &in.ConfigMaps, &out.ConfigMaps
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Replicas != nil {
 		in, out := &in.Replicas, &out.Replicas
 		if *in == nil {
@@ -664,6 +669,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 	}
 	if in.Secrets != nil {
 		in, out := &in.Secrets, &out.Secrets
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.ConfigMaps != nil {
+		in, out := &in.ConfigMaps, &out.ConfigMaps
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
