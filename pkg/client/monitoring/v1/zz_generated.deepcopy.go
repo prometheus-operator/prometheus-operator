@@ -722,6 +722,15 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
+	if in.AdditionalAlertRelabelConfigs != nil {
+		in, out := &in.AdditionalAlertRelabelConfigs, &out.AdditionalAlertRelabelConfigs
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	if in.AdditionalAlertManagerConfigs != nil {
 		in, out := &in.AdditionalAlertManagerConfigs, &out.AdditionalAlertManagerConfigs
 		if *in == nil {
