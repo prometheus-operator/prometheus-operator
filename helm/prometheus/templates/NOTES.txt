@@ -1,5 +1,0 @@
-A new Prometheus instance has been created.
-
-DEPRECATION NOTICE:
-
-- additionalRulesConfigMapLabels is not used anymore, use additionalRulesLabels

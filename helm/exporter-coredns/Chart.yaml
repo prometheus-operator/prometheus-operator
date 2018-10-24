@@ -1,4 +1,0 @@
-apiVersion: v1
-description: A Helm chart for coredns metrics
-name: exporter-coredns
-version: 0.0.3

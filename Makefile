@@ -181,14 +181,6 @@ test-e2e: KUBECONFIG?=$(HOME)/.kube/config
 test-e2e:
 	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG)
 
-.PHONY: test-e2e-helm
-test-e2e-helm:
-	./helm/hack/e2e-test.sh
-	# package the chart and verify if they have the version bumped
-	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes exporter-coredns"
-	helm/hack/sync-repo.sh false
-
-
 ########
 # Misc #
 ########
@@ -196,14 +188,6 @@ test-e2e-helm:
 hack/jsonnet-docker-image: scripts/jsonnet/Dockerfile
 	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .
 	touch $@
-
-.PHONY: helm-sync-s3
-helm-sync-s3:
-	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes exporter-coredns"
-	helm/hack/sync-repo.sh true
-	helm/hack/helm-package.sh kube-prometheus
-	helm/hack/sync-repo.sh true
-
 
 ############
 # Binaries #

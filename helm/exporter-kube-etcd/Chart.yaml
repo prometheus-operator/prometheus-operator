@@ -1,7 +1,0 @@
-apiVersion: v1
-description: A Helm chart for Kubernetes
-name: exporter-kube-etcd
-version: 0.1.15
-maintainers:
-  - name: Giancarlo Rubio
-    email: gianrubio@gmail.com
