@@ -1,3 +1,8 @@
+## 0.25.0 / 2018-10-24
+
+* [FEATURE] Allow passing additional alert relabel configs in Prometheus custom resource (#2022)
+* [FEATURE] Add ability to mount custom ConfigMaps into Alertmanager and Prometheus (#2028)
+
 ## 0.24.0 / 2018-10-11
 
 This release has a breaking changes for `prometheus_operator_.*` metrics.
