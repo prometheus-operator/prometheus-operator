@@ -787,7 +787,8 @@ spec:
     - alert: CPUThrottlingHigh
       annotations:
         message: '{{ printf "%0.0f" $value }}% throttling of CPU in namespace {{ $labels.namespace
-          }} for {{ $labels.container_name }}.'
+          }} for container {{ $labels.container_name }} in pod {{ $labels.pod_name
+          }}.'
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-cputhrottlinghigh
       expr: "100 * sum(increase(container_cpu_cfs_throttled_periods_total[5m])) by
         (container_name, pod_name, namespace) \n  / \nsum(increase(container_cpu_cfs_periods_total[5m]))
