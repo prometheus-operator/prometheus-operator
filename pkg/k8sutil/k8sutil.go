@@ -133,6 +133,7 @@ func CreateOrUpdateService(sclient clientv1.ServiceInterface, svc *v1.Service) e
 		}
 	} else {
 		svc.ResourceVersion = service.ResourceVersion
+		svc.SetOwnerReferences(mergeOwnerReferences(service.GetOwnerReferences(), svc.GetOwnerReferences()))
 		_, err := sclient.Update(svc)
 		if err != nil && !apierrors.IsNotFound(err) {
 			return errors.Wrap(err, "updating service object failed")
@@ -202,4 +203,17 @@ func SanitizeVolumeName(name string) string {
 		name = name[0:validation.DNS1123LabelMaxLength]
 	}
 	return strings.Trim(name, "-")
+}
+
+func mergeOwnerReferences(old []metav1.OwnerReference, new []metav1.OwnerReference) []metav1.OwnerReference {
+	existing := make(map[metav1.OwnerReference]bool)
+	for _, ownerRef := range old {
+		existing[ownerRef] = true
+	}
+	for _, ownerRef := range new {
+		if _, ok := existing[ownerRef]; !ok {
+			old = append(old, ownerRef)
+		}
+	}
+	return old
 }

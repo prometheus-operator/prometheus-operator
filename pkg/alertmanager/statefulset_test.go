@@ -493,6 +493,37 @@ func TestRetention(t *testing.T) {
 	}
 }
 
+func TestAdditionalConfigMap(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			ConfigMaps: []string{"test-cm1"},
+		},
+	}, nil, defaultTestConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	cmVolumeFound := false
+	for _, v := range sset.Spec.Template.Spec.Volumes {
+		if v.Name == "configmap-test-cm1" {
+			cmVolumeFound = true
+		}
+	}
+	if !cmVolumeFound {
+		t.Fatal("ConfigMap volume not found")
+	}
+
+	cmMounted := false
+	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if v.Name == "configmap-test-cm1" && v.MountPath == "/etc/alertmanager/configmaps/test-cm1" {
+			cmMounted = true
+		}
+	}
+	if !cmMounted {
+		t.Fatal("ConfigMap volume not mounted")
+	}
+}
+
 func sliceContains(slice []string, match string) bool {
 	contains := false
 	for _, s := range slice {

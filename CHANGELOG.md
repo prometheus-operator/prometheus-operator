@@ -1,3 +1,8 @@
+## 0.25.0 / 2018-10-24
+
+* [FEATURE] Allow passing additional alert relabel configs in Prometheus custom resource (#2022)
+* [FEATURE] Add ability to mount custom ConfigMaps into Alertmanager and Prometheus (#2028)
+
 ## 0.24.0 / 2018-10-11
 
 This release has a breaking changes for `prometheus_operator_.*` metrics.
@@ -14,12 +19,15 @@ Alertmanager controller.
 
 For a full description see: https://github.com/coreos/prometheus-operator/pull/1984#issue-221139702
 
+In order to support multiple namespaces, the `--namespace` flag changed to `--namespaces`
+and accepts and comma-separated list of namespaces as a string.
+
 * [CHANGE] Default to Node Exporter v0.16.0 (#1812)
 * [CHANGE] Update to Go 1.11 (#1855)
 * [CHANGE] Default to Prometheus v2.4.3 (#1929) (#1983)
 * [CHANGE] Default to Thanos v0.1.0 (#1954)
 * [CHANGE] Overhaul metrics while adding triggerBy metric for Alertmanager (#1984)
-* [FEATURE] Add multi namespace support (#1813)
+* [CHANGE] Add multi namespace support (#1813)
 * [FEATURE] Add SHA field to Prometheus, Alertmanager and Thanos for images (#1847) (#1854)
 * [FEATURE] Add configuration for priority class to be assigned to Pods (#1875)
 * [FEATURE] Configure sampleLimit per ServiceMonitor (#1895)

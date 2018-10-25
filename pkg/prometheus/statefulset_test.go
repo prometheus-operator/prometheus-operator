@@ -300,6 +300,37 @@ func TestMemoryRequestNotAdjustedWhenLimitLarger2Gi(t *testing.T) {
 	}
 }
 
+func TestAdditionalConfigMap(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			ConfigMaps: []string{"test-cm1"},
+		},
+	}, "", defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	cmVolumeFound := false
+	for _, v := range sset.Spec.Template.Spec.Volumes {
+		if v.Name == "configmap-test-cm1" {
+			cmVolumeFound = true
+		}
+	}
+	if !cmVolumeFound {
+		t.Fatal("ConfigMap volume not found")
+	}
+
+	cmMounted := false
+	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if v.Name == "configmap-test-cm1" && v.MountPath == "/etc/prometheus/configmaps/test-cm1" {
+			cmMounted = true
+		}
+	}
+	if !cmMounted {
+		t.Fatal("ConfigMap volume not mounted")
+	}
+}
+
 func TestMemoryRequestAdjustedWhenOnlyLimitGiven(t *testing.T) {
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{

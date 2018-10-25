@@ -24,12 +24,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"k8s.io/apiextensions-apiserver/pkg/apiserver/conversion"
+	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/testing/fuzzer"
 	metafuzzer "k8s.io/apimachinery/pkg/apis/meta/fuzzer"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/apimachinery/pkg/util/diff"
@@ -87,7 +88,7 @@ func TestConvertFieldLabel(t *testing.T) {
 			}
 			_, c := conversion.NewCRDConverter(&crd)
 
-			label, value, err := c.ConvertFieldLabel("", "", test.label, "value")
+			label, value, err := c.ConvertFieldLabel(schema.GroupVersionKind{}, test.label, "value")
 			if e, a := test.expectError, err != nil; e != a {
 				t.Fatalf("err: expected %t, got %t", e, a)
 			}

@@ -1276,6 +1276,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	if err != nil {
 		return errors.Wrap(err, "loading additional scrape configs from Secret failed")
 	}
+	additionalAlertRelabelConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
+	if err != nil {
+		return errors.Wrap(err, "loading additional alert relabel configs from Secret failed")
+	}
 	additionalAlertManagerConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
@@ -1287,6 +1291,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		smons,
 		basicAuthSecrets,
 		additionalScrapeConfigs,
+		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
 		ruleConfigMapNames,
 	)

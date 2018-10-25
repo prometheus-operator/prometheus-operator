@@ -37,6 +37,7 @@ const (
 	defaultVersion         = "v0.15.2"
 	defaultRetention       = "120h"
 	secretsDir             = "/etc/alertmanager/secrets/"
+	configmapsDir          = "/etc/alertmanager/configmaps/"
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
 	alertmanagerStorageDir = "/alertmanager"
@@ -145,6 +146,14 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 			Labels: config.Labels.Merge(map[string]string{
 				"operated-alertmanager": "true",
 			}),
+			OwnerReferences: []metav1.OwnerReference{
+				metav1.OwnerReference{
+					Name:       p.GetName(),
+					Kind:       p.Kind,
+					APIVersion: p.APIVersion,
+					UID:        p.GetUID(),
+				},
+			},
 		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",
@@ -371,6 +380,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			SubPath:   subPathForStorage(a.Spec.Storage),
 		},
 	}
+
 	for _, s := range a.Spec.Secrets {
 		volumes = append(volumes, v1.Volume{
 			Name: k8sutil.SanitizeVolumeName("secret-" + s),
@@ -384,6 +394,24 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			Name:      k8sutil.SanitizeVolumeName("secret-" + s),
 			ReadOnly:  true,
 			MountPath: secretsDir + s,
+		})
+	}
+
+	for _, c := range a.Spec.ConfigMaps {
+		volumes = append(volumes, v1.Volume{
+			Name: k8sutil.SanitizeVolumeName("configmap-" + c),
+			VolumeSource: v1.VolumeSource{
+				ConfigMap: &v1.ConfigMapVolumeSource{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: c,
+					},
+				},
+			},
+		})
+		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+			Name:      k8sutil.SanitizeVolumeName("configmap-" + c),
+			ReadOnly:  true,
+			MountPath: configmapsDir + c,
 		})
 	}
 
