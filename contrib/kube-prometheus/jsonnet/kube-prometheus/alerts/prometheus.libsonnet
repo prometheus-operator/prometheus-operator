@@ -8,7 +8,7 @@
             alert: 'PrometheusConfigReloadFailed',
             annotations: {
               description: "Reloading Prometheus' configuration has failed for {{$labels.namespace}}/{{$labels.pod}}",
-              summary: "Reloading Promehteus' configuration failed",
+              summary: "Reloading Prometheus' configuration failed",
             },
             expr: |||
               prometheus_config_last_reload_successful{%(prometheusSelector)s} == 0
