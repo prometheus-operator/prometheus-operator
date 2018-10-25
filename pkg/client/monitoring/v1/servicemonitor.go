@@ -42,6 +42,7 @@ type ServiceMonitorInterface interface {
 	Create(*ServiceMonitor) (*ServiceMonitor, error)
 	Get(name string, opts metav1.GetOptions) (*ServiceMonitor, error)
 	Update(*ServiceMonitor) (*ServiceMonitor, error)
+	UpdateStatus(*ServiceMonitor) (*ServiceMonitor, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
 	Watch(opts metav1.ListOptions) (watch.Interface, error)
@@ -111,6 +112,19 @@ func (s *servicemonitors) Update(o *ServiceMonitor) (*ServiceMonitor, error) {
 	}
 
 	return ServiceMonitorFromUnstructured(us)
+}
+
+func (s *servicemonitors) UpdateStatus(o *ServiceMonitor) (*ServiceMonitor, error) {
+	result := &ServiceMonitor{}
+	err := s.restClient.Put().
+		Namespace(s.ns).
+		Resource("servicemonitors").
+		Name(o.Name).
+		SubResource("status").
+		Body(o).
+		Do().
+		Into(result)
+	return result, err
 }
 
 func (s *servicemonitors) Delete(name string, options *metav1.DeleteOptions) error {

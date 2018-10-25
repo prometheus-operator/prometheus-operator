@@ -61,6 +61,7 @@ var (
 	prometheusRoute = regexp.MustCompile("/apis/monitoring.coreos.com/" + v1.Version + "/namespaces/(.*)/prometheuses/(.*)/status")
 )
 
+// TODO(alecmerdler): Remove this in favor of writing `status` subresource
 func (api *API) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		if prometheusRoute.MatchString(req.URL.Path) {

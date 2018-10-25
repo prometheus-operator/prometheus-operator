@@ -850,7 +850,8 @@ func (c *Operator) processNextWorkItem() bool {
 	}
 	defer c.queue.Done(key)
 
-	err := c.sync(key.(string))
+	syncedProm, err := c.sync(key.(string))
+	_, _ = c.mclient.MonitoringV1().Prometheuses(syncedProm.GetNamespace()).UpdateStatus(syncedProm)
 	if err == nil {
 		c.queue.Forget(key)
 		return true
@@ -938,26 +939,28 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 	}
 }
 
-func (c *Operator) sync(key string) error {
+func (c *Operator) sync(key string) (*monitoringv1.Prometheus, error) {
 	obj, exists, err := c.promInf.GetIndexer().GetByKey(key)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !exists {
 		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
+		return nil, nil
 	}
 
 	p := obj.(*monitoringv1.Prometheus)
+	status, _, err := PrometheusStatus(c.kclient, p)
+	p.Status = status
 	if p.Spec.Paused {
-		return nil
+		return p, nil
 	}
 
 	level.Info(c.logger).Log("msg", "sync prometheus", "key", key)
 
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(p)
 	if err != nil {
-		return err
+		return p, err
 	}
 
 	// If no service monitor selectors are configured, the user wants to
@@ -965,67 +968,67 @@ func (c *Operator) sync(key string) error {
 	if p.Spec.ServiceMonitorSelector != nil {
 		// We just always regenerate the configuration to be safe.
 		if err := c.createOrUpdateConfigurationSecret(p, ruleConfigMapNames); err != nil {
-			return errors.Wrap(err, "creating config failed")
+			return p, errors.Wrap(err, "creating config failed")
 		}
 	}
 
 	// Create empty Secret if it doesn't exist. See comment above.
 	s, err := makeEmptyConfigurationSecret(p, c.config)
 	if err != nil {
-		return errors.Wrap(err, "generating empty config secret failed")
+		return p, errors.Wrap(err, "generating empty config secret failed")
 	}
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	_, err = sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		if _, err := c.kclient.Core().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
-			return errors.Wrap(err, "creating empty config file failed")
+			return p, errors.Wrap(err, "creating empty config file failed")
 		}
 	}
 	if !apierrors.IsNotFound(err) && err != nil {
-		return err
+		return p, err
 	}
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.Core().Services(p.Namespace)
 	if err := k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(p, c.config)); err != nil {
-		return errors.Wrap(err, "synchronizing governing service failed")
+		return p, errors.Wrap(err, "synchronizing governing service failed")
 	}
 
 	ssetClient := c.kclient.AppsV1beta2().StatefulSets(p.Namespace)
 	// Ensure we have a StatefulSet running Prometheus deployed.
 	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(prometheusKeyToStatefulSetKey(key))
 	if err != nil {
-		return errors.Wrap(err, "retrieving statefulset failed")
+		return p, errors.Wrap(err, "retrieving statefulset failed")
 	}
 
 	newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames)
 	if err != nil {
-		return err
+		return p, err
 	}
 
 	if !exists {
 		level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
 		sset, err := makeStatefulSet(*p, "", &c.config, ruleConfigMapNames, newSSetInputHash)
 		if err != nil {
-			return errors.Wrap(err, "making statefulset failed")
+			return p, errors.Wrap(err, "making statefulset failed")
 		}
 
 		level.Debug(c.logger).Log("msg", "creating Prometheus statefulset")
 		if _, err := ssetClient.Create(sset); err != nil {
-			return errors.Wrap(err, "creating statefulset failed")
+			return p, errors.Wrap(err, "creating statefulset failed")
 		}
-		return nil
+		return p, nil
 	}
 
 	oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
 	if newSSetInputHash == oldSSetInputHash {
 		level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
-		return nil
+		return p, nil
 	}
 
 	sset, err := makeStatefulSet(*p, obj.(*appsv1.StatefulSet).Spec.PodManagementPolicy, &c.config, ruleConfigMapNames, newSSetInputHash)
 	if err != nil {
-		return errors.Wrap(err, "making statefulset failed")
+		return p, errors.Wrap(err, "making statefulset failed")
 	}
 
 	level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
@@ -1037,16 +1040,16 @@ func (c *Operator) sync(key string) error {
 		level.Debug(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet")
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(sset.GetName(), &metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
+			return p, errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
 		}
-		return nil
+		return p, nil
 	}
 
 	if err != nil {
-		return errors.Wrap(err, "updating StatefulSet failed")
+		return p, errors.Wrap(err, "updating StatefulSet failed")
 	}
 
-	return nil
+	return p, nil
 }
 
 func createSSetInputHash(p monitoringv1.Prometheus, c Config, ruleConfigMapNames []string) (string, error) {

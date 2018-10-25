@@ -42,6 +42,7 @@ type AlertmanagerInterface interface {
 	Create(*Alertmanager) (*Alertmanager, error)
 	Get(name string, opts metav1.GetOptions) (*Alertmanager, error)
 	Update(*Alertmanager) (*Alertmanager, error)
+	UpdateStatus(*Alertmanager) (*Alertmanager, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
 	Watch(opts metav1.ListOptions) (watch.Interface, error)
@@ -111,6 +112,19 @@ func (a *alertmanagers) Update(o *Alertmanager) (*Alertmanager, error) {
 	}
 
 	return AlertmanagerFromUnstructured(ua)
+}
+
+func (a *alertmanagers) UpdateStatus(o *Alertmanager) (*Alertmanager, error) {
+	result := &Alertmanager{}
+	err := a.restClient.Put().
+		Namespace(a.ns).
+		Resource("alertmanagers").
+		Name(o.Name).
+		SubResource("status").
+		Body(o).
+		Do().
+		Into(result)
+	return result, err
 }
 
 func (a *alertmanagers) Delete(name string, options *metav1.DeleteOptions) error {
