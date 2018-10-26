@@ -30,6 +30,21 @@
               severity: 'warning',
             },
           },
+          {
+            alert:'AlertmanagerMembersInconsistent',
+            annotations:{
+              message: 'Alertmanager has not found all other members of the cluster.',
+            },
+            expr: |||
+              alertmanager_cluster_members{%(alertmanagerSelector)s}
+                != on (service)
+              count by (service) (alertmanager_cluster_members{%(alertmanagerSelector)s})
+            ||| % $._config,
+            'for': '5m',
+            labels: {
+              severity: 'critical',
+            },
+          },
         ],
       },
     ],
