@@ -961,6 +961,16 @@ spec:
       for: 10m
       labels:
         severity: warning
+    - alert: AlertmanagerMembersInconsistent
+      annotations:
+        message: Alertmanager has not found all other members of the cluster.
+      expr: |
+        alertmanager_cluster_members{job="alertmanager-main"}
+          != on (service)
+        count by (service) (alertmanager_cluster_members{job="alertmanager-main"})
+      for: 5m
+      labels:
+        severity: critical
   - name: general.rules
     rules:
     - alert: TargetDown
