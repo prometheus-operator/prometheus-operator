@@ -191,7 +191,7 @@ spec:
       - args:
         - --secure-listen-address=:9100
         - --upstream=http://127.0.0.1:9101/
-        image: quay.io/coreos/kube-rbac-proxy:v0.3.1
+        image: quay.io/coreos/kube-rbac-proxy:v0.4.0
         name: kube-rbac-proxy
         ports:
         - containerPort: 9100
@@ -285,7 +285,7 @@ spec:
       - args:
         - --secure-listen-address=:8443
         - --upstream=http://127.0.0.1:8081/
-        image: quay.io/coreos/kube-rbac-proxy:v0.3.1
+        image: quay.io/coreos/kube-rbac-proxy:v0.4.0
         name: kube-rbac-proxy-main
         ports:
         - containerPort: 8443
@@ -300,7 +300,7 @@ spec:
       - args:
         - --secure-listen-address=:9443
         - --upstream=http://127.0.0.1:8082/
-        image: quay.io/coreos/kube-rbac-proxy:v0.3.1
+        image: quay.io/coreos/kube-rbac-proxy:v0.4.0
         name: kube-rbac-proxy-self
         ports:
         - containerPort: 9443
@@ -317,7 +317,7 @@ spec:
         - --port=8081
         - --telemetry-host=127.0.0.1
         - --telemetry-port=8082
-        image: quay.io/coreos/kube-state-metrics:v1.3.1
+        image: quay.io/coreos/kube-state-metrics:v1.4.0
         name: kube-state-metrics
         resources:
           limits:
