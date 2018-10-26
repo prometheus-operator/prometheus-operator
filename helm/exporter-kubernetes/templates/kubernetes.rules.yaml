@@ -94,15 +94,15 @@ groups:
     labels:
       severity: warning
     annotations:
-      description: Kubernetes API Certificate is expiring soon (less than 7 days)
-      summary: Kubernetes API Certificate is expiering soon
+      description: A client certificate used for authentication is expiring soon (less than 7 days)
+      summary: Kubernetes Client Certificate is expiring soon
     expr: sum(apiserver_client_certificate_expiration_seconds_bucket{le="604800"}) > 0
 
   - alert: K8sCertificateExpirationNotice
     labels:
       severity: critical
     annotations:
-      description: Kubernetes API Certificate is expiring in less than 1 day
-      summary: Kubernetes API Certificate is expiering
+      description: A client certificate used for authentication is expiring in less than 1 day
+      summary: Kubernetes Client Certificate is expiring
     expr: sum(apiserver_client_certificate_expiration_seconds_bucket{le="86400"}) > 0
 {{ end }}
