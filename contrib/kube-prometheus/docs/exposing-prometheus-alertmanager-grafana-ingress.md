@@ -24,7 +24,8 @@ htpasswd -c auth <username>
 
 In order to use this a secret needs to be created containing the name of the `htpasswd`, and with annotations on the Ingress object basic auth can be configured.
 
-[embedmd]:# (../examples/ingress.jsonnet)
+Also, the applications provide external links to themselves in alerts and various places. When an ingress is used in front of the applications these links need to be based on the external URL's. This can be configured for each application in jsonnet.
+
 ```jsonnet
 local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 local secret = k.core.v1.secret;
@@ -38,6 +39,13 @@ local kp =
   {
     _config+:: {
       namespace: 'monitoring',
+    },
+    prometheus+:: {
+      prometheus+: {
+        spec+: {
+          externalURL: 'http://prometheus.example.com',
+        },
+      },
     },
     ingress+:: {
       'prometheus-k8s':
@@ -73,7 +81,7 @@ k.core.v1.list.new([
 ])
 ```
 
-In order to expose Alertmanager and Grafana, simply create additional fields containing an ingress object, but simply pointing at the `alertmanager` or `grafana` instead of the `prometheus-k8s` Service. Make sure to also use the correct port respectively, for Alertmanager it is also `web`, for Grafana it is `http`.
+In order to expose Alertmanager and Grafana, simply create additional fields containing an ingress object, but simply pointing at the `alertmanager` or `grafana` instead of the `prometheus-k8s` Service. Make sure to also use the correct port respectively, for Alertmanager it is also `web`, for Grafana it is `http`. Be sure to also specify the appropriate external URL. 
 
 In order to render the ingress objects similar to the other objects use as demonstrated in the [main readme](../README.md#usage):
 
@@ -89,3 +97,5 @@ In order to render the ingress objects similar to the other objects use as demon
 ```
 
 Note, that in comparison only the last line was added, the rest is identical to the original.
+
+See (../examples/ingress.jsonnet) for an example implementation.
