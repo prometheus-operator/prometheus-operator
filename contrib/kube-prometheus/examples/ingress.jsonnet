@@ -37,7 +37,7 @@ local kp =
     },
     // Create ingress objects per application
     ingress+:: {
-      alertmanager:
+      'alertmanager-main':
         ingress.new() +
         ingress.mixin.metadata.withName('alertmanager-main') +
         ingress.mixin.metadata.withNamespace($._config.namespace) +
@@ -73,9 +73,9 @@ local kp =
             httpIngressPath.mixin.backend.withServicePort('http')
           ),
         ),
-      prometheus:
+      'prometheus-k8s':
         ingress.new() +
-        ingress.mixin.metadata.withName('prometheus') +
+        ingress.mixin.metadata.withName('prometheus-k8s') +
         ingress.mixin.metadata.withNamespace($._config.namespace) +
         ingress.mixin.metadata.withAnnotations({
           'nginx.ingress.kubernetes.io/auth-type': 'basic',
