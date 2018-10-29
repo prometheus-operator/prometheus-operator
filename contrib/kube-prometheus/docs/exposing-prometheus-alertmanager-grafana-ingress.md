@@ -98,4 +98,4 @@ In order to render the ingress objects similar to the other objects use as demon
 
 Note, that in comparison only the last line was added, the rest is identical to the original.
 
-See (../examples/ingress.jsonnet) for an example implementation.
+See [ingress.jsonnet](../examples/ingress.jsonnet) for an example implementation.
