@@ -11,7 +11,68 @@ local kp =
     _config+:: {
       namespace: 'monitoring',
     },
+    // Configure External URL's per application
+    alertmanager+:: {
+      alertmanager+: {
+        spec+: {
+          externalURL: 'http://alertmanager.example.com',
+        },
+      },
+    },
+    grafana+:: {
+      config+: {
+        sections+: {
+          server+: {
+            root_url: 'http://grafana.example.com/',
+          },
+        },
+      },
+    },
+    prometheus+:: {
+      prometheus+: {
+        spec+: {
+          externalURL: 'http://prometheus.example.com',
+        },
+      },
+    },
+    // Create ingress objects per application
     ingress+:: {
+      'alertmanager-main':
+        ingress.new() +
+        ingress.mixin.metadata.withName('alertmanager-main') +
+        ingress.mixin.metadata.withNamespace($._config.namespace) +
+        ingress.mixin.metadata.withAnnotations({
+          'nginx.ingress.kubernetes.io/auth-type': 'basic',
+          'nginx.ingress.kubernetes.io/auth-secret': 'basic-auth',
+          'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
+        }) +
+        ingress.mixin.spec.withRules(
+          ingressRule.new() +
+          ingressRule.withHost('alertmanager.example.com') +
+          ingressRule.mixin.http.withPaths(
+            httpIngressPath.new() +
+            httpIngressPath.mixin.backend.withServiceName('alertmanager-main') +
+            httpIngressPath.mixin.backend.withServicePort('web')
+          ),
+        ),
+      grafana:
+        ingress.new() +
+        ingress.mixin.metadata.withName('grafana') +
+        ingress.mixin.metadata.withNamespace($._config.namespace) +
+        ingress.mixin.metadata.withAnnotations({
+          'nginx.ingress.kubernetes.io/auth-type': 'basic',
+          'nginx.ingress.kubernetes.io/auth-secret': 'basic-auth',
+          'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
+        }) +
+        ingress.mixin.spec.withRules(
+          ingressRule.new() +
+          ingressRule.withHost('grafana.example.com') +
+          ingressRule.mixin.http.withPaths(
+            httpIngressPath.new() +
+            httpIngressPath.mixin.backend.withServiceName('grafana') +
+            httpIngressPath.mixin.backend.withServicePort('http')
+          ),
+        ),
       'prometheus-k8s':
         ingress.new() +
         ingress.mixin.metadata.withName('prometheus-k8s') +
@@ -32,6 +93,7 @@ local kp =
         ),
     },
   } + {
+    // Create basic auth secret - replace 'auth' file with your own
     ingress+:: {
       'basic-auth-secret':
         secret.new('basic-auth', { auth: std.base64(importstr 'auth') }) +
@@ -39,7 +101,4 @@ local kp =
     },
   };
 
-k.core.v1.list.new([
-  kp.ingress['prometheus-k8s'],
-  kp.ingress['basic-auth-secret'],
-])
+{ [name + '-ingress']: kp.ingress[name] for name in std.objectFields(kp.ingress) }
