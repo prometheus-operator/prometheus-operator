@@ -71,7 +71,7 @@ func (api *API) Register(mux *http.ServeMux) {
 		case alertmanagerRoute.MatchString(req.URL.Path):
 			api.alertmanagerStatus(w, req)
 		default:
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusNotFound)
 		}
 	})
 }
@@ -103,10 +103,12 @@ func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 
 	p, err := api.mclient.Prometheuses(or.namespace).Get(or.name, metav1.GetOptions{})
 	if err != nil {
-		if k8sutil.IsResourceNotFoundError(err) {
-			w.WriteHeader(404)
-		}
 		api.logger.Log("error", err)
+		if k8sutil.IsResourceNotFoundError(err) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -121,7 +123,7 @@ func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusFound)
 	w.Write(b)
 }
 
@@ -130,10 +132,12 @@ func (api *API) alertmanagerStatus(w http.ResponseWriter, req *http.Request) {
 
 	am, err := api.mclient.Alertmanagers(or.namespace).Get(or.name, metav1.GetOptions{})
 	if err != nil {
-		if k8sutil.IsResourceNotFoundError(err) {
-			w.WriteHeader(404)
-		}
 		api.logger.Log("error", err)
+		if k8sutil.IsResourceNotFoundError(err) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -148,6 +152,6 @@ func (api *API) alertmanagerStatus(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusFound)
 	w.Write(b)
 }
