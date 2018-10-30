@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
@@ -58,14 +59,18 @@ func New(conf prometheus.Config, l log.Logger) (*API, error) {
 }
 
 var (
-	prometheusRoute = regexp.MustCompile("/apis/monitoring.coreos.com/" + v1.Version + "/namespaces/(.*)/prometheuses/(.*)/status")
+	prometheusRoute   = regexp.MustCompile("/apis/monitoring.coreos.com/" + v1.Version + "/namespaces/(.*)/prometheuses/(.*)/status")
+	alertmanagerRoute = regexp.MustCompile("/apis/monitoring.coreos.com/" + v1.Version + "/namespaces/(.*)/alertmanagers/(.*)/status")
 )
 
 func (api *API) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		if prometheusRoute.MatchString(req.URL.Path) {
+		switch {
+		case prometheusRoute.MatchString(req.URL.Path):
 			api.prometheusStatus(w, req)
-		} else {
+		case alertmanagerRoute.MatchString(req.URL.Path):
+			api.alertmanagerStatus(w, req)
+		default:
 			w.WriteHeader(404)
 		}
 	})
@@ -76,8 +81,8 @@ type objectReference struct {
 	namespace string
 }
 
-func parsePrometheusStatusUrl(path string) objectReference {
-	matches := prometheusRoute.FindAllStringSubmatch(path, -1)
+func parseURL(route *regexp.Regexp, path string) objectReference {
+	matches := route.FindAllStringSubmatch(path, -1)
 	ns := ""
 	name := ""
 	if len(matches) == 1 {
@@ -94,7 +99,7 @@ func parsePrometheusStatusUrl(path string) objectReference {
 }
 
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
-	or := parsePrometheusStatusUrl(req.URL.Path)
+	or := parseURL(prometheusRoute, req.URL.Path)
 
 	p, err := api.mclient.Prometheuses(or.namespace).Get(or.name, metav1.GetOptions{})
 	if err != nil {
@@ -111,6 +116,33 @@ func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 	}
 
 	b, err := json.Marshal(p)
+	if err != nil {
+		api.logger.Log("error", err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	w.Write(b)
+}
+
+func (api *API) alertmanagerStatus(w http.ResponseWriter, req *http.Request) {
+	or := parseURL(alertmanagerRoute, req.URL.Path)
+
+	am, err := api.mclient.Alertmanagers(or.namespace).Get(or.name, metav1.GetOptions{})
+	if err != nil {
+		if k8sutil.IsResourceNotFoundError(err) {
+			w.WriteHeader(404)
+		}
+		api.logger.Log("error", err)
+		return
+	}
+
+	am.Status, _, err = alertmanager.AlertmanagerStatus(api.kclient, am)
+	if err != nil {
+		api.logger.Log("error", err)
+	}
+
+	b, err := json.Marshal(am)
 	if err != nil {
 		api.logger.Log("error", err)
 		return

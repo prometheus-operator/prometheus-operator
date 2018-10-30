@@ -1078,18 +1078,18 @@ func ListOptions(name string) metav1.ListOptions {
 }
 
 // PrometheusStatus evaluates the current status of a Prometheus deployment with
-// respect to its specified resource object. It return the status and a list of
+// respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
 func PrometheusStatus(kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
 	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
 	pods, err := kclient.Core().Pods(p.Namespace).List(ListOptions(p.Name))
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
+		return nil, nil, errors.Wrap(err, "retrieving Pods failed")
 	}
 	sset, err := kclient.AppsV1beta2().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
+		return nil, nil, errors.Wrap(err, "retrieving StatefulSet failed")
 	}
 
 	res.Replicas = int32(len(pods.Items))
@@ -1098,7 +1098,7 @@ func PrometheusStatus(kclient kubernetes.Interface, p *monitoringv1.Prometheus) 
 	for _, pod := range pods.Items {
 		ready, err := k8sutil.PodRunningAndReady(pod)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "cannot determine pod ready state")
+			return nil, nil, errors.Wrap(err, "cannot determine Pod ready state")
 		}
 		if ready {
 			res.AvailableReplicas++
