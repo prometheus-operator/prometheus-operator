@@ -7,6 +7,7 @@ local configMapList = k.core.v1.configMapList;
 (import 'alertmanager/alertmanager.libsonnet') +
 (import 'prometheus-operator/prometheus-operator.libsonnet') +
 (import 'prometheus/prometheus.libsonnet') +
+(import 'prometheus-adapter/prometheus-adapter.libsonnet') +
 (import 'kubernetes-mixin/mixin.libsonnet') +
 (import 'alerts/alerts.libsonnet') +
 (import 'rules/rules.libsonnet') + {
