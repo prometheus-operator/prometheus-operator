@@ -184,7 +184,7 @@ jsonnet -J vendor -m manifests "${1-example.jsonnet}" | xargs -I{} sh -c 'cat {}
 
 This script runs the jsonnet code, then reads each key of the generated json and uses that as the file name, and writes the value of that key to that file, and converts each json manifest to yaml.
 
-### Apply the manifests to setup Grafana and Prometheus
+### Apply the kube-prometheus stack
 The previous steps (compilation) has created a bunch of manifest files in the manifest/ folder.
 Now simply use kubectl to install Prometheus and Grafana as per your configuration:
 
@@ -230,14 +230,14 @@ jb may have been updated so it's a good idea to get the latest version of this b
 go get -u github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 ```
 
-### Update from Prometheus Operator
+### Update kube-prometheus
 The command below will sync with upstream project.
 ```
 jb update
 ```
 
 ### Compile the manifests and apply
-Once updated, just follow the instructions under "Compiling" and "Apply the manifests to setup Grafana and Prometheus" to apply the changes to your cluster.
+Once updated, just follow the instructions under "Compiling" and "Apply the kube-prometheus stack" to apply the changes to your cluster.
 
 
 ## Configuration
