@@ -328,7 +328,7 @@ Jsonnet is a turing complete language, any logic can be reflected in it. It also
 
 ### Cluster Creation Tools
 
-A common example is that not all Kubernetes clusters are created exactly the same way, meaning the configuration to monitor them may be slightly different. For [kubeadm](examples/jsonnet-snippets/kubeadm.jsonnet) and [bootkube](examples/jsonnet-snippets/bootkube.jsonnet) and [kops](examples/jsonnet-snippets/kops.jsonnet) clusters there are mixins available to easily configure these:
+A common example is that not all Kubernetes clusters are created exactly the same way, meaning the configuration to monitor them may be slightly different. For [kubeadm](examples/jsonnet-snippets/kubeadm.jsonnet), [bootkube](examples/jsonnet-snippets/bootkube.jsonnet), [kops](examples/jsonnet-snippets/kops.jsonnet) and [kubespray](examples/jsonnet-snippets/kubespray.jsonnet) clusters there are mixins available to easily configure these:
 
 kubeadm:
 
@@ -352,6 +352,14 @@ kops:
 ```jsonnet
 (import 'kube-prometheus/kube-prometheus.libsonnet') +
 (import 'kube-prometheus/kube-prometheus-kops.libsonnet')
+```
+
+kubespray:
+
+[embedmd]:# (examples/jsonnet-snippets/kubespray.jsonnet)
+```jsonnet
+(import 'kube-prometheus/kube-prometheus.libsonnet') +
+(import 'kube-prometheus/kube-prometheus-kubespray.libsonnet')
 ```
 
 ### Internal Registry
