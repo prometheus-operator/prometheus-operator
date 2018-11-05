@@ -61,9 +61,11 @@ The Operator acts on the following [custom resource definitions (CRDs)](https://
 To learn more about the CRDs introduced by the Prometheus Operator have a look
 at the [design doc](Documentation/design.md).
 
-## Installation
+## Quickstart
 
-Install the Operator inside a cluster by running the following command:
+Note that this quickstart does not provision an entire monitoring stack, if that is what you are looking for see the [kube-prometheus](contrib/kube-prometheus) sub-project. If you want the whole stack, but have already applied the `bundle.yaml`, just delete the bundle (`kubectl delete -f bundle.yaml`).
+
+To quickly try out _just_ the Prometheus Operator inside a cluster by running the following command:
 
 ```sh
 kubectl apply -f bundle.yaml
