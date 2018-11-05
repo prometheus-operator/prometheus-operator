@@ -63,7 +63,7 @@ at the [design doc](Documentation/design.md).
 
 ## Quickstart
 
-Note that this quickstart does not provision an entire monitoring stack, if that is what you are looking for see the [kube-prometheus](contrib/kube-prometheus) sub-project. If you awant the whole stack, but have already applied the `bundle.yaml`, just delete the bundle (`kubectl delete -f bundle.yaml`).
+Note that this quickstart does not provision an entire monitoring stack, if that is what you are looking for see the [kube-prometheus](contrib/kube-prometheus) sub-project. If you want the whole stack, but have already applied the `bundle.yaml`, just delete the bundle (`kubectl delete -f bundle.yaml`).
 
 To quickly try out _just_ the Prometheus Operator inside a cluster by running the following command:
 
