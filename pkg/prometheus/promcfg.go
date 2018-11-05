@@ -395,7 +395,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 			{Key: "regex", Value: ep.TargetPort.String()},
 		})
 	}
-	
+
 	if version.Major <= 2 && version.Minor < 3 {
 		// Relabel node and pod labels for pre v2.3 meta labels
 		relabelings = append(relabelings, []yaml.MapSlice{
@@ -415,7 +415,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 			},
 		}...)
 	}
-	
+
 	// Relabel namespace and pod and service labels into proper labels.
 	relabelings = append(relabelings, []yaml.MapSlice{
 		{
