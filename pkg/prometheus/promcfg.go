@@ -395,7 +395,27 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 			{Key: "regex", Value: ep.TargetPort.String()},
 		})
 	}
-
+	
+	if version.Major <= 2 && version.Minor < 3 {
+		// Relabel node and pod labels for pre v2.3 meta labels
+		relabelings = append(relabelings, []yaml.MapSlice{
+			{
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
+				{Key: "separator", Value: ";"},
+				{Key: "regex", Value: "Node;(.*)"},
+				{Key: "replacement", Value: "${1}"},
+				{Key: "target_label", Value: "node"},
+			},
+			{
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
+				{Key: "separator", Value: ";"},
+				{Key: "regex", Value: "Pod;(.*)"},
+				{Key: "replacement", Value: "${1}"},
+				{Key: "target_label", Value: "pod"},
+			},
+		}...)
+	}
+	
 	// Relabel namespace and pod and service labels into proper labels.
 	relabelings = append(relabelings, []yaml.MapSlice{
 		{
@@ -403,22 +423,16 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 			{Key: "target_label", Value: "namespace"},
 		},
 		{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
-			{Key: "separator", Value: ";"},
-			{Key: "regex", Value: "Node;(.*)"},
-			{Key: "replacement", Value: "${1}"},
-			{Key: "target_label", Value: "node"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
+			{Key: "target_label", Value: "service"},
 		},
 		{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
-			{Key: "separator", Value: ";"},
-			{Key: "regex", Value: "Pod;(.*)"},
-			{Key: "replacement", Value: "${1}"},
+			{Key: "source_labels", Value: []string{"_meta_kubernetes_pod_name"}},
 			{Key: "target_label", Value: "pod"},
 		},
 		{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
-			{Key: "target_label", Value: "service"},
+			{Key: "source_labels", Value: []string{"_meta_kubernetes_node_name"}},
+			{Key: "target_label", Value: "node"},
 		},
 	}...)
 
