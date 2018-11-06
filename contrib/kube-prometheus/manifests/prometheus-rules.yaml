@@ -688,7 +688,7 @@ spec:
         severity: warning
     - alert: KubeCronJobRunning
       annotations:
-        message: CronJob {{ $labels.namespaces }}/{{ $labels.cronjob }} is taking
+        message: CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} is taking
           more than 1h to complete.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubecronjobrunning
       expr: |
@@ -698,7 +698,7 @@ spec:
         severity: warning
     - alert: KubeJobCompletion
       annotations:
-        message: Job {{ $labels.namespaces }}/{{ $labels.job }} is taking more than
+        message: Job {{ $labels.namespace }}/{{ $labels.job_name }} is taking more than
           one hour to complete.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubejobcompletion
       expr: |
@@ -708,7 +708,7 @@ spec:
         severity: warning
     - alert: KubeJobFailed
       annotations:
-        message: Job {{ $labels.namespaces }}/{{ $labels.job }} failed to complete.
+        message: Job {{ $labels.namespace }}/{{ $labels.job_name }} failed to complete.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubejobfailed
       expr: |
         kube_job_status_failed{job="kube-state-metrics"}  > 0
@@ -852,7 +852,7 @@ spec:
         severity: warning
     - alert: KubeClientErrors
       annotations:
-        message: Kubernetes API server client '{{ $labels.job }}/{{ $labels.instance
+        message: Kubernetes API server client '{{ $labels.job_name }}/{{ $labels.instance
           }}' is experiencing {{ printf "%0.0f" $value }}% errors.'
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeclienterrors
       expr: |
@@ -865,7 +865,7 @@ spec:
         severity: warning
     - alert: KubeClientErrors
       annotations:
-        message: Kubernetes API server client '{{ $labels.job }}/{{ $labels.instance
+        message: Kubernetes API server client '{{ $labels.job_name }}/{{ $labels.instance
           }}' is experiencing {{ printf "%0.0f" $value }} errors / second.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeclienterrors
       expr: |
@@ -975,7 +975,7 @@ spec:
     rules:
     - alert: TargetDown
       annotations:
-        message: '{{ $value }}% of the {{ $labels.job }} targets are down.'
+        message: '{{ $value }}% of the {{ $labels.job_name }} targets are down.'
       expr: 100 * (count(up == 0) BY (job) / count(up) BY (job)) > 10
       for: 10m
       labels:
@@ -1060,7 +1060,7 @@ spec:
         severity: warning
     - alert: PrometheusTSDBReloadsFailing
       annotations:
-        description: '{{$labels.job}} at {{$labels.instance}} had {{$value | humanize}}
+        description: '{{$labels.job_name}} at {{$labels.instance}} had {{$value | humanize}}
           reload failures over the last four hours.'
         summary: Prometheus has issues reloading data blocks from disk
       expr: |
@@ -1070,7 +1070,7 @@ spec:
         severity: warning
     - alert: PrometheusTSDBCompactionsFailing
       annotations:
-        description: '{{$labels.job}} at {{$labels.instance}} had {{$value | humanize}}
+        description: '{{$labels.job_name}} at {{$labels.instance}} had {{$value | humanize}}
           compaction failures over the last four hours.'
         summary: Prometheus has issues compacting sample blocks
       expr: |
@@ -1080,7 +1080,7 @@ spec:
         severity: warning
     - alert: PrometheusTSDBWALCorruptions
       annotations:
-        description: '{{$labels.job}} at {{$labels.instance}} has a corrupted write-ahead
+        description: '{{$labels.job_name}} at {{$labels.instance}} has a corrupted write-ahead
           log (WAL).'
         summary: Prometheus write-ahead log is corrupted
       expr: |
