@@ -488,9 +488,6 @@ scrape_configs:
     - __meta_kubernetes_pod_name
     target_label: pod
   - source_labels:
-    - __meta_kubernetes_pod_node_name
-    target_label: node
-  - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
     regex: (.+)
@@ -611,9 +608,6 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_name
     target_label: pod
-  - source_labels:
-    - __meta_kubernetes_pod_node_name
-    target_label: node
   - source_labels:
     - __meta_kubernetes_pod_label_example
     target_label: example
