@@ -38,6 +38,11 @@ rules:
   - apiextensions.k8s.io
   resources:
   - customresourcedefinitions
+  resourceNames:
+    - servicemonitors.monitoring.coreos.com
+    - prometheusrules.monitoring.coreos.com
+    - prometheuses.monitoring.coreos.com
+    - alertmanagers.monitoring.coreos.com
   verbs:
   - '*'
 - apiGroups:
