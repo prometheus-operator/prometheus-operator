@@ -405,7 +405,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 			{Key: "replacement", Value: "${1}"},
 			{Key: "target_label", Value: "node"},
 		},
-		{ // Relabel pod labels for pre v2.3 meta labels
+		{ // Relabel pod labels for >=v2.3 meta labels
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}},
 			{Key: "separator", Value: ";"},
 			{Key: "regex", Value: "Pod;(.*)"},
