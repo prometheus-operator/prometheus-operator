@@ -23,7 +23,6 @@ import (
 	"time"
 
 	crdutils "github.com/ant31/crd-validation/pkg"
-	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
 	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
@@ -36,6 +35,7 @@ import (
 	"k8s.io/client-go/discovery"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
+	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
 )
 
 var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")

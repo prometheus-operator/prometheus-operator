@@ -20,10 +20,10 @@ import (
 	"strings"
 	"testing"
 
-	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
 )
 
 var (

@@ -20,9 +20,9 @@ import (
 	"os"
 
 	crdutils "github.com/ant31/crd-validation/pkg"
+	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
 	k8sutil "prometheus-operator/pkg/k8sutil"
-	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
 var (

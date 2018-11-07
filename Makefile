@@ -1,4 +1,4 @@
-SHELL=/bin/bash -o pipefail
+SHELL=/usr/bin/env bash -o pipefail
 
 REPO?=quay.io/coreos/prometheus-operator
 REPO_PROMETHEUS_CONFIG_RELOADER?=quay.io/coreos/prometheus-config-reloader
@@ -33,12 +33,12 @@ clean:
 build: operator prometheus-config-reloader
 
 operator: $(GOLANG_FILES)
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor \
 	-ldflags "-X github.com/coreos/prometheus-operator/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/operator/main.go
 
 prometheus-config-reloader:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor \
 	-ldflags "-X github.com/coreos/prometheus-operator/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/$@/main.go
 
