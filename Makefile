@@ -33,12 +33,12 @@ clean:
 build: operator prometheus-config-reloader
 
 operator: $(GOLANG_FILES)
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor \
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
 	-ldflags "-X github.com/coreos/prometheus-operator/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/operator/main.go
 
 prometheus-config-reloader:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor \
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
 	-ldflags "-X github.com/coreos/prometheus-operator/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/$@/main.go
 
