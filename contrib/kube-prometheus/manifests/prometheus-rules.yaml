@@ -122,17 +122,17 @@ spec:
       record: 'node_namespace_pod:kube_pod_info:'
     - expr: |
         count by (node) (sum by (node, cpu) (
-          node_cpu{job="node-exporter"}
+          node_cpu_seconds_total{job="node-exporter"}
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         ))
       record: node:node_num_cpu:sum
     - expr: |
-        1 - avg(rate(node_cpu{job="node-exporter",mode="idle"}[1m]))
+        1 - avg(rate(node_cpu_seconds_total{job="node-exporter",mode="idle"}[1m]))
       record: :node_cpu_utilisation:avg1m
     - expr: |
         1 - avg by (node) (
-          rate(node_cpu{job="node-exporter",mode="idle"}[1m])
+          rate(node_cpu_seconds_total{job="node-exporter",mode="idle"}[1m])
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:)
       record: node:node_cpu_utilisation:avg1m
@@ -152,26 +152,26 @@ spec:
       record: 'node:node_cpu_saturation_load1:'
     - expr: |
         1 -
-        sum(node_memory_MemFree{job="node-exporter"} + node_memory_Cached{job="node-exporter"} + node_memory_Buffers{job="node-exporter"})
+        sum(node_memory_MemFree_bytes{job="node-exporter"} + node_memory_Cached_bytes{job="node-exporter"} + node_memory_Buffers_bytes{job="node-exporter"})
         /
-        sum(node_memory_MemTotal{job="node-exporter"})
+        sum(node_memory_MemTotal_bytes{job="node-exporter"})
       record: ':node_memory_utilisation:'
     - expr: |
-        sum(node_memory_MemFree{job="node-exporter"} + node_memory_Cached{job="node-exporter"} + node_memory_Buffers{job="node-exporter"})
-      record: :node_memory_MemFreeCachedBuffers:sum
+        sum(node_memory_MemFree_bytes{job="node-exporter"} + node_memory_Cached_bytes{job="node-exporter"} + node_memory_Buffers_bytes{job="node-exporter"})
+      record: :node_memory_MemFreeCachedBuffers_bytes:sum
     - expr: |
-        sum(node_memory_MemTotal{job="node-exporter"})
-      record: :node_memory_MemTotal:sum
+        sum(node_memory_MemTotal_bytes{job="node-exporter"})
+      record: :node_memory_MemTotal_bytes:sum
     - expr: |
         sum by (node) (
-          (node_memory_MemFree{job="node-exporter"} + node_memory_Cached{job="node-exporter"} + node_memory_Buffers{job="node-exporter"})
+          (node_memory_MemFree_bytes{job="node-exporter"} + node_memory_Cached_bytes{job="node-exporter"} + node_memory_Buffers_bytes{job="node-exporter"})
           * on (namespace, pod) group_left(node)
             node_namespace_pod:kube_pod_info:
         )
       record: node:node_memory_bytes_available:sum
     - expr: |
         sum by (node) (
-          node_memory_MemTotal{job="node-exporter"}
+          node_memory_MemTotal_bytes{job="node-exporter"}
           * on (namespace, pod) group_left(node)
             node_namespace_pod:kube_pod_info:
         )
@@ -190,13 +190,13 @@ spec:
     - expr: |
         1 -
         sum by (node) (
-          (node_memory_MemFree{job="node-exporter"} + node_memory_Cached{job="node-exporter"} + node_memory_Buffers{job="node-exporter"})
+          (node_memory_MemFree_bytes{job="node-exporter"} + node_memory_Cached_bytes{job="node-exporter"} + node_memory_Buffers_bytes{job="node-exporter"})
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
         /
         sum by (node) (
-          node_memory_MemTotal{job="node-exporter"}
+          node_memory_MemTotal_bytes{job="node-exporter"}
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
@@ -213,21 +213,21 @@ spec:
         )
       record: node:node_memory_swap_io_bytes:sum_rate
     - expr: |
-        avg(irate(node_disk_io_time_ms{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]) / 1e3)
+        avg(irate(node_disk_io_time_seconds_total{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]))
       record: :node_disk_utilisation:avg_irate
     - expr: |
         avg by (node) (
-          irate(node_disk_io_time_ms{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]) / 1e3
+          irate(node_disk_io_time_seconds_total{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m])
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
       record: node:node_disk_utilisation:avg_irate
     - expr: |
-        avg(irate(node_disk_io_time_weighted{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]) / 1e3)
+        avg(irate(node_disk_io_time_weighted_seconds_total_seconds_total{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]) / 1e3)
       record: :node_disk_saturation:avg_irate
     - expr: |
         avg by (node) (
-          irate(node_disk_io_time_weighted{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]) / 1e3
+          irate(node_disk_io_time_weighted_seconds_total_seconds_total{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]) / 1e3
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
@@ -241,25 +241,25 @@ spec:
         max by (namespace, pod, device) (node_filesystem_avail{fstype=~"ext[234]|btrfs|xfs|zfs"} / node_filesystem_size{fstype=~"ext[234]|btrfs|xfs|zfs"})
       record: 'node:node_filesystem_avail:'
     - expr: |
-        sum(irate(node_network_receive_bytes{job="node-exporter",device="eth0"}[1m])) +
-        sum(irate(node_network_transmit_bytes{job="node-exporter",device="eth0"}[1m]))
+        sum(irate(node_network_receive_bytes_total{job="node-exporter",device="eth0"}[1m])) +
+        sum(irate(node_network_transmit_bytes_total{job="node-exporter",device="eth0"}[1m]))
       record: :node_net_utilisation:sum_irate
     - expr: |
         sum by (node) (
-          (irate(node_network_receive_bytes{job="node-exporter",device="eth0"}[1m]) +
-          irate(node_network_transmit_bytes{job="node-exporter",device="eth0"}[1m]))
+          (irate(node_network_receive_bytes_total{job="node-exporter",device="eth0"}[1m]) +
+          irate(node_network_transmit_bytes_total{job="node-exporter",device="eth0"}[1m]))
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
       record: node:node_net_utilisation:sum_irate
     - expr: |
-        sum(irate(node_network_receive_drop{job="node-exporter",device="eth0"}[1m])) +
-        sum(irate(node_network_transmit_drop{job="node-exporter",device="eth0"}[1m]))
+        sum(irate(node_network_receive_drop_total{job="node-exporter",device="eth0"}[1m])) +
+        sum(irate(node_network_transmit_drop_total{job="node-exporter",device="eth0"}[1m]))
       record: :node_net_saturation:sum_irate
     - expr: |
         sum by (node) (
-          (irate(node_network_receive_drop{job="node-exporter",device="eth0"}[1m]) +
-          irate(node_network_transmit_drop{job="node-exporter",device="eth0"}[1m]))
+          (irate(node_network_receive_drop_total{job="node-exporter",device="eth0"}[1m]) +
+          irate(node_network_transmit_drop_total{job="node-exporter",device="eth0"}[1m]))
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
@@ -688,8 +688,8 @@ spec:
         severity: warning
     - alert: KubeCronJobRunning
       annotations:
-        message: CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} is taking
-          more than 1h to complete.
+        message: CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} is taking more
+          than 1h to complete.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubecronjobrunning
       expr: |
         time() - kube_cronjob_next_schedule_time{job="kube-state-metrics"} > 3600
@@ -698,8 +698,8 @@ spec:
         severity: warning
     - alert: KubeJobCompletion
       annotations:
-        message: Job {{ $labels.namespace }}/{{ $labels.job_name }} is taking more than
-          one hour to complete.
+        message: Job {{ $labels.namespace }}/{{ $labels.job_name }} is taking more
+          than one hour to complete.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubejobcompletion
       expr: |
         kube_job_spec_completions{job="kube-state-metrics"} - kube_job_status_succeeded{job="kube-state-metrics"}  > 0
@@ -739,7 +739,7 @@ spec:
       expr: |
         sum(namespace_name:kube_pod_container_resource_requests_memory_bytes:sum)
           /
-        sum(node_memory_MemTotal)
+        sum(node_memory_MemTotal_bytes)
           >
         (count(node:node_num_cpu:sum)-1)
           /
@@ -766,7 +766,7 @@ spec:
       expr: |
         sum(kube_resourcequota{job="kube-state-metrics", type="hard", resource="requests.memory"})
           /
-        sum(node_memory_MemTotal{job="node-exporter"})
+        sum(node_memory_MemTotal_bytes{job="node-exporter"})
           > 1.5
       for: 5m
       labels:
@@ -801,7 +801,7 @@ spec:
     - alert: KubePersistentVolumeUsageCritical
       annotations:
         message: The PersistentVolume claimed by {{ $labels.persistentvolumeclaim
-          }} in Namespace {{ $labels.namespace }} is only {{ printf "%0.0f" $value
+          }} in Namespace {{ $labels.namespace }} is only {{ printf "%0.2f" $value
           }}% free.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepersistentvolumeusagecritical
       expr: |
@@ -816,14 +816,14 @@ spec:
       annotations:
         message: Based on recent sampling, the PersistentVolume claimed by {{ $labels.persistentvolumeclaim
           }} in Namespace {{ $labels.namespace }} is expected to fill up within four
-          days. Currently {{ $value }} bytes are available.
+          days. Currently {{ printf "%0.2f" $value }}% is available.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepersistentvolumefullinfourdays
       expr: |
-        (
-          kubelet_volume_stats_used_bytes{job="kubelet"}
+        100 * (
+          kubelet_volume_stats_available_bytes{job="kubelet"}
             /
           kubelet_volume_stats_capacity_bytes{job="kubelet"}
-        ) > 0.85
+        ) < 15
         and
         predict_linear(kubelet_volume_stats_available_bytes{job="kubelet"}[6h], 4 * 24 * 3600) < 0
       for: 5m
