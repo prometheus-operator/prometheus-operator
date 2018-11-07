@@ -34,7 +34,7 @@ import (
 
 const (
 	governingServiceName     = "prometheus-operated"
-	DefaultPrometheusVersion = "v2.4.3"
+	DefaultPrometheusVersion = "v2.5.0"
 	DefaultThanosVersion     = "v0.1.0"
 	defaultRetention         = "24h"
 	storageDir               = "/prometheus"
@@ -80,6 +80,7 @@ var (
 		"v2.4.1",
 		"v2.4.2",
 		"v2.4.3",
+		"v2.5.0",
 	}
 )
 
