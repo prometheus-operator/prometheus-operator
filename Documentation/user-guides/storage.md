@@ -9,7 +9,7 @@ To maintain data across deployments and version upgrades, the data must be persi
 
 Kubernetes supports several kinds of storage volumes. The Prometheus Operator works with PersistentVolumeClaims, which support the underlying PersistentVolume to be provisioned when requested.
 
-This document assumes a basic understanding of PersisentVolumes, PersisentVolumeClaims, and their [provisioning][pv-provisioning].
+This document assumes a basic understanding of PersistentVolumes, PersistentVolumeClaims, and their [provisioning][pv-provisioning].
 
 ## Storage Provisioning on AWS
 
@@ -101,7 +101,7 @@ spec:
 
 To manually provision volumes (as of Kubernetes 1.6.0), you may need to disable the default StorageClass that is automatically created for certain Cloud Providers. Default StorageClasses are pre-installed on Azure, AWS, GCE, OpenStack, and vSphere.
 
-The default StorageClass behavior will override manual storage provisioning, preventing PerisistentVolumeClaims from automatically binding to manually created PersistentVolumes.
+The default StorageClass behavior will override manual storage provisioning, preventing PersistentVolumeClaims from automatically binding to manually created PersistentVolumes.
 
 To override this behavior, you must explicitly create the same resource, but set it to *not* be default. (See the [changelog][volumes-changelog] for more information.)
 
