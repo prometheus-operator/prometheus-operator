@@ -7,6 +7,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc // indirect
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
 	github.com/ant31/crd-validation v0.0.0-20180702145049-30f8a35d0ac2
+	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.0 // indirect
@@ -24,6 +25,7 @@ require (
 	github.com/gogo/protobuf v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20181024230925-c65c006176ff // indirect
 	github.com/google/btree v0.0.0-20180124185431-e89373fe6b4a // indirect
+	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/google/martian v2.1.0+incompatible // indirect
 	github.com/googleapis/gax-go v2.0.0+incompatible // indirect
@@ -37,6 +39,7 @@ require (
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515 // indirect
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/mailru/easyjson v0.0.0-20180320131758-517203d186eb // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180228065516-1df9eeb2bb81 // indirect
@@ -45,13 +48,18 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v0.8.0
+	github.com/prometheus/client_golang v0.0.0-20181001174001-0a8115f42e03
+	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910 // indirect
+	github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e // indirect
+	github.com/prometheus/procfs v0.0.0-20180725123919-05ee40e3a273 // indirect
 	github.com/prometheus/tsdb v0.0.0-20181107155241-3a08a71d86c0 // indirect
 	github.com/spf13/pflag v0.0.0-20180220143236-ee5fd03fd6ac // indirect
 	github.com/stretchr/testify v1.2.1
-	go.opencensus.io v0.18.0 // indirect
+	go.opencensus.io v0.15.0 // indirect
 	golang.org/x/crypto v0.0.0-20180320225959-80db560fac1f // indirect
+	golang.org/x/net v0.0.0-20180906233101-161cd47e91fd // indirect
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
+	golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e // indirect
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2 // indirect
 	google.golang.org/api v0.0.0-20181107172312-bae21c44055e // indirect
 	google.golang.org/appengine v1.2.0 // indirect
@@ -64,8 +72,5 @@ require (
 	k8s.io/apiextensions-apiserver v0.0.0-20181004124836-1748dfb29e8a
 	k8s.io/apimachinery v0.0.0-20180913025736-6dd46049f395
 	k8s.io/client-go v9.0.0+incompatible
-	k8s.io/code-generator v0.0.0-20181102090834-e8b5114992ff // indirect
-	k8s.io/gengo v0.0.0-20181106084056-51747d6e00da // indirect
-	k8s.io/klog v0.0.0-20181102134211-b9b56d5dfc92 // indirect
 	k8s.io/kube-openapi v0.0.0-20180711000925-0cf8f7e6ed1d
 )
