@@ -27,9 +27,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
-	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"prometheus-operator/pkg/alertmanager"
+	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
+	"prometheus-operator/pkg/client/monitoring/v1alpha1"
 	"github.com/pkg/errors"
 )
 

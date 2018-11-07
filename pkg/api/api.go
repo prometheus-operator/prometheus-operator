@@ -23,9 +23,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	"prometheus-operator/pkg/client/monitoring/v1"
+	"prometheus-operator/pkg/k8sutil"
+	"prometheus-operator/pkg/prometheus"
 )
 
 type API struct {

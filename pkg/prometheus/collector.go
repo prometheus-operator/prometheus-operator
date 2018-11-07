@@ -15,7 +15,7 @@
 package prometheus
 
 import (
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	"prometheus-operator/pkg/client/monitoring/v1"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"

@@ -30,9 +30,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	testFramework "github.com/coreos/prometheus-operator/test/framework"
+	"prometheus-operator/pkg/alertmanager"
+	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
+	testFramework "prometheus-operator/test/framework"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {

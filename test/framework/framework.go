@@ -29,9 +29,9 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	monitoringv1alpha1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
-	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1alpha1 "prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"prometheus-operator/pkg/k8sutil"
 	"github.com/pkg/errors"
 )
 

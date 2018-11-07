@@ -48,7 +48,7 @@ pkg/client/monitoring/v1/zz_generated.deepcopy.go: .header pkg/client/monitoring
 	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
 	-v=4 \
 	--logtostderr \
-	--bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" \
+	--bounding-dirs "prometheus-operator/pkg/client" \
 	--output-file-base zz_generated.deepcopy
 	go fmt pkg/client/monitoring/v1/zz_generated.deepcopy.go
 
@@ -58,7 +58,7 @@ pkg/client/monitoring/v1alpha1/zz_generated.deepcopy.go: $(DEEPCOPY_GEN_BINARY)
 	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
 	-v=4 \
 	--logtostderr \
-	--bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" \
+	--bounding-dirs "prometheus-operator/pkg/client" \
 	--output-file-base zz_generated.deepcopy
 	go fmt pkg/client/monitoring/v1alpha1/zz_generated.deepcopy.go
 
