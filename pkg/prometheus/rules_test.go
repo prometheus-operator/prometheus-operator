@@ -18,7 +18,7 @@ import (
 	"strings"
 	"testing"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
 
 	"k8s.io/api/core/v1"
 )

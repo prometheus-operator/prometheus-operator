@@ -18,8 +18,8 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/flowcontrol"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	"prometheus-operator/pkg/client/monitoring/v1"
+	"prometheus-operator/pkg/client/monitoring/v1alpha1"
 )
 
 var _ Interface = &Clientset{}

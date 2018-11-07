@@ -34,10 +34,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
-	testFramework "github.com/coreos/prometheus-operator/test/framework"
+	"prometheus-operator/pkg/alertmanager"
+	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
+	"prometheus-operator/pkg/prometheus"
+	testFramework "prometheus-operator/test/framework"
 
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/pkg/errors"

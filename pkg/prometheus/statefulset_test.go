@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1beta2"
 	"k8s.io/api/core/v1"

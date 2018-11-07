@@ -27,8 +27,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/blang/semver"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	monitoringv1 "prometheus-operator/pkg/client/monitoring/v1"
+	"prometheus-operator/pkg/k8sutil"
 	"github.com/pkg/errors"
 )
 
