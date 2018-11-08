@@ -79,7 +79,6 @@ type Config struct {
 	CrdKinds                     monitoringv1.CrdKinds
 	CrdGroup                     string
 	EnableValidation             bool
-	DisableAutoUserGroup         bool
 	ManageCRDs                   bool
 }
 
@@ -121,7 +120,6 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 			CrdKinds:                     c.CrdKinds,
 			Labels:                       c.Labels,
 			EnableValidation:             c.EnableValidation,
-			DisableAutoUserGroup:         c.DisableAutoUserGroup,
 			ManageCRDs:                   c.ManageCRDs,
 		},
 	}

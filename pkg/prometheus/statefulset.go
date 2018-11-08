@@ -301,8 +301,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		"-web.console.libraries=/etc/prometheus/console_libraries",
 	}
 
-	var securityContext *v1.PodSecurityContext
-
 	switch version.Major {
 	case 1:
 		promArgs = append(promArgs,
@@ -336,8 +334,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				"-storage.local.target-heap-size="+fmt.Sprintf("%d", reqMem.Value()/3*2),
 			)
 		}
-
-		securityContext = &v1.PodSecurityContext{}
 	case 2:
 		promArgs = append(promArgs,
 			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
@@ -346,21 +342,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			"-web.enable-lifecycle",
 			"-storage.tsdb.no-lockfile",
 		)
-
-		gid := int64(2000)
-		uid := int64(1000)
-		nr := true
-		securityContext = &v1.PodSecurityContext{
-			RunAsNonRoot: &nr,
-		}
-		if !c.DisableAutoUserGroup {
-			securityContext.FSGroup = &gid
-			securityContext.RunAsUser = &uid
-		}
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
 
+	var securityContext *v1.PodSecurityContext = nil
 	if p.Spec.SecurityContext != nil {
 		securityContext = p.Spec.SecurityContext
 	}
