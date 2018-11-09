@@ -56,6 +56,7 @@ dependencies:
     version: 0.1.10
     #e2e-repository: file://../exporter-kubernetes
     repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+    condition: deployExporterKubernetes
 
   - name: exporter-node
     version: 0.4.6

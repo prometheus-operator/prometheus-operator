@@ -16,6 +16,9 @@ deployKubeControllerManager: True
 # Kube state
 deployKubeState: True
 
+#Kubernetes
+deployExporterKubernetes: True
+
 ## If true, create & use RBAC resources resp. Pod Security Policies
 ##
 global:
