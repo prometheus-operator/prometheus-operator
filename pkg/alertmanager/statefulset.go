@@ -303,16 +303,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		}, ports...)
 	}
 
-	gid := int64(2000)
-	uid := int64(1000)
-	nr := true
-	securityContext := &v1.PodSecurityContext{
-		RunAsNonRoot: &nr,
-	}
-	if !config.DisableAutoUserGroup {
-		securityContext.FSGroup = &gid
-		securityContext.RunAsUser = &uid
-	}
+	var securityContext *v1.PodSecurityContext = nil
 	if a.Spec.SecurityContext != nil {
 		securityContext = a.Spec.SecurityContext
 	}
