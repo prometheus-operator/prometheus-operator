@@ -21,7 +21,7 @@ spec:
         - --metrics-relist-interval=1m
         - --prometheus-url=http://prometheus-k8s.monitoring.svc:9090/
         - --secure-port=6443
-        image: directxman12/k8s-prometheus-adapter-amd64:latest
+        image: quay.io/coreos/k8s-prometheus-adapter-amd64:v0.3.0
         name: prometheus-adapter
         ports:
         - containerPort: 6443
