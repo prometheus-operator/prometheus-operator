@@ -3,7 +3,7 @@ groups:
 - name: ./etcd3.rules
   rules:
   - alert: InsufficientMembers
-    expr: count(up{job="kube-etcd"} == 0) > (count(up{job="kube-etcd"}) / 2 - 1)
+    expr: count(up{job="kube-etcd"} == 0) without (instance, pod) > (count(up{job="kube-etcd"}) without (instance, pod) / 2 - 1)
     for: 3m
     labels:
       severity: critical
