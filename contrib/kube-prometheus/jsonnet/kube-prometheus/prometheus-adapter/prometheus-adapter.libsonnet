@@ -103,6 +103,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         ]) +
         container.withPorts([{ containerPort: 6443 }]) +
         container.withVolumeMounts([
+          containerVolumeMount.new('tmpfs', '/tmp'),
           containerVolumeMount.new('volume-serving-cert', '/var/run/serving-cert'),
           containerVolumeMount.new('config', '/etc/adapter'),
         ],);
@@ -112,7 +113,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       deployment.mixin.spec.selector.withMatchLabels($._config.prometheusAdapter.labels) +
       deployment.mixin.spec.template.spec.withServiceAccountName($.prometheusAdapter.serviceAccount.metadata.name) +
       deployment.mixin.spec.template.spec.withVolumes([
-        // volume.fromSecret('volume-serving-cert', 'cm-adapter-serving-certs'),
+        volume.fromEmptyDir(name='tmpfs'),
         volume.fromEmptyDir(name='volume-serving-cert'),
         { name: 'config', configMap: { name: 'adapter-config' } },
       ]),
