@@ -26,6 +26,9 @@ spec:
         ports:
         - containerPort: 6443
         volumeMounts:
+        - mountPath: /tmp
+          name: tmpfs
+          readOnly: false
         - mountPath: /var/run/serving-cert
           name: volume-serving-cert
           readOnly: false
@@ -34,6 +37,8 @@ spec:
           readOnly: false
       serviceAccountName: prometheus-adapter
       volumes:
+      - emptyDir: {}
+        name: tmpfs
       - emptyDir: {}
         name: volume-serving-cert
       - configMap:
