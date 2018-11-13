@@ -4,7 +4,7 @@ metadata:
   name: v1beta1.custom.metrics.k8s.io
 spec:
   service:
-    name: custom-metrics-apiserver
+    name: prometheus-adapter
     namespace: monitoring
   group: custom.metrics.k8s.io
   version: v1beta1
