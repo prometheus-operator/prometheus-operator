@@ -255,7 +255,7 @@ These are the available fields with their respective default values:
     namespace: "default",
 
     versions+:: {
-        alertmanager: "v0.15.2",
+        alertmanager: "v0.15.3",
         nodeExporter: "v0.16.0",
         kubeStateMetrics: "v1.3.1",
         kubeRbacProxy: "v0.3.1",
@@ -377,9 +377,9 @@ $ jsonnet -J vendor -S --tla-str repository=internal-registry.com/organization s
 docker pull quay.io/coreos/addon-resizer:1.0
 docker tag quay.io/coreos/addon-resizer:1.0 internal-registry.com/organization/addon-resizer:1.0
 docker push internal-registry.com/organization/addon-resizer:1.0
-docker pull quay.io/prometheus/alertmanager:v0.15.2
-docker tag quay.io/prometheus/alertmanager:v0.15.2 internal-registry.com/organization/alertmanager:v0.15.2
-docker push internal-registry.com/organization/alertmanager:v0.15.2
+docker pull quay.io/prometheus/alertmanager:v0.15.3
+docker tag quay.io/prometheus/alertmanager:v0.15.3 internal-registry.com/organization/alertmanager:v0.15.3
+docker push internal-registry.com/organization/alertmanager:v0.15.3
 ...
 ```
 

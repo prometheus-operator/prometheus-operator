@@ -5279,7 +5279,8 @@ items:
                                   "expr": "avg(sum by (cpu) (irate(node_cpu_seconds_total{job=\"node-exporter\", mode!=\"idle\", instance=\"$instance\"}[2m]))) * 100\n",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": ""
+                                  "legendFormat": "",
+                                  "refId": "A"
                               }
                           ],
                           "thresholds": "80, 90",
@@ -5484,7 +5485,8 @@ items:
                                   "expr": "max(\n  (\n    (\n      node_memory_MemTotal_bytes{job=\"node-exporter\", instance=\"$instance\"}\n    - node_memory_MemFree_bytes{job=\"node-exporter\", instance=\"$instance\"}\n    - node_memory_Buffers_bytes{job=\"node-exporter\", instance=\"$instance\"}\n    - node_memory_Cached_bytes{job=\"node-exporter\", instance=\"$instance\"}\n    )\n    / node_memory_MemTotal_bytes{job=\"node-exporter\", instance=\"$instance\"}\n  ) * 100)\n",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": ""
+                                  "legendFormat": "",
+                                  "refId": "A"
                               }
                           ],
                           "thresholds": "80, 90",
@@ -6580,7 +6582,8 @@ items:
                                   "expr": "sum(rate(container_cpu_usage_seconds_total{job=\"kubelet\", namespace=\"$namespace\", pod_name=\u007e\"$statefulset.*\"}[3m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": ""
+                                  "legendFormat": "",
+                                  "refId": "A"
                               }
                           ],
                           "thresholds": "",
@@ -6659,7 +6662,8 @@ items:
                                   "expr": "sum(container_memory_usage_bytes{job=\"kubelet\", namespace=\"$namespace\", pod_name=\u007e\"$statefulset.*\"}) / 1024^3",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": ""
+                                  "legendFormat": "",
+                                  "refId": "A"
                               }
                           ],
                           "thresholds": "",
@@ -6738,7 +6742,8 @@ items:
                                   "expr": "sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", namespace=\"$namespace\", pod_name=\u007e\"$statefulset.*\"}[3m])) + sum(rate(container_network_receive_bytes_total{namespace=\"$namespace\",pod_name=\u007e\"$statefulset.*\"}[3m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": ""
+                                  "legendFormat": "",
+                                  "refId": "A"
                               }
                           ],
                           "thresholds": "",
@@ -6832,7 +6837,8 @@ items:
                                   "expr": "max(kube_statefulset_replicas{job=\"kube-state-metrics\", namespace=\"$namespace\", statefulset=\"$statefulset\"}) without (instance, pod)",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": ""
+                                  "legendFormat": "",
+                                  "refId": "A"
                               }
                           ],
                           "thresholds": "",
@@ -6912,7 +6918,8 @@ items:
                                   "expr": "min(kube_statefulset_status_replicas_current{job=\"kube-state-metrics\", namespace=\"$namespace\", statefulset=\"$statefulset\"}) without (instance, pod)",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": ""
+                                  "legendFormat": "",
+                                  "refId": "A"
                               }
                           ],
                           "thresholds": "",
@@ -6992,7 +6999,8 @@ items:
                                   "expr": "max(kube_statefulset_status_observed_generation{job=\"kube-state-metrics\",  namespace=\"$namespace\", statefulset=\"$statefulset\"}) without (instance, pod)",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": ""
+                                  "legendFormat": "",
+                                  "refId": "A"
                               }
                           ],
                           "thresholds": "",
@@ -7072,7 +7080,8 @@ items:
                                   "expr": "max(kube_statefulset_metadata_generation{job=\"kube-state-metrics\", statefulset=\"$statefulset\", namespace=\"$namespace\"}) without (instance, pod)",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": ""
+                                  "legendFormat": "",
+                                  "refId": "A"
                               }
                           ],
                           "thresholds": "",

@@ -223,22 +223,22 @@ spec:
         )
       record: node:node_disk_utilisation:avg_irate
     - expr: |
-        avg(irate(node_disk_io_time_weighted_seconds_total_seconds_total{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]) / 1e3)
+        avg(irate(node_disk_io_time_weighted_seconds_total{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]) / 1e3)
       record: :node_disk_saturation:avg_irate
     - expr: |
         avg by (node) (
-          irate(node_disk_io_time_weighted_seconds_total_seconds_total{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]) / 1e3
+          irate(node_disk_io_time_weighted_seconds_total{job="node-exporter",device=~"(sd|xvd|nvme).+"}[1m]) / 1e3
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
       record: node:node_disk_saturation:avg_irate
     - expr: |
-        max by (namespace, pod, device) ((node_filesystem_size{fstype=~"ext[234]|btrfs|xfs|zfs"}
-        - node_filesystem_avail{fstype=~"ext[234]|btrfs|xfs|zfs"})
-        / node_filesystem_size{fstype=~"ext[234]|btrfs|xfs|zfs"})
+        max by (namespace, pod, device) ((node_filesystem_size_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"}
+        - node_filesystem_avail_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"})
+        / node_filesystem_size_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"})
       record: 'node:node_filesystem_usage:'
     - expr: |
-        max by (namespace, pod, device) (node_filesystem_avail{fstype=~"ext[234]|btrfs|xfs|zfs"} / node_filesystem_size{fstype=~"ext[234]|btrfs|xfs|zfs"})
+        max by (namespace, pod, device) (node_filesystem_avail_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"} / node_filesystem_size_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"})
       record: 'node:node_filesystem_avail:'
     - expr: |
         sum(irate(node_network_receive_bytes_total{job="node-exporter",device="eth0"}[1m])) +
@@ -826,6 +826,16 @@ spec:
         ) < 15
         and
         predict_linear(kubelet_volume_stats_available_bytes{job="kubelet"}[6h], 4 * 24 * 3600) < 0
+      for: 5m
+      labels:
+        severity: critical
+    - alert: KubePersistentVolumeErrors
+      annotations:
+        message: The persistent volume {{ $labels.persistentvolume }} has status {{
+          $labels.phase }}.
+        runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepersistentvolumeerrors
+      expr: |
+        kube_persistentvolume_status_phase{phase=~"Failed|Pending",job="kube-state-metrics"} > 0
       for: 5m
       labels:
         severity: critical
