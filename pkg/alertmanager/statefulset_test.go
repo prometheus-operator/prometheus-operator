@@ -290,7 +290,7 @@ func TestMakeStatefulSetSpecMeshClusterFlags(t *testing.T) {
 		wrongHAPrefix string
 	}{
 		{"v0.14.0", "mesh", "cluster"},
-		{"v0.15.2", "cluster", "mesh"},
+		{"v0.15.3", "cluster", "mesh"},
 	}
 
 	for _, test := range tests {
@@ -326,7 +326,7 @@ func TestMakeStatefulSetSpecPeerFlagPort(t *testing.T) {
 		portNeeded bool
 	}{
 		{"v0.14.0", false},
-		{"v0.15.2", true},
+		{"v0.15.3", true},
 	}
 
 	for _, test := range tests {
@@ -354,7 +354,7 @@ func TestMakeStatefulSetSpecPeerFlagPort(t *testing.T) {
 
 func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
-	a.Spec.Version = "v0.15.2"
+	a.Spec.Version = "v0.15.3"
 	replicas := int32(1)
 	a.Spec.Replicas = &replicas
 	a.Spec.AdditionalPeers = []string{"example.com"}
@@ -425,7 +425,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 			Spec: monitoringv1.AlertmanagerSpec{
 				Tag:     "my-unrelated-tag",
-				Version: "v0.15.2",
+				Version: "v0.15.3",
 			},
 		}, nil, defaultTestConfig)
 		if err != nil {
@@ -443,7 +443,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{
 				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 				Tag:     "my-unrelated-tag",
-				Version: "v0.15.2",
+				Version: "v0.15.3",
 			},
 		}, nil, defaultTestConfig)
 		if err != nil {

@@ -93,7 +93,7 @@ func testAMVersionMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.15.2"
+	am.Spec.Version = "v0.15.3"
 	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
 		t.Fatal(err)
 	}
@@ -192,7 +192,7 @@ func testAMMeshInitialization(t *testing.T) {
 
 	// Starting with Alertmanager v0.15.0 hashicorp/memberlist is used for HA.
 	// Make sure both memberlist as well as mesh (< 0.15.0) work
-	amVersions := []string{"v0.14.0", "v0.15.2"}
+	amVersions := []string{"v0.14.0", "v0.15.3"}
 
 	for _, v := range amVersions {
 		version := v
