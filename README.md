@@ -63,15 +63,15 @@ at the [design doc](Documentation/design.md).
 
 ## Quickstart
 
-Note that this quickstart does not provision an entire monitoring stack, if that is what you are looking for see the [kube-prometheus](contrib/kube-prometheus) sub-project. If you want the whole stack, but have already applied the `bundle.yaml`, just delete the bundle (`kubectl delete -f bundle.yaml`).
+Note that this quickstart does not provision an entire monitoring stack; if that is what you are looking for see the [kube-prometheus](contrib/kube-prometheus) sub-project. If you want the whole stack, but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
 
-To quickly try out _just_ the Prometheus Operator inside a cluster by running the following command:
+To quickly try out _just_ the Prometheus Operator inside a cluster, run the following command:
 
 ```sh
 kubectl apply -f bundle.yaml
 ```
 
-> Note: make sure to adapt the namespace in the ClusterRoleBinding if deploying in another namespace than the default namespace.
+> Note: make sure to adapt the namespace in the ClusterRoleBinding if deploying in a namespace other than the default namespace.
 
 To run the Operator outside of a cluster:
 
@@ -83,7 +83,7 @@ hack/run-external.sh <kubectl cluster name>
 ## Removal
 
 To remove the operator and Prometheus, first delete any custom resources you created in each namespace. The
-operator will automatically shut down and remove Prometheus and Alertmanager pods, and associated configmaps.
+operator will automatically shut down and remove Prometheus and Alertmanager pods, and associated ConfigMaps.
 
 ```sh
 for n in $(kubectl get namespaces -o jsonpath={..metadata.name}); do
