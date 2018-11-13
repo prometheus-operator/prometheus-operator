@@ -16,7 +16,7 @@ deployKubeControllerManager: True
 # Kube state
 deployKubeState: True
 
-#Kubernetes
+#Kubernetes rules
 deployExporterKubernetes: True
 
 ## If true, create & use RBAC resources resp. Pod Security Policies
@@ -24,7 +24,7 @@ deployExporterKubernetes: True
 global:
   rbacEnable: true
   pspEnable: true
-  
+
   # Reference to one or more secrets to be used when pulling images
   imagePullSecrets: []
   #  - name: "image-pull-secret"
