@@ -4,13 +4,14 @@ REPO?=quay.io/coreos/prometheus-operator
 REPO_PROMETHEUS_CONFIG_RELOADER?=quay.io/coreos/prometheus-config-reloader
 TAG?=$(shell git rev-parse --short HEAD)
 
-PO_CRDGEN_BINARY:=$(GOPATH)/bin/po-crdgen
-OPENAPI_GEN_BINARY:=$(GOPATH)/bin/openapi-gen
-DEEPCOPY_GEN_BINARY:=$(GOPATH)/bin/deepcopy-gen
-GOJSONTOYAML_BINARY:=$(GOPATH)/bin/gojsontoyaml
-JB_BINARY:=$(GOPATH)/bin/jb
-PO_DOCGEN_BINARY:=$(GOPATH)/bin/po-docgen
-EMBEDMD_BINARY:=$(GOPATH)/bin/embedmd
+FIRST_GOPATH:=$(firstword $(subst :, ,$(shell go env GOPATH)))
+PO_CRDGEN_BINARY:=$(FIRST_GOPATH)/bin/po-crdgen
+OPENAPI_GEN_BINARY:=$(FIRST_GOPATH)/bin/openapi-gen
+DEEPCOPY_GEN_BINARY:=$(FIRST_GOPATH)/bin/deepcopy-gen
+GOJSONTOYAML_BINARY:=$(FIRST_GOPATH)/bin/gojsontoyaml
+JB_BINARY:=$(FIRST_GOPATH)/bin/jb
+PO_DOCGEN_BINARY:=$(FIRST_GOPATH)/bin/po-docgen
+EMBEDMD_BINARY:=$(FIRST_GOPATH)/bin/embedmd
 
 GOLANG_FILES:=$(shell find . -name \*.go -print)
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
@@ -45,7 +46,7 @@ prometheus-config-reloader:
 pkg/client/monitoring/v1/zz_generated.deepcopy.go: .header pkg/client/monitoring/v1/types.go $(DEEPCOPY_GEN_BINARY)
 	$(DEEPCOPY_GEN_BINARY) \
 	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 \
-	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
+	--go-header-file="$(FIRST_GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
 	-v=4 \
 	--logtostderr \
 	--bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" \
@@ -55,7 +56,7 @@ pkg/client/monitoring/v1/zz_generated.deepcopy.go: .header pkg/client/monitoring
 pkg/client/monitoring/v1alpha1/zz_generated.deepcopy.go: $(DEEPCOPY_GEN_BINARY)
 	$(DEEPCOPY_GEN_BINARY) \
 	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1 \
-	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
+	--go-header-file="$(FIRST_GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
 	-v=4 \
 	--logtostderr \
 	--bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" \
@@ -111,7 +112,7 @@ pkg/client/monitoring/v1/openapi_generated.go: pkg/client/monitoring/v1/types.go
 	$(OPENAPI_GEN_BINARY) \
 	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1 \
 	-p github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 \
-	--go-header-file="$(GOPATH)/src/github.com/coreos/prometheus-operator/.header"
+	--go-header-file="$(FIRST_GOPATH)/src/github.com/coreos/prometheus-operator/.header"
 	go fmt pkg/client/monitoring/v1/openapi_generated.go
 
 bundle.yaml: $(shell find example/rbac/prometheus-operator/*.yaml -type f)
@@ -223,12 +224,12 @@ $(PO_DOCGEN_BINARY): $(shell find cmd/po-docgen -type f) pkg/client/monitoring/v
 
 $(OPENAPI_GEN_BINARY):
 	go get -u -v -d k8s.io/code-generator/cmd/openapi-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.11
+	cd $(FIRST_GOPATH)/src/k8s.io/code-generator; git checkout release-1.11
 	go install k8s.io/code-generator/cmd/openapi-gen
 
 $(DEEPCOPY_GEN_BINARY):
 	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
-	cd $(GOPATH)/src/k8s.io/code-generator; git checkout release-1.11
+	cd $(FIRST_GOPATH)/src/k8s.io/code-generator; git checkout release-1.11
 	go install k8s.io/code-generator/cmd/deepcopy-gen
 
 $(GOJSONTOYAML_BINARY):
