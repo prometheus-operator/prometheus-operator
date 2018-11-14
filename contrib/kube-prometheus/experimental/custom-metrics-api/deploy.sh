@@ -1,4 +1,4 @@
-#!/usr/bin/env bash	
+#!/usr/bin/env bash
 
 kubectl apply -n monitoring custom-metrics-apiserver-resource-reader-cluster-role-binding.yaml
 kubectl apply -n monitoring custom-metrics-apiservice.yaml
