@@ -142,17 +142,6 @@ type AlertingSpec struct {
 
 // StorageSpec defines the configured storage for a group Prometheus servers.
 type StorageSpec struct {
-	// Name of the StorageClass to use when requesting storage provisioning. More
-	// info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
-	// DEPRECATED
-	Class string `json:"class"`
-	// A label query over volumes to consider for binding.
-	// DEPRECATED
-	Selector *metav1.LabelSelector `json:"selector"`
-	// Resources represents the minimum resources the volume should have. More
-	// info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources
-	// DEPRECATED
-	Resources v1.ResourceRequirements `json:"resources"`
 	// A PVC spec to be used by the Prometheus StatefulSets.
 	VolumeClaimTemplate v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
