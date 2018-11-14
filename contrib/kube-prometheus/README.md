@@ -35,6 +35,7 @@ This stack is meant for cluster monitoring, so it is pre-configured to collect m
     * [node-exporter DaemonSet namespace](#node-exporter-daemonset-namespace)
     * [Alertmanager configuration](#alertmanager-configuration)
     * [Static etcd configuration](#static-etcd-configuration)
+    * [Pod Anti-Affinity](#pod-anti-affinity)
     * [Customizing Prometheus alerting/recording rules and Grafana dashboards](#customizing-prometheus-alertingrecording-rules-and-grafana-dashboards)
     * [Exposing Prometheus/Alermanager/Grafana via Ingress](#exposing-prometheusalermanagergrafana-via-ingress)
 * [Minikube Example](#minikube-example)
@@ -225,7 +226,7 @@ docker run \
 ```
 
 ## Update from upstream project
-You may wish to fetch changes made on this project so they are available to you. 
+You may wish to fetch changes made on this project so they are available to you.
 
 ### Update jb
 jb may have been updated so it's a good idea to get the latest version of this binary
@@ -522,6 +523,16 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
 In order to configure a static etcd cluster to scrape there is a simple [kube-prometheus-static-etcd.libsonnet](jsonnet/kube-prometheus/kube-prometheus-static-etcd.libsonnet) mixin prepared - see [etcd.jsonnet](examples/etcd.jsonnet) for an example of how to use that mixin, and [Monitoring external etcd](docs/monitoring-external-etcd.md) for more information.
 
 > Note that monitoring etcd in minikube is currently not possible because of how etcd is setup. (minikube's etcd binds to 127.0.0.1:2379 only, and within host networking namespace.)
+
+### Pod Anti-Affinity
+
+To prevent `Prometheus` and `Alertmanager` instances from being deployed onto the same node when
+possible, one can include the [kube-prometheus-anti-affinity.libsonnet](jsonnet/kube-prometheus/kube-prometheus-anti-affinity.libsonnet) mixin:
+
+```jsonnet
+(import 'kube-prometheus/kube-prometheus.libsonnet') +
+(import 'kube-prometheus/kube-prometheus-anti-affinity.libsonnet')
+```
 
 ### Customizing Prometheus alerting/recording rules and Grafana dashboards
 
