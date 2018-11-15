@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: custom-metrics-resource-reader
+  name: custom-metrics-server-resources
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: custom-metrics-resource-reader
+  name: custom-metrics-server-resources
 subjects:
 - kind: ServiceAccount
-  name: custom-metrics-apiserver
+  name: prometheus-adapter
   namespace: monitoring
