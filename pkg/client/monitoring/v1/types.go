@@ -237,20 +237,9 @@ type AlertingSpec struct {
 // If neither `emptyDir` nor `volumeClaimTemplate` is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) will be used.
 // +k8s:openapi-gen=true
 type StorageSpec struct {
-	// Name of the StorageClass to use when requesting storage provisioning. More
-	// info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses
-	// (DEPRECATED - instead use `volumeClaimTemplate.spec.storageClassName`)
-	Class string `json:"class,omitempty"`
 	// EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More
 	// info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
 	EmptyDir *v1.EmptyDirVolumeSource `json:"emptyDir,omitempty"`
-	// A label query over volumes to consider for binding.
-	// (DEPRECATED - instead use `volumeClaimTemplate.spec.selector`)
-	Selector *metav1.LabelSelector `json:"selector,omitempty"`
-	// Resources represents the minimum resources the volume should have. More
-	// info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources
-	// (DEPRECATED - instead use `volumeClaimTemplate.spec.resources`)
-	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// A PVC spec to be used by the Prometheus StatefulSets.
 	VolumeClaimTemplate v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }

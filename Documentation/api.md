@@ -454,10 +454,7 @@ StorageSpec defines the configured storage for a group Prometheus servers. If ne
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| class | Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses (DEPRECATED - instead use `volumeClaimTemplate.spec.storageClassName`) | string | false |
 | emptyDir | EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir | *[v1.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#emptydirvolumesource-v1-core) | false |
-| selector | A label query over volumes to consider for binding. (DEPRECATED - instead use `volumeClaimTemplate.spec.selector`) | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
-| resources | Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources (DEPRECATED - instead use `volumeClaimTemplate.spec.resources`) | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
 | volumeClaimTemplate | A PVC spec to be used by the Prometheus StatefulSets. | [v1.PersistentVolumeClaim](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#persistentvolumeclaim-v1-core) | false |
 
 [Back to TOC](#table-of-contents)

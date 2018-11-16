@@ -2149,29 +2149,10 @@ func schema_pkg_client_monitoring_v1_StorageSpec(ref common.ReferenceCallback) c
 			SchemaProps: spec.SchemaProps{
 				Description: "StorageSpec defines the configured storage for a group Prometheus servers. If neither `emptyDir` nor `volumeClaimTemplate` is specified, then by default an [EmptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) will be used.",
 				Properties: map[string]spec.Schema{
-					"class": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the StorageClass to use when requesting storage provisioning. More info: https://kubernetes.io/docs/user-guide/persistent-volumes/#storageclasses (DEPRECATED - instead use `volumeClaimTemplate.spec.storageClassName`)",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"emptyDir": {
 						SchemaProps: spec.SchemaProps{
 							Description: "EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir",
 							Ref:         ref("k8s.io/api/core/v1.EmptyDirVolumeSource"),
-						},
-					},
-					"selector": {
-						SchemaProps: spec.SchemaProps{
-							Description: "A label query over volumes to consider for binding. (DEPRECATED - instead use `volumeClaimTemplate.spec.selector`)",
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
-						},
-					},
-					"resources": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Resources represents the minimum resources the volume should have. More info: http://kubernetes.io/docs/user-guide/persistent-volumes#resources (DEPRECATED - instead use `volumeClaimTemplate.spec.resources`)",
-							Ref:         ref("k8s.io/api/core/v1.ResourceRequirements"),
 						},
 					},
 					"volumeClaimTemplate": {
@@ -2184,7 +2165,7 @@ func schema_pkg_client_monitoring_v1_StorageSpec(ref common.ReferenceCallback) c
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.EmptyDirVolumeSource", "k8s.io/api/core/v1.PersistentVolumeClaim", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+			"k8s.io/api/core/v1.EmptyDirVolumeSource", "k8s.io/api/core/v1.PersistentVolumeClaim"},
 	}
 }
 

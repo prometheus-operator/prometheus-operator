@@ -1075,16 +1075,6 @@ func (in *StorageSpec) DeepCopyInto(out *StorageSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
-	if in.Selector != nil {
-		in, out := &in.Selector, &out.Selector
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(meta_v1.LabelSelector)
-			(*in).DeepCopyInto(*out)
-		}
-	}
-	in.Resources.DeepCopyInto(&out.Resources)
 	in.VolumeClaimTemplate.DeepCopyInto(&out.VolumeClaimTemplate)
 	return
 }
