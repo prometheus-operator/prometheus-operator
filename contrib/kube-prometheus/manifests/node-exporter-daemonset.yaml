@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - args:
-        - --web.listen-address=127.0.0.1:9101
+        - --web.listen-address=127.0.0.1:9100
         - --path.procfs=/host/proc
         - --path.sysfs=/host/sys
         - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+)($|/)
@@ -42,8 +42,13 @@ spec:
           name: root
           readOnly: true
       - args:
-        - --secure-listen-address=:9100
-        - --upstream=http://127.0.0.1:9101/
+        - --secure-listen-address=$(IP):9100
+        - --upstream=http://127.0.0.1:9100/
+        env:
+        - name: IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
         image: quay.io/coreos/kube-rbac-proxy:v0.4.0
         name: kube-rbac-proxy
         ports:
