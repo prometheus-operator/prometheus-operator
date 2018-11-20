@@ -21,6 +21,10 @@ spec:
         ports:
         - containerPort: 3000
           name: http
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: http
         resources:
           limits:
             cpu: 200m
