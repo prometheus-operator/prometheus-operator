@@ -93,19 +93,19 @@ func testAMVersionMigration(t *testing.T) {
 	name := "test"
 
 	am := framework.MakeBasicAlertmanager(name, 1)
-	am.Spec.Version = "v0.14.0"
+	am.Spec.Version = "v0.15.3"
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, am)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.15.3"
+	am.Spec.Version = "v0.16.0"
 	am, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.14.0"
+	am.Spec.Version = "v0.15.3"
 	am, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am)
 	if err != nil {
 		t.Fatal(err)
@@ -204,8 +204,9 @@ func testAMMeshInitialization(t *testing.T) {
 	t.Parallel()
 
 	// Starting with Alertmanager v0.15.0 hashicorp/memberlist is used for HA.
-	// Make sure both memberlist as well as mesh (< 0.15.0) work
-	amVersions := []string{"v0.14.0", "v0.15.3"}
+	// Make sure both memberlist as well as mesh (< 0.15.0) work. `""` will end
+	// up as Alertmanager default version.
+	amVersions := []string{"v0.14.0", ""}
 
 	for _, v := range amVersions {
 		version := v
@@ -220,7 +221,9 @@ func testAMMeshInitialization(t *testing.T) {
 
 				amClusterSize := 3
 				alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
-				alertmanager.Spec.Version = version
+				if version != "" {
+					alertmanager.Spec.Version = version
+				}
 				alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
 				if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
@@ -239,6 +242,48 @@ func testAMMeshInitialization(t *testing.T) {
 				}
 			},
 		)
+	}
+}
+
+// testAMMeshAfterRollingUpdate tests whether all Alertmanager instances join
+// the cluster after a rolling update, even though DNS records will probably be
+// outdated at startup time. See
+// https://github.com/prometheus/alertmanager/pull/1428 for more details.
+func testAMMeshAfterRollingUpdate(t *testing.T) {
+	var err error
+
+	t.Parallel()
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	amClusterSize := 3
+
+	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
+
+	if alertmanager, err = framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < amClusterSize; i++ {
+		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
+		if err := framework.WaitForAlertmanagerInitializedMesh(ns, name, amClusterSize); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// We need to force a rolling update, e.g. by changing one of the command
+	// line flags via the Retention.
+	alertmanager.Spec.Retention = "1h"
+
+	if _, err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < amClusterSize; i++ {
+		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
+		if err := framework.WaitForAlertmanagerInitializedMesh(ns, name, amClusterSize); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 
@@ -442,7 +487,6 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 	}
 
 	alertmanager := framework.MakeBasicAlertmanager("rolling-deploy", 3)
-	alertmanager.Spec.Version = "v0.13.0"
 	amsvc := framework.MakeAlertmanagerService(alertmanager.Name, "test", v1.ServiceTypeClusterIP)
 	amcfg := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -529,7 +573,7 @@ inhibit_rules:
 	}
 
 	// Wait for alert to propagate
-	time.Sleep(10 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	opts := metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -556,9 +600,10 @@ inhibit_rules:
 		t.Fatalf("One notification expected, but %d received.\n\n%s", c, logs)
 	}
 
-	alertmanager.Spec.Version = "v0.14.0"
-	alertmanager, err = framework.MonClientV1.Alertmanagers(ns).Update(alertmanager)
-	if err != nil {
+	// We need to force a rolling update, e.g. by changing one of the command
+	// line flags via the Retention.
+	alertmanager.Spec.Retention = "1h"
+	if _, err := framework.MonClientV1.Alertmanagers(ns).Update(alertmanager); err != nil {
 		t.Fatal(err)
 	}
 

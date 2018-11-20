@@ -117,6 +117,7 @@ func testAllNS(t *testing.T) {
 		"AMStorageUpdate":                 testAMStorageUpdate,
 		"AMExposingWithKubernetesAPI":     testAMExposingWithKubernetesAPI,
 		"AMMeshInitialization":            testAMMeshInitialization,
+		"AMMeshAfterRollingUpdate":        testAMMeshAfterRollingUpdate,
 		"AMClusterGossipSilences":         testAMClusterGossipSilences,
 		"AMReloadConfig":                  testAMReloadConfig,
 		"AMZeroDowntimeRollingDeployment": testAMZeroDowntimeRollingDeployment,

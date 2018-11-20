@@ -34,7 +34,7 @@ import (
 
 const (
 	governingServiceName   = "alertmanager-operated"
-	defaultVersion         = "v0.15.3"
+	defaultVersion         = "v0.16.0"
 	defaultRetention       = "120h"
 	secretsDir             = "/etc/alertmanager/secrets/"
 	configmapsDir          = "/etc/alertmanager/configmaps/"
