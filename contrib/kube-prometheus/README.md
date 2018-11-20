@@ -367,6 +367,14 @@ kubespray:
 (import 'kube-prometheus/kube-prometheus-kubespray.libsonnet')
 ```
 
+kube-aws:
+
+[embedmd]:# (examples/jsonnet-snippets/kube-aws.jsonnet)
+```jsonnet
+(import 'kube-prometheus/kube-prometheus.libsonnet') +
+(import 'kube-prometheus/kube-prometheus-kube-aws.libsonnet')
+```
+
 ### Internal Registry
 
 Some Kubernetes installations source all their images from an internal registry. kube-prometheus supports this use case and helps the user synchronize every image it uses to the internal registry and generate manifests pointing at the internal registry.
