@@ -9,12 +9,10 @@ spec:
   endpoints:
   - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
     interval: 15s
-    port: http-metrics
-  jobLabel: k8s-app
+    port: metrics
   namespaceSelector:
     matchNames:
     - kube-system
   selector:
     matchLabels:
-      component: metrics
-      k8s-app: coredns
+      k8s-app: kube-dns
