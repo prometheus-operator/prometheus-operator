@@ -29,6 +29,7 @@ local configMapList = k.core.v1.configMapList;
     kubeSchedulerSelector: 'job="kube-scheduler"',
     kubeControllerManagerSelector: 'job="kube-controller-manager"',
     kubeApiserverSelector: 'job="apiserver"',
+    coreDNSSelector: 'job="kube-dns"',
     podLabel: 'pod',
 
     alertmanagerSelector: 'job="alertmanager-main"',
@@ -45,6 +46,7 @@ local configMapList = k.core.v1.configMapList;
       Alertmanager: $._config.alertmanagerSelector,
       Prometheus: $._config.prometheusSelector,
       PrometheusOperator: $._config.prometheusOperatorSelector,
+      CoreDNS: $._config.coreDNSSelector,
     },
 
     prometheus+:: {

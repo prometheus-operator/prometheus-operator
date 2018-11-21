@@ -386,11 +386,9 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           },
         },
         spec: {
-          jobLabel: 'k8s-app',
           selector: {
             matchLabels: {
-              'k8s-app': 'coredns',
-              component: 'metrics',
+              'k8s-app': 'kube-dns',
             },
           },
           namespaceSelector: {
@@ -400,7 +398,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           },
           endpoints: [
             {
-              port: 'http-metrics',
+              port: 'metrics',
               interval: '15s',
               bearerTokenFile: '/var/run/secrets/kubernetes.io/serviceaccount/token',
             },
