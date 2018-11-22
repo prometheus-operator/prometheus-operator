@@ -40,6 +40,8 @@ func New(conf prometheus.Config, l log.Logger) (*API, error) {
 		return nil, err
 	}
 
+	cfg.Timeout = conf.Timeout
+
 	kclient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, err

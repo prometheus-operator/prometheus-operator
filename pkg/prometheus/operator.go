@@ -147,6 +147,11 @@ type Config struct {
 	LogLevel                     string
 	LogFormat                    string
 	ManageCRDs                   bool
+
+	// The maximum length of time to wait before giving up on a server request against the k8s API.
+	// A value of zero means no timeout.
+	// Internally this sets net/http#Client.Timeout in k8s's REST http client.
+	Timeout time.Duration
 }
 
 type BasicAuthCredentials struct {
@@ -160,6 +165,9 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	cfg.Timeout = conf.Timeout
+
 	client, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
