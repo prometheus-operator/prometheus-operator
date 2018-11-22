@@ -662,7 +662,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					Name:  "GOOGLE_APPLICATION_CREDENTIALS",
 					Value: path.Join(secretDir, secretFileName),
 				})
-				volumeName := "secret-" + p.Spec.Thanos.GCS.SecretKey.Name
+				volumeName := k8sutil.SanitizeVolumeName("secret-" + p.Spec.Thanos.GCS.SecretKey.Name)
 				volumes = append(volumes, v1.Volume{
 					Name: volumeName,
 					VolumeSource: v1.VolumeSource{
