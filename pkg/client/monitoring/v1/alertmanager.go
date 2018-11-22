@@ -16,14 +16,12 @@ package v1
 
 import (
 	"encoding/json"
-
-	"github.com/pkg/errors"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
-	dynamic "k8s.io/client-go/deprecated-dynamic"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 )
 
@@ -50,77 +48,91 @@ type AlertmanagerInterface interface {
 
 type alertmanagers struct {
 	restClient rest.Interface
-	client     dynamic.ResourceInterface
 	crdKind    CrdKind
 	ns         string
+	timeout    time.Duration
 }
 
-func newAlertmanagers(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *alertmanagers {
+func newAlertmanagers(r rest.Interface, crdKind CrdKind, namespace string, timeout time.Duration) *alertmanagers {
 	return &alertmanagers{
 		restClient: r,
-		client: c.Resource(
-			&metav1.APIResource{
-				Kind:       crdKind.Kind,
-				Name:       crdKind.Plural,
-				Namespaced: true,
-			},
-			namespace,
-		),
-		crdKind: crdKind,
-		ns:      namespace,
+		crdKind:    crdKind,
+		ns:         namespace,
+		timeout:    timeout,
 	}
 }
 
 func (a *alertmanagers) Create(o *Alertmanager) (*Alertmanager, error) {
-	ua, err := UnstructuredFromAlertmanager(o)
+	result := &Alertmanager{}
+
+	err := a.restClient.Post().
+		Namespace(a.ns).
+		Resource(a.crdKind.Plural).
+		Body(o).
+		Timeout(a.timeout).
+		Do().
+		Into(result)
+
 	if err != nil {
 		return nil, err
 	}
 
-	ua, err = a.client.Create(ua)
-	if err != nil {
-		return nil, err
-	}
-
-	return AlertmanagerFromUnstructured(ua)
+	return result, nil
 }
 
 func (a *alertmanagers) Get(name string, opts metav1.GetOptions) (*Alertmanager, error) {
-	obj, err := a.client.Get(name, opts)
+	result := &Alertmanager{}
+
+	err := a.restClient.Get().
+		Namespace(a.ns).
+		Resource(a.crdKind.Plural).
+		Name(name).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(a.timeout).
+		Do().
+		Into(result)
+
 	if err != nil {
 		return nil, err
 	}
-	return AlertmanagerFromUnstructured(obj)
+
+	return result, nil
 }
 
 func (a *alertmanagers) Update(o *Alertmanager) (*Alertmanager, error) {
-	ua, err := UnstructuredFromAlertmanager(o)
+	result := &Alertmanager{}
+
+	err := a.restClient.Put().
+		Namespace(a.ns).
+		Resource(a.crdKind.Plural).
+		Body(o).
+		Timeout(a.timeout).
+		Do().
+		Into(result)
+
 	if err != nil {
 		return nil, err
 	}
 
-	cura, err := a.Get(o.Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get current version for update")
-	}
-	ua.SetResourceVersion(cura.ObjectMeta.ResourceVersion)
-
-	ua, err = a.client.Update(ua)
-	if err != nil {
-		return nil, err
-	}
-
-	return AlertmanagerFromUnstructured(ua)
+	return result, nil
 }
 
 func (a *alertmanagers) Delete(name string, options *metav1.DeleteOptions) error {
-	return a.client.Delete(name, options)
+	return a.restClient.Delete().
+		Namespace(a.ns).
+		Resource(a.crdKind.Plural).
+		Name(name).
+		Body(options).
+		Timeout(a.timeout).
+		Do().
+		Error()
 }
 
 func (a *alertmanagers) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := a.restClient.Get().
 		Namespace(a.ns).
-		Resource(a.crdKind.Plural)
+		Resource(a.crdKind.Plural).
+		Timeout(a.timeout)
 
 	b, err := req.DoRaw()
 	if err != nil {
@@ -135,6 +147,7 @@ func (a *alertmanagers) Watch(opts metav1.ListOptions) (watch.Interface, error) 
 		Prefix("watch").
 		Namespace(a.ns).
 		Resource(a.crdKind.Plural).
+		Timeout(a.timeout).
 		Stream()
 	if err != nil {
 		return nil, err
@@ -147,52 +160,20 @@ func (a *alertmanagers) Watch(opts metav1.ListOptions) (watch.Interface, error) 
 }
 
 func (a *alertmanagers) DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error {
-	return a.client.DeleteCollection(dopts, lopts)
-}
+	timeout := a.timeout
 
-// AlertmanagerFromUnstructured unmarshals an Alertmanager object from dynamic client's unstructured
-func AlertmanagerFromUnstructured(r *unstructured.Unstructured) (*Alertmanager, error) {
-	b, err := json.Marshal(r.Object)
-	if err != nil {
-		return nil, err
+	if lopts.TimeoutSeconds != nil {
+		timeout = time.Duration(*lopts.TimeoutSeconds) * time.Second
 	}
-	var a Alertmanager
-	if err := json.Unmarshal(b, &a); err != nil {
-		return nil, err
-	}
-	a.TypeMeta.Kind = AlertmanagersKind
-	a.TypeMeta.APIVersion = Group + "/" + Version
-	return &a, nil
-}
 
-// UnstructuredFromAlertmanager marshals an Alertmanager object into dynamic client's unstructured
-func UnstructuredFromAlertmanager(a *Alertmanager) (*unstructured.Unstructured, error) {
-	a.TypeMeta.Kind = AlertmanagersKind
-	a.TypeMeta.APIVersion = Group + "/" + Version
-	b, err := json.Marshal(a)
-	if err != nil {
-		return nil, err
-	}
-	var r unstructured.Unstructured
-	if err := json.Unmarshal(b, &r.Object); err != nil {
-		return nil, err
-	}
-	// Value-type timestamp fields like ObjectMeta.CreationTimestamp with a zero
-	// value are marshalled as "null" in JSON (rather than omitted) and then
-	// unmarshalled into Unstructured with the key intact and a null value (rather
-	// than being omitted); the net effect is the resulting structs can't be used
-	// to issue a POST because creationTimestamp=null is sent to the server and
-	// fails validation. For example, passing an Alertmanager with a
-	// volumeClaimTemplate can result in an invalid object. This hack simply
-	// removes such timestamp fields manually.
-	//
-	// TODO: reevaluate the use of Unstructured directly here in the context of
-	// the latest dynamic client capabilities; this manual conversion may not be
-	// necessary anymore.
-	unstructured.RemoveNestedField(r.Object, "metadata", "creationTimestamp")
-	unstructured.RemoveNestedField(r.Object, "spec", "storage", "volumeClaimTemplate", "metadata", "creationTimestamp")
-	unstructured.RemoveNestedField(r.Object, "spec", "podMetadata", "creationTimestamp")
-	return &r, nil
+	return a.restClient.Delete().
+		Namespace(a.ns).
+		Resource(a.crdKind.Plural).
+		VersionedParams(&lopts, scheme.ParameterCodec).
+		Timeout(timeout).
+		Body(dopts).
+		Do().
+		Error()
 }
 
 type alertmanagerDecoder struct {

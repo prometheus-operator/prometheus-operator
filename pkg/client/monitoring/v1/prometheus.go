@@ -16,14 +16,12 @@ package v1
 
 import (
 	"encoding/json"
-
-	"github.com/pkg/errors"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
-	dynamic "k8s.io/client-go/deprecated-dynamic"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 )
 
@@ -50,77 +48,91 @@ type PrometheusInterface interface {
 
 type prometheuses struct {
 	restClient rest.Interface
-	client     dynamic.ResourceInterface
 	crdKind    CrdKind
 	ns         string
+	timeout    time.Duration
 }
 
-func newPrometheuses(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *prometheuses {
+func newPrometheuses(r rest.Interface, crdKind CrdKind, namespace string, timeout time.Duration) *prometheuses {
 	return &prometheuses{
 		restClient: r,
-		client: c.Resource(
-			&metav1.APIResource{
-				Kind:       crdKind.Kind,
-				Name:       crdKind.Plural,
-				Namespaced: true,
-			},
-			namespace,
-		),
-		crdKind: crdKind,
-		ns:      namespace,
+		crdKind:    crdKind,
+		ns:         namespace,
+		timeout:    timeout,
 	}
 }
 
 func (p *prometheuses) Create(o *Prometheus) (*Prometheus, error) {
-	up, err := UnstructuredFromPrometheus(o)
+	result := &Prometheus{}
+
+	err := p.restClient.Post().
+		Namespace(p.ns).
+		Resource(p.crdKind.Plural).
+		Body(o).
+		Timeout(p.timeout).
+		Do().
+		Into(result)
+
 	if err != nil {
 		return nil, err
 	}
 
-	up, err = p.client.Create(up)
-	if err != nil {
-		return nil, err
-	}
-
-	return PrometheusFromUnstructured(up)
+	return result, nil
 }
 
 func (p *prometheuses) Get(name string, opts metav1.GetOptions) (*Prometheus, error) {
-	obj, err := p.client.Get(name, opts)
+	result := &Prometheus{}
+
+	err := p.restClient.Get().
+		Namespace(p.ns).
+		Resource(p.crdKind.Plural).
+		Name(name).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(p.timeout).
+		Do().
+		Into(result)
+
 	if err != nil {
 		return nil, err
 	}
-	return PrometheusFromUnstructured(obj)
+
+	return result, nil
 }
 
 func (p *prometheuses) Update(o *Prometheus) (*Prometheus, error) {
-	up, err := UnstructuredFromPrometheus(o)
+	result := &Prometheus{}
+
+	err := p.restClient.Put().
+		Namespace(p.ns).
+		Resource(p.crdKind.Plural).
+		Body(o).
+		Timeout(p.timeout).
+		Do().
+		Into(result)
+
 	if err != nil {
 		return nil, err
 	}
 
-	curp, err := p.Get(o.Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get current version for update")
-	}
-	up.SetResourceVersion(curp.ObjectMeta.ResourceVersion)
-
-	up, err = p.client.Update(up)
-	if err != nil {
-		return nil, err
-	}
-
-	return PrometheusFromUnstructured(up)
+	return result, nil
 }
 
 func (p *prometheuses) Delete(name string, options *metav1.DeleteOptions) error {
-	return p.client.Delete(name, options)
+	return p.restClient.Delete().
+		Namespace(p.ns).
+		Resource(p.crdKind.Plural).
+		Name(name).
+		Body(options).
+		Timeout(p.timeout).
+		Do().
+		Error()
 }
 
 func (p *prometheuses) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := p.restClient.Get().
 		Namespace(p.ns).
-		Resource(p.crdKind.Plural)
+		Resource(p.crdKind.Plural).
+		Timeout(p.timeout)
 
 	b, err := req.DoRaw()
 	if err != nil {
@@ -135,6 +147,7 @@ func (p *prometheuses) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 		Prefix("watch").
 		Namespace(p.ns).
 		Resource(p.crdKind.Plural).
+		Timeout(p.timeout).
 		Stream()
 	if err != nil {
 		return nil, err
@@ -146,52 +159,20 @@ func (p *prometheuses) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 }
 
 func (p *prometheuses) DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error {
-	return p.client.DeleteCollection(dopts, lopts)
-}
+	timeout := p.timeout
 
-// PrometheusFromUnstructured unmarshals a Prometheus object from dynamic client's unstructured
-func PrometheusFromUnstructured(r *unstructured.Unstructured) (*Prometheus, error) {
-	b, err := json.Marshal(r.Object)
-	if err != nil {
-		return nil, err
+	if lopts.TimeoutSeconds != nil {
+		timeout = time.Duration(*lopts.TimeoutSeconds) * time.Second
 	}
-	var p Prometheus
-	if err := json.Unmarshal(b, &p); err != nil {
-		return nil, err
-	}
-	p.TypeMeta.Kind = PrometheusesKind
-	p.TypeMeta.APIVersion = Group + "/" + Version
-	return &p, nil
-}
 
-// UnstructuredFromPrometheus marshals a Prometheus object into dynamic client's unstructured
-func UnstructuredFromPrometheus(p *Prometheus) (*unstructured.Unstructured, error) {
-	p.TypeMeta.Kind = PrometheusesKind
-	p.TypeMeta.APIVersion = Group + "/" + Version
-	b, err := json.Marshal(p)
-	if err != nil {
-		return nil, err
-	}
-	var r unstructured.Unstructured
-	if err := json.Unmarshal(b, &r.Object); err != nil {
-		return nil, err
-	}
-	// Value-type timestamp fields like ObjectMeta.CreationTimestamp with a zero
-	// value are marshalled as "null" in JSON (rather than omitted) and then
-	// unmarshalled into Unstructured with the key intact and a null value (rather
-	// than being omitted); the net effect is the resulting structs can't be used
-	// to issue a POST because creationTimestamp=null is sent to the server and
-	// fails validation. For example, passing a Prometheus with a
-	// volumeClaimTemplate can result in an invalid object. This hack simply
-	// removes such timestamp fields manually.
-	//
-	// TODO: reevaluate the use of Unstructured directly here in the context of
-	// the latest dynamic client capabilities; this manual conversion may not be
-	// necessary anymore.
-	unstructured.RemoveNestedField(r.Object, "metadata", "creationTimestamp")
-	unstructured.RemoveNestedField(r.Object, "spec", "storage", "volumeClaimTemplate", "metadata", "creationTimestamp")
-	unstructured.RemoveNestedField(r.Object, "spec", "podMetadata", "creationTimestamp")
-	return &r, nil
+	return p.restClient.Delete().
+		Namespace(p.ns).
+		Resource(p.crdKind.Plural).
+		VersionedParams(&lopts, scheme.ParameterCodec).
+		Timeout(timeout).
+		Body(dopts).
+		Do().
+		Error()
 }
 
 type prometheusDecoder struct {

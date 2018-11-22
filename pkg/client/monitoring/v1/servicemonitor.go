@@ -16,14 +16,12 @@ package v1
 
 import (
 	"encoding/json"
-
-	"github.com/pkg/errors"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
-	dynamic "k8s.io/client-go/deprecated-dynamic"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 )
 
@@ -50,77 +48,91 @@ type ServiceMonitorInterface interface {
 
 type servicemonitors struct {
 	restClient rest.Interface
-	client     dynamic.ResourceInterface
 	crdKind    CrdKind
 	ns         string
+	timeout    time.Duration
 }
 
-func newServiceMonitors(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *servicemonitors {
+func newServiceMonitors(r rest.Interface, crdKind CrdKind, namespace string, timeout time.Duration) *servicemonitors {
 	return &servicemonitors{
 		restClient: r,
-		client: c.Resource(
-			&metav1.APIResource{
-				Kind:       crdKind.Kind,
-				Name:       crdKind.Plural,
-				Namespaced: true,
-			},
-			namespace,
-		),
-		crdKind: crdKind,
-		ns:      namespace,
+		crdKind:    crdKind,
+		ns:         namespace,
+		timeout:    timeout,
 	}
 }
 
 func (s *servicemonitors) Create(o *ServiceMonitor) (*ServiceMonitor, error) {
-	us, err := UnstructuredFromServiceMonitor(o)
+	result := &ServiceMonitor{}
+
+	err := s.restClient.Post().
+		Namespace(s.ns).
+		Resource(s.crdKind.Plural).
+		Body(o).
+		Timeout(s.timeout).
+		Do().
+		Into(result)
+
 	if err != nil {
 		return nil, err
 	}
 
-	us, err = s.client.Create(us)
-	if err != nil {
-		return nil, err
-	}
-
-	return ServiceMonitorFromUnstructured(us)
+	return result, nil
 }
 
 func (s *servicemonitors) Get(name string, opts metav1.GetOptions) (*ServiceMonitor, error) {
-	obj, err := s.client.Get(name, opts)
+	result := &ServiceMonitor{}
+
+	err := s.restClient.Get().
+		Namespace(s.ns).
+		Resource(s.crdKind.Plural).
+		Name(name).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(s.timeout).
+		Do().
+		Into(result)
+
 	if err != nil {
 		return nil, err
 	}
-	return ServiceMonitorFromUnstructured(obj)
+
+	return result, nil
 }
 
 func (s *servicemonitors) Update(o *ServiceMonitor) (*ServiceMonitor, error) {
-	us, err := UnstructuredFromServiceMonitor(o)
+	result := &ServiceMonitor{}
+
+	err := s.restClient.Put().
+		Namespace(s.ns).
+		Resource(s.crdKind.Plural).
+		Body(o).
+		Timeout(s.timeout).
+		Do().
+		Into(result)
+
 	if err != nil {
 		return nil, err
 	}
 
-	curs, err := s.Get(o.Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get current version for update")
-	}
-	us.SetResourceVersion(curs.ObjectMeta.ResourceVersion)
-
-	us, err = s.client.Update(us)
-	if err != nil {
-		return nil, err
-	}
-
-	return ServiceMonitorFromUnstructured(us)
+	return result, nil
 }
 
 func (s *servicemonitors) Delete(name string, options *metav1.DeleteOptions) error {
-	return s.client.Delete(name, options)
+	return s.restClient.Delete().
+		Namespace(s.ns).
+		Resource(s.crdKind.Plural).
+		Name(name).
+		Body(options).
+		Timeout(s.timeout).
+		Do().
+		Error()
 }
 
 func (s *servicemonitors) List(opts metav1.ListOptions) (runtime.Object, error) {
 	req := s.restClient.Get().
 		Namespace(s.ns).
-		Resource(s.crdKind.Plural)
+		Resource(s.crdKind.Plural).
+		Timeout(s.timeout)
 
 	b, err := req.DoRaw()
 	if err != nil {
@@ -135,6 +147,7 @@ func (s *servicemonitors) Watch(opts metav1.ListOptions) (watch.Interface, error
 		Prefix("watch").
 		Namespace(s.ns).
 		Resource(s.crdKind.Plural).
+		Timeout(s.timeout).
 		Stream()
 	if err != nil {
 		return nil, err
@@ -146,37 +159,20 @@ func (s *servicemonitors) Watch(opts metav1.ListOptions) (watch.Interface, error
 }
 
 func (s *servicemonitors) DeleteCollection(dopts *metav1.DeleteOptions, lopts metav1.ListOptions) error {
-	return s.client.DeleteCollection(dopts, lopts)
-}
+	timeout := s.timeout
 
-// ServiceMonitorFromUnstructured unmarshals a ServiceMonitor object from dynamic client's unstructured
-func ServiceMonitorFromUnstructured(r *unstructured.Unstructured) (*ServiceMonitor, error) {
-	b, err := json.Marshal(r.Object)
-	if err != nil {
-		return nil, err
+	if lopts.TimeoutSeconds != nil {
+		timeout = time.Duration(*lopts.TimeoutSeconds) * time.Second
 	}
-	var s ServiceMonitor
-	if err := json.Unmarshal(b, &s); err != nil {
-		return nil, err
-	}
-	s.TypeMeta.Kind = ServiceMonitorsKind
-	s.TypeMeta.APIVersion = Group + "/" + Version
-	return &s, nil
-}
 
-// UnstructuredFromServiceMonitor marshals a ServiceMonitor object into dynamic client's unstructured
-func UnstructuredFromServiceMonitor(s *ServiceMonitor) (*unstructured.Unstructured, error) {
-	s.TypeMeta.Kind = ServiceMonitorsKind
-	s.TypeMeta.APIVersion = Group + "/" + Version
-	b, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-	var r unstructured.Unstructured
-	if err := json.Unmarshal(b, &r.Object); err != nil {
-		return nil, err
-	}
-	return &r, nil
+	return s.restClient.Delete().
+		Namespace(s.ns).
+		Resource(s.crdKind.Plural).
+		VersionedParams(&lopts, scheme.ParameterCodec).
+		Timeout(timeout).
+		Body(dopts).
+		Do().
+		Error()
 }
 
 type serviceMonitorDecoder struct {

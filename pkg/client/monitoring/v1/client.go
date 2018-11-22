@@ -17,6 +17,7 @@ package v1
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -109,22 +110,23 @@ type MonitoringV1Client struct {
 	restClient    rest.Interface
 	dynamicClient *dynamic.Client
 	crdKinds      *CrdKinds
+	timeout       time.Duration
 }
 
 func (c *MonitoringV1Client) Prometheuses(namespace string) PrometheusInterface {
-	return newPrometheuses(c.restClient, c.dynamicClient, c.crdKinds.Prometheus, namespace)
+	return newPrometheuses(c.restClient, c.crdKinds.Prometheus, namespace, c.timeout)
 }
 
 func (c *MonitoringV1Client) Alertmanagers(namespace string) AlertmanagerInterface {
-	return newAlertmanagers(c.restClient, c.dynamicClient, c.crdKinds.Alertmanager, namespace)
+	return newAlertmanagers(c.restClient, c.crdKinds.Alertmanager, namespace, c.timeout)
 }
 
 func (c *MonitoringV1Client) ServiceMonitors(namespace string) ServiceMonitorInterface {
-	return newServiceMonitors(c.restClient, c.dynamicClient, c.crdKinds.ServiceMonitor, namespace)
+	return newServiceMonitors(c.restClient, c.crdKinds.ServiceMonitor, namespace, c.timeout)
 }
 
 func (c *MonitoringV1Client) PrometheusRules(namespace string) PrometheusRuleInterface {
-	return newPrometheusRules(c.restClient, c.dynamicClient, c.crdKinds.PrometheusRule, namespace)
+	return newPrometheusRules(c.restClient, c.crdKinds.PrometheusRule, namespace, c.timeout)
 }
 
 func (c *MonitoringV1Client) RESTClient() rest.Interface {
@@ -147,7 +149,7 @@ func NewForConfig(crdKinds *CrdKinds, apiGroup string, c *rest.Config) (*Monitor
 		return nil, err
 	}
 
-	return &MonitoringV1Client{client, dynamicClient, crdKinds}, nil
+	return &MonitoringV1Client{client, dynamicClient, crdKinds, c.Timeout}, nil
 }
 
 func SetConfigDefaults(apiGroup string, config *rest.Config) {

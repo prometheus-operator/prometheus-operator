@@ -26,6 +26,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	alertmanagercontroller "github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/api"
@@ -132,6 +133,7 @@ func init() {
 	flagset.StringVar(&cfg.LogLevel, "log-level", logLevelInfo, fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(availableLogLevels, ", ")))
 	flagset.StringVar(&cfg.LogFormat, "log-format", logFormatLogfmt, fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", ")))
 	flagset.BoolVar(&cfg.ManageCRDs, "manage-crds", true, "Manage all CRDs with the Prometheus Operator.")
+	flagset.DurationVar(&cfg.Timeout, "timeout", 32*time.Second, "The timeout for remote calls towards the k8s API.")
 	flagset.Parse(os.Args[1:])
 	cfg.Namespaces = ns.asSlice()
 }
