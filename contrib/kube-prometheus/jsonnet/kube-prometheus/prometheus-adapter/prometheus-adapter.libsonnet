@@ -15,6 +15,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     prometheusAdapter+:: {
       name: 'prometheus-adapter',
       labels: { name: $._config.prometheusAdapter.name },
+      prometheusURL: 'http://prometheus-' + $._config.prometheus.name + '.' + $._config.namespace + '.svc:9090/',
       config: |||
         resourceRules:
           cpu:
@@ -98,7 +99,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           '--config=/etc/adapter/config.yaml',
           '--logtostderr=true',
           '--metrics-relist-interval=1m',
-          '--prometheus-url=http://prometheus-' + $._config.prometheus.name + '.' + $._config.namespace + '.svc:9090/',
+          '--prometheus-url=' + $._config.prometheusAdapter.prometheusURL,
           '--secure-port=6443',
         ]) +
         container.withPorts([{ containerPort: 6443 }]) +
