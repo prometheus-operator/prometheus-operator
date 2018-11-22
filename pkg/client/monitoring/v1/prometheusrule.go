@@ -64,6 +64,8 @@ func newPrometheusRules(r rest.Interface, crdKind CrdKind, namespace string, tim
 
 func (s *prometheusrules) Create(o *PrometheusRule) (*PrometheusRule, error) {
 	result := &PrometheusRule{}
+	o.TypeMeta.Kind = PrometheusRuleKind
+	o.TypeMeta.APIVersion = Group + "/" + Version
 
 	err := s.restClient.Post().
 		Namespace(s.ns).

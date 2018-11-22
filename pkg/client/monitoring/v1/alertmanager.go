@@ -64,6 +64,8 @@ func newAlertmanagers(r rest.Interface, crdKind CrdKind, namespace string, timeo
 
 func (a *alertmanagers) Create(o *Alertmanager) (*Alertmanager, error) {
 	result := &Alertmanager{}
+	o.TypeMeta.Kind = AlertmanagersKind
+	o.TypeMeta.APIVersion = Group + "/" + Version
 
 	err := a.restClient.Post().
 		Namespace(a.ns).

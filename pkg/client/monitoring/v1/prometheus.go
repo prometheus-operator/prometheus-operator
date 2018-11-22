@@ -64,6 +64,8 @@ func newPrometheuses(r rest.Interface, crdKind CrdKind, namespace string, timeou
 
 func (p *prometheuses) Create(o *Prometheus) (*Prometheus, error) {
 	result := &Prometheus{}
+	o.TypeMeta.Kind = PrometheusesKind
+	o.TypeMeta.APIVersion = Group + "/" + Version
 
 	err := p.restClient.Post().
 		Namespace(p.ns).

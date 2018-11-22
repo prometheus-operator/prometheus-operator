@@ -64,6 +64,8 @@ func newServiceMonitors(r rest.Interface, crdKind CrdKind, namespace string, tim
 
 func (s *servicemonitors) Create(o *ServiceMonitor) (*ServiceMonitor, error) {
 	result := &ServiceMonitor{}
+	o.TypeMeta.Kind = ServiceMonitorsKind
+	o.TypeMeta.APIVersion = Group + "/" + Version
 
 	err := s.restClient.Post().
 		Namespace(s.ns).
