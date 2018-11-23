@@ -37,7 +37,7 @@
             },
             expr: |||
               alertmanager_cluster_members{%(alertmanagerSelector)s}
-                != on (service)
+                != on (service) GROUP_LEFT()
               count by (service) (alertmanager_cluster_members{%(alertmanagerSelector)s})
             ||| % $._config,
             'for': '5m',
