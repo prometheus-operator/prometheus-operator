@@ -1,5 +1,6 @@
 SHELL=/bin/bash -o pipefail
 
+GO_PKG=github.com/coreos/prometheus-operator
 REPO?=quay.io/coreos/prometheus-operator
 REPO_PROMETHEUS_CONFIG_RELOADER?=quay.io/coreos/prometheus-config-reloader
 TAG?=$(shell git rev-parse --short HEAD)
@@ -7,15 +8,24 @@ TAG?=$(shell git rev-parse --short HEAD)
 FIRST_GOPATH:=$(firstword $(subst :, ,$(shell go env GOPATH)))
 PO_CRDGEN_BINARY:=$(FIRST_GOPATH)/bin/po-crdgen
 OPENAPI_GEN_BINARY:=$(FIRST_GOPATH)/bin/openapi-gen
-DEEPCOPY_GEN_BINARY:=$(FIRST_GOPATH)/bin/deepcopy-gen
 GOJSONTOYAML_BINARY:=$(FIRST_GOPATH)/bin/gojsontoyaml
 JB_BINARY:=$(FIRST_GOPATH)/bin/jb
 PO_DOCGEN_BINARY:=$(FIRST_GOPATH)/bin/po-docgen
 EMBEDMD_BINARY:=$(FIRST_GOPATH)/bin/embedmd
 
+TYPES_V1_TARGET:=pkg/apis/monitoring/v1/types.go
+
+K8S_GEN_VERSION:=release-1.11
+K8S_GEN_BINARIES:=deepcopy-gen informer-gen lister-gen client-gen
+K8S_GEN_ARGS:=--go-header-file $(FIRST_GOPATH)/src/$(GO_PKG)/.header --v=1 --logtostderr
+
+K8S_GEN_DEPS:=.header
+K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
+K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(FIRST_GOPATH)/bin/$(bin))
+K8S_GEN_DEPS+=$(OPENAPI_GEN_BINARY)
+
 GOLANG_FILES:=$(shell find . -name \*.go -print)
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
-
 
 .PHONY: all
 all: format generate build test
@@ -25,43 +35,72 @@ clean:
 	# Remove all files and directories ignored by git.
 	git clean -Xfd .
 
-
 ############
 # Building #
 ############
 
 .PHONY: build
-build: operator prometheus-config-reloader
+build: operator prometheus-config-reloader k8s-gen
 
+.PHONY: operator
 operator: $(GOLANG_FILES)
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
-	-ldflags "-X github.com/coreos/prometheus-operator/pkg/version.Version=$(shell cat VERSION)" \
+	-ldflags "-X $(GO_PKG)/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/operator/main.go
 
+.PHONY: prometheus-config-reloader
 prometheus-config-reloader:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
-	-ldflags "-X github.com/coreos/prometheus-operator/pkg/version.Version=$(shell cat VERSION)" \
+	-ldflags "-X $(GO_PKG)/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/$@/main.go
 
-pkg/client/monitoring/v1/zz_generated.deepcopy.go: .header pkg/client/monitoring/v1/types.go $(DEEPCOPY_GEN_BINARY)
+DEEPCOPY_TARGET := pkg/apis/monitoring/v1/zz_generated.deepcopy.go
+$(DEEPCOPY_TARGET): $(K8S_GEN_DEPS)
 	$(DEEPCOPY_GEN_BINARY) \
-	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 \
-	--go-header-file="$(FIRST_GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
-	-v=4 \
-	--logtostderr \
-	--bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" \
+	$(K8S_GEN_ARGS) \
+	--input-dirs    "$(GO_PKG)/pkg/apis/monitoring/v1" \
+	--bounding-dirs "$(GO_PKG)/pkg/apis/monitoring" \
 	--output-file-base zz_generated.deepcopy
-	go fmt pkg/client/monitoring/v1/zz_generated.deepcopy.go
 
-pkg/client/monitoring/v1alpha1/zz_generated.deepcopy.go: $(DEEPCOPY_GEN_BINARY)
-	$(DEEPCOPY_GEN_BINARY) \
-	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1 \
-	--go-header-file="$(FIRST_GOPATH)/src/github.com/coreos/prometheus-operator/.header" \
-	-v=4 \
-	--logtostderr \
-	--bounding-dirs "github.com/coreos/prometheus-operator/pkg/client" \
-	--output-file-base zz_generated.deepcopy
-	go fmt pkg/client/monitoring/v1alpha1/zz_generated.deepcopy.go
+CLIENT_TARGET := pkg/client/versioned/clientset.go
+$(CLIENT_TARGET): $(K8S_GEN_DEPS)
+	$(CLIENT_GEN_BINARY) \
+	$(K8S_GEN_ARGS) \
+	--input-base     "" \
+	--clientset-name "versioned" \
+	--input	         "$(GO_PKG)/pkg/apis/monitoring/v1" \
+	--output-package "$(GO_PKG)/pkg/client"
+
+LISTER_TARGET := pkg/client/listers/monitoring/v1/prometheus.go
+$(LISTER_TARGET): $(K8S_GEN_DEPS)
+	$(LISTER_GEN_BINARY) \
+	$(K8S_GEN_ARGS) \
+	--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1" \
+	--output-package "$(GO_PKG)/pkg/client/listers"
+
+INFORMER_TARGET := pkg/client/informers/externalversions/monitoring/v1/prometheus.go
+$(INFORMER_TARGET): $(K8S_GEN_DEPS) $(LISTER_TARGET) $(CLIENT_TARGET)
+	$(INFORMER_GEN_BINARY) \
+	$(K8S_GEN_ARGS) \
+	--versioned-clientset-package "$(GO_PKG)/pkg/client/versioned" \
+	--listers-package "$(GO_PKG)/pkg/client/listers" \
+	--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1" \
+	--output-package  "$(GO_PKG)/pkg/client/informers"
+
+OPENAPI_TARGET := pkg/apis/monitoring/v1/openapi_generated.go
+$(OPENAPI_TARGET): $(K8S_GEN_DEPS)
+	$(OPENAPI_GEN_BINARY) \
+	$(K8S_GEN_ARGS) \
+	-i $(GO_PKG)/pkg/apis/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1 \
+	-p $(GO_PKG)/pkg/apis/monitoring/v1
+
+.PHONY: k8s-gen
+k8s-gen: \
+ $(DEEPCOPY_TARGET) \
+ $(CLIENT_TARGET) \
+ $(LISTER_TARGET) \
+ $(INFORMER_TARGET) \
+ $(OPENAPI_TARGET)
 
 .PHONY: image
 image: hack/operator-image hack/prometheus-config-reloader-image
@@ -86,7 +125,7 @@ hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 ##############
 
 .PHONY: generate
-generate: pkg/client/monitoring/v1/zz_generated.deepcopy.go pkg/client/monitoring/v1/openapi_generated.go $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml kube-prometheus $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGET) $(OPENAPI_TARGET) $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml kube-prometheus $(shell find Documentation -type f)
 
 .PHONY: generate-in-docker
 generate-in-docker: hack/jsonnet-docker-image
@@ -96,7 +135,7 @@ generate-in-docker: hack/jsonnet-docker-image
 kube-prometheus:
 	cd contrib/kube-prometheus && $(MAKE) $(MFLAGS) generate
 
-example/prometheus-operator-crd/**.crd.yaml: pkg/client/monitoring/v1/openapi_generated.go $(PO_CRDGEN_BINARY)
+example/prometheus-operator-crd/**.crd.yaml: $(OPENAPI_TARGET) $(PO_CRDGEN_BINARY)
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
 	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
 	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
@@ -107,13 +146,6 @@ jsonnet/prometheus-operator/**-crd.libsonnet: $(shell find example/prometheus-op
 	cat example/prometheus-operator-crd/prometheus.crd.yaml     | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheus-crd.libsonnet
 	cat example/prometheus-operator-crd/servicemonitor.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
 	cat example/prometheus-operator-crd/prometheusrule.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
-
-pkg/client/monitoring/v1/openapi_generated.go: pkg/client/monitoring/v1/types.go $(OPENAPI_GEN_BINARY)
-	$(OPENAPI_GEN_BINARY) \
-	-i github.com/coreos/prometheus-operator/pkg/client/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1 \
-	-p github.com/coreos/prometheus-operator/pkg/client/monitoring/v1 \
-	--go-header-file="$(FIRST_GOPATH)/src/github.com/coreos/prometheus-operator/.header"
-	go fmt pkg/client/monitoring/v1/openapi_generated.go
 
 bundle.yaml: $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	hack/generate-bundle.sh
@@ -136,8 +168,8 @@ jsonnet/prometheus-operator/prometheus-operator.libsonnet: VERSION
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(wildcard Documentation/*.md))
 
-Documentation/api.md: $(PO_DOCGEN_BINARY) pkg/client/monitoring/v1/types.go
-	$(PO_DOCGEN_BINARY) api pkg/client/monitoring/v1/types.go > $@
+Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET)
+	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) > $@
 
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
@@ -205,10 +237,35 @@ helm-sync-s3:
 	helm/hack/helm-package.sh kube-prometheus
 	helm/hack/sync-repo.sh true
 
-
 ############
 # Binaries #
 ############
+
+# generate k8s generator variable and target,
+# i.e. if $(1)=informer-gen:
+#
+# INFORMER_GEN_BINARY=/home/user/go/bin/informer-gen
+#
+# /home/user/go/bin/informer-gen:
+#	go get -u -d k8s.io/code-generator/cmd/informer-gen
+#	cd /home/user/go/src/k8s.io/code-generator; git checkout release-1.11
+#	go install k8s.io/code-generator/cmd/informer-gen
+#
+define _K8S_GEN_VAR_TARGET_
+$(shell echo $(1) | tr '[:lower:]' '[:upper:]' | tr '-' '_')_BINARY:=$(FIRST_GOPATH)/bin/$(1)
+
+$(FIRST_GOPATH)/bin/$(1):
+	go get -u -d k8s.io/code-generator/cmd/$(1)
+	cd $(FIRST_GOPATH)/src/k8s.io/code-generator; git checkout $(K8S_GEN_VERSION)
+	go install k8s.io/code-generator/cmd/$(1)
+
+endef
+
+$(OPENAPI_GEN_BINARY):
+	go get -u -d k8s.io/kube-openapi/cmd/openapi-gen
+	go install k8s.io/kube-openapi/cmd/openapi-gen
+
+$(foreach binary,$(K8S_GEN_BINARIES),$(eval $(call _K8S_GEN_VAR_TARGET_,$(binary))))
 
 $(EMBEDMD_BINARY):
 	@go get github.com/campoy/embedmd
@@ -216,21 +273,11 @@ $(EMBEDMD_BINARY):
 $(JB_BINARY):
 	go get -u github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 
-$(PO_CRDGEN_BINARY): cmd/po-crdgen/main.go pkg/client/monitoring/v1/openapi_generated.go
-	go install github.com/coreos/prometheus-operator/cmd/po-crdgen
+$(PO_CRDGEN_BINARY): cmd/po-crdgen/main.go $(OPENAPI_TARGET)
+	go install $(GO_PKG)/cmd/po-crdgen
 
-$(PO_DOCGEN_BINARY): $(shell find cmd/po-docgen -type f) pkg/client/monitoring/v1/types.go
-	go install github.com/coreos/prometheus-operator/cmd/po-docgen
-
-$(OPENAPI_GEN_BINARY):
-	go get -u -v -d k8s.io/code-generator/cmd/openapi-gen
-	cd $(FIRST_GOPATH)/src/k8s.io/code-generator; git checkout release-1.11
-	go install k8s.io/code-generator/cmd/openapi-gen
-
-$(DEEPCOPY_GEN_BINARY):
-	go get -u -v -d k8s.io/code-generator/cmd/deepcopy-gen
-	cd $(FIRST_GOPATH)/src/k8s.io/code-generator; git checkout release-1.11
-	go install k8s.io/code-generator/cmd/deepcopy-gen
+$(PO_DOCGEN_BINARY): $(shell find cmd/po-docgen -type f) $(TYPES_V1_TARGET)
+	go install $(GO_PKG)/cmd/po-docgen
 
 $(GOJSONTOYAML_BINARY):
 	go get -u github.com/brancz/gojsontoyaml
