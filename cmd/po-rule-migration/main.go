@@ -23,7 +23,8 @@ import (
 	"path"
 	"path/filepath"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -106,7 +107,7 @@ func CMToRule(cm *v1.ConfigMap) ([]monitoringv1.PrometheusRule, error) {
 		rule := monitoringv1.PrometheusRule{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       monitoringv1.PrometheusRuleKind,
-				APIVersion: monitoringv1.Group + "/" + monitoringv1.Version,
+				APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
 			},
 
 			ObjectMeta: metav1.ObjectMeta{

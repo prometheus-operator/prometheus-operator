@@ -25,23 +25,23 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	monitoringv1alpha1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+
 	"github.com/pkg/errors"
 )
 
 type Framework struct {
-	KubeClient        kubernetes.Interface
-	MonClientV1       monitoringv1.MonitoringV1Interface
-	MonClientV1alpha1 monitoringv1alpha1.MonitoringV1alpha1Interface
-	HTTPClient        *http.Client
-	MasterHost        string
-	DefaultTimeout    time.Duration
+	KubeClient     kubernetes.Interface
+	MonClientV1    monitoringclient.MonitoringV1Interface
+	HTTPClient     *http.Client
+	MasterHost     string
+	DefaultTimeout time.Duration
 }
 
 // New setups a test framework and returns it.
@@ -61,23 +61,17 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 		return nil, errors.Wrap(err, "creating http-client failed")
 	}
 
-	mClientV1, err := monitoringv1.NewForConfig(&monitoringv1.DefaultCrdKinds, monitoringv1.Group, config)
+	mClientV1, err := monitoringclient.NewForConfig(config)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating v1 monitoring client failed")
 	}
 
-	mClientV1alpha1, err := monitoringv1alpha1.NewForConfig(config)
-	if err != nil {
-		return nil, errors.Wrap(err, "creating v1alpha1 monitoring client failed")
-	}
-
 	f := &Framework{
-		MasterHost:        config.Host,
-		KubeClient:        cli,
-		MonClientV1:       mClientV1,
-		MonClientV1alpha1: mClientV1alpha1,
-		HTTPClient:        httpc,
-		DefaultTimeout:    time.Minute,
+		MasterHost:     config.Host,
+		KubeClient:     cli,
+		MonClientV1:    mClientV1,
+		HTTPClient:     httpc,
+		DefaultTimeout: time.Minute,
 	}
 
 	return f, nil
@@ -150,22 +144,30 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespacesToWat
 		return errors.Wrap(err, "failed to wait for prometheus operator to become ready")
 	}
 
-	err = k8sutil.WaitForCRDReady(f.MonClientV1.Prometheuses(v1.NamespaceAll).List)
+	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(opts)
+	})
 	if err != nil {
 		return errors.Wrap(err, "Prometheus CRD not ready: %v\n")
 	}
 
-	err = k8sutil.WaitForCRDReady(f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List)
+	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List(opts)
+	})
 	if err != nil {
 		return errors.Wrap(err, "ServiceMonitor CRD not ready: %v\n")
 	}
 
-	err = k8sutil.WaitForCRDReady(f.MonClientV1.PrometheusRules(v1.NamespaceAll).List)
+	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(opts)
+	})
 	if err != nil {
 		return errors.Wrap(err, "PrometheusRule CRD not ready: %v\n")
 	}
 
-	err = k8sutil.WaitForCRDReady(f.MonClientV1.Alertmanagers(v1.NamespaceAll).List)
+	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(opts)
+	})
 	if err != nil {
 		return errors.Wrap(err, "Alertmanager CRD not ready: %v\n")
 	}

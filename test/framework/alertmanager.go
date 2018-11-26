@@ -28,8 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/pkg/errors"
 )
 
@@ -55,17 +54,6 @@ func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *monitori
 		Spec: monitoringv1.AlertmanagerSpec{
 			Replicas: &replicas,
 			LogLevel: "debug",
-		},
-	}
-}
-
-func (f *Framework) MakeBasicAlertmanagerV1alpha1(name string, replicas int32) *v1alpha1.Alertmanager {
-	return &v1alpha1.Alertmanager{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Spec: v1alpha1.AlertmanagerSpec{
-			Replicas: &replicas,
 		},
 	}
 }

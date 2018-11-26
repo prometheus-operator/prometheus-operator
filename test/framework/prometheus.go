@@ -26,8 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/pkg/errors"
 )
@@ -89,30 +88,6 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
-				{
-					Port:     "web",
-					Interval: "30s",
-				},
-			},
-		},
-	}
-}
-
-func (f *Framework) MakeBasicServiceMonitorV1alpha1(name string) *v1alpha1.ServiceMonitor {
-	return &v1alpha1.ServiceMonitor{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			Labels: map[string]string{
-				"group": name,
-			},
-		},
-		Spec: v1alpha1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": name,
-				},
-			},
-			Endpoints: []v1alpha1.Endpoint{
 				{
 					Port:     "web",
 					Interval: "30s",
