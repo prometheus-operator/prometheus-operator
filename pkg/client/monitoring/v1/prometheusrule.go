@@ -16,6 +16,7 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -53,6 +54,12 @@ type prometheusrules struct {
 	client     dynamic.ResourceInterface
 	crdKind    CrdKind
 	ns         string
+}
+
+type rawPrometheusRuleList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []json.RawMessage `json:"items"`
 }
 
 func newPrometheusRules(r rest.Interface, c *dynamic.Client, crdKind CrdKind, namespace string) *prometheusrules {
@@ -126,8 +133,39 @@ func (s *prometheusrules) List(opts metav1.ListOptions) (runtime.Object, error) 
 	if err != nil {
 		return nil, err
 	}
+
 	var sm PrometheusRuleList
-	return &sm, json.Unmarshal(b, &sm)
+	var rl rawPrometheusRuleList
+	var rules []*PrometheusRule
+
+	err = json.Unmarshal(b, &rl)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, item := range rl.Items {
+		var pr PrometheusRule
+		err = json.Unmarshal(item, &pr)
+
+		if err != nil {
+
+			// Extract the metadata for this one rule so we can report on it
+			var m struct {
+				metav1.ObjectMeta `json:"metadata"`
+			}
+
+			if uErr := json.Unmarshal(item, &m); uErr != nil {
+				fmt.Printf("LIST: Error parsing rule metadata: %s\n", uErr)
+			} else {
+				fmt.Printf("LIST: Error parsing rule, dropping: %s/%s, err: %s\n", m.GetNamespace(), m.GetName(), err)
+			}
+		} else {
+			rules = append(rules, &pr)
+		}
+	}
+
+	sm.Items = rules
+	return &sm, nil
 }
 
 func (s *prometheusrules) Watch(opts metav1.ListOptions) (watch.Interface, error) {
@@ -189,12 +227,38 @@ func (d *prometheusRuleDecoder) Close() {
 }
 
 func (d *prometheusRuleDecoder) Decode() (action watch.EventType, object runtime.Object, err error) {
+
+	// We need to extract the name and namespace from the rule before attempting
+	// to decode the actual rule into a PrometheusRule.
 	var e struct {
+		Type   watch.EventType
+		Object struct {
+			metav1.ObjectMeta `json:"metadata"`
+			Spec              json.RawMessage `json:"spec"`
+		}
+	}
+
+	var r struct {
 		Type   watch.EventType
 		Object PrometheusRule
 	}
+
+	var ruleSpec PrometheusRuleSpec
+
 	if err := d.dec.Decode(&e); err != nil {
-		return watch.Error, nil, err
+		fmt.Printf("WATCH: Failed to decode rule: %s\n", err)
+		return watch.Error, &PrometheusRule{}, err
+	} else {
+		if uErr := json.Unmarshal(e.Object.Spec, &ruleSpec); uErr != nil {
+			fmt.Printf("WATCH: Error parsing rule, dropping: %s/%s, err: %s\n", e.Object.GetNamespace(), e.Object.GetName(), uErr)
+
+			// Pretend that the rule was deleted, we don't need to continually report on it
+			return watch.Deleted, &PrometheusRule{}, nil
+		}
+
 	}
-	return e.Type, &e.Object, nil
+
+	r.Object = PrometheusRule{ObjectMeta: e.Object.ObjectMeta, Spec: ruleSpec}
+
+	return e.Type, &r.Object, nil
 }
