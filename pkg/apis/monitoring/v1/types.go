@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright 2018 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,28 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	Version = "v1"
+
+	PrometheusesKind  = "Prometheus"
+	PrometheusName    = "prometheuses"
+	PrometheusKindKey = "prometheus"
+
+	AlertmanagersKind   = "Alertmanager"
+	AlertmanagerName    = "alertmanagers"
+	AlertManagerKindKey = "alertmanager"
+
+	ServiceMonitorsKind   = "ServiceMonitor"
+	ServiceMonitorName    = "servicemonitors"
+	ServiceMonitorKindKey = "servicemonitor"
+
+	PrometheusRuleKind    = "PrometheusRule"
+	PrometheusRuleName    = "prometheusrules"
+	PrometheusRuleKindKey = "prometheusrule"
+)
+
 // Prometheus defines a Prometheus deployment.
+// +genclient
 // +k8s:openapi-gen=true
 type Prometheus struct {
 	metav1.TypeMeta `json:",inline"`
@@ -432,6 +453,7 @@ type AlertmanagerEndpoints struct {
 }
 
 // ServiceMonitor defines monitoring for a set of services.
+// +genclient
 // +k8s:openapi-gen=true
 type ServiceMonitor struct {
 	metav1.TypeMeta `json:",inline"`
@@ -546,6 +568,7 @@ type PrometheusRuleList struct {
 }
 
 // PrometheusRule defines alerting rules for a Prometheus instance
+// +genclient
 // +k8s:openapi-gen=true
 type PrometheusRule struct {
 	metav1.TypeMeta `json:",inline"`
@@ -586,6 +609,7 @@ type Rule struct {
 }
 
 // Alertmanager describes an Alertmanager cluster.
+// +genclient
 // +k8s:openapi-gen=true
 type Alertmanager struct {
 	metav1.TypeMeta `json:",inline"`
