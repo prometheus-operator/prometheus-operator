@@ -110,23 +110,23 @@ func (f *Framework) AlertmanagerConfigSecret(ns, name string) (*v1.Secret, error
 	return s, nil
 }
 
-func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) error {
+func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
 	amConfigSecretName := fmt.Sprintf("alertmanager-%s", a.Name)
 	s, err := f.AlertmanagerConfigSecret(ns, amConfigSecretName)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("making alertmanager config secret %v failed", amConfigSecretName))
+		return nil, errors.Wrap(err, fmt.Sprintf("making alertmanager config secret %v failed", amConfigSecretName))
 	}
 	_, err = f.KubeClient.CoreV1().Secrets(ns).Create(s)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("creating alertmanager config secret %v failed", s.Name))
+		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager config secret %v failed", s.Name))
 	}
 
-	_, err = f.MonClientV1.Alertmanagers(ns).Create(a)
+	a, err = f.MonClientV1.Alertmanagers(ns).Create(a)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
+		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	return f.WaitForAlertmanagerReady(ns, a.Name, int(*a.Spec.Replicas))
+	return a, f.WaitForAlertmanagerReady(ns, a.Name, int(*a.Spec.Replicas))
 }
 
 func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) error {
@@ -141,10 +141,10 @@ func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) erro
 	return errors.Wrap(err, fmt.Sprintf("failed to create an Alertmanager cluster (%s) with %d instances", name, replicas))
 }
 
-func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) error {
-	_, err := f.MonClientV1.Alertmanagers(ns).Update(a)
+func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
+	a, err := f.MonClientV1.Alertmanagers(ns).Update(a)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = WaitForPodsReady(
@@ -155,10 +155,10 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoring
 		alertmanager.ListOptions(a.Name),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to update %d Alertmanager instances (%s): %v", a.Spec.Replicas, a.Name, err)
+		return nil, fmt.Errorf("failed to update %d Alertmanager instances (%s): %v", a.Spec.Replicas, a.Name, err)
 	}
 
-	return nil
+	return a, nil
 }
 
 func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ns, name string) error {

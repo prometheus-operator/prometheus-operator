@@ -33,6 +33,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	testFramework "github.com/coreos/prometheus-operator/test/framework"
+	"github.com/golang/protobuf/proto"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {
@@ -45,7 +46,7 @@ func testAMCreateDeleteCluster(t *testing.T) {
 
 	name := "test"
 
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, framework.MakeBasicAlertmanager(name, 3)); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, framework.MakeBasicAlertmanager(name, 3)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -64,15 +65,19 @@ func testAMScaling(t *testing.T) {
 
 	name := "test"
 
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, framework.MakeBasicAlertmanager(name, 3)); err != nil {
+	a, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, framework.MakeBasicAlertmanager(name, 3))
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, framework.MakeBasicAlertmanager(name, 5)); err != nil {
+	a.Spec.Replicas = proto.Int32(5)
+	a, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, a)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, framework.MakeBasicAlertmanager(name, 3)); err != nil {
+	a.Spec.Replicas = proto.Int32(3)
+	if _, err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, a); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -89,17 +94,20 @@ func testAMVersionMigration(t *testing.T) {
 
 	am := framework.MakeBasicAlertmanager(name, 1)
 	am.Spec.Version = "v0.14.0"
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, am)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	am.Spec.Version = "v0.15.3"
-	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
+	am, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	am.Spec.Version = "v0.14.0"
-	if err := framework.UpdateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
+	am, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am)
+	if err != nil {
 		t.Fatal(err)
 	}
 }
@@ -115,12 +123,16 @@ func testAMStorageUpdate(t *testing.T) {
 
 	am := framework.MakeBasicAlertmanager(name, 1)
 
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, am); err != nil {
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, am)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	am.Spec.Storage = &monitoringv1.StorageSpec{
 		VolumeClaimTemplate: v1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				CreationTimestamp: metav1.Now(),
+			},
 			Spec: v1.PersistentVolumeClaimSpec{
 				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 				Resources: v1.ResourceRequirements{
@@ -131,7 +143,8 @@ func testAMStorageUpdate(t *testing.T) {
 			},
 		},
 	}
-	_, err := framework.MonClientV1.Alertmanagers(ns).Update(am)
+
+	am, err = framework.MonClientV1.Alertmanagers(ns).Update(am)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +184,7 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 	alertmanager := framework.MakeBasicAlertmanager("test-alertmanager", 1)
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -210,7 +223,7 @@ func testAMMeshInitialization(t *testing.T) {
 				alertmanager.Spec.Version = version
 				alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
-				if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+				if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
 					t.Fatal(err)
 				}
 
@@ -239,7 +252,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 	amClusterSize := 3
 	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
 
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -325,7 +338,7 @@ receivers:
 		},
 	}
 
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -463,7 +476,8 @@ inhibit_rules:
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(amcfg); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := framework.MonClientV1.Alertmanagers(ns).Create(alertmanager); err != nil {
+	alertmanager, err = framework.MonClientV1.Alertmanagers(ns).Create(alertmanager)
+	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, amsvc); err != nil {
@@ -543,7 +557,8 @@ inhibit_rules:
 	}
 
 	alertmanager.Spec.Version = "v0.14.0"
-	if _, err := framework.MonClientV1.Alertmanagers(ns).Update(alertmanager); err != nil {
+	alertmanager, err = framework.MonClientV1.Alertmanagers(ns).Update(alertmanager)
+	if err != nil {
 		t.Fatal(err)
 	}
 
