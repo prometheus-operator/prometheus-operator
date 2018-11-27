@@ -50,8 +50,8 @@ local kp =
     ingress+:: {
       'prometheus-k8s':
         ingress.new() +
-        ingress.mixin.metadata.withName('prometheus-k8s') +
-        ingress.mixin.metadata.withNamespace($._config.namespace) +
+        ingress.mixin.metadata.withName($.prometheus.prometheus.metadata.name) +
+        ingress.mixin.metadata.withNamespace($.prometheus.prometheus.metadata.namespace) +
         ingress.mixin.metadata.withAnnotations({
           'nginx.ingress.kubernetes.io/auth-type': 'basic',
           'nginx.ingress.kubernetes.io/auth-secret': 'basic-auth',
@@ -62,7 +62,7 @@ local kp =
           ingressRule.withHost('prometheus.example.com') +
           ingressRule.mixin.http.withPaths(
             httpIngressPath.new() +
-            httpIngressPath.mixin.backend.withServiceName('prometheus-k8s') +
+            httpIngressPath.mixin.backend.withServiceName($.prometheus.service.metadata.name) +
             httpIngressPath.mixin.backend.withServicePort('web')
           ),
         ),
