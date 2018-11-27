@@ -26,8 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/pkg/errors"
 )
@@ -89,30 +88,6 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
-				{
-					Port:     "web",
-					Interval: "30s",
-				},
-			},
-		},
-	}
-}
-
-func (f *Framework) MakeBasicServiceMonitorV1alpha1(name string) *v1alpha1.ServiceMonitor {
-	return &v1alpha1.ServiceMonitor{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			Labels: map[string]string{
-				"group": name,
-			},
-		},
-		Spec: v1alpha1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": name,
-				},
-			},
-			Endpoints: []v1alpha1.Endpoint{
 				{
 					Port:     "web",
 					Interval: "30s",
@@ -189,29 +164,29 @@ func (f *Framework) MakeThanosService(name string) *v1.Service {
 	return service
 }
 
-func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) error {
-	_, err := f.MonClientV1.Prometheuses(ns).Create(p)
+func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
+	result, err := f.MonClientV1.Prometheuses(ns).Create(p)
 	if err != nil {
-		return fmt.Errorf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
+		return nil, fmt.Errorf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
-	if err := f.WaitForPrometheusReady(p, 5*time.Minute); err != nil {
-		return fmt.Errorf("waiting for %v Prometheus instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
+	if err := f.WaitForPrometheusReady(result, 5*time.Minute); err != nil {
+		return nil, fmt.Errorf("waiting for %v Prometheus instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
-	return nil
+	return result, nil
 }
 
-func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) error {
-	_, err := f.MonClientV1.Prometheuses(ns).Update(p)
+func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
+	result, err := f.MonClientV1.Prometheuses(ns).Update(p)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if err := f.WaitForPrometheusReady(p, 5*time.Minute); err != nil {
-		return fmt.Errorf("failed to update %d Prometheus instances (%v): %v", p.Spec.Replicas, p.Name, err)
+	if err := f.WaitForPrometheusReady(result, 5*time.Minute); err != nil {
+		return nil, fmt.Errorf("failed to update %d Prometheus instances (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
-	return nil
+	return result, nil
 }
 
 func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout time.Duration) error {

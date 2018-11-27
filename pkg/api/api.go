@@ -20,34 +20,36 @@ import (
 	"regexp"
 
 	"github.com/go-kit/kit/log"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 )
 
 type API struct {
 	kclient *kubernetes.Clientset
-	mclient *v1.MonitoringV1Client
+	mclient monitoringclient.Interface
 	logger  log.Logger
 }
 
 func New(conf prometheus.Config, l log.Logger) (*API, error) {
 	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "instantiating cluster config failed")
 	}
 
 	kclient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
-	mclient, err := v1.NewForConfig(&conf.CrdKinds, conf.CrdGroup, cfg)
+	mclient, err := monitoringclient.NewForConfig(cfg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "instantiating monitoring client failed")
 	}
 
 	return &API{
@@ -96,7 +98,7 @@ func parsePrometheusStatusUrl(path string) objectReference {
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 	or := parsePrometheusStatusUrl(req.URL.Path)
 
-	p, err := api.mclient.Prometheuses(or.namespace).Get(or.name, metav1.GetOptions{})
+	p, err := api.mclient.MonitoringV1().Prometheuses(or.namespace).Get(or.name, metav1.GetOptions{})
 	if err != nil {
 		if k8sutil.IsResourceNotFoundError(err) {
 			w.WriteHeader(404)

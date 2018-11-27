@@ -18,15 +18,15 @@ import (
 	"fmt"
 	"time"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-func (f *Framework) MakeBasicRule(ns, name string, groups []monitoringv1.RuleGroup) monitoringv1.PrometheusRule {
-	return monitoringv1.PrometheusRule{
+func (f *Framework) MakeBasicRule(ns, name string, groups []monitoringv1.RuleGroup) *monitoringv1.PrometheusRule {
+	return &monitoringv1.PrometheusRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: ns,
@@ -40,16 +40,16 @@ func (f *Framework) MakeBasicRule(ns, name string, groups []monitoringv1.RuleGro
 	}
 }
 
-func (f *Framework) CreateRule(ns string, ar monitoringv1.PrometheusRule) error {
-	_, err := f.MonClientV1.PrometheusRules(ns).Create(&ar)
+func (f *Framework) CreateRule(ns string, ar *monitoringv1.PrometheusRule) (*monitoringv1.PrometheusRule, error) {
+	result, err := f.MonClientV1.PrometheusRules(ns).Create(ar)
 	if err != nil {
-		return fmt.Errorf("creating %v RuleFile failed: %v", ar.Name, err)
+		return nil, fmt.Errorf("creating %v RuleFile failed: %v", ar.Name, err)
 	}
 
-	return nil
+	return result, nil
 }
 
-func (f *Framework) MakeAndCreateFiringRule(ns, name, alertName string) (monitoringv1.PrometheusRule, error) {
+func (f *Framework) MakeAndCreateFiringRule(ns, name, alertName string) (*monitoringv1.PrometheusRule, error) {
 	groups := []monitoringv1.RuleGroup{
 		{
 			Name: alertName,
@@ -63,12 +63,12 @@ func (f *Framework) MakeAndCreateFiringRule(ns, name, alertName string) (monitor
 	}
 	file := f.MakeBasicRule(ns, name, groups)
 
-	err := f.CreateRule(ns, file)
+	result, err := f.CreateRule(ns, file)
 	if err != nil {
-		return file, err
+		return nil, err
 	}
 
-	return file, nil
+	return result, nil
 }
 
 // WaitForRule waits for a rule file with a given name to exist in a given
@@ -85,13 +85,13 @@ func (f *Framework) WaitForRule(ns, name string) error {
 	})
 }
 
-func (f *Framework) UpdateRule(ns string, ar monitoringv1.PrometheusRule) error {
-	_, err := f.MonClientV1.PrometheusRules(ns).Update(&ar)
+func (f *Framework) UpdateRule(ns string, ar *monitoringv1.PrometheusRule) (*monitoringv1.PrometheusRule, error) {
+	result, err := f.MonClientV1.PrometheusRules(ns).Update(ar)
 	if err != nil {
-		return fmt.Errorf("updating %v RuleFile failed: %v", ar.Name, err)
+		return nil, fmt.Errorf("updating %v RuleFile failed: %v", ar.Name, err)
 	}
 
-	return nil
+	return result, nil
 }
 
 func (f *Framework) DeleteRule(ns string, r string) error {

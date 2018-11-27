@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/listwatch"
 
@@ -56,7 +56,7 @@ const (
 // monitoring configurations.
 type Operator struct {
 	kclient   kubernetes.Interface
-	mclient   monitoring.Interface
+	mclient   monitoringclient.Interface
 	crdclient apiextensionsclient.Interface
 	logger    log.Logger
 
@@ -158,21 +158,22 @@ type BasicAuthCredentials struct {
 func New(conf Config, logger log.Logger) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
-		return nil, err
-	}
-	client, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "instantiating cluster config failed")
 	}
 
-	mclient, err := monitoring.NewForConfig(&conf.CrdKinds, conf.CrdGroup, cfg)
+	client, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
 	crdclient, err := apiextensionsclient.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating apiextensions client failed")
+	}
+
+	mclient, err := monitoringclient.NewForConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "instantiating monitoring client failed")
 	}
 
 	kubeletObjectName := ""
@@ -206,7 +207,9 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	c.promInf = cache.NewSharedIndexInformer(
 		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
 			return &cache.ListWatch{
-				ListFunc:  mclient.MonitoringV1().Prometheuses(namespace).List,
+				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					return mclient.MonitoringV1().Prometheuses(namespace).List(options)
+				},
 				WatchFunc: mclient.MonitoringV1().Prometheuses(namespace).Watch,
 			}
 		}),
@@ -216,7 +219,9 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	c.smonInf = cache.NewSharedIndexInformer(
 		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
 			return &cache.ListWatch{
-				ListFunc:  mclient.MonitoringV1().ServiceMonitors(namespace).List,
+				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					return mclient.MonitoringV1().ServiceMonitors(namespace).List(options)
+				},
 				WatchFunc: mclient.MonitoringV1().ServiceMonitors(namespace).Watch,
 			}
 		}),
@@ -226,7 +231,9 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	c.ruleInf = cache.NewSharedIndexInformer(
 		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
 			return &cache.ListWatch{
-				ListFunc:  mclient.MonitoringV1().PrometheusRules(namespace).List,
+				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					return mclient.MonitoringV1().PrometheusRules(namespace).List(options)
+				},
 				WatchFunc: mclient.MonitoringV1().PrometheusRules(namespace).Watch,
 			}
 		}),
@@ -948,6 +955,10 @@ func (c *Operator) sync(key string) error {
 	}
 
 	p := obj.(*monitoringv1.Prometheus)
+	p = p.DeepCopy()
+	p.APIVersion = monitoringv1.SchemeGroupVersion.String()
+	p.Kind = monitoringv1.PrometheusesKind
+
 	if p.Spec.Paused {
 		return nil
 	}
@@ -1422,21 +1433,33 @@ func (c *Operator) createCRDs() error {
 		listFunc func(opts metav1.ListOptions) (runtime.Object, error)
 	}{
 		{
-			"Prometheus",
+			monitoringv1.PrometheusesKind,
 			listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{ListFunc: c.mclient.MonitoringV1().Prometheuses(namespace).List}
+				return &cache.ListWatch{
+					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+						return c.mclient.MonitoringV1().Prometheuses(namespace).List(options)
+					},
+				}
 			}).List,
 		},
 		{
-			"ServiceMonitor",
+			monitoringv1.ServiceMonitorsKind,
 			listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{ListFunc: c.mclient.MonitoringV1().ServiceMonitors(namespace).List}
+				return &cache.ListWatch{
+					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+						return c.mclient.MonitoringV1().ServiceMonitors(namespace).List(options)
+					},
+				}
 			}).List,
 		},
 		{
-			"PrometheusRule",
+			monitoringv1.PrometheusRuleKind,
 			listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{ListFunc: c.mclient.MonitoringV1().PrometheusRules(namespace).List}
+				return &cache.ListWatch{
+					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+						return c.mclient.MonitoringV1().PrometheusRules(namespace).List(options)
+					},
+				}
 			}).List,
 		},
 	}

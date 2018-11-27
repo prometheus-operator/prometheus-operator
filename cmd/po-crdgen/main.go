@@ -19,9 +19,11 @@ import (
 	"fmt"
 	"os"
 
-	crdutils "github.com/ant31/crd-validation/pkg"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	k8sutil "github.com/coreos/prometheus-operator/pkg/k8sutil"
+
+	crdutils "github.com/ant31/crd-validation/pkg"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
@@ -33,7 +35,7 @@ func initFlags(crdkind monitoringv1.CrdKind, flagset *flag.FlagSet) *flag.FlagSe
 	flagset.Var(&cfg.Labels, "labels", "Labels")
 	flagset.Var(&cfg.Annotations, "annotations", "Annotations")
 	flagset.BoolVar(&cfg.EnableValidation, "with-validation", true, "Add CRD validation field, default: true")
-	flagset.StringVar(&cfg.Group, "apigroup", monitoringv1.Group, "CRD api group")
+	flagset.StringVar(&cfg.Group, "apigroup", monitoring.GroupName, "CRD api group")
 	flagset.StringVar(&cfg.SpecDefinitionName, "spec-name", crdkind.SpecName, "CRD spec definition name")
 	flagset.StringVar(&cfg.OutputFormat, "output", "yaml", "output format: json|yaml")
 	flagset.StringVar(&cfg.Kind, "kind", crdkind.Kind, "CRD Kind")

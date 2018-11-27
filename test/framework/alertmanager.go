@@ -28,8 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/pkg/errors"
 )
 
@@ -55,17 +54,6 @@ func (f *Framework) MakeBasicAlertmanager(name string, replicas int32) *monitori
 		Spec: monitoringv1.AlertmanagerSpec{
 			Replicas: &replicas,
 			LogLevel: "debug",
-		},
-	}
-}
-
-func (f *Framework) MakeBasicAlertmanagerV1alpha1(name string, replicas int32) *v1alpha1.Alertmanager {
-	return &v1alpha1.Alertmanager{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Spec: v1alpha1.AlertmanagerSpec{
-			Replicas: &replicas,
 		},
 	}
 }
@@ -122,23 +110,23 @@ func (f *Framework) AlertmanagerConfigSecret(ns, name string) (*v1.Secret, error
 	return s, nil
 }
 
-func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) error {
+func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
 	amConfigSecretName := fmt.Sprintf("alertmanager-%s", a.Name)
 	s, err := f.AlertmanagerConfigSecret(ns, amConfigSecretName)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("making alertmanager config secret %v failed", amConfigSecretName))
+		return nil, errors.Wrap(err, fmt.Sprintf("making alertmanager config secret %v failed", amConfigSecretName))
 	}
 	_, err = f.KubeClient.CoreV1().Secrets(ns).Create(s)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("creating alertmanager config secret %v failed", s.Name))
+		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager config secret %v failed", s.Name))
 	}
 
-	_, err = f.MonClientV1.Alertmanagers(ns).Create(a)
+	a, err = f.MonClientV1.Alertmanagers(ns).Create(a)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
+		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	return f.WaitForAlertmanagerReady(ns, a.Name, int(*a.Spec.Replicas))
+	return a, f.WaitForAlertmanagerReady(ns, a.Name, int(*a.Spec.Replicas))
 }
 
 func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) error {
@@ -153,10 +141,10 @@ func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) erro
 	return errors.Wrap(err, fmt.Sprintf("failed to create an Alertmanager cluster (%s) with %d instances", name, replicas))
 }
 
-func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) error {
-	_, err := f.MonClientV1.Alertmanagers(ns).Update(a)
+func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
+	a, err := f.MonClientV1.Alertmanagers(ns).Update(a)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = WaitForPodsReady(
@@ -167,10 +155,10 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoring
 		alertmanager.ListOptions(a.Name),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to update %d Alertmanager instances (%s): %v", a.Spec.Replicas, a.Name, err)
+		return nil, fmt.Errorf("failed to update %d Alertmanager instances (%s): %v", a.Spec.Replicas, a.Name, err)
 	}
 
-	return nil
+	return a, nil
 }
 
 func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ns, name string) error {
