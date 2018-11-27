@@ -514,8 +514,8 @@ inhibit_rules:
 					)
 					if err != nil {
 						failures++
-						// Allow 30 (~3 Seconds) failures during Alertmanager rolling update.
-						if failures > 30 {
+						// Allow 50 (~5 Seconds) failures during Alertmanager rolling update.
+						if failures > 50 {
 							errc <- err
 							return
 						}
