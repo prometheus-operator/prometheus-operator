@@ -26,7 +26,7 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
 rules:
 - apiGroups: ["monitoring.coreos.com"]
-  resources: ["alertmanagers, prometheuses, prometheusrules, servicemonitors"]
+  resources: ["alertmanagers", "prometheuses", "prometheusrules", "servicemonitors"]
   verbs: ["get", "list", "watch"]
 ---
 kind: ClusterRole
@@ -38,6 +38,6 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
 - apiGroups: ["monitoring.coreos.com"]
-  resources: ["alertmanagers, prometheuses, prometheusrules, servicemonitors"]
+  resources: ["alertmanagers", "prometheuses", "prometheusrules", "servicemonitors"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ```
