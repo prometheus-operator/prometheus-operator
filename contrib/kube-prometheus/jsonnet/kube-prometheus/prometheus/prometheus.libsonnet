@@ -40,7 +40,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       service.new('prometheus-' + $._config.prometheus.name, { app: 'prometheus', prometheus: $._config.prometheus.name }, prometheusPort) +
       service.mixin.metadata.withNamespace($._config.namespace) +
       service.mixin.metadata.withLabels({ prometheus: $._config.prometheus.name }),
-    rules:
+    [if $._config.prometheus.rules != null and $._config.prometheus.rules != {} then "rules"]:
       {
         apiVersion: 'monitoring.coreos.com/v1',
         kind: 'PrometheusRule',
