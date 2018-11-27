@@ -42,6 +42,7 @@ type PrometheusInterface interface {
 	Create(*Prometheus) (*Prometheus, error)
 	Get(name string, opts metav1.GetOptions) (*Prometheus, error)
 	Update(*Prometheus) (*Prometheus, error)
+	UpdateStatus(*Prometheus) (*Prometheus, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	List(opts metav1.ListOptions) (runtime.Object, error)
 	Watch(opts metav1.ListOptions) (watch.Interface, error)
@@ -111,6 +112,19 @@ func (p *prometheuses) Update(o *Prometheus) (*Prometheus, error) {
 	}
 
 	return PrometheusFromUnstructured(up)
+}
+
+func (p *prometheuses) UpdateStatus(o *Prometheus) (*Prometheus, error) {
+	result := &Prometheus{}
+	err := p.restClient.Put().
+		Namespace(p.ns).
+		Resource("prometheuses").
+		Name(o.Name).
+		SubResource("status").
+		Body(o).
+		Do().
+		Into(result)
+	return result, err
 }
 
 func (p *prometheuses) Delete(name string, options *metav1.DeleteOptions) error {
