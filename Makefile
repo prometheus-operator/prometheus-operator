@@ -44,13 +44,13 @@ build: operator prometheus-config-reloader k8s-gen
 
 .PHONY: operator
 operator: $(GOLANG_FILES)
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
+	GOOS=linux CGO_ENABLED=0 go build \
 	-ldflags "-X $(GO_PKG)/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/operator/main.go
 
 .PHONY: prometheus-config-reloader
 prometheus-config-reloader:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
+	GOOS=linux CGO_ENABLED=0 go build \
 	-ldflags "-X $(GO_PKG)/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/$@/main.go
 
