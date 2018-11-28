@@ -43,7 +43,7 @@ local kp =
     prometheus+:: {
       prometheus+: {
         spec+: {
-          externalURL: 'http://prometheus.example.com',
+          externalUrl: 'http://prometheus.example.com',
         },
       },
     },
