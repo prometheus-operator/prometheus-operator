@@ -1,14 +1,19 @@
 # Thanos and the Prometheus Operator
 
-There are a few other components, like the queriers and stores, which Thanos
-needs to be fully functional, that have to be deployed independently.  The
+Thanos is a set of components that can be composed into a highly available
+metric system with unlimited storage capacity.  The Prometheus Operator provides
+integration for allowing Prometheus to connect to Thanos.
+
+These Thanos components include the queriers and stores, which Thanos needs to
+be fully functional, and should be deployed independently of the Prometheus
+Operator and its Thanos configuration.  The
 [kube-prometheus](contrib/kube-prometheus/) project has some experimental
 starting points as well as the [thanos
 project](https://github.com/improbable-eng/thanos/tree/master/kube/manifests).
 In the future there may also be jsonnet configurations for deploying these
 additional components.
 
-In short, for the Thanos integration using the the Prometheus Operator to work
+In short, for the Thanos integration using the Prometheus Operator to work
 correctly you will need to have these extra components installed and
 configured.
 
@@ -22,7 +27,8 @@ which is important for getting HA to work with Thanos.
 
 ### No s3 storage (assumes Thanos querier has been deployed)
 
-This is the simplest configuration, and is the only configuration needed to
+This is the simplest configuration change that needs to be made to your
+Prometheus Custom Resource, and is the only configuration needed to
 provide HA benefits.
 
 ```
@@ -59,8 +65,10 @@ spec:
 ...
 ```
 
-Note: The `endpoint` key allows for non AWS based object storage to be used.
-Above, we are using a Digital Ocean bucket in place of an S3 bucket.
+Note: The `endpoint` key allows for non AWS based object storage to be used.  In
+the above example, we are using a Digital Ocean bucket in place of an S3 bucket.
+If you use one of the linked deployments you will need to update it to reflect
+the cloud provider you are using.
 
 ### Extra
 
