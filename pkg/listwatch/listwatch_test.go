@@ -74,6 +74,7 @@ func TestMultiWatchResultChan(t *testing.T) {
 	var events []watch.Event
 	var wg sync.WaitGroup
 	for _, w := range ws {
+		w := w
 		wg.Add(1)
 		go func() {
 			w.Add(&runtime.Unknown{})
@@ -108,11 +109,77 @@ func TestMultiWatchStop(t *testing.T) {
 	if stopped != len(ws) {
 		t.Errorf("expected %d watchers to be stopped but got %d", len(ws), stopped)
 	}
-	if !m.stopped {
+	select {
+	case <-m.stopped:
+		// all good, watcher is closed, proceed
+	default:
 		t.Error("expected multiWatch to be stopped")
 	}
 	_, running := <-m.ResultChan()
 	if running {
 		t.Errorf("expected multiWatch chan to be closed")
 	}
+}
+
+type mockListerWatcher struct {
+	evCh    chan watch.Event
+	stopped bool
+}
+
+func (m *mockListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
+	return nil, nil
+}
+
+func (m *mockListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
+	return m, nil
+}
+
+func (m *mockListerWatcher) Stop() {
+	m.stopped = true
+}
+
+func (m *mockListerWatcher) ResultChan() <-chan watch.Event {
+	return m.evCh
+}
+
+func TestRacyMultiWatch(t *testing.T) {
+	evCh := make(chan watch.Event)
+	lw := &mockListerWatcher{evCh: evCh}
+
+	mw, err := newMultiWatch(
+		[]cache.ListerWatcher{lw},
+		[]string{"foo"},
+		metav1.ListOptions{},
+	)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	// this will not block, as newMultiWatch started a goroutine,
+	// receiving that event and block on the dispatching it there.
+	evCh <- watch.Event{
+		Type: "foo",
+	}
+
+	if got := <-mw.ResultChan(); got.Type != "foo" {
+		t.Errorf("expected foo, got %s", got.Type)
+		return
+	}
+
+	// Enqueue event, do not dequeue it.
+	// In conjunction with go test -race this asserts
+	// if there is a race between stopping and dispatching an event
+	evCh <- watch.Event{
+		Type: "bar",
+	}
+	mw.Stop()
+
+	if got := lw.stopped; got != true {
+		t.Errorf("expected watcher to be closed true, got %t", got)
+	}
+
+	// some reentrant calls, should be non-blocking
+	mw.Stop()
+	mw.Stop()
 }
