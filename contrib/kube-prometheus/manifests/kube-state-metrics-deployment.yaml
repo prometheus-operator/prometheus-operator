@@ -84,7 +84,7 @@ spec:
         name: addon-resizer
         resources:
           limits:
-            cpu: 10m
+            cpu: 50m
             memory: 30Mi
           requests:
             cpu: 10m

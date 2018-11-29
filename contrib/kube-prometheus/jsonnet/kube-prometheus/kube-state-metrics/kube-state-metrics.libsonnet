@@ -182,7 +182,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           },
         ]) +
         container.mixin.resources.withRequests({ cpu: '10m', memory: '30Mi' }) +
-        container.mixin.resources.withLimits({ cpu: '10m', memory: '30Mi' });
+        container.mixin.resources.withLimits({ cpu: '50m', memory: '30Mi' });
 
       local c = [proxyClusterMetrics, proxySelfMetrics, kubeStateMetrics, addonResizer];
 

@@ -172,7 +172,7 @@ spec:
         name: node-exporter
         resources:
           limits:
-            cpu: 102m
+            cpu: 250m
             memory: 180Mi
           requests:
             cpu: 102m
@@ -355,7 +355,7 @@ spec:
         name: addon-resizer
         resources:
           limits:
-            cpu: 10m
+            cpu: 50m
             memory: 30Mi
           requests:
             cpu: 10m
