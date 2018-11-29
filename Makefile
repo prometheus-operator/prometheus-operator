@@ -207,7 +207,7 @@ test: test-unit test-e2e
 
 .PHONY: test-unit
 test-unit:
-	@go test $(TEST_RUN_ARGS) -short $(pkgs)
+	@go test -race $(TEST_RUN_ARGS) -short $(pkgs)
 
 .PHONY: test-e2e
 test-e2e: KUBECONFIG?=$(HOME)/.kube/config

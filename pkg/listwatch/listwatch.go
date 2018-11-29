@@ -153,9 +153,8 @@ func (mlw multiListerWatcher) Watch(options metav1.ListOptions) (watch.Interface
 // multiWatch abstracts multiple watch.Interface's, allowing them
 // to be treated as a single watch.Interface.
 type multiWatch struct {
-	mu       sync.Mutex
 	result   chan watch.Event
-	stopped  bool
+	stopped  chan struct{}
 	stoppers []func()
 }
 
@@ -163,8 +162,15 @@ type multiWatch struct {
 // Watch funcs errored. The length of []cache.ListerWatcher and []string must
 // match.
 func newMultiWatch(lws []cache.ListerWatcher, resourceVersions []string, options metav1.ListOptions) (*multiWatch, error) {
-	ch := make(chan watch.Event)
-	var stoppers []func()
+	var (
+		result   = make(chan watch.Event)
+		stopped  = make(chan struct{})
+		stoppers []func()
+		wg       sync.WaitGroup
+	)
+
+	wg.Add(len(lws))
+
 	for i, lw := range lws {
 		o := options.DeepCopy()
 		o.ResourceVersion = resourceVersions[i]
@@ -172,18 +178,38 @@ func newMultiWatch(lws []cache.ListerWatcher, resourceVersions []string, options
 		if err != nil {
 			return nil, err
 		}
+
 		go func() {
+			defer wg.Done()
+
 			for {
 				event, ok := <-w.ResultChan()
 				if !ok {
-					break
+					return
 				}
-				ch <- event
+
+				select {
+				case result <- event:
+				case <-stopped:
+					return
+				}
 			}
 		}()
 		stoppers = append(stoppers, w.Stop)
 	}
-	return &multiWatch{result: ch, stoppers: stoppers}, nil
+
+	// result chan must be closed,
+	// once all event sender goroutines exited.
+	go func() {
+		wg.Wait()
+		close(result)
+	}()
+
+	return &multiWatch{
+		result:   result,
+		stoppers: stoppers,
+		stopped:  stopped,
+	}, nil
 }
 
 // ResultChan implements the watch.Interface interface.
@@ -195,14 +221,14 @@ func (mw *multiWatch) ResultChan() <-chan watch.Event {
 // It stops all of the underlying watch.Interfaces and closes the backing chan.
 // Can safely be called more than once.
 func (mw *multiWatch) Stop() {
-	mw.mu.Lock()
-	defer mw.mu.Unlock()
-	if !mw.stopped {
+	select {
+	case <-mw.stopped:
+		// nothing to do, we are already stopped
+	default:
 		for _, stop := range mw.stoppers {
 			stop()
 		}
-		close(mw.result)
-		mw.stopped = true
+		close(mw.stopped)
 	}
 	return
 }
