@@ -59,9 +59,3 @@ When there are two or more configured replicas the operator runs the Alertmanage
 The `PrometheusRule` CRD declaratively defines a desired Prometheus rule to be consumed by one or more Prometheus instances. 
 
 Alerts and recording rules can be saved and applied as YAML files, and dynamically loaded without requiring any restart.
-
-## Thanos
-
-The `Prometheus` CRD has support for adding a Thanos sidecar to the Prometheus Pod.
-There are a few other components, like the queriers and stores, which Thanos needs to be fully functional, that have to be deployed independently.
-The [kube-prometheus](contrib/kube-prometheus/) project has some experimental starting points.
