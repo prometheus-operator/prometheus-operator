@@ -102,7 +102,7 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: kube-system
-  name: kube-scheduler-prometheus-discovery
+  name: kube-scheduler
   labels:
     k8s-app: kube-scheduler
 spec:
@@ -124,7 +124,7 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: kube-system
-  name: kube-controller-manager-prometheus-discovery
+  name: kube-controller-manager
   labels:
     k8s-app: kube-controller-manager
 spec:
