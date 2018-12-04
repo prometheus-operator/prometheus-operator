@@ -27,6 +27,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [PrometheusRuleSpec](#prometheusrulespec)
 * [PrometheusSpec](#prometheusspec)
 * [PrometheusStatus](#prometheusstatus)
+* [QuerySpec](#queryspec)
 * [QueueConfig](#queueconfig)
 * [RelabelConfig](#relabelconfig)
 * [RemoteReadSpec](#remotereadspec)
@@ -276,6 +277,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
+| query | QuerySpec defines the query command line flags when starting Prometheus. | *[QuerySpec](#queryspec) | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
 | ruleSelector | A selector to select which PrometheusRules to mount for loading alerting rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom resources selected by RuleSelector. Make sure it does not match any config maps that you do not want to be migrated. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | ruleNamespaceSelector | Namespaces to be selected for PrometheusRules discovery. If unspecified, only the same namespace as the Prometheus object is in is used. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
@@ -312,6 +314,18 @@ PrometheusStatus is the most recent observed status of the Prometheus cluster. R
 | updatedReplicas | Total number of non-terminated pods targeted by this Prometheus deployment that have the desired version spec. | int32 | true |
 | availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this Prometheus deployment. | int32 | true |
 | unavailableReplicas | Total number of unavailable pods targeted by this Prometheus deployment. | int32 | true |
+
+[Back to TOC](#table-of-contents)
+
+## QuerySpec
+
+QuerySpec defines the query command line flags when starting Prometheus.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| lookbackDelta | The delta difference allowed for retrieving metrics during expression evaluations. | *string | false |
+| maxConcurrency | Number of concurrent queries that can be run at once. | *int32 | false |
+| timeout | Maximum time a query may take before being aborted. | *string | false |
 
 [Back to TOC](#table-of-contents)
 
