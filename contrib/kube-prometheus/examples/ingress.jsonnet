@@ -15,7 +15,7 @@ local kp =
     alertmanager+:: {
       alertmanager+: {
         spec+: {
-          externalURL: 'http://alertmanager.example.com',
+          externalUrl: 'http://alertmanager.example.com',
         },
       },
     },
@@ -31,7 +31,7 @@ local kp =
     prometheus+:: {
       prometheus+: {
         spec+: {
-          externalURL: 'http://prometheus.example.com',
+          externalUrl: 'http://prometheus.example.com',
         },
       },
     },
