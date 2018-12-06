@@ -18,11 +18,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 
+	"github.com/emicklei/go-restful"
 	"github.com/go-openapi/spec"
 	"k8s.io/kube-openapi/pkg/builder"
 	"k8s.io/kube-openapi/pkg/common"
@@ -53,15 +53,26 @@ func main() {
 	// Create a minimal builder config, then call the builder with the definition names.
 	config := createOpenAPIBuilderConfig()
 	config.GetDefinitions = generated.GetOpenAPIDefinitions
-	swagger, serr := builder.BuildOpenAPIDefinitionsForResources(config, defNames...)
+	// Build the Paths using a simple WebService for the final spec
+	swagger, serr := builder.BuildOpenAPISpec(createWebServices(), config)
 	if serr != nil {
 		log.Fatalf("ERROR: %s", serr.Error())
 	}
+	// Generate the definitions for the passed type names to put in the final spec.
+	// Note that in reality one should run BuildOpenAPISpec to build the entire spec. We
+	// separate the steps of building Paths and building Definitions here, because we
+	// only have a simple WebService which doesn't wire the definitions up.
+	definitionSwagger, err := builder.BuildOpenAPIDefinitionsForResources(config, defNames...)
+	if err != nil {
+		log.Fatalf("ERROR: %s", err.Error())
+	}
+	// Copy the generated definitions into the final swagger.
+	swagger.Definitions = definitionSwagger.Definitions
 
 	// Marshal the swagger spec into JSON, then write it out.
 	specBytes, err := json.MarshalIndent(swagger, " ", " ")
 	if err != nil {
-		panic(fmt.Sprintf("json marshal error: %s", err.Error()))
+		log.Fatalf("json marshal error: %s", err.Error())
 	}
 	err = ioutil.WriteFile(swaggerFilename, specBytes, 0644)
 	if err != nil {
@@ -81,5 +92,25 @@ func createOpenAPIBuilderConfig() *common.Config {
 				Version: "1.0",
 			},
 		},
+		ResponseDefinitions: map[string]spec.Response{
+			"NotFound": spec.Response{
+				ResponseProps: spec.ResponseProps{
+					Description: "Entity not found.",
+				},
+			},
+		},
+		CommonResponses: map[int]spec.Response{
+			404: *spec.ResponseRef("#/responses/NotFound"),
+		},
 	}
+}
+
+// createWebServices hard-codes a simple WebService which only defines a GET path
+// for testing.
+func createWebServices() []*restful.WebService {
+	w := new(restful.WebService)
+	// Define a dummy GET /test endpoint
+	w = w.Route(w.GET("test").
+		To(func(*restful.Request, *restful.Response) {}))
+	return []*restful.WebService{w}
 }

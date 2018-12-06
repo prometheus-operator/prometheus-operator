@@ -29,15 +29,16 @@ import (
 )
 
 const (
-	testdataDir          = "./testdata"
-	inputDir             = testdataDir + "/listtype"
-	outputBase           = "pkg"
-	outputPackage        = "generated"
-	outputBaseFilename   = "openapi_generated"
-	reportFilename       = "test.report"
-	generatedSwaggerFile = "generated.json"
-	goldenSwaggerFile    = "golden.json"
-	timeoutSeconds       = 5.0
+	testdataDir              = "./testdata"
+	inputDir                 = testdataDir + "/listtype" + "," + testdataDir + "/dummytype"
+	outputBase               = "pkg"
+	outputPackage            = "generated"
+	outputBaseFileName       = "openapi_generated"
+	generatedSwaggerFileName = "generated.json"
+	generatedReportFileName  = "generated.report"
+	goldenSwaggerFileName    = "golden.json"
+	goldenReportFileName     = "golden.report"
+	timeoutSeconds           = 5.0
 )
 
 func TestGenerators(t *testing.T) {
@@ -48,32 +49,57 @@ func TestGenerators(t *testing.T) {
 var _ = Describe("Open API Definitions Generation", func() {
 
 	var (
-		tempDir             string
-		terr                error
-		generatedSwaggerDef string
+		workingDirectory string
+		tempDir          string
+		terr             error
+		openAPIGenPath   string
 	)
 
+	testdataFile := func(filename string) string { return filepath.Join(testdataDir, filename) }
+	generatedFile := func(filename string) string { return filepath.Join(tempDir, filename) }
+
 	BeforeSuite(func() {
+		// Explicitly manage working directory
+		abs, err := filepath.Abs("")
+		Expect(err).ShouldNot(HaveOccurred())
+		workingDirectory = abs
+
 		// Create a temporary directory for generated swagger files.
-		tempDir, terr = ioutil.TempDir("", "openapi")
+		tempDir, terr = ioutil.TempDir("./", "openapi")
 		Expect(terr).ShouldNot(HaveOccurred())
+
 		// Build the OpenAPI code generator.
+		By("building openapi-gen")
 		binary_path, berr := gexec.Build("../../cmd/openapi-gen/openapi-gen.go")
 		Expect(berr).ShouldNot(HaveOccurred())
+		openAPIGenPath = binary_path
+
 		// Run the OpenAPI code generator, creating OpenAPIDefinition code
 		// to be compiled into builder.
-		command := exec.Command(binary_path, "-i", inputDir, "-o", outputBase, "-p", outputPackage, "-O", outputBaseFilename, "-r", reportFilename)
+		By("processing go idl with openapi-gen")
+		gr := generatedFile(generatedReportFileName)
+		command := exec.Command(openAPIGenPath,
+			"-i", inputDir,
+			"-o", outputBase,
+			"-p", outputPackage,
+			"-O", outputBaseFileName,
+			"-r", gr,
+		)
+		command.Dir = workingDirectory
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).ShouldNot(HaveOccurred())
 		Eventually(session, timeoutSeconds).Should(gexec.Exit(0))
 
+		By("writing swagger")
 		// Create the OpenAPI swagger builder.
 		binary_path, berr = gexec.Build("./builder/main.go")
 		Expect(berr).ShouldNot(HaveOccurred())
+
 		// Execute the builder, generating an OpenAPI swagger file with definitions.
-		generatedSwaggerDef = filepath.Join(tempDir, generatedSwaggerFile)
-		command = exec.Command(binary_path, generatedSwaggerDef)
-		command.Dir = testdataDir
+		gs := generatedFile(generatedSwaggerFileName)
+		By("writing swagger to " + gs)
+		command = exec.Command(binary_path, gs)
+		command.Dir = workingDirectory
 		session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).ShouldNot(HaveOccurred())
 		Eventually(session, timeoutSeconds).Should(gexec.Exit(0))
@@ -84,11 +110,47 @@ var _ = Describe("Open API Definitions Generation", func() {
 		gexec.CleanupBuildArtifacts()
 	})
 
+	Describe("openapi-gen --verify", func() {
+		It("Verifies that the existing files are correct", func() {
+			command := exec.Command(openAPIGenPath,
+				"-i", inputDir,
+				"-o", outputBase,
+				"-p", outputPackage,
+				"-O", outputBaseFileName,
+				"-r", testdataFile(goldenReportFileName),
+				"--verify-only",
+			)
+			command.Dir = workingDirectory
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).ShouldNot(HaveOccurred())
+			Eventually(session, timeoutSeconds).Should(gexec.Exit(0))
+		})
+	})
+
 	Describe("Validating OpenAPI Definition Generation", func() {
 		It("Generated OpenAPI swagger definitions should match golden files", func() {
 			// Diff the generated swagger against the golden swagger. Exit code should be zero.
-			command := exec.Command("diff", goldenSwaggerFile, generatedSwaggerDef)
-			command.Dir = testdataDir
+			command := exec.Command(
+				"diff",
+				testdataFile(goldenSwaggerFileName),
+				generatedFile(generatedSwaggerFileName),
+			)
+			command.Dir = workingDirectory
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).ShouldNot(HaveOccurred())
+			Eventually(session, timeoutSeconds).Should(gexec.Exit(0))
+		})
+	})
+
+	Describe("Validating API Rule Violation Reporting", func() {
+		It("Generated API rule violations should match golden report files", func() {
+			// Diff the generated report against the golden report. Exit code should be zero.
+			command := exec.Command(
+				"diff",
+				testdataFile(goldenReportFileName),
+				generatedFile(generatedReportFileName),
+			)
+			command.Dir = workingDirectory
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ShouldNot(HaveOccurred())
 			Eventually(session, timeoutSeconds).Should(gexec.Exit(0))

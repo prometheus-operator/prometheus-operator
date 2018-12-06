@@ -457,7 +457,7 @@ func TestBuildOpenAPISpec(t *testing.T) {
 func TestBuildOpenAPIDefinitionsForResource(t *testing.T) {
 	config, _, assert := setUp(t, true)
 	expected := &spec.Definitions{
-		"builder.TestInput":  getTestInputDefinition(),
+		"builder.TestInput": getTestInputDefinition(),
 	}
 	swagger, err := BuildOpenAPIDefinitionsForResource(TestInput{}, config)
 	if !assert.NoError(err) {

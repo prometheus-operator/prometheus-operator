@@ -22,7 +22,7 @@ TYPES_V1_TARGET:=pkg/apis/monitoring/v1/types.go
 # TODO(sur): bump this to a proper release branch once upstream resolved this.
 K8S_OPENAPI_GEN_VERSION:=0317810137be915b9cf888946c6e115c1bfac693
 
-K8S_GEN_VERSION:=release-1.11
+K8S_GEN_VERSION:=release-1.13
 K8S_GEN_BINARIES:=deepcopy-gen informer-gen lister-gen client-gen
 K8S_GEN_ARGS:=--go-header-file $(FIRST_GOPATH)/src/$(GO_PKG)/.header --v=1 --logtostderr
 
@@ -255,7 +255,7 @@ helm-sync-s3:
 #
 # /home/user/go/bin/informer-gen:
 #	go get -u -d k8s.io/code-generator/cmd/informer-gen
-#	cd /home/user/go/src/k8s.io/code-generator; git checkout release-1.11
+#	cd /home/user/go/src/k8s.io/code-generator; git checkout release-1.13
 #	go install k8s.io/code-generator/cmd/informer-gen
 #
 define _K8S_GEN_VAR_TARGET_
