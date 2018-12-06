@@ -1594,7 +1594,8 @@ func testOperatorNSScope(t *testing.T) {
 		pMissed.Spec.EvaluationInterval = "1s"
 		pMissed, err = framework.CreatePrometheusAndWaitUntilReady(ruleNS, pMissed)
 		if err == nil {
-			t.Fatalf("Prometheus instance was created, despite instance namespace restrictions being used")
+                        st, _, _ := prometheus.PrometheusStatus(framework.KubeClient, pMissed)
+			t.Fatalf("Prometheus instance was created, despite instance namespace restrictions being used, status: %v", st)
 		}
 	})
 }
