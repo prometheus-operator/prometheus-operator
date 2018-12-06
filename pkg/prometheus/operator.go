@@ -1160,28 +1160,39 @@ func loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySele
 	return nil, nil
 }
 
-func loadBasicAuthSecretFromAPI(basicAuth *monitoringv1.BasicAuth, c corev1client.SecretInterface) (BasicAuthCredentials, error) {
+func loadBasicAuthSecretFromAPI(basicAuth *monitoringv1.BasicAuth, c corev1client.CoreV1Interface, ns string, cache map[string]*v1.Secret) (BasicAuthCredentials, error) {
 	var username string
 	var password string
+	var s *v1.Secret
+	var err error
+	var ok bool
 
-	if s, err := c.Get(basicAuth.Username.Name, metav1.GetOptions{}); err == nil {
-		if u, ok := s.Data[basicAuth.Username.Key]; ok {
-			username = string(u)
-		} else {
-			return BasicAuthCredentials{}, fmt.Errorf("secret username key %q in secret %q not found", basicAuth.Username.Key, basicAuth.Username.Name)
+	sClient := c.Secrets(ns)
+
+	if s, ok = cache[ns+"/"+basicAuth.Username.Name]; !ok {
+		if s, err = sClient.Get(basicAuth.Username.Name, metav1.GetOptions{}); err != nil {
+			return BasicAuthCredentials{}, fmt.Errorf("unable to fetch username secret %q: %s", basicAuth.Username.Name, err)
 		}
-	} else {
-		return BasicAuthCredentials{}, fmt.Errorf("basic auth username secret %q not found", basicAuth.Username.Name)
+		cache[ns+"/"+basicAuth.Username.Name] = s
 	}
 
-	if s, err := c.Get(basicAuth.Password.Name, metav1.GetOptions{}); err == nil {
-		if p, ok := s.Data[basicAuth.Password.Key]; ok {
-			password = string(p)
-		} else {
-			return BasicAuthCredentials{}, fmt.Errorf("secret password key %q in secret %q not found", basicAuth.Password.Key, basicAuth.Username.Name)
-		}
+	if u, ok := s.Data[basicAuth.Username.Key]; ok {
+		username = string(u)
 	} else {
-		return BasicAuthCredentials{}, fmt.Errorf("basic auth password secret %q not found", basicAuth.Password.Name)
+		return BasicAuthCredentials{}, fmt.Errorf("secret username key %q in secret %q not found", basicAuth.Username.Key, basicAuth.Username.Name)
+	}
+
+	if s, ok = cache[ns+"/"+basicAuth.Password.Name]; !ok {
+		if s, err = sClient.Get(basicAuth.Password.Name, metav1.GetOptions{}); err != nil {
+			return BasicAuthCredentials{}, fmt.Errorf("unable to fetch password secret %q: %s", basicAuth.Password.Name, err)
+		}
+		cache[ns+"/"+basicAuth.Password.Name] = s
+	}
+
+	if u, ok := s.Data[basicAuth.Password.Key]; ok {
+		password = string(u)
+	} else {
+		return BasicAuthCredentials{}, fmt.Errorf("secret password key %q in secret %q not found", basicAuth.Password.Key, basicAuth.Password.Name)
 	}
 
 	return BasicAuthCredentials{username: username, password: password}, nil
@@ -1234,10 +1245,11 @@ func (c *Operator) loadBasicAuthSecrets(
 ) (map[string]BasicAuthCredentials, error) {
 
 	secrets := map[string]BasicAuthCredentials{}
+	nsSecretCache := make(map[string]*v1.Secret)
 	for _, mon := range mons {
 		for i, ep := range mon.Spec.Endpoints {
 			if ep.BasicAuth != nil {
-				credentials, err := loadBasicAuthSecretFromAPI(ep.BasicAuth, c.kclient.CoreV1().Secrets(mon.Namespace))
+				credentials, err := loadBasicAuthSecretFromAPI(ep.BasicAuth, c.kclient.CoreV1(), mon.Namespace, nsSecretCache)
 				if err != nil {
 					return nil, fmt.Errorf("could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
 				}
