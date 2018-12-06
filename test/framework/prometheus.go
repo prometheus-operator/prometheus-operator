@@ -193,7 +193,8 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 	var pollErr error
 
 	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
-		st, _, pollErr := prometheus.PrometheusStatus(f.KubeClient, p)
+		var st *monitoringv1.PrometheusStatus
+		st, _, pollErr = prometheus.PrometheusStatus(f.KubeClient, p)
 
 		if pollErr != nil {
 			return false, nil
@@ -205,7 +206,7 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 
 		return false, nil
 	})
-	return errors.Wrapf(pollErr, "waiting for Prometheus %v/%v: %v", p.Namespace, p.Name, err)
+	return errors.Wrapf(err, "waiting for Prometheus %v/%v: %v", p.Namespace, p.Name, pollErr)
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
