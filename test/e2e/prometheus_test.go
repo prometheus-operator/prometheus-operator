@@ -1435,7 +1435,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches single namespace mainNS, not arbitraryNS.
-		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{mainNS})
+		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{mainNS}, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1505,7 +1505,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches prometheusNS and ruleNS, not arbitraryNS.
-		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{prometheusNS, ruleNS})
+		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{prometheusNS, ruleNS}, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1551,6 +1551,50 @@ func testOperatorNSScope(t *testing.T) {
 
 		if firing {
 			t.Fatalf("expected alert %q not to fire", secondAlertName)
+		}
+	})
+
+	t.Run("PromInstanceMultiNS", func(t *testing.T) {
+		ctx := framework.NewTestCtx(t)
+		defer ctx.Cleanup(t)
+
+		operatorNS := ctx.CreateNamespace(t, framework.KubeClient)
+		prometheusNS := ctx.CreateNamespace(t, framework.KubeClient)
+		ruleNS := ctx.CreateNamespace(t, framework.KubeClient)
+		arbitraryNS := ctx.CreateNamespace(t, framework.KubeClient)
+
+		ctx.SetupPrometheusRBAC(t, prometheusNS, framework.KubeClient)
+
+		prometheusNamespaceSelector := map[string]string{"prometheus": prometheusNS}
+
+		for _, ns := range []string{ruleNS, arbitraryNS} {
+			err := testFramework.AddLabelsToNamespace(framework.KubeClient, ns, prometheusNamespaceSelector)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		// Prometheus Operator only watches prometheusNS and ruleNS, not arbitraryNS.
+		// this is the crux of the test: we configure to watch ruleNS for Rules and promNS for Prom CRs
+		// and create Prom CRs in both.
+		// then we test that Prometheus instance is created in promNS and NOT created with an error in ruleNS
+		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{ruleNS}, []string{prometheusNS})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		p := framework.MakeBasicPrometheus(prometheusNS, name, name, 1)
+		p.Spec.EvaluationInterval = "1s"
+		p, err = framework.CreatePrometheusAndWaitUntilReady(prometheusNS, p)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		pMissed := framework.MakeBasicPrometheus(ruleNS, name, name, 1)
+		pMissed.Spec.EvaluationInterval = "1s"
+		pMissed, err = framework.CreatePrometheusAndWaitUntilReady(ruleNS, pMissed)
+		if err == nil {
+			t.Fatalf("Prometheus instance was created, despite instance namespace restrictions being used")
 		}
 	})
 }

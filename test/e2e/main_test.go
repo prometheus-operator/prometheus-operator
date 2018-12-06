@@ -67,7 +67,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 
-	err := framework.CreatePrometheusOperator(ns, *opImage, nil)
+	err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
