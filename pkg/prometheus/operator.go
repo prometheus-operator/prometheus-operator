@@ -43,6 +43,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
+	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -1159,6 +1160,33 @@ func loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySele
 	return nil, nil
 }
 
+func loadBasicAuthSecretFromAPI(basicAuth *monitoringv1.BasicAuth, c corev1client.SecretInterface) (BasicAuthCredentials, error) {
+	var username string
+	var password string
+
+	if s, err := c.Get(basicAuth.Username.Name, metav1.GetOptions{}); err == nil {
+		if u, ok := s.Data[basicAuth.Username.Key]; ok {
+			username = string(u)
+		} else {
+			return BasicAuthCredentials{}, fmt.Errorf("secret username key %q in secret %q not found", basicAuth.Username.Key, basicAuth.Username.Name)
+		}
+	} else {
+		return BasicAuthCredentials{}, fmt.Errorf("basic auth username secret %q not found", basicAuth.Username.Name)
+	}
+
+	if s, err := c.Get(basicAuth.Password.Name, metav1.GetOptions{}); err == nil {
+		if p, ok := s.Data[basicAuth.Password.Key]; ok {
+			password = string(p)
+		} else {
+			return BasicAuthCredentials{}, fmt.Errorf("secret password key %q in secret %q not found", basicAuth.Password.Key, basicAuth.Username.Name)
+		}
+	} else {
+		return BasicAuthCredentials{}, fmt.Errorf("basic auth password secret %q not found", basicAuth.Password.Name)
+	}
+
+	return BasicAuthCredentials{username: username, password: password}, nil
+}
+
 func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (BasicAuthCredentials, error) {
 	var username string
 	var password string
@@ -1205,25 +1233,11 @@ func (c *Operator) loadBasicAuthSecrets(
 	SecretsInPromNS *v1.SecretList,
 ) (map[string]BasicAuthCredentials, error) {
 
-	sMonSecretMap := make(map[string]*v1.SecretList)
-	for _, mon := range mons {
-		smNamespace := mon.Namespace
-		if sMonSecretMap[smNamespace] == nil {
-			msClient := c.kclient.CoreV1().Secrets(smNamespace)
-			listSecrets, err := msClient.List(metav1.ListOptions{})
-
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to retrieve secrets in namespace '%v' for servicemonitor '%v'", smNamespace, mon.Name)
-			}
-			sMonSecretMap[smNamespace] = listSecrets
-		}
-	}
-
 	secrets := map[string]BasicAuthCredentials{}
 	for _, mon := range mons {
 		for i, ep := range mon.Spec.Endpoints {
 			if ep.BasicAuth != nil {
-				credentials, err := loadBasicAuthSecret(ep.BasicAuth, sMonSecretMap[mon.Namespace])
+				credentials, err := loadBasicAuthSecretFromAPI(ep.BasicAuth, c.kclient.CoreV1().Secrets(mon.Namespace))
 				if err != nil {
 					return nil, fmt.Errorf("could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
 				}
