@@ -1163,9 +1163,8 @@ func loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySele
 func extractCredKey(secret *v1.Secret, sel v1.SecretKeySelector, cred string) (string, error) {
 	if s, ok := secret.Data[sel.Key]; ok {
 		return string(s), nil
-	} else {
-		return "", fmt.Errorf("secret %s key %q in secret %q not found", cred, sel.Key, sel.Name)
 	}
+	return "", fmt.Errorf("secret %s key %q in secret %q not found", cred, sel.Key, sel.Name)
 }
 
 func getCredFromSecret(c corev1client.SecretInterface, sel v1.SecretKeySelector, cred string, cacheKey string, cache map[string]*v1.Secret) (_ string, err error) {
@@ -1181,9 +1180,10 @@ func getCredFromSecret(c corev1client.SecretInterface, sel v1.SecretKeySelector,
 	return extractCredKey(s, sel, cred)
 }
 
-func loadBasicAuthSecretFromAPI(basicAuth *monitoringv1.BasicAuth, c corev1client.CoreV1Interface, ns string, cache map[string]*v1.Secret) (_ BasicAuthCredentials, err error) {
+func loadBasicAuthSecretFromAPI(basicAuth *monitoringv1.BasicAuth, c corev1client.CoreV1Interface, ns string, cache map[string]*v1.Secret) (BasicAuthCredentials, error) {
 	var username string
 	var password string
+	var err error
 
 	sClient := c.Secrets(ns)
 
