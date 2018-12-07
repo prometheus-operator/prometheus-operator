@@ -773,6 +773,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 						Name:           "prometheus",
 						Image:          prometheusImage,
 						Ports:          ports,
+						Command:        []string{"/bin/prometheus"},
 						Args:           promArgs,
 						VolumeMounts:   promVolumeMounts,
 						LivenessProbe:  livenessProbe,
