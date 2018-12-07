@@ -424,6 +424,10 @@ spec:
     matchLabels:
       prometheus: k8s
       role: alert-rules
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
   serviceAccountName: prometheus-k8s
   serviceMonitorNamespaceSelector: {}
   serviceMonitorSelector: {}
@@ -621,6 +625,10 @@ spec:
   nodeSelector:
     beta.kubernetes.io/os: linux
   replicas: 3
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
   serviceAccountName: alertmanager-main
   version: v0.15.3
 ```
