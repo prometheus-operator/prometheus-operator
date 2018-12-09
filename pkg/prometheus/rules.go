@@ -169,7 +169,7 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 
 	for _, ns := range namespaces {
 		var marshalErr error
-		err := cache.ListAllByNamespace(c.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
+		err := cache.ListAllByNamespace(c.ruleInf.index, ns, ruleSelector, func(obj interface{}) {
 			rule := obj.(*monitoringv1.PrometheusRule)
 			content, err := yaml.Marshal(rule.Spec)
 			if err != nil {

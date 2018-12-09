@@ -52,6 +52,16 @@ const (
 	resyncPeriod = 5 * time.Minute
 )
 
+type indexedInformer struct {
+	informer cache.Controller
+	index    cache.Indexer
+}
+
+type informer struct {
+	informer cache.Controller
+	store    cache.Store
+}
+
 // Operator manages life cycle of Prometheus deployments and
 // monitoring configurations.
 type Operator struct {
@@ -60,13 +70,15 @@ type Operator struct {
 	crdclient apiextensionsclient.Interface
 	logger    log.Logger
 
-	promInf cache.SharedIndexInformer
-	smonInf cache.SharedIndexInformer
-	ruleInf cache.SharedIndexInformer
-	cmapInf cache.SharedIndexInformer
-	secrInf cache.SharedIndexInformer
+	promInf indexedInformer
+	smonInf indexedInformer
+	ruleInf indexedInformer
+	cmapInf indexedInformer
+	secrInf indexedInformer
+
+	// TODO: share this with alertmanager controller
 	ssetInf cache.SharedIndexInformer
-	nsInf   cache.SharedIndexInformer
+	nsInf   informer
 
 	queue workqueue.RateLimitingInterface
 
@@ -204,7 +216,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		configGenerator:        NewConfigGenerator(logger),
 	}
 
-	c.promInf = cache.NewSharedIndexInformer(
+	c.promInf.index, c.promInf.informer = cache.NewIndexerInformer(
 		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
 			return &cache.ListWatch{
 				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
@@ -213,10 +225,16 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 				WatchFunc: mclient.MonitoringV1().Prometheuses(namespace).Watch,
 			}
 		}),
-		&monitoringv1.Prometheus{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		&monitoringv1.Prometheus{}, resyncPeriod,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handlePrometheusAdd,
+			DeleteFunc: c.handlePrometheusDelete,
+			UpdateFunc: c.handlePrometheusUpdate,
+		},
+		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
-	c.smonInf = cache.NewSharedIndexInformer(
+	c.smonInf.index, c.smonInf.informer = cache.NewIndexerInformer(
 		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
 			return &cache.ListWatch{
 				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
@@ -225,10 +243,16 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 				WatchFunc: mclient.MonitoringV1().ServiceMonitors(namespace).Watch,
 			}
 		}),
-		&monitoringv1.ServiceMonitor{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		&monitoringv1.ServiceMonitor{}, resyncPeriod,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleSmonAdd,
+			DeleteFunc: c.handleSmonDelete,
+			UpdateFunc: c.handleSmonUpdate,
+		},
+		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
-	c.ruleInf = cache.NewSharedIndexInformer(
+	c.ruleInf.index, c.ruleInf.informer = cache.NewIndexerInformer(
 		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
 			return &cache.ListWatch{
 				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
@@ -237,21 +261,39 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 				WatchFunc: mclient.MonitoringV1().PrometheusRules(namespace).Watch,
 			}
 		}),
-		&monitoringv1.PrometheusRule{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		&monitoringv1.PrometheusRule{}, resyncPeriod,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleRuleAdd,
+			DeleteFunc: c.handleRuleDelete,
+			UpdateFunc: c.handleRuleUpdate,
+		},
+		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
-	c.cmapInf = cache.NewSharedIndexInformer(
+	c.cmapInf.index, c.cmapInf.informer = cache.NewIndexerInformer(
 		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
 			return cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", namespace, fields.Everything())
 		}),
-		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		&v1.ConfigMap{}, resyncPeriod,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleConfigMapAdd,
+			DeleteFunc: c.handleConfigMapDelete,
+			UpdateFunc: c.handleConfigMapUpdate,
+		},
+		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
-	c.secrInf = cache.NewSharedIndexInformer(
+	c.secrInf.index, c.secrInf.informer = cache.NewIndexerInformer(
 		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
 			return cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "secrets", namespace, fields.Everything())
 		}),
-		&v1.Secret{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		&v1.Secret{}, resyncPeriod,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleSecretAdd,
+			DeleteFunc: c.handleSecretDelete,
+			UpdateFunc: c.handleSecretUpdate,
+		},
+		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
 	c.ssetInf = cache.NewSharedIndexInformer(
@@ -260,6 +302,12 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		}),
 		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
+	c.ssetInf.AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleStatefulSetAdd,
+			DeleteFunc: c.handleStatefulSetDelete,
+			UpdateFunc: c.handleStatefulSetUpdate,
+		})
 
 	// nsResyncPeriod is used to control how often the namespace informer
 	// should resync. If the unprivileged ListerWatcher is used, then the
@@ -272,10 +320,9 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	if listwatch.IsAllNamespaces(c.config.Namespaces) {
 		nsResyncPeriod = resyncPeriod
 	}
-	c.nsInf = cache.NewSharedIndexInformer(
+	c.nsInf.store, c.nsInf.informer = cache.NewInformer(
 		listwatch.NewUnprivilegedNamespaceListWatchFromClient(c.kclient.Core().RESTClient(), c.config.Namespaces, fields.Everything()),
-		&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
-	)
+		&v1.Namespace{}, nsResyncPeriod, cache.ResourceEventHandlerFuncs{})
 
 	return c, nil
 }
@@ -295,7 +342,7 @@ func (c *Operator) RegisterMetrics(r prometheus.Registerer, reconcileErrorsCount
 
 	r.MustRegister(
 		c.nodeAddressLookupErrors,
-		NewPrometheusCollector(c.promInf.GetStore()),
+		NewPrometheusCollector(c.promInf.index),
 	)
 }
 
@@ -304,15 +351,15 @@ func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 	ok := true
 	informers := []struct {
 		name     string
-		informer cache.SharedIndexInformer
+		informer cache.Controller
 	}{
-		{"Prometheus", c.promInf},
-		{"ServiceMonitor", c.smonInf},
-		{"PrometheusRule", c.ruleInf},
-		{"ConfigMap", c.cmapInf},
-		{"Secret", c.secrInf},
+		{"Prometheus", c.promInf.informer},
+		{"ServiceMonitor", c.smonInf.informer},
+		{"PrometheusRule", c.ruleInf.informer},
+		{"ConfigMap", c.cmapInf.informer},
+		{"Secret", c.secrInf.informer},
 		{"StatefulSet", c.ssetInf},
-		{"Namespace", c.nsInf},
+		{"Namespace", c.nsInf.informer},
 	}
 	for _, inf := range informers {
 		if !cache.WaitForCacheSync(stopc, inf.informer.HasSynced) {
@@ -327,40 +374,6 @@ func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 	}
 	level.Info(c.logger).Log("msg", "successfully synced all caches")
 	return nil
-}
-
-// addHandlers adds the eventhandlers to the informers.
-func (c *Operator) addHandlers() {
-	c.promInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handlePrometheusAdd,
-		DeleteFunc: c.handlePrometheusDelete,
-		UpdateFunc: c.handlePrometheusUpdate,
-	})
-	c.smonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleSmonAdd,
-		DeleteFunc: c.handleSmonDelete,
-		UpdateFunc: c.handleSmonUpdate,
-	})
-	c.ruleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleRuleAdd,
-		DeleteFunc: c.handleRuleDelete,
-		UpdateFunc: c.handleRuleUpdate,
-	})
-	c.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleConfigMapAdd,
-		DeleteFunc: c.handleConfigMapDelete,
-		UpdateFunc: c.handleConfigMapUpdate,
-	})
-	c.secrInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleSecretAdd,
-		DeleteFunc: c.handleSecretDelete,
-		UpdateFunc: c.handleSecretUpdate,
-	})
-	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleStatefulSetAdd,
-		DeleteFunc: c.handleStatefulSetDelete,
-		UpdateFunc: c.handleStatefulSetUpdate,
-	})
 }
 
 // Run the controller.
@@ -397,17 +410,16 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 
 	go c.worker()
 
-	go c.promInf.Run(stopc)
-	go c.smonInf.Run(stopc)
-	go c.ruleInf.Run(stopc)
-	go c.cmapInf.Run(stopc)
-	go c.secrInf.Run(stopc)
+	go c.promInf.informer.Run(stopc)
+	go c.smonInf.informer.Run(stopc)
+	go c.ruleInf.informer.Run(stopc)
+	go c.cmapInf.informer.Run(stopc)
+	go c.secrInf.informer.Run(stopc)
 	go c.ssetInf.Run(stopc)
-	go c.nsInf.Run(stopc)
+	go c.nsInf.informer.Run(stopc)
 	if err := c.waitForCacheSync(stopc); err != nil {
 		return err
 	}
-	c.addHandlers()
 
 	if c.kubeletSyncEnabled {
 		go c.reconcileNodeEndpoints(stopc)
@@ -776,7 +788,7 @@ func (c *Operator) enqueue(obj interface{}) {
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(nsName string) {
-	nsObject, exists, err := c.nsInf.GetStore().GetByKey(nsName)
+	nsObject, exists, err := c.nsInf.store.GetByKey(nsName)
 	if err != nil {
 		level.Error(c.logger).Log(
 			"msg", "get namespace to enqueue Prometheus instances failed",
@@ -793,7 +805,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	err = cache.ListAll(c.promInf.GetStore(), labels.Everything(), func(obj interface{}) {
+	err = cache.ListAll(c.promInf.index, labels.Everything(), func(obj interface{}) {
 		// Check for Prometheus instances in the NS.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
@@ -876,7 +888,7 @@ func (c *Operator) prometheusForStatefulSet(sset interface{}) *monitoringv1.Prom
 	}
 
 	promKey := statefulSetKeyToPrometheusKey(key)
-	p, exists, err := c.promInf.GetStore().GetByKey(promKey)
+	p, exists, err := c.promInf.index.GetByKey(promKey)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "Prometheus lookup failed", "err", err)
 		return nil
@@ -945,7 +957,7 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 }
 
 func (c *Operator) sync(key string) error {
-	obj, exists, err := c.promInf.GetIndexer().GetByKey(key)
+	obj, exists, err := c.promInf.index.GetByKey(key)
 	if err != nil {
 		return err
 	}
@@ -1003,7 +1015,7 @@ func (c *Operator) sync(key string) error {
 
 	ssetClient := c.kclient.AppsV1beta2().StatefulSets(p.Namespace)
 	// Ensure we have a StatefulSet running Prometheus deployed.
-	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(prometheusKeyToStatefulSetKey(key))
+	obj, exists, err = c.ssetInf.GetStore().GetByKey(prometheusKeyToStatefulSetKey(key))
 	if err != nil {
 		return errors.Wrap(err, "retrieving statefulset failed")
 	}
@@ -1369,7 +1381,7 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select ServiceMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	for _, ns := range namespaces {
-		cache.ListAllByNamespace(c.smonInf.GetIndexer(), ns, servMonSelector, func(obj interface{}) {
+		cache.ListAllByNamespace(c.smonInf.index, ns, servMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
 				res[k] = obj.(*monitoringv1.ServiceMonitor)
@@ -1390,7 +1402,7 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 // selector.
 func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, error) {
 	var ns []string
-	err := cache.ListAll(c.nsInf.GetStore(), selector, func(obj interface{}) {
+	err := cache.ListAll(c.nsInf.store, selector, func(obj interface{}) {
 		ns = append(ns, obj.(*v1.Namespace).Name)
 	})
 	if err != nil {
