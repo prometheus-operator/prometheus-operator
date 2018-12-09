@@ -63,29 +63,23 @@ type objectCache struct {
 
 	lock  sync.Mutex
 	items map[objectKey]*objectCacheItem
+
+	resourceEventHandler cache.ResourceEventHandler
 }
 
 // NewObjectCache returns a new watch-based instance of Store interface.
-func NewObjectCache(listObject listObjectFunc, watchObject watchObjectFunc, newObject newObjectFunc, groupResource schema.GroupResource) Store {
+func NewObjectCache(listObject listObjectFunc, watchObject watchObjectFunc, newObject newObjectFunc, groupResource schema.GroupResource, h cache.ResourceEventHandler) Store {
 	return &objectCache{
-		listObject:    listObject,
-		watchObject:   watchObject,
-		newObject:     newObject,
-		groupResource: groupResource,
-		items:         make(map[objectKey]*objectCacheItem),
+		listObject:           listObject,
+		watchObject:          watchObject,
+		newObject:            newObject,
+		groupResource:        groupResource,
+		items:                make(map[objectKey]*objectCacheItem),
+		resourceEventHandler: h,
 	}
 }
 
-func (c *objectCache) newStore() cache.Store {
-	// TODO: We may consider created a dedicated store keeping just a single
-	// item, instead of using a generic store implementation for this purpose.
-	// However, simple benchmarks show that memory overhead in that case is
-	// decrease from ~600B to ~300B per object. So we are not optimizing it
-	// until we will see a good reason for that.
-	return cache.NewStore(cache.MetaNamespaceKeyFunc)
-}
-
-func (c *objectCache) newReflector(namespace, name string) *objectCacheItem {
+func (c *objectCache) newInformer(namespace, name string) *objectCacheItem {
 	fieldSelector := fields.Set{"metadata.name": name}.AsSelector().String()
 	listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
 		options.FieldSelector = fieldSelector
@@ -95,20 +89,15 @@ func (c *objectCache) newReflector(namespace, name string) *objectCacheItem {
 		options.FieldSelector = fieldSelector
 		return c.watchObject(namespace, options)
 	}
-	store := c.newStore()
-	reflector := cache.NewNamedReflector(
-		fmt.Sprintf("object-%q/%q", namespace, name),
+	store, informer := cache.NewInformer(
 		&cache.ListWatch{ListFunc: listFunc, WatchFunc: watchFunc},
-		c.newObject(),
-		store,
-		0,
-	)
+		c.newObject(), 0, c.resourceEventHandler)
 	stopCh := make(chan struct{})
-	go reflector.Run(stopCh)
+	go informer.Run(stopCh)
 	return &objectCacheItem{
 		refCount:  0,
 		store:     store,
-		hasSynced: func() (bool, error) { return reflector.LastSyncResourceVersion() != "", nil },
+		hasSynced: func() (bool, error) { return informer.HasSynced(), nil },
 		stopCh:    stopCh,
 	}
 }
@@ -125,7 +114,7 @@ func (c *objectCache) AddReference(namespace, name string) {
 	defer c.lock.Unlock()
 	item, exists := c.items[key]
 	if !exists {
-		item = c.newReflector(namespace, name)
+		item = c.newInformer(namespace, name)
 		c.items[key] = item
 	}
 	item.refCount++
@@ -188,7 +177,7 @@ func (c *objectCache) Get(namespace, name string) (runtime.Object, error) {
 // - whenever a pod is created or updated, we start individual watches for all
 //   referenced objects that aren't referenced from other registered pods
 // - every GetObject() returns a value from local cache propagated via watches
-func NewWatchBasedManager(listObject listObjectFunc, watchObject watchObjectFunc, newObject newObjectFunc, groupResource schema.GroupResource, getReferencedObjects func(*monitoringv1.ServiceMonitor) sets.String) Manager {
-	objectStore := NewObjectCache(listObject, watchObject, newObject, groupResource)
+func NewWatchBasedManager(listObject listObjectFunc, watchObject watchObjectFunc, newObject newObjectFunc, groupResource schema.GroupResource, getReferencedObjects func(*monitoringv1.ServiceMonitor) sets.String, h cache.ResourceEventHandler) Manager {
+	objectStore := NewObjectCache(listObject, watchObject, newObject, groupResource, h)
 	return NewCacheBasedManager(objectStore, getReferencedObjects)
 }
