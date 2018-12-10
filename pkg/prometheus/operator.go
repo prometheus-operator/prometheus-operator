@@ -25,6 +25,7 @@ import (
 	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/listwatch"
+	"github.com/coreos/prometheus-operator/pkg/watchmanager"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -42,6 +43,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
@@ -67,6 +70,8 @@ type Operator struct {
 	secrInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
 	nsInf   cache.SharedIndexInformer
+
+	smonManager watchmanager.Manager
 
 	queue workqueue.RateLimitingInterface
 
@@ -282,7 +287,36 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		listwatch.NewUnprivilegedNamespaceListWatchFromClient(c.kclient.Core().RESTClient(), c.config.Namespaces, fields.Everything()),
 		&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
 	)
-
+	c.smonManager = watchmanager.NewObjectCache(
+		func(namespace string, options metav1.ListOptions) (runtime.Object, error) {
+			return c.kclient.CoreV1().Secrets(namespace).List(options)
+		},
+		func(namespace string, options metav1.ListOptions) (watch.Interface, error) {
+			return c.kclient.CoreV1().Secrets(namespace).Watch(options)
+		},
+		func() runtime.Object {
+			return &v1.Secret{}
+		},
+		v1.Resource("secret"),
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    c.handleSecretAdd,
+			DeleteFunc: c.handleSecretDelete,
+			UpdateFunc: c.handleSecretUpdate,
+		},
+		func(smon *monitoringv1.ServiceMonitor) sets.String {
+			result := sets.NewString()
+			for _, ep := range smon.Spec.Endpoints {
+				if ep.BasicAuth != nil {
+					if secretName := ep.BasicAuth.Username.Name; secretName != "" {
+						result.Insert(secretName)
+					}
+					if secretName := ep.BasicAuth.Password.Name; secretName != "" {
+						result.Insert(secretName)
+					}
+				}
+			}
+			return result
+		})
 	return c, nil
 }
 
