@@ -71,7 +71,7 @@ type Operator struct {
 	ssetInf cache.SharedIndexInformer
 	nsInf   cache.SharedIndexInformer
 
-	smonManager watchmanager.Manager
+	smonSecretManager watchmanager.Manager
 
 	queue workqueue.RateLimitingInterface
 
@@ -287,37 +287,48 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		listwatch.NewUnprivilegedNamespaceListWatchFromClient(c.kclient.Core().RESTClient(), c.config.Namespaces, fields.Everything()),
 		&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
 	)
-	c.smonManager = watchmanager.NewObjectCache(
-		func(namespace string, options metav1.ListOptions) (runtime.Object, error) {
-			return c.kclient.CoreV1().Secrets(namespace).List(options)
-		},
-		func(namespace string, options metav1.ListOptions) (watch.Interface, error) {
-			return c.kclient.CoreV1().Secrets(namespace).Watch(options)
-		},
-		func() runtime.Object {
-			return &v1.Secret{}
-		},
-		v1.Resource("secret"),
-		cache.ResourceEventHandlerFuncs{
-			AddFunc:    c.handleSecretAdd,
-			DeleteFunc: c.handleSecretDelete,
-			UpdateFunc: c.handleSecretUpdate,
-		},
-		func(smon *monitoringv1.ServiceMonitor) sets.String {
-			result := sets.NewString()
-			for _, ep := range smon.Spec.Endpoints {
-				if ep.BasicAuth != nil {
-					if secretName := ep.BasicAuth.Username.Name; secretName != "" {
-						result.Insert(secretName)
-					}
-					if secretName := ep.BasicAuth.Password.Name; secretName != "" {
-						result.Insert(secretName)
-					}
+	c.smonSecretManager = newSecretManager(c)
+	return c, nil
+}
+
+// secretManager tracks ServiceMonitor and establishes single-item informers for
+// all secrets it references. If same Secret is referenced multiple times by
+// multiple ServicMonitoris only single informer is created. Any change to secrets
+// trigger same event handling function as normal Operator.secrInf
+func newSecretManager(c *Operator) watchmanager.Manager {
+	listSecrets := func(namespace string, options metav1.ListOptions) (runtime.Object, error) {
+		return c.kclient.CoreV1().Secrets(namespace).List(options)
+	}
+	watchSecrets := func(namespace string, options metav1.ListOptions) (watch.Interface, error) {
+		return c.kclient.CoreV1().Secrets(namespace).Watch(options)
+	}
+	secretEventsHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleSecretAdd,
+		DeleteFunc: c.handleSecretDelete,
+		UpdateFunc: c.handleSecretUpdate,
+	}
+	getReferencedSecrets := func(smon *monitoringv1.ServiceMonitor) sets.String {
+		result := sets.NewString()
+		for _, ep := range smon.Spec.Endpoints {
+			if ep.BasicAuth != nil {
+				if secretName := ep.BasicAuth.Username.Name; secretName != "" {
+					result.Insert(secretName)
+				}
+				if secretName := ep.BasicAuth.Password.Name; secretName != "" {
+					result.Insert(secretName)
 				}
 			}
-			return result
-		})
-	return c, nil
+		}
+		return result
+	}
+
+	return watchmanager.NewObjectCache(
+		listSecrets,
+		watchSecrets,
+		func() runtime.Object { return &v1.Secret{} },
+		v1.Resource("secret"),
+		secretEventsHandler,
+		getReferencedSecrets)
 }
 
 // RegisterMetrics registers Prometheus metrics on the given Prometheus
