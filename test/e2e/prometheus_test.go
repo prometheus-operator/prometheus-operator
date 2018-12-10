@@ -167,6 +167,11 @@ func testPromResourceUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+        if len(pods.Items) != 1 {
+                t.Fatalf("Expected single pod to be found, got %d pods instead", len(pods.Items))
+        }
+
 	res := pods.Items[0].Spec.Containers[0].Resources
 
 	if !reflect.DeepEqual(res, p.Spec.Resources) {
