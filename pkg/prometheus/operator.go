@@ -648,12 +648,22 @@ func (c *Operator) syncNodeEndpoints() error {
 	return nil
 }
 
+func sMonFromObj(obj interface{}) (*monitoringv1.ServiceMonitor, bool) {
+	staleObj, stale := obj.(cache.DeletedFinalStateUnknown)
+	if stale {
+		obj = staleObj
+	}
+	o, ok := obj.(*monitoringv1.ServiceMonitor)
+	return o, ok
+}
+
 // TODO: Don't enque just for the namespace
 func (c *Operator) handleSmonAdd(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := sMonFromObj(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor added")
 		c.triggerByCounter.WithLabelValues(monitoringv1.ServiceMonitorsKind, "add").Inc()
+		c.smonSecretManager.RegisterSMon(o)
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -661,26 +671,29 @@ func (c *Operator) handleSmonAdd(obj interface{}) {
 
 // TODO: Don't enque just for the namespace
 func (c *Operator) handleSmonUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.ServiceMonitor).ResourceVersion == cur.(*monitoringv1.ServiceMonitor).ResourceVersion {
+	oldSmon, okOld := sMonFromObj(old)
+	curSmon, okCur := sMonFromObj(cur)
+
+	if okOld && okCur && oldSmon.GetResourceVersion() == curSmon.GetResourceVersion() {
 		return
 	}
 
-	o, ok := c.getObject(cur)
-	if ok {
+	if okCur {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor updated")
 		c.triggerByCounter.WithLabelValues(monitoringv1.ServiceMonitorsKind, "update").Inc()
+		c.smonSecretManager.RegisterSMon(curSmon)
 
-		c.enqueueForNamespace(o.GetNamespace())
+		c.enqueueForNamespace(curSmon.GetNamespace())
 	}
 }
 
 // TODO: Don't enque just for the namespace
 func (c *Operator) handleSmonDelete(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := sMonFromObj(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor delete")
 		c.triggerByCounter.WithLabelValues(monitoringv1.ServiceMonitorsKind, "delete").Inc()
-
+		c.smonSecretManager.UnregisterSMon(o)
 		c.enqueueForNamespace(o.GetNamespace())
 	}
 }
