@@ -5,7 +5,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     namespace: 'default',
 
     versions+:: {
-      prometheusAdapter: 'v0.3.0',
+      prometheusAdapter: 'v0.4.0',
     },
 
     imageRepos+:: {
@@ -113,6 +113,8 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       deployment.mixin.metadata.withNamespace($._config.namespace) +
       deployment.mixin.spec.selector.withMatchLabels($._config.prometheusAdapter.labels) +
       deployment.mixin.spec.template.spec.withServiceAccountName($.prometheusAdapter.serviceAccount.metadata.name) +
+      deployment.mixin.spec.strategy.rollingUpdate.withMaxSurge(1) +
+      deployment.mixin.spec.strategy.rollingUpdate.withMaxUnavailable(0) +
       deployment.mixin.spec.template.spec.withVolumes([
         volume.fromEmptyDir(name='tmpfs'),
         volume.fromEmptyDir(name='volume-serving-cert'),
