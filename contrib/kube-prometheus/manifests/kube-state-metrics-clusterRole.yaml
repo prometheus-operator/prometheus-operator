@@ -67,3 +67,10 @@ rules:
   - subjectaccessreviews
   verbs:
   - create
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - list
+  - watch
