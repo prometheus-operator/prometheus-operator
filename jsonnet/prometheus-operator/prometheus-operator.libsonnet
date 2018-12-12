@@ -28,7 +28,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local clusterRoleBinding = k.rbac.v1.clusterRoleBinding;
 
       clusterRoleBinding.new() +
-      clusterRoleBinding.mixin.metadata.withName('prometheus-operator') +
+      clusterRoleBinding.mixin.metadata.withName('prometheus-operator-' + $._config.namespace) +
       clusterRoleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
       clusterRoleBinding.mixin.roleRef.withName('prometheus-operator') +
       clusterRoleBinding.mixin.roleRef.mixinInstance({ kind: 'ClusterRole' }) +
