@@ -405,8 +405,9 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	terminationGracePeriod := int64(0)
 	finalLabels := config.Labels.Merge(podLabels)
 	return &appsv1.StatefulSetSpec{
-		ServiceName: governingServiceName,
-		Replicas:    a.Spec.Replicas,
+		ServiceName:         governingServiceName,
+		Replicas:            a.Spec.Replicas,
+		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		},
