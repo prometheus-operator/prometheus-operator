@@ -1,0 +1,24 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-operator
+  description: |
+     Cluster-wide permissions prometheus operator needs to operate
+rules:
+# used when --mange-crds is set
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - '*'
+
+# allows namespaceSelector to work smoothly (TODO: fix missing namespace label change handling)
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
