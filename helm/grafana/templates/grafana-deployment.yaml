@@ -88,6 +88,10 @@ spec:
         volumeMounts:
           - name: grafana-dashboards
             mountPath: /var/grafana-dashboards
+          {{- if .Values.extraGrafanaConfigs }}
+          - name: grafana-extra-configs
+            mountPath: /etc/grafana
+          {{- end }}
     {{- range .Values.serverDashboardConfigmaps }}
           - name: {{ . }}
             mountPath: /var/additional-dashboards/{{ . }}
@@ -124,4 +128,9 @@ spec:
         - name: {{ . }}
           configMap:
             name: {{ . }}
+      {{- end }}
+      {{- if .Values.extraGrafanaConfigs }}
+        - name: extra
+          configMap:
+            name: {{ template "grafana.server.configname" . }}
       {{- end }}

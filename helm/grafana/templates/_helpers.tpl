@@ -32,6 +32,10 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- printf "%s-%s" .Release.Name "grafana" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "grafana.server.configname" -}}
+{{- printf "%s-config-%s" .Release.Name "grafana" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
 {{/*
 Return the appropriate apiVersion value to use for the prometheus-operator managed k8s resources
 */}}
