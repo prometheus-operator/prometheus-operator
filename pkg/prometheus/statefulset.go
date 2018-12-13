@@ -86,7 +86,6 @@ var (
 
 func makeStatefulSet(
 	p monitoringv1.Prometheus,
-	previousPodManagementPolicy appsv1.PodManagementPolicyType,
 	config *Config,
 	ruleConfigMapNames []string,
 	inputHash string,
@@ -210,10 +209,6 @@ func makeStatefulSet(
 		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
 		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, pvcTemplate)
 	}
-
-	// Updates to statefulset spec for fields other than 'replicas',
-	// 'template', and 'updateStrategy' are forbidden.
-	statefulset.Spec.PodManagementPolicy = previousPodManagementPolicy
 
 	return statefulset, nil
 }
