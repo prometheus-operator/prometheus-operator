@@ -35,7 +35,7 @@ import (
 const (
 	governingServiceName     = "prometheus-operated"
 	DefaultPrometheusVersion = "v2.5.0"
-	DefaultThanosVersion     = "v0.1.0"
+	DefaultThanosVersion     = "v0.2.1"
 	defaultRetention         = "24h"
 	storageDir               = "/prometheus"
 	confDir                  = "/etc/prometheus/config"
@@ -698,17 +698,23 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		}
 
 		if p.Spec.Thanos.S3 != nil {
+			objstore := []string{"--objstore.config=type: S3"}
+			objstore = append(objstore, "config:")
+
 			if p.Spec.Thanos.S3.Bucket != nil {
-				thanosArgs = append(thanosArgs, fmt.Sprintf("--s3.bucket=%s", *p.Spec.Thanos.S3.Bucket))
+				objstore = append(objstore, fmt.Sprintf("  bucket: %s", *p.Spec.Thanos.S3.Bucket))
 			}
 			if p.Spec.Thanos.S3.Endpoint != nil {
-				thanosArgs = append(thanosArgs, fmt.Sprintf("--s3.endpoint=%s", *p.Spec.Thanos.S3.Endpoint))
+				objstore = append(objstore, fmt.Sprintf("  endpoint: %s", *p.Spec.Thanos.S3.Endpoint))
 			}
 			if p.Spec.Thanos.S3.Insecure != nil && *p.Spec.Thanos.S3.Insecure {
-				thanosArgs = append(thanosArgs, "--s3.insecure")
+				objstore = append(objstore, "  insecure: true")
 			}
 			if p.Spec.Thanos.S3.SignatureVersion2 != nil && *p.Spec.Thanos.S3.SignatureVersion2 {
-				thanosArgs = append(thanosArgs, "--s3.signature-version2")
+				objstore = append(objstore, "  signature-version2: true")
+			}
+			if p.Spec.Thanos.S3.EncryptSSE != nil && *p.Spec.Thanos.S3.EncryptSSE {
+				objstore = append(objstore, "  encrypt-sse: true")
 			}
 			if p.Spec.Thanos.S3.AccessKey != nil {
 				envVars = append(envVars, v1.EnvVar{
@@ -717,9 +723,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 						SecretKeyRef: p.Spec.Thanos.S3.AccessKey,
 					},
 				})
-			}
-			if p.Spec.Thanos.S3.EncryptSSE != nil && *p.Spec.Thanos.S3.EncryptSSE {
-				thanosArgs = append(thanosArgs, "--s3.encrypt-sse")
+				objstore = append(objstore, "  access_key: $(S3_ACCESS_KEY)")
 			}
 			if p.Spec.Thanos.S3.SecretKey != nil {
 				envVars = append(envVars, v1.EnvVar{
@@ -728,7 +732,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 						SecretKeyRef: p.Spec.Thanos.S3.SecretKey,
 					},
 				})
+				objstore = append(objstore, "  secret_key: $(S3_SECRET_KEY)")
 			}
+			thanosArgs = append(thanosArgs, strings.Join(objstore, "\n"))
 		}
 
 		c := v1.Container{
