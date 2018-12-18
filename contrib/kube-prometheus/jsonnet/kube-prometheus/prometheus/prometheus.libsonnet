@@ -391,6 +391,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           },
         },
         spec: {
+          jobLabel: 'k8s-app',
           selector: {
             matchLabels: {
               'k8s-app': 'kube-dns',
