@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"reflect"
 	"strings"
@@ -1313,7 +1314,19 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	s.ObjectMeta.Annotations = map[string]string{
 		"generated": "true",
 	}
-	s.Data[configFilename] = []byte(conf)
+
+	// Compress config to avoid 1mb secret limit for a while
+	var buf bytes.Buffer
+	w, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	if err != nil {
+		return errors.Wrap(err, "couldnt get gzip config writer")
+	}
+	if _, err = w.Write(conf); err != nil {
+		return errors.Wrap(err, "couldnt gzip config")
+	}
+	w.Close()
+
+	s.Data[configFilename] = buf.Bytes()
 
 	curSecret, err := sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {

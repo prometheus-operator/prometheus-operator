@@ -45,6 +45,12 @@ func main() {
 	cfgFile := app.Flag("config-file", "config file watched by the reloader").
 		String()
 
+	decompress := app.Flag("decompress", "config file requires (zip) decompression").
+		Bool()
+
+	decompressOutputDir := app.Flag("decompress-output-dir", "output directory for decompessed config file").
+		String()
+
 	cfgSubstFile := app.Flag("config-envsubst-file", "output file for environment variable substituted config file").
 		String()
 
@@ -58,6 +64,13 @@ func main() {
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
+	}
+
+	if *decompress {
+		if *decompressOutputDir == "" {
+			fmt.Fprintln(os.Stderr, "decompress requires the decompress-output-dir flag")
+			os.Exit(2)
+		}
 	}
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
@@ -79,7 +92,7 @@ func main() {
 	var g run.Group
 	{
 		ctx, cancel := context.WithCancel(context.Background())
-		rel := reloader.New(logger, *reloadURL, *cfgFile, *cfgSubstFile, *ruleDir)
+		rel := reloader.New(logger, *reloadURL, *cfgFile, *cfgSubstFile, *ruleDir, *decompress, *decompressOutputDir)
 
 		g.Add(func() error {
 			return rel.Watch(ctx)

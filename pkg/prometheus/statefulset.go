@@ -43,7 +43,7 @@ const (
 	rulesDir                 = "/etc/prometheus/rules"
 	secretsDir               = "/etc/prometheus/secrets/"
 	configmapsDir            = "/etc/prometheus/configmaps/"
-	configFilename           = "prometheus.yaml"
+	configFilename           = "prometheus.yaml.gz"
 	configEnvsubstFilename   = "prometheus.env.yaml"
 	sSetInputHashName        = "prometheus-operator-input-hash"
 )
@@ -497,6 +497,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		fmt.Sprintf("--reload-url=%s", localReloadURL),
 		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
 		fmt.Sprintf("--config-envsubst-file=%s", path.Join(confOutDir, configEnvsubstFilename)),
+		fmt.Sprintf("--decompress"),
+		fmt.Sprintf("--decompress-output-dir=%s", confOutDir),
 	}
 
 	var livenessProbeHandler v1.Handler
@@ -805,9 +807,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				NodeSelector:                  p.Spec.NodeSelector,
 				PriorityClassName:             p.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
-				Volumes:                       volumes,
-				Tolerations:                   p.Spec.Tolerations,
-				Affinity:                      p.Spec.Affinity,
+				Volumes:     volumes,
+				Tolerations: p.Spec.Tolerations,
+				Affinity:    p.Spec.Affinity,
 			},
 		},
 	}, nil

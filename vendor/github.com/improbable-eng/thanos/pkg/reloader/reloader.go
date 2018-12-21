@@ -4,6 +4,7 @@ package reloader
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"crypto/sha256"
 	"hash"
@@ -15,6 +16,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -28,13 +30,15 @@ import (
 // It optionally substitutes environment variables in the configuration.
 // Referenced environment variables must be of the form `$(var)` (not `$var` or `${var}`).
 type Reloader struct {
-	logger          log.Logger
-	reloadURL       *url.URL
-	cfgFile         string
-	cfgEnvsubstFile string
-	ruleDir         string
-	ruleInterval    time.Duration
-	retryInterval   time.Duration
+	logger              log.Logger
+	reloadURL           *url.URL
+	cfgFile             string
+	cfgEnvsubstFile     string
+	ruleDir             string
+	ruleInterval        time.Duration
+	retryInterval       time.Duration
+	decompress          bool
+	decompressOutputDir string
 
 	lastCfgHash  []byte
 	lastRuleHash []byte
@@ -45,18 +49,20 @@ type Reloader struct {
 // If cfgEnvsubstFile is not empty, environment variables in the config file will be
 // substituted and the out put written into the given path. Prometheus should then
 // use cfgEnvsubstFile as its config file path.
-func New(logger log.Logger, reloadURL *url.URL, cfgFile string, cfgEnvsubstFile string, ruleDir string) *Reloader {
+func New(logger log.Logger, reloadURL *url.URL, cfgFile string, cfgEnvsubstFile string, ruleDir string, decompress bool, decompressOutputDir string) *Reloader {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
 	return &Reloader{
-		logger:          logger,
-		reloadURL:       reloadURL,
-		cfgFile:         cfgFile,
-		cfgEnvsubstFile: cfgEnvsubstFile,
-		ruleDir:         ruleDir,
-		ruleInterval:    3 * time.Minute,
-		retryInterval:   5 * time.Second,
+		logger:              logger,
+		reloadURL:           reloadURL,
+		cfgFile:             cfgFile,
+		cfgEnvsubstFile:     cfgEnvsubstFile,
+		ruleDir:             ruleDir,
+		ruleInterval:        3 * time.Minute,
+		retryInterval:       5 * time.Second,
+		decompress:          decompress,
+		decompressOutputDir: decompressOutputDir,
 	}
 }
 
@@ -112,6 +118,36 @@ func (r *Reloader) Watch(ctx context.Context) error {
 	}
 }
 
+// extract gzipped cfgFile to outputDir
+func extract(cfgFile string, outputDir string) error {
+
+	fh, err := os.OpenFile(cfgFile, os.O_RDONLY, 0)
+	if err != nil {
+		return err
+	}
+
+	zr, err := gzip.NewReader(fh)
+	if err != nil {
+		return errors.Wrap(err, "create gzip reader")
+	}
+	defer zr.Close()
+
+	fc, err := ioutil.ReadAll(zr)
+	if err != nil {
+		return errors.Wrap(err, "read compressed config file")
+	}
+
+	fileName := filepath.Base(strings.TrimRight(cfgFile, ".gz"))
+	outputFile := path.Join(outputDir, fileName)
+
+	err = ioutil.WriteFile(outputFile, fc, 0644)
+	if err != nil {
+		return errors.Wrap(err, "write extracted config file")
+	}
+
+	return nil
+}
+
 // apply triggers Prometheus reload if rules or config changed. If cfgEnvsubstFile is set, we also
 // expand env vars into config file before reloading.
 // Reload is retried in retryInterval until ruleInterval.
@@ -126,8 +162,20 @@ func (r *Reloader) apply(ctx context.Context) error {
 			return errors.Wrap(err, "hash file")
 		}
 		cfgHash = h.Sum(nil)
+
+		if r.decompress {
+			if err := extract(r.cfgFile, r.decompressOutputDir); err != nil {
+				return errors.Wrap(err, "decompress file")
+			}
+		}
+
 		if r.cfgEnvsubstFile != "" {
-			b, err := ioutil.ReadFile(r.cfgFile)
+			inputCfgFile := r.cfgFile
+			if r.decompress {
+				inputCfgFile = path.Join(r.decompressOutputDir, filepath.Base(strings.TrimRight(r.cfgFile, ".gz")))
+			}
+
+			b, err := ioutil.ReadFile(inputCfgFile)
 			if err != nil {
 				return errors.Wrap(err, "read file")
 			}
