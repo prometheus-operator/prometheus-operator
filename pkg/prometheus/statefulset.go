@@ -807,9 +807,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				NodeSelector:                  p.Spec.NodeSelector,
 				PriorityClassName:             p.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
-				Volumes:     volumes,
-				Tolerations: p.Spec.Tolerations,
-				Affinity:    p.Spec.Affinity,
+				Volumes:                       volumes,
+				Tolerations:                   p.Spec.Tolerations,
+				Affinity:                      p.Spec.Affinity,
 			},
 		},
 	}, nil
