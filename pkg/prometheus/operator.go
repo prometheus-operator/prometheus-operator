@@ -1324,7 +1324,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	if _, err = w.Write(conf); err != nil {
 		return errors.Wrap(err, "couldnt gzip config")
 	}
-	w.Close()
+	defer w.Close()
 
 	s.Data[configFilename] = buf.Bytes()
 
