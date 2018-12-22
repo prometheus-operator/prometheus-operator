@@ -76,7 +76,7 @@
                                 "step": 50
                             }
                         ],
-                        "title": "Idle CPU",
+                        "title": "CPU Usage",
                         "tooltip": {
                             "msResolution": false,
                             "shared": true,
