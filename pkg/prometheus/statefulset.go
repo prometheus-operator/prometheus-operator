@@ -497,8 +497,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		fmt.Sprintf("--reload-url=%s", localReloadURL),
 		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
 		fmt.Sprintf("--config-envsubst-file=%s", path.Join(confOutDir, configEnvsubstFilename)),
-		fmt.Sprintf("--decompress"),
-		fmt.Sprintf("--decompress-output-dir=%s", confOutDir),
+		fmt.Sprintf("--gunzip-dir=%s", confOutDir),
 	}
 
 	var livenessProbeHandler v1.Handler
