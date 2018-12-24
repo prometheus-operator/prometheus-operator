@@ -30,15 +30,14 @@ import (
 // It optionally substitutes environment variables in the configuration.
 // Referenced environment variables must be of the form `$(var)` (not `$var` or `${var}`).
 type Reloader struct {
-	logger              log.Logger
-	reloadURL           *url.URL
-	cfgFile             string
-	cfgEnvsubstFile     string
-	ruleDir             string
-	ruleInterval        time.Duration
-	retryInterval       time.Duration
-	decompress          bool
-	decompressOutputDir string
+	logger          log.Logger
+	reloadURL       *url.URL
+	cfgFile         string
+	cfgEnvsubstFile string
+	ruleDir         string
+	ruleInterval    time.Duration
+	retryInterval   time.Duration
+	gunzipDir       string
 
 	lastCfgHash  []byte
 	lastRuleHash []byte
@@ -49,20 +48,19 @@ type Reloader struct {
 // If cfgEnvsubstFile is not empty, environment variables in the config file will be
 // substituted and the out put written into the given path. Prometheus should then
 // use cfgEnvsubstFile as its config file path.
-func New(logger log.Logger, reloadURL *url.URL, cfgFile string, cfgEnvsubstFile string, ruleDir string, decompress bool, decompressOutputDir string) *Reloader {
+func New(logger log.Logger, reloadURL *url.URL, cfgFile string, cfgEnvsubstFile string, ruleDir string, gunzipDir string) *Reloader {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
 	return &Reloader{
-		logger:              logger,
-		reloadURL:           reloadURL,
-		cfgFile:             cfgFile,
-		cfgEnvsubstFile:     cfgEnvsubstFile,
-		ruleDir:             ruleDir,
-		ruleInterval:        3 * time.Minute,
-		retryInterval:       5 * time.Second,
-		decompress:          decompress,
-		decompressOutputDir: decompressOutputDir,
+		logger:          logger,
+		reloadURL:       reloadURL,
+		cfgFile:         cfgFile,
+		cfgEnvsubstFile: cfgEnvsubstFile,
+		gunzipDir:       gunzipDir,
+		ruleDir:         ruleDir,
+		ruleInterval:    3 * time.Minute,
+		retryInterval:   5 * time.Second,
 	}
 }
 
@@ -163,16 +161,17 @@ func (r *Reloader) apply(ctx context.Context) error {
 		}
 		cfgHash = h.Sum(nil)
 
-		if r.decompress {
-			if err := extract(r.cfgFile, r.decompressOutputDir); err != nil {
-				return errors.Wrap(err, "decompress file")
+		if r.gunzipDir != "" {
+			if err := extract(r.cfgFile, r.gunzipDir); err != nil {
+				return errors.Wrap(err, "gunzip file")
 			}
 		}
 
 		if r.cfgEnvsubstFile != "" {
 			inputCfgFile := r.cfgFile
-			if r.decompress {
-				inputCfgFile = path.Join(r.decompressOutputDir, filepath.Base(strings.TrimRight(r.cfgFile, ".gz")))
+			// If we're dealing with a compressed cfgFile, read the uncompressed file from gunzipDir
+			if r.gunzipDir != "" {
+				inputCfgFile = path.Join(r.gunzipDir, filepath.Base(strings.TrimRight(r.cfgFile, ".gz")))
 			}
 
 			b, err := ioutil.ReadFile(inputCfgFile)
