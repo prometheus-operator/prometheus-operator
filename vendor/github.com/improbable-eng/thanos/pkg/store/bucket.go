@@ -12,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/improbable-eng/thanos/pkg/compact/downsample"
 	"github.com/improbable-eng/thanos/pkg/objstore"
 	"github.com/improbable-eng/thanos/pkg/pool"
+	"github.com/improbable-eng/thanos/pkg/runutil"
 	"github.com/improbable-eng/thanos/pkg/store/storepb"
 	"github.com/improbable-eng/thanos/pkg/strutil"
 	"github.com/improbable-eng/thanos/pkg/tracing"
@@ -56,7 +58,7 @@ type bucketStoreMetrics struct {
 	chunkSizeBytes        prometheus.Histogram
 }
 
-func newBucketStoreMetrics(reg prometheus.Registerer, s *BucketStore) *bucketStoreMetrics {
+func newBucketStoreMetrics(reg prometheus.Registerer) *bucketStoreMetrics {
 	var m bucketStoreMetrics
 
 	m.blockLoads = prometheus.NewCounter(prometheus.CounterOpts{
@@ -90,11 +92,11 @@ func newBucketStoreMetrics(reg prometheus.Registerer, s *BucketStore) *bucketSto
 	}, []string{"data_type"})
 
 	m.seriesDataSizeTouched = prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Name: "thanos_bucket_store_series_data_size_touched",
+		Name: "thanos_bucket_store_series_data_size_touched_bytes",
 		Help: "Size of all items of a data type in a block were touched for a single series request.",
 	}, []string{"data_type"})
 	m.seriesDataSizeFetched = prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Name: "thanos_bucket_store_series_data_size_fetched",
+		Name: "thanos_bucket_store_series_data_size_fetched_bytes",
 		Help: "Size of all items of a data type in a block were fetched for a single series request.",
 	}, []string{"data_type"})
 
@@ -164,6 +166,9 @@ type BucketStore struct {
 	mtx       sync.RWMutex
 	blocks    map[ulid.ULID]*bucketBlock
 	blockSets map[uint64]*bucketBlockSet
+
+	// Verbose enabled additional logging.
+	debugLogging bool
 }
 
 // NewBucketStore creates a new bucket backed store that implements the store API against
@@ -175,6 +180,7 @@ func NewBucketStore(
 	dir string,
 	indexCacheSizeBytes uint64,
 	maxChunkPoolBytes uint64,
+	debugLogging bool,
 ) (*BucketStore, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
@@ -188,33 +194,21 @@ func NewBucketStore(
 		return nil, errors.Wrap(err, "create chunk pool")
 	}
 	s := &BucketStore{
-		logger:     logger,
-		bucket:     bucket,
-		dir:        dir,
-		indexCache: indexCache,
-		chunkPool:  chunkPool,
-		blocks:     map[ulid.ULID]*bucketBlock{},
-		blockSets:  map[uint64]*bucketBlockSet{},
+		logger:       logger,
+		bucket:       bucket,
+		dir:          dir,
+		indexCache:   indexCache,
+		chunkPool:    chunkPool,
+		blocks:       map[ulid.ULID]*bucketBlock{},
+		blockSets:    map[uint64]*bucketBlockSet{},
+		debugLogging: debugLogging,
 	}
-	s.metrics = newBucketStoreMetrics(reg, s)
+	s.metrics = newBucketStoreMetrics(reg)
 
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return nil, errors.Wrap(err, "create dir")
 	}
-	fns, err := fileutil.ReadDir(dir)
-	if err != nil {
-		return nil, errors.Wrap(err, "read dir")
-	}
-	for _, dn := range fns {
-		id, err := ulid.Parse(dn)
-		if err != nil {
-			continue
-		}
-		if err := s.addBlock(context.TODO(), id); err != nil {
-			level.Warn(s.logger).Log("msg", "loading block failed", "id", id, "err", err)
-			continue
-		}
-	}
+
 	return s, nil
 }
 
@@ -233,6 +227,7 @@ func (s *BucketStore) Close() (err error) {
 }
 
 // SyncBlocks synchronizes the stores state with the Bucket bucket.
+// It will reuse disk space as persistent cache based on s.dir param.
 func (s *BucketStore) SyncBlocks(ctx context.Context) error {
 	var wg sync.WaitGroup
 	blockc := make(chan ulid.ULID)
@@ -274,7 +269,7 @@ func (s *BucketStore) SyncBlocks(ctx context.Context) error {
 	wg.Wait()
 
 	if err != nil {
-		return err
+		return errors.Wrap(err, "iter")
 	}
 	// Drop all blocks that are no longer present in the bucket.
 	for id := range s.blocks {
@@ -287,6 +282,36 @@ func (s *BucketStore) SyncBlocks(ctx context.Context) error {
 		}
 		s.metrics.blockDrops.Inc()
 	}
+
+	return nil
+}
+
+// InitialSync perform blocking sync with extra step at the end to delete locally saved blocks that are no longer
+// present in the bucket. The mismatch of these can only happen between restarts, so we can do that only once per startup.
+func (s *BucketStore) InitialSync(ctx context.Context) error {
+	if err := s.SyncBlocks(ctx); err != nil {
+		return errors.Wrap(err, "sync block")
+	}
+
+	names, err := fileutil.ReadDir(s.dir)
+	if err != nil {
+		return errors.Wrap(err, "read dir")
+	}
+	for _, n := range names {
+		id, ok := block.IsBlockDir(n)
+		if !ok {
+			continue
+		}
+		if b := s.getBlock(id); b != nil {
+			continue
+		}
+
+		// No such block loaded, remove the local dir.
+		if err := os.RemoveAll(path.Join(s.dir, id.String())); err != nil {
+			level.Warn(s.logger).Log("msg", "failed to remove block which is not needed", "err", err)
+		}
+	}
+
 	return nil
 }
 
@@ -308,15 +333,24 @@ func (s *BucketStore) addBlock(ctx context.Context, id ulid.ULID) (err error) {
 	defer func() {
 		if err != nil {
 			s.metrics.blockLoadFailures.Inc()
-			os.RemoveAll(dir)
+			if err2 := os.RemoveAll(dir); err2 != nil {
+				level.Warn(s.logger).Log("msg", "failed to remove block we cannot load", "err", err2)
+			}
 		}
 	}()
 	s.metrics.blockLoads.Inc()
 
-	b, err := newBucketBlock(ctx, log.With(s.logger, "block", id),
-		s.bucket, id, dir, s.indexCache, s.chunkPool)
+	b, err := newBucketBlock(
+		ctx,
+		log.With(s.logger, "block", id),
+		s.bucket,
+		id,
+		dir,
+		s.indexCache,
+		s.chunkPool,
+	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "new bucket block")
 	}
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
@@ -343,18 +377,18 @@ func (s *BucketStore) addBlock(ctx context.Context, id ulid.ULID) (err error) {
 func (s *BucketStore) removeBlock(id ulid.ULID) error {
 	s.mtx.Lock()
 	b, ok := s.blocks[id]
-	delete(s.blocks, id)
-
 	if ok {
 		lset := labels.FromMap(b.meta.Thanos.Labels)
 		s.blockSets[lset.Hash()].remove(id)
+		delete(s.blocks, id)
 	}
 	s.mtx.Unlock()
-	s.metrics.blocksLoaded.Dec()
 
 	if !ok {
 		return nil
 	}
+
+	s.metrics.blocksLoaded.Dec()
 	if err := b.Close(); err != nil {
 		return errors.Wrap(err, "close block")
 	}
@@ -448,10 +482,13 @@ func (s *BucketStore) blockSeries(
 	if lazyPostings == index.EmptyPostings() {
 		return storepb.EmptySeriesSet(), stats, nil
 	}
+
 	if err := indexr.preloadPostings(); err != nil {
 		return nil, stats, errors.Wrap(err, "preload postings")
 	}
+
 	// Get result postings list by resolving the postings tree.
+	// TODO(bwplotka): Users are seeing panics here, because of lazyPosting being not loaded by preloadPostings.
 	ps, err := index.ExpandPostings(lazyPostings)
 	if err != nil {
 		return nil, stats, errors.Wrap(err, "expand postings")
@@ -603,7 +640,45 @@ func populateChunk(out *storepb.AggrChunk, in chunkenc.Chunk, aggrs []storepb.Ag
 	return nil
 }
 
+// debugFoundBlockSetOverview logs on debug level what exactly blocks we used for query in terms of
+// labels and resolution. This is important because we allow mixed resolution results, so it is quite crucial
+// to be aware what exactly resolution we see on query.
+// TODO(bplotka): Consider adding resolution label to all results to propagate that info to UI and Query API.
+func debugFoundBlockSetOverview(logger log.Logger, mint, maxt int64, lset labels.Labels, bs []*bucketBlock) {
+	if len(bs) == 0 {
+		level.Debug(logger).Log("msg", "No block found", "mint", mint, "maxt", maxt, "lset", lset.String())
+		return
+	}
+
+	var (
+		parts            []string
+		currRes          = int64(-1)
+		currMin, currMax int64
+	)
+	for _, b := range bs {
+		if currRes == b.meta.Thanos.Downsample.Resolution {
+			currMax = b.meta.MaxTime
+			continue
+		}
+
+		if currRes != -1 {
+			parts = append(parts, fmt.Sprintf("Range: %d-%d Resolution: %d", currMin, currMax, currRes))
+		}
+
+		currRes = b.meta.Thanos.Downsample.Resolution
+		currMin = b.meta.MinTime
+		currMax = b.meta.MaxTime
+	}
+
+	parts = append(parts, fmt.Sprintf("Range: %d-%d Resolution: %d", currMin, currMax, currRes))
+
+	level.Debug(logger).Log("msg", "Blocks source resolutions", "blocks", len(bs), "mint", mint, "maxt", maxt, "lset", lset.String(), "spans", strings.Join(parts, "\n"))
+}
+
 // Series implements the storepb.StoreServer interface.
+// TODO(bwplotka): It buffers all chunks in memory and only then streams to client.
+// 1. Either count chunk sizes and error out too big query.
+// 2. Stream posting -> series -> chunk all together.
 func (s *BucketStore) Series(req *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
 	matchers, err := translateMatchers(req.Matchers)
 	if err != nil {
@@ -624,6 +699,10 @@ func (s *BucketStore) Series(req *storepb.SeriesRequest, srv storepb.Store_Serie
 		}
 		blocks := bs.getFor(req.MinTime, req.MaxTime, req.MaxResolutionWindow)
 
+		if s.debugLogging {
+			debugFoundBlockSetOverview(s.logger, req.MinTime, req.MaxTime, bs.labels, blocks)
+		}
+
 		for _, b := range blocks {
 			stats.blocksQueried++
 
@@ -633,8 +712,10 @@ func (s *BucketStore) Series(req *storepb.SeriesRequest, srv storepb.Store_Serie
 			// We must keep the readers open until all their data has been sent.
 			indexr := b.indexReader(ctx)
 			chunkr := b.chunkReader(ctx)
-			defer indexr.Close()
-			defer chunkr.Close()
+
+			// Defer all closes to the end of Series method.
+			defer runutil.CloseWithLogOnErr(s.logger, indexr, "series block")
+			defer runutil.CloseWithLogOnErr(s.logger, chunkr, "series block")
 
 			g.Add(func() error {
 				part, pstats, err := s.blockSeries(ctx,
@@ -756,7 +837,7 @@ func (s *BucketStore) LabelValues(ctx context.Context, req *storepb.LabelValuesR
 		// TODO(fabxc): only aggregate chunk metas first and add a subsequent fetch stage
 		// where we consolidate requests.
 		g.Go(func() error {
-			defer indexr.Close()
+			defer runutil.CloseWithLogOnErr(s.logger, indexr, "label values")
 
 			tpls, err := indexr.LabelValues(req.Label)
 			if err != nil {
@@ -800,7 +881,7 @@ type bucketBlockSet struct {
 }
 
 // newBucketBlockSet initializes a new set with the known downsampling windows hard-configured.
-// The set currently does not support arbtirary ranges.
+// The set currently does not support arbitrary ranges.
 func newBucketBlockSet(lset labels.Labels) *bucketBlockSet {
 	return &bucketBlockSet{
 		labels:      lset,
@@ -882,7 +963,7 @@ func (s *bucketBlockSet) getFor(mint, maxt, minResolution int64) (bs []*bucketBl
 		bs = append(bs, b)
 	}
 	// Our current resolution might not cover all data, recursively fill the gaps at the start
-	// end end of [mint, maxt] with higher resolution blocks.
+	// and end of [mint, maxt] with higher resolution blocks.
 	i++
 	// No higher resolution left, we are done.
 	if i >= len(s.resolutions) {
@@ -948,23 +1029,19 @@ func newBucketBlock(
 	b = &bucketBlock{
 		logger:     logger,
 		bucket:     bkt,
-		indexObj:   path.Join(id.String(), "index"),
+		indexObj:   path.Join(id.String(), block.IndexFilename),
 		indexCache: indexCache,
 		chunkPool:  chunkPool,
+		dir:        dir,
 	}
-	defer func() {
-		if err != nil {
-			os.RemoveAll(dir)
-		}
-	}()
-	if err = b.loadMeta(ctx, id, dir); err != nil {
+	if err = b.loadMeta(ctx, id); err != nil {
 		return nil, errors.Wrap(err, "load meta")
 	}
-	if err = b.loadIndexCache(ctx, dir); err != nil {
+	if err = b.loadIndexCache(ctx); err != nil {
 		return nil, errors.Wrap(err, "load index cache")
 	}
 	// Get object handles for all chunk files.
-	err = bkt.Iter(ctx, path.Join(id.String(), "chunks"), func(n string) error {
+	err = bkt.Iter(ctx, path.Join(id.String(), block.ChunksDirname), func(n string) error {
 		b.chunkObjs = append(b.chunkObjs, n)
 		return nil
 	})
@@ -974,21 +1051,21 @@ func newBucketBlock(
 	return b, nil
 }
 
-func (b *bucketBlock) loadMeta(ctx context.Context, id ulid.ULID, dir string) error {
+func (b *bucketBlock) loadMeta(ctx context.Context, id ulid.ULID) error {
 	// If we haven't seen the block before download the meta.json file.
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(dir, 0777); err != nil {
+	if _, err := os.Stat(b.dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(b.dir, 0777); err != nil {
 			return errors.Wrap(err, "create dir")
 		}
-		src := path.Join(id.String(), "meta.json")
+		src := path.Join(id.String(), block.MetaFilename)
 
-		if err := objstore.DownloadFile(ctx, b.bucket, src, dir); err != nil {
+		if err := objstore.DownloadFile(ctx, b.logger, b.bucket, src, b.dir); err != nil {
 			return errors.Wrap(err, "download meta.json")
 		}
 	} else if err != nil {
 		return err
 	}
-	meta, err := block.ReadMetaFile(dir)
+	meta, err := block.ReadMetaFile(b.dir)
 	if err != nil {
 		return errors.Wrap(err, "read meta.json")
 	}
@@ -996,35 +1073,39 @@ func (b *bucketBlock) loadMeta(ctx context.Context, id ulid.ULID, dir string) er
 	return nil
 }
 
-func (b *bucketBlock) loadIndexCache(ctx context.Context, dir string) (err error) {
-	cachefn := filepath.Join(dir, block.IndexCacheFilename)
+func (b *bucketBlock) loadIndexCache(ctx context.Context) (err error) {
+	cachefn := filepath.Join(b.dir, block.IndexCacheFilename)
 
-	b.indexVersion, b.symbols, b.lvals, b.postings, err = block.ReadIndexCache(cachefn)
+	b.indexVersion, b.symbols, b.lvals, b.postings, err = block.ReadIndexCache(b.logger, cachefn)
 	if err == nil {
 		return nil
 	}
 	if !os.IsNotExist(errors.Cause(err)) {
 		return errors.Wrap(err, "read index cache")
 	}
-	// No cache exists is on disk yet, build it from a the downloaded index and retry.
-	fn := filepath.Join(dir, "index")
+	// No cache exists is on disk yet, build it from the downloaded index and retry.
+	fn := filepath.Join(b.dir, block.IndexFilename)
 
-	if err := objstore.DownloadFile(ctx, b.bucket, b.indexObj, fn); err != nil {
+	if err := objstore.DownloadFile(ctx, b.logger, b.bucket, b.indexObj, fn); err != nil {
 		return errors.Wrap(err, "download index file")
 	}
-	defer os.Remove(fn)
+	defer func() {
+		if rerr := os.Remove(fn); rerr != nil {
+			level.Error(b.logger).Log("msg", "failed to remove temp index file", "path", fn, "err", rerr)
+		}
+	}()
 
 	indexr, err := index.NewFileReader(fn)
 	if err != nil {
 		return errors.Wrap(err, "open index reader")
 	}
-	defer indexr.Close()
+	defer runutil.CloseWithLogOnErr(b.logger, indexr, "load index cache reader")
 
-	if err := block.WriteIndexCache(cachefn, indexr); err != nil {
+	if err := block.WriteIndexCache(b.logger, cachefn, indexr); err != nil {
 		return errors.Wrap(err, "write index cache")
 	}
 
-	b.indexVersion, b.symbols, b.lvals, b.postings, err = block.ReadIndexCache(cachefn)
+	b.indexVersion, b.symbols, b.lvals, b.postings, err = block.ReadIndexCache(b.logger, cachefn)
 	if err != nil {
 		return errors.Wrap(err, "read index cache")
 	}
@@ -1036,7 +1117,7 @@ func (b *bucketBlock) readIndexRange(ctx context.Context, off, length int64) ([]
 	if err != nil {
 		return nil, errors.Wrap(err, "get range reader")
 	}
-	defer r.Close()
+	defer runutil.CloseWithLogOnErr(b.logger, r, "readIndexRange close range reader")
 
 	c, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -1056,7 +1137,7 @@ func (b *bucketBlock) readChunkRange(ctx context.Context, seq int, off, length i
 	if err != nil {
 		return nil, errors.Wrap(err, "get range reader")
 	}
-	defer r.Close()
+	defer runutil.CloseWithLogOnErr(b.logger, r, "readChunkRange close range reader")
 
 	if _, err = io.Copy(buf, r); err != nil {
 		return nil, errors.Wrap(err, "read range")
@@ -1132,14 +1213,35 @@ func (r *bucketIndexReader) preloadPostings() error {
 			}
 		})
 	}
-	return g.Run()
+
+	if err := g.Run(); err != nil {
+		return err
+	}
+
+	// TODO(bwplotka): Users are seeing lazyPostings not fully loaded. Double checking it here and printing more info
+	// on failure case.
+	for _, postings := range ps {
+		if postings.Postings != nil {
+			continue
+		}
+
+		msg := fmt.Sprintf("found parts: %v bases on:", parts)
+		for _, p := range ps {
+			msg += fmt.Sprintf(" [start: %v; end: %v]", p.ptr.Start, p.ptr.End)
+		}
+
+		return errors.Errorf("expected all postings to be loaded but spotted malformed one with key: %v; start: %v; end: %v. Additional info: %s",
+			postings.key, postings.ptr.Start, postings.ptr.End, msg)
+	}
+
+	return nil
 }
 
 // loadPostings loads given postings using given start + length. It is expected to have given postings data within given range.
 func (r *bucketIndexReader) loadPostings(ctx context.Context, postings []*lazyPostings, start, end int64) error {
 	begin := time.Now()
 
-	b, err := r.block.readIndexRange(r.ctx, int64(start), int64(end-start))
+	b, err := r.block.readIndexRange(ctx, int64(start), int64(end-start))
 	if err != nil {
 		return errors.Wrap(err, "read postings range")
 	}
@@ -1489,27 +1591,6 @@ func (r *bucketChunkReader) Close() error {
 		r.block.chunkPool.Put(b)
 	}
 	return nil
-}
-
-func renameFile(from, to string) error {
-	if err := os.RemoveAll(to); err != nil {
-		return err
-	}
-	if err := os.Rename(from, to); err != nil {
-		return err
-	}
-
-	// Directory was renamed; sync parent dir to persist rename.
-	pdir, err := fileutil.OpenDir(filepath.Dir(to))
-	if err != nil {
-		return err
-	}
-
-	if err = fileutil.Fsync(pdir); err != nil {
-		pdir.Close()
-		return err
-	}
-	return pdir.Close()
 }
 
 type queryStats struct {

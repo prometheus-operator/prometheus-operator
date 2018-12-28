@@ -19,29 +19,35 @@ import (
 	"syscall"
 	"time"
 
-	"cloud.google.com/go/storage"
+	"github.com/improbable-eng/thanos/pkg/extprom"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/improbable-eng/thanos/pkg/alert"
+	"github.com/improbable-eng/thanos/pkg/block"
 	"github.com/improbable-eng/thanos/pkg/cluster"
-	"github.com/improbable-eng/thanos/pkg/objstore"
-	"github.com/improbable-eng/thanos/pkg/objstore/gcs"
-	"github.com/improbable-eng/thanos/pkg/objstore/s3"
+	"github.com/improbable-eng/thanos/pkg/discovery/cache"
+	"github.com/improbable-eng/thanos/pkg/discovery/dns"
+	"github.com/improbable-eng/thanos/pkg/objstore/client"
 	"github.com/improbable-eng/thanos/pkg/runutil"
 	"github.com/improbable-eng/thanos/pkg/shipper"
 	"github.com/improbable-eng/thanos/pkg/store"
 	"github.com/improbable-eng/thanos/pkg/store/storepb"
 	"github.com/improbable-eng/thanos/pkg/tracing"
+	"github.com/improbable-eng/thanos/pkg/ui"
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/common/route"
+	"github.com/prometheus/prometheus/discovery/file"
+	"github.com/prometheus/prometheus/discovery/targetgroup"
 	promlabels "github.com/prometheus/prometheus/pkg/labels"
 	"github.com/prometheus/prometheus/promql"
 	"github.com/prometheus/prometheus/rules"
 	"github.com/prometheus/prometheus/storage/tsdb"
+	"github.com/prometheus/prometheus/util/strutil"
 	"github.com/prometheus/tsdb/labels"
 	"google.golang.org/grpc"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -51,86 +57,116 @@ import (
 func registerRule(m map[string]setupFunc, app *kingpin.Application, name string) {
 	cmd := app.Command(name, "ruler evaluating Prometheus rules against given Query nodes, exposing Store API and storing old blocks in bucket")
 
-	labelStrs := cmd.Flag("label", "labels applying to all generated metrics (repeated)").
+	grpcBindAddr, httpBindAddr, cert, key, clientCA, newPeerFn := regCommonServerFlags(cmd)
+
+	labelStrs := cmd.Flag("label", "Labels to be applied to all generated metrics (repeated). Similar to external labels for Prometheus, used to identify ruler and its blocks as unique source.").
 		PlaceHolder("<name>=\"<value>\"").Strings()
 
 	dataDir := cmd.Flag("data-dir", "data directory").Default("data/").String()
 
-	ruleFiles := cmd.Flag("rule-file", "rule files that should be used by rule manager. Can be in glob format (repeated)").
+	ruleFiles := cmd.Flag("rule-file", "Rule files that should be used by rule manager. Can be in glob format (repeated).").
 		Default("rules/").Strings()
 
-	httpAddr := cmd.Flag("http-address", "listen host:port for HTTP endpoints").
-		Default(defaultHTTPAddr).String()
+	evalInterval := modelDuration(cmd.Flag("eval-interval", "The default evaluation interval to use.").
+		Default("30s"))
+	tsdbBlockDuration := modelDuration(cmd.Flag("tsdb.block-duration", "Block duration for TSDB block.").
+		Default("2h"))
+	tsdbRetention := modelDuration(cmd.Flag("tsdb.retention", "Block retention time on local disk.").
+		Default("48h"))
 
-	grpcAddr := cmd.Flag("grpc-address", "listen host:port for gRPC endpoints").
-		Default(defaultGRPCAddr).String()
-
-	evalInterval := cmd.Flag("eval-interval", "the default evaluation interval to use").
-		Default("30s").Duration()
-	tsdbBlockDuration := cmd.Flag("tsdb.block-duration", "block duration for TSDB block").
-		Default("2h").Duration()
-	tsdbRetention := cmd.Flag("tsdb.retention", "block retention time on local disk").
-		Default("48h").Duration()
-
-	alertmgrs := cmd.Flag("alertmanagers.url", "Alertmanager URLs to push firing alerts to. The scheme may be prefixed with 'dns+' or 'dnssrv+' to detect Alertmanager IPs through respective DNS lookups. The port defaults to 9093 or the SRV record's value. The URL path is used as a prefix for the regular Alertmanager API path.").
+	alertmgrs := cmd.Flag("alertmanagers.url", "Alertmanager replica URLs to push firing alerts. Ruler claims success if push to at least one alertmanager from discovered succeeds. The scheme may be prefixed with 'dns+' or 'dnssrv+' to detect Alertmanager IPs through respective DNS lookups. The port defaults to 9093 or the SRV record's value. The URL path is used as a prefix for the regular Alertmanager API path.").
 		Strings()
 
-	gcsBucket := cmd.Flag("gcs.bucket", "Google Cloud Storage bucket name for stored blocks. If empty ruler won't store any block inside Google Cloud Storage").
-		PlaceHolder("<bucket>").String()
+	alertmgrsTimeout := cmd.Flag("alertmanagers.send-timeout", "Timeout for sending alerts to alertmanager").Default("10s").Duration()
 
-	s3Bucket := cmd.Flag("s3.bucket", "S3-Compatible API bucket name for stored blocks.").
-		PlaceHolder("<bucket>").Envar("S3_BUCKET").String()
+	alertQueryURL := cmd.Flag("alert.query-url", "The external Thanos Query URL that would be set in all alerts 'Source' field").String()
 
-	s3Endpoint := cmd.Flag("s3.endpoint", "S3-Compatible API endpoint for stored blocks.").
-		PlaceHolder("<api-url>").Envar("S3_ENDPOINT").String()
+	alertExcludeLabels := cmd.Flag("alert.label-drop", "Labels by name to drop before sending to alertmanager. This allows alert to be deduplicated on replica label (repeated). Similar Prometheus alert relabelling").
+		Strings()
 
-	s3AccessKey := cmd.Flag("s3.access-key", "Access key for an S3-Compatible API.").
-		PlaceHolder("<key>").Envar("S3_ACCESS_KEY").String()
+	objStoreConfig := regCommonObjStoreFlags(cmd, "")
 
-	s3SecretKey := os.Getenv("S3_SECRET_KEY")
+	queries := cmd.Flag("query", "Addresses of statically configured query API servers (repeatable). The scheme may be prefixed with 'dns+' or 'dnssrv+' to detect query API servers through respective DNS lookups.").
+		PlaceHolder("<query>").Strings()
 
-	s3Insecure := cmd.Flag("s3.insecure", "Whether to use an insecure connection with an S3-Compatible API.").
-		Default("false").Envar("S3_INSECURE").Bool()
+	fileSDFiles := cmd.Flag("query.sd-files", "Path to file that contain addresses of query peers. The path can be a glob pattern (repeatable).").
+		PlaceHolder("<path>").Strings()
 
-	s3SignatureV2 := cmd.Flag("s3.signature-version2", "Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used.").
-		Default("false").Envar("S3_SIGNATURE_VERSION2").Bool()
+	fileSDInterval := modelDuration(cmd.Flag("query.sd-interval", "Refresh interval to re-read file SD files. (used as a fallback)").
+		Default("5m"))
 
-	peers := cmd.Flag("cluster.peers", "initial peers to join the cluster. It can be either <ip:port>, or <domain:port>").Strings()
+	dnsSDInterval := modelDuration(cmd.Flag("query.sd-dns-interval", "Interval between DNS resolutions.").
+		Default("30s"))
 
-	clusterBindAddr := cmd.Flag("cluster.address", "listen address for cluster").
-		Default(defaultClusterAddr).String()
-
-	gossipInterval := cmd.Flag("cluster.gossip-interval", "interval between sending gossip messages. By lowering this value (more frequent) gossip messages are propagated across the cluster more quickly at the expense of increased bandwidth.").
-		Default(cluster.DefaultGossipInterval.String()).Duration()
-
-	pushPullInterval := cmd.Flag("cluster.pushpull-interval", "interval for gossip state syncs . Setting this interval lower (more frequent) will increase convergence speeds across larger clusters at the expense of increased bandwidth usage.").
-		Default(cluster.DefaultPushPullInterval.String()).Duration()
-
-	clusterAdvertiseAddr := cmd.Flag("cluster.advertise-address", "explicit address to advertise in cluster").
-		String()
-
-	m[name] = func(g *run.Group, logger log.Logger, reg *prometheus.Registry, tracer opentracing.Tracer) error {
+	m[name] = func(g *run.Group, logger log.Logger, reg *prometheus.Registry, tracer opentracing.Tracer, _ bool) error {
 		lset, err := parseFlagLabels(*labelStrs)
 		if err != nil {
 			return errors.Wrap(err, "parse labels")
 		}
-		peer, err := cluster.New(logger, reg, *clusterBindAddr, *clusterAdvertiseAddr, *peers, false, *gossipInterval, *pushPullInterval)
+		peer, err := newPeerFn(logger, reg, false, "", false)
 		if err != nil {
 			return errors.Wrap(err, "new cluster peer")
 		}
+		alertQueryURL, err := url.Parse(*alertQueryURL)
+		if err != nil {
+			return errors.Wrap(err, "parse alert query url")
+		}
 
 		tsdbOpts := &tsdb.Options{
-			MinBlockDuration: model.Duration(*tsdbBlockDuration),
-			MaxBlockDuration: model.Duration(*tsdbBlockDuration),
-			Retention:        model.Duration(*tsdbRetention),
+			MinBlockDuration: *tsdbBlockDuration,
+			MaxBlockDuration: *tsdbBlockDuration,
+			Retention:        *tsdbRetention,
 			NoLockfile:       true,
 			WALFlushInterval: 30 * time.Second,
 		}
-		return runRule(g, logger, reg, tracer, lset, *alertmgrs, *httpAddr, *grpcAddr, *evalInterval, *dataDir, *ruleFiles, peer, *gcsBucket, *s3Bucket, *s3Endpoint, *s3AccessKey, s3SecretKey, *s3Insecure, *s3SignatureV2, tsdbOpts)
+
+		lookupQueries := map[string]struct{}{}
+		for _, q := range *queries {
+			if _, ok := lookupQueries[q]; ok {
+				return errors.Errorf("Address %s is duplicated for --query flag.", q)
+			}
+
+			lookupQueries[q] = struct{}{}
+		}
+
+		var fileSD *file.Discovery
+		if len(*fileSDFiles) > 0 {
+			conf := &file.SDConfig{
+				Files:           *fileSDFiles,
+				RefreshInterval: *fileSDInterval,
+			}
+			fileSD = file.NewDiscovery(conf, logger)
+		}
+
+		return runRule(g,
+			logger,
+			reg,
+			tracer,
+			lset,
+			*alertmgrs,
+			*alertmgrsTimeout,
+			*grpcBindAddr,
+			*cert,
+			*key,
+			*clientCA,
+			*httpBindAddr,
+			time.Duration(*evalInterval),
+			*dataDir,
+			*ruleFiles,
+			peer,
+			objStoreConfig,
+			tsdbOpts,
+			name,
+			alertQueryURL,
+			*alertExcludeLabels,
+			*queries,
+			fileSD,
+			time.Duration(*dnsSDInterval),
+		)
 	}
 }
 
-// runRule runs a rule evaluation component that continously evaluates alerting and recording
+// runRule runs a rule evaluation component that continuously evaluates alerting and recording
 // rules. It sends alert notifications and writes TSDB data for results like a regular Prometheus server.
 func runRule(
 	g *run.Group,
@@ -139,21 +175,60 @@ func runRule(
 	tracer opentracing.Tracer,
 	lset labels.Labels,
 	alertmgrURLs []string,
-	httpAddr string,
-	grpcAddr string,
+	alertmgrsTimeout time.Duration,
+	grpcBindAddr string,
+	cert string,
+	key string,
+	clientCA string,
+	httpBindAddr string,
 	evalInterval time.Duration,
 	dataDir string,
 	ruleFiles []string,
-	peer *cluster.Peer,
-	gcsBucket string,
-	s3Bucket string,
-	s3Endpoint string,
-	s3AccessKey string,
-	s3SecretKey string,
-	s3Insecure bool,
-	s3SignatureV2 bool,
+	peer cluster.Peer,
+	objStoreConfig *pathOrContent,
 	tsdbOpts *tsdb.Options,
+	component string,
+	alertQueryURL *url.URL,
+	alertExcludeLabels []string,
+	queryAddrs []string,
+	fileSD *file.Discovery,
+	dnsSDInterval time.Duration,
 ) error {
+	configSuccess := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "thanos_rule_config_last_reload_successful",
+		Help: "Whether the last configuration reload attempt was successful.",
+	})
+	configSuccessTime := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "thanos_rule_config_last_reload_success_timestamp_seconds",
+		Help: "Timestamp of the last successful configuration reload.",
+	})
+	duplicatedQuery := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "thanos_rule_duplicated_query_address",
+		Help: "The number of times a duplicated query addresses is detected from the different configs in rule",
+	})
+	alertMngrAddrResolutionErrors := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "thanos_rule_alertmanager_address_resolution_errors",
+		Help: "The number of times resolving an address of an alertmanager has failed inside Thanos Rule",
+	})
+	rulesLoaded := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "thanos_rule_loaded_rules",
+			Help: "Loaded rules partitioned by file and group",
+		},
+		[]string{"file", "group"},
+	)
+	reg.MustRegister(configSuccess)
+	reg.MustRegister(configSuccessTime)
+	reg.MustRegister(duplicatedQuery)
+	reg.MustRegister(alertMngrAddrResolutionErrors)
+	reg.MustRegister(rulesLoaded)
+
+	for _, addr := range queryAddrs {
+		if addr == "" {
+			return errors.New("static querier address cannot be empty")
+		}
+	}
+
 	db, err := tsdb.Open(dataDir, log.With(logger, "component", "tsdb"), reg, tsdbOpts)
 	if err != nil {
 		return errors.Wrap(err, "open TSDB")
@@ -168,9 +243,16 @@ func runRule(
 		})
 	}
 
+	// FileSD query addresses.
+	fileSDCache := cache.New()
+	dnsProvider := dns.NewProvider(logger, extprom.NewSubsystem(reg, "rule_query"))
+
 	// Hit the HTTP query API of query peers in randomized order until we get a result
 	// back or the context get canceled.
 	queryFn := func(ctx context.Context, q string, t time.Time) (promql.Vector, error) {
+		var addrs []string
+
+		// Add addresses from gossip.
 		peers := peer.PeerStates(cluster.PeerTypeQuery)
 		var ids []string
 		for id := range peers {
@@ -179,9 +261,17 @@ func runRule(
 		sort.Slice(ids, func(i int, j int) bool {
 			return strings.Compare(ids[i], ids[j]) < 0
 		})
+		for _, id := range ids {
+			addrs = append(addrs, peers[id].QueryAPIAddr)
+		}
 
-		for _, i := range rand.Perm(len(ids)) {
-			vec, err := queryPrometheusInstant(ctx, logger, peers[ids[i]].APIAddr, q, t)
+		// Add DNS resolved addresses from static flags and file SD.
+		addrs = append(addrs, dnsProvider.Addresses()...)
+
+		removeDuplicateQueryAddrs(logger, duplicatedQuery, addrs)
+
+		for _, i := range rand.Perm(len(addrs)) {
+			vec, err := queryPrometheusInstant(ctx, logger, addrs[i], q, t)
 			if err != nil {
 				return nil, err
 			}
@@ -192,8 +282,8 @@ func runRule(
 
 	// Run rule evaluation and alert notifications.
 	var (
-		alertmgrs = newAlertmanagerSet(alertmgrURLs, nil)
-		alertQ    = alert.NewQueue(logger, reg, 10000, 100, labelsTSDBToProm(lset))
+		alertmgrs = newAlertmanagerSet(alertmgrURLs)
+		alertQ    = alert.NewQueue(logger, reg, 10000, 100, labelsTSDBToProm(lset), alertExcludeLabels)
 		mgr       *rules.Manager
 	)
 	{
@@ -208,9 +298,10 @@ func runRule(
 					continue
 				}
 				a := &alert.Alert{
-					StartsAt:    alrt.FiredAt,
-					Labels:      alrt.Labels,
-					Annotations: alrt.Annotations,
+					StartsAt:     alrt.FiredAt,
+					Labels:       alrt.Labels,
+					Annotations:  alrt.Annotations,
+					GeneratorURL: alertQueryURL.String() + strutil.TableLinkForExpression(expr),
 				}
 				if !alrt.ResolvedAt.IsZero() {
 					a.EndsAt = alrt.ResolvedAt
@@ -227,6 +318,7 @@ func runRule(
 			NotifyFunc:  notify,
 			Logger:      log.With(logger, "component", "rules"),
 			Appendable:  tsdb.Adapter(db, 0),
+			Registerer:  reg,
 			ExternalURL: nil,
 		})
 		g.Add(func() error {
@@ -246,18 +338,14 @@ func runRule(
 
 		ctx, cancel := context.WithCancel(context.Background())
 		g.Add(func() error {
-			err := peer.Join(cluster.PeerState{
-				Type:    cluster.PeerTypeSource,
-				APIAddr: grpcAddr,
-				Metadata: cluster.PeerMetadata{
-					Labels: storeLset,
-					// Start out with the full time range. The shipper will constrain it later.
-					// TODO(fabxc): minimum timestamp is never adjusted if shipping is disabled.
-					MinTime: 0,
-					MaxTime: math.MaxInt64,
-				},
-			})
-			if err != nil {
+			// New gossip cluster.
+			if err = peer.Join(cluster.PeerTypeSource, cluster.PeerMetadata{
+				Labels: storeLset,
+				// Start out with the full time range. The shipper will constrain it later.
+				// TODO(fabxc): minimum timestamp is never adjusted if shipping is disabled.
+				MinTime: 0,
+				MaxTime: math.MaxInt64,
+			}); err != nil {
 				return errors.Wrap(err, "join cluster")
 			}
 
@@ -269,7 +357,8 @@ func runRule(
 		})
 	}
 	{
-		sdr := alert.NewSender(logger, reg, alertmgrs.get, nil)
+		// TODO(bwplotka): https://github.com/improbable-eng/thanos/issues/660
+		sdr := alert.NewSender(logger, reg, alertmgrs.get, nil, alertmgrsTimeout)
 		ctx, cancel := context.WithCancel(context.Background())
 
 		g.Add(func() error {
@@ -292,12 +381,46 @@ func runRule(
 		g.Add(func() error {
 			return runutil.Repeat(30*time.Second, ctx.Done(), func() error {
 				if err := alertmgrs.update(ctx); err != nil {
-					level.Warn(logger).Log("msg", "refreshing Alertmanagers failed", "err", err)
+					level.Error(logger).Log("msg", "refreshing alertmanagers failed", "err", err)
+					alertMngrAddrResolutionErrors.Inc()
 				}
 				return nil
 			})
 		}, func(error) {
 			cancel()
+		})
+	}
+	// Run File Service Discovery and update the query addresses when the files are modified
+	if fileSD != nil {
+		var fileSDUpdates chan []*targetgroup.Group
+		ctxRun, cancelRun := context.WithCancel(context.Background())
+
+		fileSDUpdates = make(chan []*targetgroup.Group)
+
+		g.Add(func() error {
+			fileSD.Run(ctxRun, fileSDUpdates)
+			return nil
+		}, func(error) {
+			cancelRun()
+		})
+
+		ctxUpdate, cancelUpdate := context.WithCancel(context.Background())
+		g.Add(func() error {
+			for {
+				select {
+				case update := <-fileSDUpdates:
+					// Discoverers sometimes send nil updates so need to check for it to avoid panics
+					if update == nil {
+						continue
+					}
+					fileSDCache.Update(update)
+				case <-ctxUpdate.Done():
+					return nil
+				}
+			}
+		}, func(error) {
+			cancelUpdate()
+			close(fileSDUpdates)
 		})
 	}
 
@@ -329,7 +452,17 @@ func runRule(
 
 				level.Info(logger).Log("msg", "reload rule files", "numFiles", len(files))
 				if err := mgr.Update(evalInterval, files); err != nil {
+					configSuccess.Set(0)
 					level.Error(logger).Log("msg", "reloading rules failed", "err", err)
+					continue
+				}
+
+				configSuccess.Set(1)
+				configSuccessTime.Set(float64(time.Now().UnixNano()) / 1e9)
+
+				rulesLoaded.Reset()
+				for _, group := range mgr.RuleGroups() {
+					rulesLoaded.WithLabelValues(group.File(), group.Name()).Set(float64(len(group.Rules())))
 				}
 			}
 		}, func(error) {
@@ -357,10 +490,21 @@ func runRule(
 			close(cancel)
 		})
 	}
-
-	// Start HTTP and gRPC servers.
+	// Periodically update the addresses from static flags and file SD by resolving them using DNS SD if necessary.
 	{
-		l, err := net.Listen("tcp", grpcAddr)
+		ctx, cancel := context.WithCancel(context.Background())
+		g.Add(func() error {
+			return runutil.Repeat(dnsSDInterval, ctx.Done(), func() error {
+				dnsProvider.Resolve(ctx, append(fileSDCache.Addresses(), queryAddrs...))
+				return nil
+			})
+		}, func(error) {
+			cancel()
+		})
+	}
+	// Start gRPC server.
+	{
+		l, err := net.Listen("tcp", grpcBindAddr)
 		if err != nil {
 			return errors.Wrap(err, "listen API address")
 		}
@@ -368,85 +512,79 @@ func runRule(
 
 		store := store.NewTSDBStore(logger, reg, db, lset)
 
-		s := grpc.NewServer(defaultGRPCServerOpts(logger, reg, tracer)...)
+		opts, err := defaultGRPCServerOpts(logger, reg, tracer, cert, key, clientCA)
+		if err != nil {
+			return errors.Wrap(err, "setup gRPC options")
+		}
+		s := grpc.NewServer(opts...)
 		storepb.RegisterStoreServer(s, store)
 
 		g.Add(func() error {
 			return errors.Wrap(s.Serve(l), "serve gRPC")
 		}, func(error) {
 			s.Stop()
-			l.Close()
+			runutil.CloseWithLogOnErr(logger, l, "store gRPC listener")
 		})
 	}
+	// Start UI & metrics HTTP server.
 	{
 		router := route.New()
+		router.Post("/-/reload", func(w http.ResponseWriter, r *http.Request) {
+			reload <- struct{}{}
+		})
+
+		ui.NewRuleUI(logger, mgr, alertQueryURL.String()).Register(router)
 
 		mux := http.NewServeMux()
 		registerMetrics(mux, reg)
 		registerProfile(mux)
 		mux.Handle("/", router)
 
-		l, err := net.Listen("tcp", httpAddr)
+		l, err := net.Listen("tcp", httpBindAddr)
 		if err != nil {
-			return errors.Wrapf(err, "listen on address %s", httpAddr)
+			return errors.Wrapf(err, "listen HTTP on address %s", httpBindAddr)
 		}
 
 		g.Add(func() error {
+			level.Info(logger).Log("msg", "Listening for ui requests", "address", httpBindAddr)
 			return errors.Wrap(http.Serve(l, mux), "serve query")
 		}, func(error) {
-			l.Close()
+			runutil.CloseWithLogOnErr(logger, l, "query and metric listener")
 		})
 	}
 
-	var (
-		bkt    objstore.Bucket
-		bucket string
-		// closeFn gets called when the sync loop ends to close clients, clean up, etc
-		closeFn = func() error { return nil }
-		uploads = true
-	)
+	var uploads = true
 
-	s3Config := &s3.Config{
-		Bucket:      s3Bucket,
-		Endpoint:    s3Endpoint,
-		AccessKey:   s3AccessKey,
-		SecretKey:   s3SecretKey,
-		Insecure:    s3Insecure,
-		SignatureV2: s3SignatureV2,
+	bucketConfig, err := objStoreConfig.Content()
+	if err != nil {
+		return err
 	}
-
 	// The background shipper continuously scans the data directory and uploads
 	// new blocks to Google Cloud Storage or an S3-compatible storage service.
-	if gcsBucket != "" {
-		gcsClient, err := storage.NewClient(context.Background())
-		if err != nil {
-			return errors.Wrap(err, "create GCS client")
-		}
+	bkt, err := client.NewBucket(logger, bucketConfig, reg, component)
+	if err != nil && err != client.ErrNotFound {
+		return err
+	}
 
-		bkt = gcs.NewBucket(gcsBucket, gcsClient.Bucket(gcsBucket), reg)
-		closeFn = gcsClient.Close
-		bucket = gcsBucket
-	} else if s3Config.Validate() == nil {
-		bkt, err = s3.NewBucket(s3Config, reg)
-		if err != nil {
-			return errors.Wrap(err, "create s3 client")
-		}
-
-		bucket = s3Config.Bucket
-	} else {
-		level.Info(logger).Log("msg", "No GCS or S3 bucket configured, uploads will be disabled")
+	if err == client.ErrNotFound {
+		level.Info(logger).Log("msg", "No supported bucket was configured, uploads will be disabled")
 		uploads = false
 	}
 
 	if uploads {
-		bkt = objstore.BucketWithMetrics(bucket, bkt, reg)
+		// Ensure we close up everything properly.
+		defer func() {
+			if err != nil {
+				runutil.CloseWithLogOnErr(logger, bkt, "bucket client")
+			}
+		}()
 
-		s := shipper.New(logger, nil, dataDir, bkt, func() labels.Labels { return lset })
+		s := shipper.New(logger, nil, dataDir, bkt, func() labels.Labels { return lset }, block.RulerSource)
 
 		ctx, cancel := context.WithCancel(context.Background())
 
 		g.Add(func() error {
-			defer closeFn()
+			defer runutil.CloseWithLogOnErr(logger, bkt, "bucket client")
 
 			return runutil.Repeat(30*time.Second, ctx.Done(), func() error {
 				s.Sync(ctx)
@@ -466,6 +604,34 @@ func runRule(
 
 	level.Info(logger).Log("msg", "starting rule node", "peer", peer.Name())
 	return nil
+}
+
+// Scalar response consists of array with mixed types so it needs to be
+// unmarshaled separatelly.
+func convertScalarJSONToVector(scalarJSONResult json.RawMessage) (model.Vector, error) {
+	var (
+		// Do not specify exact length of the expected slice since JSON unmarshaling
+		// would make the leght fit the size and we won't be able to check the length afterwards.
+		resultPointSlice []json.RawMessage
+		resultTime       model.Time
+		resultValue      model.SampleValue
+	)
+	if err := json.Unmarshal(scalarJSONResult, &resultPointSlice); err != nil {
+		return nil, err
+	}
+	if len(resultPointSlice) != 2 {
+		return nil, errors.Errorf("invalid scalar result format %v, expected timestamp -> value tuple", resultPointSlice)
+	}
+	if err := json.Unmarshal(resultPointSlice[0], &resultTime); err != nil {
+		return nil, errors.Wrapf(err, "unmarshaling scalar time from %v", resultPointSlice)
+	}
+	if err := json.Unmarshal(resultPointSlice[1], &resultValue); err != nil {
+		return nil, errors.Wrapf(err, "unmarshaling scalar value from %v", resultPointSlice)
+	}
+	return model.Vector{&model.Sample{
+		Metric:    model.Metric{},
+		Value:     resultValue,
+		Timestamp: resultTime}}, nil
 }
 
 func queryPrometheusInstant(ctx context.Context, logger log.Logger, addr, query string, t time.Time) (promql.Vector, error) {
@@ -496,21 +662,42 @@ func queryPrometheusInstant(ctx context.Context, logger log.Logger, addr, query 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer runutil.CloseWithLogOnErr(logger, resp.Body, "query body")
 
-	// Always try to decode a vector. Scalar rules won't work for now and arguably
-	// have no relevant use case.
+	// Decode only ResultType and load Result only as RawJson since we don't know
+	// structure of the Result yet.
 	var m struct {
 		Data struct {
-			Result model.Vector `json:"result"`
+			ResultType string          `json:"resultType"`
+			Result     json.RawMessage `json:"result"`
 		} `json:"data"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
+
+	if err = json.NewDecoder(resp.Body).Decode(&m); err != nil {
 		return nil, err
 	}
-	vec := make(promql.Vector, 0, len(m.Data.Result))
 
-	for _, e := range m.Data.Result {
+	var vectorResult model.Vector
+
+	// Decode the Result depending on the ResultType
+	// Currently only `vector` and `scalar` types are supported
+	switch m.Data.ResultType {
+	case promql.ValueTypeVector:
+		if err = json.Unmarshal(m.Data.Result, &vectorResult); err != nil {
+			return nil, err
+		}
+	case promql.ValueTypeScalar:
+		vectorResult, err = convertScalarJSONToVector(m.Data.Result)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, errors.Errorf("unknown response type: '%q'", m.Data.ResultType)
+	}
+
+	vec := make(promql.Vector, 0, len(vectorResult))
+
+	for _, e := range vectorResult {
 		lset := make(promlabels.Labels, 0, len(e.Metric))
 
 		for k, v := range e.Metric {
@@ -526,22 +713,20 @@ func queryPrometheusInstant(ctx context.Context, logger log.Logger, addr, query 
 			Point:  promql.Point{T: int64(e.Timestamp), V: float64(e.Value)},
 		})
 	}
+
 	return vec, nil
 }
 
 type alertmanagerSet struct {
-	resolver *net.Resolver
+	resolver dns.Resolver
 	addrs    []string
 	mtx      sync.Mutex
 	current  []*url.URL
 }
 
-func newAlertmanagerSet(addrs []string, resolver *net.Resolver) *alertmanagerSet {
-	if resolver == nil {
-		resolver = net.DefaultResolver
-	}
+func newAlertmanagerSet(addrs []string) *alertmanagerSet {
 	return &alertmanagerSet{
-		resolver: resolver,
+		resolver: dns.NewResolver(),
 		addrs:    addrs,
 	}
 }
@@ -555,62 +740,45 @@ func (s *alertmanagerSet) get() []*url.URL {
 const defaultAlertmanagerPort = 9093
 
 func (s *alertmanagerSet) update(ctx context.Context) error {
-	var res []*url.URL
-
+	var result []*url.URL
 	for _, addr := range s.addrs {
-		u, err := url.Parse(addr)
-		if err != nil {
-			return errors.Wrapf(err, "parse URL %q", addr)
-		}
-		host, port, err := net.SplitHostPort(u.Host)
-		if err != nil {
-			host, port = u.Host, ""
-		}
 		var (
-			hosts  []string
-			proto  = u.Scheme
-			lookup = "none"
+			name           = addr
+			qtype          dns.QType
+			resolvedDomain []string
 		)
-		if ps := strings.SplitN(u.Scheme, "+", 2); len(ps) == 2 {
-			lookup, proto = ps[0], ps[1]
-		}
-		switch lookup {
-		case "dns":
-			if port == "" {
-				port = strconv.Itoa(defaultAlertmanagerPort)
-			}
-			ips, err := s.resolver.LookupIPAddr(ctx, host)
-			if err != nil {
-				return errors.Wrapf(err, "lookup IP addresses %q", host)
-			}
-			for _, ip := range ips {
-				hosts = append(hosts, net.JoinHostPort(ip.String(), port))
-			}
-		case "dnssrv":
-			_, recs, err := s.resolver.LookupSRV(ctx, "", proto, host)
-			if err != nil {
-				return errors.Wrapf(err, "lookup SRV records %q", host)
-			}
-			for _, rec := range recs {
-				// Only use port from SRV record if no explicit port was specified.
-				if port == "" {
-					port = strconv.Itoa(int(rec.Port))
-				}
-				hosts = append(hosts, net.JoinHostPort(rec.Target, port))
-			}
-		case "none":
-			if port == "" {
-				port = strconv.Itoa(defaultAlertmanagerPort)
-			}
-			hosts = append(hosts, net.JoinHostPort(host, port))
-		default:
-			return errors.Errorf("invalid lookup scheme %q", lookup)
+
+		if nameQtype := strings.SplitN(addr, "+", 2); len(nameQtype) == 2 {
+			name, qtype = nameQtype[1], dns.QType(nameQtype[0])
 		}
 
-		for _, h := range hosts {
-			res = append(res, &url.URL{
-				Scheme: proto,
-				Host:   h,
+		u, err := url.Parse(name)
+		if err != nil {
+			return errors.Wrapf(err, "parse URL %q", name)
+		}
+
+		// Get only the host and resolve it if needed.
+		host := u.Host
+		if qtype != "" {
+			if qtype == dns.A {
+				_, _, err = net.SplitHostPort(host)
+				if err != nil {
+					// The host could be missing a port. Append the defaultAlertmanagerPort.
+					host = host + ":" + strconv.Itoa(defaultAlertmanagerPort)
+				}
+			}
+			resolvedDomain, err = s.resolver.Resolve(ctx, host, qtype)
+			if err != nil {
+				return errors.Wrap(err, "alertmanager resolve")
+			}
+		} else {
+			resolvedDomain = []string{host}
+		}
+
+		for _, resolved := range resolvedDomain {
+			result = append(result, &url.URL{
+				Scheme: u.Scheme,
+				Host:   resolved,
 				Path:   u.Path,
 				User:   u.User,
 			})
@@ -618,7 +786,7 @@ func (s *alertmanagerSet) update(ctx context.Context) error {
 	}
 
 	s.mtx.Lock()
-	s.current = res
+	s.current = result
 	s.mtx.Unlock()
 
 	return nil
@@ -648,4 +816,21 @@ func labelsTSDBToProm(lset labels.Labels) (res promlabels.Labels) {
 		})
 	}
 	return res
+}
+
+func removeDuplicateQueryAddrs(logger log.Logger, duplicatedQueriers prometheus.Counter, addrs []string) []string {
+	set := make(map[string]struct{})
+	for _, addr := range addrs {
+		if _, ok := set[addr]; ok {
+			level.Warn(logger).Log("msg", "Duplicate query address is provided - %v", addr)
+			duplicatedQueriers.Inc()
+		}
+		set[addr] = struct{}{}
+	}
+
+	deduplicated := make([]string, 0, len(set))
+	for key := range set {
+		deduplicated = append(deduplicated, key)
+	}
+	return deduplicated
 }

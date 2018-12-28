@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/log"
+	"github.com/improbable-eng/thanos/pkg/block"
+	"github.com/improbable-eng/thanos/pkg/runutil"
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
 	"github.com/prometheus/tsdb"
@@ -20,11 +22,46 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const (
+	defaultPrometheusVersion   = "v2.4.3"
+	defaultAlertmanagerVersion = "v0.15.2"
+	defaultMinioVersion        = "RELEASE.2018-10-06T00-15-16Z"
+
+	promBinEnvVar         = "THANOS_TEST_PROMETHEUS_PATH"
+	alertmanagerBinEnvVar = "THANOS_TEST_ALERTMANAGER_PATH"
+	minioBinEnvVar        = "THANOS_TEST_MINIO_PATH"
+)
+
+func PrometheusBinary() string {
+	b := os.Getenv(promBinEnvVar)
+	if b == "" {
+		return fmt.Sprintf("prometheus-%s", defaultPrometheusVersion)
+	}
+	return b
+}
+
+func AlertmanagerBinary() string {
+	b := os.Getenv(alertmanagerBinEnvVar)
+	if b == "" {
+		return fmt.Sprintf("alertmanager-%s", defaultAlertmanagerVersion)
+	}
+	return b
+}
+
+func MinioBinary() string {
+	b := os.Getenv(minioBinEnvVar)
+	if b == "" {
+		return fmt.Sprintf("minio-%s", defaultMinioVersion)
+	}
+	return b
+}
+
 // Prometheus represents a test instance for integration testing.
 // It can be populated with data before being started.
 type Prometheus struct {
-	dir string
-	db  *tsdb.DB
+	dir    string
+	db     *tsdb.DB
+	prefix string
 
 	running bool
 	cmd     *exec.Cmd
@@ -42,8 +79,13 @@ func NewTSDB() (*tsdb.DB, error) {
 	})
 }
 
-// NewPrometheus creates a new test Prometheus instance that will listen on address.
+// NewPrometheus creates a new test Prometheus instance that will listen on local address.
 func NewPrometheus() (*Prometheus, error) {
+	return NewPrometheusOnPath("")
+}
+
+// NewPrometheus creates a new test Prometheus instance that will listen on local address and given prefix path.
+func NewPrometheusOnPath(prefix string) (*Prometheus, error) {
 	db, err := NewTSDB()
 	if err != nil {
 		return nil, err
@@ -56,9 +98,10 @@ func NewPrometheus() (*Prometheus, error) {
 	}
 
 	return &Prometheus{
-		dir:  db.Dir(),
-		db:   db,
-		addr: "<prometheus-not-started>",
+		dir:    db.Dir(),
+		db:     db,
+		prefix: prefix,
+		addr:   "<prometheus-not-started>",
 	}, nil
 }
 
@@ -77,9 +120,10 @@ func (p *Prometheus) Start() error {
 
 	p.addr = fmt.Sprintf("localhost:%d", port)
 	p.cmd = exec.Command(
-		"prometheus",
+		PrometheusBinary(),
 		"--storage.tsdb.path="+p.db.Dir(),
 		"--web.listen-address="+p.addr,
+		"--web.route-prefix="+p.prefix,
 		"--config.file="+filepath.Join(p.db.Dir(), "prometheus.yml"),
 	)
 	go func() {
@@ -95,16 +139,16 @@ func (p *Prometheus) Start() error {
 
 // Addr gets correct address after Start method.
 func (p *Prometheus) Addr() string {
-	return p.addr
+	return p.addr + p.prefix
 }
 
 // SetConfig updates the contents of the config file.
-func (p *Prometheus) SetConfig(s string) error {
+func (p *Prometheus) SetConfig(s string) (err error) {
 	f, err := os.Create(filepath.Join(p.dir, "prometheus.yml"))
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer runutil.CloseWithErrCapture(nil, &err, f, "prometheus config")
 
 	_, err = f.Write([]byte(s))
 	return err
@@ -112,7 +156,10 @@ func (p *Prometheus) SetConfig(s string) error {
 
 // Stop terminates Prometheus and clean up its data directory.
 func (p *Prometheus) Stop() error {
-	p.cmd.Process.Signal(syscall.SIGTERM)
+	if err := p.cmd.Process.Signal(syscall.SIGTERM); err != nil {
+		return errors.Wrapf(err, "failed to Prometheus. Kill it manually and cleanr %s dir", p.db.Dir())
+	}
+
 	time.Sleep(time.Second / 2)
 	return p.cleanup()
 }
@@ -138,12 +185,14 @@ func CreateBlock(
 	series []labels.Labels,
 	numSamples int,
 	mint, maxt int64,
+	extLset labels.Labels,
+	resolution int64,
 ) (id ulid.ULID, err error) {
 	h, err := tsdb.NewHead(nil, nil, tsdb.NopWAL(), 10000000000)
 	if err != nil {
 		return id, errors.Wrap(err, "create head block")
 	}
-	defer h.Close()
+	defer runutil.CloseWithErrCapture(log.NewNopLogger(), &err, h, "TSDB Head")
 
 	var g errgroup.Group
 	var timeStepSize = (maxt - mint) / int64(numSamples+1)
@@ -166,7 +215,10 @@ func CreateBlock(
 				for _, lset := range batch {
 					_, err := app.Add(lset, t, rand.Float64())
 					if err != nil {
-						app.Rollback()
+						if rerr := app.Rollback(); rerr != nil {
+							err = errors.Wrapf(err, "rollback failed: %v", rerr)
+						}
+
 						return errors.Wrap(err, "add sample")
 					}
 				}
@@ -185,5 +237,23 @@ func CreateBlock(
 	if err != nil {
 		return id, errors.Wrap(err, "create compactor")
 	}
-	return c.Write(dir, h, mint, maxt)
+
+	id, err = c.Write(dir, h, mint, maxt)
+	if err != nil {
+		return id, errors.Wrap(err, "write block")
+	}
+
+	if _, err = block.InjectThanosMeta(log.NewNopLogger(), filepath.Join(dir, id.String()), block.ThanosMeta{
+		Labels:     extLset.Map(),
+		Downsample: block.ThanosDownsampleMeta{Resolution: resolution},
+		Source:     block.TestSource,
+	}, nil); err != nil {
+		return id, errors.Wrap(err, "finalize block")
+	}
+
+	if err = os.Remove(filepath.Join(dir, id.String(), "tombstones")); err != nil {
+		return id, errors.Wrap(err, "remove tombstones")
+	}
+
+	return id, nil
 }

@@ -4,17 +4,12 @@ import (
 	"context"
 	"math"
 	"net"
-	"net/http"
-	"os"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/improbable-eng/thanos/pkg/cluster"
-	"github.com/improbable-eng/thanos/pkg/objstore"
-	"github.com/improbable-eng/thanos/pkg/objstore/gcs"
-	"github.com/improbable-eng/thanos/pkg/objstore/s3"
+	"github.com/improbable-eng/thanos/pkg/objstore/client"
 	"github.com/improbable-eng/thanos/pkg/runutil"
 	"github.com/improbable-eng/thanos/pkg/store"
 	"github.com/improbable-eng/thanos/pkg/store/storepb"
@@ -28,36 +23,12 @@ import (
 
 // registerStore registers a store command.
 func registerStore(m map[string]setupFunc, app *kingpin.Application, name string) {
-	cmd := app.Command(name, "store node giving access to blocks in a GCS bucket")
+	cmd := app.Command(name, "store node giving access to blocks in a bucket provider. Now supported GCS, S3, Azure and Swift.")
 
-	grpcAddr := cmd.Flag("grpc-address", "listen address for gRPC endpoints").
-		Default(defaultGRPCAddr).String()
+	grpcBindAddr, httpBindAddr, cert, key, clientCA, newPeerFn := regCommonServerFlags(cmd)
 
-	httpAddr := cmd.Flag("http-address", "listen address for HTTP endpoints").
-		Default(defaultHTTPAddr).String()
-
-	dataDir := cmd.Flag("tsdb.path", "data directory of TSDB").
+	dataDir := cmd.Flag("data-dir", "Data directory in which to cache remote blocks.").
 		Default("./data").String()
-
-	gcsBucket := cmd.Flag("gcs.bucket", "Google Cloud Storage bucket name for stored blocks. If empty sidecar won't store any block inside Google Cloud Storage").
-		PlaceHolder("<bucket>").String()
-
-	s3Bucket := cmd.Flag("s3.bucket", "S3-Compatible API bucket name for stored blocks.").
-		PlaceHolder("<bucket>").Envar("S3_BUCKET").String()
-
-	s3Endpoint := cmd.Flag("s3.endpoint", "S3-Compatible API endpoint for stored blocks.").
-		PlaceHolder("<api-url>").Envar("S3_ENDPOINT").String()
-
-	s3AccessKey := cmd.Flag("s3.access-key", "Access key for an S3-Compatible API.").
-		PlaceHolder("<key>").Envar("S3_ACCESS_KEY").String()
-
-	s3SecretKey := os.Getenv("S3_SECRET_KEY")
-
-	s3Insecure := cmd.Flag("s3.insecure", "Whether to use an insecure connection with an S3-Compatible API.").
-		Default("false").Envar("S3_INSECURE").Bool()
-
-	s3SignatureV2 := cmd.Flag("s3.signature-version2", "Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used.").
-		Default("false").Envar("S3_SIGNATURE_VERSION2").Bool()
 
 	indexCacheSize := cmd.Flag("index-cache-size", "Maximum size of items held in the index cache.").
 		Default("250MB").Bytes()
@@ -65,22 +36,13 @@ func registerStore(m map[string]setupFunc, app *kingpin.Application, name string
 	chunkPoolSize := cmd.Flag("chunk-pool-size", "Maximum size of concurrently allocatable bytes for chunks.").
 		Default("2GB").Bytes()
 
-	peers := cmd.Flag("cluster.peers", "initial peers to join the cluster. It can be either <ip:port>, or <domain:port>").Strings()
+	objStoreConfig := regCommonObjStoreFlags(cmd, "")
 
-	clusterBindAddr := cmd.Flag("cluster.address", "listen address for clutser").
-		Default(defaultClusterAddr).String()
+	syncInterval := cmd.Flag("sync-block-duration", "Repeat interval for syncing the blocks between local and remote view.").
+		Default("3m").Duration()
 
-	clusterAdvertiseAddr := cmd.Flag("cluster.advertise-address", "explicit address to advertise in cluster").
-		String()
-
-	gossipInterval := cmd.Flag("cluster.gossip-interval", "interval between sending gossip messages. By lowering this value (more frequent) gossip messages are propagated across the cluster more quickly at the expense of increased bandwidth.").
-		Default(cluster.DefaultGossipInterval.String()).Duration()
-
-	pushPullInterval := cmd.Flag("cluster.pushpull-interval", "interval for gossip state syncs . Setting this interval lower (more frequent) will increase convergence speeds across larger clusters at the expense of increased bandwidth usage.").
-		Default(cluster.DefaultPushPullInterval.String()).Duration()
-
-	m[name] = func(g *run.Group, logger log.Logger, reg *prometheus.Registry, tracer opentracing.Tracer) error {
-		peer, err := cluster.New(logger, reg, *clusterBindAddr, *clusterAdvertiseAddr, *peers, false, *gossipInterval, *pushPullInterval)
+	m[name] = func(g *run.Group, logger log.Logger, reg *prometheus.Registry, tracer opentracing.Tracer, debugLogging bool) error {
+		peer, err := newPeerFn(logger, reg, false, "", false)
 		if err != nil {
 			return errors.Wrap(err, "new cluster peer")
 		}
@@ -88,84 +50,60 @@ func registerStore(m map[string]setupFunc, app *kingpin.Application, name string
 			logger,
 			reg,
 			tracer,
-			*gcsBucket,
-			*s3Bucket,
-			*s3Endpoint,
-			*s3AccessKey,
-			s3SecretKey,
-			*s3Insecure,
-			*s3SignatureV2,
+			objStoreConfig,
 			*dataDir,
-			*grpcAddr,
-			*httpAddr,
+			*grpcBindAddr,
+			*cert,
+			*key,
+			*clientCA,
+			*httpBindAddr,
 			peer,
 			uint64(*indexCacheSize),
 			uint64(*chunkPoolSize),
+			name,
+			debugLogging,
+			*syncInterval,
 		)
 	}
 }
 
-// runStore starts a daemon that connects to a cluster of other store nodes through gossip.
-// It also connects to a Google Cloud Storage bucket and serves data queries to a subset of its contents.
-// The served subset is determined through HRW hashing against the block's ULIDs and the known peers.
+// runStore starts a daemon that serves queries to cluster peers using data from an object store.
 func runStore(
 	g *run.Group,
 	logger log.Logger,
 	reg *prometheus.Registry,
 	tracer opentracing.Tracer,
-	gcsBucket string,
-	s3Bucket string,
-	s3Endpoint string,
-	s3AccessKey string,
-	s3SecretKey string,
-	s3Insecure bool,
-	s3SignatureV2 bool,
+	objStoreConfig *pathOrContent,
 	dataDir string,
-	grpcAddr string,
-	httpAddr string,
-	peer *cluster.Peer,
+	grpcBindAddr string,
+	cert string,
+	key string,
+	clientCA string,
+	httpBindAddr string,
+	peer cluster.Peer,
 	indexCacheSizeBytes uint64,
 	chunkPoolSizeBytes uint64,
+	component string,
+	verbose bool,
+	syncInterval time.Duration,
 ) error {
 	{
-		var (
-			bkt objstore.Bucket
-			// closeFn gets called when the sync loop ends to close clients, clean up, etc
-			closeFn = func() error { return nil }
-			bucket  string
-		)
-
-		s3Config := &s3.Config{
-			Bucket:      s3Bucket,
-			Endpoint:    s3Endpoint,
-			AccessKey:   s3AccessKey,
-			SecretKey:   s3SecretKey,
-			Insecure:    s3Insecure,
-			SignatureV2: s3SignatureV2,
+		bucketConfig, err := objStoreConfig.Content()
+		if err != nil {
+			return err
 		}
 
-		if gcsBucket != "" {
-			gcsClient, err := storage.NewClient(context.Background())
-			if err != nil {
-				return errors.Wrap(err, "create GCS client")
-			}
-
-			bkt = gcs.NewBucket(gcsBucket, gcsClient.Bucket(gcsBucket), reg)
-			closeFn = gcsClient.Close
-			bucket = gcsBucket
-		} else if s3Config.Validate() == nil {
-			b, err := s3.NewBucket(s3Config, reg)
-			if err != nil {
-				return errors.Wrap(err, "create s3 client")
-			}
-
-			bkt = b
-			bucket = s3Config.Bucket
-		} else {
-			return errors.New("no valid GCS or S3 configuration supplied")
+		bkt, err := client.NewBucket(logger, bucketConfig, reg, component)
+		if err != nil {
+			return errors.Wrap(err, "create bucket client")
 		}
 
-		bkt = objstore.BucketWithMetrics(bucket, bkt, reg)
+		// Ensure we close up everything properly.
+		defer func() {
+			if err != nil {
+				runutil.CloseWithLogOnErr(logger, bkt, "bucket client")
+			}
+		}()
 
 		bs, err := store.NewBucketStore(
 			logger,
@@ -174,14 +112,24 @@ func runStore(
 			dataDir,
 			indexCacheSizeBytes,
 			chunkPoolSizeBytes,
+			verbose,
 		)
 		if err != nil {
 			return errors.Wrap(err, "create object storage store")
 		}
-		ctx, cancel := context.WithCancel(context.Background())
 
+		begin := time.Now()
+		level.Debug(logger).Log("msg", "initializing bucket store")
+		if err := bs.InitialSync(context.Background()); err != nil {
+			return errors.Wrap(err, "bucket store initial sync")
+		}
+		level.Debug(logger).Log("msg", "bucket store ready", "init_duration", time.Since(begin).String())
+
+		ctx, cancel := context.WithCancel(context.Background())
 		g.Add(func() error {
-			err := runutil.Repeat(3*time.Minute, ctx.Done(), func() error {
+			defer runutil.CloseWithLogOnErr(logger, bkt, "bucket client")
+
+			err := runutil.Repeat(syncInterval, ctx.Done(), func() error {
 				if err := bs.SyncBlocks(ctx); err != nil {
 					level.Warn(logger).Log("msg", "syncing blocks failed", "err", err)
 				}
@@ -189,40 +137,43 @@ func runStore(
 				return nil
 			})
 
-			bs.Close()
-			closeFn()
-
+			runutil.CloseWithLogOnErr(logger, bs, "bucket store")
 			return err
 		}, func(error) {
 			cancel()
 		})
 
-		l, err := net.Listen("tcp", grpcAddr)
+		l, err := net.Listen("tcp", grpcBindAddr)
 		if err != nil {
 			return errors.Wrap(err, "listen API address")
 		}
 
-		s := grpc.NewServer(defaultGRPCServerOpts(logger, reg, tracer)...)
+		opts, err := defaultGRPCServerOpts(logger, reg, tracer, cert, key, clientCA)
+		if err != nil {
+			return errors.Wrap(err, "grpc server options")
+		}
+
+		s := grpc.NewServer(opts...)
 		storepb.RegisterStoreServer(s, bs)
 
 		g.Add(func() error {
+			level.Info(logger).Log("msg", "Listening for StoreAPI gRPC", "address", grpcBindAddr)
 			return errors.Wrap(s.Serve(l), "serve gRPC")
 		}, func(error) {
-			l.Close()
+			runutil.CloseWithLogOnErr(logger, l, "store gRPC listener")
 		})
 	}
 	{
 		ctx, cancel := context.WithCancel(context.Background())
 		g.Add(func() error {
-			err := peer.Join(cluster.PeerState{
-				Type:    cluster.PeerTypeStore,
-				APIAddr: grpcAddr,
-				Metadata: cluster.PeerMetadata{
+			// New gossip cluster.
+			if err := peer.Join(
+				cluster.PeerTypeStore,
+				cluster.PeerMetadata{
 					MinTime: math.MinInt64,
 					MaxTime: math.MaxInt64,
 				},
-			})
-			if err != nil {
+			); err != nil {
 				return errors.Wrap(err, "join cluster")
 			}
 
@@ -233,21 +184,8 @@ func runStore(
 			peer.Close(5 * time.Second)
 		})
 	}
-	{
-		mux := http.NewServeMux()
-		registerMetrics(mux, reg)
-		registerProfile(mux)
-
-		l, err := net.Listen("tcp", httpAddr)
-		if err != nil {
-			return errors.Wrap(err, "listen metrics address")
-		}
-
-		g.Add(func() error {
-			return errors.Wrap(http.Serve(l, mux), "serve metrics")
-		}, func(error) {
-			l.Close()
-		})
+	if err := metricHTTPListenGroup(g, logger, reg, httpBindAddr); err != nil {
+		return err
 	}
 
 	level.Info(logger).Log("msg", "starting store node")

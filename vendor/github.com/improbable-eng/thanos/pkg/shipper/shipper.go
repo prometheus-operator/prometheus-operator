@@ -15,6 +15,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/improbable-eng/thanos/pkg/block"
 	"github.com/improbable-eng/thanos/pkg/objstore"
+	"github.com/improbable-eng/thanos/pkg/runutil"
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -68,6 +69,7 @@ type Shipper struct {
 	metrics *metrics
 	bucket  objstore.Bucket
 	labels  func() labels.Labels
+	source  block.SourceType
 }
 
 // New creates a new shipper that detects new TSDB blocks in dir and uploads them
@@ -78,6 +80,7 @@ func New(
 	dir string,
 	bucket objstore.Bucket,
 	lbls func() labels.Labels,
+	source block.SourceType,
 ) *Shipper {
 	if logger == nil {
 		logger = log.NewNopLogger()
@@ -91,6 +94,7 @@ func New(
 		bucket:  bucket,
 		labels:  lbls,
 		metrics: newMetrics(r),
+		source:  source,
 	}
 }
 
@@ -110,7 +114,7 @@ func (s *Shipper) Timestamps() (minTime, maxSyncTime int64, err error) {
 	minTime = math.MaxInt64
 	maxSyncTime = math.MinInt64
 
-	s.iterBlockMetas(func(m *block.Meta) error {
+	if err := s.iterBlockMetas(func(m *block.Meta) error {
 		if m.MinTime < minTime {
 			minTime = m.MinTime
 		}
@@ -118,7 +122,15 @@ func (s *Shipper) Timestamps() (minTime, maxSyncTime int64, err error) {
 			maxSyncTime = m.MaxTime
 		}
 		return nil
-	})
+	}); err != nil {
+		return 0, 0, errors.Wrap(err, "iter Block metas for timestamp")
+	}
+
+	if minTime == math.MaxInt64 {
+		// No block yet found. We cannot assume any min block size so propagate 0 minTime.
+		minTime = 0
+	}
+
 	return minTime, maxSyncTime, nil
 }
 
@@ -144,19 +156,26 @@ func (s *Shipper) Sync(ctx context.Context) {
 	// Reset the uploaded slice so we can rebuild it only with blocks that still exist locally.
 	meta.Uploaded = nil
 
-	s.iterBlockMetas(func(m *block.Meta) error {
+	// TODO(bplotka): If there are no blocks in the system check for WAL dir to ensure we have actually
+	// access to real TSDB dir (!).
+	if err = s.iterBlockMetas(func(m *block.Meta) error {
 		// Do not sync a block if we already uploaded it. If it is no longer found in the bucket,
 		// it was generally removed by the compaction process.
 		if _, ok := hasUploaded[m.ULID]; !ok {
 			if err := s.sync(ctx, m); err != nil {
 				level.Error(s.logger).Log("msg", "shipping failed", "block", m.ULID, "err", err)
+				// No error returned, just log line. This is because we want other blocks to be uploaded even
+				// though this one failed. It will be retried on second Sync iteration.
 				return nil
 			}
 		}
 		meta.Uploaded = append(meta.Uploaded, m.ULID)
 		return nil
-	})
-	if err := WriteMetaFile(s.dir, meta); err != nil {
+	}); err != nil {
+		level.Error(s.logger).Log("msg", "iter block metas failed", "err", err)
+		return
+	}
+	if err := WriteMetaFile(s.logger, s.dir, meta); err != nil {
 		level.Warn(s.logger).Log("msg", "updating meta file failed", "err", err)
 	}
 }
@@ -165,10 +184,13 @@ func (s *Shipper) sync(ctx context.Context, meta *block.Meta) (err error) {
 	dir := filepath.Join(s.dir, meta.ULID.String())
 
 	// We only ship of the first compacted block level.
+	// TODO(bplotka): https://github.com/improbable-eng/thanos/issues/206
 	if meta.Compaction.Level > 1 {
 		return nil
 	}
-	ok, err := s.bucket.Exists(ctx, path.Join(meta.ULID.String(), "meta.json"))
+
+	// Check against bucket if the meta file for this block exists.
+	ok, err := s.bucket.Exists(ctx, path.Join(meta.ULID.String(), block.MetaFilename))
 	if err != nil {
 		return errors.Wrap(err, "check exists")
 	}
@@ -180,15 +202,20 @@ func (s *Shipper) sync(ctx context.Context, meta *block.Meta) (err error) {
 
 	// We hard-link the files into a temporary upload directory so we are not affected
 	// by other operations happening against the TSDB directory.
-	updir := filepath.Join(s.dir, "thanos", "upload")
+	updir := filepath.Join(s.dir, "thanos", "upload", meta.ULID.String())
 
+	// Remove updir just in case.
 	if err := os.RemoveAll(updir); err != nil {
 		return errors.Wrap(err, "clean upload directory")
 	}
 	if err := os.MkdirAll(updir, 0777); err != nil {
 		return errors.Wrap(err, "create upload dir")
 	}
-	defer os.RemoveAll(updir)
+	defer func() {
+		if err := os.RemoveAll(updir); err != nil {
+			level.Error(s.logger).Log("msg", "failed to clean upload directory", "err", err)
+		}
+	}()
 
 	if err := hardlinkBlock(dir, updir); err != nil {
 		return errors.Wrap(err, "hard link block")
@@ -197,18 +224,11 @@ func (s *Shipper) sync(ctx context.Context, meta *block.Meta) (err error) {
 	if lset := s.labels(); lset != nil {
 		meta.Thanos.Labels = lset.Map()
 	}
-	if err := block.WriteMetaFile(updir, meta); err != nil {
+	meta.Thanos.Source = s.source
+	if err := block.WriteMetaFile(s.logger, updir, meta); err != nil {
 		return errors.Wrap(err, "write meta file")
 	}
-	err = objstore.UploadDir(ctx, s.bucket, updir, meta.ULID.String())
-	if err == nil {
-		return nil
-	}
-	// Cleanup the dir with an uncancelable context.
-	if err2 := objstore.DeleteDir(context.Background(), s.bucket, meta.ULID.String()); err2 != nil {
-		level.Warn(s.logger).Log("msg", "cleaning up block failed", "block", meta.ULID, "err", err)
-	}
-	return err
+	return block.Upload(ctx, s.logger, s.bucket, updir)
 }
 
 // iterBlockMetas calls f with the block meta for each block found in dir. It logs
@@ -220,7 +240,7 @@ func (s *Shipper) iterBlockMetas(f func(m *block.Meta) error) error {
 		return errors.Wrap(err, "read dir")
 	}
 	for _, n := range names {
-		if _, err := ulid.Parse(n); err != nil {
+		if _, ok := block.IsBlockDir(n); !ok {
 			continue
 		}
 		dir := filepath.Join(s.dir, n)
@@ -246,20 +266,20 @@ func (s *Shipper) iterBlockMetas(f func(m *block.Meta) error) error {
 }
 
 func hardlinkBlock(src, dst string) error {
-	chunkDir := filepath.Join(dst, "chunks")
+	chunkDir := filepath.Join(dst, block.ChunksDirname)
 
 	if err := os.MkdirAll(chunkDir, 0777); err != nil {
 		return errors.Wrap(err, "create chunks dir")
 	}
 
-	files, err := fileutil.ReadDir(filepath.Join(src, "chunks"))
+	files, err := fileutil.ReadDir(filepath.Join(src, block.ChunksDirname))
 	if err != nil {
 		return errors.Wrap(err, "read chunk dir")
 	}
 	for i, fn := range files {
-		files[i] = filepath.Join("chunks", fn)
+		files[i] = filepath.Join(block.ChunksDirname, fn)
 	}
-	files = append(files, "meta.json", "index")
+	files = append(files, block.MetaFilename, block.IndexFilename)
 
 	for _, fn := range files {
 		if err := os.Link(filepath.Join(src, fn), filepath.Join(dst, fn)); err != nil {
@@ -279,7 +299,7 @@ type Meta struct {
 const MetaFilename = "thanos.shipper.json"
 
 // WriteMetaFile writes the given meta into <dir>/thanos.shipper.json.
-func WriteMetaFile(dir string, meta *Meta) error {
+func WriteMetaFile(logger log.Logger, dir string, meta *Meta) error {
 	// Make any changes to the file appear atomic.
 	path := filepath.Join(dir, MetaFilename)
 	tmp := path + ".tmp"
@@ -293,13 +313,13 @@ func WriteMetaFile(dir string, meta *Meta) error {
 	enc.SetIndent("", "\t")
 
 	if err := enc.Encode(meta); err != nil {
-		f.Close()
+		runutil.CloseWithLogOnErr(logger, f, "write meta file close")
 		return err
 	}
 	if err := f.Close(); err != nil {
 		return err
 	}
-	return renameFile(tmp, path)
+	return renameFile(logger, tmp, path)
 }
 
 // ReadMetaFile reads the given meta from <dir>/thanos.shipper.json.
@@ -316,10 +336,11 @@ func ReadMetaFile(dir string) (*Meta, error) {
 	if m.Version != 1 {
 		return nil, errors.Errorf("unexpected meta file version %d", m.Version)
 	}
+
 	return &m, nil
 }
 
-func renameFile(from, to string) error {
+func renameFile(logger log.Logger, from, to string) error {
 	if err := os.RemoveAll(to); err != nil {
 		return err
 	}
@@ -334,7 +355,7 @@ func renameFile(from, to string) error {
 	}
 
 	if err = fileutil.Fsync(pdir); err != nil {
-		pdir.Close()
+		runutil.CloseWithLogOnErr(logger, pdir, "rename file dir close")
 		return err
 	}
 	return pdir.Close()

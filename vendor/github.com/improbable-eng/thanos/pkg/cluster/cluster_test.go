@@ -3,13 +3,16 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"net"
 	"reflect"
 	"sort"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/fortytw2/leaktest"
 	"github.com/go-kit/kit/log"
+	"github.com/hashicorp/go-sockaddr"
 	"github.com/improbable-eng/thanos/pkg/runutil"
 	"github.com/improbable-eng/thanos/pkg/store/storepb"
 	"github.com/improbable-eng/thanos/pkg/testutil"
@@ -18,42 +21,42 @@ import (
 	"github.com/prometheus/prometheus/pkg/timestamp"
 )
 
-func joinPeer(num int, knownPeers []string) (peerAddr string, peer *Peer, err error) {
+func joinPeer(num int, knownPeers []string) (peerAddr string, peer *peer, err error) {
 	port, err := testutil.FreePort()
 	if err != nil {
 		return "", nil, err
 	}
 	peerAddr = fmt.Sprintf("127.0.0.1:%d", port)
 	now := time.Now()
-	peerState1 := PeerState{
-		Type:    PeerTypeSource,
-		APIAddr: apiAddr(num),
-		Metadata: PeerMetadata{
-			Labels: []storepb.Label{
-				{
-					Name:  "a",
-					Value: fmt.Sprintf("%d", num),
-				},
-			},
-			MinTime: timestamp.FromTime(now.Add(-10 * time.Minute)),
-			MaxTime: timestamp.FromTime(now.Add(-1 * time.Second)),
-		},
-	}
 
 	peer, err = New(
 		log.NewNopLogger(),
 		prometheus.NewRegistry(),
 		peerAddr,
 		peerAddr,
+		apiAddr(num),
+		"",
 		knownPeers,
 		false,
 		100*time.Millisecond,
 		50*time.Millisecond,
+		30*time.Millisecond,
+		nil,
+		LanNetworkPeerType,
 	)
 	if err != nil {
 		return "", nil, err
 	}
-	err = peer.Join(peerState1)
+	err = peer.Join(PeerTypeSource, PeerMetadata{
+		Labels: []storepb.Label{
+			{
+				Name:  "a",
+				Value: fmt.Sprintf("%d", num),
+			},
+		},
+		MinTime: timestamp.FromTime(now.Add(-10 * time.Minute)),
+		MaxTime: timestamp.FromTime(now.Add(-1 * time.Second)),
+	})
 	if err != nil {
 		return "", nil, err
 	}
@@ -125,7 +128,7 @@ func TestPeers_PropagatingState(t *testing.T) {
 	defer cancel2()
 	testutil.Ok(t, runutil.Retry(1*time.Second, ctx2.Done(), func() error {
 		for _, st := range peer2.PeerStates(PeerTypeSource) {
-			if st.APIAddr != "sidecar-address:1" {
+			if st.StoreAPIAddr != "sidecar-address:1" {
 				continue
 			}
 
@@ -139,8 +142,69 @@ func TestPeers_PropagatingState(t *testing.T) {
 
 func apiAddrs(states map[string]PeerState) (addrs []string) {
 	for _, ps := range states {
-		addrs = append(addrs, ps.APIAddr)
+		addrs = append(addrs, ps.StoreAPIAddr)
 	}
 	sort.Strings(addrs)
 	return addrs
+}
+
+func TestCalculateAdvAddress(t *testing.T) {
+	privateIP, err := sockaddr.GetPrivateIP()
+	testutil.Ok(t, err)
+
+	for _, tc := range []struct {
+		bind      string
+		advertise string
+
+		expected string
+		err      error
+	}{
+		{
+			err: errors.New("invalid bind address '': missing port in address"),
+		},
+		{
+			advertise: "l1234",
+			err:       errors.New("invalid advertise address: address l1234: missing port in address"),
+		},
+		{
+			advertise: "localhost:1234",
+			expected:  "localhost:1234",
+		},
+		{
+			bind:      "local:5555",
+			advertise: "ext:1234",
+			expected:  "ext:1234",
+		},
+		{
+			bind:     "local:5555",
+			expected: "local:5555",
+		},
+		{
+			bind:     ":5555",
+			expected: privateIP + ":5555",
+		},
+		{
+			bind:     "0.0.0.0:5555",
+			expected: privateIP + ":5555",
+		},
+		{
+			bind:      "[::]:1234",
+			advertise: "[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:1234",
+			expected:  "[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:1234",
+		},
+	} {
+		if ok := t.Run("", func(t *testing.T) {
+			host, port, err := CalculateAdvertiseAddress(tc.bind, tc.advertise)
+			if tc.err != nil {
+				testutil.NotOk(t, err)
+				testutil.Equals(t, tc.err.Error(), err.Error())
+				return
+			}
+			testutil.Ok(t, err)
+			testutil.Equals(t, tc.expected, net.JoinHostPort(host, strconv.Itoa(port)))
+
+		}); !ok {
+			return
+		}
+	}
 }

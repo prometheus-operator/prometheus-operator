@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/go-kit/kit/log"
+	"github.com/improbable-eng/thanos/pkg/runutil"
 	"github.com/improbable-eng/thanos/pkg/store/storepb"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -16,15 +17,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// TSDBStore implements the store API against a local TSDB instance.
+// It attaches the provided external labels to all results. It only responds with raw data
+// and does not support downsampling.
 type TSDBStore struct {
 	logger log.Logger
 	db     *tsdb.DB
 	labels labels.Labels
 }
 
-// NewTSDBStore implements the store API against a local TSDB instance.
-// It attaches the provided external labels to all results. It only responds with raw data
-// and does not support downsampling.
+// NewTSDBStore creates a new TSDBStore.
 func NewTSDBStore(logger log.Logger, reg prometheus.Registerer, db *tsdb.DB, externalLabels labels.Labels) *TSDBStore {
 	if logger == nil {
 		logger = log.NewNopLogger()
@@ -78,7 +80,7 @@ func (s *TSDBStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesSer
 	if err != nil {
 		return status.Error(codes.Internal, err.Error())
 	}
-	defer q.Close()
+	defer runutil.CloseWithLogOnErr(s.logger, q, "close tsdb querier series")
 
 	set, err := q.Select(matchers...)
 	if err != nil {
@@ -173,7 +175,7 @@ func (s *TSDBStore) LabelValues(ctx context.Context, r *storepb.LabelValuesReque
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	defer q.Close()
+	defer runutil.CloseWithLogOnErr(s.logger, q, "close tsdb querier label values")
 
 	res, err := q.LabelValues(r.Label)
 	if err != nil {

@@ -2,7 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
+	"math"
+	"net"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -12,13 +17,15 @@ import (
 	"runtime/debug"
 	"syscall"
 
-	"math"
+	gmetrics "github.com/armon/go-metrics"
 
+	gprom "github.com/armon/go-metrics/prometheus"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/improbable-eng/thanos/pkg/runutil"
 	"github.com/improbable-eng/thanos/pkg/tracing"
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
@@ -28,17 +35,17 @@ import (
 	"github.com/prometheus/common/version"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
-	defaultClusterAddr = "0.0.0.0:10900"
-	defaultGRPCAddr    = "0.0.0.0:10901"
-	defaultHTTPAddr    = "0.0.0.0:10902"
+	logFormatLogfmt = "logfmt"
+	logFormatJson   = "json"
 )
 
-type setupFunc func(*run.Group, log.Logger, *prometheus.Registry, opentracing.Tracer) error
+type setupFunc func(*run.Group, log.Logger, *prometheus.Registry, opentracing.Tracer, bool) error
 
 func main() {
 	if os.Getenv("DEBUG") != "" {
@@ -51,10 +58,12 @@ func main() {
 	app.Version(version.Print("thanos"))
 	app.HelpFlag.Short('h')
 
-	debugName := app.Flag("debug.name", "name to prefix to log lines").Hidden().String()
+	debugName := app.Flag("debug.name", "Name to add as prefix to log lines.").Hidden().String()
 
-	logLevel := app.Flag("log.level", "log filtering level").
+	logLevel := app.Flag("log.level", "Log filtering level.").
 		Default("info").Enum("error", "warn", "info", "debug")
+	logFormat := app.Flag("log.format", "Log format to use.").
+		Default(logFormatLogfmt).Enum(logFormatLogfmt, logFormatJson)
 
 	gcloudTraceProject := app.Flag("gcloudtrace.project", "GCP project to send Google Cloud Trace tracings to. If empty, tracing will be disabled.").
 		String()
@@ -93,6 +102,9 @@ func main() {
 			panic("unexpected log level")
 		}
 		logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+		if *logFormat == logFormatJson {
+			logger = log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
+		}
 		logger = level.NewFilter(logger, lvl)
 
 		if *debugName != "" {
@@ -106,7 +118,22 @@ func main() {
 	metrics.MustRegister(
 		version.NewCollector("thanos"),
 		prometheus.NewGoCollector(),
+		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 	)
+
+	prometheus.DefaultRegisterer = metrics
+	// Memberlist uses go-metrics
+	sink, err := gprom.NewPrometheusSink()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "%s command failed", cmd))
+		os.Exit(1)
+	}
+	gmetricsConfig := gmetrics.DefaultConfig("thanos_" + cmd)
+	gmetricsConfig.EnableRuntimeMetrics = false
+	if _, err = gmetrics.NewGlobal(gmetricsConfig, sink); err != nil {
+		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "%s command failed", cmd))
+		os.Exit(1)
+	}
 
 	var g run.Group
 	var tracer opentracing.Tracer
@@ -118,17 +145,24 @@ func main() {
 		var closeFn func() error
 		tracer, closeFn = tracing.NewOptionalGCloudTracer(ctx, logger, *gcloudTraceProject, *gcloudTraceSampleFactor, *debugName)
 
+		// This is bad, but Prometheus does not support any other tracer injections than just global one.
+		// TODO(bplotka): Work with basictracer to handle gracefully tracker mismatches, and also with Prometheus to allow
+		// tracer injection.
+		opentracing.SetGlobalTracer(tracer)
+
 		ctx, cancel := context.WithCancel(ctx)
 		g.Add(func() error {
 			<-ctx.Done()
 			return ctx.Err()
 		}, func(error) {
-			closeFn()
+			if err := closeFn(); err != nil {
+				level.Warn(logger).Log("msg", "closing tracer failed", "err", err)
+			}
 			cancel()
 		})
 	}
 
-	if err := cmds[cmd](&g, logger, metrics, tracer); err != nil {
+	if err := cmds[cmd](&g, logger, metrics, tracer, *logLevel == "debug"); err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "%s command failed", cmd))
 		os.Exit(1)
 	}
@@ -137,7 +171,7 @@ func main() {
 	{
 		cancel := make(chan struct{})
 		g.Add(func() error {
-			return interrupt(cancel)
+			return interrupt(logger, cancel)
 		}, func(error) {
 			close(cancel)
 		})
@@ -150,11 +184,12 @@ func main() {
 	level.Info(logger).Log("msg", "exiting")
 }
 
-func interrupt(cancel <-chan struct{}) error {
+func interrupt(logger log.Logger, cancel <-chan struct{}) error {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	select {
-	case <-c:
+	case s := <-c:
+		level.Info(logger).Log("msg", "caught signal. Exiting.", "signal", s)
 		return nil
 	case <-cancel:
 		return errors.New("canceled")
@@ -181,7 +216,7 @@ func registerMetrics(mux *http.ServeMux, g prometheus.Gatherer) {
 // - request histogram
 // - tracing
 // - panic recovery with panic counter
-func defaultGRPCServerOpts(logger log.Logger, reg *prometheus.Registry, tracer opentracing.Tracer) []grpc.ServerOption {
+func defaultGRPCServerOpts(logger log.Logger, reg *prometheus.Registry, tracer opentracing.Tracer, cert, key, clientCA string) ([]grpc.ServerOption, error) {
 	met := grpc_prometheus.NewServerMetrics()
 	met.EnableHandlingTimeHistogram(
 		grpc_prometheus.WithHistogramBuckets([]float64{
@@ -199,7 +234,7 @@ func defaultGRPCServerOpts(logger log.Logger, reg *prometheus.Registry, tracer o
 		return status.Errorf(codes.Internal, "%s", p)
 	}
 	reg.MustRegister(met, panicsTotal)
-	return []grpc.ServerOption{
+	opts := []grpc.ServerOption{
 		grpc.MaxSendMsgSize(math.MaxInt32),
 		grpc_middleware.WithUnaryServerChain(
 			met.UnaryServerInterceptor(),
@@ -212,4 +247,68 @@ func defaultGRPCServerOpts(logger log.Logger, reg *prometheus.Registry, tracer o
 			grpc_recovery.StreamServerInterceptor(grpc_recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 	}
+
+	if key == "" && cert == "" {
+		if clientCA != "" {
+			return nil, errors.New("when a client CA is used a server key and certificate must also be provided")
+		}
+
+		level.Info(logger).Log("msg", "disabled TLS, key and cert must be set to enable")
+		return opts, nil
+	}
+
+	if key == "" || cert == "" {
+		return nil, errors.New("both server key and certificate must be provided")
+	}
+
+	tlsCfg := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+
+	tlsCert, err := tls.LoadX509KeyPair(cert, key)
+	if err != nil {
+		return nil, errors.Wrap(err, "server credentials")
+	}
+
+	level.Info(logger).Log("msg", "enabled gRPC server side TLS")
+
+	tlsCfg.Certificates = []tls.Certificate{tlsCert}
+
+	if clientCA != "" {
+		caPEM, err := ioutil.ReadFile(clientCA)
+		if err != nil {
+			return nil, errors.Wrap(err, "reading client CA")
+		}
+
+		certPool := x509.NewCertPool()
+		if !certPool.AppendCertsFromPEM(caPEM) {
+			return nil, errors.Wrap(err, "building client CA")
+		}
+		tlsCfg.ClientCAs = certPool
+		tlsCfg.ClientAuth = tls.RequireAndVerifyClientCert
+
+		level.Info(logger).Log("msg", "gRPC server TLS client verification enabled")
+	}
+
+	return append(opts, grpc.Creds(credentials.NewTLS(tlsCfg))), nil
+}
+
+// metricHTTPListenGroup is a run.Group that servers HTTP endpoint with only Prometheus metrics.
+func metricHTTPListenGroup(g *run.Group, logger log.Logger, reg *prometheus.Registry, httpBindAddr string) error {
+	mux := http.NewServeMux()
+	registerMetrics(mux, reg)
+	registerProfile(mux)
+
+	l, err := net.Listen("tcp", httpBindAddr)
+	if err != nil {
+		return errors.Wrap(err, "listen metrics address")
+	}
+
+	g.Add(func() error {
+		level.Info(logger).Log("msg", "Listening for metrics", "address", httpBindAddr)
+		return errors.Wrap(http.Serve(l, mux), "serve metrics")
+	}, func(error) {
+		runutil.CloseWithLogOnErr(logger, l, "metric listener")
+	})
+	return nil
 }

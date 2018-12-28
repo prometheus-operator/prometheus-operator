@@ -7,7 +7,7 @@ metadata:
     thanos-peer: "true"
 spec:
   serviceName: "prometheus"
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: prometheus-gcs
@@ -17,26 +17,42 @@ spec:
       labels:
         app: prometheus-gcs
         thanos-peer: "true"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "10902"
     spec:
+## Commented out because Minikube has only one node, should be commented in for any production setup
+#      affinity:
+#        podAntiAffinity:
+#          requiredDuringSchedulingIgnoredDuringExecution:
+#          - labelSelector:
+#              matchExpressions:
+#              - key: app
+#                operator: In
+#                values:
+#                - prometheus
+#            topologyKey: kubernetes.io/hostname
       containers:
       - name: prometheus
         image: quay.io/prometheus/prometheus:v2.0.0
         args:
         - "--storage.tsdb.retention=24h"
-        - "--config.file=/etc/prometheus/prometheus.yml"
+        - "--config.file=/etc/prometheus-shared/prometheus.yml"
         - "--storage.tsdb.path=/var/prometheus"
         - "--storage.tsdb.min-block-duration=2h"
         - "--storage.tsdb.max-block-duration=2h"
+        - "--web.enable-lifecycle"
         ports:
-        - name: http
+        - name: prom-http
           containerPort: 9090
         volumeMounts:
-        - name: config
-          mountPath: /etc/prometheus
+        - name: config-shared
+          mountPath: /etc/prometheus-shared
         - name: data
           mountPath: /var/prometheus
       - name: thanos-sidecar
-        image: improbable/thanos:latest
+        # Always use explicit image tags (release or master-<date>-sha) instead of ambigous `latest` or `master`.
+        image: improbable/thanos:v0.1.0
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /creds/gcs-credentials.json
@@ -48,8 +64,10 @@ spec:
         - "--cluster.peers=thanos-peers.default.svc.cluster.local:10900"
        # NOTE: This is required to be added in GCS prior startup of this.
         - "--gcs.bucket=<bucket-name>"
+        - "--reloader.config-file=/etc/prometheus/prometheus.yml.tmpl"
+        - "--reloader.config-envsubst-file=/etc/prometheus-shared/prometheus.yml"
         ports:
-        - name: http
+        - name: sidecar-http
           containerPort: 10902
         - name: grpc
           containerPort: 10901
@@ -60,10 +78,16 @@ spec:
           mountPath: /var/prometheus
         - name: gcs-credentials
           mountPath: /creds/
+        - name: config-shared
+          mountPath: /etc/prometheus-shared
+        - name: config
+          mountPath: /etc/prometheus
       volumes:
       - name: config
         configMap:
           name: prometheus-config-gcs
+      - name: config-shared
+        emptyDir: {}
       - name: data
         emptyDir: {}
       - name: gcs-credentials
@@ -77,12 +101,18 @@ kind: ConfigMap
 metadata:
   name: prometheus-config-gcs
 data:
-  prometheus.yml: |-
+  prometheus.yml.tmpl: |-
     global:
       external_labels:
         monitor: prometheus
+        replica: '$(HOSTNAME)'
 
     scrape_configs:
+    - job_name: prometheus
+      static_configs:
+        - targets:
+          - "127.0.0.1:9090"
+
     - job_name: kubelets
       kubernetes_sd_configs:
       - role: node
@@ -132,21 +162,21 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: prometheus
-  name: prometheus
+    app: prometheus-gcs
+  name: prometheus-gcs
 spec:
   externalTrafficPolicy: Cluster
   ports:
   - port: 9090
     protocol: TCP
-    targetPort: 9090
+    targetPort: prom-http
     name: http-prometheus
   - port: 10902
     protocol: TCP
-    targetPort: http
+    targetPort: sidecar-http
     name: http-sidecar-metrics
   selector:
-    app: prometheus
+    app: prometheus-gcs
   sessionAffinity: None
   type: NodePort
 status:

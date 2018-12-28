@@ -7,7 +7,7 @@ metadata:
     thanos-peer: "true"
 spec:
   serviceName: "prometheus"
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: prometheus
@@ -17,34 +17,52 @@ spec:
       labels:
         app: prometheus
         thanos-peer: "true"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "10902"
     spec:
+## Commented out because Minikube has only one node, should be commented in for any production setup
+#      affinity:
+#        podAntiAffinity:
+#          requiredDuringSchedulingIgnoredDuringExecution:
+#          - labelSelector:
+#              matchExpressions:
+#              - key: app
+#                operator: In
+#                values:
+#                - prometheus
+#            topologyKey: kubernetes.io/hostname
       containers:
       - name: prometheus
         image: quay.io/prometheus/prometheus:v2.0.0
         args:
         - "--storage.tsdb.retention=24h"
-        - "--config.file=/etc/prometheus/prometheus.yml"
+        - "--config.file=/etc/prometheus-shared/prometheus.yml"
         - "--storage.tsdb.path=/var/prometheus"
         - "--storage.tsdb.min-block-duration=2h"
         - "--storage.tsdb.max-block-duration=2h"
+        - "--web.enable-lifecycle"
         ports:
-        - name: http
+        - name: prom-http
           containerPort: 9090
         volumeMounts:
-        - name: config
-          mountPath: /etc/prometheus
+        - name: config-shared
+          mountPath: /etc/prometheus-shared
         - name: data
           mountPath: /var/prometheus
       - name: thanos-sidecar
-        image: improbable/thanos:latest
+        # Always use explicit image tags (release or master-<date>-sha) instead of ambigous `latest` or `master`.
+        image: improbable/thanos:v0.1.0
         args:
         - "sidecar"
         - "--log.level=debug"
         - "--tsdb.path=/var/prometheus"
         - "--prometheus.url=http://127.0.0.1:9090"
         - "--cluster.peers=thanos-peers.default.svc.cluster.local:10900"
+        - "--reloader.config-file=/etc/prometheus/prometheus.yml.tmpl"
+        - "--reloader.config-envsubst-file=/etc/prometheus-shared/prometheus.yml"
         ports:
-        - name: http
+        - name: sidecar-http
           containerPort: 10902
         - name: grpc
           containerPort: 10901
@@ -53,10 +71,16 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /var/prometheus
+        - name: config-shared
+          mountPath: /etc/prometheus-shared
+        - name: config
+          mountPath: /etc/prometheus
       volumes:
       - name: config
         configMap:
           name: prometheus-config
+      - name: config-shared
+        emptyDir: {}
       - name: data
         emptyDir: {}
 ---
@@ -65,12 +89,18 @@ kind: ConfigMap
 metadata:
   name: prometheus-config
 data:
-  prometheus.yml: |-
+  prometheus.yml.tmpl: |-
     global:
       external_labels:
         monitor: prometheus
+        replica: '$(HOSTNAME)'
 
     scrape_configs:
+    - job_name: prometheus
+      static_configs:
+        - targets:
+          - "127.0.0.1:9090"
+
     - job_name: kubelets
       kubernetes_sd_configs:
       - role: node
@@ -127,11 +157,11 @@ spec:
   ports:
   - port: 9090
     protocol: TCP
-    targetPort: 9090
+    targetPort: prom-http
     name: http-prometheus
   - port: 10902
     protocol: TCP
-    targetPort: http
+    targetPort: sidecar-http
     name: http-sidecar-metrics
   selector:
     app: prometheus

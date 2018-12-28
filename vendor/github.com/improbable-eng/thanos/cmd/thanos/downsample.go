@@ -3,23 +3,20 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"net"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/prometheus/tsdb/chunkenc"
 
-	"cloud.google.com/go/storage"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/improbable-eng/thanos/pkg/block"
 	"github.com/improbable-eng/thanos/pkg/compact/downsample"
 	"github.com/improbable-eng/thanos/pkg/objstore"
-	"github.com/improbable-eng/thanos/pkg/objstore/gcs"
+	"github.com/improbable-eng/thanos/pkg/objstore/client"
+	"github.com/improbable-eng/thanos/pkg/runutil"
 	"github.com/oklog/run"
 	"github.com/oklog/ulid"
 	"github.com/opentracing/opentracing-go"
@@ -30,22 +27,15 @@ import (
 )
 
 func registerDownsample(m map[string]setupFunc, app *kingpin.Application, name string) {
-	cmd := app.Command(name, "continously compacts blocks in an object store bucket")
+	cmd := app.Command(name, "continuously downsamples blocks in an object store bucket")
 
-	httpAddr := cmd.Flag("http-address", "listen host:port for HTTP endpoints").
-		Default(defaultHTTPAddr).String()
-
-	dataDir := cmd.Flag("data-dir", "data directory to cache blocks and process compactions").
+	dataDir := cmd.Flag("data-dir", "Data directory in which to cache blocks and process downsamplings.").
 		Default("./data").String()
 
-	gcsBucket := cmd.Flag("gcs.bucket", "Google Cloud Storage bucket name for stored blocks.").
-		PlaceHolder("<bucket>").Required().String()
+	objStoreConfig := regCommonObjStoreFlags(cmd, "")
 
-	syncDelay := cmd.Flag("sync-delay", "minimum age of blocks before they are being processed.").
-		Default("2h").Duration()
-
-	m[name] = func(g *run.Group, logger log.Logger, reg *prometheus.Registry, tracer opentracing.Tracer) error {
-		return runDownsample(g, logger, reg, *httpAddr, *dataDir, *gcsBucket, *syncDelay)
+	m[name] = func(g *run.Group, logger log.Logger, reg *prometheus.Registry, tracer opentracing.Tracer, _ bool) error {
+		return runDownsample(g, logger, reg, *dataDir, objStoreConfig, name)
 	}
 }
 
@@ -53,24 +43,34 @@ func runDownsample(
 	g *run.Group,
 	logger log.Logger,
 	reg *prometheus.Registry,
-	httpAddr string,
 	dataDir string,
-	gcsBucket string,
-	syncDelay time.Duration,
+	objStoreConfig *pathOrContent,
+	component string,
 ) error {
-	gcsClient, err := storage.NewClient(context.Background())
+	bucketConfig, err := objStoreConfig.Content()
 	if err != nil {
-		return errors.Wrap(err, "create GCS client")
+		return err
 	}
-	var bkt objstore.Bucket
-	bkt = gcs.NewBucket(gcsBucket, gcsClient.Bucket(gcsBucket), reg)
-	bkt = objstore.BucketWithMetrics(gcsBucket, bkt, reg)
+
+	bkt, err := client.NewBucket(logger, bucketConfig, reg, component)
+	if err != nil {
+		return err
+	}
+
+	// Ensure we close up everything properly.
+	defer func() {
+		if err != nil {
+			runutil.CloseWithLogOnErr(logger, bkt, "bucket client")
+		}
+	}()
 
 	// Start cycle of syncing blocks from the bucket and garbage collecting the bucket.
 	{
 		ctx, cancel := context.WithCancel(context.Background())
 
 		g.Add(func() error {
+			defer runutil.CloseWithLogOnErr(logger, bkt, "bucket client")
+
 			level.Info(logger).Log("msg", "start first pass of downsampling")
 
 			if err := downsampleBucket(ctx, logger, bkt, dataDir); err != nil {
@@ -82,30 +82,14 @@ func runDownsample(
 			if err := downsampleBucket(ctx, logger, bkt, dataDir); err != nil {
 				return errors.Wrap(err, "downsampling failed")
 			}
+
 			return nil
 		}, func(error) {
 			cancel()
 		})
 	}
-	// Start metric and profiling endpoints.
-	{
-		mux := http.NewServeMux()
-		registerMetrics(mux, reg)
-		registerProfile(mux)
 
-		l, err := net.Listen("tcp", httpAddr)
-		if err != nil {
-			return errors.Wrapf(err, "listen on address %s", httpAddr)
-		}
-
-		g.Add(func() error {
-			return errors.Wrap(http.Serve(l, mux), "serve query")
-		}, func(error) {
-			l.Close()
-		})
-	}
-
-	level.Info(logger).Log("msg", "starting compact node")
+	level.Info(logger).Log("msg", "starting downsample node")
 	return nil
 }
 
@@ -124,18 +108,16 @@ func downsampleBucket(
 	var metas []*block.Meta
 
 	err := bkt.Iter(ctx, "", func(name string) error {
-		if !strings.HasSuffix(name, "/") {
+		id, ok := block.IsBlockDir(name)
+		if !ok {
 			return nil
 		}
-		id, err := ulid.Parse(name[:len(name)-1])
-		if err != nil {
-			return nil
-		}
-		rc, err := bkt.Get(ctx, path.Join(id.String(), "meta.json"))
+
+		rc, err := bkt.Get(ctx, path.Join(id.String(), block.MetaFilename))
 		if err != nil {
 			return errors.Wrapf(err, "get meta for block %s", id)
 		}
-		defer rc.Close()
+		defer runutil.CloseWithLogOnErr(logger, rc, "block reader")
 
 		var m block.Meta
 		if err := json.NewDecoder(rc).Decode(&m); err != nil {
@@ -186,7 +168,7 @@ func downsampleBucket(
 			}
 			// Only downsample blocks once we are sure to get roughly 2 chunks out of it.
 			// NOTE(fabxc): this must match with at which block size the compactor creates downsampled
-			// blockes. Otherwise we may never downsample some data.
+			// blocks. Otherwise we may never downsample some data.
 			if m.MaxTime-m.MinTime < 40*60*60*1000 {
 				continue
 			}
@@ -207,7 +189,7 @@ func downsampleBucket(
 			}
 			// Only downsample blocks once we are sure to get roughly 2 chunks out of it.
 			// NOTE(fabxc): this must match with at which block size the compactor creates downsampled
-			// blockes. Otherwise we may never downsample some data.
+			// blocks. Otherwise we may never downsample some data.
 			if m.MaxTime-m.MinTime < 10*24*60*60*1000 {
 				continue
 			}
@@ -223,13 +205,13 @@ func processDownsampling(ctx context.Context, logger log.Logger, bkt objstore.Bu
 	begin := time.Now()
 	bdir := filepath.Join(dir, m.ULID.String())
 
-	err := objstore.DownloadDir(ctx, bkt, m.ULID.String(), bdir)
+	err := block.Download(ctx, logger, bkt, m.ULID, bdir)
 	if err != nil {
 		return errors.Wrapf(err, "download block %s", m.ULID)
 	}
 	level.Info(logger).Log("msg", "downloaded block", "id", m.ULID, "duration", time.Since(begin))
 
-	if err := block.VerifyIndex(filepath.Join(bdir, "index")); err != nil {
+	if err := block.VerifyIndex(logger, filepath.Join(bdir, block.IndexFilename), m.MinTime, m.MaxTime); err != nil {
 		return errors.Wrap(err, "input block index not valid")
 	}
 
@@ -239,15 +221,16 @@ func processDownsampling(ctx context.Context, logger log.Logger, bkt objstore.Bu
 	if m.Thanos.Downsample.Resolution == 0 {
 		pool = chunkenc.NewPool()
 	} else {
-		pool = downsample.AggrChunkPool{}
+		pool = downsample.NewPool()
 	}
 
 	b, err := tsdb.OpenBlock(bdir, pool)
 	if err != nil {
 		return errors.Wrapf(err, "open block %s", m.ULID)
 	}
+	defer runutil.CloseWithLogOnErr(log.With(logger, "outcome", "potential left mmap file handlers left"), b, "tsdb reader")
 
-	id, err := downsample.Downsample(ctx, m, b, dir, resolution)
+	id, err := downsample.Downsample(logger, m, b, dir, resolution)
 	if err != nil {
 		return errors.Wrapf(err, "downsample block %s to window %d", m.ULID, resolution)
 	}
@@ -256,13 +239,13 @@ func processDownsampling(ctx context.Context, logger log.Logger, bkt objstore.Bu
 	level.Info(logger).Log("msg", "downsampled block",
 		"from", m.ULID, "to", id, "duration", time.Since(begin))
 
-	if err := block.VerifyIndex(filepath.Join(resdir, "index")); err != nil {
+	if err := block.VerifyIndex(logger, filepath.Join(resdir, block.IndexFilename), m.MinTime, m.MaxTime); err != nil {
 		return errors.Wrap(err, "output block index not valid")
 	}
 
 	begin = time.Now()
 
-	err = objstore.UploadDir(ctx, bkt, resdir, id.String())
+	err = block.Upload(ctx, logger, bkt, resdir)
 	if err != nil {
 		return errors.Wrapf(err, "upload downsampled block %s", id)
 	}
@@ -271,8 +254,13 @@ func processDownsampling(ctx context.Context, logger log.Logger, bkt objstore.Bu
 
 	begin = time.Now()
 
-	os.RemoveAll(bdir)
-	os.RemoveAll(resdir)
+	// It is not harmful if these fails.
+	if err := os.RemoveAll(bdir); err != nil {
+		level.Warn(logger).Log("msg", "failed to clean directory", "dir", bdir, "err", err)
+	}
+	if err := os.RemoveAll(resdir); err != nil {
+		level.Warn(logger).Log("msg", "failed to clean directory", "resdir", bdir, "err", err)
+	}
 
 	return nil
 }

@@ -2,7 +2,7 @@ package cluster
 
 import (
 	"context"
-	"io/ioutil"
+	stdlog "log"
 	"math/rand"
 	"net"
 	"strconv"
@@ -18,27 +18,58 @@ import (
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/model"
 )
 
+type PeerStateFetcher interface {
+	PeerState(id string) (PeerState, bool)
+}
+
+type Peer interface {
+	PeerStateFetcher
+
+	Name() string
+	SetLabels(labels []storepb.Label)
+	SetTimestamps(mint int64, maxt int64)
+	Join(peerType PeerType, initialMetadata PeerMetadata) error
+	PeerStates(types ...PeerType) map[string]PeerState
+	Close(timeout time.Duration)
+}
+
 // Peer is a single peer in a gossip cluster.
-type Peer struct {
+type peer struct {
 	logger   log.Logger
 	mlistMtx sync.RWMutex
 	mlist    *memberlist.Memberlist
 	stopc    chan struct{}
 
-	cfg        *memberlist.Config
-	addr       net.IP
-	knownPeers []string
+	cfg             *memberlist.Config
+	knownPeers      []string
+	advertiseAddr   string
+	refreshInterval time.Duration
 
 	data                 *data
 	gossipMsgsReceived   prometheus.Counter
 	gossipClusterMembers prometheus.Gauge
+
+	// Own External gRPC StoreAPI host:port (if any) to propagate to other peers.
+	advertiseStoreAPIAddr string
+	// Own External HTTP QueryAPI host:port (if any) to propagate to other peers.
+	advertiseQueryAPIAddress string
 }
 
 const (
-	DefaultPushPullInterval = 5 * time.Second
-	DefaultGossipInterval   = 5 * time.Second
+	DefaultRefreshInterval = model.Duration(60 * time.Second)
+
+	// Peer's network types. These are used as a predefined peer configurations for a specified network type.
+	LocalNetworkPeerType = "local"
+	LanNetworkPeerType   = "lan"
+	WanNetworkPeerType   = "wan"
+)
+
+var (
+	// NetworkPeerTypes is a list of available peers' network types.
+	NetworkPeerTypes = []string{LocalNetworkPeerType, LanNetworkPeerType, WanNetworkPeerType}
 )
 
 // PeerType describes a peer's role in the cluster.
@@ -58,14 +89,21 @@ const (
 
 // PeerState contains state for the peer.
 type PeerState struct {
-	Type    PeerType
-	APIAddr string
+	// Type represents type of the peer holding the state.
+	Type PeerType
 
+	// StoreAPIAddr is a host:port address of gRPC StoreAPI of the peer holding the state. Required for PeerTypeSource and PeerTypeStore.
+	StoreAPIAddr string
+	// QueryAPIAddr is a host:port address of HTTP QueryAPI of the peer holding the state. Required for PeerTypeQuery type only.
+	QueryAPIAddr string
+
+	// Metadata holds metadata of the peer holding the state.
 	Metadata PeerMetadata
 }
 
 // PeerMetadata are the information that can change in runtime of the peer.
 type PeerMetadata struct {
+	// Labels represents external labels for the peer. Only relevant for PeerTypeSource. Empty for other types.
 	Labels []storepb.Label
 
 	// MinTime indicates the minTime of the oldest block available from this peer.
@@ -80,11 +118,18 @@ func New(
 	reg *prometheus.Registry,
 	bindAddr string,
 	advertiseAddr string,
+	advertiseStoreAPIAddr string,
+	advertiseQueryAPIAddress string,
 	knownPeers []string,
 	waitIfEmpty bool,
 	pushPullInterval time.Duration,
 	gossipInterval time.Duration,
-) (*Peer, error) {
+	refreshInterval time.Duration,
+	secretKey []byte,
+	networkType string,
+) (*peer, error) {
+	l = log.With(l, "component", "cluster")
+
 	bindHost, bindPortStr, err := net.SplitHostPort(bindAddr)
 	if err != nil {
 		return nil, err
@@ -93,40 +138,24 @@ func New(
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid listen address")
 	}
-	var advertiseHost string
-	var advertisePort int
 
-	if advertiseAddr != "" {
-		var advertisePortStr string
-		advertiseHost, advertisePortStr, err = net.SplitHostPort(advertiseAddr)
-		if err != nil {
-			return nil, errors.Wrap(err, "invalid advertise address")
-		}
-		advertisePort, err = strconv.Atoi(advertisePortStr)
-		if err != nil {
-			return nil, errors.Wrap(err, "invalid advertise address, wrong port")
-		}
-	} else if bindHost == "" {
-		return nil, errors.New("advertise address needs to be specified if gRPC address is in form of ':<port>'")
-	}
-
-	resolvedPeers, err := resolvePeers(context.Background(), knownPeers, advertiseAddr, net.Resolver{}, waitIfEmpty)
-	if err != nil {
-		return nil, errors.Wrap(err, "resolve peers")
-	}
-	level.Debug(l).Log("msg", "resolved peers to following addresses", "peers", strings.Join(resolvedPeers, ","))
-
-	// Initial validation of user-specified advertise address.
-	addr, err := calculateAdvertiseAddress(bindHost, advertiseHost)
+	// Best-effort deduction of advertise address.
+	advertiseHost, advertisePort, err := CalculateAdvertiseAddress(bindAddr, advertiseAddr)
 	if err != nil {
 		level.Warn(l).Log("err", "couldn't deduce an advertise address: "+err.Error())
-	} else if hasNonlocal(resolvedPeers) && isUnroutable(addr.String()) {
-		level.Warn(l).Log("err", "this node advertises itself on an unroutable address", "addr", addr.String())
+	}
+
+	if IsUnroutable(advertiseHost) {
+		level.Warn(l).Log("err", "this node advertises itself on an unroutable address", "host", advertiseHost, "port", advertisePort)
 		level.Warn(l).Log("err", "this node will be unreachable in the cluster")
 		level.Warn(l).Log("err", "provide --cluster.advertise-address as a routable IP address or hostname")
 	}
 
-	l = log.With(l, "component", "cluster")
+	resolvedPeers, err := resolvePeers(context.Background(), knownPeers, advertiseAddr, *net.DefaultResolver, waitIfEmpty)
+	if err != nil {
+		return nil, errors.Wrap(err, "resolve peers")
+	}
+	level.Debug(l).Log("msg", "resolved peers to following addresses", "peers", strings.Join(resolvedPeers, ","))
 
 	// TODO(fabxc): generate human-readable but random names?
 	name, err := ulid.New(ulid.Now(), rand.New(rand.NewSource(time.Now().UnixNano())))
@@ -134,13 +163,21 @@ func New(
 		return nil, err
 	}
 
-	cfg := memberlist.DefaultLANConfig()
+	cfg, err := parseNetworkConfig(networkType)
+	if err != nil {
+		return nil, err
+	}
 	cfg.Name = name.String()
 	cfg.BindAddr = bindHost
 	cfg.BindPort = bindPort
-	cfg.GossipInterval = gossipInterval
-	cfg.PushPullInterval = pushPullInterval
-	cfg.LogOutput = ioutil.Discard
+	if gossipInterval != 0 {
+		cfg.GossipInterval = gossipInterval
+	}
+	if pushPullInterval != 0 {
+		cfg.PushPullInterval = pushPullInterval
+	}
+	cfg.Logger = stdlog.New(log.NewStdlibAdapter(level.Debug(l)), "peers", stdlog.LstdFlags)
+	cfg.SecretKey = secretKey
 	if advertiseAddr != "" {
 		cfg.AdvertiseAddr = advertiseHost
 		cfg.AdvertisePort = advertisePort
@@ -158,22 +195,25 @@ func New(
 	reg.MustRegister(gossipMsgsReceived)
 	reg.MustRegister(gossipClusterMembers)
 
-	return &Peer{
-		logger:               l,
-		addr:                 addr,
-		knownPeers:           knownPeers,
-		cfg:                  cfg,
-		gossipMsgsReceived:   gossipMsgsReceived,
-		gossipClusterMembers: gossipClusterMembers,
-		stopc:                make(chan struct{}),
-		data:                 &data{data: map[string]PeerState{}},
+	return &peer{
+		logger:                   l,
+		knownPeers:               knownPeers,
+		cfg:                      cfg,
+		refreshInterval:          refreshInterval,
+		gossipMsgsReceived:       gossipMsgsReceived,
+		gossipClusterMembers:     gossipClusterMembers,
+		stopc:                    make(chan struct{}),
+		data:                     &data{data: map[string]PeerState{}},
+		advertiseAddr:            advertiseAddr,
+		advertiseStoreAPIAddr:    advertiseStoreAPIAddr,
+		advertiseQueryAPIAddress: advertiseQueryAPIAddress,
 	}, nil
 }
 
-// Join joins to the memberlist gossip cluster using knownPeers and initialState.
-func (p *Peer) Join(initialState PeerState) error {
+// Join joins to the memberlist gossip cluster using knownPeers and given peerType and initialMetadata.
+func (p *peer) Join(peerType PeerType, initialMetadata PeerMetadata) error {
 	if p.hasJoined() {
-		return errors.New("peer already joined. Close it first to rejoin.")
+		return errors.New("peer already joined; close it first to rejoin")
 	}
 
 	var ml *memberlist.Memberlist
@@ -181,24 +221,17 @@ func (p *Peer) Join(initialState PeerState) error {
 	p.cfg.Delegate = d
 	p.cfg.Events = d
 
-	// If the API listens on 0.0.0.0, deduce it to the advertise IP.
-	if initialState.APIAddr != "" {
-		apiHost, apiPort, err := net.SplitHostPort(initialState.APIAddr)
-		if err != nil {
-			return errors.Wrap(err, "invalid API address")
-		}
-		if apiHost == "0.0.0.0" {
-			initialState.APIAddr = net.JoinHostPort(p.addr.String(), apiPort)
-		}
-	}
-
 	ml, err := memberlist.Create(p.cfg)
 	if err != nil {
 		return errors.Wrap(err, "create memberlist")
 	}
 
-	n, _ := ml.Join(p.knownPeers)
-	level.Debug(p.logger).Log("msg", "joined cluster", "peers", n)
+	n, err := ml.Join(p.knownPeers)
+	if err != nil {
+		level.Error(p.logger).Log("msg", "none of the peers was can be reached", "peerType", peerType, "knownPeers", strings.Join(p.knownPeers, ","), "err", err)
+	} else {
+		level.Debug(p.logger).Log("msg", "joined cluster", "peerType", peerType, "knownPeers", strings.Join(p.knownPeers, ","))
+	}
 
 	if n > 0 {
 		go warnIfAlone(p.logger, 10*time.Second, p.stopc, ml.NumMembers)
@@ -209,11 +242,82 @@ func (p *Peer) Join(initialState PeerState) error {
 	p.mlistMtx.Unlock()
 
 	// Initialize state with ourselves.
-	p.data.Set(p.Name(), initialState)
+	p.data.Set(p.Name(), PeerState{
+		Type:         peerType,
+		StoreAPIAddr: p.advertiseStoreAPIAddr,
+		QueryAPIAddr: p.advertiseQueryAPIAddress,
+		Metadata:     initialMetadata,
+	})
+
+	if p.refreshInterval != 0 {
+		go p.periodicallyRefresh()
+	}
+
 	return nil
 }
 
-func (p *Peer) hasJoined() bool {
+func (p *peer) periodicallyRefresh() {
+	tick := time.NewTicker(p.refreshInterval)
+	defer tick.Stop()
+
+	for {
+		select {
+		case <-p.stopc:
+			return
+		case <-tick.C:
+			if err := p.Refresh(); err != nil {
+				level.Error(p.logger).Log("msg", "Refreshing memberlist", "err", err)
+			}
+		}
+	}
+}
+
+// Refresh renews membership cluster, this will refresh DNS names and join newly added members
+func (p *peer) Refresh() error {
+	p.mlistMtx.Lock()
+	defer p.mlistMtx.Unlock()
+
+	if p.mlist == nil {
+		return nil
+	}
+
+	resolvedPeers, err := resolvePeers(context.Background(), p.knownPeers, p.advertiseAddr, *net.DefaultResolver, false)
+	if err != nil {
+		return errors.Wrapf(err, "refresh cluster could not resolve peers: %v", resolvedPeers)
+	}
+
+	currMembers := p.mlist.Members()
+	var notConnected []string
+	for _, peer := range resolvedPeers {
+		var isPeerFound bool
+
+		for _, mem := range currMembers {
+			if mem.Address() == peer {
+				isPeerFound = true
+				break
+			}
+		}
+
+		if !isPeerFound {
+			notConnected = append(notConnected, peer)
+		}
+	}
+
+	if len(notConnected) == 0 {
+		level.Debug(p.logger).Log("msg", "refresh cluster done", "peers", strings.Join(p.knownPeers, ","), "resolvedPeers", strings.Join(resolvedPeers, ","))
+		return nil
+	}
+
+	curr, err := p.mlist.Join(notConnected)
+	if err != nil {
+		return errors.Wrapf(err, "join peers %s ", strings.Join(notConnected, ","))
+	}
+
+	level.Debug(p.logger).Log("msg", "refresh cluster done, peers joined", "peers", strings.Join(notConnected, ","), "before", len(currMembers), "after", curr)
+	return nil
+}
+
+func (p *peer) hasJoined() bool {
 	p.mlistMtx.RLock()
 	defer p.mlistMtx.RUnlock()
 
@@ -238,7 +342,7 @@ func warnIfAlone(logger log.Logger, d time.Duration, stopc chan struct{}, numNod
 
 // SetLabels updates internal metadata's labels stored in PeerState for this peer.
 // Note that this data will be propagated based on gossipInterval we set.
-func (p *Peer) SetLabels(labels []storepb.Label) {
+func (p *peer) SetLabels(labels []storepb.Label) {
 	if !p.hasJoined() {
 		return
 	}
@@ -250,7 +354,7 @@ func (p *Peer) SetLabels(labels []storepb.Label) {
 
 // SetTimestamps updates internal metadata's timestamps stored in PeerState for this peer.
 // Note that this data will be propagated based on gossipInterval we set.
-func (p *Peer) SetTimestamps(mint int64, maxt int64) {
+func (p *peer) SetTimestamps(mint int64, maxt int64) {
 	if !p.hasJoined() {
 		return
 	}
@@ -263,22 +367,23 @@ func (p *Peer) SetTimestamps(mint int64, maxt int64) {
 
 // Close leaves the cluster waiting up to timeout and shutdowns peer if cluster left.
 // TODO(bplotka): Add this method into run.Group closing logic for each command. This will improve graceful shutdown.
-func (p *Peer) Close(timeout time.Duration) {
+func (p *peer) Close(timeout time.Duration) {
 	if !p.hasJoined() {
 		return
 	}
 
-	err := p.mlist.Leave(timeout)
-	if err != nil {
+	if err := p.mlist.Leave(timeout); err != nil {
 		level.Error(p.logger).Log("msg", "memberlist leave failed", "err", err)
 	}
 	close(p.stopc)
-	p.mlist.Shutdown()
+	if err := p.mlist.Shutdown(); err != nil {
+		level.Error(p.logger).Log("msg", "memberlist shutdown failed", "err", err)
+	}
 	p.mlist = nil
 }
 
 // Name returns the unique ID of this peer in the cluster.
-func (p *Peer) Name() string {
+func (p *peer) Name() string {
 	if !p.hasJoined() {
 		return ""
 	}
@@ -292,7 +397,7 @@ func PeerTypesStoreAPIs() []PeerType {
 }
 
 // PeerStates returns the custom state information for each peer by memberlist peer id (name).
-func (p *Peer) PeerStates(types ...PeerType) map[string]PeerState {
+func (p *peer) PeerStates(types ...PeerType) map[string]PeerState {
 	if !p.hasJoined() {
 		return nil
 	}
@@ -308,7 +413,6 @@ func (p *Peer) PeerStates(types ...PeerType) map[string]PeerState {
 			ps[o.Name] = os
 			continue
 		}
-
 		for _, t := range types {
 			if os.Type == t {
 				ps[o.Name] = os
@@ -319,8 +423,8 @@ func (p *Peer) PeerStates(types ...PeerType) map[string]PeerState {
 	return ps
 }
 
-// PeerStates returns the custom state information by memberlist peer name.
-func (p *Peer) PeerState(id string) (PeerState, bool) {
+// PeerState returns the custom state information by memberlist peer name.
+func (p *peer) PeerState(id string) (PeerState, bool) {
 	if !p.hasJoined() {
 		return PeerState{}, false
 	}
@@ -334,7 +438,7 @@ func (p *Peer) PeerState(id string) (PeerState, bool) {
 
 // Info returns a JSON-serializable dump of cluster state.
 // Useful for debug.
-func (p *Peer) Info() map[string]interface{} {
+func (p *peer) Info() map[string]interface{} {
 	if !p.hasJoined() {
 		return nil
 	}
@@ -361,7 +465,6 @@ func resolvePeers(ctx context.Context, peers []string, myAddress string, res net
 			return nil, errors.Wrapf(err, "split host/port for peer %s", peer)
 		}
 
-		retryCtx, cancel := context.WithCancel(ctx)
 		ips, err := res.LookupIPAddr(ctx, host)
 		if err != nil {
 			// Assume direct address.
@@ -371,6 +474,8 @@ func resolvePeers(ctx context.Context, peers []string, myAddress string, res net
 
 		if len(ips) == 0 {
 			var lookupErrSpotted bool
+			retryCtx, cancel := context.WithCancel(ctx)
+			defer cancel()
 
 			err := runutil.Retry(2*time.Second, retryCtx.Done(), func() error {
 				if lookupErrSpotted {
@@ -420,28 +525,45 @@ func removeMyAddr(ips []net.IPAddr, targetPort string, myAddr string) []net.IPAd
 	return result
 }
 
-func hasNonlocal(clusterPeers []string) bool {
-	for _, peer := range clusterPeers {
-		if host, _, err := net.SplitHostPort(peer); err == nil {
-			peer = host
-		}
-		if ip := net.ParseIP(peer); ip != nil && !ip.IsLoopback() {
-			return true
-		} else if ip == nil && strings.ToLower(peer) != "localhost" {
-			return true
-		}
-	}
-	return false
-}
-
-func isUnroutable(addr string) bool {
-	if host, _, err := net.SplitHostPort(addr); err == nil {
-		addr = host
-	}
-	if ip := net.ParseIP(addr); ip != nil && (ip.IsUnspecified() || ip.IsLoopback()) {
+func IsUnroutable(host string) bool {
+	if ip := net.ParseIP(host); ip != nil && (ip.IsUnspecified() || ip.IsLoopback()) {
 		return true // typically 0.0.0.0 or localhost
-	} else if ip == nil && strings.ToLower(addr) == "localhost" {
+	} else if ip == nil && strings.ToLower(host) == "localhost" {
 		return true
 	}
 	return false
 }
+
+func parseNetworkConfig(networkType string) (*memberlist.Config, error) {
+	var mc *memberlist.Config
+
+	switch networkType {
+	case LanNetworkPeerType:
+		mc = memberlist.DefaultLANConfig()
+	case WanNetworkPeerType:
+		mc = memberlist.DefaultWANConfig()
+	case LocalNetworkPeerType:
+		mc = memberlist.DefaultLocalConfig()
+	default:
+		return nil, errors.Errorf("unexpected network type %s, should be one of: %s",
+			networkType,
+			strings.Join(NetworkPeerTypes, ", "),
+		)
+	}
+
+	return mc, nil
+}
+
+func NewNoop() Peer {
+	return noopPeer{}
+}
+
+type noopPeer struct{}
+
+func (n noopPeer) Name() string                                               { return "no gossip" }
+func (n noopPeer) SetLabels(labels []storepb.Label)                           {}
+func (n noopPeer) SetTimestamps(mint int64, maxt int64)                       {}
+func (n noopPeer) PeerState(id string) (PeerState, bool)                      { return PeerState{}, false }
+func (n noopPeer) Join(peerType PeerType, initialMetadata PeerMetadata) error { return nil }
+func (n noopPeer) PeerStates(types ...PeerType) map[string]PeerState          { return nil }
+func (n noopPeer) Close(timeout time.Duration)                                {}
