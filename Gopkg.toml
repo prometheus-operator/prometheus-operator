@@ -71,3 +71,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/prometheus/client_golang"
+
+[[constraint]]
+  name = "github.com/improbable-eng/thanos"
+  revision = "cd7963372a11cea93a832584be099d2bfa0ac19a"
