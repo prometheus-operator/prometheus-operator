@@ -44,7 +44,7 @@ const (
 	secretsDir               = "/etc/prometheus/secrets/"
 	configmapsDir            = "/etc/prometheus/configmaps/"
 	configFilename           = "prometheus.yaml.gz"
-	configOutputFilename     = "prometheus.env.yaml"
+	configEnvsubstFilename   = "prometheus.env.yaml"
 	sSetInputHashName        = "prometheus-operator-input-hash"
 )
 
@@ -308,7 +308,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			"-storage.local.num-fingerprint-mutexes=4096",
 			fmt.Sprintf("-storage.local.path=%s", storageDir),
 			"-storage.local.chunk-encoding-version=2",
-			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configOutputFilename)),
+			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
 		)
 		// We attempt to specify decent storage tuning flags based on how much the
 		// requested memory can fit. The user has to specify an appropriate buffering
@@ -336,7 +336,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		}
 	case 2:
 		promArgs = append(promArgs,
-			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configOutputFilename)),
+			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
 			fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
 			"-storage.tsdb.retention="+p.Spec.Retention,
 			"-web.enable-lifecycle",
@@ -496,7 +496,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		fmt.Sprintf("--log-format=%s", c.LogFormat),
 		fmt.Sprintf("--reload-url=%s", localReloadURL),
 		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
-		fmt.Sprintf("--config-output-file=%s", path.Join(confOutDir, configOutputFilename)),
+		fmt.Sprintf("--config-output-file=%s", path.Join(confOutDir, configEnvsubstFilename)),
 	}
 
 	var livenessProbeHandler v1.Handler

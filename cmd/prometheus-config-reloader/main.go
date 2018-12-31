@@ -45,7 +45,7 @@ func main() {
 	cfgFile := app.Flag("config-file", "config file watched by the reloader").
 		String()
 
-	cfgOutputFile := app.Flag("config-output-file", "output file for environment variable substituted config file").
+	cfgSubstFile := app.Flag("config-envsubst-file", "output file for environment variable substituted config file").
 		String()
 
 	logFormat := app.Flag("log-format", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", "))).Default(logFormatLogfmt).String()
@@ -70,7 +70,7 @@ func main() {
 	var g run.Group
 	{
 		ctx, cancel := context.WithCancel(context.Background())
-		rel := reloader.New(logger, *reloadURL, *cfgFile, *cfgOutputFile, []string{})
+		rel := reloader.New(logger, *reloadURL, *cfgFile, *cfgSubstFile, []string{})
 
 		g.Add(func() error {
 			return rel.Watch(ctx)
