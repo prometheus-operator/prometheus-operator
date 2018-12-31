@@ -1864,6 +1864,21 @@ spec:
             priorityClassName:
               description: Priority class assigned to the Pods
               type: string
+            query:
+              description: QuerySpec defines the query command line flags when starting
+                Prometheus.
+              properties:
+                lookbackDelta:
+                  description: The delta difference allowed for retrieving metrics
+                    during expression evaluations.
+                  type: string
+                maxConcurrency:
+                  description: Number of concurrent queries that can be run at once.
+                  format: int32
+                  type: integer
+                timeout:
+                  description: Maximum time a query may take before being aborted.
+                  type: string
             remoteRead:
               description: If specified, the remote_read spec. This is an experimental
                 feature, it may change in any upcoming release in a breaking way.
