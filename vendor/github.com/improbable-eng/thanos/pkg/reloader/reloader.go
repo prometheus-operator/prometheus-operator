@@ -4,7 +4,6 @@ package reloader
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"crypto/sha256"
 	"hash"
@@ -30,42 +29,40 @@ import (
 // It optionally substitutes environment variables in the configuration.
 // Referenced environment variables must be of the form `$(var)` (not `$var` or `${var}`).
 type Reloader struct {
-	logger        log.Logger
-	reloadURL     *url.URL
-	cfgFile       string
-	cfgOutputFile string
-	ruleDirs      []string
-	ruleInterval  time.Duration
-	retryInterval time.Duration
+	logger          log.Logger
+	reloadURL       *url.URL
+	cfgFile         string
+	cfgEnvsubstFile string
+	ruleDirs        []string
+	ruleInterval    time.Duration
+	retryInterval   time.Duration
 
 	lastCfgHash  []byte
 	lastRuleHash []byte
 }
 
-var magicGzip = []byte{0x1f, 0x8b, 0x08}
-
 // New creates a new reloader that watches the given config file and rule directory
 // and triggers a Prometheus reload upon changes.
-// If cfgOutputFile is not empty, environment variables in the config file will be
+// If cfgEnvsubstFile is not empty, environment variables in the config file will be
 // substituted and the out put written into the given path. Prometheus should then
-// use cfgOutputFile as its config file path.
-func New(logger log.Logger, reloadURL *url.URL, cfgFile string, cfgOutputFile string, ruleDirs []string) *Reloader {
+// use cfgEnvsubstFile as its config file path.
+func New(logger log.Logger, reloadURL *url.URL, cfgFile string, cfgEnvsubstFile string, ruleDirs []string) *Reloader {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
 	return &Reloader{
-		logger:        logger,
-		reloadURL:     reloadURL,
-		cfgFile:       cfgFile,
-		cfgOutputFile: cfgOutputFile,
-		ruleDirs:      ruleDirs,
-		ruleInterval:  3 * time.Minute,
-		retryInterval: 5 * time.Second,
+		logger:          logger,
+		reloadURL:       reloadURL,
+		cfgFile:         cfgFile,
+		cfgEnvsubstFile: cfgEnvsubstFile,
+		ruleDirs:        ruleDirs,
+		ruleInterval:    3 * time.Minute,
+		retryInterval:   5 * time.Second,
 	}
 }
 
 // Watch starts to watch the config file and rules and process them until the context
-// gets canceled. Config file gets env expanded if cfgOutputFile is specified and reload is trigger if
+// gets canceled. Config file gets env expanded if cfgEnvsubstFile is specified and reload is trigger if
 // config or rules changed.
 func (r *Reloader) Watch(ctx context.Context) error {
 	configWatcher, err := fsnotify.NewWatcher()
@@ -81,7 +78,7 @@ func (r *Reloader) Watch(ctx context.Context) error {
 		level.Info(r.logger).Log(
 			"msg", "started watching config file for changes",
 			"in", r.cfgFile,
-			"out", r.cfgOutputFile)
+			"out", r.cfgEnvsubstFile)
 
 		err := r.apply(ctx)
 		if err != nil {
@@ -114,7 +111,7 @@ func (r *Reloader) Watch(ctx context.Context) error {
 	}
 }
 
-// apply triggers Prometheus reload if rules or config changed. If cfgOutputFile is set, we also
+// apply triggers Prometheus reload if rules or config changed. If cfgEnvsubstFile is set, we also
 // expand env vars into config file before reloading.
 // Reload is retried in retryInterval until ruleInterval.
 func (r *Reloader) apply(ctx context.Context) error {
@@ -128,14 +125,19 @@ func (r *Reloader) apply(ctx context.Context) error {
 			return errors.Wrap(err, "hash file")
 		}
 		cfgHash = h.Sum(nil)
-		if r.cfgOutputFile != "" {
+		if r.cfgEnvsubstFile != "" {
 			b, err := ioutil.ReadFile(r.cfgFile)
 			if err != nil {
 				return errors.Wrap(err, "read file")
 			}
 
-			if err := r.writeOutputFile(b); err != nil {
-				return errors.Wrap(err, "gunzip file")
+			b, err = expandEnv(b)
+			if err != nil {
+				return errors.Wrap(err, "expand environment variables")
+			}
+
+			if err := ioutil.WriteFile(r.cfgEnvsubstFile, b, 0666); err != nil {
+				return errors.Wrap(err, "write file")
 			}
 		}
 	}
@@ -189,40 +191,13 @@ func (r *Reloader) apply(ctx context.Context) error {
 		level.Info(r.logger).Log(
 			"msg", "Prometheus reload triggered",
 			"cfg_in", r.cfgFile,
-			"cfg_out", r.cfgOutputFile,
+			"cfg_out", r.cfgEnvsubstFile,
 			"rule_dirs", strings.Join(r.ruleDirs, ", "))
 		return nil
 	})
 	cancel()
 	if err != nil {
 		level.Error(r.logger).Log("msg", "Failed to trigger reload. Retrying.", "err", err)
-	}
-
-	return nil
-}
-
-// write output file, extracting if necessary
-func (r *Reloader) writeOutputFile(b []byte) error {
-	if bytes.Equal(b[0:3], magicGzip) {
-		zr, err := gzip.NewReader(bytes.NewReader(b))
-		if err != nil {
-			return errors.Wrap(err, "create gzip reader")
-		}
-		defer runutil.CloseWithLogOnErr(r.logger, zr, "gzip reader close")
-
-		b, err = ioutil.ReadAll(zr)
-		if err != nil {
-			return errors.Wrap(err, "read compressed config file")
-		}
-	}
-
-	b, err := expandEnv(b)
-	if err != nil {
-		return errors.Wrap(err, "expand environment variables")
-	}
-
-	if err := ioutil.WriteFile(r.cfgOutputFile, b, 0666); err != nil {
-		return errors.Wrap(err, "write file")
 	}
 
 	return nil
