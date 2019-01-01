@@ -5,7 +5,7 @@ endpoints: []
 # Are we talking http or https?
 scheme: http
 # service selector label key to target kube controller manager pods
-serviceSelectorLabelKey: k8s-app
+serviceSelectorLabelKey: component
 # default rules are in templates/kube-controller-manager.rules.yaml
 # prometheusRules: {}
 ## Custom Labels to be added to ServiceMonitor

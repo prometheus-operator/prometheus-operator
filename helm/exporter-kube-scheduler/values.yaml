@@ -5,7 +5,7 @@ endpoints: []
 # Are we talking http or https?
 scheme: http
 # service selector label key to target kube scheduler pods
-serviceSelectorLabelKey: k8s-app
+serviceSelectorLabelKey: component
 # default rules are in templates/kube-scheduler.rules.yaml
 # prometheusRules: {}
 ## Custom Labels to be added to ServiceMonitor
