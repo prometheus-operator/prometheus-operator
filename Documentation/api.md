@@ -34,6 +34,8 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [RemoteWriteSpec](#remotewritespec)
 * [Rule](#rule)
 * [RuleGroup](#rulegroup)
+* [Rules](#rules)
+* [RulesAlert](#rulesalert)
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
@@ -276,6 +278,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | logLevel | Log level for Prometheus to be configured with. | string | false |
 | scrapeInterval | Interval between consecutive scrapes. | string | false |
 | evaluationInterval | Interval between consecutive evaluations. | string | false |
+| rules | /--rules.*/ command-line arguments. | [Rules](#rules) | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
@@ -423,6 +426,28 @@ RuleGroup is a list of sequentially evaluated recording and alerting rules.
 | name |  | string | true |
 | interval |  | string | false |
 | rules |  | [][Rule](#rule) | true |
+
+[Back to TOC](#table-of-contents)
+
+## Rules
+
+/--rules.*/ command-line arguments
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| alert |  | [RulesAlert](#rulesalert) | false |
+
+[Back to TOC](#table-of-contents)
+
+## RulesAlert
+
+/--rules.alert.*/ command-line arguments
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| forOutageTolerance | Max time to tolerate prometheus outage for restoring 'for' state of alert. | string | false |
+| forGracePeriod | Minimum duration between alert and restored 'for' state. This is maintained only for alerts with configured 'for' time greater than grace period. | string | false |
+| resendDelay | Minimum amount of time to wait before resending an alert to Alertmanager. | string | false |
 
 [Back to TOC](#table-of-contents)
 

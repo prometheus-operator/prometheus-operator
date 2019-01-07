@@ -118,6 +118,8 @@ type PrometheusSpec struct {
 	ScrapeInterval string `json:"scrapeInterval,omitempty"`
 	// Interval between consecutive evaluations.
 	EvaluationInterval string `json:"evaluationInterval,omitempty"`
+	// /--rules.*/ command-line arguments.
+	Rules Rules `json:"rules,omitempty"`
 	// The labels to add to any time series or alerts when communicating with
 	// external systems (federation, remote storage, Alertmanager).
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
@@ -783,6 +785,24 @@ type NamespaceSelector struct {
 	// TODO(fabxc): this should embed metav1.LabelSelector eventually.
 	// Currently the selector is only used for namespaces which require more complex
 	// implementation to support label selections.
+}
+
+// /--rules.*/ command-line arguments
+// +k8s:openapi-gen=true
+type Rules struct {
+	Alert RulesAlert `json:"alert,omitempty"`
+}
+
+// /--rules.alert.*/ command-line arguments
+// +k8s:openapi-gen=true
+type RulesAlert struct {
+	// Max time to tolerate prometheus outage for restoring 'for' state of alert.
+	ForOutageTolerance string `json:"forOutageTolerance,omitempty"`
+	// Minimum duration between alert and restored 'for' state.
+	// This is maintained only for alerts with configured 'for' time greater than grace period.
+	ForGracePeriod string `json:"forGracePeriod,omitempty"`
+	// Minimum amount of time to wait before resending an alert to Alertmanager.
+	ResendDelay string `json:"resendDelay,omitempty"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
