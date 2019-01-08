@@ -689,7 +689,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
 				},
 			})
-			thanosArgs = append(thanosArgs, "--objstore.config", "$(OBJSTORE_CONFIG)")
+			thanosArgs = append(thanosArgs, "--objstore.config=$(OBJSTORE_CONFIG)")
 		}
 
 		if p.Spec.Thanos.GCS != nil {
@@ -852,9 +852,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				NodeSelector:                  p.Spec.NodeSelector,
 				PriorityClassName:             p.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
-				Volumes:     volumes,
-				Tolerations: p.Spec.Tolerations,
-				Affinity:    p.Spec.Affinity,
+				Volumes:                       volumes,
+				Tolerations:                   p.Spec.Tolerations,
+				Affinity:                      p.Spec.Affinity,
 			},
 		},
 	}, nil
