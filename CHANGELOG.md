@@ -1,3 +1,8 @@
+## 0.27.0 / 2019-01-08
+
+* [FEATURE] Add `image` field to specify full Prometheus, Alertmanager and Thanos images.
+* [FEATURE] Add prometheus query options (lookback-delta, max-concurrency, timeout).
+
 ## 0.26.0 / 2018-11-30
 
 * [CHANGE] Remove attempting to set "secure" security context (#2109).
