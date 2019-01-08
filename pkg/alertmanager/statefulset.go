@@ -195,6 +195,9 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	if a.Spec.SHA != "" {
 		image = fmt.Sprintf("%s@sha256:%s", a.Spec.BaseImage, a.Spec.SHA)
 	}
+	if a.Spec.Image != nil && *a.Spec.Image != "" {
+		image = *a.Spec.Image
+	}
 
 	versionStr := strings.TrimLeft(a.Spec.Version, "v")
 
