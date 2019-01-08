@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
@@ -29,28 +30,60 @@ func main() {
 
 		switch meta.Kind {
 		case v1.AlertmanagersKind:
-			var alertmanager v1.Alertmanager
-			err := yaml.Unmarshal(content, &alertmanager)
+			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
-				log.Fatal(fmt.Errorf("alertmanager is invalid: %v", err))
+				log.Fatalf("unable to convert YAML to JSON: %v", err)
+			}
+
+			decoder := json.NewDecoder(bytes.NewBuffer(j))
+			decoder.DisallowUnknownFields()
+
+			var alertmanager v1.Alertmanager
+			err = decoder.Decode(&alertmanager)
+			if err != nil {
+				log.Fatalf("alertmanager is invalid: %v", err)
 			}
 		case v1.PrometheusesKind:
-			var prometheus v1.Prometheus
-			err := yaml.Unmarshal(content, &prometheus)
+			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
-				log.Fatal(fmt.Errorf("prometheus is invalid: %v", err))
+				log.Fatalf("unable to convert YAML to JSON: %v", err)
+			}
+
+			decoder := json.NewDecoder(bytes.NewBuffer(j))
+			decoder.DisallowUnknownFields()
+
+			var prometheus v1.Prometheus
+			err = decoder.Decode(&prometheus)
+			if err != nil {
+				log.Fatalf("prometheus is invalid: %v", err)
 			}
 		case v1.PrometheusRuleKind:
-			var rule v1.PrometheusRule
-			err := yaml.Unmarshal(content, &rule)
+			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
-				log.Fatal(fmt.Errorf("prometheus rule is invalid: %v", err))
+				log.Fatalf("unable to convert YALM to JSON: %v", err)
+			}
+
+			decoder := json.NewDecoder(bytes.NewBuffer(j))
+			decoder.DisallowUnknownFields()
+
+			var rule v1.PrometheusRule
+			err = decoder.Decode(&rule)
+			if err != nil {
+				log.Fatalf("prometheus rule is invalid: %v", err)
 			}
 		case v1.ServiceMonitorsKind:
-			var serviceMonitor v1.ServiceMonitor
-			err := yaml.Unmarshal(content, &serviceMonitor)
+			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
-				log.Fatal(fmt.Errorf("serviceMonitor is invalid: %v", err))
+				log.Fatalf("unable to convert YALM to JSON: %v", err)
+			}
+
+			decoder := json.NewDecoder(bytes.NewBuffer(j))
+			decoder.DisallowUnknownFields()
+
+			var serviceMonitor v1.ServiceMonitor
+			err = decoder.Decode(&serviceMonitor)
+			if err != nil {
+				log.Fatalf("serviceMonitor is invalid: %v", err)
 			}
 		default:
 			log.Fatal("MetaType is unknown to linter. Not in Alertmanager, Prometheus, PrometheusRule, ServiceMonitor")
