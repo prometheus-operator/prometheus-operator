@@ -456,6 +456,26 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 		}
 	}
+	{
+		image := "my-registry/alertmanager:latest"
+		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+			Spec: monitoringv1.AlertmanagerSpec{
+				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+				Tag:     "my-unrelated-tag",
+				Version: "v0.15.3",
+				Image:   &image,
+			},
+		}, nil, defaultTestConfig)
+		if err != nil {
+			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+		}
+
+		resultImage := sset.Spec.Template.Spec.Containers[0].Image
+		expected := "my-registry/alertmanager:latest"
+		if resultImage != expected {
+			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
+		}
+	}
 }
 
 func TestRetention(t *testing.T) {

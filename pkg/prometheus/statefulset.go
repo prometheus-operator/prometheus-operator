@@ -631,6 +631,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		if p.Spec.Thanos.SHA != nil {
 			thanosImage = fmt.Sprintf("%s@sha256:%s", thanosBaseImage, *p.Spec.Thanos.SHA)
 		}
+		if p.Spec.Thanos.Image != nil && *p.Spec.Thanos.Image != "" {
+			thanosImage = *p.Spec.Thanos.Image
+		}
 
 		thanosArgs := []string{
 			"sidecar",
@@ -768,6 +771,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	}
 	if p.Spec.SHA != "" {
 		prometheusImage = fmt.Sprintf("%s@sha256:%s", p.Spec.BaseImage, p.Spec.SHA)
+	}
+	if p.Spec.Image != nil && *p.Spec.Image != "" {
+		prometheusImage = *p.Spec.Image
 	}
 
 	return &appsv1.StatefulSetSpec{

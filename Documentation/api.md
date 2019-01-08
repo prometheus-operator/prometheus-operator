@@ -113,6 +113,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
+| image | Image if specified has precedence over baseImage, tag and sha combinations. Specifying the version is still necessary to ensure the Prometheus Operator knows what version of Alertmanager is being configured. | *string | false |
 | version | Version the cluster should be on. | string | false |
 | tag | Tag of Alertmanager container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. | string | false |
 | sha | SHA of Alertmanager container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. | string | false |
@@ -267,6 +268,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | tag | Tag of Prometheus container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. | string | false |
 | sha | SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. | string | false |
 | paused | When a Prometheus deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
+| image | Image if specified has precedence over baseImage, tag and sha combinations. Specifying the version is still necessary to ensure the Prometheus Operator knows what version of Prometheus is being configured. | *string | false |
 | baseImage | Base image to use for a Prometheus deployment. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | false |
 | replicas | Number of instances to deploy for a Prometheus deployment. | *int32 | false |
@@ -521,6 +523,7 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | peers | Peers is a DNS name for Thanos to discover peers through. | *string | false |
+| image | Image if specified has precedence over baseImage, tag and sha combinations. Specifying the version is still necessary to ensure the Prometheus Operator knows what version of Thanos is being configured. | *string | false |
 | version | Version describes the version of Thanos to use. | *string | false |
 | tag | Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. | *string | false |
 | sha | SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. | *string | false |

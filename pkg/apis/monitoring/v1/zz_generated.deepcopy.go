@@ -172,6 +172,15 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
+	if in.Image != nil {
+		in, out := &in.Image, &out.Image
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
+	}
 	if in.ImagePullSecrets != nil {
 		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
 		*out = make([]core_v1.LocalObjectReference, len(*in))
@@ -600,6 +609,15 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		} else {
 			*out = new(meta_v1.LabelSelector)
 			(*in).DeepCopyInto(*out)
+		}
+	}
+	if in.Image != nil {
+		in, out := &in.Image, &out.Image
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
 		}
 	}
 	if in.ImagePullSecrets != nil {
@@ -1275,6 +1293,15 @@ func (in *ThanosSpec) DeepCopyInto(out *ThanosSpec) {
 	*out = *in
 	if in.Peers != nil {
 		in, out := &in.Peers, &out.Peers
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
+	}
+	if in.Image != nil {
+		in, out := &in.Image, &out.Image
 		if *in == nil {
 			*out = nil
 		} else {

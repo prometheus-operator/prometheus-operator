@@ -1551,6 +1551,12 @@ spec:
                 under. This is necessary to generate correct URLs. This is necessary
                 if Prometheus is not served from root of a DNS name.
               type: string
+            image:
+              description: Image if specified has precedence over baseImage, tag and
+                sha combinations. Specifying the version is still necessary to ensure
+                the Prometheus Operator knows what version of Prometheus is being
+                configured.
+              type: string
             imagePullSecrets:
               description: An optional list of references to secrets in the same namespace
                 to use for pulling prometheus and alertmanager images from registries
@@ -2959,6 +2965,12 @@ spec:
                           type: boolean
                       required:
                       - key
+                image:
+                  description: Image if specified has precedence over baseImage, tag
+                    and sha combinations. Specifying the version is still necessary
+                    to ensure the Prometheus Operator knows what version of Thanos
+                    is being configured.
+                  type: string
                 peers:
                   description: Peers is a DNS name for Thanos to discover peers through.
                   type: string
