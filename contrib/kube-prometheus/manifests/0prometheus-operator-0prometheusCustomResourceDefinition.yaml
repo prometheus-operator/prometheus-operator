@@ -1550,6 +1550,12 @@ spec:
                 under. This is necessary to generate correct URLs. This is necessary
                 if Prometheus is not served from root of a DNS name.
               type: string
+            image:
+              description: Image if specified has precedence over baseImage, tag and
+                sha combinations. Specifying the version is still necessary to ensure
+                the Prometheus Operator knows what version of Prometheus is being
+                configured.
+              type: string
             imagePullSecrets:
               description: An optional list of references to secrets in the same namespace
                 to use for pulling prometheus and alertmanager images from registries
@@ -1863,6 +1869,21 @@ spec:
             priorityClassName:
               description: Priority class assigned to the Pods
               type: string
+            query:
+              description: QuerySpec defines the query command line flags when starting
+                Prometheus.
+              properties:
+                lookbackDelta:
+                  description: The delta difference allowed for retrieving metrics
+                    during expression evaluations.
+                  type: string
+                maxConcurrency:
+                  description: Number of concurrent queries that can be run at once.
+                  format: int32
+                  type: integer
+                timeout:
+                  description: Maximum time a query may take before being aborted.
+                  type: string
             remoteRead:
               description: If specified, the remote_read spec. This is an experimental
                 feature, it may change in any upcoming release in a breaking way.
@@ -2943,6 +2964,12 @@ spec:
                           type: boolean
                       required:
                       - key
+                image:
+                  description: Image if specified has precedence over baseImage, tag
+                    and sha combinations. Specifying the version is still necessary
+                    to ensure the Prometheus Operator knows what version of Thanos
+                    is being configured.
+                  type: string
                 peers:
                   description: Peers is a DNS name for Thanos to discover peers through.
                   type: string
