@@ -516,7 +516,7 @@ TLSConfig specifies TLS configuration parameters.
 
 ## ThanosGCSSpec
 
-ThanosGCSSpec defines parameters for use of Google Cloud Storage (GCS) with Thanos.
+Deprecated: ThanosGCSSpec should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosGCSSpec will be removed.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -527,7 +527,7 @@ ThanosGCSSpec defines parameters for use of Google Cloud Storage (GCS) with Than
 
 ## ThanosS3Spec
 
-ThanosS3Spec defines parameters for of AWS Simple Storage Service (S3) with Thanos. (S3 compatible services apply as well)
+Deprecated: ThanosS3Spec should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosS3Spec will be removed.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -554,7 +554,8 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | sha | SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. | *string | false |
 | baseImage | Thanos base image if other than default. | *string | false |
 | resources | Resources defines the resource requirements for the Thanos sidecar. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
-| gcs | GCS configures use of GCS in Thanos. | *[ThanosGCSSpec](#thanosgcsspec) | false |
-| s3 | S3 configures use of S3 in Thanos. | *[ThanosS3Spec](#thanoss3spec) | false |
+| gcs | Deprecated: GCS should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. This field will be removed. | *[ThanosGCSSpec](#thanosgcsspec) | false |
+| s3 | Deprecated: S3 should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. This field will be removed. | *[ThanosS3Spec](#thanoss3spec) | false |
+| objectStorageConfig | ObjectStorageConfig configures object storage in Thanos. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 
 [Back to TOC](#table-of-contents)

@@ -1398,6 +1398,15 @@ func (in *ThanosSpec) DeepCopyInto(out *ThanosSpec) {
 			(*in).DeepCopyInto(*out)
 		}
 	}
+	if in.ObjectStorageConfig != nil {
+		in, out := &in.ObjectStorageConfig, &out.ObjectStorageConfig
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	return
 }
 

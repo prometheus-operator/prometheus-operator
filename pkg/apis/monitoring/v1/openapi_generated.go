@@ -2337,7 +2337,7 @@ func schema_pkg_apis_monitoring_v1_ThanosGCSSpec(ref common.ReferenceCallback) c
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ThanosGCSSpec defines parameters for use of Google Cloud Storage (GCS) with Thanos.",
+				Description: "Deprecated: ThanosGCSSpec should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosGCSSpec will be removed.",
 				Properties: map[string]spec.Schema{
 					"bucket": {
 						SchemaProps: spec.SchemaProps{
@@ -2364,7 +2364,7 @@ func schema_pkg_apis_monitoring_v1_ThanosS3Spec(ref common.ReferenceCallback) co
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ThanosS3Spec defines parameters for of AWS Simple Storage Service (S3) with Thanos. (S3 compatible services apply as well)",
+				Description: "Deprecated: ThanosS3Spec should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosS3Spec will be removed.",
 				Properties: map[string]spec.Schema{
 					"bucket": {
 						SchemaProps: spec.SchemaProps{
@@ -2477,21 +2477,27 @@ func schema_pkg_apis_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) comm
 					},
 					"gcs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "GCS configures use of GCS in Thanos.",
+							Description: "Deprecated: GCS should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. This field will be removed.",
 							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosGCSSpec"),
 						},
 					},
 					"s3": {
 						SchemaProps: spec.SchemaProps{
-							Description: "S3 configures use of S3 in Thanos.",
+							Description: "Deprecated: S3 should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. This field will be removed.",
 							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosS3Spec"),
+						},
+					},
+					"objectStorageConfig": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ObjectStorageConfig configures object storage in Thanos.",
+							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosGCSSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosS3Spec", "k8s.io/api/core/v1.ResourceRequirements"},
+			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosGCSSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosS3Spec", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector"},
 	}
 }
 
