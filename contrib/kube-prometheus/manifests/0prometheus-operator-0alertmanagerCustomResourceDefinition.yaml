@@ -1378,6 +1378,12 @@ spec:
                 under. This is necessary to generate correct URLs. This is necessary
                 if Alertmanager is not served from root of a DNS name.
               type: string
+            image:
+              description: Image if specified has precedence over baseImage, tag and
+                sha combinations. Specifying the version is still necessary to ensure
+                the Prometheus Operator knows what version of Alertmanager is being
+                configured.
+              type: string
             imagePullSecrets:
               description: An optional list of references to secrets in the same namespace
                 to use for pulling prometheus and alertmanager images from registries
