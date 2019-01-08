@@ -5,7 +5,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     namespace: 'default',
 
     versions+:: {
-      prometheusOperator: 'v0.26.0',
+      prometheusOperator: 'v0.27.0',
       prometheusConfigReloader: self.prometheusOperator,
       configmapReloader: 'v0.0.1',
     },
