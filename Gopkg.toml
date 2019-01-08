@@ -52,10 +52,6 @@
   name = "k8s.io/kube-openapi"
   revision = "0cf8f7e6ed1d2e3d47d02e3b6e559369af24d803"
 
-[[override]]
-  name = "github.com/ericchiang/k8s"
-  version = "v0.4.0"
-
 [[constraint]]
   branch = "master"
   name = "github.com/kylelemons/godebug"
