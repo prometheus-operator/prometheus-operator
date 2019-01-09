@@ -2,14 +2,19 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 local service = k.core.v1.service;
 local servicePort = k.core.v1.service.mixin.spec.portsType;
 
-
 {
   _config+:: {
     versions+:: {
-      thanos: 'v0.1.0',
+      thanos: 'v0.2.1',
     },
     imageRepos+:: {
       thanos: 'improbable/thanos',
+    },
+    thanos+:: {
+      objectStorageConfig: {
+        key: 'thanos.yaml', # How the file inside the secret is called
+        name: 'thanos-objstore-config', # This is the name of your Kubernetes secret with the config
+      },
     },
   },
   prometheus+:: {
@@ -22,6 +27,7 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
           peers: 'thanos-peers.' + $._config.namespace + '.svc:10900',
           version: $._config.versions.thanos,
           baseImage: $._config.imageRepos.thanos,
+          objectStorageConfig: $._config.thanos.objectStorageConfig,
         },
       },
     },
