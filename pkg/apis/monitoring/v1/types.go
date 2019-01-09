@@ -309,14 +309,19 @@ type ThanosSpec struct {
 	// Resources defines the resource requirements for the Thanos sidecar.
 	// If not provided, no requests/limits will be set
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
-	// GCS configures use of GCS in Thanos.
+	// Deprecated: GCS should be configured with an ObjectStorageConfig secret
+	// starting with Thanos v0.2.0. This field will be removed.
 	GCS *ThanosGCSSpec `json:"gcs,omitempty"`
-	// S3 configures use of S3 in Thanos.
+	// Deprecated: S3 should be configured with an ObjectStorageConfig secret
+	// starting with Thanos v0.2.0. This field will be removed.
 	S3 *ThanosS3Spec `json:"s3,omitempty"`
+	// ObjectStorageConfig configures object storage in Thanos.
+	ObjectStorageConfig *v1.SecretKeySelector `json:"objectStorageConfig,omitempty"`
 }
 
-// ThanosGCSSpec defines parameters for use of Google Cloud Storage (GCS) with
-// Thanos.
+// Deprecated: ThanosGCSSpec should be configured with an ObjectStorageConfig
+// secret starting with Thanos v0.2.0. ThanosGCSSpec will be removed.
+//
 // +k8s:openapi-gen=true
 type ThanosGCSSpec struct {
 	// Google Cloud Storage bucket name for stored blocks. If empty it won't
@@ -326,8 +331,9 @@ type ThanosGCSSpec struct {
 	SecretKey *v1.SecretKeySelector `json:"credentials,omitempty"`
 }
 
-// ThanosS3Spec defines parameters for of AWS Simple Storage Service (S3) with
-// Thanos. (S3 compatible services apply as well)
+// Deprecated: ThanosS3Spec should be configured with an ObjectStorageConfig
+// secret starting with Thanos v0.2.0. ThanosS3Spec will be removed.
+//
 // +k8s:openapi-gen=true
 type ThanosS3Spec struct {
 	// S3-Compatible API bucket name for stored blocks.

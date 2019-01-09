@@ -566,6 +566,46 @@ func TestThanosResourcesSet(t *testing.T) {
 	}
 }
 
+func TestThanosObjectStorage(t *testing.T) {
+	testKey := "thanos-config-secret-test"
+
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				ObjectStorageConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	var containsEnvVar bool
+	for _, env := range sset.Spec.Template.Spec.Containers[2].Env {
+		if env.Name == "OBJSTORE_CONFIG" {
+			if env.ValueFrom.SecretKeyRef.Key == testKey {
+				containsEnvVar = true
+			}
+		}
+	}
+	if !containsEnvVar {
+		t.Fatalf("Thanos sidecar is missing expected OBJSTORE_CONFIG env var with correct value")
+	}
+
+	var containsArg bool
+	const expectedArg = "--objstore.config=$(OBJSTORE_CONFIG)"
+	for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
+		if arg == expectedArg {
+			containsArg = true
+		}
+	}
+	if !containsArg {
+		t.Fatalf("Thanos sidecar is missing expected argument: %s", expectedArg)
+	}
+}
+
 func TestRetention(t *testing.T) {
 	tests := []struct {
 		version              string
