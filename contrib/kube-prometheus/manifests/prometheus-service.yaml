@@ -13,3 +13,4 @@ spec:
   selector:
     app: prometheus
     prometheus: k8s
+  sessionAffinity: ClientIP
