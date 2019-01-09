@@ -344,6 +344,18 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				fmt.Sprintf("-query.lookback-delta=%s", *p.Spec.Query.LookbackDelta),
 			)
 		}
+
+		if version.Minor >= 4 {
+			if p.Spec.Rules.Alert.ForOutageTolerance != "" {
+				promArgs = append(promArgs, "-rules.alert.for-outage-tolerance="+p.Spec.Rules.Alert.ForOutageTolerance)
+			}
+			if p.Spec.Rules.Alert.ForGracePeriod != "" {
+				promArgs = append(promArgs, "-rules.alert.for-grace-period="+p.Spec.Rules.Alert.ForGracePeriod)
+			}
+			if p.Spec.Rules.Alert.ResendDelay != "" {
+				promArgs = append(promArgs, "-rules.alert.resend-delay="+p.Spec.Rules.Alert.ResendDelay)
+			}
+		}
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}

@@ -52,6 +52,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RemoteWriteSpec":       schema_pkg_apis_monitoring_v1_RemoteWriteSpec(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.Rule":                  schema_pkg_apis_monitoring_v1_Rule(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RuleGroup":             schema_pkg_apis_monitoring_v1_RuleGroup(ref),
+		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.Rules":                 schema_pkg_apis_monitoring_v1_Rules(ref),
+		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RulesAlert":            schema_pkg_apis_monitoring_v1_RulesAlert(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ServiceMonitor":        schema_pkg_apis_monitoring_v1_ServiceMonitor(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ServiceMonitorList":    schema_pkg_apis_monitoring_v1_ServiceMonitorList(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ServiceMonitorSpec":    schema_pkg_apis_monitoring_v1_ServiceMonitorSpec(ref),
@@ -1323,6 +1325,12 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"rules": {
+						SchemaProps: spec.SchemaProps{
+							Description: "/--rules.*/ command-line arguments.",
+							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.Rules"),
+						},
+					},
 					"externalLabels": {
 						SchemaProps: spec.SchemaProps{
 							Description: "The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager).",
@@ -1548,7 +1556,7 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.APIServerConfig", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.AlertingSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.QuerySpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RemoteReadSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RemoteWriteSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.StorageSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.APIServerConfig", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.AlertingSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.QuerySpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RemoteReadSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RemoteWriteSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.Rules", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.StorageSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -2030,6 +2038,59 @@ func schema_pkg_apis_monitoring_v1_RuleGroup(ref common.ReferenceCallback) commo
 		},
 		Dependencies: []string{
 			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.Rule"},
+	}
+}
+
+func schema_pkg_apis_monitoring_v1_Rules(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "/--rules.*/ command-line arguments",
+				Properties: map[string]spec.Schema{
+					"alert": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RulesAlert"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RulesAlert"},
+	}
+}
+
+func schema_pkg_apis_monitoring_v1_RulesAlert(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "/--rules.alert.*/ command-line arguments",
+				Properties: map[string]spec.Schema{
+					"forOutageTolerance": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Max time to tolerate prometheus outage for restoring 'for' state of alert.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"forGracePeriod": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Minimum duration between alert and restored 'for' state. This is maintained only for alerts with configured 'for' time greater than grace period.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"resendDelay": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Minimum amount of time to wait before resending an alert to Alertmanager.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{},
 	}
 }
 

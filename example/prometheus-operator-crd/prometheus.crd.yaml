@@ -2244,6 +2244,25 @@ spec:
                     "In", and the values array contains only "value". The requirements
                     are ANDed.
                   type: object
+            rules:
+              description: /--rules.*/ command-line arguments
+              properties:
+                alert:
+                  description: /--rules.alert.*/ command-line arguments
+                  properties:
+                    forGracePeriod:
+                      description: Minimum duration between alert and restored 'for'
+                        state. This is maintained only for alerts with configured
+                        'for' time greater than grace period.
+                      type: string
+                    forOutageTolerance:
+                      description: Max time to tolerate prometheus outage for restoring
+                        'for' state of alert.
+                      type: string
+                    resendDelay:
+                      description: Minimum amount of time to wait before resending
+                        an alert to Alertmanager.
+                      type: string
             scrapeInterval:
               description: Interval between consecutive scrapes.
               type: string
