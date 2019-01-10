@@ -381,6 +381,8 @@ type RemoteWriteSpec struct {
 type QueueConfig struct {
 	// Capacity is the number of samples to buffer per shard before we start dropping them.
 	Capacity int `json:"capacity,omitempty"`
+	// MinShards is the minimum number of shards, i.e. amount of concurrency.
+	MinShards int `json:"minShards,omitempty"`
 	// MaxShards is the maximum number of shards, i.e. amount of concurrency.
 	MaxShards int `json:"maxShards,omitempty"`
 	// MaxSamplesPerSend is the maximum number of samples per send.
