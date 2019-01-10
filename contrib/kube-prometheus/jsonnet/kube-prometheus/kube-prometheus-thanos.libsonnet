@@ -12,8 +12,8 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
     },
     thanos+:: {
       objectStorageConfig: {
-        key: 'thanos.yaml', # How the file inside the secret is called
-        name: 'thanos-objstore-config', # This is the name of your Kubernetes secret with the config
+        key: 'thanos.yaml',  // How the file inside the secret is called
+        name: 'thanos-objstore-config',  // This is the name of your Kubernetes secret with the config
       },
     },
   },
@@ -66,5 +66,47 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
       service.new('thanos-query', { app: 'thanos-query' }, thanosQueryPort) +
       service.mixin.metadata.withNamespace($._config.namespace) +
       service.mixin.metadata.withLabels({ app: 'thanos-query' }),
+
+    thanosStoreStatefulset:
+      local statefulSet = k.apps.v1beta2.statefulSet;
+      local volume = statefulSet.mixin.spec.template.spec.volumesType;
+      local container = statefulSet.mixin.spec.template.spec.containersType;
+      local containerEnv = container.envType;
+      local containerVolumeMount = container.volumeMountsType;
+
+      local labels = { app: 'thanos', 'thanos-peer': 'true' };
+
+      local c =
+        container.new('thanos-store', $._config.imageRepos.thanos + ':' + $._config.versions.thanos) +
+        container.withArgs([
+          'store',
+          '--log.level=debug',
+          '--data-dir=/var/thanos/store',
+          '--cluster.peers=thanos-peers.' + $._config.namespace + '.svc:10900',
+          '--objstore.config=$(OBJSTORE_CONFIG)',
+        ]) +
+        container.withEnv([
+          containerEnv.fromSecretRef(
+            'OBJSTORE_CONFIG',
+            $._config.thanos.objectStorageConfig.name,
+            $._config.thanos.objectStorageConfig.key,
+          ),
+        ]) +
+        container.withPorts([
+          { name: 'cluster', containerPort: 10900 },
+          { name: 'grpc', containerPort: 10901 },
+          { name: 'http', containerPort: 10902 },
+        ]) +
+        container.withVolumeMounts([
+          containerVolumeMount.new('data', '/var/thanos/store', false),
+        ]);
+
+      statefulSet.new('thanos-store', 1, c, [], labels) +
+      statefulSet.mixin.metadata.withNamespace($._config.namespace) +
+      statefulSet.mixin.spec.selector.withMatchLabels(labels) +
+      statefulSet.mixin.spec.withServiceName('thanos-store') +
+      statefulSet.mixin.spec.template.spec.withVolumes([
+        volume.fromEmptyDir('data'),
+      ]),
   },
 }
