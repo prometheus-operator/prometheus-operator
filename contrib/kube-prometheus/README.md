@@ -359,6 +359,17 @@ kops:
 (import 'kube-prometheus/kube-prometheus-kops.libsonnet')
 ```
 
+kops with CoreDNS:
+
+If your kops cluster is using CoreDNS, there is an additional mixin to import.
+
+[embedmd]:# (examples/jsonnet-snippets/kops-coredns.jsonnet)
+```jsonnet
+(import 'kube-prometheus/kube-prometheus.libsonnet') +
+(import 'kube-prometheus/kube-prometheus-kops.libsonnet') + 
+(import 'kube-prometheus/kube-prometheus-kops-coredns.libsonnet')
+```
+
 kubespray:
 
 [embedmd]:# (examples/jsonnet-snippets/kubespray.jsonnet)

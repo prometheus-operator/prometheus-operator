@@ -8,7 +8,7 @@
                     "subdir": "contrib/kube-prometheus/jsonnet/kube-prometheus"
                 }
             },
-            "version": "e26f80aca8c9b021245ed3a62bb6c4d23be25786"
+            "version": "acd31e80dcddd7ce11fd3b715d5bfe179a95474e"
         },
         {
             "name": "ksonnet",
