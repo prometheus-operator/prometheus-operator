@@ -31,6 +31,12 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
         },
       },
     },
+    thanosPeerService:
+      local thanosPeerPort = servicePort.newNamed('cluster', 10900, 'cluster');
+      service.new('thanos-peers', { 'thanos-peer': 'true' }, thanosPeerPort) +
+      service.mixin.metadata.withNamespace($._config.namespace) +
+      service.mixin.spec.withType('ClusterIP') +
+      service.mixin.spec.withClusterIp('None'),
     thanosQueryDeployment:
       local deployment = k.apps.v1beta2.deployment;
       local container = k.apps.v1beta2.deployment.mixin.spec.template.spec.containersType;
@@ -60,11 +66,5 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
       service.new('thanos-query', { app: 'thanos-query' }, thanosQueryPort) +
       service.mixin.metadata.withNamespace($._config.namespace) +
       service.mixin.metadata.withLabels({ app: 'thanos-query' }),
-    thanosPeerService:
-      local thanosPeerPort = servicePort.newNamed('cluster', 10900, 'cluster');
-      service.new('thanos-peers', { 'thanos-peer': 'true' }, thanosPeerPort) +
-      service.mixin.metadata.withNamespace($._config.namespace) +
-      service.mixin.spec.withType('ClusterIP') +
-      service.mixin.spec.withClusterIp('None'),
   },
 }
