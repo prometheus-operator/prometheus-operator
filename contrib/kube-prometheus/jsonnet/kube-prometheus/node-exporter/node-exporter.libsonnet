@@ -1,5 +1,7 @@
 local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
+local daemonset = k.apps.v1beta2.daemonSet;
+local toleration = daemonset.mixin.spec.template.spec.tolerationsType;
 {
   _config+:: {
     namespace: 'default',
@@ -13,6 +15,11 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       nodeExporter: 'quay.io/prometheus/node-exporter',
       kubeRbacProxy: 'quay.io/coreos/kube-rbac-proxy',
     },
+    tolerations+::[
+        toleration.new() +
+            toleration.withEffect('NoSchedule') +
+            toleration.withKey('node-role.kubernetes.io/master'),
+    ],
   },
 
   nodeExporter+:: {
@@ -57,14 +64,9 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local containerPort = container.portsType;
       local containerVolumeMount = container.volumeMountsType;
       local podSelector = daemonset.mixin.spec.template.spec.selectorType;
-      local toleration = daemonset.mixin.spec.template.spec.tolerationsType;
       local containerEnv = container.envType;
 
       local podLabels = { app: 'node-exporter' };
-
-      local masterToleration = toleration.new() +
-                               toleration.withEffect('NoSchedule') +
-                               toleration.withKey('node-role.kubernetes.io/master');
 
       local procVolumeName = 'proc';
       local procVolume = volume.fromHostPath(procVolumeName, '/proc');
@@ -125,7 +127,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       daemonset.mixin.metadata.withLabels(podLabels) +
       daemonset.mixin.spec.selector.withMatchLabels(podLabels) +
       daemonset.mixin.spec.template.metadata.withLabels(podLabels) +
-      daemonset.mixin.spec.template.spec.withTolerations([masterToleration]) +
+      daemonset.mixin.spec.template.spec.withTolerations($._config.tolerations) +
       daemonset.mixin.spec.template.spec.withNodeSelector({ 'beta.kubernetes.io/os': 'linux' }) +
       daemonset.mixin.spec.template.spec.withContainers(c) +
       daemonset.mixin.spec.template.spec.withVolumes([procVolume, sysVolume, rootVolume]) +
