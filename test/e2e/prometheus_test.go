@@ -292,7 +292,7 @@ scrape_configs:
 `
 
 	var buf bytes.Buffer
-	if err := gzipConfig(&buf, firstConfig); err != nil {
+	if err := gzipConfig(&buf, []byte(firstConfig)); err != nil {
 		t.Fatal(err)
 	}
 	firstConfigCompressed := buf.Bytes()
@@ -339,7 +339,7 @@ scrape_configs:
         - 111.111.111.112:9090
 `
 
-	if err = gzipConfig(&buf, secondConfig); err != nil {
+	if err := gzipConfig(&buf, []byte(secondConfig)); err != nil {
 		t.Fatal(err)
 	}
 	secondConfigCompressed := buf.Bytes()
