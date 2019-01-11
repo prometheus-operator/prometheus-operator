@@ -816,8 +816,10 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, spe
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "capacity", Value: spec.QueueConfig.Capacity})
 			}
 
-			if spec.QueueConfig.MinShards != int(0) {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_shards", Value: spec.QueueConfig.MinShards})
+			if version.GTE(semver.MustParse("2.6.0")) {
+				if spec.QueueConfig.MinShards != int(0) {
+					queueConfig = append(queueConfig, yaml.MapItem{Key: "min_shards", Value: spec.QueueConfig.MinShards})
+				}
 			}
 
 			if spec.QueueConfig.MaxShards != int(0) {
