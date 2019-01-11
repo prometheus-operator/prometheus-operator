@@ -302,8 +302,8 @@ scrape_configs:
 			Name: fmt.Sprintf("prometheus-%s", name),
 		},
 		Data: map[string][]byte{
-			"prometheus.yaml.zip": firstConfigCompressed,
-			"configmaps.json":     []byte("{}"),
+			"prometheus.yaml.gz": firstConfigCompressed,
+			"configmaps.json":    []byte("{}"),
 		},
 	}
 
@@ -349,7 +349,7 @@ scrape_configs:
 		t.Fatal(errors.Wrap(err, "could not retrieve previous secret"))
 	}
 
-	cfg.Data["prometheus.yaml.zip"] = secondConfigCompressed
+	cfg.Data["prometheus.yaml.gz"] = secondConfigCompressed
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(cfg); err != nil {
 		t.Fatal(err)
 	}
