@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -290,13 +291,19 @@ scrape_configs:
         - 111.111.111.111:9090
 `
 
+	var buf bytes.Buffer
+	if err := gzipConfig(&buf, firstConfig); err != nil {
+		t.Fatal(err)
+	}
+	firstConfigCompressed := buf.Bytes()
+
 	cfg := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 		},
 		Data: map[string][]byte{
-			"prometheus.yaml": []byte(firstConfig),
-			"configmaps.json": []byte("{}"),
+			"prometheus.yaml.zip": firstConfigCompressed,
+			"configmaps.json":     []byte("{}"),
 		},
 	}
 
@@ -332,12 +339,17 @@ scrape_configs:
         - 111.111.111.112:9090
 `
 
+	if err = gzipConfig(&buf, secondConfig); err != nil {
+		t.Fatal(err)
+	}
+	secondConfigCompressed := buf.Bytes()
+
 	cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Get(cfg.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "could not retrieve previous secret"))
 	}
 
-	cfg.Data["prometheus.yaml"] = []byte(secondConfig)
+	cfg.Data["prometheus.yaml.zip"] = secondConfigCompressed
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -1713,4 +1725,13 @@ type alertmanagerDiscovery struct {
 type prometheusAlertmanagerAPIResponse struct {
 	Status string                 `json:"status"`
 	Data   *alertmanagerDiscovery `json:"data"`
+}
+
+func gzipConfig(buf *bytes.Buffer, conf []byte) error {
+	w := gzip.NewWriter(buf)
+	defer w.Close()
+	if _, err := w.Write(conf); err != nil {
+		return err
+	}
+	return nil
 }
