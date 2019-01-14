@@ -13,6 +13,10 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       nodeExporter: 'quay.io/prometheus/node-exporter',
       kubeRbacProxy: 'quay.io/coreos/kube-rbac-proxy',
     },
+
+    nodeExporter+:: {
+      port: 9100,
+    },
   },
 
   nodeExporter+:: {
@@ -83,7 +87,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local nodeExporter =
         container.new('node-exporter', $._config.imageRepos.nodeExporter + ':' + $._config.versions.nodeExporter) +
         container.withArgs([
-          '--web.listen-address=127.0.0.1:9100',
+          '--web.listen-address=127.0.0.1:' + $._config.nodeExporter.port,
           '--path.procfs=/host/proc',
           '--path.sysfs=/host/sys',
 
@@ -101,8 +105,8 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local proxy =
         container.new('kube-rbac-proxy', $._config.imageRepos.kubeRbacProxy + ':' + $._config.versions.kubeRbacProxy) +
         container.withArgs([
-          '--secure-listen-address=$(IP):9100',
-          '--upstream=http://127.0.0.1:9100/',
+          '--secure-listen-address=$(IP):' + $._config.nodeExporter.port,
+          '--upstream=http://127.0.0.1:' + $._config.nodeExporter.port + '/',
         ]) +
         // Keep `hostPort` here, rather than in the node-exporter container
         // because Kubernetes mandates that if you define a `hostPort` then
@@ -112,7 +116,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         // used by the service is tied to the proxy container. We *could*
         // forgo declaring the host port, however it is important to declare
         // it so that the scheduler can decide if the pod is schedulable.
-        container.withPorts(containerPort.new(9100) + containerPort.withHostPort(9100) + containerPort.withName('https')) +
+        container.withPorts(containerPort.new($._config.nodeExporter.port) + containerPort.withHostPort($._config.nodeExporter.port) + containerPort.withName('https')) +
         container.mixin.resources.withRequests({ cpu: '10m', memory: '20Mi' }) +
         container.mixin.resources.withLimits({ cpu: '20m', memory: '40Mi' }) +
         container.withEnv([ip]);
@@ -177,7 +181,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local service = k.core.v1.service;
       local servicePort = k.core.v1.service.mixin.spec.portsType;
 
-      local nodeExporterPort = servicePort.newNamed('https', 9100, 'https');
+      local nodeExporterPort = servicePort.newNamed('https', $._config.nodeExporter.port, 'https');
 
       service.new('node-exporter', $.nodeExporter.daemonset.spec.selector.matchLabels, nodeExporterPort) +
       service.mixin.metadata.withNamespace($._config.namespace) +

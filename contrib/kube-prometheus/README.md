@@ -312,6 +312,10 @@ These are the available fields with their respective default values:
       cpuPerNode: '2m',
       memoryPerNode: '30Mi',
     },
+
+    nodeExporter+:: {
+      port: 9100,
+    },
 	},
 }
 ```
