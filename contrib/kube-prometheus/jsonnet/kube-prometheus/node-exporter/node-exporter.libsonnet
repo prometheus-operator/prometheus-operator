@@ -90,6 +90,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           '--web.listen-address=127.0.0.1:' + $._config.nodeExporter.port,
           '--path.procfs=/host/proc',
           '--path.sysfs=/host/sys',
+          '--path.rootfs=/host/root',
 
           // The following settings have been taken from
           // https://github.com/prometheus/node_exporter/blob/0662673/collector/filesystem_linux.go#L30-L31
