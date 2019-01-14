@@ -1,7 +1,6 @@
 package downsample
 
 import (
-	"context"
 	"io/ioutil"
 	"math"
 	"os"
@@ -15,6 +14,7 @@ import (
 	"time"
 
 	"github.com/fortytw2/leaktest"
+	"github.com/go-kit/kit/log"
 	"github.com/improbable-eng/thanos/pkg/block"
 	"github.com/improbable-eng/thanos/pkg/testutil"
 	"github.com/prometheus/tsdb/chunkenc"
@@ -27,55 +27,16 @@ func TestExpandChunkIterator(t *testing.T) {
 	// and staleness markers.
 	// Same timestamps are okay since we use them for counter markers.
 	var res []sample
-	expandChunkIterator(newSampleIterator([]sample{
-		{100, 1}, {200, 2}, {200, 3}, {201, 4}, {200, 5},
-		{300, 6}, {400, math.Float64frombits(value.StaleNaN)}, {500, 5},
-	}), &res)
+	testutil.Ok(t,
+		expandChunkIterator(
+			newSampleIterator([]sample{
+				{100, 1}, {200, 2}, {200, 3}, {201, 4}, {200, 5},
+				{300, 6}, {400, math.Float64frombits(value.StaleNaN)}, {500, 5},
+			}), &res,
+		),
+	)
 
 	testutil.Equals(t, []sample{{100, 1}, {200, 2}, {200, 3}, {201, 4}, {300, 6}, {500, 5}}, res)
-}
-
-func TestAggrChunk(t *testing.T) {
-	defer leaktest.CheckTimeout(t, 10*time.Second)()
-
-	var input [5][]sample
-
-	input[AggrCount] = []sample{{100, 30}, {200, 50}, {300, 60}, {400, 67}}
-	input[AggrSum] = []sample{{100, 130}, {200, 1000}, {300, 2000}, {400, 5555}}
-	input[AggrMin] = []sample{{100, 0}, {200, -10}, {300, 1000}, {400, -9.5}}
-	// Maximum is absent.
-	input[AggrCounter] = []sample{{100, 5}, {200, 10}, {300, 10.1}, {400, 15}, {400, 3}}
-
-	var chks [5]chunkenc.Chunk
-
-	for i, smpls := range input {
-		if len(smpls) == 0 {
-			continue
-		}
-		chks[i] = chunkenc.NewXORChunk()
-		a, err := chks[i].Appender()
-		testutil.Ok(t, err)
-
-		for _, s := range smpls {
-			a.Append(s.t, s.v)
-		}
-	}
-
-	var res [5][]sample
-	ac := EncodeAggrChunk(chks)
-
-	for _, at := range []AggrType{AggrCount, AggrSum, AggrMin, AggrMax, AggrCounter} {
-		if c, err := ac.Get(at); err != ErrAggrNotExist {
-			testutil.Ok(t, err)
-			testutil.Ok(t, expandChunkIterator(c.Iterator(), &res[at]))
-		}
-	}
-	testutil.Equals(t, input, res)
-}
-
-type testAggrSeries struct {
-	lset labels.Labels
-	data map[AggrType][]sample
 }
 
 func TestDownsampleRaw(t *testing.T) {
@@ -141,12 +102,7 @@ func TestDownsampleAggr(t *testing.T) {
 	testDownsample(t, input, &meta, 500)
 }
 
-type testSeries struct {
-	lset labels.Labels
-	data []sample
-}
-
-func encodeTestAggrSeries(v map[AggrType][]sample) (AggrChunk, int64, int64) {
+func encodeTestAggrSeries(v map[AggrType][]sample) chunks.Meta {
 	b := newAggrChunkBuilder()
 
 	for at, d := range v {
@@ -154,7 +110,8 @@ func encodeTestAggrSeries(v map[AggrType][]sample) (AggrChunk, int64, int64) {
 			b.apps[at].Append(s.t, s.v)
 		}
 	}
-	return b.encode(), b.mint, b.maxt
+
+	return b.encode()
 }
 
 type downsampleTestSet struct {
@@ -171,7 +128,7 @@ func testDownsample(t *testing.T, data []*downsampleTestSet, meta *block.Meta, r
 
 	dir, err := ioutil.TempDir("", "downsample-raw")
 	testutil.Ok(t, err)
-	defer os.RemoveAll(dir)
+	defer func() { testutil.Ok(t, os.RemoveAll(dir)) }()
 
 	// Ideally we would use tsdb.HeadBlock here for less dependency on our own code. However,
 	// it cannot accept the counter signal sample with the same timestamp as the previous sample.
@@ -196,18 +153,12 @@ func testDownsample(t *testing.T, data []*downsampleTestSet, meta *block.Meta, r
 				Chunk:   chk,
 			})
 		} else {
-			ac, mint, maxt := encodeTestAggrSeries(d.inAggr)
-
-			ser.chunks = append(ser.chunks, chunks.Meta{
-				MinTime: mint,
-				MaxTime: maxt,
-				Chunk:   ac,
-			})
+			ser.chunks = append(ser.chunks, encodeTestAggrSeries(d.inAggr))
 		}
 		mb.addSeries(ser)
 	}
 
-	id, err := Downsample(context.Background(), meta, mb, dir, resolution)
+	id, err := Downsample(log.NewNopLogger(), meta, mb, dir, resolution)
 	testutil.Ok(t, err)
 
 	exp := map[uint64]map[AggrType][]sample{}
@@ -216,13 +167,13 @@ func testDownsample(t *testing.T, data []*downsampleTestSet, meta *block.Meta, r
 	for _, d := range data {
 		exp[d.lset.Hash()] = d.output
 	}
-	indexr, err := index.NewFileReader(filepath.Join(dir, id.String(), "index"))
+	indexr, err := index.NewFileReader(filepath.Join(dir, id.String(), block.IndexFilename))
 	testutil.Ok(t, err)
-	defer indexr.Close()
+	defer func() { testutil.Ok(t, indexr.Close()) }()
 
-	chunkr, err := chunks.NewDirReader(filepath.Join(dir, id.String(), "chunks"), AggrChunkPool{})
+	chunkr, err := chunks.NewDirReader(filepath.Join(dir, id.String(), block.ChunksDirname), NewPool())
 	testutil.Ok(t, err)
-	defer chunkr.Close()
+	defer func() { testutil.Ok(t, chunkr.Close()) }()
 
 	pall, err := indexr.Postings(index.AllPostingsKey())
 	testutil.Ok(t, err)
@@ -242,7 +193,7 @@ func testDownsample(t *testing.T, data []*downsampleTestSet, meta *block.Meta, r
 			testutil.Ok(t, err)
 
 			for _, at := range []AggrType{AggrCount, AggrSum, AggrMin, AggrMax, AggrCounter} {
-				c, err := chk.(AggrChunk).Get(at)
+				c, err := chk.(*AggrChunk).Get(at)
 				if err == ErrAggrNotExist {
 					continue
 				}
@@ -312,6 +263,87 @@ func TestCounterSeriesIterator(t *testing.T) {
 		res = append(res, sample{t, v})
 	}
 	testutil.Ok(t, x.Err())
+	testutil.Equals(t, exp, res)
+}
+
+func TestCounterSeriesIteratorSeek(t *testing.T) {
+	chunks := [][]sample{
+		{{100, 10}, {200, 20}, {300, 10}, {400, 20}, {400, 5}},
+	}
+
+	exp := []sample{
+		{200, 20}, {300, 30}, {400, 40},
+	}
+
+	var its []chunkenc.Iterator
+	for _, c := range chunks {
+		its = append(its, newSampleIterator(c))
+	}
+
+	var res []sample
+	x := NewCounterSeriesIterator(its...)
+
+	ok := x.Seek(150)
+	testutil.Assert(t, ok, "Seek should return true")
+	testutil.Ok(t, x.Err())
+	for {
+		ts, v := x.At()
+		res = append(res, sample{ts, v})
+
+		ok = x.Next()
+		if !ok {
+			break
+		}
+	}
+	testutil.Equals(t, exp, res)
+}
+
+func TestCounterSeriesIteratorSeekExtendTs(t *testing.T) {
+	chunks := [][]sample{
+		{{100, 10}, {200, 20}, {300, 10}, {400, 20}, {400, 5}},
+	}
+
+	var its []chunkenc.Iterator
+	for _, c := range chunks {
+		its = append(its, newSampleIterator(c))
+	}
+
+	x := NewCounterSeriesIterator(its...)
+
+	ok := x.Seek(500)
+	testutil.Assert(t, !ok, "Seek should return false")
+}
+
+func TestCounterSeriesIteratorSeekAfterNext(t *testing.T) {
+	chunks := [][]sample{
+		{{100, 10}},
+	}
+	exp := []sample{
+		{100, 10},
+	}
+
+	var its []chunkenc.Iterator
+	for _, c := range chunks {
+		its = append(its, newSampleIterator(c))
+	}
+
+	var res []sample
+	x := NewCounterSeriesIterator(its...)
+
+	x.Next()
+
+	ok := x.Seek(50)
+	testutil.Assert(t, ok, "Seek should return true")
+	testutil.Ok(t, x.Err())
+	for {
+		ts, v := x.At()
+		res = append(res, sample{ts, v})
+
+		ok = x.Next()
+		if !ok {
+			break
+		}
+	}
 	testutil.Equals(t, exp, res)
 }
 

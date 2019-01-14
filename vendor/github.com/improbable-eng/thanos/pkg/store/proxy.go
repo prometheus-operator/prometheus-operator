@@ -4,9 +4,13 @@ import (
 	"context"
 	"io"
 	"math"
+	"strings"
 	"sync"
 
+	"fmt"
+
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/improbable-eng/thanos/pkg/store/storepb"
 	"github.com/improbable-eng/thanos/pkg/strutil"
 	"github.com/pkg/errors"
@@ -16,16 +20,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Info holds meta information about a store.
+// Client holds meta information about a store.
 type Client interface {
 	// Client to access the store.
 	storepb.StoreClient
 
-	// Labels that apply to all date exposed by the backing store.
+	// Labels that apply to all data exposed by the backing store.
 	Labels() []storepb.Label
 
 	// Minimum and maximum time range of data in the store.
 	TimeRange() (mint int64, maxt int64)
+
+	String() string
 }
 
 // ProxyStore implements the store API that proxies request to all given underlying stores.
@@ -80,23 +86,31 @@ func (s *ProxyStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesSe
 		return nil
 	}
 
+	stores, err := s.stores(srv.Context())
+	if err != nil {
+		err = errors.Wrap(err, "failed to get store APIs")
+		level.Error(s.logger).Log("err", err)
+		return status.Errorf(codes.Unknown, err.Error())
+	}
+
 	var (
-		respCh    = make(chan *storepb.SeriesResponse, 10)
 		seriesSet []storepb.SeriesSet
+		respCh    = make(chan *storepb.SeriesResponse, len(stores)+1)
 		g         errgroup.Group
 	)
 
-	stores, err := s.stores(srv.Context())
-	if err != nil {
-		return status.Errorf(codes.Unknown, err.Error())
-	}
+	var storeDebugMsgs []string
+
 	for _, st := range stores {
 		// We might be able to skip the store if its meta information indicates
 		// it cannot have series matching our query.
 		// NOTE: all matchers are validated in labelsMatches method so we explicitly ignore error.
 		if ok, _ := storeMatches(st, r.MinTime, r.MaxTime, newMatchers...); !ok {
+			storeDebugMsgs = append(storeDebugMsgs, fmt.Sprintf("store %s filtered out", st))
 			continue
 		}
+		storeDebugMsgs = append(storeDebugMsgs, fmt.Sprintf("store %s queried", st))
+
 		sc, err := st.Series(srv.Context(), &storepb.SeriesRequest{
 			MinTime:             r.MinTime,
 			MaxTime:             r.MaxTime,
@@ -105,12 +119,26 @@ func (s *ProxyStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesSe
 			MaxResolutionWindow: r.MaxResolutionWindow,
 		})
 		if err != nil {
-			respCh <- storepb.NewWarnSeriesResponse(errors.Wrap(err, "fetch series"))
+			storeID := fmt.Sprintf("%v", st.Labels())
+			if storeID == "" {
+				storeID = "Store Gateway"
+			}
+			err = errors.Wrapf(err, "fetch series for %s", storeID)
+			level.Error(s.logger).Log("err", err)
+			respCh <- storepb.NewWarnSeriesResponse(err)
 			continue
 		}
 
 		seriesSet = append(seriesSet, startStreamSeriesSet(sc, respCh, 10))
 	}
+	if len(seriesSet) == 0 {
+		err := errors.New("No store matched for this query")
+		level.Warn(s.logger).Log("err", err, "stores", strings.Join(storeDebugMsgs, ";"))
+		respCh <- storepb.NewWarnSeriesResponse(err)
+		return nil
+	}
+
+	level.Debug(s.logger).Log("msg", strings.Join(storeDebugMsgs, ";"))
 
 	g.Go(func() error {
 		defer close(respCh)
@@ -130,7 +158,12 @@ func (s *ProxyStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesSe
 		}
 	}
 
-	return g.Wait()
+	if err := g.Wait(); err != nil {
+		level.Error(s.logger).Log("err", err)
+		return err
+	}
+	return nil
+
 }
 
 // streamSeriesSet iterates over incoming stream of series.
@@ -218,6 +251,7 @@ func storeMatches(s Client, mint, maxt int64, matchers ...storepb.LabelMatcher) 
 	return true, nil
 }
 
+// LabelNames returns all known label names.
 func (s *ProxyStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest) (
 	*storepb.LabelNamesResponse, error,
 ) {

@@ -41,7 +41,7 @@ import (
 )
 
 func testQueryableCreator(queryable storage.Queryable) query.QueryableCreator {
-	return func(deduplicate bool, p query.PartialErrReporter) storage.Queryable {
+	return func(_ bool, _ time.Duration, _ query.PartialErrReporter) storage.Queryable {
 		return queryable
 	}
 }
@@ -450,7 +450,7 @@ func TestRespondSuccess(t *testing.T) {
 		t.Fatalf("Error on test request: %s", err)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
+	defer func() { testutil.Ok(t, resp.Body.Close()) }()
 	if err != nil {
 		t.Fatalf("Error reading response body: %s", err)
 	}
@@ -487,7 +487,7 @@ func TestRespondError(t *testing.T) {
 		t.Fatalf("Error on test request: %s", err)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
+	defer func() { testutil.Ok(t, resp.Body.Close()) }()
 	if err != nil {
 		t.Fatalf("Error reading response body: %s", err)
 	}

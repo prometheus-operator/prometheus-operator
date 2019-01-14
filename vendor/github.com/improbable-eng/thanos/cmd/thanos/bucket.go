@@ -4,228 +4,213 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path"
-	"path/filepath"
+	"sort"
 	"text/template"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"github.com/improbable-eng/thanos/pkg/block"
-	"github.com/improbable-eng/thanos/pkg/objstore"
-	"github.com/improbable-eng/thanos/pkg/objstore/gcs"
+	"github.com/improbable-eng/thanos/pkg/objstore/client"
+	"github.com/improbable-eng/thanos/pkg/runutil"
+	"github.com/improbable-eng/thanos/pkg/verifier"
 	"github.com/oklog/run"
 	"github.com/oklog/ulid"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
+var (
+	issuesMap = map[string]verifier.Issue{
+		verifier.IndexIssueID:                verifier.IndexIssue,
+		verifier.OverlappedBlocksIssueID:     verifier.OverlappedBlocksIssue,
+		verifier.DuplicatedCompactionIssueID: verifier.DuplicatedCompactionIssue,
+	}
+	allIssues = func() (s []string) {
+		for id := range issuesMap {
+			s = append(s, id)
+		}
+
+		sort.Strings(s)
+		return s
+	}
+)
+
 func registerBucket(m map[string]setupFunc, app *kingpin.Application, name string) {
 	cmd := app.Command(name, "inspect metric data in an object storage bucket")
 
-	gcsBucket := cmd.Flag("gcs-bucket", "Google Cloud Storage bucket name for stored blocks.").
-		PlaceHolder("<bucket>").Required().String()
+	objStoreConfig := regCommonObjStoreFlags(cmd, "")
+	objStoreBackupConfig := regCommonObjStoreFlags(cmd, "-backup")
 
-	check := cmd.Command("check", "verify all blocks in the bucket")
-
-	checkRepair := check.Flag("repair", "attempt to repair blocks for which issues were detected").
+	// Verify command.
+	verify := cmd.Command("verify", "verify all blocks in the bucket against specified issues")
+	verifyRepair := verify.Flag("repair", "attempt to repair blocks for which issues were detected").
 		Short('r').Default("false").Bool()
+	verifyIssues := verify.Flag("issues", fmt.Sprintf("Issues to verify (and optionally repair). Possible values: %v", allIssues())).
+		Short('i').Default(verifier.IndexIssueID, verifier.OverlappedBlocksIssueID).Strings()
+	verifyIDWhitelist := verify.Flag("id-whitelist", "Block IDs to verify (and optionally repair) only. "+
+		"If none is specified, all blocks will be verified. Repeated field").Strings()
+	m[name+" verify"] = func(g *run.Group, logger log.Logger, reg *prometheus.Registry, _ opentracing.Tracer, _ bool) error {
+		bucketConfig, err := objStoreConfig.Content()
+		if err != nil {
+			return err
+		}
 
-	m[name+" check"] = func(g *run.Group, logger log.Logger, reg *prometheus.Registry, _ opentracing.Tracer) error {
+		bkt, err := client.NewBucket(logger, bucketConfig, reg, name)
+		if err != nil {
+			return err
+		}
+		defer runutil.CloseWithLogOnErr(logger, bkt, "bucket client")
+
+		backupBucketConfig, err := objStoreBackupConfig.Content()
+		if err != nil {
+			return err
+		}
+
+		backupBkt, err := client.NewBucket(logger, backupBucketConfig, reg, name)
+		if err == client.ErrNotFound {
+			if *verifyRepair {
+				return errors.Wrap(err, "repair is specified, so backup client is required")
+			}
+		} else if err != nil {
+			return err
+		} else {
+			defer runutil.CloseWithLogOnErr(logger, backupBkt, "backup bucket client")
+		}
+
 		// Dummy actor to immediately kill the group after the run function returns.
 		g.Add(func() error { return nil }, func(error) {})
 
-		gcsClient, err := storage.NewClient(context.Background())
-		if err != nil {
-			return errors.Wrap(err, "create GCS client")
+		var (
+			ctx    = context.Background()
+			v      *verifier.Verifier
+			issues []verifier.Issue
+		)
+
+		for _, i := range *verifyIssues {
+			issueFn, ok := issuesMap[i]
+			if !ok {
+				return errors.Errorf("no such issue name %s", i)
+			}
+			issues = append(issues, issueFn)
 		}
-		defer gcsClient.Close()
 
-		bkt := gcs.NewBucket(*gcsBucket, gcsClient.Bucket(*gcsBucket), reg)
+		if *verifyRepair {
+			v = verifier.NewWithRepair(logger, bkt, backupBkt, issues)
+		} else {
+			v = verifier.New(logger, bkt, issues)
+		}
 
-		return runBucketCheck(logger, bkt, *checkRepair)
+		var idMatcher func(ulid.ULID) bool = nil
+		if len(*verifyIDWhitelist) > 0 {
+			whilelistIDs := map[string]struct{}{}
+			for _, bid := range *verifyIDWhitelist {
+				id, err := ulid.Parse(bid)
+				if err != nil {
+					return errors.Wrap(err, "invalid ULID found in --id-whitelist flag")
+				}
+				whilelistIDs[id.String()] = struct{}{}
+			}
+
+			idMatcher = func(id ulid.ULID) bool {
+				if _, ok := whilelistIDs[id.String()]; !ok {
+					return false
+				}
+				return true
+			}
+		}
+
+		return v.Verify(ctx, idMatcher)
 	}
 
 	ls := cmd.Command("ls", "list all blocks in the bucket")
-
-	lsOutput := ls.Flag("ouput", "format in which to print each block's information; may be 'json' or custom template").
+	lsOutput := ls.Flag("output", "Format in which to print each block's information. May be 'json' or custom template.").
 		Short('o').Default("").String()
+	m[name+" ls"] = func(g *run.Group, logger log.Logger, reg *prometheus.Registry, _ opentracing.Tracer, _ bool) error {
+		bucketConfig, err := objStoreConfig.Content()
+		if err != nil {
+			return err
+		}
 
-	m[name+" ls"] = func(g *run.Group, logger log.Logger, _ *prometheus.Registry, _ opentracing.Tracer) error {
+		bkt, err := client.NewBucket(logger, bucketConfig, reg, name)
+		if err != nil {
+			return err
+		}
+
 		// Dummy actor to immediately kill the group after the run function returns.
 		g.Add(func() error { return nil }, func(error) {})
 
-		return runBucketList(*gcsBucket, *lsOutput)
-	}
-}
+		defer runutil.CloseWithLogOnErr(logger, bkt, "bucket client")
 
-func runBucketCheck(logger log.Logger, bkt objstore.Bucket, repair bool) error {
-	var all []ulid.ULID
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
 
-	ctx := context.Background()
+		var (
+			format     = *lsOutput
+			printBlock func(id ulid.ULID) error
+		)
 
-	err := bkt.Iter(ctx, "", func(name string) error {
-		if id, err := ulid.Parse(name[:len(name)-1]); err == nil {
-			all = append(all, id)
-		}
-		return nil
-	})
-	if err != nil {
-		return errors.Wrap(err, "iter bucket")
-	}
-	level.Info(logger).Log("msg", "start verifying blocks", "count", len(all))
+		switch format {
+		case "":
+			printBlock = func(id ulid.ULID) error {
+				fmt.Fprintln(os.Stdout, id.String())
+				return nil
+			}
+		case "wide":
+			printBlock = func(id ulid.ULID) error {
+				m, err := block.DownloadMeta(ctx, logger, bkt, id)
+				if err != nil {
+					return err
+				}
 
-	for _, id := range all {
-		level.Info(logger).Log("msg", "verify block", "id", id)
+				minTime := time.Unix(m.MinTime/1000, 0)
+				maxTime := time.Unix(m.MaxTime/1000, 0)
 
-		if err = verifyBlock(ctx, bkt, id); err != nil {
-			level.Warn(logger).Log("msg", "detected issue", "id", id, "err", err)
-		}
-		if err == nil || !repair {
-			continue
-		}
-		repid, err := repairBlock(ctx, bkt, id)
-		if err != nil {
-			level.Warn(logger).Log("msg", "repairing block failed", "id", id, "err", err)
-			continue
-		}
-		level.Info(logger).Log("msg", "repaired block", "id", id, "repl", repid)
-	}
-	return nil
-}
+				if _, err = fmt.Fprintf(os.Stdout, "%s -- %s - %s Diff: %s, Compaction: %d, Downsample: %d, Source: %s\n",
+					m.ULID, minTime.Format("2006-01-02 15:04"), maxTime.Format("2006-01-02 15:04"), maxTime.Sub(minTime),
+					m.Compaction.Level, m.Thanos.Downsample.Resolution, m.Thanos.Source); err != nil {
+					return err
+				}
+				return nil
+			}
+		case "json":
+			enc := json.NewEncoder(os.Stdout)
+			enc.SetIndent("", "\t")
 
-// verifyBlock checks whether the block in the bucket has inconsistencies.
-func verifyBlock(ctx context.Context, bkt objstore.BucketReader, id ulid.ULID) error {
-	tmpdir, err := ioutil.TempDir("", fmt.Sprintf("verify-block-%s", id))
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpdir)
-
-	err = objstore.DownloadFile(ctx, bkt,
-		path.Join(id.String(), "index"), filepath.Join(tmpdir, "index"))
-	if err != nil {
-		return errors.Wrap(err, "download index file")
-	}
-
-	if err := block.VerifyIndex(filepath.Join(tmpdir, "index")); err != nil {
-		return errors.Wrap(err, "verify index")
-	}
-	return nil
-}
-
-// repairBlock rewrites the given block while fixing repairable inconsistencies.
-// If the replacement was created successfully it is uploaded to the bucket and the input
-// block is deleted.
-func repairBlock(ctx context.Context, bkt objstore.Bucket, id ulid.ULID) (resid ulid.ULID, err error) {
-	tmpdir, err := ioutil.TempDir("", fmt.Sprintf("repair-block-%s", id))
-	if err != nil {
-		return resid, err
-	}
-	defer os.RemoveAll(tmpdir)
-
-	bdir := filepath.Join(tmpdir, id.String())
-
-	if err := objstore.DownloadDir(ctx, bkt, id.String(), bdir); err != nil {
-		return resid, errors.Wrap(err, "download block")
-	}
-	meta, err := block.ReadMetaFile(bdir)
-	if err != nil {
-		return resid, errors.Wrap(err, "read meta file")
-	}
-
-	if meta.Thanos.Downsample.Resolution > 0 {
-		return resid, errors.New("cannot repair downsampled blocks")
-	}
-
-	resid, err = block.Repair(tmpdir, meta.ULID)
-	if err != nil {
-		return resid, errors.Wrap(err, "repair failed")
-	}
-	// Verify repaired block before uploading it.
-	if err := block.VerifyIndex(filepath.Join(tmpdir, resid.String(), "index")); err != nil {
-		return resid, errors.Wrap(err, "repaired block invalid")
-	}
-
-	err = objstore.UploadDir(ctx, bkt, filepath.Join(tmpdir, resid.String()), resid.String())
-	if err != nil {
-		return resid, errors.Wrapf(err, "upload of %s failed", resid)
-	}
-	if err := objstore.DeleteDir(ctx, bkt, id.String()); err != nil {
-		return resid, errors.Wrapf(err, "deleting old block %s failed", id)
-	}
-	return resid, nil
-}
-
-func parseMeta(ctx context.Context, bkt objstore.Bucket, name string) (block.Meta, error) {
-	rc, err := bkt.Get(ctx, path.Join(name, "meta.json"))
-	if err != nil {
-		return block.Meta{}, errors.Wrap(err, "get reader for meta.json")
-	}
-	defer rc.Close()
-
-	// Do a full decode/encode cycle to ensure we only print valid JSON.
-	var m block.Meta
-
-	if err := json.NewDecoder(rc).Decode(&m); err != nil {
-		return block.Meta{}, errors.Wrap(err, "deocde meta.json")
-	}
-	return m, nil
-}
-
-func runBucketList(gcsBucket, format string) error {
-	gcsClient, err := storage.NewClient(context.Background())
-	if err != nil {
-		return errors.Wrap(err, "create GCS client")
-	}
-
-	var bkt objstore.Bucket
-	bkt = gcs.NewBucket(gcsBucket, gcsClient.Bucket(gcsBucket), nil)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	var printBlock func(name string) error
-
-	switch format {
-	case "":
-		printBlock = func(name string) error {
-			fmt.Fprintln(os.Stdout, name[:len(name)-1])
-			return nil
-		}
-	case "json":
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "\t")
-
-		printBlock = func(name string) error {
-			m, err := parseMeta(ctx, bkt, name)
+			printBlock = func(id ulid.ULID) error {
+				m, err := block.DownloadMeta(ctx, logger, bkt, id)
+				if err != nil {
+					return err
+				}
+				return enc.Encode(&m)
+			}
+		default:
+			tmpl, err := template.New("").Parse(format)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "invalid template")
 			}
-			return enc.Encode(&m)
-		}
-	default:
-		tmpl, err := template.New("").Parse(format)
-		if err != nil {
-			return errors.Wrap(err, "invalid template")
-		}
-		printBlock = func(name string) error {
-			m, err := parseMeta(ctx, bkt, name)
-			if err != nil {
-				return err
-			}
+			printBlock = func(id ulid.ULID) error {
+				m, err := block.DownloadMeta(ctx, logger, bkt, id)
+				if err != nil {
+					return err
+				}
 
-			if err := tmpl.Execute(os.Stdout, &m); err != nil {
-				return errors.Wrap(err, "execute template")
+				if err := tmpl.Execute(os.Stdout, &m); err != nil {
+					return errors.Wrap(err, "execute template")
+				}
+				fmt.Fprintln(os.Stdout, "")
+				return nil
 			}
-			fmt.Fprintln(os.Stdout, "")
-			return nil
 		}
+
+		return bkt.Iter(ctx, "", func(name string) error {
+			id, ok := block.IsBlockDir(name)
+			if !ok {
+				return nil
+			}
+			return printBlock(id)
+		})
 	}
-	return bkt.Iter(ctx, "", printBlock)
 }

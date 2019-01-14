@@ -16,14 +16,19 @@ spec:
       labels:
         app: thanos-query
         thanos-peer: "true"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "10902"
     spec:
       containers:
       - name: thanos-query
-        image: improbable/thanos:latest
+        # Always use explicit image tags (release or master-<date>-sha) instead of ambigous `latest` or `master`.
+        image: improbable/thanos:v0.1.0
         args:
         - "query"
         - "--log.level=debug"
         - "--cluster.peers=thanos-peers.default.svc.cluster.local:10900"
+        - "--query.replica-label=replica"
         ports:
         - name: http
           containerPort: 10902
@@ -31,6 +36,10 @@ spec:
           containerPort: 10901
         - name: cluster
           containerPort: 10900
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: http
 ---
 apiVersion: v1
 kind: Service
@@ -49,5 +58,3 @@ spec:
     app: thanos-query
   sessionAffinity: None
   type: NodePort
-status:
-  loadBalancer: {}

@@ -30,6 +30,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/improbable-eng/thanos/pkg/query"
+	"github.com/improbable-eng/thanos/pkg/runutil"
 	"github.com/improbable-eng/thanos/pkg/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -96,20 +97,23 @@ type apiFunc func(r *http.Request) (interface{}, []error, *apiError)
 // API can register a set of endpoints in a router and handle
 // them using the provided storage and query engine.
 type API struct {
+	logger          log.Logger
 	queryableCreate query.QueryableCreator
 	queryEngine     *promql.Engine
 
-	instantQueryDuration prometheus.Histogram
-	rangeQueryDuration   prometheus.Histogram
-
-	now func() time.Time
+	instantQueryDuration   prometheus.Histogram
+	rangeQueryDuration     prometheus.Histogram
+	enableAutodownsampling bool
+	now                    func() time.Time
 }
 
 // NewAPI returns an initialized API type.
 func NewAPI(
+	logger log.Logger,
 	reg *prometheus.Registry,
 	qe *promql.Engine,
 	c query.QueryableCreator,
+	enableAutodownsampling bool,
 ) *API {
 	instantQueryDuration := prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: "thanos_query_api_instant_query_duration_seconds",
@@ -131,11 +135,13 @@ func NewAPI(
 		rangeQueryDuration,
 	)
 	return &API{
-		queryEngine:          qe,
-		queryableCreate:      c,
-		instantQueryDuration: instantQueryDuration,
-		rangeQueryDuration:   rangeQueryDuration,
-		now:                  time.Now,
+		logger:                 logger,
+		queryEngine:            qe,
+		queryableCreate:        c,
+		instantQueryDuration:   instantQueryDuration,
+		rangeQueryDuration:     rangeQueryDuration,
+		enableAutodownsampling: enableAutodownsampling,
+		now: time.Now,
 	}
 }
 
@@ -168,7 +174,7 @@ func (api *API) Register(r *route.Router, tracer opentracing.Tracer, logger log.
 type queryData struct {
 	ResultType promql.ValueType `json:"resultType"`
 	Result     promql.Value     `json:"result"`
-	Warnings   []error          `json:"warnings"`
+	Warnings   []error          `json:"warnings,omitempty"`
 }
 
 func (api *API) options(r *http.Request) (interface{}, []error, *apiError) {
@@ -202,7 +208,7 @@ func (api *API) query(r *http.Request) (interface{}, []error, *apiError) {
 	var (
 		warnmtx             sync.Mutex
 		warnings            []error
-		enableDeduplication bool
+		enableDeduplication = true
 	)
 	partialErrReporter := func(err error) {
 		warnmtx.Lock()
@@ -224,7 +230,7 @@ func (api *API) query(r *http.Request) (interface{}, []error, *apiError) {
 	defer span.Finish()
 
 	begin := api.now()
-	qry, err := api.queryEngine.NewInstantQuery(api.queryableCreate(enableDeduplication, partialErrReporter), r.FormValue("query"), ts)
+	qry, err := api.queryEngine.NewInstantQuery(api.queryableCreate(enableDeduplication, 0, partialErrReporter), r.FormValue("query"), ts)
 	if err != nil {
 		return nil, nil, &apiError{errorBadData, err}
 	}
@@ -265,11 +271,28 @@ func (api *API) queryRange(r *http.Request) (interface{}, []error, *apiError) {
 
 	step, err := parseDuration(r.FormValue("step"))
 	if err != nil {
-		return nil, nil, &apiError{errorBadData, err}
+		return nil, nil, &apiError{errorBadData, errors.Wrap(err, "param step")}
 	}
 
 	if step <= 0 {
 		err := errors.New("zero or negative query resolution step widths are not accepted. Try a positive integer")
+		return nil, nil, &apiError{errorBadData, err}
+	}
+
+	maxSourceResolution := 0 * time.Second
+	if api.enableAutodownsampling {
+		// If no max_source_resolution is specified fit at least 5 samples between steps.
+		maxSourceResolution = step / 5
+	}
+	if val := r.FormValue("max_source_resolution"); val != "" {
+		maxSourceResolution, err = parseDuration(val)
+		if err != nil {
+			return nil, nil, &apiError{errorBadData, errors.Wrap(err, "param max_source_resolution")}
+		}
+	}
+
+	if maxSourceResolution < 0 {
+		err := errors.New("negative query max source resolution is not accepted. Try a positive integer")
 		return nil, nil, &apiError{errorBadData, err}
 	}
 
@@ -294,7 +317,7 @@ func (api *API) queryRange(r *http.Request) (interface{}, []error, *apiError) {
 	var (
 		warnmtx             sync.Mutex
 		warnings            []error
-		enableDeduplication bool
+		enableDeduplication = true
 	)
 	partialErrReporter := func(err error) {
 		warnmtx.Lock()
@@ -316,7 +339,13 @@ func (api *API) queryRange(r *http.Request) (interface{}, []error, *apiError) {
 	defer span.Finish()
 
 	begin := api.now()
-	qry, err := api.queryEngine.NewRangeQuery(api.queryableCreate(enableDeduplication, partialErrReporter), r.FormValue("query"), start, end, step)
+	qry, err := api.queryEngine.NewRangeQuery(
+		api.queryableCreate(enableDeduplication, maxSourceResolution, partialErrReporter),
+		r.FormValue("query"),
+		start,
+		end,
+		step,
+	)
 	if err != nil {
 		return nil, nil, &apiError{errorBadData, err}
 	}
@@ -357,11 +386,11 @@ func (api *API) labelValues(r *http.Request) (interface{}, []error, *apiError) {
 		warnmtx.Unlock()
 	}
 
-	q, err := api.queryableCreate(true, partialErrReporter).Querier(ctx, math.MinInt64, math.MaxInt64)
+	q, err := api.queryableCreate(true, 0, partialErrReporter).Querier(ctx, math.MinInt64, math.MaxInt64)
 	if err != nil {
 		return nil, nil, &apiError{errorExec, err}
 	}
-	defer q.Close()
+	defer runutil.CloseWithLogOnErr(api.logger, q, "queryable labelValues")
 
 	// TODO(fabxc): add back request context.
 
@@ -379,7 +408,10 @@ var (
 )
 
 func (api *API) series(r *http.Request) (interface{}, []error, *apiError) {
-	r.ParseForm()
+	if err := r.ParseForm(); err != nil {
+		return nil, nil, &apiError{errorInternal, errors.Wrap(err, "parse form")}
+	}
+
 	if len(r.Form["match[]"]) == 0 {
 		return nil, nil, &apiError{errorBadData, fmt.Errorf("no match[] parameter provided")}
 	}
@@ -418,7 +450,7 @@ func (api *API) series(r *http.Request) (interface{}, []error, *apiError) {
 	var (
 		warnmtx             sync.Mutex
 		warnings            []error
-		enableDeduplication bool
+		enableDeduplication = true
 	)
 	partialErrReporter := func(err error) {
 		warnmtx.Lock()
@@ -435,15 +467,15 @@ func (api *API) series(r *http.Request) (interface{}, []error, *apiError) {
 		}
 	}
 
-	q, err := api.queryableCreate(enableDeduplication, partialErrReporter).Querier(r.Context(), timestamp.FromTime(start), timestamp.FromTime(end))
+	q, err := api.queryableCreate(enableDeduplication, 0, partialErrReporter).Querier(r.Context(), timestamp.FromTime(start), timestamp.FromTime(end))
 	if err != nil {
 		return nil, nil, &apiError{errorExec, err}
 	}
-	defer q.Close()
+	defer runutil.CloseWithLogOnErr(api.logger, q, "queryable series")
 
 	var sets []storage.SeriesSet
 	for _, mset := range matcherSets {
-		s, err := q.Select(nil, mset...)
+		s, err := q.Select(&storage.SelectParams{}, mset...)
 		if err != nil {
 			return nil, nil, &apiError{errorExec, err}
 		}
@@ -473,7 +505,7 @@ func respond(w http.ResponseWriter, data interface{}, warnings []error) {
 	for _, warn := range warnings {
 		resp.Warnings = append(resp.Warnings, warn.Error())
 	}
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 func respondError(w http.ResponseWriter, apiErr *apiError, data interface{}) {
@@ -494,7 +526,7 @@ func respondError(w http.ResponseWriter, apiErr *apiError, data interface{}) {
 	}
 	w.WriteHeader(code)
 
-	json.NewEncoder(w).Encode(&response{
+	_ = json.NewEncoder(w).Encode(&response{
 		Status:    statusError,
 		ErrorType: apiErr.typ,
 		Error:     apiErr.err.Error(),

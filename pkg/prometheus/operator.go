@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"reflect"
 	"strings"
@@ -1225,6 +1226,15 @@ func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (B
 
 }
 
+func gzipConfig(buf *bytes.Buffer, conf []byte) error {
+	w := gzip.NewWriter(buf)
+	defer w.Close()
+	if _, err := w.Write(conf); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *Operator) loadBasicAuthSecrets(
 	mons map[string]*monitoringv1.ServiceMonitor,
 	remoteReads []monitoringv1.RemoteReadSpec,
@@ -1328,7 +1338,13 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	s.ObjectMeta.Annotations = map[string]string{
 		"generated": "true",
 	}
-	s.Data[configFilename] = []byte(conf)
+
+	// Compress config to avoid 1mb secret limit for a while
+	var buf bytes.Buffer
+	if err = gzipConfig(&buf, conf); err != nil {
+		return errors.Wrap(err, "couldnt gzip config")
+	}
+	s.Data[configFilename] = buf.Bytes()
 
 	curSecret, err := sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {

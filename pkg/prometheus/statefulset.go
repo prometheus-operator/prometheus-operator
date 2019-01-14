@@ -43,7 +43,7 @@ const (
 	rulesDir                 = "/etc/prometheus/rules"
 	secretsDir               = "/etc/prometheus/secrets/"
 	configmapsDir            = "/etc/prometheus/configmaps/"
-	configFilename           = "prometheus.yaml"
+	configFilename           = "prometheus.yaml.gz"
 	configEnvsubstFilename   = "prometheus.env.yaml"
 	sSetInputHashName        = "prometheus-operator-input-hash"
 )

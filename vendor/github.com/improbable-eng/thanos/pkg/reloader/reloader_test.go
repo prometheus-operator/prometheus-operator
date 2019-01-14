@@ -23,7 +23,6 @@ func TestReloader_ConfigApply(t *testing.T) {
 
 	l, err := net.Listen("tcp", "localhost:0")
 	testutil.Ok(t, err)
-	defer l.Close()
 
 	reloads := 0
 	i := 0
@@ -42,15 +41,17 @@ func TestReloader_ConfigApply(t *testing.T) {
 		reloads++
 		resp.WriteHeader(http.StatusOK)
 	})
-	go srv.Serve(l)
-	defer srv.Close()
+	go func() {
+		_ = srv.Serve(l)
+	}()
+	defer func() { testutil.Ok(t, srv.Close()) }()
 
 	reloadURL, err := url.Parse(fmt.Sprintf("http://%s", l.Addr().String()))
 	testutil.Ok(t, err)
 
 	dir, err := ioutil.TempDir("", "reloader-cfg-test")
 	testutil.Ok(t, err)
-	defer os.RemoveAll(dir)
+	defer func() { testutil.Ok(t, os.RemoveAll(dir)) }()
 
 	testutil.Ok(t, os.Mkdir(dir+"/in", os.ModePerm))
 	testutil.Ok(t, os.Mkdir(dir+"/out", os.ModePerm))
@@ -59,7 +60,7 @@ func TestReloader_ConfigApply(t *testing.T) {
 		input  = path.Join(dir, "in", "cfg.yaml.tmpl")
 		output = path.Join(dir, "out", "cfg.yaml")
 	)
-	reloader := New(nil, reloadURL, input, output, "")
+	reloader := New(nil, reloadURL, input, output, nil)
 	reloader.retryInterval = 100 * time.Millisecond
 
 	testNoConfig(t, reloader)
@@ -187,7 +188,6 @@ func TestReloader_RuleApply(t *testing.T) {
 
 	l, err := net.Listen("tcp", "localhost:0")
 	testutil.Ok(t, err)
-	defer l.Close()
 
 	reloads := 0
 	i := 0
@@ -207,17 +207,19 @@ func TestReloader_RuleApply(t *testing.T) {
 		reloads++
 		resp.WriteHeader(http.StatusOK)
 	})
-	go srv.Serve(l)
-	defer srv.Close()
+	go func() {
+		_ = srv.Serve(l)
+	}()
+	defer func() { testutil.Ok(t, srv.Close()) }()
 
 	reloadURL, err := url.Parse(fmt.Sprintf("http://%s", l.Addr().String()))
 	testutil.Ok(t, err)
 
 	dir, err := ioutil.TempDir("", "reloader-rules-test")
 	testutil.Ok(t, err)
-	defer os.RemoveAll(dir)
+	defer func() { testutil.Ok(t, os.RemoveAll(dir)) }()
 
-	reloader := New(nil, reloadURL, "", "", dir)
+	reloader := New(nil, reloadURL, "", "", []string{dir})
 	reloader.ruleInterval = 100 * time.Millisecond
 	reloader.retryInterval = 100 * time.Millisecond
 

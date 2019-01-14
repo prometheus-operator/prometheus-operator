@@ -50,8 +50,6 @@ func main() {
 
 	logFormat := app.Flag("log-format", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", "))).Default(logFormatLogfmt).String()
 
-	ruleDir := app.Flag("rule-dir", "rule directory for the reloader to refresh").String()
-
 	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
 		Default("http://127.0.0.1:9090/-/reload").URL()
 
@@ -69,17 +67,10 @@ func main() {
 
 	logger.Log("msg", fmt.Sprintf("Starting prometheus-config-reloader version '%v'.", version.Version))
 
-	if *ruleDir != "" {
-		if err := os.MkdirAll(*ruleDir, 0777); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(2)
-		}
-	}
-
 	var g run.Group
 	{
 		ctx, cancel := context.WithCancel(context.Background())
-		rel := reloader.New(logger, *reloadURL, *cfgFile, *cfgSubstFile, *ruleDir)
+		rel := reloader.New(logger, *reloadURL, *cfgFile, *cfgSubstFile, []string{})
 
 		g.Add(func() error {
 			return rel.Watch(ctx)
