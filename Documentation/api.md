@@ -341,6 +341,7 @@ QueueConfig allows the tuning of remote_write queue_config parameters. This obje
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | capacity | Capacity is the number of samples to buffer per shard before we start dropping them. | int | false |
+| minShards | MinShards is the minimum number of shards, i.e. amount of concurrency. | int | false |
 | maxShards | MaxShards is the maximum number of shards, i.e. amount of concurrency. | int | false |
 | maxSamplesPerSend | MaxSamplesPerSend is the maximum number of samples per send. | int | false |
 | batchSendDeadline | BatchSendDeadline is the maximum time a sample will wait in buffer. | string | false |

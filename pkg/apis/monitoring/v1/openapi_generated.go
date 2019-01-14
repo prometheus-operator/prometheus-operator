@@ -1656,6 +1656,13 @@ func schema_pkg_apis_monitoring_v1_QueueConfig(ref common.ReferenceCallback) com
 							Format:      "int32",
 						},
 					},
+					"minShards": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MinShards is the minimum number of shards, i.e. amount of concurrency.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
 					"maxShards": {
 						SchemaProps: spec.SchemaProps{
 							Description: "MaxShards is the maximum number of shards, i.e. amount of concurrency.",
