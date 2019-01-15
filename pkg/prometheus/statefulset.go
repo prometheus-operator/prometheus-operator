@@ -381,8 +381,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		securityContext = p.Spec.SecurityContext
 	}
 
-	/* enable prometheus admin API to allow metric deletion */
-	promArgs = append(promArgs, "-web.enable-admin-api")
+  if p.Spec.EnableAdminApi != "false" {
+		promArgs = append(promArgs, "-web.enable-admin-api")
+	}
 
 	if p.Spec.ExternalURL != "" {
 		promArgs = append(promArgs, "-web.external-url="+p.Spec.ExternalURL)

@@ -327,6 +327,25 @@ Once this Service is created the Prometheus web UI is available under the node's
 
 > Exposing the Prometheus web UI may not be an applicable solution. Read more about the possibilities of exposing it in the [exposing Prometheus and Alertmanager guide][exposing-prom].
 
+## Expose the Prometheus Admin API
+
+Prometheus Admin API allows access to delete series for a certain time range, cleanup tombstones, capture snapshots, etc. Users should enable this with caution when exposing Prometheus servers to the public internet. More information about the admin API can be found in [Prometheus official documentation](https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis)
+This API access is enabled by default (as prometheus operator doesn't act as a gatekeeper) and can be toggled using this boolean flag. The following example exposes the admin API:
+
+[embedmd]:# (../../example/user-guides/getting-started/prometheus.yaml)
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+spec:
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    matchLabels:
+      team: frontend
+  enableAdminApi: true
+```
+
 Further reading:
 
 * [Alerting][alerting-guide] describes using the Prometheus Operator go manage Alertmanager clusters.
