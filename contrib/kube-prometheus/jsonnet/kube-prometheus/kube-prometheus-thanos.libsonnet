@@ -138,5 +138,44 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
       statefulSet.mixin.spec.template.spec.withVolumes([
         volume.fromEmptyDir('data'),
       ]),
+
+    thanosCompactorStatefulset:
+      local statefulSet = k.apps.v1beta2.statefulSet;
+      local volume = statefulSet.mixin.spec.template.spec.volumesType;
+      local container = statefulSet.mixin.spec.template.spec.containersType;
+      local containerEnv = container.envType;
+      local containerVolumeMount = container.volumeMountsType;
+
+      local labels = { app: 'thanos', 'thanos-peers': 'true' };
+
+      local c =
+        container.new('thanos-compactor', $._config.imageRepos.thanos + ':' + $._config.versions.thanos) +
+        container.withArgs([
+          'compact',
+          '--log.level=debug',
+          '--data-dir=/var/thanos/store',
+          '--objstore.config=$(OBJSTORE_CONFIG)',
+        ]) +
+        container.withEnv([
+          containerEnv.fromSecretRef(
+            'OBJSTORE_CONFIG',
+            $._config.thanos.objectStorageConfig.name,
+            $._config.thanos.objectStorageConfig.key,
+          ),
+        ]) +
+        container.withPorts([
+          { name: 'http', containerPort: 10902 },
+        ]) +
+        container.withVolumeMounts([
+          containerVolumeMount.new('data', '/var/thanos/store', false),
+        ]);
+
+      statefulSet.new('thanos-compactor', 1, c, [], labels) +
+      statefulSet.mixin.metadata.withNamespace($._config.namespace) +
+      statefulSet.mixin.spec.selector.withMatchLabels(labels) +
+      statefulSet.mixin.spec.withServiceName('thanos-compactor') +
+      statefulSet.mixin.spec.template.spec.withVolumes([
+        volume.fromEmptyDir('data'),
+      ]),
   },
 }
