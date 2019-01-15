@@ -48,6 +48,10 @@ spec:
   externalLabels:
 {{ toYaml .Values.externalLabels | indent 4}}
 {{- end }}
+{{- if .Values.enableAdminApi }}
+  enableAdminApi: "{{ .Values.enableAdminApi }}"
+{{ toYaml .Values.enableAdminApi | indent 4}}
+{{- end }}
 {{- if .Values.externalUrl }}
   externalUrl: "{{ .Values.externalUrl }}"
 {{- else if .Values.ingress.enabled }}

@@ -143,6 +143,8 @@ In order to update the kube-prometheus dependency, simply use the jsonnet-bundle
 
 e.g. of how to compile the manifests: `./build.sh example.jsonnet`
 
+> before compiling, install `gojsontoyaml` tool with `go get github.com/brancz/gojsontoyaml`
+
 Here's [example.jsonnet](example.jsonnet):
 
 [embedmd]:# (example.jsonnet)
@@ -279,6 +281,7 @@ These are the available fields with their respective default values:
         names: 'k8s',
         replicas: 2,
         rules: {},
+        enableAdminApi: 'true',
     },
 
     alertmanager+:: {

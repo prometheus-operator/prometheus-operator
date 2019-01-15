@@ -12,6 +12,7 @@ spec:
       namespace: monitoring
       port: web
   baseImage: quay.io/prometheus/prometheus
+  enableAdminApi: true
   nodeSelector:
     beta.kubernetes.io/os: linux
   replicas: 2

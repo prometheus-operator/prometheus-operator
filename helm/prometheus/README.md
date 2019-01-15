@@ -46,6 +46,7 @@ Parameter | Description | Default
 `alertingEndpoints` | Alertmanagers to which alerts will be sent | `[]`
 `config` | Prometheus configuration directives | `{}`
 `externalLabels` | The labels to add to any time series or alerts when communicating with external systems  | `{}`
+`enableAdminApi` | Enable access to prometheus web admin API | `true`
 `externalUrl` | External URL at which Prometheus will be reachable | `""`
 `routePrefix` | Prefix used to register routes | `"/"`
 `image.repository` | Image | `quay.io/prometheus/prometheus`

@@ -184,6 +184,10 @@ prometheus:
     specifiedInValues: true
     value: {}
 
+  ## Enable access to prometheus web admin API
+  ##
+  enableAdminApi: true
+  
   ## External URL at which Prometheus will be reachable
   ##
   externalUrl: ""

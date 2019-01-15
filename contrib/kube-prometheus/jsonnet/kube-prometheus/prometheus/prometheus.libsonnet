@@ -18,6 +18,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
     prometheus+:: {
       name: 'k8s',
+      enableAdminApi: 'true',
       replicas: 2,
       rules: {},
       renderedRules: {},
@@ -168,6 +169,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           replicas: $._config.prometheus.replicas,
           version: $._config.versions.prometheus,
           baseImage: $._config.imageRepos.prometheus,
+          enableAdminApi: $._config.prometheus.enableAdminApi,
           serviceAccountName: 'prometheus-' + $._config.prometheus.name,
           serviceMonitorSelector: {},
           serviceMonitorNamespaceSelector: {},

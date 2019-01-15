@@ -15,6 +15,10 @@ config:
   specifiedInValues: true
   value: {}
 
+## Enable access to prometheus web admin API
+##
+enableAdminApi: true
+
 ## External labels to add to any time series or alerts when communicating with external systems
 ##
 externalLabels: {}

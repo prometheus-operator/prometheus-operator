@@ -82,6 +82,8 @@ local configMapList = k.core.v1.configMapList;
     prometheusSelector: 'job="prometheus-k8s"',
     prometheusOperatorSelector: 'job="prometheus-operator"',
 
+    enableAdminApi: 'true',
+
     jobs: {
       Kubelet: $._config.kubeletSelector,
       KubeScheduler: $._config.kubeSchedulerSelector,
@@ -97,6 +99,7 @@ local configMapList = k.core.v1.configMapList;
 
     prometheus+:: {
       rules: $.prometheusRules + $.prometheusAlerts,
+      enableAdminApi: $._config.enableAdminApi,
     },
 
     grafana+:: {
