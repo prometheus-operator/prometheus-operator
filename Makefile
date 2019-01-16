@@ -15,6 +15,13 @@ EMBEDMD_BINARY:=$(FIRST_GOPATH)/bin/embedmd
 
 TYPES_V1_TARGET:=pkg/apis/monitoring/v1/types.go
 
+# Unfortunately kube-openapi doesn't seem to be properly tagged yet as the other generator binary.
+# Starting with https://github.com/kubernetes/kube-openapi/commit/07437455b254b00a4deb3b420e790b2215450487
+# type object declarations are added which break prometheus operator.
+#
+# TODO(sur): bump this to a proper release branch once upstream resolved this.
+K8S_OPENAPI_GEN_VERSION:=0317810137be915b9cf888946c6e115c1bfac693
+
 K8S_GEN_VERSION:=release-1.11
 K8S_GEN_BINARIES:=deepcopy-gen informer-gen lister-gen client-gen
 K8S_GEN_ARGS:=--go-header-file $(FIRST_GOPATH)/src/$(GO_PKG)/.header --v=1 --logtostderr
@@ -263,6 +270,7 @@ endef
 
 $(OPENAPI_GEN_BINARY):
 	go get -u -d k8s.io/kube-openapi/cmd/openapi-gen
+	cd $(FIRST_GOPATH)/src/k8s.io/kube-openapi; git checkout $(K8S_OPENAPI_GEN_VERSION)
 	go install k8s.io/kube-openapi/cmd/openapi-gen
 
 $(foreach binary,$(K8S_GEN_BINARIES),$(eval $(call _K8S_GEN_VAR_TARGET_,$(binary))))
