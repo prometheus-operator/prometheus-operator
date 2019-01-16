@@ -4,7 +4,7 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
   },
   prometheus+:: {
     name: 'k8s',
-    enableAdminApi: 'true',
+    enableAdminAPI: 'true',
   },
 };
 

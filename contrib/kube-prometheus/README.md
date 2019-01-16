@@ -281,7 +281,7 @@ These are the available fields with their respective default values:
         names: 'k8s',
         replicas: 2,
         rules: {},
-        enableAdminApi: 'true',
+        enableAdminAPI: 'true',
     },
 
     alertmanager+:: {

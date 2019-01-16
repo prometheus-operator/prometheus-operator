@@ -1538,7 +1538,7 @@ spec:
                 required:
                 - name
               type: array
-            enableAdminApi:
+            enableAdminAPI:
               description: Enable access to prometheus web admin API. More info: https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
               type: boolean
             evaluationInterval:

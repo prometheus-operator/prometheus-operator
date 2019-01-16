@@ -125,7 +125,7 @@ type PrometheusSpec struct {
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
 	// Enable access to prometheus web admin API. Defaults to the value of `true`.
 	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
-	EnableAdminApi string `json:"enableAdminApi,omitempty"`
+	EnableAdminAPI string `json:"enableAdminAPI,omitempty"`
 	// The external URL the Prometheus instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Prometheus is not
 	// served from root of a DNS name.
