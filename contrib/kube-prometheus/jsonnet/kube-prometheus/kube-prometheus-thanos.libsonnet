@@ -139,6 +139,42 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
         volume.fromEmptyDir('data'),
       ]),
 
+    serviceMonitorThanosCompactor:
+      {
+        apiVersion: 'monitoring.coreos.com/v1',
+        kind: 'ServiceMonitor',
+        metadata: {
+          name: 'thanos-compactor',
+          namespace: $._config.namespace,
+          labels: {
+            'k8s-app': 'thanos-compactor',
+          },
+        },
+        spec: {
+          jobLabel: 'k8s-app',
+          endpoints: [
+            {
+              port: 'http',
+              interval: '30s',
+            },
+          ],
+          selector: {
+            matchLabels: {
+              app: 'thanos-compactor',
+            },
+          },
+        },
+      },
+
+    thanosCompactorService:
+      service.new(
+        'thanos-compactor',
+        { app: 'thanos-compactor' },
+        servicePort.newNamed('http', 9090, 'http'),
+      ) +
+      service.mixin.metadata.withNamespace($._config.namespace) +
+      service.mixin.metadata.withLabels({ app: 'thanos-compactor' }),
+
     thanosCompactorStatefulset:
       local statefulSet = k.apps.v1beta2.statefulSet;
       local volume = statefulSet.mixin.spec.template.spec.volumesType;
@@ -146,7 +182,7 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
       local containerEnv = container.envType;
       local containerVolumeMount = container.volumeMountsType;
 
-      local labels = { app: 'thanos', 'thanos-peers': 'true' };
+      local labels = { app: 'thanos-compactor' };
 
       local c =
         container.new('thanos-compactor', $._config.imageRepos.thanos + ':' + $._config.versions.thanos) +
@@ -155,6 +191,7 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
           '--log.level=debug',
           '--data-dir=/var/thanos/store',
           '--objstore.config=$(OBJSTORE_CONFIG)',
+          '--wait',
         ]) +
         container.withEnv([
           containerEnv.fromSecretRef(
