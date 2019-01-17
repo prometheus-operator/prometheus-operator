@@ -18,7 +18,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
     prometheus+:: {
       name: 'k8s',
-      enableAdminAPI: 'false',
       replicas: 2,
       rules: {},
       renderedRules: {},

@@ -295,7 +295,7 @@ spec:
   resources:
     requests:
       memory: 400Mi
-  enableAdminAPI: true
+  enableAdminAPI: false
 ```
 
 > If you have RBAC authorization activated, use the RBAC aware [Prometheus manifest][prometheus-manifest] instead.

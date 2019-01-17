@@ -381,7 +381,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		securityContext = p.Spec.SecurityContext
 	}
 
-  if p.Spec.EnableAdminAPI == "true" {
+	if p.Spec.EnableAdminAPI {
 		promArgs = append(promArgs, "-web.enable-admin-api")
 	}
 
