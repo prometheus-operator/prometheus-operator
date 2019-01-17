@@ -752,7 +752,7 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, spe
 			for _, c := range spec.WriteRelabelConfigs {
 				relabeling := yaml.MapSlice{}
 
-				if c.SourceLabels != "" {
+				if len(c.SourceLabels) > 0 {
 					relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
 				}
 
