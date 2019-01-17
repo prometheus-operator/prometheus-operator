@@ -129,7 +129,7 @@ type PrometheusSpec struct {
 	// user is advised to add additional authentication authorization via a proxy to
 	// ensure only clients authorized to perform these actions can do so.
 	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
-	EnableAdminAPI string `json:"enableAdminAPI,omitempty"`
+	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
 	// The external URL the Prometheus instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Prometheus is not
 	// served from root of a DNS name.
