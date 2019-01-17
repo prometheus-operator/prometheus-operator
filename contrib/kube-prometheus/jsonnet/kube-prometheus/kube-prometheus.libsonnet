@@ -82,7 +82,7 @@ local configMapList = k.core.v1.configMapList;
     prometheusSelector: 'job="prometheus-k8s"',
     prometheusOperatorSelector: 'job="prometheus-operator"',
 
-    enableAdminAPI: 'true',
+    enableAdminAPI: 'false',
 
     jobs: {
       Kubelet: $._config.kubeletSelector,

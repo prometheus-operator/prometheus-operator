@@ -331,7 +331,7 @@ Once this Service is created the Prometheus web UI is available under the node's
 ## Expose the Prometheus Admin API
 
 Prometheus Admin API allows access to delete series for a certain time range, cleanup tombstones, capture snapshots, etc. More information about the admin API can be found in [Prometheus official documentation](https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis)
-This API access is enabled by default (as prometheus operator doesn't act as a gatekeeper) and can be toggled using this boolean flag. The following example exposes the admin API:
+This API access is disabled by default and can be toggled using this boolean flag. The following example exposes the admin API:
 
 > WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
 > shutdown Prometheus, and more. Enabling this should be done with care and the
@@ -352,7 +352,7 @@ spec:
   resources:
     requests:
       memory: 400Mi
-  enableAdminAPI: true
+  enableAdminAPI: false
 ```
 
 Further reading:

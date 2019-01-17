@@ -10,4 +10,4 @@ spec:
   resources:
     requests:
       memory: 400Mi
-  enableAdminAPI: true
+  enableAdminAPI: false
