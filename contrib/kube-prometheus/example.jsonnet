@@ -1,8 +1,9 @@
-local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
-  _config+:: {
-    namespace: 'monitoring',
-  },
-};
+local kp =
+  (import 'kube-prometheus/kube-prometheus.libsonnet') + {
+    _config+:: {
+      namespace: 'monitoring',
+    },
+  };
 
 { ['00namespace-' + name]: kp.kubePrometheus[name] for name in std.objectFields(kp.kubePrometheus) } +
 { ['0prometheus-operator-' + name]: kp.prometheusOperator[name] for name in std.objectFields(kp.prometheusOperator) } +
