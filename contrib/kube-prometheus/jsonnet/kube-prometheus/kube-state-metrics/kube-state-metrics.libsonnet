@@ -4,6 +4,31 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
   _config+:: {
     namespace: 'default',
 
+    tlsCipherSuites: [
+      // 'TLS_RSA_WITH_RC4_128_SHA',            // insecure: https://access.redhat.com/security/cve/cve-2013-2566
+      // 'TLS_RSA_WITH_3DES_EDE_CBC_SHA',       // insecure: https://access.redhat.com/articles/2548661
+      'TLS_RSA_WITH_AES_128_CBC_SHA',
+      'TLS_RSA_WITH_AES_256_CBC_SHA',
+      'TLS_RSA_WITH_AES_128_CBC_SHA256',
+      'TLS_RSA_WITH_AES_128_GCM_SHA256',
+      'TLS_RSA_WITH_AES_256_GCM_SHA384',
+      // 'TLS_ECDHE_ECDSA_WITH_RC4_128_SHA',    // insecure: https://access.redhat.com/security/cve/cve-2013-2566
+      'TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA',
+      'TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA',
+      // 'TLS_ECDHE_RSA_WITH_RC4_128_SHA',      // insecure: https://access.redhat.com/security/cve/cve-2013-2566
+      // 'TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA', // insecure: https://access.redhat.com/articles/2548661
+      'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA',
+      'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA',
+      'TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256',
+      'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256',
+      'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256',
+      'TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256',
+      'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384',
+      'TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384',
+      'TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305',
+      'TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305',
+    ],
+
     kubeStateMetrics+:: {
       collectors: '',  // empty string gets a default set
       scrapeInterval: '30s',
@@ -110,11 +135,11 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                                 rulesType.withVerbs(['create']);
 
       local policyRule = rulesType.new() +
-                                rulesType.withApiGroups(['policy']) +
-                                rulesType.withResources([
-                                  'poddisruptionbudgets',
-                                ]) +
-                                rulesType.withVerbs(['list', 'watch']);
+                         rulesType.withApiGroups(['policy']) +
+                         rulesType.withResources([
+                           'poddisruptionbudgets',
+                         ]) +
+                         rulesType.withVerbs(['list', 'watch']);
 
       local rules = [coreRule, extensionsRule, appsRule, batchRule, autoscalingRule, authenticationRole, authorizationRole, policyRule];
 
@@ -135,6 +160,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         container.new('kube-rbac-proxy-main', $._config.imageRepos.kubeRbacProxy + ':' + $._config.versions.kubeRbacProxy) +
         container.withArgs([
           '--secure-listen-address=:8443',
+          '--tls-cipher-suites=' + std.join(',', $._config.tlsCipherSuites),
           '--upstream=http://127.0.0.1:8081/',
         ]) +
         container.withPorts(containerPort.newNamed('https-main', 8443)) +
@@ -145,6 +171,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         container.new('kube-rbac-proxy-self', $._config.imageRepos.kubeRbacProxy + ':' + $._config.versions.kubeRbacProxy) +
         container.withArgs([
           '--secure-listen-address=:9443',
+          '--tls-cipher-suites=' + std.join(',', $._config.tlsCipherSuites),
           '--upstream=http://127.0.0.1:8082/',
         ]) +
         container.withPorts(containerPort.newNamed('https-self', 9443)) +
