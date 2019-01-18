@@ -11,6 +11,7 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
       thanos: 'improbable/thanos',
     },
     thanos+:: {
+      debug: false,
       objectStorageConfig: {
         key: 'thanos.yaml',  // How the file inside the secret is called
         name: 'thanos-objstore-config',  // This is the name of your Kubernetes secret with the config
@@ -72,6 +73,12 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
       local container = k.apps.v1beta2.deployment.mixin.spec.template.spec.containersType;
       local containerPort = container.portsType;
 
+      local args = [
+        'query',
+        '--query.replica-label=prometheus_replica',
+        '--cluster.peers=thanos-peers.' + $._config.namespace + '.svc:10900',
+      ] + if $._config.thanos.debug then ['--log.level=debug'] else [];
+
       local thanosQueryContainer =
         container.new('thanos-query', $._config.imageRepos.thanos + ':' + $._config.versions.thanos) +
         container.withPorts([
@@ -79,12 +86,7 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
           containerPort.newNamed('grpc', 10901),
           containerPort.newNamed('cluster', 10900),
         ]) +
-        container.withArgs([
-          'query',
-          '--log.level=debug',
-          '--query.replica-label=prometheus_replica',
-          '--cluster.peers=thanos-peers.' + $._config.namespace + '.svc:10900',
-        ]);
+        container.withArgs(args);
       local podLabels = { app: 'thanos-query', 'thanos-peers': 'true' };
       deployment.new('thanos-query', 1, thanosQueryContainer, podLabels) +
       deployment.mixin.metadata.withNamespace($._config.namespace) +
@@ -106,15 +108,16 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
 
       local labels = { app: 'thanos', 'thanos-peers': 'true' };
 
+      local args = [
+        'store',
+        '--data-dir=/var/thanos/store',
+        '--cluster.peers=thanos-peers.' + $._config.namespace + '.svc:10900',
+        '--objstore.config=$(OBJSTORE_CONFIG)',
+      ] + if $._config.thanos.debug then ['--log.level=debug'] else [];
+
       local c =
         container.new('thanos-store', $._config.imageRepos.thanos + ':' + $._config.versions.thanos) +
-        container.withArgs([
-          'store',
-          '--log.level=debug',
-          '--data-dir=/var/thanos/store',
-          '--cluster.peers=thanos-peers.' + $._config.namespace + '.svc:10900',
-          '--objstore.config=$(OBJSTORE_CONFIG)',
-        ]) +
+        container.withArgs(args) +
         container.withEnv([
           containerEnv.fromSecretRef(
             'OBJSTORE_CONFIG',
@@ -184,15 +187,16 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
 
       local labels = { app: 'thanos-compactor' };
 
+      local args = [
+        'compact',
+        '--data-dir=/var/thanos/store',
+        '--objstore.config=$(OBJSTORE_CONFIG)',
+        '--wait',
+      ] + if $._config.thanos.debug then ['--log.level=debug'] else [];
+
       local c =
         container.new('thanos-compactor', $._config.imageRepos.thanos + ':' + $._config.versions.thanos) +
-        container.withArgs([
-          'compact',
-          '--log.level=debug',
-          '--data-dir=/var/thanos/store',
-          '--objstore.config=$(OBJSTORE_CONFIG)',
-          '--wait',
-        ]) +
+        container.withArgs(args) +
         container.withEnv([
           containerEnv.fromSecretRef(
             'OBJSTORE_CONFIG',
