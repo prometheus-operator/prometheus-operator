@@ -2,8 +2,8 @@
 
 [Thanos](https://github.com/improbable-eng/thanos/) is a set of components
 that can be composed into a highly available
-metric system with unlimited storage capacity. The Prometheus Operator provides
-integration for allowing Prometheus to connect to Thanos.
+metric system with unlimited storage capacity, if you Object Storage allows for it.
+The Prometheus Operator provides integration for allowing Prometheus to connect to Thanos.
 
 These Thanos components include the queriers and stores, which Thanos needs to
 be fully functional, and should be deployed independently of the Prometheus
