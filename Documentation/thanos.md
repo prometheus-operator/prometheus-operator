@@ -77,7 +77,7 @@ spec:
 
 ## Thanos and kube-prometheus
 
-Deploying the sidecar was the first step towards getting Thanos up and running, but there more components to be deployed, that complete Thanos.
+Deploying the sidecar was the first step towards getting Thanos up and running, but there are more components to be deployed, that complete Thanos.
 
 * Store
 * Query
