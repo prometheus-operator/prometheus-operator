@@ -83,9 +83,10 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                           policyRule.withApiGroups(['']) +
                           policyRule.withResources([
                             'services',
+                            'services/finalizers',
                             'endpoints',
                           ]) +
-                          policyRule.withVerbs(['get', 'create', 'update']);
+                          policyRule.withVerbs(['get', 'create', 'update', 'delete']);
 
       local nodeRule = policyRule.new() +
                        policyRule.withApiGroups(['']) +
