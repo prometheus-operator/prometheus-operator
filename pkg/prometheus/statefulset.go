@@ -381,6 +381,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		securityContext = p.Spec.SecurityContext
 	}
 
+	if p.Spec.EnableAdminAPI {
+		promArgs = append(promArgs, "-web.enable-admin-api")
+	}
+
 	if p.Spec.ExternalURL != "" {
 		promArgs = append(promArgs, "-web.external-url="+p.Spec.ExternalURL)
 	}

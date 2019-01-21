@@ -123,6 +123,13 @@ type PrometheusSpec struct {
 	// The labels to add to any time series or alerts when communicating with
 	// external systems (federation, remote storage, Alertmanager).
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
+	// Enable access to prometheus web admin API. Defaults to the value of `false`.
+	// WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+	// shutdown Prometheus, and more. Enabling this should be done with care and the
+	// user is advised to add additional authentication authorization via a proxy to
+	// ensure only clients authorized to perform these actions can do so.
+	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
+	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
 	// The external URL the Prometheus instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Prometheus is not
 	// served from root of a DNS name.

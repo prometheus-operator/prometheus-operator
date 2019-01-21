@@ -1539,6 +1539,14 @@ spec:
                 required:
                 - name
               type: array
+            enableAdminAPI:
+              description: 'Enable access to prometheus web admin API. Defaults to
+                the value of `false`. WARNING: Enabling the admin APIs enables mutating
+                endpoints, to delete data, shutdown Prometheus, and more. Enabling
+                this should be done with care and the user is advised to add additional
+                authentication authorization via a proxy to ensure only clients authorized
+                to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis'
+              type: boolean
             evaluationInterval:
               description: Interval between consecutive evaluations.
               type: string

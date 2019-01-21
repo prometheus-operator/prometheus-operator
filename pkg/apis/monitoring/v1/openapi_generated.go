@@ -1345,6 +1345,13 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 							},
 						},
 					},
+					"enableAdminAPI": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Enable access to prometheus web admin API. Defaults to the value of `false`. WARNING: Enabling the admin APIs enables mutating endpoints, to delete data, shutdown Prometheus, and more. Enabling this should be done with care and the user is advised to add additional authentication authorization via a proxy to ensure only clients authorized to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"externalUrl": {
 						SchemaProps: spec.SchemaProps{
 							Description: "The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name.",
