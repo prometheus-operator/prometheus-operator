@@ -134,6 +134,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local proxyClusterMetrics =
         container.new('kube-rbac-proxy-main', $._config.imageRepos.kubeRbacProxy + ':' + $._config.versions.kubeRbacProxy) +
         container.withArgs([
+          '--logtostderr',
           '--secure-listen-address=:8443',
           '--tls-cipher-suites=' + std.join(',', $._config.tlsCipherSuites),
           '--upstream=http://127.0.0.1:8081/',
