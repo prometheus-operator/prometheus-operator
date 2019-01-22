@@ -168,7 +168,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           replicas: $._config.prometheus.replicas,
           version: $._config.versions.prometheus,
           baseImage: $._config.imageRepos.prometheus,
-          enableAdminAPI: $._config.prometheus.enableAdminAPI,
           serviceAccountName: 'prometheus-' + $._config.prometheus.name,
           serviceMonitorSelector: {},
           serviceMonitorNamespaceSelector: {},
