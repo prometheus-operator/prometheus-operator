@@ -1,5 +1,7 @@
 # Thanos and the Prometheus Operator
 
+_Note: This guide is valid for Prometheus Operator v0.28+ and Thanos v0.2+ and above._
+
 [Thanos](https://github.com/improbable-eng/thanos/) is a set of components
 that can be composed into a highly available
 metric system with unlimited storage capacity, if you Object Storage allows for it.
