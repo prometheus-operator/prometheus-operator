@@ -71,17 +71,18 @@ This project is intended to be used as a library (i.e. the intent is not for you
 Though for a quickstart a compiled version of the Kubernetes [manifests](manifests) generated with this library (specifically with `example.jsonnet`) is checked into this repository in order to try the content out quickly. To try out the stack un-customized run:
  * Simply create the stack:
 ```
-$ kubectl create -f manifests/ || true
+$ kubectl apply -f manifests/
 
 # It can take a few seconds for the above 'create manifests' command to fully create the following resources, so verify the resources are ready before proceeding.
-until kubectl get customresourcedefinitions servicemonitors.monitoring.coreos.com ; do date; sleep 1; echo ""; done
-until kubectl get servicemonitors --all-namespaces ; do date; sleep 1; echo ""; done
+$ until kubectl get customresourcedefinitions servicemonitors.monitoring.coreos.com ; do date; sleep 1; echo ""; done
+$ until kubectl get servicemonitors --all-namespaces ; do date; sleep 1; echo ""; done
 
-$ kubectl create -f manifests/ 2>/dev/null || true  # This command sometimes may need to be done twice (to workaround a race condition).
+$ kubectl apply -f manifests/ # This command sometimes may need to be done twice (to workaround a race condition).
 ```
+
  * And to teardown the stack:
 ```
-$ kubectl delete -f manifests/ || true
+$ kubectl delete -f manifests/
 ```
 
 ### Access the dashboards
