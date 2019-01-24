@@ -42,6 +42,9 @@ test: $(JB_BINARY)
 	$(JB_BINARY) install
 	./test.sh
 
+test-e2e:
+	go test -timeout 55m -v ./tests/e2e
+
 test-in-docker: ../../hack/jsonnet-docker-image
 	@echo ">> Compiling assets and generating Kubernetes manifests"
 	docker run \

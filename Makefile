@@ -32,7 +32,7 @@ K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(FIRST_GOPATH)/bin/$(bin))
 K8S_GEN_DEPS+=$(OPENAPI_GEN_BINARY)
 
 GOLANG_FILES:=$(shell find . -name \*.go -print)
-pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
+pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/ | grep -v /contrib/)
 
 .PHONY: all
 all: format generate build test

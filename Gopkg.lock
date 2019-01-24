@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:c91426cc6b64096a83edab0d2a4000b466d6ec39eca7075dbf928c20aca21396"
+  name = "github.com/Jeffail/gabs"
+  packages = ["."]
+  pruneopts = ""
+  revision = "7be49c3f43696c7ca8c9a76d6836703d83aea404"
+  version = "v1.1.1"
+
+[[projects]]
   digest = "1:8e47871087b94913898333f37af26732faaab30cdb41571136cf7aec9921dae7"
   name = "github.com/PuerkitoBio/purell"
   packages = ["."]
@@ -751,6 +759,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Jeffail/gabs",
     "github.com/ant31/crd-validation/pkg",
     "github.com/blang/semver",
     "github.com/ghodss/yaml",
