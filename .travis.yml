@@ -22,6 +22,8 @@ jobs:
   # E2e tests
   - script: ./scripts/travis-e2e.sh
   - script: ./scripts/travis-e2e-helm.sh
+  # kube-prometheus e2e tests
+  - script: ./contrib/kube-prometheus/tests/e2e/travis-e2e.sh
 
   - stage: deploy
     script: skip

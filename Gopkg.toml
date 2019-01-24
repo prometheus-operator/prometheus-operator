@@ -21,6 +21,10 @@
 
 
 [[constraint]]
+  name = "github.com/Jeffail/gabs"
+  version = "1.0.0"
+
+[[constraint]]
   branch = "master"
   name = "github.com/ant31/crd-validation"
 
