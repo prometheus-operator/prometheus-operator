@@ -189,7 +189,8 @@ func amImage(version string) string {
 }
 
 func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPeers int) error {
-	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	var pollError error
+	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		amStatus, err := f.GetAlertmanagerConfig(ns, name)
 		if err != nil {
 			return false, err
@@ -198,8 +199,16 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPe
 			return true, nil
 		}
 
+		pollError = fmt.Errorf("failed to get correct amount of peers, expected %d, got %d", amountPeers, amStatus.Data.getAmountPeers())
+
 		return false, nil
 	})
+
+	if err != nil {
+		return fmt.Errorf("failed to wait for initialized alertmanager mesh: %v: %v", err, pollError)
+	}
+
+	return nil
 }
 
 func (f *Framework) GetAlertmanagerConfig(ns, n string) (amAPIStatusResp, error) {
@@ -322,7 +331,6 @@ func (f *Framework) GetSilences(ns, n string) ([]amAPISil, error) {
 // configuration via the Alertmanager's API and checks if it contains the given
 // string.
 func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expectedString string) error {
-	var pollError error
 	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
 		config, err := f.GetAlertmanagerConfig(ns, "alertmanager-"+amName+"-0")
 		if err != nil {
@@ -337,7 +345,7 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expecte
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to wait for alertmanager config to contain %q: %v: %v", expectedString, err, pollError)
+		return fmt.Errorf("failed to wait for alertmanager config to contain %q: %v", expectedString, err)
 	}
 
 	return nil
