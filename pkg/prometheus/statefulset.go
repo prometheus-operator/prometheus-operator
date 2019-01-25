@@ -398,6 +398,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
 		promArgs = append(promArgs, fmt.Sprintf("-log.level=%s", p.Spec.LogLevel))
 	}
+	if version.GTE(semver.MustParse("2.6.0")) {
+		if p.Spec.LogFormat != "" && p.Spec.LogFormat != "logfmt" {
+			promArgs = append(promArgs, fmt.Sprintf("-log.format=%s", p.Spec.LogFormat))
+		}
+	}
 
 	var ports []v1.ContainerPort
 	if p.Spec.ListenLocal {
@@ -664,6 +669,12 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		}
 		if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
 			thanosArgs = append(thanosArgs, fmt.Sprintf("--log.level=%s", p.Spec.LogLevel))
+		}
+		thanosVersion := semver.MustParse(strings.TrimPrefix(*p.Spec.Thanos.Version, "v"))
+		if thanosVersion.GTE(semver.MustParse("0.2.0")) {
+			if p.Spec.LogFormat != "" && p.Spec.LogFormat != "logfmt" {
+				thanosArgs = append(thanosArgs, fmt.Sprintf("--log.format=%s", p.Spec.LogFormat))
+			}
 		}
 
 		thanosVolumeMounts := []v1.VolumeMount{

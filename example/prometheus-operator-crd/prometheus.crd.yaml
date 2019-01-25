@@ -1581,6 +1581,9 @@ spec:
               description: ListenLocal makes the Prometheus server listen on loopback,
                 so that it does not bind against the Pod IP.
               type: boolean
+            logFormat:
+              description: Log format for Prometheus to be configured with.
+              type: string
             logLevel:
               description: Log level for Prometheus to be configured with.
               type: string
