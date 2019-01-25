@@ -84,7 +84,7 @@ func TestAllNS(t *testing.T) {
 		"k8s-app": "prometheus-operator",
 	})).String()}
 
-	pl, err := framework.KubeClient.Core().Pods(ns).List(opts)
+	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(opts)
 	if err != nil {
 		t.Fatal(err)
 	}
