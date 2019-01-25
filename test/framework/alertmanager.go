@@ -195,11 +195,24 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPe
 		if err != nil {
 			return false, err
 		}
-		if amStatus.Data.getAmountPeers() == amountPeers {
+
+		if len(amStatus.Data.MeshStatus.Peers) == amountPeers {
 			return true, nil
 		}
 
-		pollError = fmt.Errorf("failed to get correct amount of peers, expected %d, got %d", amountPeers, amStatus.Data.getAmountPeers())
+		var addresses []string
+		if amStatus.Data.MeshStatus != nil {
+			for _, p := range amStatus.Data.MeshStatus.Peers {
+				addresses = append(addresses, p.Address)
+			}
+		}
+
+		pollError = fmt.Errorf(
+			"failed to get correct amount of peers, expected %d, got %d, addresses %v",
+			amountPeers,
+			amStatus.Data.getAmountPeers(),
+			strings.Join(addresses, ","),
+		)
 
 		return false, nil
 	})
@@ -392,6 +405,11 @@ func (s *amAPIStatusData) getAmountPeers() int {
 	return len(s.ClusterStatus.Peers)
 }
 
+type peer struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
+}
+
 type clusterStatus struct {
-	Peers []interface{} `json:"peers"`
+	Peers []peer `json:"peers"`
 }
