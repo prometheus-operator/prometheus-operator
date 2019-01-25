@@ -4896,6 +4896,12 @@ items:
   data:
     nodes.json: |-
       {
+          "__inputs": [
+
+          ],
+          "__requires": [
+
+          ],
           "annotations": {
               "list": [
 
@@ -6208,6 +6214,12 @@ items:
   data:
     persistentvolumesusage.json: |-
       {
+          "__inputs": [
+
+          ],
+          "__requires": [
+
+          ],
           "annotations": {
               "list": [
 
@@ -6551,6 +6563,12 @@ items:
   data:
     pods.json: |-
       {
+          "__inputs": [
+
+          ],
+          "__requires": [
+
+          ],
           "annotations": {
               "list": [
 
@@ -7035,6 +7053,12 @@ items:
   data:
     statefulset.json: |-
       {
+          "__inputs": [
+
+          ],
+          "__requires": [
+
+          ],
           "annotations": {
               "list": [
 
