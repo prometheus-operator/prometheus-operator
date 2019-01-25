@@ -1311,6 +1311,13 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"logFormat": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Log format for Prometheus to be configured with.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"scrapeInterval": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Interval between consecutive scrapes.",

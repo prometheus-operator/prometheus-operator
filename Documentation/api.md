@@ -276,6 +276,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | replicas | Number of instances to deploy for a Prometheus deployment. | *int32 | false |
 | retention | Time duration Prometheus shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | string | false |
 | logLevel | Log level for Prometheus to be configured with. | string | false |
+| logFormat | Log format for Prometheus to be configured with. | string | false |
 | scrapeInterval | Interval between consecutive scrapes. | string | false |
 | evaluationInterval | Interval between consecutive evaluations. | string | false |
 | rules | /--rules.*/ command-line arguments. | [Rules](#rules) | false |

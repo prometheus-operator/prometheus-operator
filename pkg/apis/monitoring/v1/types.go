@@ -114,6 +114,8 @@ type PrometheusSpec struct {
 	Retention string `json:"retention,omitempty"`
 	// Log level for Prometheus to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
+	// Log format for Prometheus to be configured with.
+	LogFormat string `json:"logFormat,omitempty"`
 	// Interval between consecutive scrapes.
 	ScrapeInterval string `json:"scrapeInterval,omitempty"`
 	// Interval between consecutive evaluations.
