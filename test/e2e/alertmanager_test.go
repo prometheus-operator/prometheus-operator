@@ -150,7 +150,7 @@ func testAMStorageUpdate(t *testing.T) {
 	}
 
 	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.Core().Pods(ns).List(alertmanager.ListOptions(name))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(alertmanager.ListOptions(name))
 		if err != nil {
 			return false, err
 		}
@@ -580,7 +580,7 @@ inhibit_rules:
 			"app": "alertmanager-webhook",
 		})).String(),
 	}
-	pl, err := framework.KubeClient.Core().Pods(ns).List(opts)
+	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(opts)
 	if err != nil {
 		t.Fatal(err)
 	}

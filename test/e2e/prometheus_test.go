@@ -164,7 +164,7 @@ func testPromResourceUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pods, err := framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+	pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(name))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,7 +185,7 @@ func testPromResourceUpdate(t *testing.T) {
 	}
 
 	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(name))
 		if err != nil {
 			return false, err
 		}
@@ -245,7 +245,7 @@ func testPromStorageUpdate(t *testing.T) {
 	}
 
 	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(name))
 		if err != nil {
 			return false, err
 		}
