@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1beta2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -658,7 +658,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 		thanosArgs := []string{
 			"sidecar",
-			fmt.Sprintf("--prometheus.url=http://%s:9090", c.LocalHost),
+			fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, webRoutePrefix),
 			fmt.Sprintf("--tsdb.path=%s", storageDir),
 			fmt.Sprintf("--cluster.address=[$(POD_IP)]:%d", 10900),
 			fmt.Sprintf("--grpc-address=[$(POD_IP)]:%d", 10901),
