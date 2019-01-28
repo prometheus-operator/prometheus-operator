@@ -319,6 +319,7 @@ These are the available fields with their respective default values:
 
     nodeExporter+:: {
       port: 9100,
+      tolerations: [],
     },
 	},
 }

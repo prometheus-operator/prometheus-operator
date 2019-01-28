@@ -16,6 +16,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
     nodeExporter+:: {
       port: 9100,
+      tolerations: [],
     },
   },
 
@@ -125,6 +126,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         container.withEnv([ip]);
 
       local c = [nodeExporter, proxy];
+      local tolerations = [masterToleration] + $._config.nodeExporter.tolerations
 
       daemonset.new() +
       daemonset.mixin.metadata.withName('node-exporter') +
@@ -132,7 +134,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       daemonset.mixin.metadata.withLabels(podLabels) +
       daemonset.mixin.spec.selector.withMatchLabels(podLabels) +
       daemonset.mixin.spec.template.metadata.withLabels(podLabels) +
-      daemonset.mixin.spec.template.spec.withTolerations([masterToleration]) +
+      daemonset.mixin.spec.template.spec.withTolerations(tolerations) +
       daemonset.mixin.spec.template.spec.withNodeSelector({ 'beta.kubernetes.io/os': 'linux' }) +
       daemonset.mixin.spec.template.spec.withContainers(c) +
       daemonset.mixin.spec.template.spec.withVolumes([procVolume, sysVolume, rootVolume]) +
