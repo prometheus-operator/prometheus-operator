@@ -6,7 +6,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
     versions+:: {
       nodeExporter: 'v0.17.0',
-      kubeRbacProxy: 'v0.4.0',
+      kubeRbacProxy: 'v0.4.1',
     },
 
     imageRepos+:: {
@@ -106,6 +106,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local proxy =
         container.new('kube-rbac-proxy', $._config.imageRepos.kubeRbacProxy + ':' + $._config.versions.kubeRbacProxy) +
         container.withArgs([
+          '--logtostderr',
           '--secure-listen-address=$(IP):' + $._config.nodeExporter.port,
           '--tls-cipher-suites=' + std.join(',', $._config.tlsCipherSuites),
           '--upstream=http://127.0.0.1:' + $._config.nodeExporter.port + '/',

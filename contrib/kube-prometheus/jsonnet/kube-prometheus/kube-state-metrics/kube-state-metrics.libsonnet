@@ -17,7 +17,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
     versions+:: {
       kubeStateMetrics: 'v1.5.0',
-      kubeRbacProxy: 'v0.4.0',
+      kubeRbacProxy: 'v0.4.1',
       addonResizer: '1.0',
     },
 
@@ -134,6 +134,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local proxyClusterMetrics =
         container.new('kube-rbac-proxy-main', $._config.imageRepos.kubeRbacProxy + ':' + $._config.versions.kubeRbacProxy) +
         container.withArgs([
+          '--logtostderr',
           '--secure-listen-address=:8443',
           '--tls-cipher-suites=' + std.join(',', $._config.tlsCipherSuites),
           '--upstream=http://127.0.0.1:8081/',
@@ -145,6 +146,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local proxySelfMetrics =
         container.new('kube-rbac-proxy-self', $._config.imageRepos.kubeRbacProxy + ':' + $._config.versions.kubeRbacProxy) +
         container.withArgs([
+          '--logtostderr',
           '--secure-listen-address=:9443',
           '--tls-cipher-suites=' + std.join(',', $._config.tlsCipherSuites),
           '--upstream=http://127.0.0.1:8082/',
