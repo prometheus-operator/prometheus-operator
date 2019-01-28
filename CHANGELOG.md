@@ -7,6 +7,8 @@
 * [ENHANCEMENT] Support min_shards configuration of the queueConfig (#2284)
 * [ENHANCEMENT] Write compressed Prometheus config into Kubernetes Secret (#2243)
 * [ENHANCEMENT] Add flag to enable Prometheus web admin API (#2300)
+* [ENHANCEMENT] Add logFormat support for Prometheus (#2307)
+* [ENHANCEMENT] Configure Thanos sidecar with route prefix (#2345)
 * [BUGFIX] Fix omitting source_labels where they are unnecessary (#2292)
 * [BUGFIX] Guard against nil targetPort (#2318)
 
