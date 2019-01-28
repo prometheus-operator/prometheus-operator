@@ -38,8 +38,18 @@ global:
 extraVars:
 
 ## Change to true override Grafana's default config.
+## There are 3 possibilities for config type: hostpath, configmap or secret
 ## Make sure grafana.ini is present on /etc/grafana
-mountGrafanaConfig: false
+mountGrafanaConfig:
+  enabled: false
+  # type: hostpath
+
+  # hostPath:
+  #   path: /etc/grafana
+  #   type: Directory
+
+  # secretName: "configSecretName"
+  # configmapName: "configConfigmapName"
 
 adminUser: "admin"
 adminPassword: "admin"

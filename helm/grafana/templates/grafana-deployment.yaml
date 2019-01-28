@@ -114,12 +114,18 @@ spec:
         - name: grafana-dashboards
           configMap:
             name: {{ template "grafana.server.fullname" . }}
-      {{- if .Values.mountGrafanaConfig }}
+      {{- if .Values.mountGrafanaConfig.enabled }}
         - name: grafana-config
+      {{- if eq .Values.mountGrafanaConfig.type "hostpath" }}
           hostPath:
-            path: /etc/grafana
-            type: Directory
-      {{- end }}
+            {{ toYaml .Values.mountGrafanaConfig.hostPath | indent 2 }}
+      {{- else if eq .Values.mountGrafanaConfig.type "secret" }}
+          secret:
+            {{ toYaml .Values.mountGrafanaConfig.secretName | indent 2 }}
+      {{- else if eq .Values.mountGrafanaConfig.type "configmap" }}
+          configMap:
+            {{ toYaml .Values.mountGrafanaConfig.configmapName | indent 2 }}
+      {{ end }}
       {{- range .Values.serverDashboardConfigmaps }}
         - name: {{ . }}
           configMap:
