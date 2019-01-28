@@ -191,13 +191,14 @@ func amImage(version string) string {
 func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPeers int) error {
 	var pollError error
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		amStatus, err := f.GetAlertmanagerConfig(ns, name)
+		amStatus, err := f.GetAlertmanagerStatus(ns, name)
 		if err != nil {
 			return false, err
 		}
 
 		if amStatus.Data.MeshStatus == nil {
-			return false, fmt.Errorf("do not have a mesh status")
+			pollError = fmt.Errorf("do not have a mesh status")
+			return false, nil
 		}
 
 		if len(amStatus.Data.MeshStatus.Peers) == amountPeers {
@@ -228,7 +229,7 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPe
 	return nil
 }
 
-func (f *Framework) GetAlertmanagerConfig(ns, n string) (amAPIStatusResp, error) {
+func (f *Framework) GetAlertmanagerStatus(ns, n string) (amAPIStatusResp, error) {
 	var amStatus amAPIStatusResp
 	request := ProxyGetPod(f.KubeClient, ns, n, "web", "/api/v1/status")
 	resp, err := request.DoRaw()
@@ -349,7 +350,7 @@ func (f *Framework) GetSilences(ns, n string) ([]amAPISil, error) {
 // string.
 func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expectedString string) error {
 	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
-		config, err := f.GetAlertmanagerConfig(ns, "alertmanager-"+amName+"-0")
+		config, err := f.GetAlertmanagerStatus(ns, "alertmanager-"+amName+"-0")
 		if err != nil {
 			return false, err
 		}
