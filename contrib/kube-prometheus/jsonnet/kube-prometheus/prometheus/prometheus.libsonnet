@@ -22,6 +22,9 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       rules: {},
       renderedRules: {},
       namespaces: ['default', 'kube-system', $._config.namespace],
+      service: {
+        annotations: null,
+      },
     },
   },
 
@@ -40,7 +43,10 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       service.new('prometheus-' + $._config.prometheus.name, { app: 'prometheus', prometheus: $._config.prometheus.name }, prometheusPort) +
       service.mixin.spec.withSessionAffinity('ClientIP') +
       service.mixin.metadata.withNamespace($._config.namespace) +
-      service.mixin.metadata.withLabels({ prometheus: $._config.prometheus.name }),
+      service.mixin.metadata.withLabels({ prometheus: $._config.prometheus.name }) +
+      if $._config.prometheus.service.annotations != null 
+        then service.mixin.metadata.withAnnotations($._config.prometheus.service.annotations) 
+        else {},
     [if $._config.prometheus.rules != null && $._config.prometheus.rules != {} then 'rules']:
       {
         apiVersion: 'monitoring.coreos.com/v1',
