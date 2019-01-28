@@ -4,6 +4,7 @@ metadata:
   name: prometheus-crd-view
   labels:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
 - apiGroups: ["monitoring.coreos.com"]
   resources: ["alertmanagers", "prometheuses", "prometheusrules", "servicemonitors"]
