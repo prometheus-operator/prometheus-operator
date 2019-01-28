@@ -196,6 +196,10 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPe
 			return false, err
 		}
 
+		if amStatus.Data.MeshStatus == nil {
+			return false, fmt.Errorf("do not have a mesh status")
+		}
+
 		if len(amStatus.Data.MeshStatus.Peers) == amountPeers {
 			return true, nil
 		}
