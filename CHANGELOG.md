@@ -1,3 +1,17 @@
+## 0.28.0 / 2019-01-24
+
+* [FEATURE] CLI tool to lint YAML against CRD defintions (#2269)
+* [FEATURE] Support Thanos v0.2 arbitrary object storage configuration (#2264)
+* [ENHANCEMENT] Update Alertmanager to v0.16.0 (#2145)
+* [ENHANCEMENT] Added AlertResendDelay to Prometheus resource (#2265)
+* [ENHANCEMENT] Support min_shards configuration of the queueConfig (#2284)
+* [ENHANCEMENT] Write compressed Prometheus config into Kubernetes Secret (#2243)
+* [ENHANCEMENT] Add flag to enable Prometheus web admin API (#2300)
+* [ENHANCEMENT] Add logFormat support for Prometheus (#2307)
+* [ENHANCEMENT] Configure Thanos sidecar with route prefix (#2345)
+* [BUGFIX] Fix omitting source_labels where they are unnecessary (#2292)
+* [BUGFIX] Guard against nil targetPort (#2318)
+
 ## 0.27.0 / 2019-01-08
 
 * [FEATURE] Add `image` field to specify full Prometheus, Alertmanager and Thanos images.
