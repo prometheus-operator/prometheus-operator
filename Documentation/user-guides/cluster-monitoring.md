@@ -39,7 +39,7 @@ The manifests used here use the [Prometheus Operator](https://github.com/coreos/
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/0prometheus-operator-deployment.yaml)
 ```yaml
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -145,7 +145,7 @@ Unrelated to Kubernetes itself, but still important is to gather various metrics
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/node-exporter-daemonset.yaml)
 ```yaml
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -272,7 +272,7 @@ And last but not least, kube-state-metrics which collects information about Kube
 
 [embedmd]:# (../../contrib/kube-prometheus/manifests/kube-state-metrics-deployment.yaml)
 ```yaml
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
