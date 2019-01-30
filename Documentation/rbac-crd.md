@@ -23,6 +23,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: prometheus-crd-view
   labels:
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-view: "true"
 rules:
 - apiGroups: ["monitoring.coreos.com"]
