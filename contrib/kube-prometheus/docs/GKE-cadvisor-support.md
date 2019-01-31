@@ -20,19 +20,17 @@ Or, you can patch and re-apply your existing manifests with:
 On linux:
 
 ```
-sed -i -e 's/https/http/g' \
-contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kubelet.yaml
+sed -i -e 's/https/http/g' manifests/prometheus-serviceMonitorKubelet.yaml
 ```
 
 On MacOs:
 
 ```
-sed -i '' -e 's/https/http/g' \
-contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kubelet.yaml
+sed -i '' -e 's/https/http/g' manifests/prometheus-serviceMonitorKubelet.yaml
 ```
 
 After you have modified the yaml file please run
 
 ```
-kubectl apply -f contrib/kube-prometheus/manifests/prometheus/prometheus-k8s-service-monitor-kubelet.yaml
+kubectl apply -f manifests/prometheus-serviceMonitorKubelet.yaml
 ```
