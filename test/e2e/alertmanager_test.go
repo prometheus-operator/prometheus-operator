@@ -99,7 +99,7 @@ func testAMVersionMigration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	am.Spec.Version = "v0.16.0"
+	am.Spec.Version = "v0.16.1"
 	am, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am)
 	if err != nil {
 		t.Fatal(err)
