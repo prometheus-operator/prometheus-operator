@@ -17,9 +17,11 @@
 package v1
 
 import (
+	"time"
+
 	v1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	scheme "github.com/coreos/prometheus-operator/pkg/client/versioned/scheme"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
@@ -36,11 +38,11 @@ type AlertmanagerInterface interface {
 	Create(*v1.Alertmanager) (*v1.Alertmanager, error)
 	Update(*v1.Alertmanager) (*v1.Alertmanager, error)
 	UpdateStatus(*v1.Alertmanager) (*v1.Alertmanager, error)
-	Delete(name string, options *meta_v1.DeleteOptions) error
-	DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error
-	Get(name string, options meta_v1.GetOptions) (*v1.Alertmanager, error)
-	List(opts meta_v1.ListOptions) (*v1.AlertmanagerList, error)
-	Watch(opts meta_v1.ListOptions) (watch.Interface, error)
+	Delete(name string, options *metav1.DeleteOptions) error
+	DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
+	Get(name string, options metav1.GetOptions) (*v1.Alertmanager, error)
+	List(opts metav1.ListOptions) (*v1.AlertmanagerList, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
 	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.Alertmanager, err error)
 	AlertmanagerExpansion
 }
@@ -60,7 +62,7 @@ func newAlertmanagers(c *MonitoringV1Client, namespace string) *alertmanagers {
 }
 
 // Get takes name of the alertmanager, and returns the corresponding alertmanager object, and an error if there is any.
-func (c *alertmanagers) Get(name string, options meta_v1.GetOptions) (result *v1.Alertmanager, err error) {
+func (c *alertmanagers) Get(name string, options metav1.GetOptions) (result *v1.Alertmanager, err error) {
 	result = &v1.Alertmanager{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -73,24 +75,34 @@ func (c *alertmanagers) Get(name string, options meta_v1.GetOptions) (result *v1
 }
 
 // List takes label and field selectors, and returns the list of Alertmanagers that match those selectors.
-func (c *alertmanagers) List(opts meta_v1.ListOptions) (result *v1.AlertmanagerList, err error) {
+func (c *alertmanagers) List(opts metav1.ListOptions) (result *v1.AlertmanagerList, err error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	result = &v1.AlertmanagerList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("alertmanagers").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Do().
 		Into(result)
 	return
 }
 
 // Watch returns a watch.Interface that watches the requested alertmanagers.
-func (c *alertmanagers) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
+func (c *alertmanagers) Watch(opts metav1.ListOptions) (watch.Interface, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
 		Resource("alertmanagers").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Watch()
 }
 
@@ -136,7 +148,7 @@ func (c *alertmanagers) UpdateStatus(alertmanager *v1.Alertmanager) (result *v1.
 }
 
 // Delete takes name of the alertmanager and deletes it. Returns an error if one occurs.
-func (c *alertmanagers) Delete(name string, options *meta_v1.DeleteOptions) error {
+func (c *alertmanagers) Delete(name string, options *metav1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("alertmanagers").
@@ -147,11 +159,16 @@ func (c *alertmanagers) Delete(name string, options *meta_v1.DeleteOptions) erro
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *alertmanagers) DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error {
+func (c *alertmanagers) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
+	var timeout time.Duration
+	if listOptions.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("alertmanagers").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
+		Timeout(timeout).
 		Body(options).
 		Do().
 		Error()

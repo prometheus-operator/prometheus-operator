@@ -38,23 +38,23 @@
 
 [[constraint]]
   name = "k8s.io/api"
-  version = "kubernetes-1.12.0"
+  version = "kubernetes-1.13.0"
 
 [[constraint]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.12.0"
+  version = "kubernetes-1.13.0"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.12.0"
+  version = "kubernetes-1.13.0"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "=v9.0.0"
+  version = "=v10.0.0"
 
 [[constraint]]
   name = "k8s.io/kube-openapi"
-  revision = "0cf8f7e6ed1d2e3d47d02e3b6e559369af24d803"
+  revision = "c59034cc13d587f5ef4e85ca0ade0c1866ae8e1d"
 
 [[constraint]]
   branch = "master"
@@ -62,7 +62,7 @@
 
 [[override]]
   name = "github.com/json-iterator/go"
-  revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
+  revision = "ab8a2e0c74be9d3be70b3184d9acc634935ded82"
 
 [[constraint]]
   branch = "master"
