@@ -40,3 +40,7 @@ The versions of Prometheus compatible to be run with the Prometheus Operator are
 * v2.4.2
 * v2.4.3
 * v2.5.0
+* v2.6.0
+* v2.6.1
+* v2.7.0
+* v2.7.1

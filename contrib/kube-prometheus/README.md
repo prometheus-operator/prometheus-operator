@@ -260,13 +260,13 @@ These are the available fields with their respective default values:
     namespace: "default",
 
     versions+:: {
-        alertmanager: "v0.15.3",
-        nodeExporter: "v0.16.0",
-        kubeStateMetrics: "v1.3.1",
-        kubeRbacProxy: "v0.3.1",
+        alertmanager: "v0.16.0",
+        nodeExporter: "v0.17.0",
+        kubeStateMetrics: "v1.5.0",
+        kubeRbacProxy: "v0.4.1",
         addonResizer: "1.0",
-        prometheusOperator: "v0.24.0",
-        prometheus: "v2.4.3",
+        prometheusOperator: "v0.28.0",
+        prometheus: "v2.5.0",
     },
 
     imageRepos+:: {
@@ -374,7 +374,7 @@ If your kops cluster is using CoreDNS, there is an additional mixin to import.
 [embedmd]:# (examples/jsonnet-snippets/kops-coredns.jsonnet)
 ```jsonnet
 (import 'kube-prometheus/kube-prometheus.libsonnet') +
-(import 'kube-prometheus/kube-prometheus-kops.libsonnet') + 
+(import 'kube-prometheus/kube-prometheus-kops.libsonnet') +
 (import 'kube-prometheus/kube-prometheus-kops-coredns.libsonnet')
 ```
 
