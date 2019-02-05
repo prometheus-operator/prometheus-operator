@@ -16,7 +16,7 @@ spec:
         app: grafana
     spec:
       containers:
-      - image: grafana/grafana:5.2.4
+      - image: grafana/grafana:6.0.0-beta1
         name: grafana
         ports:
         - containerPort: 3000
