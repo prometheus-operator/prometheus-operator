@@ -42,8 +42,12 @@ local configMapList = k.core.v1.configMapList;
   _config+:: {
     namespace: 'default',
 
+    versions+:: {
+      grafana: '6.0.0-beta1',
+    },
+
     tlsCipherSuites: [
-      'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256',    // required by h2: http://golang.org/cl/30721
+      'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256',  // required by h2: http://golang.org/cl/30721
       'TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256',  // required by h2: http://golang.org/cl/30721
 
       // 'TLS_RSA_WITH_RC4_128_SHA',            // insecure: https://access.redhat.com/security/cve/cve-2013-2566
