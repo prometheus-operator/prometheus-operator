@@ -282,6 +282,22 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                 insecureSkipVerify: true,
               },
               bearerTokenFile: '/var/run/secrets/kubernetes.io/serviceaccount/token',
+              metricRelabelings: [
+                // Drop container_* metrics with no image.
+                {
+                  sourceLabels: ['__name__', 'image'],
+                  regex: 'container_([a-z_]+);',
+                  action: 'drop',
+                },
+
+                // Drop a bunch of metrics which are disabled but still sent, see
+                // https://github.com/google/cadvisor/issues/1925.
+                {
+                  sourceLabels: ['__name__'],
+                  regex: 'container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)',
+                  action: 'drop',
+                },
+              ],
             },
           ],
           selector: {
@@ -372,6 +388,16 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                 {
                   sourceLabels: ['__name__'],
                   regex: 'etcd_(debugging|disk|request|server).*',
+                  action: 'drop',
+                },
+                {
+                  sourceLabels: ['__name__'],
+                  regex: 'apiserver_admission_controller_admission_latencies_seconds_.*',
+                  action: 'drop',
+                },
+                {
+                  sourceLabels: ['__name__'],
+                  regex: 'apiserver_admission_step_admission_latencies_seconds_.*',
                   action: 'drop',
                 },
               ],
