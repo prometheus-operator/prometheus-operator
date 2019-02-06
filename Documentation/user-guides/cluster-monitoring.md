@@ -463,6 +463,14 @@ spec:
       regex: etcd_(debugging|disk|request|server).*
       sourceLabels:
       - __name__
+    - action: drop
+      regex: apiserver_admission_controller_admission_latencies_seconds_.*
+      sourceLabels:
+      - __name__
+    - action: drop
+      regex: apiserver_admission_step_admission_latencies_seconds_.*
+      sourceLabels:
+      - __name__
     port: https
     scheme: https
     tlsConfig:
@@ -499,6 +507,16 @@ spec:
   - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
     honorLabels: true
     interval: 30s
+    metricRelabelings:
+    - action: drop
+      regex: container_([a-z_]+);
+      sourceLabels:
+      - __name__
+      - image
+    - action: drop
+      regex: container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)
+      sourceLabels:
+      - __name__
     path: /metrics/cadvisor
     port: https-metrics
     scheme: https

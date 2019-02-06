@@ -241,25 +241,25 @@ spec:
         max by (namespace, pod, device) (node_filesystem_avail_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"} / node_filesystem_size_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"})
       record: 'node:node_filesystem_avail:'
     - expr: |
-        sum(irate(node_network_receive_bytes_total{job="node-exporter",device="eth0"}[1m])) +
-        sum(irate(node_network_transmit_bytes_total{job="node-exporter",device="eth0"}[1m]))
+        sum(irate(node_network_receive_bytes_total{job="node-exporter",device!~"veth.+"}[1m])) +
+        sum(irate(node_network_transmit_bytes_total{job="node-exporter",device!~"veth.+"}[1m]))
       record: :node_net_utilisation:sum_irate
     - expr: |
         sum by (node) (
-          (irate(node_network_receive_bytes_total{job="node-exporter",device="eth0"}[1m]) +
-          irate(node_network_transmit_bytes_total{job="node-exporter",device="eth0"}[1m]))
+          (irate(node_network_receive_bytes_total{job="node-exporter",device!~"veth.+"}[1m]) +
+          irate(node_network_transmit_bytes_total{job="node-exporter",device!~"veth.+"}[1m]))
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
       record: node:node_net_utilisation:sum_irate
     - expr: |
-        sum(irate(node_network_receive_drop_total{job="node-exporter",device="eth0"}[1m])) +
-        sum(irate(node_network_transmit_drop_total{job="node-exporter",device="eth0"}[1m]))
+        sum(irate(node_network_receive_drop_total{job="node-exporter",device!~"veth.+"}[1m])) +
+        sum(irate(node_network_transmit_drop_total{job="node-exporter",device!~"veth.+"}[1m]))
       record: :node_net_saturation:sum_irate
     - expr: |
         sum by (node) (
-          (irate(node_network_receive_drop_total{job="node-exporter",device="eth0"}[1m]) +
-          irate(node_network_transmit_drop_total{job="node-exporter",device="eth0"}[1m]))
+          (irate(node_network_receive_drop_total{job="node-exporter",device!~"veth.+"}[1m]) +
+          irate(node_network_transmit_drop_total{job="node-exporter",device!~"veth.+"}[1m]))
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
