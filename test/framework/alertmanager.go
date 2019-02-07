@@ -196,20 +196,22 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPe
 			return false, err
 		}
 
-		if amStatus.Data.MeshStatus == nil {
-			pollError = fmt.Errorf("do not have a mesh status")
+		// Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'.
+		// Therefor we need to check for both.
+		if amStatus.Data.MeshStatus == nil && amStatus.Data.ClusterStatus == nil {
+			pollError = fmt.Errorf("do not have a cluster / mesh status")
 			return false, nil
 		}
 
-		if len(amStatus.Data.MeshStatus.Peers) == amountPeers {
+		if amStatus.Data.getAmountPeers() == amountPeers {
 			return true, nil
 		}
 
 		var addresses []string
-		if amStatus.Data.MeshStatus != nil {
-			for _, p := range amStatus.Data.MeshStatus.Peers {
-				addresses = append(addresses, p.Address)
-			}
+		// Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'. This
+		// is abstracted via `getPeers()`.
+		for _, p := range amStatus.Data.getPeers() {
+			addresses = append(addresses, p.Address)
 		}
 
 		pollError = fmt.Errorf(
@@ -403,11 +405,15 @@ type amAPIStatusData struct {
 }
 
 // Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'
-func (s *amAPIStatusData) getAmountPeers() int {
+func (s *amAPIStatusData) getPeers() []peer {
 	if s.MeshStatus != nil {
-		return len(s.MeshStatus.Peers)
+		return s.MeshStatus.Peers
 	}
-	return len(s.ClusterStatus.Peers)
+	return s.ClusterStatus.Peers
+}
+
+func (s *amAPIStatusData) getAmountPeers() int {
+	return len(s.getPeers())
 }
 
 type peer struct {
