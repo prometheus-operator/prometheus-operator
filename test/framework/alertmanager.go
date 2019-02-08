@@ -191,15 +191,35 @@ func amImage(version string) string {
 func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPeers int) error {
 	var pollError error
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		amStatus, err := f.GetAlertmanagerConfig(ns, name)
+		amStatus, err := f.GetAlertmanagerStatus(ns, name)
 		if err != nil {
 			return false, err
 		}
+
+		// Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'.
+		// Therefor we need to check for both.
+		if amStatus.Data.MeshStatus == nil && amStatus.Data.ClusterStatus == nil {
+			pollError = fmt.Errorf("do not have a cluster / mesh status")
+			return false, nil
+		}
+
 		if amStatus.Data.getAmountPeers() == amountPeers {
 			return true, nil
 		}
 
-		pollError = fmt.Errorf("failed to get correct amount of peers, expected %d, got %d", amountPeers, amStatus.Data.getAmountPeers())
+		var addresses []string
+		// Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'. This
+		// is abstracted via `getPeers()`.
+		for _, p := range amStatus.Data.getPeers() {
+			addresses = append(addresses, p.Address)
+		}
+
+		pollError = fmt.Errorf(
+			"failed to get correct amount of peers, expected %d, got %d, addresses %v",
+			amountPeers,
+			amStatus.Data.getAmountPeers(),
+			strings.Join(addresses, ","),
+		)
 
 		return false, nil
 	})
@@ -211,7 +231,7 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPe
 	return nil
 }
 
-func (f *Framework) GetAlertmanagerConfig(ns, n string) (amAPIStatusResp, error) {
+func (f *Framework) GetAlertmanagerStatus(ns, n string) (amAPIStatusResp, error) {
 	var amStatus amAPIStatusResp
 	request := ProxyGetPod(f.KubeClient, ns, n, "web", "/api/v1/status")
 	resp, err := request.DoRaw()
@@ -332,7 +352,7 @@ func (f *Framework) GetSilences(ns, n string) ([]amAPISil, error) {
 // string.
 func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expectedString string) error {
 	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
-		config, err := f.GetAlertmanagerConfig(ns, "alertmanager-"+amName+"-0")
+		config, err := f.GetAlertmanagerStatus(ns, "alertmanager-"+amName+"-0")
 		if err != nil {
 			return false, err
 		}
@@ -385,13 +405,22 @@ type amAPIStatusData struct {
 }
 
 // Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'
-func (s *amAPIStatusData) getAmountPeers() int {
+func (s *amAPIStatusData) getPeers() []peer {
 	if s.MeshStatus != nil {
-		return len(s.MeshStatus.Peers)
+		return s.MeshStatus.Peers
 	}
-	return len(s.ClusterStatus.Peers)
+	return s.ClusterStatus.Peers
+}
+
+func (s *amAPIStatusData) getAmountPeers() int {
+	return len(s.getPeers())
+}
+
+type peer struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
 }
 
 type clusterStatus struct {
-	Peers []interface{} `json:"peers"`
+	Peers []peer `json:"peers"`
 }
