@@ -233,7 +233,7 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPe
 
 func (f *Framework) GetAlertmanagerStatus(ns, n string) (amAPIStatusResp, error) {
 	var amStatus amAPIStatusResp
-	request := ProxyGetPod(f.KubeClient, ns, n, "web", "/api/v1/status")
+	request := ProxyGetPod(f.KubeClient, ns, n, "/api/v1/status")
 	resp, err := request.DoRaw()
 	if err != nil {
 		return amStatus, err
@@ -251,7 +251,7 @@ func (f *Framework) CreateSilence(ns, n string) (string, error) {
 
 	request := ProxyPostPod(
 		f.KubeClient, ns, n,
-		"web", "/api/v1/silences",
+		"/api/v1/silences",
 		`{"id":"","createdBy":"Max Mustermann","comment":"1234","startsAt":"2030-04-09T09:16:15.114Z","endsAt":"2031-04-09T11:16:15.114Z","matchers":[{"name":"test","value":"123","isRegex":false}]}`,
 	)
 	resp, err := request.DoRaw()
@@ -307,7 +307,7 @@ func (f *Framework) SendAlertToAlertmanager(ns, n string, start time.Time) error
 	}
 
 	var postAlertResp amAPIPostAlertResp
-	request := ProxyPostPod(f.KubeClient, ns, n, "web", "api/v1/alerts", string(b))
+	request := ProxyPostPod(f.KubeClient, ns, n, "api/v1/alerts", string(b))
 	resp, err := request.DoRaw()
 	if err != nil {
 		return err
@@ -327,7 +327,7 @@ func (f *Framework) SendAlertToAlertmanager(ns, n string, start time.Time) error
 func (f *Framework) GetSilences(ns, n string) ([]amAPISil, error) {
 	var getSilencesResponse amAPIGetSilResp
 
-	request := ProxyGetPod(f.KubeClient, ns, n, "web", "/api/v1/silences")
+	request := ProxyGetPod(f.KubeClient, ns, n, "/api/v1/silences")
 	resp, err := request.DoRaw()
 	if err != nil {
 		return getSilencesResponse.Data, err

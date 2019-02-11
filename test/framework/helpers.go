@@ -157,7 +157,7 @@ func (f *Framework) Poll(timeout, pollInterval time.Duration, pollFunc func() (b
 	}
 }
 
-func ProxyGetPod(kubeClient kubernetes.Interface, namespace, podName, port, path string) *rest.Request {
+func ProxyGetPod(kubeClient kubernetes.Interface, namespace, podName, path string) *rest.Request {
 	return kubeClient.
 		CoreV1().
 		RESTClient().
@@ -169,7 +169,7 @@ func ProxyGetPod(kubeClient kubernetes.Interface, namespace, podName, port, path
 		Suffix(path)
 }
 
-func ProxyPostPod(kubeClient kubernetes.Interface, namespace, podName, port, path, body string) *rest.Request {
+func ProxyPostPod(kubeClient kubernetes.Interface, namespace, podName, path, body string) *rest.Request {
 	return kubeClient.
 		CoreV1().
 		RESTClient().
