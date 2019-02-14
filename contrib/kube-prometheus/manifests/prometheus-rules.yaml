@@ -137,6 +137,13 @@ spec:
           node_namespace_pod:kube_pod_info:)
       record: node:node_cpu_utilisation:avg1m
     - expr: |
+        node:node_cpu_utilisation:avg1m
+          *
+        node:node_num_cpu:sum
+          /
+        scalar(sum(node:node_num_cpu:sum))
+      record: node:cluster_cpu_utilisation:ratio
+    - expr: |
         sum(node_load1{job="node-exporter"})
         /
         sum(node:node_num_cpu:sum)
@@ -179,8 +186,13 @@ spec:
     - expr: |
         (node:node_memory_bytes_total:sum - node:node_memory_bytes_available:sum)
         /
-        scalar(sum(node:node_memory_bytes_total:sum))
+        node:node_memory_bytes_total:sum
       record: node:node_memory_utilisation:ratio
+    - expr: |
+        (node:node_memory_bytes_total:sum - node:node_memory_bytes_available:sum)
+        /
+        scalar(sum(node:node_memory_bytes_total:sum))
+      record: node:cluster_memory_utilisation:ratio
     - expr: |
         1e3 * sum(
           (rate(node_vmstat_pgpgin{job="node-exporter"}[1m])
