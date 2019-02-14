@@ -29,8 +29,8 @@ addon_resizer:
   cpu: 100m
   extra_cpu: 1m
   image:
-    repository: gcr.io/google_containers/addon-resizer
-    tag: "1.7"
+    repository: gcr.io/google-containers/addon-resizer-amd64
+    tag: "2.1"
     pullPolicy: IfNotPresent
   resources:
     limits:

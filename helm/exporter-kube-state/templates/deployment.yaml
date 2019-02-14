@@ -64,7 +64,7 @@ spec:
           - --extra-cpu={{ .Values.addon_resizer.extra_cpu }}
           - --memory={{ .Values.addon_resizer.memory }}
           - --extra-memory={{ .Values.addon_resizer.extra_memory }}
-          - --threshold=5
+          - --acceptance-offset=5
           - --deployment={{ template "exporter-kube-state.fullname" . }}
         resources:
 {{ toYaml .Values.addon_resizer.resources | indent 12 }}
