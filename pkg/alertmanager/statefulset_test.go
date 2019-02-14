@@ -29,6 +29,8 @@ import (
 var (
 	defaultTestConfig = Config{
 		ConfigReloaderImage:          "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderCPU:            "100m",
+		ConfigReloaderMemory:         "15Mi",
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
 )
@@ -230,7 +232,7 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 		replicas := int32(3)
 		a.Spec.Replicas = &replicas
 
-		statefulSet, err := makeStatefulSetSpec(&a, Config{})
+		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -261,7 +263,7 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 		replicas := int32(1)
 		a.Spec.Replicas = &replicas
 
-		statefulSet, err := makeStatefulSetSpec(&a, Config{})
+		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -299,7 +301,7 @@ func TestMakeStatefulSetSpecMeshClusterFlags(t *testing.T) {
 		replicas := int32(3)
 		a.Spec.Replicas = &replicas
 
-		statefulSet, err := makeStatefulSetSpec(&a, Config{})
+		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -335,7 +337,7 @@ func TestMakeStatefulSetSpecPeerFlagPort(t *testing.T) {
 		replicas := int32(3)
 		a.Spec.Replicas = &replicas
 
-		statefulSet, err := makeStatefulSetSpec(&a, Config{})
+		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -359,7 +361,7 @@ func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	a.Spec.Replicas = &replicas
 	a.Spec.AdditionalPeers = []string{"example.com"}
 
-	statefulSet, err := makeStatefulSetSpec(&a, Config{})
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
