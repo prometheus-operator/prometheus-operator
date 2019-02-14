@@ -136,6 +136,8 @@ type Config struct {
 	TLSInsecure                  bool
 	TLSConfig                    rest.TLSClientConfig
 	ConfigReloaderImage          string
+	ConfigReloaderCPU            string
+	ConfigReloaderMemory         string
 	PrometheusConfigReloader     string
 	AlertmanagerDefaultBaseImage string
 	PrometheusDefaultBaseImage   string
