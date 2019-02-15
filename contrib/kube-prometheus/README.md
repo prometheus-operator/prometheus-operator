@@ -264,7 +264,7 @@ These are the available fields with their respective default values:
         nodeExporter: "v0.17.0",
         kubeStateMetrics: "v1.5.0",
         kubeRbacProxy: "v0.4.1",
-        addonResizer: "1.0",
+        addonResizer: "2.1",
         prometheusOperator: "v0.28.0",
         prometheus: "v2.5.0",
     },
@@ -274,7 +274,7 @@ These are the available fields with their respective default values:
         alertmanager: "quay.io/prometheus/alertmanager",
         kubeStateMetrics: "quay.io/coreos/kube-state-metrics",
         kubeRbacProxy: "quay.io/coreos/kube-rbac-proxy",
-        addonResizer: "quay.io/coreos/addon-resizer",
+        addonResizer: "gcr.io/google-containers/addon-resizer-amd64",
         nodeExporter: "quay.io/prometheus/node-exporter",
         prometheusOperator: "quay.io/coreos/prometheus-operator",
     },
@@ -402,9 +402,9 @@ To produce the `docker pull/tag/push` commands that will synchronize upstream im
 
 ```shell
 $ jsonnet -J vendor -S --tla-str repository=internal-registry.com/organization sync-to-internal-registry.jsonnet
-docker pull quay.io/coreos/addon-resizer:1.0
-docker tag quay.io/coreos/addon-resizer:1.0 internal-registry.com/organization/addon-resizer:1.0
-docker push internal-registry.com/organization/addon-resizer:1.0
+docker pull gcr.io/google-containers/addon-resizer-amd64:2.1
+docker tag gcr.io/google-containers/addon-resizer-amd64:2.1 internal-registry.com/organization/addon-resizer:2.1
+docker push internal-registry.com/organization/addon-resizer:2.1
 docker pull quay.io/prometheus/alertmanager:v0.15.3
 docker tag quay.io/prometheus/alertmanager:v0.15.3 internal-registry.com/organization/alertmanager:v0.15.3
 docker push internal-registry.com/organization/alertmanager:v0.15.3
