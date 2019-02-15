@@ -560,5 +560,7 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | gcs | Deprecated: GCS should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. This field will be removed. | *[ThanosGCSSpec](#thanosgcsspec) | false |
 | s3 | Deprecated: S3 should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. This field will be removed. | *[ThanosS3Spec](#thanoss3spec) | false |
 | objectStorageConfig | ObjectStorageConfig configures object storage in Thanos. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| grpcAdvertiseAddress | Explicit (external) host:port address to advertise for gRPC StoreAPI in gossip cluster. If empty, 'grpc-address' will be used.. | *string | false |
+| clusterAdvertiseAddress | Explicit (external) ip:port address to advertise for gossip in gossip cluster. Used internally for membership only. | *string | false |
 
 [Back to TOC](#table-of-contents)
