@@ -91,7 +91,13 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	m := map[string]string{}
 
 	m["prometheus"] = fmt.Sprintf("%s/%s", p.Namespace, p.Name)
-	m["prometheus_replica"] = "$(POD_NAME)"
+
+	replicaExternalLabelName := p.Spec.ReplicaExternalLabelName
+	if replicaExternalLabelName == "" {
+		replicaExternalLabelName = defaultReplicaExternalLabelName
+	}
+
+	m[replicaExternalLabelName] = "$(POD_NAME)"
 
 	for n, v := range p.Spec.ExternalLabels {
 		m[n] = v
@@ -195,11 +201,15 @@ func (cg *configGenerator) generateConfig(
 	var alertRelabelConfigs []yaml.MapSlice
 
 	// action 'labeldrop' is not supported <= v1.4.1
+	replicaExternalLabelName := p.Spec.ReplicaExternalLabelName
+	if replicaExternalLabelName == "" {
+		replicaExternalLabelName = defaultReplicaExternalLabelName
+	}
 	if version.GT(semver.MustParse("1.4.1")) {
-		// Drop 'prometheus_replica' label, to make alerts from two Prometheus replicas alike
+		// Drop replica label, to make alerts from multiple Prometheus replicas alike
 		alertRelabelConfigs = append(alertRelabelConfigs, yaml.MapSlice{
 			{Key: "action", Value: "labeldrop"},
-			{Key: "regex", Value: "prometheus_replica"},
+			{Key: "regex", Value: regexp.QuoteMeta(replicaExternalLabelName)},
 		})
 	}
 
