@@ -33,19 +33,20 @@ import (
 )
 
 const (
-	governingServiceName     = "prometheus-operated"
-	DefaultPrometheusVersion = "v2.7.1"
-	DefaultThanosVersion     = "v0.2.1"
-	defaultRetention         = "24h"
-	storageDir               = "/prometheus"
-	confDir                  = "/etc/prometheus/config"
-	confOutDir               = "/etc/prometheus/config_out"
-	rulesDir                 = "/etc/prometheus/rules"
-	secretsDir               = "/etc/prometheus/secrets/"
-	configmapsDir            = "/etc/prometheus/configmaps/"
-	configFilename           = "prometheus.yaml.gz"
-	configEnvsubstFilename   = "prometheus.env.yaml"
-	sSetInputHashName        = "prometheus-operator-input-hash"
+	governingServiceName            = "prometheus-operated"
+	DefaultPrometheusVersion        = "v2.7.1"
+	DefaultThanosVersion            = "v0.2.1"
+	defaultRetention                = "24h"
+	defaultReplicaExternalLabelName = "prometheus_replica"
+	storageDir                      = "/prometheus"
+	confDir                         = "/etc/prometheus/config"
+	confOutDir                      = "/etc/prometheus/config_out"
+	rulesDir                        = "/etc/prometheus/rules"
+	secretsDir                      = "/etc/prometheus/secrets/"
+	configmapsDir                   = "/etc/prometheus/configmaps/"
+	configFilename                  = "prometheus.yaml.gz"
+	configEnvsubstFilename          = "prometheus.env.yaml"
+	sSetInputHashName               = "prometheus-operator-input-hash"
 )
 
 var (
