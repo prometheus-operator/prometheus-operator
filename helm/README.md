@@ -28,4 +28,52 @@ The CRDs are provisioned using crd-install hooks, rather than relying on a separ
 Because the kubelet service has a new name in the chart, make sure to clean up the old kubelet service in the `kube-system` namespace to prevent counting container metrics twice
 
 ### Persistent Volumes
-If you would like to keep the data of the current persistent volumes, it should realistically be possible to appropriately rename and relabel the PVs and PVCs from their convention using the old chart to the new chart conventions. Alternatively you could copy the data from the PVCs using mechanisms available in your cluster
+If you would like to keep the data of the current persistent volumes, it should be possible to attach existing volumes to new PVCs and PVs that are created using the conventions in the new chart. For example, in order to use an existing Azure disk for a helm release called `prometheus-migration` the following resources can be created:
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvc-prometheus-migration-prometheus-0
+spec:
+  accessModes:
+  - ReadWriteOnce
+  azureDisk:
+    cachingMode: None
+    diskName: pvc-prometheus-migration-prometheus-0    
+    diskURI: /subscriptions/f5125d82-2622-4c50-8d25-3f7ba3e9ac4b/resourceGroups/sample-migration-resource-group/providers/Microsoft.Compute/disks/pvc-prometheus-migration-prometheus-0
+    fsType: ""
+    kind: Managed
+    readOnly: false
+  capacity:
+    storage: 1Gi
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: prometheus
+  volumeMode: Filesystem
+```
+```
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: prometheus
+    prometheus: prometheus-migration-prometheus
+  name: prometheus-prometheus-migration-prometheus-db-prometheus-prometheus-migration-prometheus-0
+  namespace: monitoring
+spec:
+  accessModes:
+  - ReadWriteOnce
+  dataSource: null
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: prometheus
+  volumeMode: Filesystem
+  volumeName: pvc-prometheus-migration-prometheus-0
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+```
+
+The PVC will take ownership of the PV and when you create a release using a persistent volume claim template it will use the existing PVCs as they match the naming convention used by the chart. For other cloud providers similar approaches can be used.
