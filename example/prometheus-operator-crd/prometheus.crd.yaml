@@ -2147,6 +2147,10 @@ spec:
                 required:
                 - url
               type: array
+            replicaExternalLabelName:
+              description: Name of Prometheus external label used to denote replica
+                name. Defaults to the value of `prometheus_replica`.
+              type: string
             replicas:
               description: Number of instances to deploy for a Prometheus deployment.
               format: int32
