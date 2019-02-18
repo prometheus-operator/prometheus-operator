@@ -33,19 +33,20 @@ import (
 )
 
 const (
-	governingServiceName     = "prometheus-operated"
-	DefaultPrometheusVersion = "v2.7.1"
-	DefaultThanosVersion     = "v0.2.1"
-	defaultRetention         = "24h"
-	storageDir               = "/prometheus"
-	confDir                  = "/etc/prometheus/config"
-	confOutDir               = "/etc/prometheus/config_out"
-	rulesDir                 = "/etc/prometheus/rules"
-	secretsDir               = "/etc/prometheus/secrets/"
-	configmapsDir            = "/etc/prometheus/configmaps/"
-	configFilename           = "prometheus.yaml.gz"
-	configEnvsubstFilename   = "prometheus.env.yaml"
-	sSetInputHashName        = "prometheus-operator-input-hash"
+	governingServiceName            = "prometheus-operated"
+	DefaultPrometheusVersion        = "v2.7.1"
+	DefaultThanosVersion            = "v0.2.1"
+	defaultRetention                = "24h"
+	defaultReplicaExternalLabelName = "prometheus_replica"
+	storageDir                      = "/prometheus"
+	confDir                         = "/etc/prometheus/config"
+	confOutDir                      = "/etc/prometheus/config_out"
+	rulesDir                        = "/etc/prometheus/rules"
+	secretsDir                      = "/etc/prometheus/secrets/"
+	configmapsDir                   = "/etc/prometheus/configmaps/"
+	configFilename                  = "prometheus.yaml.gz"
+	configEnvsubstFilename          = "prometheus.env.yaml"
+	sSetInputHashName               = "prometheus-operator-input-hash"
 )
 
 var (
@@ -621,8 +622,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			VolumeMounts: []v1.VolumeMount{},
 			Resources: v1.ResourceRequirements{
 				Limits: v1.ResourceList{
-					v1.ResourceCPU:    resource.MustParse("25m"),
-					v1.ResourceMemory: resource.MustParse("10Mi"),
+					v1.ResourceCPU:    resource.MustParse(c.ConfigReloaderCPU),
+					v1.ResourceMemory: resource.MustParse(c.ConfigReloaderMemory),
 				},
 			},
 		}
