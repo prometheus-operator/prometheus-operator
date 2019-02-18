@@ -1,9 +1,0 @@
-apiVersion: v1
-description: A Helm chart for Kubernetes
-name: exporter-kube-controller-manager
-version: 0.1.10
-maintainers:
-  - name: Michael Goodness
-    email: mgoodness@gmail.com
-  - name: Giancarlo Rubio
-    email: gianrubio@gmail.com
