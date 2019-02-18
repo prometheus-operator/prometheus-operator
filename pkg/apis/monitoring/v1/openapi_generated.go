@@ -2517,7 +2517,7 @@ func schema_pkg_apis_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) comm
 					},
 					"grpcAdvertiseAddress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Explicit (external) host:port address to advertise for gRPC StoreAPI in gossip cluster. If empty, 'grpc-address' will be used..",
+							Description: "Explicit (external) host:port address to advertise for gRPC StoreAPI in gossip cluster. If empty, 'grpc-address' will be used.",
 							Type:        []string{"string"},
 							Format:      "",
 						},

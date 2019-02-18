@@ -2975,6 +2975,10 @@ spec:
                 baseImage:
                   description: Thanos base image if other than default.
                   type: string
+                clusterAdvertiseAddress:
+                  description: Explicit (external) ip:port address to advertise for
+                    gossip in gossip cluster. Used internally for membership only.
+                  type: string
                 gcs:
                   description: 'Deprecated: ThanosGCSSpec should be configured with
                     an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosGCSSpec
@@ -3000,6 +3004,11 @@ spec:
                           type: boolean
                       required:
                       - key
+                grpcAdvertiseAddress:
+                  description: Explicit (external) host:port address to advertise
+                    for gRPC StoreAPI in gossip cluster. If empty, 'grpc-address'
+                    will be used.
+                  type: string
                 image:
                   description: Image if specified has precedence over baseImage, tag
                     and sha combinations. Specifying the version is still necessary

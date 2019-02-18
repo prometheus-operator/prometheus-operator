@@ -327,7 +327,7 @@ type ThanosSpec struct {
 	// ObjectStorageConfig configures object storage in Thanos.
 	ObjectStorageConfig *v1.SecretKeySelector `json:"objectStorageConfig,omitempty"`
 	// Explicit (external) host:port address to advertise for gRPC StoreAPI in gossip cluster.
-	// If empty, 'grpc-address' will be used..
+	// If empty, 'grpc-address' will be used.
 	GrpcAdvertiseAddress *string `json:"grpcAdvertiseAddress,omitempty"`
 	// Explicit (external) ip:port address to advertise for gossip in gossip cluster.
 	// Used internally for membership only.
