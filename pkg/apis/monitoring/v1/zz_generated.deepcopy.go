@@ -1169,6 +1169,16 @@ func (in *ThanosSpec) DeepCopyInto(out *ThanosSpec) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.GrpcAdvertiseAddress != nil {
+		in, out := &in.GrpcAdvertiseAddress, &out.GrpcAdvertiseAddress
+		*out = new(string)
+		**out = **in
+	}
+	if in.ClusterAdvertiseAddress != nil {
+		in, out := &in.ClusterAdvertiseAddress, &out.ClusterAdvertiseAddress
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 

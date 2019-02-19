@@ -2522,6 +2522,20 @@ func schema_pkg_apis_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) comm
 							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
+					"grpcAdvertiseAddress": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Explicit (external) host:port address to advertise for gRPC StoreAPI in gossip cluster. If empty, 'grpc-address' will be used.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"clusterAdvertiseAddress": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Explicit (external) ip:port address to advertise for gossip in gossip cluster. Used internally for membership only.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
