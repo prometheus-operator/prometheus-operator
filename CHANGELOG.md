@@ -1,3 +1,11 @@
+## 0.29.0 / 2019-02-19
+
+* [FEATURE] Thanos sidecar supports external Thanos clusters (#2412)
+* [FEATURE] Make replicas external label name configurable (#2411)
+* [FEATURE] Flags for config reloader memory and cpu limits (#2403)
+* [ENHANCEMENT] Update to Prometheus v2.7.1 as default (#2374)
+* [ENHANCEMENT] Update to Alertmanager v0.16.1 as default (#2362)
+
 ## 0.28.0 / 2019-01-24
 
 * [FEATURE] CLI tool to lint YAML against CRD defintions (#2269)
