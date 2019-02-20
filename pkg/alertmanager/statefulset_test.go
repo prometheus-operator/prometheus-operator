@@ -30,7 +30,7 @@ var (
 	defaultTestConfig = Config{
 		ConfigReloaderImage:          "quay.io/coreos/configmap-reload:latest",
 		ConfigReloaderCPU:            "100m",
-		ConfigReloaderMemory:         "15Mi",
+		ConfigReloaderMemory:         "25Mi",
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
 )
