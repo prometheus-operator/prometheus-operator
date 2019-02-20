@@ -138,7 +138,7 @@ spec:
                     type: string
                   relabelings:
                     description: 'RelabelConfigs to apply to samples before ingestion.
-                      More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<relabel_config>'
+                      More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
                     items:
                       description: 'RelabelConfig allows dynamic rewriting of the
                         label set, being applied to samples before ingestion. It defines
