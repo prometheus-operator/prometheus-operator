@@ -1,9 +1,0 @@
-apiVersion: v1
-description: A Helm chart singleton for kube-state-metrics
-name: exporter-kube-scheduler
-version: 0.1.9
-maintainers:
-  - name: Michael Goodness
-    email: mgoodness@gmail.com
-  - name: Giancarlo Rubio
-    email: gianrubio@gmail.com

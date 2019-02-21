@@ -1,9 +1,0 @@
-# default rules are in templates/kubernetes.rules.yaml
-# prometheusRules: {}
-
-## Custom Labels to be added to ServiceMonitor
-##
-additionalServiceMonitorLabels: {}
-##Custom Labels to be added to Prometheus Rules CRD
-##
-additionalRulesLabels: {}
