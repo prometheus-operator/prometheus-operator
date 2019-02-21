@@ -2831,7 +2831,7 @@ items:
                           },
                           "yaxes": [
                               {
-                                  "format": "decbytes",
+                                  "format": "bytes",
                                   "label": null,
                                   "logBase": 1,
                                   "max": null,
@@ -2919,7 +2919,7 @@ items:
 
                                   ],
                                   "type": "number",
-                                  "unit": "decbytes"
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Memory Requests",
@@ -2937,7 +2937,7 @@ items:
 
                                   ],
                                   "type": "number",
-                                  "unit": "decbytes"
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Memory Requests %",
@@ -2973,7 +2973,7 @@ items:
 
                                   ],
                                   "type": "number",
-                                  "unit": "decbytes"
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Memory Limits %",
@@ -3625,7 +3625,7 @@ items:
                           ],
                           "timeFrom": null,
                           "timeShift": null,
-                          "title": "Memory Usage",
+                          "title": "Memory Usage (w/o cache)",
                           "tooltip": {
                               "shared": true,
                               "sort": 0,
@@ -3643,7 +3643,7 @@ items:
                           },
                           "yaxes": [
                               {
-                                  "format": "decbytes",
+                                  "format": "bytes",
                                   "label": null,
                                   "logBase": 1,
                                   "max": null,
@@ -3731,7 +3731,7 @@ items:
 
                                   ],
                                   "type": "number",
-                                  "unit": "decbytes"
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Memory Requests",
@@ -3749,7 +3749,7 @@ items:
 
                                   ],
                                   "type": "number",
-                                  "unit": "decbytes"
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Memory Requests %",
@@ -3785,7 +3785,7 @@ items:
 
                                   ],
                                   "type": "number",
-                                  "unit": "decbytes"
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Memory Limits %",
@@ -3804,6 +3804,60 @@ items:
                                   ],
                                   "type": "number",
                                   "unit": "percentunit"
+                              },
+                              {
+                                  "alias": "Memory Usage (RSS)",
+                                  "colorMode": null,
+                                  "colors": [
+
+                                  ],
+                                  "dateFormat": "YYYY-MM-DD HH:mm:ss",
+                                  "decimals": 2,
+                                  "link": false,
+                                  "linkTooltip": "Drill down",
+                                  "linkUrl": "",
+                                  "pattern": "Value #F",
+                                  "thresholds": [
+
+                                  ],
+                                  "type": "number",
+                                  "unit": "bytes"
+                              },
+                              {
+                                  "alias": "Memory Usage (Cache)",
+                                  "colorMode": null,
+                                  "colors": [
+
+                                  ],
+                                  "dateFormat": "YYYY-MM-DD HH:mm:ss",
+                                  "decimals": 2,
+                                  "link": false,
+                                  "linkTooltip": "Drill down",
+                                  "linkUrl": "",
+                                  "pattern": "Value #G",
+                                  "thresholds": [
+
+                                  ],
+                                  "type": "number",
+                                  "unit": "bytes"
+                              },
+                              {
+                                  "alias": "Memory Usage (Swap",
+                                  "colorMode": null,
+                                  "colors": [
+
+                                  ],
+                                  "dateFormat": "YYYY-MM-DD HH:mm:ss",
+                                  "decimals": 2,
+                                  "link": false,
+                                  "linkTooltip": "Drill down",
+                                  "linkUrl": "",
+                                  "pattern": "Value #H",
+                                  "thresholds": [
+
+                                  ],
+                                  "type": "number",
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Pod",
@@ -3883,6 +3937,33 @@ items:
                                   "intervalFactor": 2,
                                   "legendFormat": "",
                                   "refId": "E",
+                                  "step": 10
+                              },
+                              {
+                                  "expr": "sum(label_replace(container_memory_rss{namespace=\"$namespace\",container_name!=\"\"}, \"pod\", \"$1\", \"pod_name\", \"(.*)\")) by (pod)",
+                                  "format": "table",
+                                  "instant": true,
+                                  "intervalFactor": 2,
+                                  "legendFormat": "",
+                                  "refId": "F",
+                                  "step": 10
+                              },
+                              {
+                                  "expr": "sum(label_replace(container_memory_cache{namespace=\"$namespace\",container_name!=\"\"}, \"pod\", \"$1\", \"pod_name\", \"(.*)\")) by (pod)",
+                                  "format": "table",
+                                  "instant": true,
+                                  "intervalFactor": 2,
+                                  "legendFormat": "",
+                                  "refId": "G",
+                                  "step": 10
+                              },
+                              {
+                                  "expr": "sum(label_replace(container_memory_swap{namespace=\"$namespace\",container_name!=\"\"}, \"pod\", \"$1\", \"pod_name\", \"(.*)\")) by (pod)",
+                                  "format": "table",
+                                  "instant": true,
+                                  "intervalFactor": 2,
+                                  "legendFormat": "",
+                                  "refId": "H",
                                   "step": 10
                               }
                           ],
@@ -4451,10 +4532,26 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum(container_memory_usage_bytes{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\", container_name!=\"\"}) by (container_name)",
+                                  "expr": "sum(container_memory_rss{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\", container_name!=\"\"}) by (container_name)",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": "{{container_name}}",
+                                  "legendFormat": "{{container_name}} (RSS)",
+                                  "legendLink": null,
+                                  "step": 10
+                              },
+                              {
+                                  "expr": "sum(container_memory_cache{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\", container_name!=\"\"}) by (container_name)",
+                                  "format": "time_series",
+                                  "intervalFactor": 2,
+                                  "legendFormat": "{{container_name}} (Cache)",
+                                  "legendLink": null,
+                                  "step": 10
+                              },
+                              {
+                                  "expr": "sum(container_memory_swap{namespace=\"$namespace\", pod_name=\"$pod\", container_name!=\"POD\", container_name!=\"\"}) by (container_name)",
+                                  "format": "time_series",
+                                  "intervalFactor": 2,
+                                  "legendFormat": "{{container_name}} (Swap)",
                                   "legendLink": null,
                                   "step": 10
                               }
@@ -4482,7 +4579,7 @@ items:
                           },
                           "yaxes": [
                               {
-                                  "format": "short",
+                                  "format": "bytes",
                                   "label": null,
                                   "logBase": 1,
                                   "max": null,
@@ -4570,7 +4667,7 @@ items:
 
                                   ],
                                   "type": "number",
-                                  "unit": "decbytes"
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Memory Requests",
@@ -4588,7 +4685,7 @@ items:
 
                                   ],
                                   "type": "number",
-                                  "unit": "decbytes"
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Memory Requests %",
@@ -4624,7 +4721,7 @@ items:
 
                                   ],
                                   "type": "number",
-                                  "unit": "decbytes"
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Memory Limits %",
@@ -4643,6 +4740,60 @@ items:
                                   ],
                                   "type": "number",
                                   "unit": "percentunit"
+                              },
+                              {
+                                  "alias": "Memory Usage (RSS)",
+                                  "colorMode": null,
+                                  "colors": [
+
+                                  ],
+                                  "dateFormat": "YYYY-MM-DD HH:mm:ss",
+                                  "decimals": 2,
+                                  "link": false,
+                                  "linkTooltip": "Drill down",
+                                  "linkUrl": "",
+                                  "pattern": "Value #F",
+                                  "thresholds": [
+
+                                  ],
+                                  "type": "number",
+                                  "unit": "bytes"
+                              },
+                              {
+                                  "alias": "Memory Usage (Cache)",
+                                  "colorMode": null,
+                                  "colors": [
+
+                                  ],
+                                  "dateFormat": "YYYY-MM-DD HH:mm:ss",
+                                  "decimals": 2,
+                                  "link": false,
+                                  "linkTooltip": "Drill down",
+                                  "linkUrl": "",
+                                  "pattern": "Value #G",
+                                  "thresholds": [
+
+                                  ],
+                                  "type": "number",
+                                  "unit": "bytes"
+                              },
+                              {
+                                  "alias": "Memory Usage (Swap",
+                                  "colorMode": null,
+                                  "colors": [
+
+                                  ],
+                                  "dateFormat": "YYYY-MM-DD HH:mm:ss",
+                                  "decimals": 2,
+                                  "link": false,
+                                  "linkTooltip": "Drill down",
+                                  "linkUrl": "",
+                                  "pattern": "Value #H",
+                                  "thresholds": [
+
+                                  ],
+                                  "type": "number",
+                                  "unit": "bytes"
                               },
                               {
                                   "alias": "Container",
@@ -4722,6 +4873,33 @@ items:
                                   "intervalFactor": 2,
                                   "legendFormat": "",
                                   "refId": "E",
+                                  "step": 10
+                              },
+                              {
+                                  "expr": "sum(label_replace(container_memory_rss{namespace=\"$namespace\", pod_name=\"$pod\", container_name != \"\", container_name != \"POD\"}, \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container)",
+                                  "format": "table",
+                                  "instant": true,
+                                  "intervalFactor": 2,
+                                  "legendFormat": "",
+                                  "refId": "F",
+                                  "step": 10
+                              },
+                              {
+                                  "expr": "sum(label_replace(container_memory_cache{namespace=\"$namespace\", pod_name=\"$pod\", container_name != \"\", container_name != \"POD\"}, \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container)",
+                                  "format": "table",
+                                  "instant": true,
+                                  "intervalFactor": 2,
+                                  "legendFormat": "",
+                                  "refId": "G",
+                                  "step": 10
+                              },
+                              {
+                                  "expr": "sum(label_replace(container_memory_swap{namespace=\"$namespace\", pod_name=\"$pod\", container_name != \"\", container_name != \"POD\"}, \"container\", \"$1\", \"container_name\", \"(.*)\")) by (container)",
+                                  "format": "table",
+                                  "instant": true,
+                                  "intervalFactor": 2,
+                                  "legendFormat": "",
+                                  "refId": "H",
                                   "step": 10
                               }
                           ],
