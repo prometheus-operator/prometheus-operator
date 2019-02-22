@@ -2,6 +2,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
 {
   _config+:: {
+    labels: { 'apps.kubernetes.io/name': 'prometheus-operator' },
     namespace: 'default',
 
     versions+:: {
@@ -28,6 +29,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local clusterRoleBinding = k.rbac.v1.clusterRoleBinding;
 
       clusterRoleBinding.new() +
+      clusterRoleBinding.mixin.metadata.withLabels($._config.labels) +
       clusterRoleBinding.mixin.metadata.withName('prometheus-operator') +
       clusterRoleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
       clusterRoleBinding.mixin.roleRef.withName('prometheus-operator') +
@@ -105,6 +107,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local rules = [apiExtensionsRule, monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
 
       clusterRole.new() +
+      clusterRole.mixin.metadata.withLabels($._config.labels) +
       clusterRole.mixin.metadata.withName('prometheus-operator') +
       clusterRole.withRules(rules),
 
@@ -114,7 +117,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local containerPort = container.portsType;
 
       local targetPort = 8080;
-      local podLabels = { 'k8s-app': 'prometheus-operator' };
 
       local operatorContainer =
         container.new('prometheus-operator', $._config.imageRepos.prometheusOperator + ':' + $._config.versions.prometheusOperator) +
@@ -132,10 +134,10 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         container.mixin.resources.withRequests({ cpu: '100m', memory: '100Mi' }) +
         container.mixin.resources.withLimits({ cpu: '200m', memory: '200Mi' });
 
-      deployment.new('prometheus-operator', 1, operatorContainer, podLabels) +
+      deployment.new('prometheus-operator', 1, operatorContainer, $._config.labels) +
       deployment.mixin.metadata.withNamespace($._config.namespace) +
-      deployment.mixin.metadata.withLabels(podLabels) +
-      deployment.mixin.spec.selector.withMatchLabels(podLabels) +
+      deployment.mixin.metadata.withLabels($._config.labels) +
+      deployment.mixin.spec.selector.withMatchLabels($._config.labels) +
       deployment.mixin.spec.template.spec.withNodeSelector({ 'beta.kubernetes.io/os': 'linux' }) +
       deployment.mixin.spec.template.spec.securityContext.withRunAsNonRoot(true) +
       deployment.mixin.spec.template.spec.securityContext.withRunAsUser(65534) +
@@ -145,6 +147,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local serviceAccount = k.core.v1.serviceAccount;
 
       serviceAccount.new('prometheus-operator') +
+      serviceAccount.mixin.metadata.withLabels($._config.labels) +
       serviceAccount.mixin.metadata.withNamespace($._config.namespace),
 
     service:
@@ -154,7 +157,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local poServicePort = servicePort.newNamed('http', 8080, 'http');
 
       service.new('prometheus-operator', $.prometheusOperator.deployment.spec.selector.matchLabels, [poServicePort]) +
-      service.mixin.metadata.withLabels({ 'k8s-app': 'prometheus-operator' }) +
+      service.mixin.metadata.withLabels($._config.labels) +
       service.mixin.metadata.withNamespace($._config.namespace) +
       service.mixin.spec.withClusterIp('None'),
     serviceMonitor:
@@ -164,9 +167,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         metadata: {
           name: 'prometheus-operator',
           namespace: $._config.namespace,
-          labels: {
-            'k8s-app': 'prometheus-operator',
-          },
+          labels: $._config.labels,
         },
         spec: {
           endpoints: [
@@ -176,9 +177,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
             },
           ],
           selector: {
-            matchLabels: {
-              'k8s-app': 'prometheus-operator',
-            },
+            matchLabels: $._config.labels,
           },
         },
       },
