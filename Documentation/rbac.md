@@ -18,6 +18,10 @@ Here is a ready to use manifest of a `ClusterRole` that can be used to start the
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  labels:
+    apps.kubernetes.io/component: controller
+    apps.kubernetes.io/name: prometheus-operator
+    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -148,6 +152,10 @@ Say the Prometheus Operator shall be deployed in the `default` namespace. First 
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  labels:
+    apps.kubernetes.io/component: controller
+    apps.kubernetes.io/name: prometheus-operator
+    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
   namespace: default
 ```
@@ -161,6 +169,10 @@ And then a `ClusterRoleBinding`:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  labels:
+    apps.kubernetes.io/component: controller
+    apps.kubernetes.io/name: prometheus-operator
+    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
