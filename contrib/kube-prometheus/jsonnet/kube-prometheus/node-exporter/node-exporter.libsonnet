@@ -66,9 +66,13 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
       local podLabels = { app: 'node-exporter' };
 
-      local masterToleration = toleration.new() +
-                               toleration.withEffect('NoSchedule') +
-                               toleration.withKey('node-role.kubernetes.io/master');
+      local noExecuteToleration = toleration.new() +
+                                  toleration.withOperator('Exists') +
+                                  toleration.withEffect('NoExecute');
+
+      local noScheduleToleration = toleration.new() +
+                                   toleration.withOperator('Exists') +
+                                   toleration.withEffect('NoSchedule');
 
       local procVolumeName = 'proc';
       local procVolume = volume.fromHostPath(procVolumeName, '/proc');
@@ -132,7 +136,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       daemonset.mixin.metadata.withLabels(podLabels) +
       daemonset.mixin.spec.selector.withMatchLabels(podLabels) +
       daemonset.mixin.spec.template.metadata.withLabels(podLabels) +
-      daemonset.mixin.spec.template.spec.withTolerations([masterToleration]) +
+      daemonset.mixin.spec.template.spec.withTolerations([noExecuteToleration, noScheduleToleration]) +
       daemonset.mixin.spec.template.spec.withNodeSelector({ 'beta.kubernetes.io/os': 'linux' }) +
       daemonset.mixin.spec.template.spec.withContainers(c) +
       daemonset.mixin.spec.template.spec.withVolumes([procVolume, sysVolume, rootVolume]) +
