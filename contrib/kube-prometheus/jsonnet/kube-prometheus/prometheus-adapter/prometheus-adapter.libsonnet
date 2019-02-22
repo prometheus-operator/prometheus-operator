@@ -50,7 +50,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
   prometheusAdapter+:: {
     apiService:
       {
-        apiVersion: 'apiregistration.k8s.io/v1beta1',
+        apiVersion: 'apiregistration.k8s.io/v1',
         kind: 'APIService',
         metadata: {
           name: 'v1beta1.metrics.k8s.io',
@@ -147,7 +147,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
       clusterRoleBinding.new() +
       clusterRoleBinding.mixin.metadata.withName($._config.prometheusAdapter.name) +
-      clusterRoleBinding.mixin.metadata.withNamespace($._config.namespace) +
       clusterRoleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
       clusterRoleBinding.mixin.roleRef.withName($.prometheusAdapter.clusterRole.metadata.name) +
       clusterRoleBinding.mixin.roleRef.mixinInstance({ kind: 'ClusterRole' }) +
