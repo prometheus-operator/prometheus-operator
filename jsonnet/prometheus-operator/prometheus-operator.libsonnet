@@ -5,7 +5,11 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     namespace: 'default',
 
     prometheusOperator+:: {
-      labels: { 'apps.kubernetes.io/name': 'prometheus-operator' },
+      labels: {
+        'apps.kubernetes.io/name': 'prometheus-operator',
+        'apps.kubernetes.io/component': 'controller',
+        'apps.kubernetes.io/version': $._config.versions.prometheusOperator,
+      },
     },
 
     versions+:: {
