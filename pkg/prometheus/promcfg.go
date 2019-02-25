@@ -90,7 +90,20 @@ func addTLStoYaml(cfg yaml.MapSlice, tls *v1.TLSConfig) yaml.MapSlice {
 func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	m := map[string]string{}
 
-	m["prometheus"] = fmt.Sprintf("%s/%s", p.Namespace, p.Name)
+	// "prometheus" external label name by default if field is missing.
+	// Do not add external label if field is set to empty string.
+	prometheusExternalLabelName := "prometheus"
+	if p.Spec.PrometheusExternalLabelName != nil {
+		if *p.Spec.PrometheusExternalLabelName != "" {
+			prometheusExternalLabelName = *p.Spec.PrometheusExternalLabelName
+		} else {
+			prometheusExternalLabelName = ""
+		}
+	}
+
+	if prometheusExternalLabelName != "" {
+		m[prometheusExternalLabelName] = fmt.Sprintf("%s/%s", p.Namespace, p.Name)
+	}
 
 	replicaExternalLabelName := p.Spec.ReplicaExternalLabelName
 	if replicaExternalLabelName == "" {

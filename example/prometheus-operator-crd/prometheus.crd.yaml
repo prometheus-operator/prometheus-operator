@@ -1881,6 +1881,11 @@ spec:
             priorityClassName:
               description: Priority class assigned to the Pods
               type: string
+            prometheusExternalLabelName:
+              description: Name of Prometheus external label used to denote Prometheus
+                instance name. Defaults to the value of `prometheus`. External label
+                will _not_ be added when value is set to empty string (`""`).
+              type: string
             query:
               description: QuerySpec defines the query command line flags when starting
                 Prometheus.

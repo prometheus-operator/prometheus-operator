@@ -1305,6 +1305,13 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"prometheusExternalLabelName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of Prometheus external label used to denote Prometheus instance name. Defaults to the value of `prometheus`. External label will _not_ be added when value is set to empty string (`\"\"`).",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"retention": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Time duration Prometheus shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).",
