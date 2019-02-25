@@ -2,18 +2,24 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   labels:
-    k8s-app: prometheus-operator
+    apps.kubernetes.io/component: controller
+    apps.kubernetes.io/name: prometheus-operator
+    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: prometheus-operator
+      apps.kubernetes.io/component: controller
+      apps.kubernetes.io/name: prometheus-operator
+      apps.kubernetes.io/version: v0.29.0
   template:
     metadata:
       labels:
-        k8s-app: prometheus-operator
+        apps.kubernetes.io/component: controller
+        apps.kubernetes.io/name: prometheus-operator
+        apps.kubernetes.io/version: v0.29.0
     spec:
       containers:
       - args:

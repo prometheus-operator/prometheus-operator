@@ -19,6 +19,10 @@ To follow this getting started you will need a Kubernetes cluster you have acces
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  labels:
+    apps.kubernetes.io/component: controller
+    apps.kubernetes.io/name: prometheus-operator
+    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -32,6 +36,10 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  labels:
+    apps.kubernetes.io/component: controller
+    apps.kubernetes.io/name: prometheus-operator
+    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -102,18 +110,24 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   labels:
-    k8s-app: prometheus-operator
+    apps.kubernetes.io/component: controller
+    apps.kubernetes.io/name: prometheus-operator
+    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: prometheus-operator
+      apps.kubernetes.io/component: controller
+      apps.kubernetes.io/name: prometheus-operator
+      apps.kubernetes.io/version: v0.29.0
   template:
     metadata:
       labels:
-        k8s-app: prometheus-operator
+        apps.kubernetes.io/component: controller
+        apps.kubernetes.io/name: prometheus-operator
+        apps.kubernetes.io/version: v0.29.0
     spec:
       containers:
       - args:
@@ -146,6 +160,10 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  labels:
+    apps.kubernetes.io/component: controller
+    apps.kubernetes.io/name: prometheus-operator
+    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
   namespace: default
 ```
