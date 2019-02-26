@@ -121,7 +121,6 @@ spec:
     matchLabels:
       apps.kubernetes.io/component: controller
       apps.kubernetes.io/name: prometheus-operator
-      apps.kubernetes.io/version: v0.29.0
   template:
     metadata:
       labels:
