@@ -10,6 +10,53 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
     imageRepos+:: {
       thanos: 'improbable/thanos',
     },
+    replicas+:: {
+      thanosQuery: 1,
+      thanosCompact: 1,
+      thanosStore: 1,
+    },
+    resources+:: {
+      thanosQuery+:: {
+        requests: {
+          cpu: '1',
+          memory: '4Gi',
+        },
+        limits: {
+          cpu: '1',
+          memory: '4Gi',
+        },
+      },
+      thanosCompact+:: {
+        requests: {
+          cpu: '1',
+          memory: '1Gi',
+        },
+        limits: {
+          cpu: '1',
+          memory: '1Gi',
+        },
+      },
+      thanosStore+:: {
+        requests: {
+          cpu: '1',
+          memory: '1.5Gi',
+        },
+        limits: {
+          cpu: '1',
+          memory: '2Gi',
+        },
+      },
+      thanosSideCar+:: {
+        requests: {
+          cpu: '100m',
+          memory: '256Mi',
+        },
+        limits: {
+          cpu: '200m',
+          memory: '512Mi',
+        },
+      },
+    },
     thanos+:: {
       objectStorageConfig: {
         key: 'thanos.yaml',  // How the file inside the secret is called
@@ -28,6 +75,16 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
           version: $._config.versions.thanos,
           baseImage: $._config.imageRepos.thanos,
           objectStorageConfig: $._config.thanos.objectStorageConfig,
+          resources: {
+            requests: {
+              cpu: $._config.resources.thanosSideCar.requests.cpu,
+              memory: $._config.resources.thanosSideCar.requests.memory,
+            },
+            limits: {
+              cpu: $._config.resources.thanosSideCar.limits.cpu,
+              memory: $._config.resources.thanosSideCar.limits.memory,
+            },
+          },
         },
       },
     },
@@ -71,6 +128,11 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
       local deployment = k.apps.v1beta2.deployment;
       local container = k.apps.v1beta2.deployment.mixin.spec.template.spec.containersType;
       local containerPort = container.portsType;
+      local replicas = $._config.replicas.thanosQuery;
+      local requestsCPU = $._config.resources.thanosQuery.requests.cpu;
+      local requestsMEM = $._config.resources.thanosQuery.requests.memory;
+      local limitsCPU = $._config.resources.thanosQuery.limits.cpu;
+      local limitsMEM = $._config.resources.thanosQuery.limits.memory;
 
       local thanosQueryContainer =
         container.new('thanos-query', $._config.imageRepos.thanos + ':' + $._config.versions.thanos) +
@@ -84,9 +146,11 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
           '--log.level=debug',
           '--query.replica-label=prometheus_replica',
           '--cluster.peers=thanos-peers.' + $._config.namespace + '.svc:10900',
-        ]);
+        ]) +
+        container.mixin.resources.withRequests({ cpu: requestsCPU, memory: requestsMEM }) +
+        container.mixin.resources.withLimits({ cpu: limitsCPU, memory: limitsMEM });
       local podLabels = { app: 'thanos-query', 'thanos-peers': 'true' };
-      deployment.new('thanos-query', 1, thanosQueryContainer, podLabels) +
+      deployment.new('thanos-query', replicas, thanosQueryContainer, podLabels) +
       deployment.mixin.metadata.withNamespace($._config.namespace) +
       deployment.mixin.metadata.withLabels(podLabels) +
       deployment.mixin.spec.selector.withMatchLabels(podLabels) +
@@ -103,6 +167,11 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
       local container = statefulSet.mixin.spec.template.spec.containersType;
       local containerEnv = container.envType;
       local containerVolumeMount = container.volumeMountsType;
+      local replicas = $._config.replicas.thanosStore;
+      local requestsCPU = $._config.resources.thanosStore.requests.cpu;
+      local requestsMEM = $._config.resources.thanosStore.requests.memory;
+      local limitsCPU = $._config.resources.thanosStore.limits.cpu;
+      local limitsMEM = $._config.resources.thanosStore.limits.memory;
 
       local labels = { app: 'thanos', 'thanos-peers': 'true' };
 
@@ -129,9 +198,11 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
         ]) +
         container.withVolumeMounts([
           containerVolumeMount.new('data', '/var/thanos/store', false),
-        ]);
+        ]) +
+        container.mixin.resources.withRequests({ cpu: requestsCPU, memory: requestsMEM }) +
+        container.mixin.resources.withLimits({ cpu: limitsCPU, memory: limitsMEM });
 
-      statefulSet.new('thanos-store', 1, c, [], labels) +
+      statefulSet.new('thanos-store', replicas, c, [], labels) +
       statefulSet.mixin.metadata.withNamespace($._config.namespace) +
       statefulSet.mixin.spec.selector.withMatchLabels(labels) +
       statefulSet.mixin.spec.withServiceName('thanos-store') +
@@ -181,6 +252,11 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
       local container = statefulSet.mixin.spec.template.spec.containersType;
       local containerEnv = container.envType;
       local containerVolumeMount = container.volumeMountsType;
+      local replicas = $._config.replicas.thanosCompact;
+      local requestsCPU = $._config.resources.thanosCompact.requests.cpu;
+      local requestsMEM = $._config.resources.thanosCompact.requests.memory;
+      local limitsCPU = $._config.resources.thanosCompact.limits.cpu;
+      local limitsMEM = $._config.resources.thanosCompact.limits.memory;
 
       local labels = { app: 'thanos-compactor' };
 
@@ -205,9 +281,11 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
         ]) +
         container.withVolumeMounts([
           containerVolumeMount.new('data', '/var/thanos/store', false),
-        ]);
+        ]) +
+        container.mixin.resources.withRequests({ cpu: requestsCPU, memory: requestsMEM }) +
+        container.mixin.resources.withLimits({ cpu: limitsCPU, memory: limitsMEM });
 
-      statefulSet.new('thanos-compactor', 1, c, [], labels) +
+      statefulSet.new('thanos-compactor', replicas, c, [], labels) +
       statefulSet.mixin.metadata.withNamespace($._config.namespace) +
       statefulSet.mixin.spec.selector.withMatchLabels(labels) +
       statefulSet.mixin.spec.withServiceName('thanos-compactor') +
