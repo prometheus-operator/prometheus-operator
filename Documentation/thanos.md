@@ -51,6 +51,41 @@ Let's assume you saved this file to `/tmp/thanos-config.yaml`. You can use the f
 kubectl -n monitoring create secret generic thanos-objstore-config --from-file=thanos.yaml=/tmp/thanos-config.yaml
 ```
 
+### Configuring Thanos Replicas
+You can use the config block to run custom number of replicas of each Thanos component
+
+```
+{
+  _config+:: {
+    replicas+:: {
+      thanosQuery: 1,
+      thanosCompact: if thanosFederationRole =="cluster" then 1 else 0,
+      thanosStore: 1,
+    },
+    ...
+```
+
+### Configuring Thanos Resource Quotas
+You can use the config block to run Thanos components with custom resource quotas
+
+```
+{
+  _config+:: {
+    resources+:: {
+      thanosQuery+:: {
+        requests: {
+          cpu: '1',
+          memory: '4Gi',
+        },
+        limits: {
+          cpu: '1',
+          memory: '4Gi',
+        },
+      },
+      thanosCompact+:: {},
+      thanosStore+:: {},
+```
+
 ### Prometheus Custom Resource with Thanos Sidecar
 
 The `Prometheus` CRD has support for adding a Thanos sidecar to the Prometheus
