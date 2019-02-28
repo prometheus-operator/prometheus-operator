@@ -83,6 +83,7 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
           'query',
           '--log.level=debug',
           '--query.replica-label=prometheus_replica',
+          '--query.auto-downsampling',
           '--cluster.peers=thanos-peers.' + $._config.namespace + '.svc:10900',
         ]);
       local podLabels = { app: 'thanos-query', 'thanos-peers': 'true' };
