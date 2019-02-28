@@ -698,3 +698,53 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 		}
 	}
 }
+
+func TestAdditionalContainers(t *testing.T) {
+	// The base to compare everything against
+	baseSet, err := makeStatefulSet(monitoringv1.Prometheus{}, defaultTestConfig, nil, "")
+
+	// Add an extra container
+	addSset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Containers: []v1.Container{
+				{
+					Name: "extra-container",
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	require.NoError(t, err)
+
+	if len(baseSet.Spec.Template.Spec.Containers)+1 != len(addSset.Spec.Template.Spec.Containers) {
+		t.Fatalf("container count mismatch")
+	}
+
+	// Adding a new container with the same name results in
+	const existingContainerName = "prometheus"
+	modSset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Containers: []v1.Container{
+				{
+					Name: existingContainerName,
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	require.NoError(t, err)
+
+	if len(baseSet.Spec.Template.Spec.Containers)+1 != len(modSset.Spec.Template.Spec.Containers) {
+		t.Fatalf("container count mismatch")
+	}
+
+	// Check that adding a container with an existing name results in 2 containers.
+	// Note: this is a valid CRD but k8s will not start the pod because there are 2 containers with the same name
+	var containersNamedPrometheus int
+	for _, c := range modSset.Spec.Template.Spec.Containers {
+		if c.Name == existingContainerName {
+			containersNamedPrometheus++
+		}
+	}
+	if containersNamedPrometheus != 2 {
+		t.Fatalf("expected 2 containers named prometheus but only found %d", containersNamedPrometheus)
+	}
+}
