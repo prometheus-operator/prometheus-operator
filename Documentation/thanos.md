@@ -4,10 +4,10 @@ _Note: This guide is valid for Prometheus Operator v0.28+ and Thanos v0.2+ and a
 
 [Thanos](https://github.com/improbable-eng/thanos/) is a set of components
 that can be composed into a highly available
-metric system with unlimited storage capacity, if you Object Storage allows for it.
+metric system with unlimited storage capacity, if your Object Storage allows for it.
 The Prometheus Operator provides integration for allowing Prometheus to connect to Thanos.
 
-These Thanos components include the queriers and stores, which Thanos needs to
+Thanos components include the queriers and stores, which Thanos needs to
 be fully functional, and should be deployed independently of the Prometheus
 Operator and its Thanos configuration. The
 [kube-prometheus](contrib/kube-prometheus/) project has some experimental
