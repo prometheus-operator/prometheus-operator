@@ -111,19 +111,24 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
 
 ### Pre-rendered rules
 
-We acknowledge, that users may need to transition existing rules, and therefore allow an option to add additional pre-rendered rules. This can be done simply by importing the existing rules in the [Prometheus rule format](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/) using the jsonnet function `importstr`. In this example we are importing a [provided example rule](../examples/example.rules.yaml).
+We acknowledge, that users may need to transition existing rules, and therefore allow an option to add additional pre-rendered rules. Luckily the yaml and json formats are very close so the yaml rules just need to be converted to json without any manual interaction needed. Just a tool to convert yaml to json is needed:
+
+```
+go get -u -v github.com/brancz/gojsontoyaml
+```
+
+And convert the existing rule file:
+
+```
+cat existingrule.yaml | gojsontoyaml -yamltojson > existingrule.json
+```
+
+Then import it in jsonnet:
 
 [embedmd]:# (../examples/prometheus-additional-rendered-rule-example.jsonnet)
 ```jsonnet
 local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
-  _config+:: {
-    namespace: 'monitoring',
-    prometheus+:: {
-      renderedRules: {
-        'example.rules.yaml': (importstr 'example.rules.yaml'),
-      },
-    },
-  },
+  prometheusAlerts+:: (import 'existingrule.json'),
 };
 
 { ['00namespace-' + name]: kp.kubePrometheus[name] for name in std.objectFields(kp.kubePrometheus) } +
