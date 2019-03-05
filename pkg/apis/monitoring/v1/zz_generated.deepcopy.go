@@ -553,6 +553,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.ReplicaExternalLabelName != nil {
+		in, out := &in.ReplicaExternalLabelName, &out.ReplicaExternalLabelName
+		*out = new(string)
+		**out = **in
+	}
 	if in.PrometheusExternalLabelName != nil {
 		in, out := &in.PrometheusExternalLabelName, &out.PrometheusExternalLabelName
 		*out = new(string)

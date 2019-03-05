@@ -1300,7 +1300,7 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 					},
 					"replicaExternalLabelName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name of Prometheus external label used to denote replica name. Defaults to the value of `prometheus_replica`.",
+							Description: "Name of Prometheus external label used to denote replica name. Defaults to the value of `prometheus_replica`. External label will _not_ be added when value is set to empty string (`\"\"`).",
 							Type:        []string{"string"},
 							Format:      "",
 						},

@@ -110,8 +110,9 @@ type PrometheusSpec struct {
 	// Number of instances to deploy for a Prometheus deployment.
 	Replicas *int32 `json:"replicas,omitempty"`
 	// Name of Prometheus external label used to denote replica name.
-	// Defaults to the value of `prometheus_replica`.
-	ReplicaExternalLabelName string `json:"replicaExternalLabelName,omitempty"`
+	// Defaults to the value of `prometheus_replica`. External label will
+	// _not_ be added when value is set to empty string (`""`).
+	ReplicaExternalLabelName *string `json:"replicaExternalLabelName,omitempty"`
 	// Name of Prometheus external label used to denote Prometheus instance
 	// name. Defaults to the value of `prometheus`. External label will
 	// _not_ be added when value is set to empty string (`""`).

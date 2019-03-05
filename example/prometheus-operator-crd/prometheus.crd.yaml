@@ -2154,7 +2154,8 @@ spec:
               type: array
             replicaExternalLabelName:
               description: Name of Prometheus external label used to denote replica
-                name. Defaults to the value of `prometheus_replica`.
+                name. Defaults to the value of `prometheus_replica`. External label
+                will _not_ be added when value is set to empty string (`""`).
               type: string
             replicas:
               description: Number of instances to deploy for a Prometheus deployment.
