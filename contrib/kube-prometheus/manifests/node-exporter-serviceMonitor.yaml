@@ -11,6 +11,9 @@ spec:
     interval: 30s
     port: https
     scheme: https
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_node_name]
+      targetLabel: instance
     tlsConfig:
       insecureSkipVerify: true
   jobLabel: k8s-app
