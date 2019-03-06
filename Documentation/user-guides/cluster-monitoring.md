@@ -95,6 +95,8 @@ Aside from the kubelet and the API server the other Kubernetes components all ru
 
 > Note the `Service` manifests for the scheduler and controller-manager are just examples. They may need to be adapted respective to a cluster.
 
+> If you are using a managed Kubernetes cluster such as Amazon EKS, the kube-scheduler and kube-controller-manager might be hidden inside the managed control plane and not visible to Kubernetes itself.  In this case you cannot scrape them with Prometheus and must depend on your cloud provider for monitoring of these components.
+
 kube-scheduler:
 
 ```yaml
