@@ -71,9 +71,9 @@ spec:
     baseImage: improbable/thanos
     version: v0.2.1
     peers: thanos-peers.monitoring.svc:10900
-      objectStorageConfig:
-        key: thanos.yaml
-        name: thanos-objstore-config
+    objectStorageConfig:
+      key: thanos.yaml
+      name: thanos-objstore-config
 ...
 ```
 
