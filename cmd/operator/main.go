@@ -122,8 +122,8 @@ func init() {
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
 	flagset.StringVar(&cfg.PrometheusConfigReloaderImage, "prometheus-config-reloader", fmt.Sprintf("quay.io/coreos/prometheus-config-reloader:v%v", version.Version), "Prometheus config reloader image")
-	flagset.StringVar(&cfg.PrometheusConfigReloaderCPU, "prometheus-config-reloader-cpu", "50m", "Prometheus config reloader image")
-	flagset.StringVar(&cfg.PrometheusConfigReloaderMemory, "prometheus-config-reloader-memory", "50Mi", "Prometheus config reloader image")
+	flagset.StringVar(&cfg.PrometheusConfigReloaderCPU, "prometheus-config-reloader-cpu", "50m", "Prometheus config reloader CPU")
+	flagset.StringVar(&cfg.PrometheusConfigReloaderMemory, "prometheus-config-reloader-memory", "50Mi", "Prometheus config reloader Memory")
 	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", "quay.io/coreos/configmap-reload:v0.0.1", "Reload Image")
 	flagset.StringVar(&cfg.ConfigReloaderCPU, "config-reloader-cpu", "100m", "Config Reloader CPU")
 	flagset.StringVar(&cfg.ConfigReloaderMemory, "config-reloader-memory", "25Mi", "Config Reloader Memory")
