@@ -34,6 +34,9 @@ var (
 		ConfigReloaderImage:        "quay.io/coreos/configmap-reload:latest",
 		ConfigReloaderCPU:          "100m",
 		ConfigReloaderMemory:       "25Mi",
+		PrometheusConfigReloaderImage:        "quay.io/coreos/prometheus-config-reloader:latest",
+		PrometheusConfigReloaderCPU:          "50m",
+		PrometheusConfigReloaderMemory:       "50Mi",
 		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "improbable/thanos",
 	}
