@@ -109,7 +109,7 @@
               summary: 'Prometheus write-ahead log is corrupted',
             },
             expr: |||
-              tsdb_wal_corruptions_total{%(prometheusSelector)s} > 0
+              prometheus_tsdb_wal_corruptions_total{%(prometheusSelector)s} > 0
             ||| % $._config,
             'for': '4h',
             labels: {
