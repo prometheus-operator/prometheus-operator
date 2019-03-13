@@ -18,13 +18,13 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     versions+:: {
       kubeStateMetrics: 'v1.5.0',
       kubeRbacProxy: 'v0.4.1',
-      addonResizer: '2.1',
+      addonResizer: '1.8.4',
     },
 
     imageRepos+:: {
       kubeStateMetrics: 'quay.io/coreos/kube-state-metrics',
       kubeRbacProxy: 'quay.io/coreos/kube-rbac-proxy',
-      addonResizer: 'gcr.io/google-containers/addon-resizer-amd64',
+      addonResizer: 'k8s.gcr.io/addon-resizer',
     },
   },
 
@@ -175,7 +175,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           '--extra-cpu=' + $._config.kubeStateMetrics.cpuPerNode,
           '--memory=' + $._config.kubeStateMetrics.baseMemory,
           '--extra-memory=' + $._config.kubeStateMetrics.memoryPerNode,
-          '--acceptance-offset=5',
+          '--threshold=5',
           '--deployment=kube-state-metrics',
         ]) +
         container.withEnv([

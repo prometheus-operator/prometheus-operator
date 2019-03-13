@@ -260,12 +260,12 @@ These are the available fields with their respective default values:
     namespace: "default",
 
     versions+:: {
-        alertmanager: "v0.16.0",
+        alertmanager: "v0.16.1",
         nodeExporter: "v0.17.0",
         kubeStateMetrics: "v1.5.0",
         kubeRbacProxy: "v0.4.1",
-        addonResizer: "2.1",
-        prometheusOperator: "v0.28.0",
+        addonResizer: "1.8.4",
+        prometheusOperator: "v0.29.0",
         prometheus: "v2.5.0",
     },
 
@@ -274,7 +274,7 @@ These are the available fields with their respective default values:
         alertmanager: "quay.io/prometheus/alertmanager",
         kubeStateMetrics: "quay.io/coreos/kube-state-metrics",
         kubeRbacProxy: "quay.io/coreos/kube-rbac-proxy",
-        addonResizer: "gcr.io/google-containers/addon-resizer-amd64",
+        addonResizer: "k8s.gcr.io/addon-resizer",
         nodeExporter: "quay.io/prometheus/node-exporter",
         prometheusOperator: "quay.io/coreos/prometheus-operator",
     },
@@ -402,12 +402,12 @@ To produce the `docker pull/tag/push` commands that will synchronize upstream im
 
 ```shell
 $ jsonnet -J vendor -S --tla-str repository=internal-registry.com/organization sync-to-internal-registry.jsonnet
-docker pull gcr.io/google-containers/addon-resizer-amd64:2.1
-docker tag gcr.io/google-containers/addon-resizer-amd64:2.1 internal-registry.com/organization/addon-resizer:2.1
-docker push internal-registry.com/organization/addon-resizer:2.1
-docker pull quay.io/prometheus/alertmanager:v0.15.3
-docker tag quay.io/prometheus/alertmanager:v0.15.3 internal-registry.com/organization/alertmanager:v0.15.3
-docker push internal-registry.com/organization/alertmanager:v0.15.3
+docker pull k8s.gcr.io/addon-resizer:1.8.4
+docker tag k8s.gcr.io/addon-resizer:1.8.4 internal-registry.com/organization/addon-resizer:1.8.4
+docker push internal-registry.com/organization/addon-resizer:1.8.4
+docker pull quay.io/prometheus/alertmanager:v0.16.1
+docker tag quay.io/prometheus/alertmanager:v0.16.1 internal-registry.com/organization/alertmanager:v0.16.1
+docker push internal-registry.com/organization/alertmanager:v0.16.1
 ...
 ```
 
