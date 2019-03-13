@@ -225,21 +225,21 @@ spec:
         )
       record: node:node_memory_swap_io_bytes:sum_rate
     - expr: |
-        avg(irate(node_disk_io_time_seconds_total{job="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+"}[1m]))
+        avg(irate(node_disk_io_time_seconds_total{job="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+"}[1m]))
       record: :node_disk_utilisation:avg_irate
     - expr: |
         avg by (node) (
-          irate(node_disk_io_time_seconds_total{job="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+"}[1m])
+          irate(node_disk_io_time_seconds_total{job="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+"}[1m])
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
       record: node:node_disk_utilisation:avg_irate
     - expr: |
-        avg(irate(node_disk_io_time_weighted_seconds_total{job="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+"}[1m]) / 1e3)
+        avg(irate(node_disk_io_time_weighted_seconds_total{job="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+"}[1m]) / 1e3)
       record: :node_disk_saturation:avg_irate
     - expr: |
         avg by (node) (
-          irate(node_disk_io_time_weighted_seconds_total{job="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+"}[1m]) / 1e3
+          irate(node_disk_io_time_weighted_seconds_total{job="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+"}[1m]) / 1e3
         * on (namespace, pod) group_left(node)
           node_namespace_pod:kube_pod_info:
         )
@@ -769,9 +769,9 @@ spec:
         message: API server is returning errors for {{ $value }}% of requests.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorshigh
       expr: |
-        sum(rate(apiserver_request_count{job="apiserver",code=~"^(?:5..)$"}[5m])) without(instance, pod)
+        sum(rate(apiserver_request_count{job="apiserver",code=~"^(?:5..)$"}[5m]))
           /
-        sum(rate(apiserver_request_count{job="apiserver"}[5m])) without(instance, pod) * 100 > 10
+        sum(rate(apiserver_request_count{job="apiserver"}[5m])) * 100 > 3
       for: 10m
       labels:
         severity: critical
@@ -780,9 +780,33 @@ spec:
         message: API server is returning errors for {{ $value }}% of requests.
         runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorshigh
       expr: |
-        sum(rate(apiserver_request_count{job="apiserver",code=~"^(?:5..)$"}[5m])) without(instance, pod)
+        sum(rate(apiserver_request_count{job="apiserver",code=~"^(?:5..)$"}[5m]))
           /
-        sum(rate(apiserver_request_count{job="apiserver"}[5m])) without(instance, pod) * 100 > 5
+        sum(rate(apiserver_request_count{job="apiserver"}[5m])) * 100 > 1
+      for: 10m
+      labels:
+        severity: warning
+    - alert: KubeAPIErrorsHigh
+      annotations:
+        message: API server is returning errors for {{ $value }}% of requests for
+          {{ $labels.verb }} {{ $labels.resource }} {{ $labels.subresource }}.
+        runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorshigh
+      expr: |
+        sum(rate(apiserver_request_count{job="apiserver",code=~"^(?:5..)$"}[5m])) by (resource,subresource,verb)
+          /
+        sum(rate(apiserver_request_count{job="apiserver"}[5m])) by (resource,subresource,verb) * 100 > 10
+      for: 10m
+      labels:
+        severity: critical
+    - alert: KubeAPIErrorsHigh
+      annotations:
+        message: API server is returning errors for {{ $value }}% of requests for
+          {{ $labels.verb }} {{ $labels.resource }} {{ $labels.subresource }}.
+        runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeapierrorshigh
+      expr: |
+        sum(rate(apiserver_request_count{job="apiserver",code=~"^(?:5..)$"}[5m])) by (resource,subresource,verb)
+          /
+        sum(rate(apiserver_request_count{job="apiserver"}[5m])) by (resource,subresource,verb) * 100 > 5
       for: 10m
       labels:
         severity: warning
@@ -843,14 +867,14 @@ spec:
       for: 10m
       labels:
         severity: warning
-    - alert: Watchdog
+    - alert: DeadMansSwitch
       annotations:
         message: |
           This is an alert meant to ensure that the entire alerting pipeline is functional.
           This alert is always firing, therefore it should always be firing in Alertmanager
           and always fire against a receiver. There are integrations with various notification
           mechanisms that send a notification when this alert is not firing. For example the
-          "DeadMansSnitch" integration in PagerDuty.
+          "DeadMansSwitch" integration in PagerDuty.
       expr: vector(1)
       labels:
         severity: none
@@ -951,7 +975,7 @@ spec:
           log (WAL).'
         summary: Prometheus write-ahead log is corrupted
       expr: |
-        tsdb_wal_corruptions_total{job="prometheus-k8s",namespace="monitoring"} > 0
+        prometheus_tsdb_wal_corruptions_total{job="prometheus-k8s",namespace="monitoring"} > 0
       for: 4h
       labels:
         severity: warning

@@ -349,7 +349,7 @@ spec:
         - --extra-cpu=2m
         - --memory=150Mi
         - --extra-memory=30Mi
-        - --acceptance-offset=5
+        - --threshold=5
         - --deployment=kube-state-metrics
         env:
         - name: MY_POD_NAME
@@ -362,7 +362,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: gcr.io/google-containers/addon-resizer-amd64:2.1
+        image: k8s.gcr.io/addon-resizer:1.8.4
         name: addon-resizer
         resources:
           limits:
@@ -659,7 +659,7 @@ spec:
     runAsNonRoot: true
     runAsUser: 1000
   serviceAccountName: alertmanager-main
-  version: v0.16.0
+  version: v0.16.1
 ```
 
 Read more in the [alerting guide](alerting.md) on how to configure the Alertmanager as it will not spin up unless it has a valid configuration mounted through a `Secret`. Note that the `Secret` has to be in the same namespace as the `Alertmanager` resource as well as have the name `alertmanager-<name-of-alertmanager-object>` and the key of the configuration is `alertmanager.yaml`.
