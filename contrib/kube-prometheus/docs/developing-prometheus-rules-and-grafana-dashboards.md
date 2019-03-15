@@ -139,7 +139,75 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
 { ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
 { ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
 ```
+### Changing default rules
 
+Along with adding additional rules, we give the user the option to filter or adjust the existing rules imported by `kube-prometheus/kube-prometheus.libsonnet`. The recording rules can be found in [kube-prometheus/rules](https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus/jsonnet/kube-prometheus/rules) and [kubernetes-mixin/rules](https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/rules) while the alerting rules can be found in [kube-prometheus/alerts](https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus/jsonnet/kube-prometheus/alerts) and [kubernetes-mixin/alerts](https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/alerts).
+
+Knowing which rules to change, the user can now use functions from the [Jsonnet standard library](https://jsonnet.org/ref/stdlib.html) to make these changes. Below are examples of both a filter and an adjustment being made to the default rules. These changes can be assigned to a local variable and then added to the `local kp` object as seen in the examples above.  
+
+#### Filter
+Here the alert `KubeStatefulSetReplicasMismatch` is being filtered out of the group `kubernetes-apps`. The default rule can be seen [here](https://github.com/kubernetes-monitoring/kubernetes-mixin/blob/master/alerts/apps_alerts.libsonnet).
+```jsonnet
+local filter = {
+  prometheusAlerts+:: {
+    groups: std.map(
+      function(group)
+        if group.name == 'kubernetes-apps' then
+          group {
+            rules: std.filter(function(rule)
+              rule.alert != "KubeStatefulSetReplicasMismatch",
+              group.rules
+            )
+          }
+        else
+          group,
+      super.groups
+    ),
+  },
+};
+```
+#### Adjustment
+Here the expression for the alert used above is updated from its previous value. The default rule can be seen [here](https://github.com/kubernetes-monitoring/kubernetes-mixin/blob/master/alerts/apps_alerts.libsonnet).
+```jsonnet
+local update = {
+  prometheusAlerts+:: {
+    groups: std.map(
+      function(group)
+        if group.name == 'kubernetes-apps' then
+          group {
+            rules: std.map(
+              function(rule)
+                if rule.alert == "KubeStatefulSetReplicasMismatch" then
+                  rule {
+                    expr: "kube_statefulset_status_replicas_ready{job=\"kube-state-metrics\",statefulset!=\"vault\"} != kube_statefulset_status_replicas{job=\"kube-state-metrics\",statefulset!=\"vault\"}"
+                  }
+                else
+                  rule,
+                group.rules
+            )
+          }
+        else
+          group,
+      super.groups
+    ),
+  },
+};
+```
+Using the example from above about adding in pre-rendered rules, the new local vaiables can be added in as follows:
+```jsonnet
+local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + filter + update + {
+    prometheusAlerts+:: (import 'existingrule.json'),
+};
+
+{ ['00namespace-' + name]: kp.kubePrometheus[name] for name in std.objectFields(kp.kubePrometheus) } +
+{ ['0prometheus-operator-' + name]: kp.prometheusOperator[name] for name in std.objectFields(kp.prometheusOperator) } +
+{ ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) } +
+{ ['kube-state-metrics-' + name]: kp.kubeStateMetrics[name] for name in std.objectFields(kp.kubeStateMetrics) } +
+{ ['alertmanager-' + name]: kp.alertmanager[name] for name in std.objectFields(kp.alertmanager) } +
+{ ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
+{ ['prometheus-adapter-' + name]: kp.prometheusAdapter[name] for name in std.objectFields(kp.prometheusAdapter) } +
+{ ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) }
+``` 
 ## Dashboards
 
 Dashboards can either be added using jsonnet or simply a pre-rendered json dashboard.
