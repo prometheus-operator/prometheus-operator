@@ -23,7 +23,7 @@
                 This alert is always firing, therefore it should always be firing in Alertmanager
                 and always fire against a receiver. There are integrations with various notification
                 mechanisms that send a notification when this alert is not firing. For example the
-                "DeadMansSwitch" integration in PagerDuty.
+                "DeadMansSnitch" integration in PagerDuty.
               |||,
             },
             expr: 'vector(1)',
