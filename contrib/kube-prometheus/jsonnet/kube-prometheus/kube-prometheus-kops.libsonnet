@@ -15,7 +15,7 @@ local servicePort = k.core.v1.service.mixin.spec.portsType;
       service.mixin.metadata.withLabels({ 'k8s-app': 'kube-scheduler' }) +
       service.mixin.spec.withClusterIp('None'),
     kubeDnsPrometheusDiscoveryService:
-      service.new('kube-dns-prometheus-discovery', { 'k8s-app': 'kube-dns' }, [servicePort.newNamed('http-metrics-skydns', 10055, 10055), servicePort.newNamed('http-metrics-dnsmasq', 10054, 10054)]) +
+      service.new('kube-dns-prometheus-discovery', { 'k8s-app': 'kube-dns' }, [servicePort.newNamed('metrics', 10055, 10055), servicePort.newNamed('http-metrics-dnsmasq', 10054, 10054)]) +
       service.mixin.metadata.withNamespace('kube-system') +
       service.mixin.metadata.withLabels({ 'k8s-app': 'kube-dns' }) +
       service.mixin.spec.withClusterIp('None'),
