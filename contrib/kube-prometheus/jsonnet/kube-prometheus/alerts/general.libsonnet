@@ -16,7 +16,7 @@
             },
           },
           {
-            alert: 'DeadMansSwitch',
+            alert: 'Watchdog',
             annotations: {
               message: |||
                 This is an alert meant to ensure that the entire alerting pipeline is functional.

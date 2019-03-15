@@ -298,7 +298,7 @@ These are the available fields with their respective default values:
           receiver: 'null'
           routes:
           - match:
-              alertname: DeadMansSwitch
+              alertname: Watchdog
             receiver: 'null'
         receivers:
         - name: 'null'
@@ -497,7 +497,7 @@ The Alertmanager configuration is located in the `_config.alertmanager.config` c
            receiver: 'null'
            routes:
            - match:
-               alertname: DeadMansSwitch
+               alertname: Watchdog
              receiver: 'null'
          receivers:
          - name: 'null'
