@@ -5499,7 +5499,7 @@ items:
                           ],
                           "timeFrom": null,
                           "timeShift": null,
-                          "title": "CPU Utilizaion",
+                          "title": "CPU Utilization",
                           "tooltip": {
                               "shared": false,
                               "sort": 0,
