@@ -5,7 +5,7 @@ ENV JSONNET_VERSION 0.12.1
 RUN apt-get update -y && apt-get install -y g++ make git jq && \
     rm -rf /var/lib/apt/lists/*
 RUN curl -Lso - https://github.com/google/jsonnet/archive/v${JSONNET_VERSION}.tar.gz | \
-    tar xvfz - -C /tmp && \
+    tar xfz - -C /tmp && \
     cd /tmp/jsonnet-${JSONNET_VERSION} && \
     make && mv jsonnet /usr/local/bin && \
     rm -rf /tmp/jsonnet-${JSONNET_VERSION}

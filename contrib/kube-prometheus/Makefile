@@ -19,6 +19,7 @@ generate-in-docker: ../../hack/jsonnet-docker-image
 	-u=$(shell id -u $(USER)):$(shell id -g $(USER)) \
 	-v $(shell dirname $(dir $(abspath $(dir $$PWD)))):/go/src/github.com/coreos/prometheus-operator/ \
 	--workdir /go/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus \
+	-e GOCACHE \
 	po-jsonnet make generate
 
 generate: manifests **.md
@@ -52,6 +53,7 @@ test-in-docker: ../../hack/jsonnet-docker-image
 	-u=$(shell id -u $(USER)):$(shell id -g $(USER)) \
 	-v $(shell dirname $(dir $(abspath $(dir $$PWD)))):/go/src/github.com/coreos/prometheus-operator/ \
 	--workdir /go/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus \
+	-e GOCACHE \
 	po-jsonnet make test
 
 $(JB_BINARY):

@@ -10,6 +10,7 @@ cache:
 env:
   global:
   - GOCACHE=$HOME/.go-build
+  - CHANGE_MINIKUBE_NONE_USER=true
 services:
 - docker
 before_install:
@@ -32,5 +33,5 @@ jobs:
   # kube-prometheus e2e tests
   - script: ./contrib/kube-prometheus/tests/e2e/travis-e2e.sh
 
-  - stage: push-docker-image
-    script: ./scripts/travis-push-docker-image.sh
+#  - stage: push-docker-image
+#    script: ./scripts/travis-push-docker-image.sh
