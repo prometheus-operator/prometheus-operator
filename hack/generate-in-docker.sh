@@ -22,4 +22,5 @@ docker run \
     --rm \
     -u="$(id -u "$USER")":"$(id -g "$USER")" \
     -v "${SCRIPTDIR}/..:/go/src/github.com/coreos/prometheus-operator${VOLUME_OPTIONS}" \
+    -v $(go env GOCACHE):/.cache/go-build/ \
     po-jsonnet make ${MFLAGS[@]} generate
