@@ -140,8 +140,6 @@ type Config struct {
 	ConfigReloaderCPU              string
 	ConfigReloaderMemory           string
 	PrometheusConfigReloaderImage  string
-	PrometheusConfigReloaderCPU    string
-	PrometheusConfigReloaderMemory string
 	AlertmanagerDefaultBaseImage   string
 	PrometheusDefaultBaseImage     string
 	ThanosDefaultBaseImage         string

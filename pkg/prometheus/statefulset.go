@@ -875,8 +875,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 						VolumeMounts: configReloadVolumeMounts,
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse(c.PrometheusConfigReloaderCPU),
-								v1.ResourceMemory: resource.MustParse(c.PrometheusConfigReloaderMemory),
+								v1.ResourceCPU:    resource.MustParse(c.ConfigReloaderCPU),
+								v1.ResourceMemory: resource.MustParse(c.ConfigReloaderMemory),
 							},
 						},
 					},
