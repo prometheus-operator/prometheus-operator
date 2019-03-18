@@ -43,7 +43,7 @@ local configMapList = k.core.v1.configMapList;
     namespace: 'default',
 
     versions+:: {
-      grafana: '6.0.0-beta1',
+      grafana: '6.0.1',
     },
 
     tlsCipherSuites: [

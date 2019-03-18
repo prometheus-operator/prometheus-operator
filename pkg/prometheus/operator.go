@@ -478,6 +478,7 @@ func (c *Operator) handlePrometheusUpdate(old, cur interface{}) {
 }
 
 func (c *Operator) reconcileNodeEndpoints(stopc <-chan struct{}) {
+	c.syncNodeEndpointsWithLogError()
 	ticker := time.NewTicker(3 * time.Minute)
 	defer ticker.Stop()
 	for {
@@ -485,10 +486,7 @@ func (c *Operator) reconcileNodeEndpoints(stopc <-chan struct{}) {
 		case <-stopc:
 			return
 		case <-ticker.C:
-			err := c.syncNodeEndpoints()
-			if err != nil {
-				level.Error(c.logger).Log("msg", "syncing nodes into Endpoints object failed", "err", err)
-			}
+			c.syncNodeEndpointsWithLogError()
 		}
 	}
 }
@@ -535,6 +533,13 @@ func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
 	}
 
 	return addresses, errs
+}
+
+func (c *Operator) syncNodeEndpointsWithLogError() {
+	err := c.syncNodeEndpoints()
+	if err != nil {
+		level.Error(c.logger).Log("msg", "syncing nodes into Endpoints object failed", "err", err)
+	}
 }
 
 func (c *Operator) syncNodeEndpoints() error {
