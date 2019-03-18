@@ -40,12 +40,12 @@ func MakeDeployment(pathToYaml string) (*appsv1.Deployment, error) {
 	if err != nil {
 		return nil, err
 	}
-	tectonicPromOp := appsv1.Deployment{}
-	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&tectonicPromOp); err != nil {
+	deployment := appsv1.Deployment{}
+	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&deployment); err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to decode file %s", pathToYaml))
 	}
 
-	return &tectonicPromOp, nil
+	return &deployment, nil
 }
 
 func CreateDeployment(kubeClient kubernetes.Interface, namespace string, d *appsv1.Deployment) error {

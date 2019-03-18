@@ -164,10 +164,20 @@ type Namespaces struct {
 	PrometheusAllowList, AlertmanagerAllowList []string
 }
 
+// BasicAuthCredentials represents a username password pair to be used with
+// basic http authentication, see https://tools.ietf.org/html/rfc7617.
 type BasicAuthCredentials struct {
 	username string
 	password string
 }
+
+// BearerToken represents a bearer token, see
+// https://tools.ietf.org/html/rfc6750.
+type BearerToken string
+
+// TLSAsset represents any TLS related opaque string, e.g. CA files, client
+// certificates.
+type TLSAsset string
 
 // New creates a new controller.
 func New(conf Config, logger log.Logger) (*Operator, error) {
@@ -1091,6 +1101,10 @@ func (c *Operator) sync(key string) error {
 		return err
 	}
 
+	if err := c.createOrUpdateTLSAssetSecret(p); err != nil {
+		return errors.Wrap(err, "creating tls asset secret failed")
+	}
+
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if err := k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(p, c.config)); err != nil {
@@ -1351,6 +1365,7 @@ func (c *Operator) loadBasicAuthSecrets(
 				}
 				secrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = credentials
 			}
+
 		}
 	}
 
@@ -1387,6 +1402,94 @@ func (c *Operator) loadBasicAuthSecrets(
 
 }
 
+func (c *Operator) loadBearerTokensFromSecrets(mons map[string]*monitoringv1.ServiceMonitor) (map[string]BearerToken, error) {
+	tokens := map[string]BearerToken{}
+	nsSecretCache := make(map[string]*v1.Secret)
+
+	for _, mon := range mons {
+		for i, ep := range mon.Spec.Endpoints {
+			if ep.BearerTokenSecret.Name == "" {
+				continue
+			}
+
+			sClient := c.kclient.CoreV1().Secrets(mon.Namespace)
+			token, err := getCredFromSecret(
+				sClient,
+				ep.BearerTokenSecret,
+				"bearertoken",
+				mon.Namespace+"/"+ep.BearerTokenSecret.Name,
+				nsSecretCache,
+			)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"failed to extract endpoint bearertoken for servicemonitor %v from secret %v in namespace %v",
+					mon.Name, ep.BearerTokenSecret.Name, mon.Namespace,
+				)
+			}
+
+			tokens[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = BearerToken(token)
+		}
+	}
+
+	return tokens, nil
+}
+
+func (c *Operator) loadTLSAssetsFromSecrets(mons map[string]*monitoringv1.ServiceMonitor) (map[string]TLSAsset, error) {
+	assets := map[string]TLSAsset{}
+	nsSecretCache := make(map[string]*v1.Secret)
+
+	for _, mon := range mons {
+		for _, ep := range mon.Spec.Endpoints {
+			if ep.TLSConfig == nil {
+				continue
+			}
+
+			prefix := mon.Namespace + "/"
+			secretSelectors := map[string]*v1.SecretKeySelector{}
+			if ep.TLSConfig.CASecret != nil {
+				secretSelectors[prefix+ep.TLSConfig.CASecret.Name+"/"+ep.TLSConfig.CASecret.Key] = ep.TLSConfig.CASecret
+			}
+			if ep.TLSConfig.CertSecret != nil {
+
+				secretSelectors[prefix+ep.TLSConfig.CertSecret.Name+"/"+ep.TLSConfig.CertSecret.Key] = ep.TLSConfig.CertSecret
+			}
+			if ep.TLSConfig.KeySecret != nil {
+				secretSelectors[prefix+ep.TLSConfig.KeySecret.Name+"/"+ep.TLSConfig.KeySecret.Key] = ep.TLSConfig.KeySecret
+			}
+
+			for key, selector := range secretSelectors {
+				sClient := c.kclient.CoreV1().Secrets(mon.Namespace)
+				asset, err := getCredFromSecret(
+					sClient,
+					*selector,
+					"tls config",
+					// TODO: Is the cache key really necessary? Can't this be part of `getCredFromSecret`?
+					key,
+					nsSecretCache,
+				)
+				if err != nil {
+					return nil, fmt.Errorf(
+						"failed to extract endpoint tls asset for servicemonitor %v from secret %v and key %v in namespace %v",
+						mon.Name, selector.Name, selector.Key, mon.Namespace,
+					)
+				}
+
+				// TODO: Namespacing via underscores seems rather hacky.
+				assets[fmt.Sprintf(
+					"%v_%v_%v",
+					mon.Namespace,
+					selector.Name,
+					selector.Key,
+				)] = TLSAsset(asset)
+
+			}
+
+		}
+	}
+
+	return assets, nil
+}
+
 func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus, ruleConfigMapNames []string) error {
 	smons, err := c.selectServiceMonitors(p)
 	if err != nil {
@@ -1405,6 +1508,11 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	}
 
 	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, p.Spec.APIServerConfig, SecretsInPromNS)
+	if err != nil {
+		return err
+	}
+
+	bearerTokens, err := c.loadBearerTokensFromSecrets(smons)
 	if err != nil {
 		return err
 	}
@@ -1428,6 +1536,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		smons,
 		pmons,
 		basicAuthSecrets,
+		bearerTokens,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
@@ -1475,9 +1584,73 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	return err
 }
 
+func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) error {
+	boolTrue := true
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+
+	smons, err := c.selectServiceMonitors(p)
+	if err != nil {
+		return errors.Wrap(err, "selecting ServiceMonitors failed")
+	}
+
+	tlsAssets, err := c.loadTLSAssetsFromSecrets(smons)
+	if err != nil {
+		return err
+	}
+
+	tlsAssetsSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   tlsAssetsSecretName(p.Name),
+			Labels: c.config.Labels.Merge(managedByOperatorLabels),
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         p.APIVersion,
+					BlockOwnerDeletion: &boolTrue,
+					Controller:         &boolTrue,
+					Kind:               p.Kind,
+					Name:               p.Name,
+					UID:                p.UID,
+				},
+			},
+		},
+		Data: map[string][]byte{},
+	}
+
+	for key, asset := range tlsAssets {
+		tlsAssetsSecret.Data[key] = []byte(asset)
+	}
+
+	oldSecretExists := true
+	_, err = sClient.Get(tlsAssetsSecret.Name, metav1.GetOptions{})
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			return errors.Wrapf(
+				err,
+				"failed to check whether tls assets secret already exists for Prometheus %v in namespace %v",
+				p.Name,
+				p.Namespace,
+			)
+		}
+
+		oldSecretExists = false
+	}
+
+	if oldSecretExists {
+		_, err = sClient.Update(tlsAssetsSecret)
+	} else {
+		_, err = sClient.Create(tlsAssetsSecret)
+	}
+
+	if err != nil {
+		return errors.Wrapf(err, "failed to create tls assets secret for Prometheus %v in namespace %v", p.Name, p.Namespace)
+	}
+
+	return nil
+}
+
 func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string]*monitoringv1.ServiceMonitor, error) {
 	namespaces := []string{}
-	// Selectors might overlap. Deduplicate them along the keyFunc.
+	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	res := make(map[string]*monitoringv1.ServiceMonitor)
 
 	servMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
@@ -1509,6 +1682,25 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 				res[k] = obj.(*monitoringv1.ServiceMonitor)
 			}
 		})
+	}
+
+	// If denied by Prometheus spec, filter out all service monitors that access
+	// the file system.
+	if p.Spec.ArbitraryFSAccessThroughSMs.Deny {
+		for namespaceAndName, sm := range res {
+			for _, endpoint := range sm.Spec.Endpoints {
+				if err := testForArbitraryFSAccess(endpoint); err != nil {
+					delete(res, namespaceAndName)
+					level.Warn(c.logger).Log(
+						"msg", "skipping servicemonitor",
+						"error", err.Error(),
+						"servicemonitor", namespaceAndName,
+						"namespace", p.Namespace,
+						"prometheus", p.Name,
+					)
+				}
+			}
+		}
 	}
 
 	serviceMonitors := []string{}
@@ -1561,6 +1753,27 @@ func (c *Operator) selectPodMonitors(p *monitoringv1.Prometheus) (map[string]*mo
 	level.Debug(c.logger).Log("msg", "selected PodMonitors", "podmonitors", strings.Join(podMonitors, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	return res, nil
+}
+
+func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
+	if e.BearerTokenFile != "" {
+		return errors.New("it accesses file system via bearer token file which Prometheus specification prohibits")
+	}
+
+	tlsConf := e.TLSConfig
+	if tlsConf == nil {
+		return nil
+	}
+
+	if err := e.TLSConfig.Validate(); err != nil {
+		return err
+	}
+
+	if tlsConf.CAFile != "" || tlsConf.CertFile != "" || tlsConf.KeyFile != "" {
+		return errors.New("it accesses file system via tls config which Prometheus specification prohibits")
+	}
+
+	return nil
 }
 
 // listMatchingNamespaces lists all the namespaces that match the provided

@@ -22,11 +22,15 @@ import (
 )
 
 func CreateClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) (finalizerFn, error) {
-	finalizerFn := func() error { return DeleteClusterRoleBinding(kubeClient, relativePath) }
+	finalizerFn := func() error { return DeleteClusterRoleBinding(kubeClient, ns, relativePath) }
 	clusterRoleBinding, err := parseClusterRoleBindingYaml(relativePath)
 	if err != nil {
 		return finalizerFn, err
 	}
+
+	// Make sure to create a new cluster role binding for each namespace to
+	// prevent concurrent tests to delete each others bindings.
+	clusterRoleBinding.Name = ns + "-" + clusterRoleBinding.Name
 
 	clusterRoleBinding.Subjects[0].Namespace = ns
 
@@ -49,11 +53,15 @@ func CreateClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relati
 	return finalizerFn, err
 }
 
-func DeleteClusterRoleBinding(kubeClient kubernetes.Interface, relativePath string) error {
+func DeleteClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) error {
 	clusterRoleBinding, err := parseClusterRoleYaml(relativePath)
 	if err != nil {
 		return err
 	}
+
+	// Make sure to delete the specific cluster role binding for the namespace
+	// it was created preventing concurrent tests to delete each others bindings.
+	clusterRoleBinding.Name = ns + "-" + clusterRoleBinding.Name
 
 	return kubeClient.RbacV1().ClusterRoleBindings().Delete(clusterRoleBinding.Name, &metav1.DeleteOptions{})
 }
