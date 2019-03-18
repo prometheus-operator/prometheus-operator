@@ -202,7 +202,7 @@ func (ctx *TestCtx) SetupPrometheusRBACGlobal(t *testing.T, ns string, kubeClien
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	if finalizerFn, err := CreateClusterRoleBinding(kubeClient, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil {
+	if finalizerFn, err := CreateClusterRoleBinding(kubeClient, ns, "../../example/rbac/prometheus/prometheus-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus cluster role binding"))
 	} else {
 		ctx.AddFinalizerFn(finalizerFn)

@@ -27,12 +27,23 @@ import (
 func main() {
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		if checkAuth(w, r) {
+		if checkBasicAuth(w, r) {
 			promhttp.Handler().ServeHTTP(w, r)
 			return
 		}
 
 		w.Header().Set("WWW-Authenticate", `Basic realm="MY REALM"`)
+		w.WriteHeader(401)
+		w.Write([]byte("401 Unauthorized\n"))
+	})
+
+	http.HandleFunc("/bearer-metrics", func(w http.ResponseWriter, r *http.Request) {
+		if checkBearerAuth(w, r) {
+			promhttp.Handler().ServeHTTP(w, r)
+			return
+		}
+
+		w.Header().Set("WWW-Authenticate", `Bearer realm="MY REALM"`)
 		w.WriteHeader(401)
 		w.Write([]byte("401 Unauthorized\n"))
 	})
@@ -45,7 +56,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "\nAppVersion:"+os.Getenv("VERSION"))
 }
 
-func checkAuth(w http.ResponseWriter, r *http.Request) bool {
+func checkBasicAuth(w http.ResponseWriter, r *http.Request) bool {
 	s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 	if len(s) != 2 {
 		return false
@@ -62,4 +73,15 @@ func checkAuth(w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	return pair[0] == "user" && pair[1] == "pass"
+}
+
+func checkBearerAuth(w http.ResponseWriter, r *http.Request) bool {
+	s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
+	if len(s) != 2 {
+		return false
+	}
+
+	fmt.Println(s[1])
+
+	return s[1] == "abc"
 }

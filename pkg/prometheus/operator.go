@@ -154,10 +154,16 @@ type Config struct {
 	ManageCRDs                    bool
 }
 
+// BasicAuthCredentials represents a username password pair to be used with
+// basic http authentication, see https://tools.ietf.org/html/rfc7617.
 type BasicAuthCredentials struct {
 	username string
 	password string
 }
+
+// BearerToken represents a bearer token, see
+// https://tools.ietf.org/html/rfc6750.
+type BearerToken string
 
 // New creates a new controller.
 func New(conf Config, logger log.Logger) (*Operator, error) {
@@ -1274,6 +1280,7 @@ func (c *Operator) loadBasicAuthSecrets(
 				}
 				secrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = credentials
 			}
+
 		}
 	}
 
@@ -1310,6 +1317,38 @@ func (c *Operator) loadBasicAuthSecrets(
 
 }
 
+func (c *Operator) loadBearerTokensFromSecrets(mons map[string]*monitoringv1.ServiceMonitor) (map[string]BearerToken, error) {
+	tokens := map[string]BearerToken{}
+	nsSecretCache := make(map[string]*v1.Secret)
+
+	for _, mon := range mons {
+		for i, ep := range mon.Spec.Endpoints {
+			if ep.BearerTokenSecret == nil {
+				continue
+			}
+
+			sClient := c.kclient.CoreV1().Secrets(mon.Namespace)
+			token, err := getCredFromSecret(
+				sClient,
+				*ep.BearerTokenSecret,
+				"bearertoken",
+				mon.Namespace+"/"+ep.BearerTokenSecret.Name,
+				nsSecretCache,
+			)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"failed to extract endpoint bearertoken for servicemonitor %v from secret %v in namespace %v",
+					mon.Name, ep.BearerTokenSecret.Name, mon.Namespace,
+				)
+			}
+
+			tokens[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = BearerToken(token)
+		}
+	}
+
+	return tokens, nil
+}
+
 func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus, ruleConfigMapNames []string) error {
 	smons, err := c.selectServiceMonitors(p)
 	if err != nil {
@@ -1323,6 +1362,11 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	}
 
 	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, p.Spec.APIServerConfig, SecretsInPromNS)
+	if err != nil {
+		return err
+	}
+
+	bearerTokens, err := c.loadBearerTokensFromSecrets(smons)
 	if err != nil {
 		return err
 	}
@@ -1345,6 +1389,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		p,
 		smons,
 		basicAuthSecrets,
+		bearerTokens,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,

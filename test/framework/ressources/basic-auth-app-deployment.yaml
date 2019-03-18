@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: example-app
-        image: quay.io/coreos/basic-auth-test-app:0.1.0
+        image: quay.io/mxinden/basic-auth-test-app:0.2.0-bearer
         imagePullPolicy: IfNotPresent
         ports:
         - name: web

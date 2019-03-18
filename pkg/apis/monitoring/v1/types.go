@@ -254,6 +254,11 @@ type PrometheusSpec struct {
 	Thanos *ThanosSpec `json:"thanos,omitempty"`
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
+	// Allow local file access. E.g. bearer tokens ....
+	// Config struct {
+	// 	DenyInGeneral         bool
+	// 	WhitelistSpecificOnes []string
+	// }
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not
@@ -569,10 +574,15 @@ type Endpoint struct {
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// File to read bearer token for scraping targets.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
+	// Secret to mount to read bearer token for scraping targets. The secret
+	// needs to be in the same namespace as the service monitor and accessible by
+	// the Prometheus Operator.
+	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	HonorLabels bool `json:"honorLabels,omitempty"`
 	// BasicAuth allow an endpoint to authenticate over basic authentication
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// TODO: from which ns is this?
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
@@ -587,9 +597,9 @@ type Endpoint struct {
 // More info: https://prometheus.io/docs/operating/configuration/#endpoints
 // +k8s:openapi-gen=true
 type BasicAuth struct {
-	// The secret that contains the username for authenticate
+	// The secret that contains the username for authentication.
 	Username v1.SecretKeySelector `json:"username,omitempty"`
-	// The secret that contains the password for authenticate
+	// The secret that contains the password for authentication.
 	Password v1.SecretKeySelector `json:"password,omitempty"`
 }
 

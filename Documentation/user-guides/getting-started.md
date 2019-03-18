@@ -19,10 +19,6 @@ To follow this getting started you will need a Kubernetes cluster you have acces
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  labels:
-    apps.kubernetes.io/component: controller
-    apps.kubernetes.io/name: prometheus-operator
-    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -36,10 +32,6 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels:
-    apps.kubernetes.io/component: controller
-    apps.kubernetes.io/name: prometheus-operator
-    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -110,31 +102,26 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   labels:
-    apps.kubernetes.io/component: controller
-    apps.kubernetes.io/name: prometheus-operator
-    apps.kubernetes.io/version: v0.29.0
+    k8s-app: prometheus-operator
   name: prometheus-operator
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      apps.kubernetes.io/component: controller
-      apps.kubernetes.io/name: prometheus-operator
+      k8s-app: prometheus-operator
   template:
     metadata:
       labels:
-        apps.kubernetes.io/component: controller
-        apps.kubernetes.io/name: prometheus-operator
-        apps.kubernetes.io/version: v0.29.0
+        k8s-app: prometheus-operator
     spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --logtostderr=true
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.29.0
-        image: quay.io/coreos/prometheus-operator:v0.29.0
+        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.28.0
+        image: quay.io/coreos/prometheus-operator:v0.28.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -159,10 +146,6 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  labels:
-    apps.kubernetes.io/component: controller
-    apps.kubernetes.io/name: prometheus-operator
-    apps.kubernetes.io/version: v0.29.0
   name: prometheus-operator
   namespace: default
 ```

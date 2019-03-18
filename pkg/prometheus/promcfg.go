@@ -130,6 +130,7 @@ func (cg *configGenerator) generateConfig(
 	p *v1.Prometheus,
 	mons map[string]*v1.ServiceMonitor,
 	basicAuthSecrets map[string]BasicAuthCredentials,
+	bearerTokens map[string]BearerToken,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertManagerConfigs []byte,
@@ -190,7 +191,7 @@ func (cg *configGenerator) generateConfig(
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range identifiers {
 		for i, ep := range mons[identifier].Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, cg.generateServiceMonitorConfig(version, mons[identifier], ep, i, apiserverConfig, basicAuthSecrets))
+			scrapeConfigs = append(scrapeConfigs, cg.generateServiceMonitorConfig(version, mons[identifier], ep, i, apiserverConfig, basicAuthSecrets, bearerTokens))
 		}
 	}
 	var alertmanagerConfigs []yaml.MapSlice
@@ -272,7 +273,15 @@ func (cg *configGenerator) generateConfig(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, m *v1.ServiceMonitor, ep v1.Endpoint, i int, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
+func (cg *configGenerator) generateServiceMonitorConfig(
+	version semver.Version,
+	m *v1.ServiceMonitor,
+	ep v1.Endpoint,
+	i int,
+	apiserverConfig *v1.APIServerConfig,
+	basicAuthSecrets map[string]BasicAuthCredentials,
+	bearerTokens map[string]BearerToken,
+) yaml.MapSlice {
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -321,6 +330,12 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 
 	if ep.BearerTokenFile != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
+	}
+
+	if ep.BearerTokenSecret != nil {
+		if s, ok := bearerTokens[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
+		}
 	}
 
 	if ep.BasicAuth != nil {

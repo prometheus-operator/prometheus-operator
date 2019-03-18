@@ -832,13 +832,13 @@ func schema_pkg_apis_monitoring_v1_BasicAuth(ref common.ReferenceCallback) commo
 				Properties: map[string]spec.Schema{
 					"username": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The secret that contains the username for authenticate",
+							Description: "The secret that contains the username for authentication.",
 							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
 					"password": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The secret that contains the password for authenticate",
+							Description: "The secret that contains the password for authentication.",
 							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
@@ -933,6 +933,12 @@ func schema_pkg_apis_monitoring_v1_Endpoint(ref common.ReferenceCallback) common
 							Format:      "",
 						},
 					},
+					"bearerTokenSecret": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the service monitor and accessible by the Prometheus Operator.",
+							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
+						},
+					},
 					"honorLabels": {
 						SchemaProps: spec.SchemaProps{
 							Description: "HonorLabels chooses the metric's labels on collisions with target labels.",
@@ -980,10 +986,11 @@ func schema_pkg_apis_monitoring_v1_Endpoint(ref common.ReferenceCallback) common
 						},
 					},
 				},
+				Required: []string{"bearerTokenSecret"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RelabelConfig", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.TLSConfig", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RelabelConfig", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.TLSConfig", "k8s.io/api/core/v1.SecretKeySelector", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
 	}
 }
 

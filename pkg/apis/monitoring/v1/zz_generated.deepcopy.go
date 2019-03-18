@@ -330,6 +330,11 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 		*out = new(TLSConfig)
 		**out = **in
 	}
+	if in.BearerTokenSecret != nil {
+		in, out := &in.BearerTokenSecret, &out.BearerTokenSecret
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		*out = new(BasicAuth)
