@@ -71,7 +71,7 @@ spec:
         - --extra-cpu=2m
         - --memory=150Mi
         - --extra-memory=30Mi
-        - --acceptance-offset=5
+        - --threshold=5
         - --deployment=kube-state-metrics
         env:
         - name: MY_POD_NAME
@@ -84,7 +84,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: gcr.io/google-containers/addon-resizer-amd64:2.1
+        image: k8s.gcr.io/addon-resizer:1.8.4
         name: addon-resizer
         resources:
           limits:

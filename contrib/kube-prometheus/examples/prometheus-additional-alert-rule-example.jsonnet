@@ -8,13 +8,13 @@ local kp = (import 'kube-prometheus/kube-prometheus.libsonnet') + {
         name: 'example-group',
         rules: [
           {
-            alert: 'DeadMansSwitch',
+            alert: 'Watchdog',
             expr: 'vector(1)',
             labels: {
               severity: 'none',
             },
             annotations: {
-              description: 'This is a DeadMansSwitch meant to ensure that the entire alerting pipeline is functional.',
+              description: 'This is a Watchdog meant to ensure that the entire alerting pipeline is functional.',
             },
           },
         ],

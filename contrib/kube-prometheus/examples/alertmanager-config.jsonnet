@@ -12,7 +12,7 @@
            receiver: 'null'
            routes:
            - match:
-               alertname: DeadMansSwitch
+               alertname: Watchdog
              receiver: 'null'
          receivers:
          - name: 'null'

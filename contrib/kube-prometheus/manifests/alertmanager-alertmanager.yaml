@@ -15,4 +15,4 @@ spec:
     runAsNonRoot: true
     runAsUser: 1000
   serviceAccountName: alertmanager-main
-  version: v0.16.0
+  version: v0.16.1
