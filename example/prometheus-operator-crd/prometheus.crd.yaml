@@ -1558,6 +1558,21 @@ spec:
                 under. This is necessary to generate correct URLs. This is necessary
                 if Prometheus is not served from root of a DNS name.
               type: string
+            googleApplicationCredentials:
+              description: SecretKeySelector selects a key of a Secret.
+              properties:
+                key:
+                  description: The key of the secret to select from.  Must be a valid
+                    secret key.
+                  type: string
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                  type: string
+                optional:
+                  description: Specify whether the Secret or it's key must be defined
+                  type: boolean
+              required:
+              - key
             image:
               description: Image if specified has precedence over baseImage, tag and
                 sha combinations. Specifying the version is still necessary to ensure

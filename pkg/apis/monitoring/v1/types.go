@@ -249,6 +249,10 @@ type PrometheusSpec struct {
 	Thanos *ThanosSpec `json:"thanos,omitempty"`
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
+	// Google Application Credentials is a reference to a secret and key containing a json file that is used by
+	// prometheus to authenticate gce_sd_configs. The secret will be mounted in the same path as `secrets` and the
+	// environment variable GOOGLE_APPLICATION_CREDENTIALS will be the path of the key
+	GoogleApplicationCredentials *v1.SecretKeySelector `json:"googleApplicationCredentials,omitempty"`
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not

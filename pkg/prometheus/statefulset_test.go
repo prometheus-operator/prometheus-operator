@@ -16,7 +16,10 @@ package prometheus
 
 import (
 	"fmt"
+	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"path"
 	"reflect"
+	"strings"
 	"testing"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -643,5 +646,109 @@ func TestRetention(t *testing.T) {
 		if !found {
 			t.Fatalf("expected Prometheus args to contain %v, but got %v", test.expectedRetentionArg, promArgs)
 		}
+	}
+}
+
+func TestGoogleApplicationCredentials(t *testing.T) {
+	const secretName, secretKey = "secretName", "secretKey"
+	expectedVolumeName := k8sutil.SanitizeVolumeName("secret-" + secretName)
+	expectedPath := path.Join(secretsDir, secretName, secretKey)
+	gCred := &v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{Name: secretName},
+		Key:                  secretKey,
+	}
+	tests := []struct {
+		name           string
+		gcreds         *v1.SecretKeySelector
+		otherSecrets   []string
+		volumeName     string
+		expectedEnvVal string
+	}{
+		{
+			name: "unset",
+		},
+		{
+			name:           "credentials set",
+			gcreds:         gCred,
+			volumeName:     expectedVolumeName,
+			expectedEnvVal: expectedPath,
+		},
+		{
+			name:           "overlapping secret",
+			gcreds:         gCred,
+			otherSecrets:   []string{secretName},
+			volumeName:     expectedVolumeName,
+			expectedEnvVal: expectedPath,
+		},
+	}
+
+	for _, tc := range tests {
+		sset, err := makeStatefulSet(monitoringv1.Prometheus{
+			Spec: monitoringv1.PrometheusSpec{
+				GoogleApplicationCredentials: tc.gcreds,
+				Secrets: tc.otherSecrets,
+			},
+		}, defaultTestConfig, nil, "")
+		if err != nil {
+			t.Fatalf("%s: Unexpected error while making StatefulSet: %v", tc.name, err)
+		}
+
+		// get container
+		var promContainer v1.Container
+		for _, c := range sset.Spec.Template.Spec.Containers {
+			if c.Name == "prometheus" {
+				promContainer = c
+				break
+			}
+		}
+		if promContainer.Name == "" {
+			t.Fatalf("%s: no container named prometheus was found in the statefulset spec", tc.name)
+		}
+
+		// Check envvar
+		var actualEnvVal string
+		for _, ev := range promContainer.Env {
+			if ev.Name == googleCredsEnvar {
+				actualEnvVal = ev.Value
+				break
+			}
+		}
+		if actualEnvVal != tc.expectedEnvVal {
+			t.Fatalf("%s: EnvVar %s is incorrect. Expected '%s'. Actual '%s'.", tc.name, googleCredsEnvar, tc.expectedEnvVal, actualEnvVal)
+		}
+
+		var volMount v1.VolumeMount
+		for _, mnt := range promContainer.VolumeMounts {
+			if mnt.Name == tc.volumeName {
+				volMount = mnt
+			}
+		}
+		if volMount.Name != tc.volumeName {
+			t.Fatalf("%s: no volumemount named %s was found in the statefulset spec", tc.name, tc.volumeName)
+		}
+
+		if dir := strings.TrimPrefix(path.Dir(tc.expectedEnvVal), "."); dir != volMount.MountPath {
+			t.Fatalf("%s: mount directory is incorrect. Expected '%s'. Actual '%s'", tc.name, dir, volMount.MountPath)
+		}
+
+		// Get and check volume
+		var secretVolume v1.Volume
+		for _, v := range sset.Spec.Template.Spec.Volumes {
+			if v.Name == tc.volumeName {
+				if secretVolume.Name == "" {
+					secretVolume = v
+				} else {
+					t.Fatalf("%s: found multiple occurences of a volume named %s", tc.name, secretVolume.Name)
+				}
+			}
+		}
+		if secretVolume.Name != tc.volumeName {
+			t.Fatalf("%s: no volume named %s was found in the statefulset spec", tc.name, tc.volumeName)
+		}
+		secret := secretVolume.Secret
+		if (secret != nil && tc.volumeName == "") || (secret != nil && secret.SecretName == tc.volumeName) {
+			t.Fatalf("%s: volume is not using the correct secret. Expected '%s'. Actual '%s'", tc.name, secretName, secretVolume.Secret.SecretName)
+		}
+
 	}
 }

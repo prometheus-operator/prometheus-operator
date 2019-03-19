@@ -47,6 +47,7 @@ const (
 	configFilename                  = "prometheus.yaml.gz"
 	configEnvsubstFilename          = "prometheus.env.yaml"
 	sSetInputHashName               = "prometheus-operator-input-hash"
+	googleCredsEnvar                = "GOOGLE_APPLICATION_CREDENTIALS"
 )
 
 var (
@@ -525,6 +526,41 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		})
 	}
 
+	var promEnv []v1.EnvVar
+	if gac := p.Spec.GoogleApplicationCredentials; gac != nil {
+		// Set the env var
+		volumeName := k8sutil.SanitizeVolumeName("secret-" + gac.Name)
+		promEnv = append(promEnv, v1.EnvVar{
+			Name:  googleCredsEnvar,
+			Value: path.Join(secretsDir, gac.Name, gac.Key),
+		})
+
+		// Check if the volume was already mounted by the user
+		var volumeMountExists bool
+		for _, s := range p.Spec.Secrets {
+			volumeMountExists = volumeMountExists || s == gac.Name
+			if volumeMountExists {
+				break
+			}
+		}
+		// Otherwise, create a new volume mount
+		if !volumeMountExists {
+			volumes = append(volumes, v1.Volume{
+				Name: volumeName,
+				VolumeSource: v1.VolumeSource{
+					Secret: &v1.SecretVolumeSource{
+						SecretName: gac.Name,
+					},
+				},
+			})
+			promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+				Name:      volumeName,
+				ReadOnly:  true,
+				MountPath: path.Join(secretsDir, gac.Name),
+			})
+		}
+	}
+
 	configReloadVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config",
@@ -737,7 +773,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				}
 				secretDir := path.Join("/var/run/secrets/prometheus.io", p.Spec.Thanos.GCS.SecretKey.Name)
 				envVars = append(envVars, v1.EnvVar{
-					Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+					Name:  googleCredsEnvar,
 					Value: path.Join(secretDir, secretFileName),
 				})
 				volumeName := k8sutil.SanitizeVolumeName("secret-" + p.Spec.Thanos.GCS.SecretKey.Name)
@@ -853,6 +889,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					{
 						Name:           "prometheus",
 						Image:          prometheusImage,
+						Env:            promEnv,
 						Ports:          ports,
 						Args:           promArgs,
 						VolumeMounts:   promVolumeMounts,

@@ -677,6 +677,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(ThanosSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.GoogleApplicationCredentials != nil {
+		in, out := &in.GoogleApplicationCredentials, &out.GoogleApplicationCredentials
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

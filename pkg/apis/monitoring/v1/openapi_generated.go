@@ -1581,6 +1581,12 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"googleApplicationCredentials": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Google Application Credentials is a reference to a secret and key containing a json file that is used by prometheus to authenticate gce_sd_configs. The secret will be mounted in the same path as `secrets` and the environment variable GOOGLE_APPLICATION_CREDENTIALS will be the path of the key",
+							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
+						},
+					},
 				},
 			},
 		},

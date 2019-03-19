@@ -309,6 +309,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | apiserverConfig | APIServerConfig allows specifying a host and auth methods to access apiserver. If left empty, Prometheus is assumed to run inside of the cluster and will discover API servers automatically and use the pod's CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/. | *[APIServerConfig](#apiserverconfig) | false |
 | thanos | Thanos configuration allows configuring various aspects of a Prometheus server in a Thanos environment.\n\nThis section is experimental, it may change significantly without deprecation notice in any release.\n\nThis is experimental and may change significantly without backward compatibility in any release. | *[ThanosSpec](#thanosspec) | false |
 | priorityClassName | Priority class assigned to the Pods | string | false |
+| googleApplicationCredentials | Google Application Credentials is a reference to a secret and key containing a json file that is used by prometheus to authenticate gce_sd_configs. The secret will be mounted in the same path as `secrets` and the environment variable GOOGLE_APPLICATION_CREDENTIALS will be the path of the key | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 
 [Back to TOC](#table-of-contents)
 
