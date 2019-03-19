@@ -132,26 +132,26 @@ func (labels *Labels) Set(value string) error {
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
-	Host                         string
-	KubeletObject                string
-	TLSInsecure                  bool
-	TLSConfig                    rest.TLSClientConfig
-	ConfigReloaderImage          string
-	ConfigReloaderCPU            string
-	ConfigReloaderMemory         string
-	PrometheusConfigReloader     string
-	AlertmanagerDefaultBaseImage string
-	PrometheusDefaultBaseImage   string
-	ThanosDefaultBaseImage       string
-	Namespaces                   []string
-	Labels                       Labels
-	CrdGroup                     string
-	CrdKinds                     monitoringv1.CrdKinds
-	EnableValidation             bool
-	LocalHost                    string
-	LogLevel                     string
-	LogFormat                    string
-	ManageCRDs                   bool
+	Host                          string
+	KubeletObject                 string
+	TLSInsecure                   bool
+	TLSConfig                     rest.TLSClientConfig
+	ConfigReloaderImage           string
+	ConfigReloaderCPU             string
+	ConfigReloaderMemory          string
+	PrometheusConfigReloaderImage string
+	AlertmanagerDefaultBaseImage  string
+	PrometheusDefaultBaseImage    string
+	ThanosDefaultBaseImage        string
+	Namespaces                    []string
+	Labels                        Labels
+	CrdGroup                      string
+	CrdKinds                      monitoringv1.CrdKinds
+	EnableValidation              bool
+	LocalHost                     string
+	LogLevel                      string
+	LogFormat                     string
+	ManageCRDs                    bool
 }
 
 type BasicAuthCredentials struct {

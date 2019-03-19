@@ -861,7 +861,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 						Resources:      p.Spec.Resources,
 					}, {
 						Name:  "prometheus-config-reloader",
-						Image: c.PrometheusConfigReloader,
+						Image: c.PrometheusConfigReloaderImage,
 						Env: []v1.EnvVar{
 							{
 								Name: "POD_NAME",
@@ -875,8 +875,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 						VolumeMounts: configReloadVolumeMounts,
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse("50m"),
-								v1.ResourceMemory: resource.MustParse("50Mi"),
+								v1.ResourceCPU:    resource.MustParse(c.ConfigReloaderCPU),
+								v1.ResourceMemory: resource.MustParse(c.ConfigReloaderMemory),
 							},
 						},
 					},

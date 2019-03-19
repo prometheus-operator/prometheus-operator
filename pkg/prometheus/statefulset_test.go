@@ -31,11 +31,12 @@ import (
 
 var (
 	defaultTestConfig = &Config{
-		ConfigReloaderImage:        "quay.io/coreos/configmap-reload:latest",
-		ConfigReloaderCPU:          "100m",
-		ConfigReloaderMemory:       "25Mi",
-		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
-		ThanosDefaultBaseImage:     "improbable/thanos",
+		ConfigReloaderImage:           "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderCPU:             "100m",
+		ConfigReloaderMemory:          "25Mi",
+		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
+		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
+		ThanosDefaultBaseImage:        "improbable/thanos",
 	}
 )
 
