@@ -47,7 +47,7 @@ const (
 	configFilename                  = "prometheus.yaml.gz"
 	configEnvsubstFilename          = "prometheus.env.yaml"
 	sSetInputHashName               = "prometheus-operator-input-hash"
-	googleCredsEnvar                = "GOOGLE_APPLICATION_CREDENTIALS"
+	googleCredentials               = "GOOGLE_APPLICATION_CREDENTIALS"
 )
 
 var (
@@ -531,7 +531,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		// Set the env var
 		volumeName := k8sutil.SanitizeVolumeName("secret-" + gac.Name)
 		promEnv = append(promEnv, v1.EnvVar{
-			Name:  googleCredsEnvar,
+			Name:  googleCredentials,
 			Value: path.Join(secretsDir, gac.Name, gac.Key),
 		})
 
@@ -773,7 +773,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				}
 				secretDir := path.Join("/var/run/secrets/prometheus.io", p.Spec.Thanos.GCS.SecretKey.Name)
 				envVars = append(envVars, v1.EnvVar{
-					Name:  googleCredsEnvar,
+					Name:  googleCredentials,
 					Value: path.Join(secretDir, secretFileName),
 				})
 				volumeName := k8sutil.SanitizeVolumeName("secret-" + p.Spec.Thanos.GCS.SecretKey.Name)

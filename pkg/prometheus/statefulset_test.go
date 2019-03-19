@@ -686,7 +686,7 @@ func TestGoogleApplicationCredentials(t *testing.T) {
 		sset, err := makeStatefulSet(monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				GoogleApplicationCredentials: tc.gcreds,
-				Secrets: tc.otherSecrets,
+				Secrets:                      tc.otherSecrets,
 			},
 		}, defaultTestConfig, nil, "")
 		if err != nil {
@@ -708,13 +708,13 @@ func TestGoogleApplicationCredentials(t *testing.T) {
 		// Check envvar
 		var actualEnvVal string
 		for _, ev := range promContainer.Env {
-			if ev.Name == googleCredsEnvar {
+			if ev.Name == googleCredentials {
 				actualEnvVal = ev.Value
 				break
 			}
 		}
 		if actualEnvVal != tc.expectedEnvVal {
-			t.Fatalf("%s: EnvVar %s is incorrect. Expected '%s'. Actual '%s'.", tc.name, googleCredsEnvar, tc.expectedEnvVal, actualEnvVal)
+			t.Fatalf("%s: EnvVar %s is incorrect. Expected '%s'. Actual '%s'.", tc.name, googleCredentials, tc.expectedEnvVal, actualEnvVal)
 		}
 
 		var volMount v1.VolumeMount
