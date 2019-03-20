@@ -28,7 +28,7 @@ generate: manifests **.md
 
 manifests: vendor example.jsonnet build.sh
 	rm -rf manifests
-	./build.sh
+	./build.sh ./examples/kustomize.jsonnet
 
 vendor: $(JB_BINARY) jsonnetfile.json jsonnetfile.lock.json
 	rm -rf vendor
