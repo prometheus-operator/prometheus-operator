@@ -74,4 +74,4 @@
 
 [[constraint]]
   name = "github.com/improbable-eng/thanos"
-  revision = "cd7963372a11cea93a832584be099d2bfa0ac19a"
+  revision = "e756fe11d3259368b4d840dc1391229d7a515a67"

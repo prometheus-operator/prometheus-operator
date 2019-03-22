@@ -13,8 +13,10 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/improbable-eng/thanos/pkg/objstore/azure"
 	"github.com/improbable-eng/thanos/pkg/objstore/client"
+	"github.com/improbable-eng/thanos/pkg/objstore/cos"
 	"github.com/improbable-eng/thanos/pkg/objstore/gcs"
 	"github.com/improbable-eng/thanos/pkg/objstore/s3"
+	"github.com/improbable-eng/thanos/pkg/objstore/swift"
 	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
@@ -25,7 +27,8 @@ var (
 		client.AZURE: azure.Config{},
 		client.GCS:   gcs.Config{},
 		client.S3:    s3.Config{},
-		client.SWIFT: azure.Config{},
+		client.SWIFT: swift.SwiftConfig{},
+		client.COS:   cos.Config{},
 	}
 )
 

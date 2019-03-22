@@ -262,14 +262,14 @@
   version = "0.3.2"
 
 [[projects]]
-  digest = "1:1891acc916bec6f9bad952252fdccb9e7d68cd59a4c3786a0a1fc9d110b6f86c"
+  digest = "1:6f01b4294f50dc00177df210bf643e0c090a958f440013e7254b5c26a1b1124c"
   name = "github.com/improbable-eng/thanos"
   packages = [
     "pkg/reloader",
     "pkg/runutil",
   ]
   pruneopts = ""
-  revision = "cd7963372a11cea93a832584be099d2bfa0ac19a"
+  revision = "e756fe11d3259368b4d840dc1391229d7a515a67"
 
 [[projects]]
   digest = "1:53ac4e911e12dde0ab68655e2006449d207a5a681f084974da2b06e5dbeaca72"

@@ -1,5 +1,51 @@
 // Package reloader contains helpers to trigger reloads of Prometheus instances
 // on configuration changes and to substitute environment variables in config files.
+//
+// Reloader type is useful when you want to:
+//
+// 	* Watch on changes against certain file e.g (`cfgFile`) .
+// 	* Optionally, specify different different output file for watched `cfgFile` (`cfgOutputFile`).
+// 	This will also try decompress the `cfgFile` if needed and substitute ALL the envvars using Kubernetes substitution format: (`$(var)`)
+// 	* Watch on changes against certain directories (`ruleDires`).
+//
+// Once any of those two changes Prometheus on given `reloadURL` will be notified, causing Prometheus to reload configuration and rules.
+//
+// This and below for reloader:
+//
+// 	u, _ := url.Parse("http://localhost:9090")
+// 	rl := reloader.New(
+// 		nil,
+// 		reloader.ReloadURLFromBase(u),
+// 		"/path/to/cfg",
+// 		"/path/to/cfg.out",
+// 		[]string{"/path/to/dirs"},
+// 	)
+//
+// The url of reloads can be generated with function ReloadURLFromBase().
+// It will append the default path of reload into the given url:
+//
+// 	u, _ := url.Parse("http://localhost:9090")
+// 	reloader.ReloadURLFromBase(u) // It will return "http://localhost:9090/-/reload"
+//
+// Start watching changes and stopped until the context gets canceled:
+//
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	go func() {
+// 		if err := rl.Watch(ctx); err != nil {
+// 			log.Fatal(err)
+// 		}
+// 	}()
+// 	// ...
+// 	cancel()
+//
+// By default, reloader will make a schedule to check the given config files and dirs of sum of hash with the last result,
+// even if it is no changes.
+//
+// A basic example of configuration template with environment variables:
+//
+//   global:
+//     external_labels:
+//       replica: '$(HOSTNAME)'
 package reloader
 
 import (
@@ -153,15 +199,26 @@ func (r *Reloader) apply(ctx context.Context) error {
 				return errors.Wrap(err, "expand environment variables")
 			}
 
-			if err := ioutil.WriteFile(r.cfgOutputFile, b, 0666); err != nil {
+			tmpFile := r.cfgOutputFile + ".tmp"
+			defer func() {
+				_ = os.Remove(tmpFile)
+			}()
+			if err := ioutil.WriteFile(tmpFile, b, 0666); err != nil {
 				return errors.Wrap(err, "write file")
+			}
+			if err := os.Rename(tmpFile, r.cfgOutputFile); err != nil {
+				return errors.Wrap(err, "rename file")
 			}
 		}
 	}
 
 	h := sha256.New()
 	for _, ruleDir := range r.ruleDirs {
-		err := filepath.Walk(ruleDir, func(path string, f os.FileInfo, err error) error {
+		walkDir, err := filepath.EvalSymlinks(ruleDir)
+		if err != nil {
+			return errors.Wrap(err, "ruleDir symlink eval")
+		}
+		err = filepath.Walk(walkDir, func(path string, f os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
