@@ -1658,6 +1658,13 @@ func schema_pkg_apis_monitoring_v1_QuerySpec(ref common.ReferenceCallback) commo
 							Format:      "int32",
 						},
 					},
+					"maxSamples": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
 					"timeout": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Maximum time a query may take before being aborted.",
