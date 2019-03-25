@@ -1898,6 +1898,10 @@ spec:
                   description: Number of concurrent queries that can be run at once.
                   format: int32
                   type: integer
+                maxSamples:
+                  description: Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return.
+                  format: int32
+                  type: integer
                 timeout:
                   description: Maximum time a query may take before being aborted.
                   type: string
