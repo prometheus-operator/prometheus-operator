@@ -15,14 +15,14 @@ local manifests =
   { ['prometheus-adapter-' + name]: kp.prometheusAdapter[name] for name in std.objectFields(kp.prometheusAdapter) } +
   { ['grafana-' + name]: kp.grafana[name] for name in std.objectFields(kp.grafana) };
 
-local kustomizationResourceFile(name) = "./manifests/" + name + ".yaml";
+local kustomizationResourceFile(name) = './manifests/' + name + '.yaml';
 local kustomization = {
   apiVersion: 'kustomize.config.k8s.io/v1beta1',
   kind: 'Kustomization',
-  resources: std.map(kustomizationResourceFile, std.objectFields(manifests))
+  resources: std.map(kustomizationResourceFile, std.objectFields(manifests)),
 };
 
 manifests {
-  "../kustomization": kustomization,
+  '../kustomization': kustomization,
 }
 
