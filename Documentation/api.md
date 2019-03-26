@@ -334,6 +334,7 @@ QuerySpec defines the query command line flags when starting Prometheus.
 | ----- | ----------- | ------ | -------- |
 | lookbackDelta | The delta difference allowed for retrieving metrics during expression evaluations. | *string | false |
 | maxConcurrency | Number of concurrent queries that can be run at once. | *int32 | false |
+| maxSamples | Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return. | *int32 | false |
 | timeout | Maximum time a query may take before being aborted. | *string | false |
 
 [Back to TOC](#table-of-contents)

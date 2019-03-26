@@ -361,6 +361,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				promArgs = append(promArgs, "-rules.alert.resend-delay="+p.Spec.Rules.Alert.ResendDelay)
 			}
 		}
+
+		if version.Minor >= 5 {
+			if p.Spec.Query != nil && p.Spec.Query.MaxSamples != nil {
+				promArgs = append(promArgs,
+					fmt.Sprintf("-query.max-samples=%d", *p.Spec.Query.MaxSamples),
+				)
+			}
+		}
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}

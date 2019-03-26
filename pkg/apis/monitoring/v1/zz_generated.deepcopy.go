@@ -719,6 +719,11 @@ func (in *QuerySpec) DeepCopyInto(out *QuerySpec) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.MaxSamples != nil {
+		in, out := &in.MaxSamples, &out.MaxSamples
+		*out = new(int32)
+		**out = **in
+	}
 	if in.Timeout != nil {
 		in, out := &in.Timeout, &out.Timeout
 		*out = new(string)
