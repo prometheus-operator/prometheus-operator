@@ -1157,7 +1157,7 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	return false
 }
 
-func loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
+func (c *Operator) loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
 	if additionalScrapeConfigs != nil {
 		for _, secret := range s.Items {
 			if secret.Name == additionalScrapeConfigs.Name {
@@ -1168,7 +1168,10 @@ func loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySele
 				return nil, fmt.Errorf("key %v could not be found in Secret %v", additionalScrapeConfigs.Key, additionalScrapeConfigs.Name)
 			}
 		}
-		return nil, fmt.Errorf("secret %v could not be found", additionalScrapeConfigs.Name)
+		if additionalScrapeConfigs.Optional == nil || !*additionalScrapeConfigs.Optional {
+			return nil, fmt.Errorf("secret %v could not be found", additionalScrapeConfigs.Name)
+		}
+		level.Debug(c.logger).Log("msg", fmt.Sprintf("secret %v could not be found", additionalScrapeConfigs.Name))
 	}
 	return nil, nil
 }
@@ -1324,15 +1327,15 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		return err
 	}
 
-	additionalScrapeConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
+	additionalScrapeConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional scrape configs from Secret failed")
 	}
-	additionalAlertRelabelConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
+	additionalAlertRelabelConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert relabel configs from Secret failed")
 	}
-	additionalAlertManagerConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
+	additionalAlertManagerConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
 	}
