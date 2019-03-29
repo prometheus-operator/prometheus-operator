@@ -32,6 +32,14 @@ the puzzle regarding full end-to-end monitoring.
 with a collection of manifests to help getting started with monitoring
 Kubernetes itself and applications running on top of it.
 
+**kube-prometheus isn't versioned and releases at the same pace as Prometheus
+Operator. Release notes describe changes only to the operator, release archives
+contain only matching changes for operator code. For changes to kube-prometheus
+always refer to the master branch of this repository.**
+
+**kube-prometheus is a separate project which will have its own repository in
+the future[1][[operator-vs-kube].**
+
 ## Prerequisites
 
 Version `>=0.18.0` of the Prometheus Operator requires a Kubernetes
@@ -156,3 +164,5 @@ auto-generated. E.g. `bundle.yaml` originates from the _Jsonnet_ files in
 If you find a security vulnerability related to the Prometheus Operator, please
 do not report it by opening a GitHub issue, but instead please send an e-mail to
 the maintainers of the project found in the [OWNERS](OWNERS) file.
+
+[operator-vs-kube]: https://github.com/coreos/prometheus-operator/issues/2510#issuecomment-476692399
