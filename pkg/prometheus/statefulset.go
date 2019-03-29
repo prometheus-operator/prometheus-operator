@@ -841,6 +841,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			},
 			Spec: v1.PodSpec{
 				Containers:                    containers,
+				InitContainers:                p.Spec.InitContainers,
 				SecurityContext:               securityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
