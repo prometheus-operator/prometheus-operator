@@ -1609,6 +1609,140 @@ func testOperatorNSScope(t *testing.T) {
 	})
 }
 
+// testPromArbitraryFSAccess tests the
+// github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PrometheusSpec.ArbitraryFSAccessThroughSMs
+// configuration.
+func testPromArbitraryFSAccess(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                              string
+		arbitraryFSAccessThroughSMsConfig monitoringv1.ArbitraryFSAccessThroughSMsConfig
+		endpoint                          monitoringv1.Endpoint
+		expectTargets                     bool
+	}{
+		{
+			name: "allowed-file",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: false,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port:            "web",
+				BearerTokenFile: "abc",
+			},
+			expectTargets: true,
+		},
+		{
+			name: "denied-file",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: true,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port:            "web",
+				BearerTokenFile: "abc",
+			},
+			expectTargets: false,
+		},
+		{
+			name: "allowed-secret",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: false,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				BearerTokenSecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "a",
+					},
+					Key: "b",
+				},
+			},
+			expectTargets: true,
+		},
+		{
+			name: "denied-secret",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: true,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				BearerTokenSecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "a",
+					},
+					Key: "b",
+				},
+			},
+			expectTargets: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := framework.NewTestCtx(t)
+			defer ctx.Cleanup(t)
+			ns := ctx.CreateNamespace(t, framework.KubeClient)
+			ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+			name := "test"
+
+			// Create random secret in case the service monitor of the test case
+			// references it.
+			service := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "a",
+				},
+				Data: map[string][]byte{
+					"b": []byte("c"),
+				},
+			}
+			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(service); err != nil {
+				t.Fatal(err)
+			}
+
+			prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
+			prometheusCRD.Namespace = ns
+			one := int32(1)
+			prometheusCRD.Spec.Replicas = &one
+			prometheusCRD.Spec.ArbitraryFSAccessThroughSMs = test.arbitraryFSAccessThroughSMsConfig
+
+			if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheusCRD); err != nil {
+				t.Fatal(err)
+			}
+
+			svc := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
+			if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, svc); err != nil {
+				t.Fatal(err)
+			}
+
+			s := framework.MakeBasicServiceMonitor(name)
+			s.Spec.Endpoints[0] = test.endpoint
+			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(s); err != nil {
+				t.Fatal("Creating ServiceMonitor failed: ", err)
+			}
+
+			if test.expectTargets {
+				if err := framework.WaitForTargets(ns, svc.Name, 1); err != nil {
+					t.Fatal(err)
+				}
+
+				return
+			}
+
+			// Make sure Prometheus has enough time to reload.
+			time.Sleep(2 * time.Minute)
+			if err := framework.WaitForTargets(ns, svc.Name, 0); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+
+}
+
 func isDiscoveryWorking(ns, svcName, prometheusName string) error {
 	var loopErr error
 

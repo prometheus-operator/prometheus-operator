@@ -1439,7 +1439,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 
 func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string]*monitoringv1.ServiceMonitor, error) {
 	namespaces := []string{}
-	// Selectors might overlap. Deduplicate them along the keyFunc.
+	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	res := make(map[string]*monitoringv1.ServiceMonitor)
 
 	servMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
@@ -1471,6 +1471,47 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 				res[k] = obj.(*monitoringv1.ServiceMonitor)
 			}
 		})
+	}
+
+	// If denied by Prometheus spec, filter out all service monitors that access
+	// the file system.
+	if p.Spec.ArbitraryFSAccessThroughSMs.Deny {
+		for namespaceAndName, sm := range res {
+			for _, endpoint := range sm.Spec.Endpoints {
+				if endpoint.BearerTokenFile != "" {
+					delete(res, namespaceAndName)
+					level.Debug(c.logger).Log(
+						"msg", fmt.Sprintf(
+							"skipping servicemonitor %v as it accesses file system via bearer token file which Prometheus specification prohibits",
+							namespaceAndName,
+						),
+						"namespace", p.Namespace,
+						"prometheus", p.Name,
+					)
+
+					continue
+				}
+
+				tlsConf := endpoint.TLSConfig
+				if tlsConf == nil {
+					continue
+				}
+
+				if tlsConf.CAFile != "" || tlsConf.CertFile != "" || tlsConf.KeyFile != "" {
+					delete(res, namespaceAndName)
+					level.Debug(c.logger).Log(
+						"msg", fmt.Sprintf(
+							"skipping servicemonitor %v as it accesses file system via tls config which Prometheus specification prohibits",
+							namespaceAndName,
+						),
+						"namespace", p.Namespace,
+						"prometheus", p.Name,
+					)
+
+					continue
+				}
+			}
+		}
 	}
 
 	serviceMonitors := []string{}

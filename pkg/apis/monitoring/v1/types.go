@@ -254,11 +254,24 @@ type PrometheusSpec struct {
 	Thanos *ThanosSpec `json:"thanos,omitempty"`
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
-	// Allow local file access. E.g. bearer tokens ....
-	// Config struct {
-	// 	DenyInGeneral         bool
-	// 	WhitelistSpecificOnes []string
-	// }
+	// ArbitraryFSAccessThroughSMs configures whether configuration
+	// based on a service monitor can access arbitrary files on the file system
+	// of the Prometheus container e.g. bearer token files.
+	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs"`
+}
+
+// ArbitraryFSAccessThroughSMsConfig enables users to configure, whether
+// a service monitor selected by the Prometheus instance is allowed to use
+// arbitrary files on the file system of the Prometheus container. This is the case
+// when e.g. a service monitor specifies a BearerTokenFile in an endpoint. A
+// malicious user could create a service monitor selecting arbitrary secret files
+// in the Prometheus container. Those secrets would then be send with a scrape
+// request by Prometheus to a malicious target. Denying the above would prevent the
+// attack, users can instead use the BearerTokenSecret field.
+type ArbitraryFSAccessThroughSMsConfig struct {
+	Deny bool
+	// TODO: To be implemented.
+	// ServiceMonitorWhitelist
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not
@@ -582,7 +595,6 @@ type Endpoint struct {
 	HonorLabels bool `json:"honorLabels,omitempty"`
 	// BasicAuth allow an endpoint to authenticate over basic authentication
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
-	// TODO: from which ns is this?
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
@@ -597,14 +609,19 @@ type Endpoint struct {
 // More info: https://prometheus.io/docs/operating/configuration/#endpoints
 // +k8s:openapi-gen=true
 type BasicAuth struct {
-	// The secret that contains the username for authentication.
+	// The secret in the service monitor namespace that contains the username
+	// for authentication.
 	Username v1.SecretKeySelector `json:"username,omitempty"`
-	// The secret that contains the password for authentication.
+	// The secret in the service monitor namespace that contains the password
+	// for authentication.
 	Password v1.SecretKeySelector `json:"password,omitempty"`
 }
 
 // TLSConfig specifies TLS configuration parameters.
 // +k8s:openapi-gen=true
+//
+// TODO: Add option to reference secrets instead of files on the file system of
+// the Prometheus container. See ArbitraryFSAccessThroughSMs above.
 type TLSConfig struct {
 	// The CA cert to use for the targets.
 	CAFile string `json:"caFile,omitempty"`
