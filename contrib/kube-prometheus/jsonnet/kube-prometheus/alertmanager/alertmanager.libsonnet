@@ -40,6 +40,16 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         ],
       },
       replicas: 3,
+      resources: {
+        requests: {
+          cpu: null,
+          memory: null,
+        },
+        limits: {
+          cpu: null,
+          memory: null,
+        }
+      },
     },
   },
 
@@ -97,6 +107,25 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       },
 
     alertmanager:
+      local statefulSet = k.apps.v1beta2.statefulSet;
+      local container = statefulSet.mixin.spec.template.spec.containersType;
+      local resourceRequirements = container.mixin.resourcesType;
+      local selector = statefulSet.mixin.spec.selectorType;
+
+      local resources =
+        resourceRequirements.new() +
+        resourceRequirements.withRequests({
+          [if $._config.alertmanager.resources.requests.cpu != null then "cpu"]:
+            $._config.alertmanager.resources.requests.cpu,
+          [if $._config.alertmanager.resources.requests.memory != null then "memory"]:
+            $._config.alertmanager.resources.requests.memory,
+        }) +
+        resourceRequirements.withLimits({
+          [if $._config.alertmanager.resources.limits.cpu != null then "cpu"]:
+            $._config.alertmanager.resources.limits.cpu,
+          [if $._config.alertmanager.resources.limits.memory != null then "memory"]:
+            $._config.alertmanager.resources.limits.memory,
+        });
       {
         apiVersion: 'monitoring.coreos.com/v1',
         kind: 'Alertmanager',
@@ -112,6 +141,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           version: $._config.versions.alertmanager,
           baseImage: $._config.imageRepos.alertmanager,
           nodeSelector: { 'beta.kubernetes.io/os': 'linux' },
+          resources: resources,
           serviceAccountName: 'alertmanager-' + $._config.alertmanager.name,
           securityContext: {
             runAsUser: 1000,

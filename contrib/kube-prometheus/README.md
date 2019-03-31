@@ -283,6 +283,16 @@ These are the available fields with their respective default values:
         names: 'k8s',
         replicas: 2,
         rules: {},
+        resources+: {
+          requests+: {
+            cpu: null,
+            memory: "400Mi",
+          },
+          limits+: {
+            cpu: null,
+            memory: null,
+          },
+        },
     },
 
     alertmanager+:: {
@@ -304,6 +314,16 @@ These are the available fields with their respective default values:
         - name: 'null'
       |||,
       replicas: 3,
+      resources+: {
+        requests+: {
+          cpu: null,
+          memory: null,
+        },
+        limits+: {
+          cpu: null,
+          memory: null,
+        }
+      },
     },
 
     kubeStateMetrics+:: {
@@ -319,6 +339,28 @@ These are the available fields with their respective default values:
 
     nodeExporter+:: {
       port: 9100,
+      resources+: {
+        nodeExporter+: {
+          requests+: {
+            cpu: "102m",
+            memory: "180Mi",
+          },
+          limits+: {
+            cpu: "250m",
+            memory: "180Mi",
+          },
+        },
+        proxy+: {
+          requests+: {
+            cpu: "10m",
+            memory: "20Mi",
+          },
+          limits+: {
+            cpu: "20m",
+            memory: "40Mi",
+          },
+        }
+      },
     },
 	},
 }

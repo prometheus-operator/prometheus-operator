@@ -16,6 +16,28 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
     nodeExporter+:: {
       port: 9100,
+      resources: {
+        nodeExporter: {
+          requests: {
+            cpu: "102m",
+            memory: "180Mi",
+          },
+          limits: {
+            cpu: "250m",
+            memory: "180Mi",
+          },
+        },
+        proxy: {
+          requests: {
+            cpu: "10m",
+            memory: "20Mi",
+          },
+          limits: {
+            cpu: "20m",
+            memory: "40Mi",
+          },
+        }
+      },
     },
   },
 
@@ -103,8 +125,14 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           '--collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|cgroup|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|mqueue|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|sysfs|tracefs)$',
         ]) +
         container.withVolumeMounts([procVolumeMount, sysVolumeMount, rootVolumeMount]) +
-        container.mixin.resources.withRequests({ cpu: '102m', memory: '180Mi' }) +
-        container.mixin.resources.withLimits({ cpu: '250m', memory: '180Mi' });
+        container.mixin.resources.withRequests({
+          cpu: $._config.nodeExporter.resources.nodeExporter.requests.cpu, 
+          memory: $._config.nodeExporter.resources.nodeExporter.requests.memory
+        }) +
+        container.mixin.resources.withLimits({
+          cpu: $._config.nodeExporter.resources.nodeExporter.limits.cpu, 
+          memory: $._config.nodeExporter.resources.nodeExporter.limits.memory
+        });
 
       local ip = containerEnv.fromFieldPath('IP', 'status.podIP');
       local proxy =
@@ -124,8 +152,14 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         // forgo declaring the host port, however it is important to declare
         // it so that the scheduler can decide if the pod is schedulable.
         container.withPorts(containerPort.new($._config.nodeExporter.port) + containerPort.withHostPort($._config.nodeExporter.port) + containerPort.withName('https')) +
-        container.mixin.resources.withRequests({ cpu: '10m', memory: '20Mi' }) +
-        container.mixin.resources.withLimits({ cpu: '20m', memory: '40Mi' }) +
+        container.mixin.resources.withRequests({
+          cpu: $._config.nodeExporter.resources.proxy.requests.cpu, 
+          memory: $._config.nodeExporter.resources.proxy.requests.memory
+        }) +
+        container.mixin.resources.withLimits({
+          cpu: $._config.nodeExporter.resources.proxy.limits.cpu, 
+          memory: $._config.nodeExporter.resources.proxy.limits.memory
+        }) +
         container.withEnv([ip]);
 
       local c = [nodeExporter, proxy];

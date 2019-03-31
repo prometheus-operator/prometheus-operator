@@ -22,6 +22,16 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       rules: {},
       renderedRules: {},
       namespaces: ['default', 'kube-system', $._config.namespace],
+      resources: {
+        requests: {
+          cpu: null,
+          memory: "400Mi",
+        },
+        limits: {
+          cpu: null,
+          memory: null,
+        },
+      },
     },
   },
 
@@ -151,7 +161,18 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
       local resources =
         resourceRequirements.new() +
-        resourceRequirements.withRequests({ memory: '400Mi' });
+        resourceRequirements.withRequests({
+          [if $._config.prometheus.resources.requests.cpu != null then "cpu"]: 
+            $._config.prometheus.resources.requests.cpu,
+          [if $._config.prometheus.resources.requests.memory != null then "memory"]: 
+            $._config.prometheus.resources.requests.memory,
+        }) +
+        resourceRequirements.withLimits({
+          [if $._config.prometheus.resources.limits.cpu != null then "cpu"]: 
+            $._config.prometheus.resources.limits.cpu,
+          [if $._config.prometheus.resources.limits.memory != null then "memory"]: 
+            $._config.prometheus.resources.limits.memory,
+        });
 
       {
         apiVersion: 'monitoring.coreos.com/v1',

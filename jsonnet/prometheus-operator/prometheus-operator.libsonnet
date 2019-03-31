@@ -12,6 +12,16 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       commonLabels:
         $._config.prometheusOperator.deploymentSelectorLabels +
         { 'apps.kubernetes.io/version': $._config.versions.prometheusOperator, },
+      resources: {
+        requests: {
+          cpu: "100m",
+          memory: "100Mi",
+        },
+        limits: {
+          cpu: "200m",
+          memory: "200Mi",
+        },
+      },
     },
 
     versions+:: {
@@ -140,8 +150,14 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         ]) +
         container.mixin.securityContext.withAllowPrivilegeEscalation(false) +
         container.mixin.securityContext.withReadOnlyRootFilesystem(true) +
-        container.mixin.resources.withRequests({ cpu: '100m', memory: '100Mi' }) +
-        container.mixin.resources.withLimits({ cpu: '200m', memory: '200Mi' });
+        container.mixin.resources.withRequests({
+          cpu: $._config.prometheusOperator.resources.requests.cpu,
+          memory: $._config.prometheusOperator.resources.requests.memory
+        }) +
+        container.mixin.resources.withLimits({
+          cpu: $._config.prometheusOperator.resources.limits.cpu,
+          memory: $._config.prometheusOperator.resources.limits.memory,
+        });
 
       deployment.new('prometheus-operator', 1, operatorContainer, $._config.prometheusOperator.commonLabels) +
       deployment.mixin.metadata.withNamespace($._config.namespace) +
