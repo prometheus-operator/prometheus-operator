@@ -4,11 +4,13 @@
 set -e
 set -u
 
+EMBEDMD_BIN=${EMBEDMD_BIN:-embedmd}
+
 function docs {
 # if check arg was passed, instead of the docs generation verifies if docs coincide with the codebase
 if [[ "${CHECK}" == "check" ]]; then
     set +e
-    DIFF=$(embedmd -d *.md)
+    DIFF=$(${EMBEDMD_BIN} -d *.md)
     RESULT=$?
     if [[ "$RESULT" != "0" ]]; then
         cat << EOF
@@ -19,7 +21,7 @@ EOF
         exit 2
     fi
 else
-    embedmd -w *.md
+    ${EMBEDMD_BIN} -w *.md
 fi
 
 }
@@ -37,10 +39,13 @@ for x in "${commands[@]}"; do
     ./thanos "${x}" --help &> "docs/components/flags/${x}.txt"
 done
 
-bucketCommands=("verify" "ls")
+bucketCommands=("verify" "ls" "inspect")
 for x in "${bucketCommands[@]}"; do
     ./thanos bucket "${x}" --help &> "docs/components/flags/bucket_${x}.txt"
 done
+
+# remove white noise
+sed -i 's/[ \t]*$//' docs/components/flags/*.txt
 
 go run scripts/bucketcfggen/main.go --output-dir=docs/flags
 

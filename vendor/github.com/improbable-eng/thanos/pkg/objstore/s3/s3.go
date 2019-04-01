@@ -3,6 +3,7 @@ package s3
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"math/rand"
@@ -34,27 +35,35 @@ const DirDelim = "/"
 
 // Config stores the configuration for s3 bucket.
 type Config struct {
-	Bucket        string     `yaml:"bucket"`
-	Endpoint      string     `yaml:"endpoint"`
-	AccessKey     string     `yaml:"access_key"`
-	Insecure      bool       `yaml:"insecure"`
-	SignatureV2   bool       `yaml:"signature_version2"`
-	SSEEncryption bool       `yaml:"encrypt_sse"`
-	SecretKey     string     `yaml:"secret_key"`
-	HTTPConfig    HTTPConfig `yaml:"http_config"`
+	Bucket          string            `yaml:"bucket"`
+	Endpoint        string            `yaml:"endpoint"`
+	AccessKey       string            `yaml:"access_key"`
+	Insecure        bool              `yaml:"insecure"`
+	SignatureV2     bool              `yaml:"signature_version2"`
+	SSEEncryption   bool              `yaml:"encrypt_sse"`
+	SecretKey       string            `yaml:"secret_key"`
+	PutUserMetadata map[string]string `yaml:"put_user_metadata"`
+	HTTPConfig      HTTPConfig        `yaml:"http_config"`
+	TraceConfig     TraceConfig       `yaml:"trace"`
+}
+
+type TraceConfig struct {
+	Enable bool `yaml:"enable"`
 }
 
 // HTTPConfig stores the http.Transport configuration for the s3 minio client.
 type HTTPConfig struct {
-	IdleConnTimeout model.Duration `yaml:"idle_conn_timeout"`
+	IdleConnTimeout    model.Duration `yaml:"idle_conn_timeout"`
+	InsecureSkipVerify bool           `yaml:"insecure_skip_verify"`
 }
 
 // Bucket implements the store.Bucket interface against s3-compatible APIs.
 type Bucket struct {
-	logger log.Logger
-	name   string
-	client *minio.Client
-	sse    encrypt.ServerSide
+	logger          log.Logger
+	name            string
+	client          *minio.Client
+	sse             encrypt.ServerSide
+	putUserMetadata map[string]string
 }
 
 // parseConfig unmarshals a buffer into a Config with default HTTPConfig values.
@@ -63,6 +72,10 @@ func parseConfig(conf []byte) (Config, error) {
 	config := Config{HTTPConfig: defaultHTTPConfig}
 	if err := yaml.Unmarshal(conf, &config); err != nil {
 		return Config{}, err
+	}
+
+	if config.PutUserMetadata == nil {
+		config.PutUserMetadata = make(map[string]string)
 	}
 	return config, nil
 }
@@ -99,13 +112,13 @@ func NewBucketWithConfig(logger log.Logger, config Config, component string) (*B
 		}}
 	} else {
 		chain = []credentials.Provider{
+			&credentials.EnvAWS{},
+			&credentials.FileAWSCredentials{},
 			&credentials.IAM{
 				Client: &http.Client{
 					Transport: http.DefaultTransport,
 				},
 			},
-			&credentials.FileAWSCredentials{},
-			&credentials.EnvAWS{},
 		}
 	}
 
@@ -136,6 +149,7 @@ func NewBucketWithConfig(logger log.Logger, config Config, component string) (*B
 		// Refer:
 		//    https://golang.org/src/net/http/transport.go?h=roundTrip#L1843
 		DisableCompression: true,
+		TLSClientConfig:    &tls.Config{InsecureSkipVerify: config.HTTPConfig.InsecureSkipVerify},
 	})
 
 	var sse encrypt.ServerSide
@@ -143,11 +157,17 @@ func NewBucketWithConfig(logger log.Logger, config Config, component string) (*B
 		sse = encrypt.NewSSE()
 	}
 
+	if config.TraceConfig.Enable {
+		logWriter := log.NewStdlibAdapter(level.Debug(logger), log.MessageKey("s3TraceMsg"))
+		client.TraceOn(logWriter)
+	}
+
 	bkt := &Bucket{
-		logger: logger,
-		name:   config.Bucket,
-		client: client,
-		sse:    sse,
+		logger:          logger,
+		name:            config.Bucket,
+		client:          client,
+		sse:             sse,
+		putUserMetadata: config.PutUserMetadata,
 	}
 	return bkt, nil
 }
@@ -256,22 +276,40 @@ func (b *Bucket) Exists(ctx context.Context, name string) (bool, error) {
 	return true, nil
 }
 
-// Upload the contents of the reader as an object into the bucket.
-func (b *Bucket) Upload(ctx context.Context, name string, r io.Reader) error {
-	// TODO(PR #617): Consider removing requirement on pre-known length when all providers will support this.
-	fileSize := int64(-1)
-	fileInfo, err := r.(*os.File).Stat()
-	if err != nil {
-		level.Warn(b.logger).Log("msg", "could not guess file size for multipart upload", "name", name)
-	} else {
-		fileSize = fileInfo.Size()
+func (b *Bucket) guessFileSize(name string, r io.Reader) int64 {
+	if f, ok := r.(*os.File); ok {
+		fileInfo, err := f.Stat()
+		if err == nil {
+			return fileInfo.Size()
+		}
+		level.Warn(b.logger).Log("msg", "could not stat file for multipart upload", "name", name, "err", err)
+		return -1
 	}
 
-	_, err = b.client.PutObjectWithContext(ctx, b.name, name, r, fileSize,
-		minio.PutObjectOptions{ServerSideEncryption: b.sse, UserMetadata: map[string]string{"X-Amz-Acl": "bucket-owner-full-control"}},
-	)
+	level.Warn(b.logger).Log("msg", "could not guess file size for multipart upload", "name", name)
+	return -1
+}
 
-	return errors.Wrap(err, "upload s3 object")
+// Upload the contents of the reader as an object into the bucket.
+func (b *Bucket) Upload(ctx context.Context, name string, r io.Reader) error {
+	// TODO(https://github.com/improbable-eng/thanos/issues/678): Remove guessing length when minio provider will support multipart upload without this.
+	fileSize := b.guessFileSize(name, r)
+
+	if _, err := b.client.PutObjectWithContext(
+		ctx,
+		b.name,
+		name,
+		r,
+		fileSize,
+		minio.PutObjectOptions{
+			ServerSideEncryption: b.sse,
+			UserMetadata:         b.putUserMetadata,
+		},
+	); err != nil {
+		return errors.Wrap(err, "upload s3 object")
+	}
+
+	return nil
 }
 
 // Delete removes the object with the given name.
@@ -295,6 +333,7 @@ func configFromEnv() Config {
 	}
 
 	c.Insecure, _ = strconv.ParseBool(os.Getenv("S3_INSECURE"))
+	c.HTTPConfig.InsecureSkipVerify, _ = strconv.ParseBool(os.Getenv("S3_INSECURE_SKIP_VERIFY"))
 	c.SignatureV2, _ = strconv.ParseBool(os.Getenv("S3_SIGNATURE_VERSION2"))
 	return c
 }
