@@ -796,7 +796,7 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum(max(node_filesystem_size_bytes{fstype=\u007e\"ext[234]|btrfs|xfs|zfs\", cluster=\"$cluster\"} - node_filesystem_avail_bytes{fstype=\u007e\"ext[234]|btrfs|xfs|zfs\", cluster=\"$cluster\"}) by (device,pod,namespace)) by (pod,namespace)\n/ scalar(sum(max(node_filesystem_size_bytes{fstype=\u007e\"ext[234]|btrfs|xfs|zfs\", cluster=\"$cluster\"}) by (device,pod,namespace)))\n* on (namespace, pod) group_left (node) node_namespace_pod:kube_pod_info:{cluster=\"$cluster\"}\n",
+                                  "expr": "sum(max(node_filesystem_size_bytes{fstype=~\"ext[234]|btrfs|xfs|zfs\", cluster=\"$cluster\"} - node_filesystem_avail_bytes{fstype=~\"ext[234]|btrfs|xfs|zfs\", cluster=\"$cluster\"}) by (device,pod,namespace)) by (pod,namespace)\n/ scalar(sum(max(node_filesystem_size_bytes{fstype=~\"ext[234]|btrfs|xfs|zfs\", cluster=\"$cluster\"}) by (device,pod,namespace)))\n* on (namespace, pod) group_left (node) node_namespace_pod:kube_pod_info:{cluster=\"$cluster\"}\n",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{node}}",
@@ -6100,7 +6100,7 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "max(rate(node_network_receive_bytes_total{cluster=\"$cluster\", job=\"node-exporter\", instance=\"$instance\", device!\u007e\"lo\"}[5m]))",
+                                  "expr": "max(rate(node_network_receive_bytes_total{cluster=\"$cluster\", job=\"node-exporter\", instance=\"$instance\", device!~\"lo\"}[5m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{device}}",
@@ -6191,7 +6191,7 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "max(rate(node_network_transmit_bytes_total{cluster=\"$cluster\", job=\"node-exporter\", instance=\"$instance\", device!\u007e\"lo\"}[5m]))",
+                                  "expr": "max(rate(node_network_transmit_bytes_total{cluster=\"$cluster\", job=\"node-exporter\", instance=\"$instance\", device!~\"lo\"}[5m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "{{device}}",
@@ -7006,21 +7006,21 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum by(container_name) (container_memory_usage_bytes{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod_name=\"$pod\", container_name=\u007e\"$container\", container_name!=\"POD\"})",
+                                  "expr": "sum by(container_name) (container_memory_usage_bytes{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod_name=\"$pod\", container_name=~\"$container\", container_name!=\"POD\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "Current: {{ container_name }}",
                                   "refId": "A"
                               },
                               {
-                                  "expr": "sum by(container) (kube_pod_container_resource_requests_memory_bytes{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", container=\u007e\"$container\"})",
+                                  "expr": "sum by(container) (kube_pod_container_resource_requests_memory_bytes{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", container=~\"$container\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "Requested: {{ container }}",
                                   "refId": "B"
                               },
                               {
-                                  "expr": "sum by(container) (kube_pod_container_resource_limits_memory_bytes{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", container=\u007e\"$container\"})",
+                                  "expr": "sum by(container) (kube_pod_container_resource_limits_memory_bytes{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", container=~\"$container\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "Limit: {{ container }}",
@@ -7374,7 +7374,7 @@ items:
                       "options": [
 
                       ],
-                      "query": "label_values(kube_pod_info{cluster=\"$cluster\", namespace=\u007e\"$namespace\"}, pod)",
+                      "query": "label_values(kube_pod_info{cluster=\"$cluster\", namespace=~\"$namespace\"}, pod)",
                       "refresh": 2,
                       "regex": "",
                       "sort": 0,
@@ -7541,7 +7541,7 @@ items:
                           "tableColumn": "",
                           "targets": [
                               {
-                                  "expr": "sum(rate(container_cpu_usage_seconds_total{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod_name=\u007e\"$statefulset.*\"}[3m]))",
+                                  "expr": "sum(rate(container_cpu_usage_seconds_total{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod_name=~\"$statefulset.*\"}[3m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "",
@@ -7624,7 +7624,7 @@ items:
                           "tableColumn": "",
                           "targets": [
                               {
-                                  "expr": "sum(container_memory_usage_bytes{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod_name=\u007e\"$statefulset.*\"}) / 1024^3",
+                                  "expr": "sum(container_memory_usage_bytes{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod_name=~\"$statefulset.*\"}) / 1024^3",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "",
@@ -7707,7 +7707,7 @@ items:
                           "tableColumn": "",
                           "targets": [
                               {
-                                  "expr": "sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod_name=\u007e\"$statefulset.*\"}[3m])) + sum(rate(container_network_receive_bytes_total{cluster=\"$cluster\", namespace=\"$namespace\",pod_name=\u007e\"$statefulset.*\"}[3m]))",
+                                  "expr": "sum(rate(container_network_transmit_bytes_total{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", pod_name=~\"$statefulset.*\"}[3m])) + sum(rate(container_network_receive_bytes_total{cluster=\"$cluster\", namespace=\"$namespace\",pod_name=~\"$statefulset.*\"}[3m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "",

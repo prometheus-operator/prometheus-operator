@@ -1,7 +1,12 @@
 sudo: required
+dist: xenial
 language: go
 go:
-- "1.11"
+- "1.11.x"
+cache:
+  directories:
+  - $GOCACHE
+  - $GOPATH/pkg/mod
 services:
 - docker
 before_install:

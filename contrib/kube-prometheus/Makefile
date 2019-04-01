@@ -18,6 +18,7 @@ generate-in-docker: ../../hack/jsonnet-docker-image
 	--rm \
 	-u=$(shell id -u $(USER)):$(shell id -g $(USER)) \
 	-v $(shell dirname $(dir $(abspath $(dir $$PWD)))):/go/src/github.com/coreos/prometheus-operator/ \
+	-v $(shell go env GOCACHE):/.cache/go-build \
 	--workdir /go/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus \
 	po-jsonnet make generate
 
@@ -43,7 +44,7 @@ test: $(JB_BINARY)
 	./test.sh
 
 test-e2e:
-	go test -timeout 55m -v ./tests/e2e
+	go test -timeout 55m -v ./tests/e2e -count=1
 
 test-in-docker: ../../hack/jsonnet-docker-image
 	@echo ">> Compiling assets and generating Kubernetes manifests"
@@ -51,6 +52,7 @@ test-in-docker: ../../hack/jsonnet-docker-image
 	--rm \
 	-u=$(shell id -u $(USER)):$(shell id -g $(USER)) \
 	-v $(shell dirname $(dir $(abspath $(dir $$PWD)))):/go/src/github.com/coreos/prometheus-operator/ \
+	-v $(shell go env GOCACHE):/.cache/go-build \
 	--workdir /go/src/github.com/coreos/prometheus-operator/contrib/kube-prometheus \
 	po-jsonnet make test
 
