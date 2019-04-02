@@ -6855,7 +6855,7 @@ items:
                       "options": [
 
                       ],
-                      "query": "label_values(kubelet_volume_stats_capacity_bytes{cluster=\"$cluster\", job=\"kubelet\"}, exported_namespace)",
+                      "query": "label_values(kubelet_volume_stats_capacity_bytes{cluster=\"$cluster\", job=\"kubelet\"}, namespace)",
                       "refresh": 2,
                       "regex": "",
                       "sort": 0,
@@ -6881,7 +6881,7 @@ items:
                       "options": [
 
                       ],
-                      "query": "label_values(kubelet_volume_stats_capacity_bytes{cluster=\"$cluster\", job=\"kubelet\", exported_namespace=\"$namespace\"}, persistentvolumeclaim)",
+                      "query": "label_values(kubelet_volume_stats_capacity_bytes{cluster=\"$cluster\", job=\"kubelet\", namespace=\"$namespace\"}, persistentvolumeclaim)",
                       "refresh": 2,
                       "regex": "",
                       "sort": 0,
@@ -7013,14 +7013,14 @@ items:
                                   "refId": "A"
                               },
                               {
-                                  "expr": "sum by(container) (kube_pod_container_resource_requests_memory_bytes{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", container=~\"$container\"})",
+                                  "expr": "sum by(container) (kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"memory\", pod=\"$pod\", container=~\"$container\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "Requested: {{ container }}",
                                   "refId": "B"
                               },
                               {
-                                  "expr": "sum by(container) (kube_pod_container_resource_limits_memory_bytes{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\", container=~\"$container\"})",
+                                  "expr": "sum by(container) (kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"memory\", pod=\"$pod\", container=~\"$container\"})",
                                   "format": "time_series",
                                   "intervalFactor": 2,
                                   "legendFormat": "Limit: {{ container }}",
@@ -7124,11 +7124,25 @@ items:
                           "steppedLine": false,
                           "targets": [
                               {
-                                  "expr": "sum by (container_name) (rate(container_cpu_usage_seconds_total{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", image!=\"\",container_name!=\"POD\",pod_name=\"$pod\"}[1m]))",
+                                  "expr": "sum by (container_name) (rate(container_cpu_usage_seconds_total{job=\"kubelet\", cluster=\"$cluster\", namespace=\"$namespace\", image!=\"\", pod_name=\"$pod\", container_name=~\"$container\", container_name!=\"POD\"}[1m]))",
                                   "format": "time_series",
                                   "intervalFactor": 2,
-                                  "legendFormat": "{{ container_name }}",
+                                  "legendFormat": "Current: {{ container_name }}",
                                   "refId": "A"
+                              },
+                              {
+                                  "expr": "sum by(container) (kube_pod_container_resource_requests{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"cpu\", pod=\"$pod\", container=~\"$container\"})",
+                                  "format": "time_series",
+                                  "intervalFactor": 2,
+                                  "legendFormat": "Requested: {{ container }}",
+                                  "refId": "B"
+                              },
+                              {
+                                  "expr": "sum by(container) (kube_pod_container_resource_limits{job=\"kube-state-metrics\", cluster=\"$cluster\", namespace=\"$namespace\", resource=\"cpu\", pod=\"$pod\", container=~\"$container\"})",
+                                  "format": "time_series",
+                                  "intervalFactor": 2,
+                                  "legendFormat": "Limit: {{ container }}",
+                                  "refId": "C"
                               }
                           ],
                           "thresholds": [
