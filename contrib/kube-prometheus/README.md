@@ -64,6 +64,12 @@ In order to just try out this stack, start minikube with the following command:
 $ minikube delete && minikube start --kubernetes-version=v1.13.2 --memory=4096 --bootstrapper=kubeadm --extra-config=kubelet.authentication-token-webhook=true --extra-config=kubelet.authorization-mode=Webhook --extra-config=scheduler.address=0.0.0.0 --extra-config=controller-manager.address=0.0.0.0
 ```
 
+> The kube-prometheus stack includes a resource metrics API server, like the metrics-server does. So ensure the metrics-server plugin is disabled on minikube:
+>
+> ```
+> minikube addons disable metrics-server
+> ```
+
 ## Quickstart
 
 This project is intended to be used as a library (i.e. the intent is not for you to create your own modified copy of this repository).
