@@ -290,6 +290,10 @@ These are the available fields with their respective default values:
         names: 'k8s',
         replicas: 2,
         rules: {},
+        resourceRequests: {
+          memory: '400Mi',
+        },
+        resourceLimits: {},
     },
 
     alertmanager+:: {
