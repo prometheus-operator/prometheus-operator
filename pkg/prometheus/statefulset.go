@@ -210,9 +210,6 @@ func makeStatefulSet(
 		if pvcTemplate.Name == "" {
 			pvcTemplate.Name = volumeName(p.Name)
 		}
-		pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
-		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
-		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
 		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, pvcTemplate)
 	}
 
