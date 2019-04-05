@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -126,19 +127,39 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoring
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	return a, f.WaitForAlertmanagerReady(ns, a.Name, int(*a.Spec.Replicas))
+	return a, f.WaitForAlertmanagerClusterReady(ns, a.Name, int(*a.Spec.Replicas))
 }
 
-func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) error {
-	err := WaitForPodsReady(
+// WaitForAlertmanagerClusterReady waits for each individual pod as well as the
+// cluster as a whole to be ready.
+func (f *Framework) WaitForAlertmanagerClusterReady(ns, name string, replicas int) error {
+	if err := WaitForPodsReady(
 		f.KubeClient,
 		ns,
 		5*time.Minute,
 		replicas,
 		alertmanager.ListOptions(name),
-	)
+	); err != nil {
+		return errors.Wrap(err,
+			fmt.Sprintf(
+				"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
+				name, replicas,
+			))
+	}
 
-	return errors.Wrap(err, fmt.Sprintf("failed to create an Alertmanager cluster (%s) with %d instances", name, replicas))
+	for i := 0; i < replicas; i++ {
+		name := fmt.Sprintf("alertmanager-%v-%v", name, strconv.Itoa(i))
+		if err := f.WaitForAlertmanagerInitializedMesh(ns, name, replicas); err != nil {
+			return errors.Wrap(err,
+				fmt.Sprintf(
+					"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
+					name, replicas,
+				),
+			)
+		}
+	}
+
+	return nil
 }
 
 func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
