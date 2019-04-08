@@ -67,6 +67,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local alertmanagerPort = servicePort.newNamed('web', 9093, 'web');
 
       service.new('alertmanager-' + $._config.alertmanager.name, { app: 'alertmanager', alertmanager: $._config.alertmanager.name }, alertmanagerPort) +
+      service.mixin.spec.withSessionAffinity('ClientIP') +
       service.mixin.metadata.withNamespace($._config.namespace) +
       service.mixin.metadata.withLabels({ alertmanager: $._config.alertmanager.name }),
 
