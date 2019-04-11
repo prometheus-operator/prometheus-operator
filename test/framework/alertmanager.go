@@ -228,12 +228,9 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPe
 			return true, nil
 		}
 
-		var addresses []string
 		// Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'. This
 		// is abstracted via `getPeers()`.
-		for _, p := range amStatus.Data.getPeers() {
-			addresses = append(addresses, p.Address)
-		}
+		addresses := amStatus.Data.getPeers()
 
 		pollError = fmt.Errorf(
 			"failed to get correct amount of peers, expected %d, got %d, addresses %v",
@@ -421,27 +418,45 @@ type amAPIStatusResp struct {
 
 type amAPIStatusData struct {
 	ClusterStatus *clusterStatus `json:"clusterStatus,omitempty"`
-	MeshStatus    *clusterStatus `json:"meshStatus,omitempty"`
+	MeshStatus    *meshStatus    `json:"meshStatus,omitempty"`
 	ConfigYAML    string         `json:"configYAML"`
 }
 
 // Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'
-func (s *amAPIStatusData) getPeers() []peer {
+func (s *amAPIStatusData) getPeers() []string {
+	peers := []string{}
 	if s.MeshStatus != nil {
-		return s.MeshStatus.Peers
+		for _, p := range s.MeshStatus.Peers {
+			peers = append(peers, fmt.Sprintf("%+v", p))
+		}
+
+		return peers
 	}
-	return s.ClusterStatus.Peers
+
+	for _, p := range s.ClusterStatus.Peers {
+		peers = append(peers, fmt.Sprintf("%+v", p))
+	}
+	return peers
 }
 
 func (s *amAPIStatusData) getAmountPeers() int {
 	return len(s.getPeers())
 }
 
-type peer struct {
+type meshPeer struct {
+	Name     string `json:"name"`
+	NickName string `json:"nickName"`
+}
+
+type meshStatus struct {
+	Peers []meshPeer `json:"peers"`
+}
+
+type clusterPeer struct {
 	Name    string `json:"name"`
 	Address string `json:"address"`
 }
 
 type clusterStatus struct {
-	Peers []peer `json:"peers"`
+	Peers []clusterPeer `json:"peers"`
 }

@@ -33,8 +33,10 @@ import (
 )
 
 const (
-	governingServiceName   = "alertmanager-operated"
-	defaultVersion         = "v0.16.1"
+	governingServiceName = "alertmanager-operated"
+	// DefaultVersion specifies which version of Alertmanager the Prometheus
+	// Operator uses by default.
+	DefaultVersion         = "v0.16.1"
 	defaultRetention       = "120h"
 	secretsDir             = "/etc/alertmanager/secrets/"
 	configmapsDir          = "/etc/alertmanager/configmaps/"
@@ -57,7 +59,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 		am.Spec.BaseImage = config.AlertmanagerDefaultBaseImage
 	}
 	if am.Spec.Version == "" {
-		am.Spec.Version = defaultVersion
+		am.Spec.Version = DefaultVersion
 	}
 	if am.Spec.Replicas == nil {
 		am.Spec.Replicas = &minReplicas
