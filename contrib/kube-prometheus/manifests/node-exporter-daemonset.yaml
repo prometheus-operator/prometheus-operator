@@ -22,6 +22,7 @@ spec:
         - --path.rootfs=/host/root
         - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+)($|/)
         - --collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|cgroup|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|mqueue|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|sysfs|tracefs)$
+        - --collector.ntp
         image: quay.io/prometheus/node-exporter:v0.17.0
         name: node-exporter
         resources:

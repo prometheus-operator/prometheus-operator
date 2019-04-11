@@ -101,6 +101,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           // Once node exporter is being released with those settings, this can be removed.
           '--collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+)($|/)',
           '--collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|cgroup|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|mqueue|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|sysfs|tracefs)$',
+          '--collector.ntp',
         ]) +
         container.withVolumeMounts([procVolumeMount, sysVolumeMount, rootVolumeMount]) +
         container.mixin.resources.withRequests({ cpu: '102m', memory: '180Mi' }) +
