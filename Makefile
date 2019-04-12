@@ -177,8 +177,9 @@ Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET)
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
 
-$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example)
-	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
+# TODO: Disable after moving kube-prometheus out - need to update docs first
+# $(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example)
+# 	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
 
 
 ##############
