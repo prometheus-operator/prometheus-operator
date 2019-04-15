@@ -20,6 +20,9 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [BasicAuth](#basicauth)
 * [Endpoint](#endpoint)
 * [NamespaceSelector](#namespaceselector)
+* [PodMonitor](#podmonitor)
+* [PodMonitorList](#podmonitorlist)
+* [PodMonitorSpec](#podmonitorspec)
 * [Prometheus](#prometheus)
 * [PrometheusList](#prometheuslist)
 * [PrometheusRule](#prometheusrule)
@@ -201,6 +204,44 @@ NamespaceSelector is a selector for selecting either all namespaces or a list of
 
 [Back to TOC](#table-of-contents)
 
+## PodMonitor
+
+PodMonitor defines monitoring for a set of pods.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
+| spec | Specification of desired Pod selection for target discrovery by Prometheus. | [PodMonitorSpec](#podmonitorspec) | true |
+
+[Back to TOC](#table-of-contents)
+
+## PodMonitorList
+
+PodMonitorList is a list of PodMonitors.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata | Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#listmeta-v1-meta) | false |
+| items | List of PodMonitors | []*[PodMonitor](#podmonitor) | true |
+
+[Back to TOC](#table-of-contents)
+
+## PodMonitorSpec
+
+PodMonitorSpec contains specification parameters for a PodMonitor.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| jobLabel | The label to use to retrieve the job name from. | string | false |
+| targetLabels | TargetLabels transfers labels on the Kubernetes Service onto the target. | []string | false |
+| podTargetLabels | PodTargetLabels transfers labels on the Kubernetes Pod onto the target. | []string | false |
+| endpoints | A list of endpoints allowed as part of this PodMonitor. | [][Endpoint](#endpoint) | true |
+| selector | Selector to select Pod objects. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | true |
+| namespaceSelector | Selector to select which namespaces the Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
+| sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
+
+[Back to TOC](#table-of-contents)
+
 ## Prometheus
 
 Prometheus defines a Prometheus deployment.
@@ -265,6 +306,8 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
 | serviceMonitorSelector | ServiceMonitors to be selected for target discovery. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | serviceMonitorNamespaceSelector | Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
+| podMonitorSelector | PodMonitors to be selected for target discovery. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
+| podMonitorNamespaceSelector | Namespaces to be selected for PodMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | version | Version of Prometheus to be deployed. | string | false |
 | tag | Tag of Prometheus container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. | string | false |
 | sha | SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. | string | false |

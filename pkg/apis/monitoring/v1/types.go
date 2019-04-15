@@ -36,6 +36,10 @@ const (
 	ServiceMonitorName    = "servicemonitors"
 	ServiceMonitorKindKey = "servicemonitor"
 
+	PodMonitorsKind   = "PodMonitor"
+	PodMonitorName    = "podmonitors"
+	PodMonitorKindKey = "podmonitor"
+
 	PrometheusRuleKind    = "PrometheusRule"
 	PrometheusRuleName    = "prometheusrules"
 	PrometheusRuleKindKey = "prometheusrule"
@@ -84,6 +88,11 @@ type PrometheusSpec struct {
 	// Namespaces to be selected for ServiceMonitor discovery. If nil, only
 	// check own namespace.
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
+	// PodMonitors to be selected for target discovery.
+	PodMonitorSelector *metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
+	// Namespaces to be selected for PodMonitor discovery. If nil, only
+	// check own namespace.
+	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 	// Version of Prometheus to be deployed.
 	Version string `json:"version,omitempty"`
 	// Tag of Prometheus container image to be deployed. Defaults to the value of `version`.
@@ -503,6 +512,38 @@ type ServiceMonitorSpec struct {
 	SampleLimit uint64 `json:"sampleLimit,omitempty"`
 }
 
+// PodMonitor defines monitoring for a set of pods.
+// +genclient
+// +k8s:openapi-gen=true
+type PodMonitor struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard object’s metadata. More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// +k8s:openapi-gen=false
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	// Specification of desired Pod selection for target discrovery by Prometheus.
+	Spec PodMonitorSpec `json:"spec"`
+}
+
+// PodMonitorSpec contains specification parameters for a PodMonitor.
+// +k8s:openapi-gen=true
+type PodMonitorSpec struct {
+	// The label to use to retrieve the job name from.
+	JobLabel string `json:"jobLabel,omitempty"`
+	// TargetLabels transfers labels on the Kubernetes Service onto the target.
+	TargetLabels []string `json:"targetLabels,omitempty"`
+	// PodTargetLabels transfers labels on the Kubernetes Pod onto the target.
+	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
+	// A list of endpoints allowed as part of this PodMonitor.
+	Endpoints []Endpoint `json:"endpoints"`
+	// Selector to select Pod objects.
+	Selector metav1.LabelSelector `json:"selector"`
+	// Selector to select which namespaces the Endpoints objects are discovered from.
+	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
+	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+	SampleLimit uint64 `json:"sampleLimit,omitempty"`
+}
+
 // Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 // +k8s:openapi-gen=true
 type Endpoint struct {
@@ -572,6 +613,17 @@ type ServiceMonitorList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of ServiceMonitors
 	Items []*ServiceMonitor `json:"items"`
+}
+
+// PodMonitorList is a list of PodMonitors.
+// +k8s:openapi-gen=true
+type PodMonitorList struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard list metadata
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	metav1.ListMeta `json:"metadata,omitempty"`
+	// List of PodMonitors
+	Items []*PodMonitor `json:"items"`
 }
 
 // PrometheusRuleList is a list of PrometheusRules.
@@ -827,6 +879,16 @@ func (l *ServiceMonitor) DeepCopyObject() runtime.Object {
 
 // DeepCopyObject implements the runtime.Object interface.
 func (l *ServiceMonitorList) DeepCopyObject() runtime.Object {
+	return l.DeepCopy()
+}
+
+// DeepCopyObject implements the runtime.Object interface.
+func (l *PodMonitor) DeepCopyObject() runtime.Object {
+	return l.DeepCopy()
+}
+
+// DeepCopyObject implements the runtime.Object interface.
+func (l *PodMonitorList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 

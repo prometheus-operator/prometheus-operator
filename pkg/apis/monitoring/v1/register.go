@@ -51,6 +51,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&PrometheusList{},
 		&ServiceMonitor{},
 		&ServiceMonitorList{},
+		&PodMonitor{},
+		&PodMonitorList{},
 		&Alertmanager{},
 		&AlertmanagerList{},
 		&PrometheusRule{},

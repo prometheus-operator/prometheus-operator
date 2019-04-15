@@ -99,8 +99,22 @@ func main() {
 			if err != nil {
 				log.Fatalf("serviceMonitor is invalid: %v", err)
 			}
+		case v1.PodMonitorsKind:
+			j, err := yaml.YAMLToJSON(content)
+			if err != nil {
+				log.Fatalf("unable to convert YALM to JSON: %v", err)
+			}
+
+			decoder := json.NewDecoder(bytes.NewBuffer(j))
+			decoder.DisallowUnknownFields()
+
+			var podMonitor v1.PodMonitor
+			err = decoder.Decode(&podMonitor)
+			if err != nil {
+				log.Fatalf("podMonitor is invalid: %v", err)
+			}
 		default:
-			log.Fatal("MetaType is unknown to linter. Not in Alertmanager, Prometheus, PrometheusRule, ServiceMonitor")
+			log.Fatal("MetaType is unknown to linter. Not in Alertmanager, Prometheus, PrometheusRule, ServiceMonitor, PodMonitor")
 		}
 	}
 }
