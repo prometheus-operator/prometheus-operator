@@ -28,17 +28,9 @@ The Prometheus Operator makes the Prometheus configuration Kubernetes native
 and manages and operates Prometheus and Alertmanager clusters. It is a piece of
 the puzzle regarding full end-to-end monitoring.
 
-[kube-prometheus](contrib/kube-prometheus) combines the Prometheus Operator
+[kube-prometheus](https://github.com/coreos/kube-prometheus) combines the Prometheus Operator
 with a collection of manifests to help getting started with monitoring
 Kubernetes itself and applications running on top of it.
-
-**kube-prometheus isn't versioned and releases at the same pace as Prometheus
-Operator. Release notes describe changes only to the operator, release archives
-contain only matching changes for operator code. For changes to kube-prometheus
-always refer to the master branch of this repository.**
-
-**kube-prometheus is a separate project which will have its own repository in
-the future[1][[operator-vs-kube].**
 
 ## Prerequisites
 
@@ -72,7 +64,7 @@ at the [design doc](Documentation/design.md).
 
 ## Quickstart
 
-Note that this quickstart does not provision an entire monitoring stack; if that is what you are looking for see the [kube-prometheus](contrib/kube-prometheus) sub-project. If you want the whole stack, but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
+Note that this quickstart does not provision an entire monitoring stack; if that is what you are looking for see the [kube-prometheus](https://github.com/coreos/kube-prometheus) project. If you want the whole stack, but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
 
 To quickly try out _just_ the Prometheus Operator inside a cluster, run the following command:
 

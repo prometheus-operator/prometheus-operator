@@ -132,15 +132,11 @@ hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 ##############
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGET) $(OPENAPI_TARGET) $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml kube-prometheus $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGET) $(OPENAPI_TARGET) $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml $(shell find Documentation -type f)
 
 .PHONY: generate-in-docker
 generate-in-docker: hack/jsonnet-docker-image
 	hack/generate-in-docker.sh $(MFLAGS) # MFLAGS are the parent make call's flags
-
-.PHONY: kube-prometheus
-kube-prometheus:
-	cd contrib/kube-prometheus && $(MAKE) $(MFLAGS) generate
 
 example/prometheus-operator-crd/**.crd.yaml: $(OPENAPI_TARGET) $(PO_CRDGEN_BINARY)
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
@@ -181,8 +177,9 @@ Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET)
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
 
-$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) kube-prometheus
-	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
+# TODO: Disable after moving kube-prometheus out - need to update docs first
+# $(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example)
+# 	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
 
 
 ##############

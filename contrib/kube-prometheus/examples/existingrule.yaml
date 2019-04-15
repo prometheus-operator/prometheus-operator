@@ -1,9 +1,0 @@
-groups:
-- name: example-group
-  rules:
-  - alert: Watchdog
-    expr: vector(1)
-    labels:
-      severity: "none"
-    annotations:
-      description: This is a Watchdog meant to ensure that the entire alerting pipeline is functional.
