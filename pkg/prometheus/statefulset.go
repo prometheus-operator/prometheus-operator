@@ -628,12 +628,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				fmt.Sprintf("--webhook-url=%s", localReloadURL),
 			},
 			VolumeMounts: []v1.VolumeMount{},
-			Resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceCPU:    resource.MustParse(c.ConfigReloaderCPU),
-					v1.ResourceMemory: resource.MustParse(c.ConfigReloaderMemory),
-				},
-			},
+			Resources:    v1.ResourceRequirements{Limits: v1.ResourceList{}},
+		}
+
+		if c.ConfigReloaderCPU != "0" {
+			container.Resources.Limits[v1.ResourceCPU] = resource.MustParse(c.ConfigReloaderCPU)
+		}
+		if c.ConfigReloaderMemory != "0" {
+			container.Resources.Limits[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
 		}
 
 		for _, name := range ruleConfigMapNames {
@@ -841,6 +843,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		prometheusImage = *p.Spec.Image
 	}
 
+	prometheusConfigReloaderResources := v1.ResourceRequirements{Limits: v1.ResourceList{}}
+	if c.ConfigReloaderCPU != "0" {
+		prometheusConfigReloaderResources.Limits[v1.ResourceCPU] = resource.MustParse(c.ConfigReloaderCPU)
+	}
+	if c.ConfigReloaderMemory != "0" {
+		prometheusConfigReloaderResources.Limits[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
+	}
+
 	return &appsv1.StatefulSetSpec{
 		ServiceName:         governingServiceName,
 		Replicas:            p.Spec.Replicas,
@@ -881,12 +891,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 						Command:      []string{"/bin/prometheus-config-reloader"},
 						Args:         configReloadArgs,
 						VolumeMounts: configReloadVolumeMounts,
-						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse(c.ConfigReloaderCPU),
-								v1.ResourceMemory: resource.MustParse(c.ConfigReloaderMemory),
-							},
-						},
+						Resources:    prometheusConfigReloaderResources,
 					},
 				}, additionalContainers...),
 				SecurityContext:               securityContext,

@@ -646,3 +646,55 @@ func TestRetention(t *testing.T) {
 		}
 	}
 }
+
+func TestSidecarsNoCPULimits(t *testing.T) {
+	testConfig := &Config{
+		ConfigReloaderImage:           "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderCPU:             "0",
+		ConfigReloaderMemory:          "50Mi",
+		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
+		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
+		ThanosDefaultBaseImage:        "improbable/thanos",
+	}
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{},
+	}, testConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{Limits: v1.ResourceList{
+		v1.ResourceMemory: resource.MustParse("50Mi"),
+	}}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if (c.Name == "prometheus-config-reloader" || c.Name == "rules-configmap-reloader") && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+		}
+	}
+}
+
+func TestSidecarsNoMemoryLimits(t *testing.T) {
+	testConfig := &Config{
+		ConfigReloaderImage:           "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderCPU:             "100m",
+		ConfigReloaderMemory:          "0",
+		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
+		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
+		ThanosDefaultBaseImage:        "improbable/thanos",
+	}
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{},
+	}, testConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{Limits: v1.ResourceList{
+		v1.ResourceCPU: resource.MustParse("100m"),
+	}}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if (c.Name == "prometheus-config-reloader" || c.Name == "rules-configmap-reloader") && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+		}
+	}
+}
