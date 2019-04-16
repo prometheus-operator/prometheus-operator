@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -126,19 +127,39 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoring
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	return a, f.WaitForAlertmanagerReady(ns, a.Name, int(*a.Spec.Replicas))
+	return a, f.WaitForAlertmanagerClusterReady(ns, a.Name, int(*a.Spec.Replicas))
 }
 
-func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) error {
-	err := WaitForPodsReady(
+// WaitForAlertmanagerClusterReady waits for each individual pod as well as the
+// cluster as a whole to be ready.
+func (f *Framework) WaitForAlertmanagerClusterReady(ns, name string, replicas int) error {
+	if err := WaitForPodsReady(
 		f.KubeClient,
 		ns,
 		5*time.Minute,
 		replicas,
 		alertmanager.ListOptions(name),
-	)
+	); err != nil {
+		return errors.Wrap(err,
+			fmt.Sprintf(
+				"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
+				name, replicas,
+			))
+	}
 
-	return errors.Wrap(err, fmt.Sprintf("failed to create an Alertmanager cluster (%s) with %d instances", name, replicas))
+	for i := 0; i < replicas; i++ {
+		name := fmt.Sprintf("alertmanager-%v-%v", name, strconv.Itoa(i))
+		if err := f.WaitForAlertmanagerInitializedMesh(ns, name, replicas); err != nil {
+			return errors.Wrap(err,
+				fmt.Sprintf(
+					"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
+					name, replicas,
+				),
+			)
+		}
+	}
+
+	return nil
 }
 
 func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
@@ -207,12 +228,9 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPe
 			return true, nil
 		}
 
-		var addresses []string
 		// Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'. This
 		// is abstracted via `getPeers()`.
-		for _, p := range amStatus.Data.getPeers() {
-			addresses = append(addresses, p.Address)
-		}
+		addresses := amStatus.Data.getPeers()
 
 		pollError = fmt.Errorf(
 			"failed to get correct amount of peers, expected %d, got %d, addresses %v",
@@ -400,27 +418,45 @@ type amAPIStatusResp struct {
 
 type amAPIStatusData struct {
 	ClusterStatus *clusterStatus `json:"clusterStatus,omitempty"`
-	MeshStatus    *clusterStatus `json:"meshStatus,omitempty"`
+	MeshStatus    *meshStatus    `json:"meshStatus,omitempty"`
 	ConfigYAML    string         `json:"configYAML"`
 }
 
 // Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'
-func (s *amAPIStatusData) getPeers() []peer {
+func (s *amAPIStatusData) getPeers() []string {
+	peers := []string{}
 	if s.MeshStatus != nil {
-		return s.MeshStatus.Peers
+		for _, p := range s.MeshStatus.Peers {
+			peers = append(peers, fmt.Sprintf("%+v", p))
+		}
+
+		return peers
 	}
-	return s.ClusterStatus.Peers
+
+	for _, p := range s.ClusterStatus.Peers {
+		peers = append(peers, fmt.Sprintf("%+v", p))
+	}
+	return peers
 }
 
 func (s *amAPIStatusData) getAmountPeers() int {
 	return len(s.getPeers())
 }
 
-type peer struct {
+type meshPeer struct {
+	Name     string `json:"name"`
+	NickName string `json:"nickName"`
+}
+
+type meshStatus struct {
+	Peers []meshPeer `json:"peers"`
+}
+
+type clusterPeer struct {
 	Name    string `json:"name"`
 	Address string `json:"address"`
 }
 
 type clusterStatus struct {
-	Peers []peer `json:"peers"`
+	Peers []clusterPeer `json:"peers"`
 }

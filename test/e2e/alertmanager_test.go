@@ -23,7 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1beta2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -37,7 +37,8 @@ import (
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {
-	t.Parallel()
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
@@ -56,7 +57,8 @@ func testAMCreateDeleteCluster(t *testing.T) {
 }
 
 func testAMScaling(t *testing.T) {
-	t.Parallel()
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
@@ -83,7 +85,8 @@ func testAMScaling(t *testing.T) {
 }
 
 func testAMVersionMigration(t *testing.T) {
-	t.Parallel()
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
@@ -113,7 +116,8 @@ func testAMVersionMigration(t *testing.T) {
 }
 
 func testAMStorageUpdate(t *testing.T) {
-	t.Parallel()
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
@@ -174,7 +178,8 @@ func testAMStorageUpdate(t *testing.T) {
 }
 
 func testAMExposingWithKubernetesAPI(t *testing.T) {
-	t.Parallel()
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
@@ -201,19 +206,20 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 }
 
 func testAMMeshInitialization(t *testing.T) {
-	t.Parallel()
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	// Starting with Alertmanager v0.15.0 hashicorp/memberlist is used for HA.
-	// Make sure both memberlist as well as mesh (< 0.15.0) work. `""` will end
-	// up as Alertmanager default version.
-	amVersions := []string{"v0.14.0", ""}
+	// Make sure both memberlist as well as mesh (< 0.15.0) work.
+	amVersions := []string{"v0.14.0", alertmanager.DefaultVersion}
 
 	for _, v := range amVersions {
 		version := v
 		t.Run(
 			fmt.Sprintf("amVersion%v", strings.Replace(version, ".", "-", -1)),
 			func(t *testing.T) {
-				t.Parallel()
+				// Don't run Alertmanager tests in parallel. See
+				// https://github.com/prometheus/alertmanager/issues/1835 for details.
 				ctx := framework.NewTestCtx(t)
 				defer ctx.Cleanup(t)
 				ns := ctx.CreateNamespace(t, framework.KubeClient)
@@ -225,6 +231,20 @@ func testAMMeshInitialization(t *testing.T) {
 					alertmanager.Spec.Version = version
 				}
 				alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
+
+				// Print Alertmanager logs on failure.
+				defer func() {
+					if !t.Failed() {
+						return
+					}
+
+					for i := 0; i < amClusterSize; i++ {
+						err := framework.PrintPodLogs(ns, fmt.Sprintf("alertmanager-test-%v", strconv.Itoa(i)))
+						if err != nil {
+							t.Fatal(err)
+						}
+					}
+				}()
 
 				if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
 					t.Fatal(err)
@@ -252,7 +272,8 @@ func testAMMeshInitialization(t *testing.T) {
 func testAMMeshAfterRollingUpdate(t *testing.T) {
 	var err error
 
-	t.Parallel()
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
@@ -288,7 +309,8 @@ func testAMMeshAfterRollingUpdate(t *testing.T) {
 }
 
 func testAMClusterGossipSilences(t *testing.T) {
-	t.Parallel()
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
@@ -336,7 +358,8 @@ func testAMClusterGossipSilences(t *testing.T) {
 }
 
 func testAMReloadConfig(t *testing.T) {
-	t.Parallel()
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
@@ -409,7 +432,8 @@ receivers:
 }
 
 func testAMZeroDowntimeRollingDeployment(t *testing.T) {
-	t.Parallel()
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
@@ -520,10 +544,16 @@ inhibit_rules:
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(amcfg); err != nil {
 		t.Fatal(err)
 	}
+
 	alertmanager, err = framework.MonClientV1.Alertmanagers(ns).Create(alertmanager)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	if err := framework.WaitForAlertmanagerClusterReady(ns, alertmanager.Name, int(*alertmanager.Spec.Replicas)); err != nil {
+		t.Fatal(err)
+	}
+
 	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, amsvc); err != nil {
 		t.Fatal(err)
 	}
@@ -604,6 +634,12 @@ inhibit_rules:
 	// line flags via the Retention.
 	alertmanager.Spec.Retention = "1h"
 	if _, err := framework.MonClientV1.Alertmanagers(ns).Update(alertmanager); err != nil {
+		t.Fatal(err)
+	}
+	// Wait for the change above to take effect.
+	time.Sleep(time.Minute)
+
+	if err := framework.WaitForAlertmanagerClusterReady(ns, alertmanager.Name, int(*alertmanager.Spec.Replicas)); err != nil {
 		t.Fatal(err)
 	}
 
