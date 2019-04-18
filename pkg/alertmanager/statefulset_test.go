@@ -23,6 +23,7 @@ import (
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -554,4 +555,56 @@ func sliceContains(slice []string, match string) bool {
 		}
 	}
 	return contains
+}
+
+func TestSidecarsNoCPULimits(t *testing.T) {
+	testConfig := Config{
+		ConfigReloaderImage:          "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderCPU:            "0",
+		ConfigReloaderMemory:         "25Mi",
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("25Mi"),
+		},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+		}
+	}
+}
+
+func TestSidecarsNoMemoryLimits(t *testing.T) {
+	testConfig := Config{
+		ConfigReloaderImage:          "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderCPU:            "100m",
+		ConfigReloaderMemory:         "0",
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU: resource.MustParse("100m"),
+		},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+		}
+	}
 }

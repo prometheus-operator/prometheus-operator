@@ -407,6 +407,14 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		})
 	}
 
+	resources := v1.ResourceRequirements{Limits: v1.ResourceList{}}
+	if config.ConfigReloaderCPU != "0" {
+		resources.Limits[v1.ResourceCPU] = resource.MustParse(config.ConfigReloaderCPU)
+	}
+	if config.ConfigReloaderMemory != "0" {
+		resources.Limits[v1.ResourceMemory] = resource.MustParse(config.ConfigReloaderMemory)
+	}
+
 	terminationGracePeriod := int64(0)
 	finalLabels := config.Labels.Merge(podLabels)
 	return &appsv1.StatefulSetSpec{
@@ -462,12 +470,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 								MountPath: alertmanagerConfDir,
 							},
 						},
-						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse(config.ConfigReloaderCPU),
-								v1.ResourceMemory: resource.MustParse(config.ConfigReloaderMemory),
-							},
-						},
+						Resources: resources,
 					},
 				}, a.Spec.Containers...),
 				Volumes:            volumes,
