@@ -719,32 +719,29 @@ func TestAdditionalContainers(t *testing.T) {
 		t.Fatalf("container count mismatch")
 	}
 
-	// Adding a new container with the same name results in
+	// Adding a new container with the same name results in a merge and just one container
 	const existingContainerName = "prometheus"
+	const containerImage = "madeUpContainerImage"
 	modSset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Containers: []v1.Container{
 				{
-					Name: existingContainerName,
+					Name:  existingContainerName,
+					Image: containerImage,
 				},
 			},
 		},
 	}, defaultTestConfig, nil, "")
 	require.NoError(t, err)
 
-	if len(baseSet.Spec.Template.Spec.Containers)+1 != len(modSset.Spec.Template.Spec.Containers) {
-		t.Fatalf("container count mismatch")
+	if len(baseSet.Spec.Template.Spec.Containers) != len(modSset.Spec.Template.Spec.Containers) {
+		t.Fatalf("container count mismatch. container %s was added instead of merged", existingContainerName)
 	}
 
-	// Check that adding a container with an existing name results in 2 containers.
-	// Note: this is a valid CRD but k8s will not start the pod because there are 2 containers with the same name
-	var containersNamedPrometheus int
+	// Check that adding a container with an existing name results in a single patched container.
 	for _, c := range modSset.Spec.Template.Spec.Containers {
-		if c.Name == existingContainerName {
-			containersNamedPrometheus++
+		if c.Name == existingContainerName && c.Image != containerImage {
+			t.Fatalf("expected container %s to have the image %s but got %s", existingContainerName, containerImage, c.Image)
 		}
-	}
-	if containersNamedPrometheus != 2 {
-		t.Fatalf("expected 2 containers named prometheus but only found %d", containersNamedPrometheus)
 	}
 }
