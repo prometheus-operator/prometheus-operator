@@ -21,9 +21,4 @@ Feel free to ask questions in #prometheus-operator on Kubernetes Slack!
     `Insert image tag or Git SHA here`
     <!-- Try kubectl -n monitoring describe deployment prometheus-operator -->
 
-* kube-prometheus revision:
-
-    `Insert branch or Git SHA here`
-    <!-- What revision of kube-prometheus do you run? master? -->
-
 **Anything else we need to know?**:

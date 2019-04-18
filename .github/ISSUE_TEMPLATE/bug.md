@@ -1,6 +1,6 @@
 ---
 name: Bug
-about: Report a bug related to kube-prometheus or the Prometheus Operator
+about: Report a bug related to the Prometheus Operator
 labels: kind/bug
 ---
 
