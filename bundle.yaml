@@ -116,6 +116,7 @@ spec:
         - --logtostderr=true
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
         - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.29.0
+        - --prometheus-default-base-image=quay.io/coreos/prometheus
         image: quay.io/coreos/prometheus-operator:v0.29.0
         name: prometheus-operator
         ports:
