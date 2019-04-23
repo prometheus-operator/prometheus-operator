@@ -832,13 +832,13 @@ func schema_pkg_apis_monitoring_v1_BasicAuth(ref common.ReferenceCallback) commo
 				Properties: map[string]spec.Schema{
 					"username": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The secret that contains the username for authentication.",
+							Description: "The secret in the service monitor namespace that contains the username for authentication.",
 							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
 					"password": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The secret that contains the password for authentication.",
+							Description: "The secret in the service monitor namespace that contains the password for authentication.",
 							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
@@ -986,7 +986,6 @@ func schema_pkg_apis_monitoring_v1_Endpoint(ref common.ReferenceCallback) common
 						},
 					},
 				},
-				Required: []string{"bearerTokenSecret"},
 			},
 		},
 		Dependencies: []string{
@@ -1610,11 +1609,18 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"arbitraryFSAccessThroughSMs": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ArbitraryFSAccessThroughSMs configures whether configuration based on a service monitor can access arbitrary files on the file system of the Prometheus container e.g. bearer token files.",
+							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ArbitraryFSAccessThroughSMsConfig"),
+						},
+					},
 				},
+				Required: []string{"arbitraryFSAccessThroughSMs"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.APIServerConfig", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.AlertingSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.QuerySpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RemoteReadSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RemoteWriteSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.Rules", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.StorageSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.APIServerConfig", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.AlertingSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ArbitraryFSAccessThroughSMsConfig", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.QuerySpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RemoteReadSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RemoteWriteSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.Rules", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.StorageSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosSpec", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -2378,23 +2384,41 @@ func schema_pkg_apis_monitoring_v1_TLSConfig(ref common.ReferenceCallback) commo
 				Properties: map[string]spec.Schema{
 					"caFile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The CA cert to use for the targets.",
+							Description: "Path to the CA cert in the Prometheus container to use for the targets.",
 							Type:        []string{"string"},
 							Format:      "",
+						},
+					},
+					"caSecret": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Secret containing the CA cert to use for the targets.",
+							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
 					"certFile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The client cert file for the targets.",
+							Description: "Path to the client cert file in the Prometheus container for the targets.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
+					"certSecret": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Secret containing the client cert file for the targets.",
+							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
+						},
+					},
 					"keyFile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The client key file for the targets.",
+							Description: "Path to the client key file in the Prometheus container for the targets.",
 							Type:        []string{"string"},
 							Format:      "",
+						},
+					},
+					"keySecret": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Secret containing the client key file for the targets.",
+							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
 					"serverName": {
@@ -2414,6 +2438,8 @@ func schema_pkg_apis_monitoring_v1_TLSConfig(ref common.ReferenceCallback) commo
 				},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.SecretKeySelector"},
 	}
 }
 

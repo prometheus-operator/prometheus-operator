@@ -194,7 +194,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | scrapeTimeout | Timeout after which the scrape is ended | string | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint | *[TLSConfig](#tlsconfig) | false |
 | bearerTokenFile | File to read bearer token for scraping targets. | string | false |
-| bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the service monitor and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the service monitor and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
@@ -521,13 +521,16 @@ StorageSpec defines the configured storage for a group Prometheus servers. If ne
 
 ## TLSConfig
 
-TLSConfig specifies TLS configuration parameters.\n\nthe Prometheus container. See ArbitraryFSAccessThroughSMs above.
+TLSConfig specifies TLS configuration parameters.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| caFile | The CA cert to use for the targets. | string | false |
-| certFile | The client cert file for the targets. | string | false |
-| keyFile | The client key file for the targets. | string | false |
+| caFile | Path to the CA cert in the Prometheus container to use for the targets. | string | false |
+| caSecret | Secret containing the CA cert to use for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| certFile | Path to the client cert file in the Prometheus container for the targets. | string | false |
+| certSecret | Secret containing the client cert file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| keyFile | Path to the client key file in the Prometheus container for the targets. | string | false |
+| keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 | serverName | Used to verify the hostname for the targets. | string | false |
 | insecureSkipVerify | Disable target certificate validation. | bool | false |
 

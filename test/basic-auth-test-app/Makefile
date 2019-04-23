@@ -1,4 +1,4 @@
-REG := quay.io/coreos
+REG := quay.io/mxinden
 APP := basic-auth-test-app
 VERSION ?= $(shell cat VERSION)
 

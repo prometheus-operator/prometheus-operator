@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"path"
 	"regexp"
 	"sort"
 	"strings"
@@ -65,19 +66,29 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	return res
 }
 
-func addTLStoYaml(cfg yaml.MapSlice, tls *v1.TLSConfig) yaml.MapSlice {
+func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.MapSlice {
 	if tls != nil {
+		pathPrefix := path.Join(tlsAssetsDir, namespace)
 		tlsConfig := yaml.MapSlice{
 			{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
 		}
 		if tls.CAFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
 		}
+		if tls.CASecret != nil {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathPrefix + "_" + tls.CASecret.Name + "_" + tls.CASecret.Key})
+		}
 		if tls.CertFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
 		}
+		if tls.CertSecret != nil {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathPrefix + "_" + tls.CertSecret.Name + "_" + tls.CertSecret.Key})
+		}
 		if tls.KeyFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
+		}
+		if tls.KeySecret != nil {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathPrefix + "_" + tls.KeySecret.Name + "_" + tls.KeySecret.Key})
 		}
 		if tls.ServerName != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
@@ -326,13 +337,13 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
 
-	cfg = addTLStoYaml(cfg, ep.TLSConfig)
+	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
 
 	if ep.BearerTokenFile != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
 	}
 
-	if ep.BearerTokenSecret != nil {
+	if ep.BearerTokenSecret.Name != "" {
 		if s, ok := bearerTokens[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
 		}
@@ -649,7 +660,9 @@ func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverCon
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token_file", Value: apiserverConfig.BearerTokenFile})
 		}
 
-		k8sSDConfig = addTLStoYaml(k8sSDConfig, apiserverConfig.TLSConfig)
+		// TODO: If we want to support secret refs for k8s service discovery tls
+		// config as well, make sure to path the right namespace here.
+		k8sSDConfig = addTLStoYaml(k8sSDConfig, "", apiserverConfig.TLSConfig)
 	}
 
 	return yaml.MapItem{
@@ -674,7 +687,9 @@ func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am
 		{Key: "scheme", Value: am.Scheme},
 	}
 
-	cfg = addTLStoYaml(cfg, am.TLSConfig)
+	// TODO: If we want to support secret refs for alertmanager config tls
+	// config as well, make sure to path the right namespace here.
+	cfg = addTLStoYaml(cfg, "", am.TLSConfig)
 
 	switch version.Major {
 	case 1:
@@ -771,7 +786,9 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, spec
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		cfg = addTLStoYaml(cfg, spec.TLSConfig)
+		// TODO: If we want to support secret refs for remote read tls
+		// config as well, make sure to path the right namespace here.
+		cfg = addTLStoYaml(cfg, "", spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
@@ -860,7 +877,9 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, spe
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		cfg = addTLStoYaml(cfg, spec.TLSConfig)
+		// TODO: If we want to support secret refs for remote write tls
+		// config as well, make sure to path the right namespace here.
+		cfg = addTLStoYaml(cfg, "", spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})

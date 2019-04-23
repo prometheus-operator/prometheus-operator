@@ -590,7 +590,7 @@ type Endpoint struct {
 	// Secret to mount to read bearer token for scraping targets. The secret
 	// needs to be in the same namespace as the service monitor and accessible by
 	// the Prometheus Operator.
-	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
+	BearerTokenSecret v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	HonorLabels bool `json:"honorLabels,omitempty"`
 	// BasicAuth allow an endpoint to authenticate over basic authentication
@@ -619,16 +619,22 @@ type BasicAuth struct {
 
 // TLSConfig specifies TLS configuration parameters.
 // +k8s:openapi-gen=true
-//
-// TODO: Add option to reference secrets instead of files on the file system of
-// the Prometheus container. See ArbitraryFSAccessThroughSMs above.
 type TLSConfig struct {
-	// The CA cert to use for the targets.
+	// Path to the CA cert in the Prometheus container to use for the targets.
 	CAFile string `json:"caFile,omitempty"`
-	// The client cert file for the targets.
+	// Secret containing the CA cert to use for the targets.
+	CASecret *v1.SecretKeySelector `json:"caSecret,omitempty"`
+
+	// Path to the client cert file in the Prometheus container for the targets.
 	CertFile string `json:"certFile,omitempty"`
-	// The client key file for the targets.
+	// Secret containing the client cert file for the targets.
+	CertSecret *v1.SecretKeySelector `json:"certSecret,omitempty"`
+
+	// Path to the client key file in the Prometheus container for the targets.
 	KeyFile string `json:"keyFile,omitempty"`
+	// Secret containing the client key file for the targets.
+	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
+
 	// Used to verify the hostname for the targets.
 	ServerName string `json:"serverName,omitempty"`
 	// Disable target certificate validation.
