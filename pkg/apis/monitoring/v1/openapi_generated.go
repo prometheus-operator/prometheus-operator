@@ -703,7 +703,7 @@ func schema_pkg_apis_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallback
 					},
 					"securityContext": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000.",
+							Description: "SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext.",
 							Ref:         ref("k8s.io/api/core/v1.PodSecurityContext"),
 						},
 					},
@@ -1520,7 +1520,7 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 					},
 					"securityContext": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SecurityContext holds pod-level security attributes and common container settings. This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and default PodSecurityContext for other versions.",
+							Description: "SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext.",
 							Ref:         ref("k8s.io/api/core/v1.PodSecurityContext"),
 						},
 					},
