@@ -11,3 +11,12 @@ build:
 
 push:
 	@docker push $(REG)/$(APP):$(VERSION)
+
+generate-certs:
+	mkdir -p certs && \
+	openssl req -newkey rsa:2048 \
+		-new -nodes -x509 \
+		-days 3650 \
+		-out certs/cert.pem \
+		-keyout certs/key.pem \
+		-subj "/C=US/ST=California/L=Mountain View/O=Your Organization/OU=Your Unit/CN=localhost"

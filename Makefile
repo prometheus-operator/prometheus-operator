@@ -208,9 +208,12 @@ test: test-unit test-e2e
 test-unit:
 	@go test -race $(TEST_RUN_ARGS) -short $(pkgs) -count=1
 
+test/basic-auth-test-app/certs/cert.pem test/basic-auth-test-app/certs/key.pem:
+	cd test/basic-auth-test-app && make generate-certs
+
 .PHONY: test-e2e
 test-e2e: KUBECONFIG?=$(HOME)/.kube/config
-test-e2e:
+test-e2e: test/basic-auth-test-app/certs/cert.pem test/basic-auth-test-app/certs/key.pem
 	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) -count=1
 
 
