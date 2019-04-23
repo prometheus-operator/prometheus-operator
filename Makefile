@@ -20,9 +20,9 @@ TYPES_V1_TARGET:=pkg/apis/monitoring/v1/types.go
 # type object declarations are added which break prometheus operator.
 #
 # TODO(sur): bump this to a proper release branch once upstream resolved this.
-K8S_OPENAPI_GEN_VERSION:=0317810137be915b9cf888946c6e115c1bfac693
+K8S_OPENAPI_GEN_VERSION:=b3a7cee44a305be0a69e1b9ac03018307287e1b0
 
-K8S_GEN_VERSION:=release-1.13
+K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=deepcopy-gen informer-gen lister-gen client-gen
 K8S_GEN_ARGS:=--go-header-file $(FIRST_GOPATH)/src/$(GO_PKG)/.header --v=1 --logtostderr
 
@@ -238,7 +238,7 @@ hack/jsonnet-docker-image: scripts/jsonnet/Dockerfile
 #
 # /home/user/go/bin/informer-gen:
 #	go get -u -d k8s.io/code-generator/cmd/informer-gen
-#	cd /home/user/go/src/k8s.io/code-generator; git checkout release-1.13
+#	cd /home/user/go/src/k8s.io/code-generator; git checkout release-1.14
 #	go install k8s.io/code-generator/cmd/informer-gen
 #
 define _K8S_GEN_VAR_TARGET_

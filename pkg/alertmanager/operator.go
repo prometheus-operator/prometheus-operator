@@ -456,7 +456,7 @@ func (c *Operator) sync(key string) error {
 	level.Info(c.logger).Log("msg", "sync alertmanager", "key", key)
 
 	// Create governing service if it doesn't exist.
-	svcClient := c.kclient.Core().Services(am.Namespace)
+	svcClient := c.kclient.CoreV1().Services(am.Namespace)
 	if err = k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(am, c.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
@@ -515,7 +515,7 @@ func ListOptions(name string) metav1.ListOptions {
 func AlertmanagerStatus(kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
 	res := &monitoringv1.AlertmanagerStatus{Paused: a.Spec.Paused}
 
-	pods, err := kclient.Core().Pods(a.Namespace).List(ListOptions(a.Name))
+	pods, err := kclient.CoreV1().Pods(a.Namespace).List(ListOptions(a.Name))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
@@ -586,7 +586,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 		return errors.Wrap(err, "updating statefulset for scale-down failed")
 	}
 
-	podClient := c.kclient.Core().Pods(sset.Namespace)
+	podClient := c.kclient.CoreV1().Pods(sset.Namespace)
 
 	// TODO(fabxc): temporary solution until StatefulSet status provides
 	// necessary info to know whether scale-down completed.

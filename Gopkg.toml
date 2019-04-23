@@ -33,28 +33,28 @@
   version = "3.5.1"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/go-openapi/spec"
+  version = "=v0.17.2"
 
 [[constraint]]
   name = "k8s.io/api"
-  version = "kubernetes-1.13.0"
+  version = "kubernetes-1.14.0"
 
 [[constraint]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.13.0"
+  version = "kubernetes-1.14.0"
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.13.0"
+  version = "kubernetes-1.14.0"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "=v10.0.0"
+  version = "=v11.0.0"
 
 [[constraint]]
   name = "k8s.io/kube-openapi"
-  revision = "c59034cc13d587f5ef4e85ca0ade0c1866ae8e1d"
+  revision = "b3a7cee44a305be0a69e1b9ac03018307287e1b0"
 
 [[constraint]]
   branch = "master"
@@ -62,7 +62,7 @@
 
 [[override]]
   name = "github.com/json-iterator/go"
-  revision = "ab8a2e0c74be9d3be70b3184d9acc634935ded82"
+  version = "=1.1.4"
 
 [[constraint]]
   branch = "master"
@@ -75,3 +75,7 @@
 [[constraint]]
   name = "github.com/improbable-eng/thanos"
   revision = "e756fe11d3259368b4d840dc1391229d7a515a67"
+
+[prune]
+  go-tests = true
+  unused-packages = true

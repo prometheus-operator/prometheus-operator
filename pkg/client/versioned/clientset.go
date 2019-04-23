@@ -26,8 +26,6 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	MonitoringV1() monitoringv1.MonitoringV1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Monitoring() monitoringv1.MonitoringV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -39,12 +37,6 @@ type Clientset struct {
 
 // MonitoringV1 retrieves the MonitoringV1Client
 func (c *Clientset) MonitoringV1() monitoringv1.MonitoringV1Interface {
-	return c.monitoringV1
-}
-
-// Deprecated: Monitoring retrieves the default version of MonitoringClient.
-// Please explicitly pick a version.
-func (c *Clientset) Monitoring() monitoringv1.MonitoringV1Interface {
 	return c.monitoringV1
 }
 
