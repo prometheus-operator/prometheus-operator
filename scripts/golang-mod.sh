@@ -8,9 +8,7 @@ set -u
 # print each command before executing it
 set -x
 
-curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-
-dep ensure
-
+go mod vendor
+go mod tidy
 
 git diff --exit-code
