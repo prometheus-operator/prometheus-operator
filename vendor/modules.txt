@@ -13,6 +13,8 @@ github.com/ant31/crd-validation/pkg
 github.com/beorn7/perks/quantile
 # github.com/blang/semver v3.5.1+incompatible
 github.com/blang/semver
+# github.com/brancz/gojsontoyaml v0.0.0-20190425155809-e8bd32d46b3d
+github.com/brancz/gojsontoyaml
 # github.com/campoy/embedmd v1.0.0
 github.com/campoy/embedmd
 github.com/campoy/embedmd/embedmd
@@ -23,6 +25,8 @@ github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
 # github.com/evanphx/json-patch v4.1.0+incompatible
 github.com/evanphx/json-patch
+# github.com/fatih/color v1.7.0
+github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
 # github.com/ghodss/yaml v1.0.0
@@ -67,6 +71,10 @@ github.com/improbable-eng/thanos/pkg/reloader
 github.com/improbable-eng/thanos/pkg/runutil
 # github.com/json-iterator/go v0.0.0-20180612202835-f2b4162afba3
 github.com/json-iterator/go
+# github.com/jsonnet-bundler/jsonnet-bundler v0.1.0
+github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
+github.com/jsonnet-bundler/jsonnet-bundler/pkg
+github.com/jsonnet-bundler/jsonnet-bundler/spec
 # github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 github.com/kr/logfmt
 # github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
@@ -76,6 +84,10 @@ github.com/kylelemons/godebug/diff
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
 github.com/mailru/easyjson/buffer
+# github.com/mattn/go-colorable v0.0.9
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.6
+github.com/mattn/go-isatty
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452
@@ -107,7 +119,7 @@ github.com/prometheus/procfs/xfs
 github.com/prometheus/procfs/internal/util
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
-# github.com/stretchr/testify v1.2.2
+# github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/require
 github.com/stretchr/testify/assert
 # golang.org/x/crypto v0.0.0-20190424203555-c05e17bb3b2d
@@ -313,16 +325,31 @@ k8s.io/client-go/util/connrotation
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/tools/clientcmd/api/v1
 # k8s.io/code-generator v0.0.0-20190311093542-50b561225d70
+k8s.io/code-generator/cmd/client-gen
 k8s.io/code-generator/cmd/deepcopy-gen
-k8s.io/code-generator/cmd/deepcopy-gen/args
+k8s.io/code-generator/cmd/informer-gen
+k8s.io/code-generator/cmd/lister-gen
+k8s.io/code-generator/cmd/client-gen/args
+k8s.io/code-generator/cmd/client-gen/generators
 k8s.io/code-generator/pkg/util
+k8s.io/code-generator/cmd/deepcopy-gen/args
+k8s.io/code-generator/cmd/informer-gen/args
+k8s.io/code-generator/cmd/informer-gen/generators
+k8s.io/code-generator/cmd/lister-gen/args
+k8s.io/code-generator/cmd/lister-gen/generators
+k8s.io/code-generator/cmd/client-gen/types
+k8s.io/code-generator/cmd/client-gen/generators/fake
+k8s.io/code-generator/cmd/client-gen/generators/scheme
+k8s.io/code-generator/cmd/client-gen/generators/util
+k8s.io/code-generator/cmd/client-gen/path
+k8s.io/code-generator/pkg/namer
 # k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a
 k8s.io/gengo/args
 k8s.io/gengo/examples/deepcopy-gen/generators
 k8s.io/gengo/generator
 k8s.io/gengo/namer
-k8s.io/gengo/parser
 k8s.io/gengo/types
+k8s.io/gengo/parser
 k8s.io/gengo/examples/set-gen/sets
 # k8s.io/klog v0.3.0
 k8s.io/klog
