@@ -263,7 +263,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 	c.secrInf = cache.NewSharedIndexInformer(
 		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
-			return cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "secrets", namespace, fields.Everything())
+			return cache.NewListWatchFromClient(c.kclient.CoreV1().RESTClient(), "secrets", namespace, fields.Everything())
 		}),
 		&v1.Secret{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
@@ -287,7 +287,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		nsResyncPeriod = resyncPeriod
 	}
 	c.nsInf = cache.NewSharedIndexInformer(
-		listwatch.NewUnprivilegedNamespaceListWatchFromClient(c.kclient.Core().RESTClient(), c.config.Namespaces, fields.Everything()),
+		listwatch.NewUnprivilegedNamespaceListWatchFromClient(c.kclient.CoreV1().RESTClient(), c.config.Namespaces, fields.Everything()),
 		&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
 	)
 
@@ -1006,7 +1006,7 @@ func (c *Operator) sync(key string) error {
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	_, err = sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		if _, err := c.kclient.Core().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
+		if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
 			return errors.Wrap(err, "creating empty config file failed")
 		}
 	}
@@ -1015,7 +1015,7 @@ func (c *Operator) sync(key string) error {
 	}
 
 	// Create governing service if it doesn't exist.
-	svcClient := c.kclient.Core().Services(p.Namespace)
+	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if err := k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(p, c.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
@@ -1107,7 +1107,7 @@ func ListOptions(name string) metav1.ListOptions {
 func PrometheusStatus(kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
 	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
-	pods, err := kclient.Core().Pods(p.Namespace).List(ListOptions(p.Name))
+	pods, err := kclient.CoreV1().Pods(p.Namespace).List(ListOptions(p.Name))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
