@@ -19,8 +19,8 @@
 package v1
 
 import (
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	core_v1 "k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -29,13 +29,21 @@ func (in *APIServerConfig) DeepCopyInto(out *APIServerConfig) {
 	*out = *in
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
-		*out = new(BasicAuth)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(BasicAuth)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
-		*out = new(TLSConfig)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(TLSConfig)
+			**out = **in
+		}
 	}
 	return
 }
@@ -81,8 +89,12 @@ func (in *Alertmanager) DeepCopyInto(out *Alertmanager) {
 	in.Spec.DeepCopyInto(&out.Spec)
 	if in.Status != nil {
 		in, out := &in.Status, &out.Status
-		*out = new(AlertmanagerStatus)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(AlertmanagerStatus)
+			**out = **in
+		}
 	}
 	return
 }
@@ -103,8 +115,12 @@ func (in *AlertmanagerEndpoints) DeepCopyInto(out *AlertmanagerEndpoints) {
 	out.Port = in.Port
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
-		*out = new(TLSConfig)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(TLSConfig)
+			**out = **in
+		}
 	}
 	return
 }
@@ -149,17 +165,25 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 	*out = *in
 	if in.PodMetadata != nil {
 		in, out := &in.PodMetadata, &out.PodMetadata
-		*out = new(metav1.ObjectMeta)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(meta_v1.ObjectMeta)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.Image != nil {
 		in, out := &in.Image, &out.Image
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.ImagePullSecrets != nil {
 		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
-		*out = make([]corev1.LocalObjectReference, len(*in))
+		*out = make([]core_v1.LocalObjectReference, len(*in))
 		copy(*out, *in)
 	}
 	if in.Secrets != nil {
@@ -174,13 +198,21 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 	}
 	if in.Replicas != nil {
 		in, out := &in.Replicas, &out.Replicas
-		*out = new(int32)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(int32)
+			**out = **in
+		}
 	}
 	if in.Storage != nil {
 		in, out := &in.Storage, &out.Storage
-		*out = new(StorageSpec)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(StorageSpec)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.NodeSelector != nil {
 		in, out := &in.NodeSelector, &out.NodeSelector
@@ -192,24 +224,32 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.Affinity != nil {
 		in, out := &in.Affinity, &out.Affinity
-		*out = new(corev1.Affinity)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.Affinity)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.Tolerations != nil {
 		in, out := &in.Tolerations, &out.Tolerations
-		*out = make([]corev1.Toleration, len(*in))
+		*out = make([]core_v1.Toleration, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.SecurityContext != nil {
 		in, out := &in.SecurityContext, &out.SecurityContext
-		*out = new(corev1.PodSecurityContext)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.PodSecurityContext)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.Containers != nil {
 		in, out := &in.Containers, &out.Containers
-		*out = make([]corev1.Container, len(*in))
+		*out = make([]core_v1.Container, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -307,42 +347,52 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 	*out = *in
 	if in.TargetPort != nil {
 		in, out := &in.TargetPort, &out.TargetPort
-		*out = new(intstr.IntOrString)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(intstr.IntOrString)
+			**out = **in
+		}
 	}
 	if in.Params != nil {
 		in, out := &in.Params, &out.Params
 		*out = make(map[string][]string, len(*in))
 		for key, val := range *in {
-			var outVal []string
 			if val == nil {
 				(*out)[key] = nil
 			} else {
-				in, out := &val, &outVal
-				*out = make([]string, len(*in))
-				copy(*out, *in)
+				(*out)[key] = make([]string, len(val))
+				copy((*out)[key], val)
 			}
-			(*out)[key] = outVal
 		}
 	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
-		*out = new(TLSConfig)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(TLSConfig)
+			**out = **in
+		}
 	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
-		*out = new(BasicAuth)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(BasicAuth)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.MetricRelabelConfigs != nil {
 		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
 		*out = make([]*RelabelConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(RelabelConfig)
-				(*in).DeepCopyInto(*out)
+			if (*in)[i] == nil {
+				(*out)[i] = nil
+			} else {
+				(*out)[i] = new(RelabelConfig)
+				(*in)[i].DeepCopyInto((*out)[i])
 			}
 		}
 	}
@@ -350,17 +400,22 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 		in, out := &in.RelabelConfigs, &out.RelabelConfigs
 		*out = make([]*RelabelConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(RelabelConfig)
-				(*in).DeepCopyInto(*out)
+			if (*in)[i] == nil {
+				(*out)[i] = nil
+			} else {
+				(*out)[i] = new(RelabelConfig)
+				(*in)[i].DeepCopyInto((*out)[i])
 			}
 		}
 	}
 	if in.ProxyURL != nil {
 		in, out := &in.ProxyURL, &out.ProxyURL
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	return
 }
@@ -404,8 +459,12 @@ func (in *Prometheus) DeepCopyInto(out *Prometheus) {
 	in.Spec.DeepCopyInto(&out.Spec)
 	if in.Status != nil {
 		in, out := &in.Status, &out.Status
-		*out = new(PrometheusStatus)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(PrometheusStatus)
+			**out = **in
+		}
 	}
 	return
 }
@@ -429,10 +488,11 @@ func (in *PrometheusList) DeepCopyInto(out *PrometheusList) {
 		in, out := &in.Items, &out.Items
 		*out = make([]*Prometheus, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(Prometheus)
-				(*in).DeepCopyInto(*out)
+			if (*in)[i] == nil {
+				(*out)[i] = nil
+			} else {
+				(*out)[i] = new(Prometheus)
+				(*in)[i].DeepCopyInto((*out)[i])
 			}
 		}
 	}
@@ -477,10 +537,11 @@ func (in *PrometheusRuleList) DeepCopyInto(out *PrometheusRuleList) {
 		in, out := &in.Items, &out.Items
 		*out = make([]*PrometheusRule, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(PrometheusRule)
-				(*in).DeepCopyInto(*out)
+			if (*in)[i] == nil {
+				(*out)[i] = nil
+			} else {
+				(*out)[i] = new(PrometheusRule)
+				(*in)[i].DeepCopyInto((*out)[i])
 			}
 		}
 	}
@@ -525,43 +586,71 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 	*out = *in
 	if in.PodMetadata != nil {
 		in, out := &in.PodMetadata, &out.PodMetadata
-		*out = new(metav1.ObjectMeta)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(meta_v1.ObjectMeta)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.ServiceMonitorSelector != nil {
 		in, out := &in.ServiceMonitorSelector, &out.ServiceMonitorSelector
-		*out = new(metav1.LabelSelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(meta_v1.LabelSelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.ServiceMonitorNamespaceSelector != nil {
 		in, out := &in.ServiceMonitorNamespaceSelector, &out.ServiceMonitorNamespaceSelector
-		*out = new(metav1.LabelSelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(meta_v1.LabelSelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.Image != nil {
 		in, out := &in.Image, &out.Image
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.ImagePullSecrets != nil {
 		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
-		*out = make([]corev1.LocalObjectReference, len(*in))
+		*out = make([]core_v1.LocalObjectReference, len(*in))
 		copy(*out, *in)
 	}
 	if in.Replicas != nil {
 		in, out := &in.Replicas, &out.Replicas
-		*out = new(int32)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(int32)
+			**out = **in
+		}
 	}
 	if in.ReplicaExternalLabelName != nil {
 		in, out := &in.ReplicaExternalLabelName, &out.ReplicaExternalLabelName
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.PrometheusExternalLabelName != nil {
 		in, out := &in.PrometheusExternalLabelName, &out.PrometheusExternalLabelName
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	out.Rules = in.Rules
 	if in.ExternalLabels != nil {
@@ -573,28 +662,48 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 	}
 	if in.Query != nil {
 		in, out := &in.Query, &out.Query
-		*out = new(QuerySpec)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(QuerySpec)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.Storage != nil {
 		in, out := &in.Storage, &out.Storage
-		*out = new(StorageSpec)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(StorageSpec)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.RuleSelector != nil {
 		in, out := &in.RuleSelector, &out.RuleSelector
-		*out = new(metav1.LabelSelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(meta_v1.LabelSelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.RuleNamespaceSelector != nil {
 		in, out := &in.RuleNamespaceSelector, &out.RuleNamespaceSelector
-		*out = new(metav1.LabelSelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(meta_v1.LabelSelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.Alerting != nil {
 		in, out := &in.Alerting, &out.Alerting
-		*out = new(AlertingSpec)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(AlertingSpec)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.NodeSelector != nil {
@@ -616,12 +725,16 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 	}
 	if in.Affinity != nil {
 		in, out := &in.Affinity, &out.Affinity
-		*out = new(corev1.Affinity)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.Affinity)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.Tolerations != nil {
 		in, out := &in.Tolerations, &out.Tolerations
-		*out = make([]corev1.Toleration, len(*in))
+		*out = make([]core_v1.Toleration, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -642,40 +755,64 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 	}
 	if in.SecurityContext != nil {
 		in, out := &in.SecurityContext, &out.SecurityContext
-		*out = new(corev1.PodSecurityContext)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.PodSecurityContext)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.Containers != nil {
 		in, out := &in.Containers, &out.Containers
-		*out = make([]corev1.Container, len(*in))
+		*out = make([]core_v1.Container, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.AdditionalScrapeConfigs != nil {
 		in, out := &in.AdditionalScrapeConfigs, &out.AdditionalScrapeConfigs
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.AdditionalAlertRelabelConfigs != nil {
 		in, out := &in.AdditionalAlertRelabelConfigs, &out.AdditionalAlertRelabelConfigs
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.AdditionalAlertManagerConfigs != nil {
 		in, out := &in.AdditionalAlertManagerConfigs, &out.AdditionalAlertManagerConfigs
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.APIServerConfig != nil {
 		in, out := &in.APIServerConfig, &out.APIServerConfig
-		*out = new(APIServerConfig)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(APIServerConfig)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.Thanos != nil {
 		in, out := &in.Thanos, &out.Thanos
-		*out = new(ThanosSpec)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(ThanosSpec)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	return
 }
@@ -711,23 +848,39 @@ func (in *QuerySpec) DeepCopyInto(out *QuerySpec) {
 	*out = *in
 	if in.LookbackDelta != nil {
 		in, out := &in.LookbackDelta, &out.LookbackDelta
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.MaxConcurrency != nil {
 		in, out := &in.MaxConcurrency, &out.MaxConcurrency
-		*out = new(int32)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(int32)
+			**out = **in
+		}
 	}
 	if in.MaxSamples != nil {
 		in, out := &in.MaxSamples, &out.MaxSamples
-		*out = new(int32)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(int32)
+			**out = **in
+		}
 	}
 	if in.Timeout != nil {
 		in, out := &in.Timeout, &out.Timeout
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	return
 }
@@ -791,13 +944,21 @@ func (in *RemoteReadSpec) DeepCopyInto(out *RemoteReadSpec) {
 	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
-		*out = new(BasicAuth)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(BasicAuth)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
-		*out = new(TLSConfig)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(TLSConfig)
+			**out = **in
+		}
 	}
 	return
 }
@@ -824,18 +985,30 @@ func (in *RemoteWriteSpec) DeepCopyInto(out *RemoteWriteSpec) {
 	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
-		*out = new(BasicAuth)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(BasicAuth)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
-		*out = new(TLSConfig)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(TLSConfig)
+			**out = **in
+		}
 	}
 	if in.QueueConfig != nil {
 		in, out := &in.QueueConfig, &out.QueueConfig
-		*out = new(QueueConfig)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(QueueConfig)
+			**out = **in
+		}
 	}
 	return
 }
@@ -965,10 +1138,11 @@ func (in *ServiceMonitorList) DeepCopyInto(out *ServiceMonitorList) {
 		in, out := &in.Items, &out.Items
 		*out = make([]*ServiceMonitor, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(ServiceMonitor)
-				(*in).DeepCopyInto(*out)
+			if (*in)[i] == nil {
+				(*out)[i] = nil
+			} else {
+				(*out)[i] = new(ServiceMonitor)
+				(*in)[i].DeepCopyInto((*out)[i])
 			}
 		}
 	}
@@ -1025,8 +1199,12 @@ func (in *StorageSpec) DeepCopyInto(out *StorageSpec) {
 	*out = *in
 	if in.EmptyDir != nil {
 		in, out := &in.EmptyDir, &out.EmptyDir
-		*out = new(corev1.EmptyDirVolumeSource)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.EmptyDirVolumeSource)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	in.VolumeClaimTemplate.DeepCopyInto(&out.VolumeClaimTemplate)
 	return
@@ -1063,13 +1241,21 @@ func (in *ThanosGCSSpec) DeepCopyInto(out *ThanosGCSSpec) {
 	*out = *in
 	if in.Bucket != nil {
 		in, out := &in.Bucket, &out.Bucket
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.SecretKey != nil {
 		in, out := &in.SecretKey, &out.SecretKey
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	return
 }
@@ -1089,38 +1275,66 @@ func (in *ThanosS3Spec) DeepCopyInto(out *ThanosS3Spec) {
 	*out = *in
 	if in.Bucket != nil {
 		in, out := &in.Bucket, &out.Bucket
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.Endpoint != nil {
 		in, out := &in.Endpoint, &out.Endpoint
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.AccessKey != nil {
 		in, out := &in.AccessKey, &out.AccessKey
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.SecretKey != nil {
 		in, out := &in.SecretKey, &out.SecretKey
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.Insecure != nil {
 		in, out := &in.Insecure, &out.Insecure
-		*out = new(bool)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(bool)
+			**out = **in
+		}
 	}
 	if in.SignatureVersion2 != nil {
 		in, out := &in.SignatureVersion2, &out.SignatureVersion2
-		*out = new(bool)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(bool)
+			**out = **in
+		}
 	}
 	if in.EncryptSSE != nil {
 		in, out := &in.EncryptSSE, &out.EncryptSSE
-		*out = new(bool)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(bool)
+			**out = **in
+		}
 	}
 	return
 }
@@ -1140,59 +1354,103 @@ func (in *ThanosSpec) DeepCopyInto(out *ThanosSpec) {
 	*out = *in
 	if in.Peers != nil {
 		in, out := &in.Peers, &out.Peers
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.Image != nil {
 		in, out := &in.Image, &out.Image
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.Version != nil {
 		in, out := &in.Version, &out.Version
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.Tag != nil {
 		in, out := &in.Tag, &out.Tag
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.SHA != nil {
 		in, out := &in.SHA, &out.SHA
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.BaseImage != nil {
 		in, out := &in.BaseImage, &out.BaseImage
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.GCS != nil {
 		in, out := &in.GCS, &out.GCS
-		*out = new(ThanosGCSSpec)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(ThanosGCSSpec)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.S3 != nil {
 		in, out := &in.S3, &out.S3
-		*out = new(ThanosS3Spec)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(ThanosS3Spec)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.ObjectStorageConfig != nil {
 		in, out := &in.ObjectStorageConfig, &out.ObjectStorageConfig
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(core_v1.SecretKeySelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.GrpcAdvertiseAddress != nil {
 		in, out := &in.GrpcAdvertiseAddress, &out.GrpcAdvertiseAddress
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.ClusterAdvertiseAddress != nil {
 		in, out := &in.ClusterAdvertiseAddress, &out.ClusterAdvertiseAddress
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	return
 }
