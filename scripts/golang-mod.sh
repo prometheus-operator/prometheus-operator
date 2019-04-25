@@ -9,6 +9,4 @@ set -u
 set -x
 
 go mod vendor
-go mod tidy
-
-git diff --exit-code
+git diff --exit-code vendor/

@@ -13,6 +13,9 @@ github.com/ant31/crd-validation/pkg
 github.com/beorn7/perks/quantile
 # github.com/blang/semver v3.5.1+incompatible
 github.com/blang/semver
+# github.com/campoy/embedmd v1.0.0
+github.com/campoy/embedmd
+github.com/campoy/embedmd/embedmd
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/emicklei/go-restful v2.6.0+incompatible
@@ -37,7 +40,7 @@ github.com/go-openapi/jsonreference
 github.com/go-openapi/spec
 # github.com/go-openapi/swag v0.17.2
 github.com/go-openapi/swag
-# github.com/gogo/protobuf v1.2.0
+# github.com/gogo/protobuf v1.2.1
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
 # github.com/golang/protobuf v1.2.0
@@ -107,9 +110,9 @@ github.com/spf13/pflag
 # github.com/stretchr/testify v1.2.2
 github.com/stretchr/testify/require
 github.com/stretchr/testify/assert
-# golang.org/x/crypto v0.0.0-20190128193316-c7b33c32a30b
+# golang.org/x/crypto v0.0.0-20190424203555-c05e17bb3b2d
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/net v0.0.0-20190213061140-3a22650c66bd
+# golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6
 golang.org/x/net/http2
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
@@ -119,12 +122,12 @@ golang.org/x/net/context/ctxhttp
 # golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
+# golang.org/x/sync v0.0.0-20190423024810-112230192c58
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223
+# golang.org/x/sys v0.0.0-20190425145619-16072639606e
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2
+# golang.org/x/text v0.3.1
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
 golang.org/x/text/secure/bidirule
@@ -132,6 +135,17 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/transform
 # golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
 golang.org/x/time/rate
+# golang.org/x/tools v0.0.0-20190425150028-36563e24a262
+golang.org/x/tools/imports
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/go/packages
+golang.org/x/tools/internal/gopathwalk
+golang.org/x/tools/internal/module
+golang.org/x/tools/go/gcexportdata
+golang.org/x/tools/go/internal/packagesdriver
+golang.org/x/tools/internal/semver
+golang.org/x/tools/internal/fastwalk
+golang.org/x/tools/go/internal/gcimporter
 # google.golang.org/appengine v1.4.0
 google.golang.org/appengine/urlfetch
 google.golang.org/appengine/internal
@@ -298,11 +312,28 @@ k8s.io/client-go/pkg/apis/clientauthentication/v1beta1
 k8s.io/client-go/util/connrotation
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/tools/clientcmd/api/v1
+# k8s.io/code-generator v0.0.0-20190311093542-50b561225d70
+k8s.io/code-generator/cmd/deepcopy-gen
+k8s.io/code-generator/cmd/deepcopy-gen/args
+k8s.io/code-generator/pkg/util
+# k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a
+k8s.io/gengo/args
+k8s.io/gengo/examples/deepcopy-gen/generators
+k8s.io/gengo/generator
+k8s.io/gengo/namer
+k8s.io/gengo/parser
+k8s.io/gengo/types
+k8s.io/gengo/examples/set-gen/sets
 # k8s.io/klog v0.3.0
 k8s.io/klog
 # k8s.io/kube-openapi v0.0.0-20190228160746-b3a7cee44a30
 k8s.io/kube-openapi/pkg/common
+k8s.io/kube-openapi/cmd/openapi-gen
+k8s.io/kube-openapi/cmd/openapi-gen/args
+k8s.io/kube-openapi/pkg/generators
 k8s.io/kube-openapi/pkg/util/proto
+k8s.io/kube-openapi/pkg/generators/rules
+k8s.io/kube-openapi/pkg/util/sets
 # k8s.io/utils v0.0.0-20190308190857-21c4ce38f2a7
 k8s.io/utils/buffer
 k8s.io/utils/trace
