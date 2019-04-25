@@ -240,26 +240,26 @@ define _K8S_GEN_VAR_TARGET_
 $(shell echo $(1) | tr '[:lower:]' '[:upper:]' | tr '-' '_')_BINARY:=$(FIRST_GOPATH)/bin/$(1)
 
 $(FIRST_GOPATH)/bin/$(1):
-	go install k8s.io/code-generator/cmd/$(1)
+	@go install -mod=vendor k8s.io/code-generator/cmd/$(1)
 
 endef
 
 $(OPENAPI_GEN_BINARY):
-	go install k8s.io/kube-openapi/cmd/openapi-gen
+	@go install -mod=vendor k8s.io/kube-openapi/cmd/openapi-gen
 
 $(foreach binary,$(K8S_GEN_BINARIES),$(eval $(call _K8S_GEN_VAR_TARGET_,$(binary))))
 
 $(EMBEDMD_BINARY):
-	@go get github.com/campoy/embedmd
+	@go install -mod=vendor github.com/campoy/embedmd
 
 $(JB_BINARY):
-	@go install github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
+	@go install -mod=vendor github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 
 $(PO_CRDGEN_BINARY): cmd/po-crdgen/main.go $(OPENAPI_TARGET)
-	@go install $(GO_PKG)/cmd/po-crdgen
+	@go install -mod=vendor $(GO_PKG)/cmd/po-crdgen
 
 $(PO_DOCGEN_BINARY): $(shell find cmd/po-docgen -type f) $(TYPES_V1_TARGET)
-	@go install $(GO_PKG)/cmd/po-docgen
+	@go install -mod=vendor $(GO_PKG)/cmd/po-docgen
 
 $(GOJSONTOYAML_BINARY):
-	@go install github.com/brancz/gojsontoyaml
+	@go install -mod=vendor github.com/brancz/gojsontoyaml
