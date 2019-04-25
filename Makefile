@@ -247,15 +247,15 @@ define _K8S_GEN_VAR_TARGET_
 $(shell echo $(1) | tr '[:lower:]' '[:upper:]' | tr '-' '_')_BINARY:=$(FIRST_GOPATH)/bin/$(1)
 
 $(FIRST_GOPATH)/bin/$(1):
-	go get -u -d k8s.io/code-generator/cmd/$(1)
-	cd $(FIRST_GOPATH)/src/k8s.io/code-generator; git checkout $(K8S_GEN_VERSION)
+	# go get -u -d k8s.io/code-generator/cmd/$(1)
+	# cd $(FIRST_GOPATH)/src/k8s.io/code-generator; git checkout $(K8S_GEN_VERSION)
 	go install k8s.io/code-generator/cmd/$(1)
 
 endef
 
 $(OPENAPI_GEN_BINARY):
-	go get -u -d k8s.io/kube-openapi/cmd/openapi-gen
-	cd $(FIRST_GOPATH)/src/k8s.io/kube-openapi; git checkout $(K8S_OPENAPI_GEN_VERSION)
+	# go get -u -d k8s.io/kube-openapi/cmd/openapi-gen
+	# cd $(FIRST_GOPATH)/src/k8s.io/kube-openapi; git checkout $(K8S_OPENAPI_GEN_VERSION)
 	go install k8s.io/kube-openapi/cmd/openapi-gen
 
 $(foreach binary,$(K8S_GEN_BINARIES),$(eval $(call _K8S_GEN_VAR_TARGET_,$(binary))))
