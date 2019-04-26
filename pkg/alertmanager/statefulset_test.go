@@ -248,110 +248,29 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 	}
 }
 
-// below Alertmanager v0.7.0 the flag 'web.route-prefix' does not exist
 func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
-	tests := []struct {
-		version              string
-		expectWebRoutePrefix bool
-	}{
-		{"v0.6.0", false},
-		{"v0.7.0", true},
+	a := monitoringv1.Alertmanager{}
+	replicas := int32(1)
+	a.Spec.Version = DefaultVersion
+	a.Spec.Replicas = &replicas
+
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	for _, test := range tests {
-		a := monitoringv1.Alertmanager{}
-		a.Spec.Version = test.version
-		replicas := int32(1)
-		a.Spec.Replicas = &replicas
+	amArgs := statefulSet.Template.Spec.Containers[0].Args
 
-		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
-		if err != nil {
-			t.Fatal(err)
-		}
+	containsWebRoutePrefix := false
 
-		amArgs := statefulSet.Template.Spec.Containers[0].Args
-
-		containsWebRoutePrefix := false
-
-		for _, arg := range amArgs {
-			if strings.Contains(arg, "-web.route-prefix") {
-				containsWebRoutePrefix = true
-			}
-		}
-
-		if containsWebRoutePrefix != test.expectWebRoutePrefix {
-			t.Fatalf("expected stateful set containing arg '-web.route-prefix' to be: %v", test.expectWebRoutePrefix)
+	for _, arg := range amArgs {
+		if strings.Contains(arg, "-web.route-prefix") {
+			containsWebRoutePrefix = true
 		}
 	}
-}
 
-// below Alertmanager v0.15.0 high availability flags are prefixed with 'mesh' instead of 'cluster'
-func TestMakeStatefulSetSpecMeshClusterFlags(t *testing.T) {
-	tests := []struct {
-		version       string
-		rightHAPrefix string
-		wrongHAPrefix string
-	}{
-		{"v0.14.0", "mesh", "cluster"},
-		{"v0.15.3", "cluster", "mesh"},
-	}
-
-	for _, test := range tests {
-		a := monitoringv1.Alertmanager{}
-		a.Spec.Version = test.version
-		replicas := int32(3)
-		a.Spec.Replicas = &replicas
-
-		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		haFlags := []string{"--%v.listen-address", "--%v.peer="}
-
-		amArgs := statefulSet.Template.Spec.Containers[0].Args
-
-		for _, flag := range haFlags {
-			if sliceContains(amArgs, fmt.Sprintf(flag, test.wrongHAPrefix)) {
-				t.Fatalf("expected Alertmanager args not to contain %v, but got %v", test.wrongHAPrefix, amArgs)
-			}
-			if !sliceContains(amArgs, fmt.Sprintf(flag, test.rightHAPrefix)) {
-				t.Fatalf("expected Alertmanager args to contain %v, but got %v", test.rightHAPrefix, amArgs)
-			}
-		}
-	}
-}
-
-// below Alertmanager v0.15.0 peer address port specification is not necessary
-func TestMakeStatefulSetSpecPeerFlagPort(t *testing.T) {
-	tests := []struct {
-		version    string
-		portNeeded bool
-	}{
-		{"v0.14.0", false},
-		{"v0.15.3", true},
-	}
-
-	for _, test := range tests {
-		a := monitoringv1.Alertmanager{}
-		a.Spec.Version = test.version
-		replicas := int32(3)
-		a.Spec.Replicas = &replicas
-
-		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		amArgs := statefulSet.Template.Spec.Containers[0].Args
-
-		for _, arg := range amArgs {
-			if strings.Contains(arg, ".peer") {
-				if strings.Contains(arg, ":6783") != test.portNeeded {
-					t.Fatalf("expected arg '%v' containing port specification to be: %v", arg, test.portNeeded)
-				}
-			}
-		}
+	if !containsWebRoutePrefix {
+		t.Fatal("expected stateful set to contain arg '-web.route-prefix'")
 	}
 }
 

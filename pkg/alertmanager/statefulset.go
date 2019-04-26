@@ -314,6 +314,9 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	}
 
 	// Adjust Alertmanager command line args to specified AM version
+	//
+	// Alertmanager versions < v0.15.0 are only supported on a best effort basis
+	// starting with Prometheus Operator v0.30.0.
 	switch version.Major {
 	case 0:
 		if version.Minor < 15 {

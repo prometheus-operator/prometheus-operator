@@ -1,3 +1,7 @@
+## Next release
+
+* [CHANGE] Drop support for Alertmanager < v0.15.0 (#2568)
+
 ## 0.29.0 / 2019-02-19
 
 * [FEATURE] Thanos sidecar supports external Thanos clusters (#2412)
