@@ -199,15 +199,8 @@ func (r *Reloader) apply(ctx context.Context) error {
 				return errors.Wrap(err, "expand environment variables")
 			}
 
-			tmpFile := r.cfgOutputFile + ".tmp"
-			defer func() {
-				_ = os.Remove(tmpFile)
-			}()
-			if err := ioutil.WriteFile(tmpFile, b, 0666); err != nil {
+			if err := ioutil.WriteFile(r.cfgOutputFile, b, 0666); err != nil {
 				return errors.Wrap(err, "write file")
-			}
-			if err := os.Rename(tmpFile, r.cfgOutputFile); err != nil {
-				return errors.Wrap(err, "rename file")
 			}
 		}
 	}

@@ -15,13 +15,6 @@ EMBEDMD_BINARY:=$(FIRST_GOPATH)/bin/embedmd
 
 TYPES_V1_TARGET:=pkg/apis/monitoring/v1/types.go
 
-# Unfortunately kube-openapi doesn't seem to be properly tagged yet as the other generator binary.
-# Starting with https://github.com/kubernetes/kube-openapi/commit/07437455b254b00a4deb3b420e790b2215450487
-# type object declarations are added which break prometheus operator.
-#
-# TODO(sur): bump this to a proper release branch once upstream resolved this.
-K8S_OPENAPI_GEN_VERSION:=b3a7cee44a305be0a69e1b9ac03018307287e1b0
-
 K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=deepcopy-gen informer-gen lister-gen client-gen
 K8S_GEN_ARGS:=--go-header-file $(FIRST_GOPATH)/src/$(GO_PKG)/.header --v=1 --logtostderr
@@ -52,12 +45,14 @@ build: operator prometheus-config-reloader k8s-gen
 .PHONY: operator
 operator: $(GOLANG_FILES)
 	GOOS=linux CGO_ENABLED=0 go build \
+	-mod=vendor \
 	-ldflags "-X $(GO_PKG)/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/operator/main.go
 
 .PHONY: prometheus-config-reloader
 prometheus-config-reloader:
 	GOOS=linux CGO_ENABLED=0 go build \
+	-mod=vendor \
 	-ldflags "-X $(GO_PKG)/pkg/version.Version=$(shell cat VERSION)" \
 	-o $@ cmd/$@/main.go
 
@@ -245,30 +240,26 @@ define _K8S_GEN_VAR_TARGET_
 $(shell echo $(1) | tr '[:lower:]' '[:upper:]' | tr '-' '_')_BINARY:=$(FIRST_GOPATH)/bin/$(1)
 
 $(FIRST_GOPATH)/bin/$(1):
-	go get -u -d k8s.io/code-generator/cmd/$(1)
-	cd $(FIRST_GOPATH)/src/k8s.io/code-generator; git checkout $(K8S_GEN_VERSION)
-	go install k8s.io/code-generator/cmd/$(1)
+	@go install -mod=vendor k8s.io/code-generator/cmd/$(1)
 
 endef
 
 $(OPENAPI_GEN_BINARY):
-	go get -u -d k8s.io/kube-openapi/cmd/openapi-gen
-	cd $(FIRST_GOPATH)/src/k8s.io/kube-openapi; git checkout $(K8S_OPENAPI_GEN_VERSION)
-	go install k8s.io/kube-openapi/cmd/openapi-gen
+	@go install -mod=vendor k8s.io/kube-openapi/cmd/openapi-gen
 
 $(foreach binary,$(K8S_GEN_BINARIES),$(eval $(call _K8S_GEN_VAR_TARGET_,$(binary))))
 
 $(EMBEDMD_BINARY):
-	@go get github.com/campoy/embedmd
+	@go install -mod=vendor github.com/campoy/embedmd
 
 $(JB_BINARY):
-	go get -u github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
+	@go install -mod=vendor github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 
 $(PO_CRDGEN_BINARY): cmd/po-crdgen/main.go $(OPENAPI_TARGET)
-	go install $(GO_PKG)/cmd/po-crdgen
+	@go install -mod=vendor $(GO_PKG)/cmd/po-crdgen
 
 $(PO_DOCGEN_BINARY): $(shell find cmd/po-docgen -type f) $(TYPES_V1_TARGET)
-	go install $(GO_PKG)/cmd/po-docgen
+	@go install -mod=vendor $(GO_PKG)/cmd/po-docgen
 
 $(GOJSONTOYAML_BINARY):
-	go get -u github.com/brancz/gojsontoyaml
+	@go install -mod=vendor github.com/brancz/gojsontoyaml
