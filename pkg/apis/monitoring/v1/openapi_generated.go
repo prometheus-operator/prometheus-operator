@@ -631,6 +631,13 @@ func schema_pkg_apis_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallback
 							Format:      "",
 						},
 					},
+					"logFormat": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Log format for Alertmanager to be configured with.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Size is the expected size of the alertmanager cluster. The controller will eventually make the size of the running cluster equal to the expected size.",
