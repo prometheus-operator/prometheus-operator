@@ -1,6 +1,6 @@
 ---
 name: Support
-about: If you have questions about kube-prometheus or the Prometheus Operator
+about: If you have questions about the Prometheus Operator
 labels: kind/support
 ---
 
