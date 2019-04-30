@@ -420,16 +420,6 @@ func (in *PodMetricsEndpoint) DeepCopyInto(out *PodMetricsEndpoint) {
 			(*out)[key] = outVal
 		}
 	}
-	if in.TLSConfig != nil {
-		in, out := &in.TLSConfig, &out.TLSConfig
-		*out = new(TLSConfig)
-		**out = **in
-	}
-	if in.BasicAuth != nil {
-		in, out := &in.BasicAuth, &out.BasicAuth
-		*out = new(BasicAuth)
-		(*in).DeepCopyInto(*out)
-	}
 	if in.MetricRelabelConfigs != nil {
 		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
 		*out = make([]*RelabelConfig, len(*in))

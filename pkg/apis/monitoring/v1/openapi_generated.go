@@ -1100,30 +1100,11 @@ func schema_pkg_apis_monitoring_v1_PodMetricsEndpoint(ref common.ReferenceCallba
 							Format:      "",
 						},
 					},
-					"tlsConfig": {
-						SchemaProps: spec.SchemaProps{
-							Description: "TLS configuration to use when scraping the endpoint",
-							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.TLSConfig"),
-						},
-					},
-					"bearerTokenFile": {
-						SchemaProps: spec.SchemaProps{
-							Description: "File to read bearer token for scraping targets.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"honorLabels": {
 						SchemaProps: spec.SchemaProps{
 							Description: "HonorLabels chooses the metric's labels on collisions with target labels.",
 							Type:        []string{"boolean"},
 							Format:      "",
-						},
-					},
-					"basicAuth": {
-						SchemaProps: spec.SchemaProps{
-							Description: "BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints",
-							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.BasicAuth"),
 						},
 					},
 					"metricRelabelings": {
@@ -1163,7 +1144,7 @@ func schema_pkg_apis_monitoring_v1_PodMetricsEndpoint(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RelabelConfig", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.TLSConfig", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RelabelConfig", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
 	}
 }
 
