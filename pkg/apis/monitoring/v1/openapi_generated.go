@@ -38,6 +38,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.BasicAuth":             schema_pkg_apis_monitoring_v1_BasicAuth(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.Endpoint":              schema_pkg_apis_monitoring_v1_Endpoint(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.NamespaceSelector":     schema_pkg_apis_monitoring_v1_NamespaceSelector(ref),
+		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PodMetricsEndpoint":    schema_pkg_apis_monitoring_v1_PodMetricsEndpoint(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PodMonitor":            schema_pkg_apis_monitoring_v1_PodMonitor(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PodMonitorList":        schema_pkg_apis_monitoring_v1_PodMonitorList(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PodMonitorSpec":        schema_pkg_apis_monitoring_v1_PodMonitorSpec(ref),
@@ -1029,6 +1030,143 @@ func schema_pkg_apis_monitoring_v1_NamespaceSelector(ref common.ReferenceCallbac
 	}
 }
 
+func schema_pkg_apis_monitoring_v1_PodMetricsEndpoint(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Prometheus metrics.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"port": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the port this endpoint refers to. Mutually exclusive with targetPort.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"targetPort": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name or number of the target port of the endpoint. Mutually exclusive with port.",
+							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
+						},
+					},
+					"path": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HTTP path to scrape for metrics.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"scheme": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HTTP scheme to use for scraping.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"params": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Optional HTTP URL parameters",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type: []string{"array"},
+										Items: &spec.SchemaOrArray{
+											Schema: &spec.Schema{
+												SchemaProps: spec.SchemaProps{
+													Type:   []string{"string"},
+													Format: "",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					"interval": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Interval at which metrics should be scraped",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"scrapeTimeout": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Timeout after which the scrape is ended",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"tlsConfig": {
+						SchemaProps: spec.SchemaProps{
+							Description: "TLS configuration to use when scraping the endpoint",
+							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.TLSConfig"),
+						},
+					},
+					"bearerTokenFile": {
+						SchemaProps: spec.SchemaProps{
+							Description: "File to read bearer token for scraping targets.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"honorLabels": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HonorLabels chooses the metric's labels on collisions with target labels.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"basicAuth": {
+						SchemaProps: spec.SchemaProps{
+							Description: "BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints",
+							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.BasicAuth"),
+						},
+					},
+					"metricRelabelings": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MetricRelabelConfigs to apply to samples before ingestion.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RelabelConfig"),
+									},
+								},
+							},
+						},
+					},
+					"relabelings": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RelabelConfig"),
+									},
+								},
+							},
+						},
+					},
+					"proxyUrl": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.BasicAuth", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.RelabelConfig", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.TLSConfig", "k8s.io/apimachinery/pkg/util/intstr.IntOrString"},
+	}
+}
+
 func schema_pkg_apis_monitoring_v1_PodMonitor(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -1052,7 +1190,7 @@ func schema_pkg_apis_monitoring_v1_PodMonitor(ref common.ReferenceCallback) comm
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specification of desired Pod selection for target discrovery by Prometheus.",
+							Description: "Specification of desired Pod selection for target discovery by Prometheus.",
 							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PodMonitorSpec"),
 						},
 					},
@@ -1128,20 +1266,6 @@ func schema_pkg_apis_monitoring_v1_PodMonitorSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
-					"targetLabels": {
-						SchemaProps: spec.SchemaProps{
-							Description: "TargetLabels transfers labels on the Kubernetes Service onto the target.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
-									},
-								},
-							},
-						},
-					},
 					"podTargetLabels": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PodTargetLabels transfers labels on the Kubernetes Pod onto the target.",
@@ -1156,14 +1280,14 @@ func schema_pkg_apis_monitoring_v1_PodMonitorSpec(ref common.ReferenceCallback) 
 							},
 						},
 					},
-					"endpoints": {
+					"podMetricsEndpoints": {
 						SchemaProps: spec.SchemaProps{
 							Description: "A list of endpoints allowed as part of this PodMonitor.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.Endpoint"),
+										Ref: ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PodMetricsEndpoint"),
 									},
 								},
 							},
@@ -1189,11 +1313,11 @@ func schema_pkg_apis_monitoring_v1_PodMonitorSpec(ref common.ReferenceCallback) 
 						},
 					},
 				},
-				Required: []string{"endpoints", "selector"},
+				Required: []string{"podMetricsEndpoints", "selector"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.Endpoint", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.NamespaceSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.NamespaceSelector", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PodMetricsEndpoint", "k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
 	}
 }
 

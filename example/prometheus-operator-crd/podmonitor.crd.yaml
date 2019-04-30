@@ -26,11 +26,28 @@ spec:
         spec:
           description: PodMonitorSpec contains specification parameters for a PodMonitor.
           properties:
-            endpoints:
+            jobLabel:
+              description: The label to use to retrieve the job name from.
+              type: string
+            namespaceSelector:
+              description: NamespaceSelector is a selector for selecting either all
+                namespaces or a list of namespaces.
+              properties:
+                any:
+                  description: Boolean describing whether all namespaces are selected
+                    in contrast to a list restricting them.
+                  type: boolean
+                matchNames:
+                  description: List of namespace names.
+                  items:
+                    type: string
+                  type: array
+              type: object
+            podMetricsEndpoints:
               description: A list of endpoints allowed as part of this PodMonitor.
               items:
-                description: Endpoint defines a scrapeable endpoint serving Prometheus
-                  metrics.
+                description: PodMetricsEndpoint defines a scrapeable endpoint of a
+                  Kubernetes Pod serving Prometheus metrics.
                 properties:
                   basicAuth:
                     description: 'BasicAuth allow an endpoint to authenticate over
@@ -133,8 +150,8 @@ spec:
                     description: HTTP path to scrape for metrics.
                     type: string
                   port:
-                    description: Name of the service port this endpoint refers to.
-                      Mutually exclusive with targetPort.
+                    description: Name of the port this endpoint refers to. Mutually
+                      exclusive with targetPort.
                     type: string
                   proxyUrl:
                     description: ProxyURL eg http://proxyserver:2195 Directs scrapes
@@ -217,23 +234,6 @@ spec:
                     type: object
                 type: object
               type: array
-            jobLabel:
-              description: The label to use to retrieve the job name from.
-              type: string
-            namespaceSelector:
-              description: NamespaceSelector is a selector for selecting either all
-                namespaces or a list of namespaces.
-              properties:
-                any:
-                  description: Boolean describing whether all namespaces are selected
-                    in contrast to a list restricting them.
-                  type: boolean
-                matchNames:
-                  description: List of namespace names.
-                  items:
-                    type: string
-                  type: array
-              type: object
             podTargetLabels:
               description: PodTargetLabels transfers labels on the Kubernetes Pod
                 onto the target.
@@ -289,14 +289,8 @@ spec:
                     are ANDed.
                   type: object
               type: object
-            targetLabels:
-              description: TargetLabels transfers labels on the Kubernetes Service
-                onto the target.
-              items:
-                type: string
-              type: array
           required:
-          - endpoints
+          - podMetricsEndpoints
           - selector
           type: object
       type: object

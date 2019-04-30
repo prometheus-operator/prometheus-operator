@@ -1535,19 +1535,17 @@ func (c *Operator) selectPodMonitors(p *monitoringv1.Prometheus) (map[string]*mo
 
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select PodMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
+	podMonitors := []string{}
 	for _, ns := range namespaces {
 		cache.ListAllByNamespace(c.pmonInf.GetIndexer(), ns, podMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
 				res[k] = obj.(*monitoringv1.PodMonitor)
+				podMonitors = append(podMonitors, k)
 			}
 		})
 	}
 
-	podMonitors := []string{}
-	for k := range res {
-		podMonitors = append(podMonitors, k)
-	}
 	level.Debug(c.logger).Log("msg", "selected PodMonitors", "podmonitors", strings.Join(podMonitors, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	return res, nil

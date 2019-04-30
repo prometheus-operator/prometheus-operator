@@ -210,7 +210,7 @@ func (cg *configGenerator) generateConfig(
 		}
 	}
 	for _, identifier := range pMonIdentifiers {
-		for i, ep := range pMons[identifier].Spec.Endpoints {
+		for i, ep := range pMons[identifier].Spec.PodMetricsEndpoints {
 			scrapeConfigs = append(scrapeConfigs, cg.generatePodMonitorConfig(version, pMons[identifier], ep, i, apiserverConfig, basicAuthSecrets))
 		}
 	}
@@ -294,7 +294,7 @@ func (cg *configGenerator) generateConfig(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *configGenerator) generatePodMonitorConfig(version semver.Version, m *v1.PodMonitor, ep v1.Endpoint, i int, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
+func (cg *configGenerator) generatePodMonitorConfig(version semver.Version, m *v1.PodMonitor, ep v1.PodMetricsEndpoint, i int, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -408,7 +408,7 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version, m *v
 	if version.Major == 1 && version.Minor < 7 {
 		// Filter targets based on the namespace selection configuration.
 		// By default we only discover services within the namespace of the
-		// ServiceMonitor.
+		// PodMonitor.
 		// Selections allow extending this to all namespaces or to a subset
 		// of them specified by label or name matching.
 		//
@@ -487,15 +487,6 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version, m *v
 	}...)
 
 	// Relabel targetLabels from Pod onto target.
-	for _, l := range m.Spec.TargetLabels {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
-			{Key: "target_label", Value: sanitizeLabelName(l)},
-			{Key: "regex", Value: "(.+)"},
-			{Key: "replacement", Value: "${1}"},
-		})
-	}
-
 	for _, l := range m.Spec.PodTargetLabels {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(l)}},
@@ -507,7 +498,7 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version, m *v
 
 	// By default, generate a safe job name from the pod name.  We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
-	// value for it. A single service may potentially have multiple metrics
+	// value for it. A single pod may potentially have multiple metrics
 	// endpoints, therefore the endpoints labels is filled with the ports name or
 	// as a fallback the port number.
 

@@ -20,6 +20,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [BasicAuth](#basicauth)
 * [Endpoint](#endpoint)
 * [NamespaceSelector](#namespaceselector)
+* [PodMetricsEndpoint](#podmetricsendpoint)
 * [PodMonitor](#podmonitor)
 * [PodMonitorList](#podmonitorlist)
 * [PodMonitorSpec](#podmonitorspec)
@@ -204,6 +205,29 @@ NamespaceSelector is a selector for selecting either all namespaces or a list of
 
 [Back to TOC](#table-of-contents)
 
+## PodMetricsEndpoint
+
+PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Prometheus metrics.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| port | Name of the port this endpoint refers to. Mutually exclusive with targetPort. | string | false |
+| targetPort | Name or number of the target port of the endpoint. Mutually exclusive with port. | *intstr.IntOrString | false |
+| path | HTTP path to scrape for metrics. | string | false |
+| scheme | HTTP scheme to use for scraping. | string | false |
+| params | Optional HTTP URL parameters | map[string][]string | false |
+| interval | Interval at which metrics should be scraped | string | false |
+| scrapeTimeout | Timeout after which the scrape is ended | string | false |
+| tlsConfig | TLS configuration to use when scraping the endpoint | *[TLSConfig](#tlsconfig) | false |
+| bearerTokenFile | File to read bearer token for scraping targets. | string | false |
+| honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
+| basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
+| metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
+| relabelings | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+| proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
+
+[Back to TOC](#table-of-contents)
+
 ## PodMonitor
 
 PodMonitor defines monitoring for a set of pods.
@@ -211,7 +235,7 @@ PodMonitor defines monitoring for a set of pods.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | metadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
-| spec | Specification of desired Pod selection for target discrovery by Prometheus. | [PodMonitorSpec](#podmonitorspec) | true |
+| spec | Specification of desired Pod selection for target discovery by Prometheus. | [PodMonitorSpec](#podmonitorspec) | true |
 
 [Back to TOC](#table-of-contents)
 
@@ -233,9 +257,8 @@ PodMonitorSpec contains specification parameters for a PodMonitor.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | jobLabel | The label to use to retrieve the job name from. | string | false |
-| targetLabels | TargetLabels transfers labels on the Kubernetes Service onto the target. | []string | false |
 | podTargetLabels | PodTargetLabels transfers labels on the Kubernetes Pod onto the target. | []string | false |
-| endpoints | A list of endpoints allowed as part of this PodMonitor. | [][Endpoint](#endpoint) | true |
+| podMetricsEndpoints | A list of endpoints allowed as part of this PodMonitor. | [][PodMetricsEndpoint](#podmetricsendpoint) | true |
 | selector | Selector to select Pod objects. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | true |
 | namespaceSelector | Selector to select which namespaces the Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
 | sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
