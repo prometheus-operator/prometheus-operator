@@ -230,6 +230,7 @@ k8s.io/apimachinery/pkg/runtime/schema
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/pkg/runtime/serializer
 k8s.io/apimachinery/pkg/types
+k8s.io/apimachinery/pkg/util/strategicpatch
 k8s.io/apimachinery/pkg/util/validation
 k8s.io/apimachinery/pkg/util/wait
 k8s.io/apimachinery/pkg/conversion
@@ -252,12 +253,11 @@ k8s.io/apimachinery/pkg/runtime/serializer/json
 k8s.io/apimachinery/pkg/runtime/serializer/protobuf
 k8s.io/apimachinery/pkg/runtime/serializer/recognizer
 k8s.io/apimachinery/pkg/runtime/serializer/versioning
-k8s.io/apimachinery/pkg/util/strategicpatch
+k8s.io/apimachinery/pkg/util/mergepatch
+k8s.io/apimachinery/third_party/forked/golang/json
 k8s.io/apimachinery/third_party/forked/golang/reflect
 k8s.io/apimachinery/pkg/apis/meta/internalversion
 k8s.io/apimachinery/pkg/util/framer
-k8s.io/apimachinery/pkg/util/mergepatch
-k8s.io/apimachinery/third_party/forked/golang/json
 # k8s.io/client-go v11.0.0+incompatible
 k8s.io/client-go/kubernetes
 k8s.io/client-go/tools/cache
@@ -356,9 +356,9 @@ k8s.io/klog
 # k8s.io/kube-openapi v0.0.0-20190228160746-b3a7cee44a30
 k8s.io/kube-openapi/pkg/common
 k8s.io/kube-openapi/cmd/openapi-gen
+k8s.io/kube-openapi/pkg/util/proto
 k8s.io/kube-openapi/cmd/openapi-gen/args
 k8s.io/kube-openapi/pkg/generators
-k8s.io/kube-openapi/pkg/util/proto
 k8s.io/kube-openapi/pkg/generators/rules
 k8s.io/kube-openapi/pkg/util/sets
 # k8s.io/utils v0.0.0-20190308190857-21c4ce38f2a7
