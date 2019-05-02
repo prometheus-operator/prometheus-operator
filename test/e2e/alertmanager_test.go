@@ -205,71 +205,54 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 	}
 }
 
-func testAMMeshInitialization(t *testing.T) {
+func testAMClusterInitialization(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
-	// Starting with Alertmanager v0.15.0 hashicorp/memberlist is used for HA.
-	// Make sure both memberlist as well as mesh (< 0.15.0) work.
-	amVersions := []string{"v0.14.0", alertmanager.DefaultVersion}
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
-	for _, v := range amVersions {
-		version := v
-		t.Run(
-			fmt.Sprintf("amVersion%v", strings.Replace(version, ".", "-", -1)),
-			func(t *testing.T) {
-				// Don't run Alertmanager tests in parallel. See
-				// https://github.com/prometheus/alertmanager/issues/1835 for details.
-				ctx := framework.NewTestCtx(t)
-				defer ctx.Cleanup(t)
-				ns := ctx.CreateNamespace(t, framework.KubeClient)
-				ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	amClusterSize := 3
+	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
+	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
-				amClusterSize := 3
-				alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
-				if version != "" {
-					alertmanager.Spec.Version = version
-				}
-				alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
+	// Print Alertmanager logs on failure.
+	defer func() {
+		if !t.Failed() {
+			return
+		}
 
-				// Print Alertmanager logs on failure.
-				defer func() {
-					if !t.Failed() {
-						return
-					}
+		for i := 0; i < amClusterSize; i++ {
+			err := framework.PrintPodLogs(ns, fmt.Sprintf("alertmanager-test-%v", strconv.Itoa(i)))
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+	}()
 
-					for i := 0; i < amClusterSize; i++ {
-						err := framework.PrintPodLogs(ns, fmt.Sprintf("alertmanager-test-%v", strconv.Itoa(i)))
-						if err != nil {
-							t.Fatal(err)
-						}
-					}
-				}()
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+		t.Fatal(err)
+	}
 
-				if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
-					t.Fatal(err)
-				}
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
+		t.Fatal(err)
+	}
 
-				if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
-					t.Fatal(err)
-				}
-
-				for i := 0; i < amClusterSize; i++ {
-					name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-					if err := framework.WaitForAlertmanagerInitializedMesh(ns, name, amClusterSize); err != nil {
-						t.Fatal(err)
-					}
-				}
-			},
-		)
+	for i := 0; i < amClusterSize; i++ {
+		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
+		if err := framework.WaitForAlertmanagerInitializedCluster(ns, name, amClusterSize); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 
-// testAMMeshAfterRollingUpdate tests whether all Alertmanager instances join
+// testAMClusterAfterRollingUpdate tests whether all Alertmanager instances join
 // the cluster after a rolling update, even though DNS records will probably be
 // outdated at startup time. See
 // https://github.com/prometheus/alertmanager/pull/1428 for more details.
-func testAMMeshAfterRollingUpdate(t *testing.T) {
+func testAMClusterAfterRollingUpdate(t *testing.T) {
 	var err error
 
 	// Don't run Alertmanager tests in parallel. See
@@ -287,7 +270,7 @@ func testAMMeshAfterRollingUpdate(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitializedMesh(ns, name, amClusterSize); err != nil {
+		if err := framework.WaitForAlertmanagerInitializedCluster(ns, name, amClusterSize); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -302,7 +285,7 @@ func testAMMeshAfterRollingUpdate(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitializedMesh(ns, name, amClusterSize); err != nil {
+		if err := framework.WaitForAlertmanagerInitializedCluster(ns, name, amClusterSize); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -325,7 +308,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitializedMesh(ns, name, amClusterSize); err != nil {
+		if err := framework.WaitForAlertmanagerInitializedCluster(ns, name, amClusterSize); err != nil {
 			t.Fatal(err)
 		}
 	}

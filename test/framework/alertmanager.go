@@ -149,7 +149,7 @@ func (f *Framework) WaitForAlertmanagerClusterReady(ns, name string, replicas in
 
 	for i := 0; i < replicas; i++ {
 		name := fmt.Sprintf("alertmanager-%v-%v", name, strconv.Itoa(i))
-		if err := f.WaitForAlertmanagerInitializedMesh(ns, name, replicas); err != nil {
+		if err := f.WaitForAlertmanagerInitializedCluster(ns, name, replicas); err != nil {
 			return errors.Wrap(err,
 				fmt.Sprintf(
 					"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
@@ -209,7 +209,7 @@ func amImage(version string) string {
 	return fmt.Sprintf("quay.io/prometheus/alertmanager:%s", version)
 }
 
-func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPeers int) error {
+func (f *Framework) WaitForAlertmanagerInitializedCluster(ns, name string, amountPeers int) error {
 	var pollError error
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		amStatus, err := f.GetAlertmanagerStatus(ns, name)
@@ -217,33 +217,28 @@ func (f *Framework) WaitForAlertmanagerInitializedMesh(ns, name string, amountPe
 			return false, err
 		}
 
-		// Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'.
-		// Therefor we need to check for both.
-		if amStatus.Data.MeshStatus == nil && amStatus.Data.ClusterStatus == nil {
-			pollError = fmt.Errorf("do not have a cluster / mesh status")
+		if amStatus.Data.ClusterStatus == nil {
+			pollError = fmt.Errorf("do not have a cluster status")
 			return false, nil
 		}
 
-		if amStatus.Data.getAmountPeers() == amountPeers {
+		if len(amStatus.Data.ClusterStatus.Peers) == amountPeers {
 			return true, nil
-		}
 
-		// Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'. This
-		// is abstracted via `getPeers()`.
-		addresses := amStatus.Data.getPeers()
+		}
 
 		pollError = fmt.Errorf(
 			"failed to get correct amount of peers, expected %d, got %d, addresses %v",
 			amountPeers,
-			amStatus.Data.getAmountPeers(),
-			strings.Join(addresses, ","),
+			len(amStatus.Data.ClusterStatus.Peers),
+			amStatus.Data.ClusterStatus.Peers,
 		)
 
 		return false, nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to wait for initialized alertmanager mesh: %v: %v", err, pollError)
+		return fmt.Errorf("failed to wait for initialized alertmanager cluster: %v: %v", err, pollError)
 	}
 
 	return nil
@@ -418,38 +413,7 @@ type amAPIStatusResp struct {
 
 type amAPIStatusData struct {
 	ClusterStatus *clusterStatus `json:"clusterStatus,omitempty"`
-	MeshStatus    *meshStatus    `json:"meshStatus,omitempty"`
 	ConfigYAML    string         `json:"configYAML"`
-}
-
-// Starting from AM v0.15.0 'MeshStatus' is called 'ClusterStatus'
-func (s *amAPIStatusData) getPeers() []string {
-	peers := []string{}
-	if s.MeshStatus != nil {
-		for _, p := range s.MeshStatus.Peers {
-			peers = append(peers, fmt.Sprintf("%+v", p))
-		}
-
-		return peers
-	}
-
-	for _, p := range s.ClusterStatus.Peers {
-		peers = append(peers, fmt.Sprintf("%+v", p))
-	}
-	return peers
-}
-
-func (s *amAPIStatusData) getAmountPeers() int {
-	return len(s.getPeers())
-}
-
-type meshPeer struct {
-	Name     string `json:"name"`
-	NickName string `json:"nickName"`
-}
-
-type meshStatus struct {
-	Peers []meshPeer `json:"peers"`
 }
 
 type clusterPeer struct {
