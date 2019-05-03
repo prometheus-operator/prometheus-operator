@@ -1608,7 +1608,7 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 			for _, endpoint := range sm.Spec.Endpoints {
 				if endpoint.BearerTokenFile != "" {
 					delete(res, namespaceAndName)
-					level.Debug(c.logger).Log(
+					level.Warn(c.logger).Log(
 						"msg", fmt.Sprintf(
 							"skipping servicemonitor %v as it accesses file system via bearer token file which Prometheus specification prohibits",
 							namespaceAndName,
@@ -1625,9 +1625,18 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 					continue
 				}
 
+				if err := endpoint.TLSConfig.Validate(); err != nil {
+					level.Warn(c.logger).Log(
+						"msg", fmt.Sprintf("skipping servicemonitor %v: %v", namespaceAndName, err.Error()),
+						"namespace", p.Namespace,
+						"prometheus", p.Name,
+					)
+					continue
+				}
+
 				if tlsConf.CAFile != "" || tlsConf.CertFile != "" || tlsConf.KeyFile != "" {
 					delete(res, namespaceAndName)
-					level.Debug(c.logger).Log(
+					level.Warn(c.logger).Log(
 						"msg", fmt.Sprintf(
 							"skipping servicemonitor %v as it accesses file system via tls config which Prometheus specification prohibits",
 							namespaceAndName,

@@ -641,6 +641,34 @@ type TLSConfig struct {
 	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
 }
 
+// TLSConfigValidationError is returned by TLSConfig.Validate() on semantically
+// invalid tls configurations.
+// +k8s:openapi-gen=false
+type TLSConfigValidationError struct {
+	err string
+}
+
+func (e *TLSConfigValidationError) Error() string {
+	return e.err
+}
+
+// Validate semantically validates the given TLSConfig.
+func (c *TLSConfig) Validate() error {
+	if c.CAFile != "" && c.CASecret != nil {
+		return &TLSConfigValidationError{"tls config can not both specify CAFile and CASecret"}
+	}
+
+	if c.CertFile != "" && c.CertSecret != nil {
+		return &TLSConfigValidationError{"tls config can not both specify CertFile and CertSecret"}
+	}
+
+	if c.KeyFile != "" && c.KeySecret != nil {
+		return &TLSConfigValidationError{"tls config can not both specify KeyFile and KeySecret"}
+	}
+
+	return nil
+}
+
 // ServiceMonitorList is a list of ServiceMonitors.
 // +k8s:openapi-gen=true
 type ServiceMonitorList struct {

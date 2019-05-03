@@ -42,6 +42,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ServiceMonitorSpec](#servicemonitorspec)
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
+* [TLSConfigValidationError](#tlsconfigvalidationerror)
 * [ThanosGCSSpec](#thanosgcsspec)
 * [ThanosS3Spec](#thanoss3spec)
 * [ThanosSpec](#thanosspec)
@@ -533,6 +534,15 @@ TLSConfig specifies TLS configuration parameters.
 | keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 | serverName | Used to verify the hostname for the targets. | string | false |
 | insecureSkipVerify | Disable target certificate validation. | bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## TLSConfigValidationError
+
+TLSConfigValidationError is returned by TLSConfig.Validate() on semantically invalid tls configurations.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
 
 [Back to TOC](#table-of-contents)
 
