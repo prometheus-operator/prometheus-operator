@@ -1,11 +1,11 @@
 REG := quay.io/mxinden
-APP := basic-auth-test-app
+APP := instrumented-sample-app
 VERSION ?= $(shell cat VERSION)
 
 all: build push 
 
 build: 
-	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor -o basic-auth-test-app main.go
+	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor -o instrumented-sample-app main.go
 	@docker build --build-arg VERSION=$(VERSION) -t $(REG)/$(APP):$(VERSION) --file $(APP).dockerfile .
 	@rm $(APP)
 

@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: basic-auth-test-app
+  name: instrumented-sample-app
   labels:
     group: test
 spec:
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: example-app
-        image: quay.io/mxinden/basic-auth-test-app:0.2.0-bearer-mtls-1
+        image: quay.io/mxinden/instrumented-sample-app:0.2.0-bearer-mtls-1
         imagePullPolicy: IfNotPresent
         ports:
         - name: web

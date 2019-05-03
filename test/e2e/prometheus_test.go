@@ -1771,12 +1771,12 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	// Setup sample app.
 	//
 
-	cert, err := ioutil.ReadFile("../../test/basic-auth-test-app/certs/cert.pem")
+	cert, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
 	if err != nil {
 		t.Fatalf("failed to load cert.pem: %v", err)
 	}
 
-	key, err := ioutil.ReadFile("../../test/basic-auth-test-app/certs/key.pem")
+	key, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
 	if err != nil {
 		t.Fatalf("failed to load key.pem: %v", err)
 	}
