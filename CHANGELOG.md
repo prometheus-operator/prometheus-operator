@@ -210,7 +210,7 @@ This release adds validations as a beta feature. It will only be installed on ne
 * [FEATURE] Add ability to specify log level.
 * [FEATURE] Add support for dropping metrics at scrape time.
 * [ENHANCEMENT] Ensure that resource limit can't make Pods unschedulable.
-* [ENHANCEMENT] Allow configuring emtpyDir volumes
+* [ENHANCEMENT] Allow configuring emptyDir volumes
 * [BUGFIX] Use `--storage.tsdb.no-lockfile` for Prometheus 2.0.
 * [BUGFIX] Fix Alertmanager default storage.path.
 
