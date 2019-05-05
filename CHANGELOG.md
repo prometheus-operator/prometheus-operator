@@ -363,7 +363,7 @@ be created properly.
 * [FEATURE] Allow not tagging targets with the `namespace` label.
 * [FEATURE] Allow specifying `ServiceAccountName` to be used by Prometheus pods.
 * [ENHANCEMENT] Label governing services to uniquely identify them.
-* [ENHANCEMENT] Reconcile Serive and Endpoints objects.
+* [ENHANCEMENT] Reconcile Service and Endpoints objects.
 * [ENHANCEMENT] General stability improvements.
 * [BUGFIX] Hostname cannot be fqdn when syncing kubelets into Endpoints object.
 
