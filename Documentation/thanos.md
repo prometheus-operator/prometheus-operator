@@ -85,7 +85,7 @@ Deploying the sidecar was the first step towards getting Thanos up and running, 
 * Query
 * Compactor
 
-Again, take a look at the Thanos documentation for more details on these componenets:  
+Again, take a look at the Thanos documentation for more details on these components:  
 https://github.com/improbable-eng/thanos/blob/master/docs/getting_started.md#store-api
 
 kube-prometheus has built-in support for these extra components.
