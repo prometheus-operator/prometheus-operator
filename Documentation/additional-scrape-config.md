@@ -18,7 +18,7 @@ scrape configs are going to break Prometheus after the upgrade.
 
 First, you will need to create the additional configuration.
 Below we are making a simple "prometheus" config.  Name this
-`prometheus-additional.yaml` or something similiar.
+`prometheus-additional.yaml` or something similar.
 
 ```
 - job_name: "prometheus"
