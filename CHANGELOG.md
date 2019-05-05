@@ -12,7 +12,7 @@
 
 ## 0.28.0 / 2019-01-24
 
-* [FEATURE] CLI tool to lint YAML against CRD defintions (#2269)
+* [FEATURE] CLI tool to lint YAML against CRD definitions (#2269)
 * [FEATURE] Support Thanos v0.2 arbitrary object storage configuration (#2264)
 * [ENHANCEMENT] Update Alertmanager to v0.16.0 (#2145)
 * [ENHANCEMENT] Added AlertResendDelay to Prometheus resource (#2265)
