@@ -108,7 +108,7 @@ index fcd2bb01..bcf01c75 100644
 
 ```
 
-Now you can rebuild the manifests by running `./build.sh` and all necesarry changes will be written to `manifests/`.
+Now you can rebuild the manifests by running `./build.sh` and all necessary changes will be written to `manifests/`.
 
 `git status -s manifests`:
 ```
