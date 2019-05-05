@@ -179,7 +179,7 @@ This example was tested with the [NGINX Ingress Controller][nginx-ingress]. For 
 kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/deployment/nginx/nginx-ingress-controller.yaml
 ```
 
-> Be certain to evaluate available Ingress controllers for the specifics of your  production environment. The NGINX Ingress Controller may or may not be suitable. Consider other solutions, like HA Proxy, Træfɪk, GCE, or AWS.
+> Be certain to evaluate available Ingress controllers for the specifics of your  production environment. The NGINX Ingress Controller may or may not be suitable. Consider other solutions, like HA Proxy, Traefik, GCE, or AWS.
 
 > WARNING: If your Ingress is exposed to the internet, everyone can have full access on your resources. It's strongly recommend to enable an [external authentication][external-auth] or [whitelisting IP address][whitelist-ip].
 
