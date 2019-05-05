@@ -7,7 +7,7 @@ that can be composed into a highly available
 metric system with unlimited storage capacity, if your Object Storage allows for it.
 The Prometheus Operator provides integration for allowing Prometheus to connect to Thanos.
 
-Thanos components include the queriers and stores, which Thanos needs to
+Thanos components include the queries and stores, which Thanos needs to
 be fully functional, and should be deployed independently of the Prometheus
 Operator and its Thanos configuration. The
 [kube-prometheus](contrib/kube-prometheus/) project has some experimental
