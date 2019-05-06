@@ -12,7 +12,7 @@
 
 ## 0.28.0 / 2019-01-24
 
-* [FEATURE] CLI tool to lint YAML against CRD defintions (#2269)
+* [FEATURE] CLI tool to lint YAML against CRD definitions (#2269)
 * [FEATURE] Support Thanos v0.2 arbitrary object storage configuration (#2264)
 * [ENHANCEMENT] Update Alertmanager to v0.16.0 (#2145)
 * [ENHANCEMENT] Added AlertResendDelay to Prometheus resource (#2265)
@@ -210,7 +210,7 @@ This release adds validations as a beta feature. It will only be installed on ne
 * [FEATURE] Add ability to specify log level.
 * [FEATURE] Add support for dropping metrics at scrape time.
 * [ENHANCEMENT] Ensure that resource limit can't make Pods unschedulable.
-* [ENHANCEMENT] Allow configuring emtpyDir volumes
+* [ENHANCEMENT] Allow configuring emptyDir volumes
 * [BUGFIX] Use `--storage.tsdb.no-lockfile` for Prometheus 2.0.
 * [BUGFIX] Fix Alertmanager default storage.path.
 
@@ -363,7 +363,7 @@ be created properly.
 * [FEATURE] Allow not tagging targets with the `namespace` label.
 * [FEATURE] Allow specifying `ServiceAccountName` to be used by Prometheus pods.
 * [ENHANCEMENT] Label governing services to uniquely identify them.
-* [ENHANCEMENT] Reconcile Serive and Endpoints objects.
+* [ENHANCEMENT] Reconcile Service and Endpoints objects.
 * [ENHANCEMENT] General stability improvements.
 * [BUGFIX] Hostname cannot be fqdn when syncing kubelets into Endpoints object.
 

@@ -7,7 +7,7 @@ that can be composed into a highly available
 metric system with unlimited storage capacity, if your Object Storage allows for it.
 The Prometheus Operator provides integration for allowing Prometheus to connect to Thanos.
 
-Thanos components include the queriers and stores, which Thanos needs to
+Thanos components include the queries and stores, which Thanos needs to
 be fully functional, and should be deployed independently of the Prometheus
 Operator and its Thanos configuration. The
 [kube-prometheus](contrib/kube-prometheus/) project has some experimental
@@ -85,7 +85,7 @@ Deploying the sidecar was the first step towards getting Thanos up and running, 
 * Query
 * Compactor
 
-Again, take a look at the Thanos documentation for more details on these componenets:  
+Again, take a look at the Thanos documentation for more details on these components:  
 https://github.com/improbable-eng/thanos/blob/master/docs/getting_started.md#store-api
 
 kube-prometheus has built-in support for these extra components.
@@ -108,7 +108,7 @@ index fcd2bb01..bcf01c75 100644
 
 ```
 
-Now you can rebuild the manifests by running `./build.sh` and all necesarry changes will be written to `manifests/`.
+Now you can rebuild the manifests by running `./build.sh` and all necessary changes will be written to `manifests/`.
 
 `git status -s manifests`:
 ```
