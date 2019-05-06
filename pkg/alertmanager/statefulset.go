@@ -36,7 +36,7 @@ const (
 	governingServiceName = "alertmanager-operated"
 	// DefaultVersion specifies which version of Alertmanager the Prometheus
 	// Operator uses by default.
-	DefaultVersion         = "v0.16.2"
+	DefaultVersion         = "v0.17.0"
 	defaultRetention       = "120h"
 	secretsDir             = "/etc/alertmanager/secrets/"
 	configmapsDir          = "/etc/alertmanager/configmaps/"
