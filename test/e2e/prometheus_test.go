@@ -1621,13 +1621,13 @@ func testOperatorNSScope(t *testing.T) {
 	})
 }
 
-// testPromArbitraryFSAccBearerTok tests the
+// testPromArbitraryFSAcc tests the
 // github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PrometheusSpec.ArbitraryFSAccessThroughSMs
-// configuration with the service monitor bearer token option.
-//
-// TODO: Add one for tls config as well.
-func testPromArbitraryFSAccBearerTok(t *testing.T) {
+// configuration with the service monitor bearer token and tls assets option.
+func testPromArbitraryFSAcc(t *testing.T) {
 	t.Parallel()
+
+	name := "test"
 
 	tests := []struct {
 		name                              string
@@ -1635,8 +1635,11 @@ func testPromArbitraryFSAccBearerTok(t *testing.T) {
 		endpoint                          monitoringv1.Endpoint
 		expectTargets                     bool
 	}{
+		//
+		// Bearer tokens:
+		//
 		{
-			name: "allowed-file",
+			name: "allowed-bearer-file",
 			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
 				Deny: false,
 			},
@@ -1647,7 +1650,7 @@ func testPromArbitraryFSAccBearerTok(t *testing.T) {
 			expectTargets: true,
 		},
 		{
-			name: "denied-file",
+			name: "denied-bearer-file",
 			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
 				Deny: true,
 			},
@@ -1658,7 +1661,7 @@ func testPromArbitraryFSAccBearerTok(t *testing.T) {
 			expectTargets: false,
 		},
 		{
-			name: "allowed-secret",
+			name: "allowed-bearer-secret",
 			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
 				Deny: false,
 			},
@@ -1666,15 +1669,15 @@ func testPromArbitraryFSAccBearerTok(t *testing.T) {
 				Port: "web",
 				BearerTokenSecret: v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
-						Name: "a",
+						Name: name,
 					},
-					Key: "b",
+					Key: "bearer-token",
 				},
 			},
 			expectTargets: true,
 		},
 		{
-			name: "denied-secret",
+			name: "denied-bearer-secret",
 			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
 				Deny: true,
 			},
@@ -1682,9 +1685,104 @@ func testPromArbitraryFSAccBearerTok(t *testing.T) {
 				Port: "web",
 				BearerTokenSecret: v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
-						Name: "a",
+						Name: name,
 					},
-					Key: "b",
+					Key: "bearer-token",
+				},
+			},
+			expectTargets: true,
+		},
+		//
+		// TLS assets:
+		//
+		{
+			name: "allowed-tls-file",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: false,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					CAFile:   "/etc/ca-certificates/example-ca.pem",
+					CertFile: "/etc/ca-certificates/example-cert.pem",
+					KeyFile:  "/etc/ca-certificates/example-key.pem",
+				},
+			},
+			expectTargets: true,
+		},
+		{
+			name: "denied-tls-file",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: true,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					CAFile:   "/etc/ca-certificates/example-ca.pem",
+					CertFile: "/etc/ca-certificates/example-cert.pem",
+					KeyFile:  "/etc/ca-certificates/example-key.pem",
+				},
+			},
+			expectTargets: false,
+		},
+		{
+			name: "allowed-tls-secret",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: false,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CASecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "cert.pem",
+					},
+					CertSecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "cert.pem",
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+			expectTargets: true,
+		},
+		{
+			name: "denied-tls-secret",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: true,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CASecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "cert.pem",
+					},
+					CertSecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "cert.pem",
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 			expectTargets: true,
@@ -1702,19 +1800,30 @@ func testPromArbitraryFSAccBearerTok(t *testing.T) {
 			ns := ctx.CreateNamespace(t, framework.KubeClient)
 			ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
-			name := "test"
+			// Create secret either used by bearer token secret key ref, or tls
+			// asset key ref.
+			cert, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
+			if err != nil {
+				t.Fatalf("failed to load cert.pem: %v", err)
+			}
 
-			// Create random secret in case the service monitor of the test case
-			// references it.
-			service := &v1.Secret{
+			key, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
+			if err != nil {
+				t.Fatalf("failed to load key.pem: %v", err)
+			}
+
+			tlsCertsSecret := &v1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "a",
+					Name: name,
 				},
 				Data: map[string][]byte{
-					"b": []byte("c"),
+					"cert.pem":     cert,
+					"key.pem":      key,
+					"bearer-token": []byte("abc"),
 				},
 			}
-			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(service); err != nil {
+
+			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(tlsCertsSecret); err != nil {
 				t.Fatal(err)
 			}
 

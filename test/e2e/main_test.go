@@ -144,7 +144,7 @@ func testAllNS(t *testing.T) {
 		"PromDiscoverTargetPort":                 testPromDiscoverTargetPort,
 		"PromOpMatchPromAndServMonInDiffNSs":     testPromOpMatchPromAndServMonInDiffNSs,
 		"PromGetAuthSecret":                      testPromGetAuthSecret,
-		"PromArbitraryFSAccBearerTok":            testPromArbitraryFSAccBearerTok,
+		"PromArbitraryFSAcc":                     testPromArbitraryFSAcc,
 		"PromTLSConfigViaSecret":                 testPromTLSConfigViaSecret,
 		"Thanos":                                 testThanos,
 	}
