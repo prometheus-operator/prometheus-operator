@@ -1474,6 +1474,9 @@ spec:
                 so that it does not bind against the Pod IP. Note this is only for
                 the Alertmanager UI, not the gossip communication.
               type: boolean
+            logFormat:
+              description: Log format for Alertmanager to be configured with.
+              type: string
             logLevel:
               description: Log level for Alertmanager to be configured with.
               type: string
