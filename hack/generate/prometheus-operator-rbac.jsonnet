@@ -5,4 +5,6 @@ local po = (import 'prometheus-operator/prometheus-operator.libsonnet').promethe
   'prometheus-operator-cluster-role.yaml': po.clusterRole,
   'prometheus-operator-service-account.yaml': po.serviceAccount,
   'prometheus-operator-deployment.yaml': po.deployment,
+  'prometheus-operator-service.yaml': po.service,
+  'prometheus-operator-service-monitor.yaml': po.serviceMonitor,
 }
