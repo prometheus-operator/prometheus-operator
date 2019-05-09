@@ -53,7 +53,7 @@ networkpolicy "prometheus" configured
  
 [embedmd]:# (../example/networkpolicies/alertmanager.yaml)
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: alertmanager-web
@@ -68,7 +68,7 @@ spec:
       alertmanager: main
       app: alertmanager
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: alertmanager-mesh
@@ -100,7 +100,7 @@ spec:
 
 [embedmd]:# (../example/networkpolicies/grafana.yaml)
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: grafana
@@ -120,7 +120,7 @@ spec:
 
 [embedmd]:# (../example/networkpolicies/prometheus.yaml)
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: prometheus
@@ -141,7 +141,7 @@ spec:
 
 [embedmd]:# (../example/networkpolicies/node-exporter.yaml)
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: node-exporter
@@ -172,7 +172,7 @@ spec:
 
 [embedmd]:# (../example/networkpolicies/kube-state-metrics.yaml)
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: kube-state-metrics
