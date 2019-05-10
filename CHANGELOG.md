@@ -1,6 +1,29 @@
 ## Next release
 
+## 0.30.0 / 2019-05-10
+
+Note: Both kube-prometheus (#2554) and the Helm Chart (#2416) have been removed from this repository.
+kube-prometheus is not hosted as github.com/coroes/kube-prometheus and the helm chart is available at https://github.com/helm/charts/tree/master/stable/prometheus-operator
+
 * [CHANGE] Drop support for Alertmanager < v0.15.0 (#2568)
+* [FEATURE] Add Prometheus Config Reloader CPU and Memory flags (#2466)
+* [FEATURE] Support `--max-samples` flag in QuerySpec (#2505)
+* [FEATURE] Adding kustomization files for remote bases (#2497)
+* [FEATURE] Allow disabling limits on sidecars (#2560)
+* [FEATURE] Modify arbitrary parts of the operator generated containers (#2445)
+* [ENHANCEMENT] Add proper Operator labels as recommended by SIG-Apps (#2427)
+* [ENHANCEMENT] Watch ConfigMaps having the prometheus-name selector (#2454)
+* [ENHANCEMENT] Add prometheusExternalLabelName field to Prometheus object (#2430)
+* [ENHANCEMENT] Optional secret in scrapeconfig (#2511)
+* [ENHANCEMENT] Update PodSecurityContext docs (#2569)
+* [ENHANCEMENT] Update Kubernetes client libraries to 1.14.0 (#2570)
+* [ENHANCEMENT] Use Go modules with Kubernetes 1.14 (#2571)
+* [ENHANCEMENT] Update to Alertmanager v0.17.0 (#2587)
+* [ENHANCEMENT] Add support for setting Log Format for Alertmanager (#2577)
+* [ENHANCEMENT] Switch Deployments and StatefulSets from apps/v1beta to apps/v1 (#2593)
+* [ENHANCEMENT] Add Service and Servicemonitor to bundle.yaml (#2595)
+* [BUGFIX] Fix startup nodeSyncEndpoints (#2475)
+* [BUGIFX] Update Thanos vendoring to include config reloader fixes (#2504)
 
 ## 0.29.0 / 2019-02-19
 
