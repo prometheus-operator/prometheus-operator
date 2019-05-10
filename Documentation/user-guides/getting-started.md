@@ -187,7 +187,7 @@ First, deploy three instances of a simple example application, which listens and
 
 [embedmd]:# (../../example/user-guides/getting-started/example-app-deployment.yaml)
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: example-app
