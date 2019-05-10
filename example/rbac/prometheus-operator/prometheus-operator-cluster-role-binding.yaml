@@ -4,7 +4,7 @@ metadata:
   labels:
     apps.kubernetes.io/component: controller
     apps.kubernetes.io/name: prometheus-operator
-    apps.kubernetes.io/version: v0.29.0
+    apps.kubernetes.io/version: v0.30.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
