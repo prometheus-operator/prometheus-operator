@@ -6,4 +6,5 @@ set -o pipefail
 # error on unset variables
 set -u
 
-hack/concat-kubernetes-manifests.sh example/rbac/prometheus-operator/*.yaml > bundle.yaml
+# shellcheck disable=SC2046
+hack/concat-kubernetes-manifests.sh $(find example/rbac/prometheus-operator -name '*.yaml' | sort | grep -v service-monitor) > bundle.yaml
