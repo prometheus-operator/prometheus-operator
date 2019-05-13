@@ -247,9 +247,16 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
-	probeHandler := v1.Handler{
+	livenessProbeHandler := v1.Handler{
 		HTTPGet: &v1.HTTPGetAction{
-			Path: path.Clean(webRoutePrefix + "/api/v1/status"),
+			Path: path.Clean(webRoutePrefix + "/-/healthy"),
+			Port: intstr.FromString("web"),
+		},
+	}
+
+	readinessProbeHandler := v1.Handler{
+		HTTPGet: &v1.HTTPGetAction{
+			Path: path.Clean(webRoutePrefix + "/-/ready"),
 			Port: intstr.FromString("web"),
 		},
 	}
@@ -258,13 +265,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	var readinessProbe *v1.Probe
 	if !a.Spec.ListenLocal {
 		livenessProbe = &v1.Probe{
-			Handler:          probeHandler,
+			Handler:          livenessProbeHandler,
 			TimeoutSeconds:   probeTimeoutSeconds,
 			FailureThreshold: 10,
 		}
 
 		readinessProbe = &v1.Probe{
-			Handler:             probeHandler,
+			Handler:             readinessProbeHandler,
 			InitialDelaySeconds: 3,
 			TimeoutSeconds:      3,
 			PeriodSeconds:       5,
