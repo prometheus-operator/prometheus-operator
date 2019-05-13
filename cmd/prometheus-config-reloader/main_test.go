@@ -42,4 +42,3 @@ func TestCreateOrdinalEnvVar(t *testing.T) {
 		})
 	}
 }
-
