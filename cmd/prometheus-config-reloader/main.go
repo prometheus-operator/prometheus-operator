@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/coreos/prometheus-operator/pkg/version"
@@ -25,12 +26,14 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/improbable-eng/thanos/pkg/reloader"
 	"github.com/oklog/run"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
-	logFormatLogfmt = "logfmt"
-	logFormatJson   = "json"
+	logFormatLogfmt                     = "logfmt"
+	logFormatJson                       = "json"
+	statefulsetOrdinalEnvvar            = "STATEFULSET_ORDINAL_NUMBER"
+	statefulsetOrdinalFromEnvvarDefault = "POD_NAME"
 )
 
 var (
@@ -48,7 +51,15 @@ func main() {
 	cfgSubstFile := app.Flag("config-envsubst-file", "output file for environment variable substituted config file").
 		String()
 
-	logFormat := app.Flag("log-format", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", "))).Default(logFormatLogfmt).String()
+	createStatefulsetOrdinalFrom := app.Flag(
+		"statefulset-ordinal-from-envvar",
+		fmt.Sprintf("parse this environment variable to create %s, containing the statefulset ordinal number", statefulsetOrdinalEnvvar)).
+		Default(statefulsetOrdinalFromEnvvarDefault).String()
+
+	logFormat := app.Flag(
+		"log-format",
+		fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", "))).
+		Default(logFormatLogfmt).String()
 
 	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
 		Default("http://127.0.0.1:9090/-/reload").URL()
@@ -64,6 +75,12 @@ func main() {
 	}
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
+
+	if createStatefulsetOrdinalFrom != nil {
+		if err := createOrdinalEnvvar(*createStatefulsetOrdinalFrom); err != nil {
+			logger.Log("msg", fmt.Sprintf("Failed setting %s", statefulsetOrdinalEnvvar))
+		}
+	}
 
 	logger.Log("msg", fmt.Sprintf("Starting prometheus-config-reloader version '%v'.", version.Version))
 
@@ -83,4 +100,10 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func createOrdinalEnvvar(fromName string) error {
+	reg := regexp.MustCompile(`\d+$`)
+	val := reg.FindString(os.Getenv(fromName))
+	return os.Setenv(statefulsetOrdinalEnvvar, val)
 }
