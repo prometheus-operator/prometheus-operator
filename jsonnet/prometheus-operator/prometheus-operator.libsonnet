@@ -6,12 +6,12 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
     prometheusOperator+:: {
       deploymentSelectorLabels: {
-        'apps.kubernetes.io/name': 'prometheus-operator',
-        'apps.kubernetes.io/component': 'controller',
+        'app.kubernetes.io/name': 'prometheus-operator',
+        'app.kubernetes.io/component': 'controller',
       },
       commonLabels:
         $._config.prometheusOperator.deploymentSelectorLabels +
-        { 'apps.kubernetes.io/version': $._config.versions.prometheusOperator, },
+        { 'app.kubernetes.io/version': $._config.versions.prometheusOperator, },
     },
 
     versions+:: {
