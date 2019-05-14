@@ -27,6 +27,14 @@ K8S_GEN_DEPS+=$(OPENAPI_GEN_BINARY)
 GOLANG_FILES:=$(shell find . -name \*.go -print)
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/ | grep -v /contrib/)
 
+CONTAINER_CMD:=docker run --rm \
+		-u="$(shell id -u):$(shell id -g)" \
+		-v "$(shell go env GOCACHE):/.cache/go-build" \
+		-v "$(PWD):/go/src/github.com/coreos/prometheus-operator:Z" \
+		-w "/go/src/github.com/coreos/prometheus-operator" \
+		-e GO111MODULE=on \
+		quay.io/coreos/jsonnet-ci
+
 .PHONY: all
 all: format generate build test
 
@@ -121,7 +129,6 @@ hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 	docker build -t $(REPO_PROMETHEUS_CONFIG_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
-
 ##############
 # Generating #
 ##############
@@ -130,8 +137,8 @@ hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 generate: $(DEEPCOPY_TARGET) $(OPENAPI_TARGET) $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml $(shell find Documentation -type f)
 
 .PHONY: generate-in-docker
-generate-in-docker: hack/jsonnet-docker-image
-	hack/generate-in-docker.sh $(MFLAGS) # MFLAGS are the parent make call's flags
+generate-in-docker:
+	$(CONTAINER_CMD) $(MAKE) $(MFLAGS) generate
 
 example/prometheus-operator-crd/**.crd.yaml: $(OPENAPI_TARGET) $(PO_CRDGEN_BINARY)
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
@@ -196,7 +203,6 @@ check-license:
 shellcheck:
 	docker run -v "${PWD}:/mnt" koalaman/shellcheck:stable $(shell find . -type f -name "*.sh" -not -path "*vendor*")
 
-
 ###########
 # Testing #
 ###########
@@ -212,15 +218,6 @@ test-unit:
 test-e2e: KUBECONFIG?=$(HOME)/.kube/config
 test-e2e:
 	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) -count=1
-
-
-########
-# Misc #
-########
-
-hack/jsonnet-docker-image: scripts/jsonnet/Dockerfile
-	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .
-	touch $@
 
 ############
 # Binaries #
