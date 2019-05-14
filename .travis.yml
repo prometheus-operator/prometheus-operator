@@ -23,7 +23,7 @@ jobs:
   # Build Prometheus Operator rule config map to rule file crds cli tool
   - script: cd cmd/po-rule-migration && go install
   # Ensure vendor folder matches vendor.json
-  - script: ./scripts/golang-mod.sh
+  - script: make --always-make vendor && git diff --exit-code vendor/
   # Unit tests
   - script: make test-unit
   # E2e tests

@@ -6,5 +6,9 @@ set -o pipefail
 # error on unset variables
 set -u
 
+function concat() {
+    awk 'FNR==1{print "---"}1' "$@" | awk '{if (NR!=1) {print}}'
+}
+
 # shellcheck disable=SC2046
-hack/concat-kubernetes-manifests.sh $(find example/rbac/prometheus-operator -name '*.yaml' | sort | grep -v service-monitor) > bundle.yaml
+concat $(find example/rbac/prometheus-operator -name '*.yaml' | sort | grep -v service-monitor) > bundle-new.yaml
