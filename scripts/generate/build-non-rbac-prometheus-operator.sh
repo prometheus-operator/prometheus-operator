@@ -6,4 +6,4 @@ set -o pipefail
 # error on unset variables
 set -u
 
-jsonnet -J hack/generate/vendor hack/generate/prometheus-operator-non-rbac.jsonnet | gojsontoyaml > example/non-rbac/prometheus-operator.yaml
+jsonnet -J scripts/generate/vendor scripts/generate/prometheus-operator-non-rbac.jsonnet | gojsontoyaml > example/non-rbac/prometheus-operator.yaml

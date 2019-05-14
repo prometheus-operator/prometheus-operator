@@ -78,7 +78,7 @@ To run the Operator outside of a cluster:
 
 ```sh
 make
-hack/run-external.sh <kubectl cluster name>
+scripts/run-external.sh <kubectl cluster name>
 ```
 
 ## Removal
