@@ -2,9 +2,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    apps.kubernetes.io/component: controller
-    apps.kubernetes.io/name: prometheus-operator
-    apps.kubernetes.io/version: v0.30.0
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/version: v0.30.0
   name: prometheus-operator
 rules:
 - apiGroups:
