@@ -1346,6 +1346,13 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"retentionSize": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Maximum amount of disk space used by blocks.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"logLevel": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Log level for Prometheus to be configured with.",
