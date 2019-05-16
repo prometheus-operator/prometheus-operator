@@ -339,6 +339,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		retentionTimeFlag := "-storage.tsdb.retention="
 		if version.Minor >= 7 {
 			retentionTimeFlag = "-storage.tsdb.retention.time="
+			if p.Spec.RetentionSize != "" {
+				promArgs = append(promArgs,
+					fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
+				)
+			}
 		}
 		promArgs = append(promArgs,
 			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),

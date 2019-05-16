@@ -609,6 +609,51 @@ func TestThanosObjectStorage(t *testing.T) {
 	}
 }
 
+func TestRetentionSize(t *testing.T) {
+	tests := []struct {
+		version              string
+		specRetentionSize    string
+		expectedRetentionArg string
+		shouldContain        bool
+	}{
+		{"v1.8.2", "2M", "--storage.tsdb.retention.size=2M", false},
+		{"v1.8.2", "1Gi", "--storage.tsdb.retention.size=1Gi", false},
+		{"v2.5.0", "2M", "--storage.tsdb.retention.size=2M", false},
+		{"v2.5.0", "1Gi", "--storage.tsdb.retention.size=1Gi", false},
+		{"v2.7.0", "2M", "--storage.tsdb.retention.size=2M", true},
+		{"v2.7.0", "1Gi", "--storage.tsdb.retention.size=1Gi", true},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSet(monitoringv1.Prometheus{
+			Spec: monitoringv1.PrometheusSpec{
+				Version:       test.version,
+				RetentionSize: test.specRetentionSize,
+			},
+		}, defaultTestConfig, nil, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		promArgs := sset.Spec.Template.Spec.Containers[0].Args
+		found := false
+		for _, flag := range promArgs {
+			if flag == test.expectedRetentionArg {
+				found = true
+				break
+			}
+		}
+
+		if found != test.shouldContain {
+			if test.shouldContain {
+				t.Fatalf("expected Prometheus args to contain %v, but got %v", test.expectedRetentionArg, promArgs)
+			} else {
+				t.Fatalf("expected Prometheus args to NOT contain %v, but got %v", test.expectedRetentionArg, promArgs)
+			}
+		}
+	}
+}
+
 func TestRetention(t *testing.T) {
 	tests := []struct {
 		version              string
