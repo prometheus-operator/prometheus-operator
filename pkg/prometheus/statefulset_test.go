@@ -627,7 +627,7 @@ func TestRetentionSize(t *testing.T) {
 	for _, test := range tests {
 		sset, err := makeStatefulSet(monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
-				Version:   test.version,
+				Version:       test.version,
 				RetentionSize: test.specRetentionSize,
 			},
 		}, defaultTestConfig, nil, "")
