@@ -4,6 +4,7 @@ GO_PKG=github.com/coreos/prometheus-operator
 REPO?=quay.io/coreos/prometheus-operator
 REPO_PROMETHEUS_CONFIG_RELOADER?=quay.io/coreos/prometheus-config-reloader
 TAG?=$(shell git rev-parse --short HEAD)
+VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
 FIRST_GOPATH:=$(firstword $(subst :, ,$(shell go env GOPATH)))
 PO_CRDGEN_BINARY:=$(FIRST_GOPATH)/bin/po-crdgen
@@ -15,7 +16,7 @@ EMBEDMD_BINARY:=$(FIRST_GOPATH)/bin/embedmd
 
 TYPES_V1_TARGET:=pkg/apis/monitoring/v1/types.go
 
-K8S_GEN_VERSION:=release-1.11
+K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=deepcopy-gen informer-gen lister-gen client-gen
 K8S_GEN_ARGS:=--go-header-file $(FIRST_GOPATH)/src/$(GO_PKG)/.header --v=1 --logtostderr
 
@@ -24,8 +25,16 @@ K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(FIRST_GOPATH)/bin/$(bin))
 K8S_GEN_DEPS+=$(OPENAPI_GEN_BINARY)
 
-GOLANG_FILES:=$(shell find . -name \*.go -print)
-pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
+GO_BUILD_RECIPE=GOOS=linux CGO_ENABLED=0 go build -mod=vendor -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
+pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/ | grep -v /contrib/)
+
+CONTAINER_CMD:=docker run --rm \
+		-u="$(shell id -u):$(shell id -g)" \
+		-v "$(shell go env GOCACHE):/.cache/go-build" \
+		-v "$(PWD):/go/src/$(GO_PKG):Z" \
+		-w "/go/src/$(GO_PKG)" \
+		-e GO111MODULE=on \
+		quay.io/coreos/jsonnet-ci
 
 .PHONY: all
 all: format generate build test
@@ -43,16 +52,12 @@ clean:
 build: operator prometheus-config-reloader k8s-gen
 
 .PHONY: operator
-operator: $(GOLANG_FILES)
-	GOOS=linux CGO_ENABLED=0 go build \
-	-ldflags "-X $(GO_PKG)/pkg/version.Version=$(shell cat VERSION)" \
-	-o $@ cmd/operator/main.go
+operator:
+	$(GO_BUILD_RECIPE) -o $@ cmd/operator/main.go
 
 .PHONY: prometheus-config-reloader
 prometheus-config-reloader:
-	GOOS=linux CGO_ENABLED=0 go build \
-	-ldflags "-X $(GO_PKG)/pkg/version.Version=$(shell cat VERSION)" \
-	-o $@ cmd/$@/main.go
+	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
 
 DEEPCOPY_TARGET := pkg/apis/monitoring/v1/zz_generated.deepcopy.go
 $(DEEPCOPY_TARGET): $(K8S_GEN_DEPS)
@@ -96,44 +101,42 @@ $(OPENAPI_TARGET): $(K8S_GEN_DEPS)
 
 .PHONY: k8s-gen
 k8s-gen: \
- $(DEEPCOPY_TARGET) \
- $(CLIENT_TARGET) \
- $(LISTER_TARGET) \
- $(INFORMER_TARGET) \
- $(OPENAPI_TARGET)
+	$(DEEPCOPY_TARGET) \
+	$(CLIENT_TARGET) \
+	$(LISTER_TARGET) \
+	$(INFORMER_TARGET) \
+	$(OPENAPI_TARGET)
 
 .PHONY: image
-image: hack/operator-image hack/prometheus-config-reloader-image
+image: .hack-operator-image .hack-prometheus-config-reloader-image
 
-hack/operator-image: Dockerfile operator
+.hack-operator-image: Dockerfile operator
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
 	docker build -t $(REPO):$(TAG) .
 	touch $@
 
-hack/prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile prometheus-config-reloader
+.hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile prometheus-config-reloader
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
 	docker build -t $(REPO_PROMETHEUS_CONFIG_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
-
 ##############
 # Generating #
 ##############
 
+vendor:
+	go mod vendor
+
 .PHONY: generate
-generate: $(DEEPCOPY_TARGET) $(OPENAPI_TARGET) $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml kube-prometheus $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGET) $(OPENAPI_TARGET) $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml $(shell find Documentation -type f)
 
 .PHONY: generate-in-docker
-generate-in-docker: hack/jsonnet-docker-image
-	hack/generate-in-docker.sh $(MFLAGS) # MFLAGS are the parent make call's flags
-
-.PHONY: kube-prometheus
-kube-prometheus:
-	cd contrib/kube-prometheus && $(MAKE) $(MFLAGS) generate
+generate-in-docker:
+	$(CONTAINER_CMD) $(MAKE) $(MFLAGS) generate
 
 example/prometheus-operator-crd/**.crd.yaml: $(OPENAPI_TARGET) $(PO_CRDGEN_BINARY)
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
@@ -148,21 +151,21 @@ jsonnet/prometheus-operator/**-crd.libsonnet: $(shell find example/prometheus-op
 	cat example/prometheus-operator-crd/prometheusrule.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
 
 bundle.yaml: $(shell find example/rbac/prometheus-operator/*.yaml -type f)
-	hack/generate-bundle.sh
+	scripts/generate-bundle.sh
 
-hack/generate/vendor: $(JB_BINARY) $(shell find jsonnet/prometheus-operator -type f)
-	cd hack/generate; $(JB_BINARY) install;
+scripts/generate/vendor: $(JB_BINARY) $(shell find jsonnet/prometheus-operator -type f)
+	cd scripts/generate; $(JB_BINARY) install;
 
-example/non-rbac/prometheus-operator.yaml: hack/generate/vendor hack/generate/prometheus-operator-non-rbac.jsonnet $(shell find jsonnet -type f)
-	hack/generate/build-non-rbac-prometheus-operator.sh
+example/non-rbac/prometheus-operator.yaml: scripts/generate/vendor scripts/generate/prometheus-operator-non-rbac.jsonnet $(shell find jsonnet -type f)
+	scripts/generate/build-non-rbac-prometheus-operator.sh
 
 RBAC_MANIFESTS = example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml example/rbac/prometheus-operator/prometheus-operator-service-account.yaml example/rbac/prometheus-operator/prometheus-operator-deployment.yaml
-$(RBAC_MANIFESTS): hack/generate/vendor hack/generate/prometheus-operator-rbac.jsonnet $(shell find jsonnet -type f)
-	hack/generate/build-rbac-prometheus-operator.sh
+$(RBAC_MANIFESTS): scripts/generate/vendor scripts/generate/prometheus-operator-rbac.jsonnet $(shell find jsonnet -type f)
+	scripts/generate/build-rbac-prometheus-operator.sh
 
 jsonnet/prometheus-operator/prometheus-operator.libsonnet: VERSION
 	sed -i                                                            \
-		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(shell cat VERSION)',/" \
+		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(VERSION)',/" \
 		jsonnet/prometheus-operator/prometheus-operator.libsonnet;
 
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
@@ -174,8 +177,9 @@ Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET)
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
 
-$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) kube-prometheus
-	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
+# TODO: Disable after moving kube-prometheus out - need to update docs first
+# $(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example)
+# 	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
 
 
 ##############
@@ -197,7 +201,6 @@ check-license:
 shellcheck:
 	docker run -v "${PWD}:/mnt" koalaman/shellcheck:stable $(shell find . -type f -name "*.sh" -not -path "*vendor*")
 
-
 ###########
 # Testing #
 ###########
@@ -207,35 +210,12 @@ test: test-unit test-e2e
 
 .PHONY: test-unit
 test-unit:
-	@go test -race $(TEST_RUN_ARGS) -short $(pkgs)
+	go test -race $(TEST_RUN_ARGS) -short $(pkgs) -count=1
 
 .PHONY: test-e2e
 test-e2e: KUBECONFIG?=$(HOME)/.kube/config
 test-e2e:
-	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG)
-
-.PHONY: test-e2e-helm
-test-e2e-helm:
-	./helm/hack/e2e-test.sh
-	# package the chart and verify if they have the version bumped
-	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes exporter-coredns"
-	helm/hack/sync-repo.sh false
-
-
-########
-# Misc #
-########
-
-hack/jsonnet-docker-image: scripts/jsonnet/Dockerfile
-	docker build -f scripts/jsonnet/Dockerfile -t po-jsonnet .
-	touch $@
-
-.PHONY: helm-sync-s3
-helm-sync-s3:
-	helm/hack/helm-package.sh "alertmanager grafana prometheus prometheus-operator exporter-kube-dns exporter-kube-scheduler exporter-kubelets exporter-node exporter-kube-controller-manager exporter-kube-etcd exporter-kube-state exporter-kubernetes exporter-coredns"
-	helm/hack/sync-repo.sh true
-	helm/hack/helm-package.sh kube-prometheus
-	helm/hack/sync-repo.sh true
+	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) -count=1
 
 ############
 # Binaries #
@@ -248,36 +228,33 @@ helm-sync-s3:
 #
 # /home/user/go/bin/informer-gen:
 #	go get -u -d k8s.io/code-generator/cmd/informer-gen
-#	cd /home/user/go/src/k8s.io/code-generator; git checkout release-1.11
+#	cd /home/user/go/src/k8s.io/code-generator; git checkout release-1.14
 #	go install k8s.io/code-generator/cmd/informer-gen
 #
 define _K8S_GEN_VAR_TARGET_
 $(shell echo $(1) | tr '[:lower:]' '[:upper:]' | tr '-' '_')_BINARY:=$(FIRST_GOPATH)/bin/$(1)
 
 $(FIRST_GOPATH)/bin/$(1):
-	go get -u -d k8s.io/code-generator/cmd/$(1)
-	cd $(FIRST_GOPATH)/src/k8s.io/code-generator; git checkout $(K8S_GEN_VERSION)
-	go install k8s.io/code-generator/cmd/$(1)
+	@go install -mod=vendor k8s.io/code-generator/cmd/$(1)
 
 endef
 
 $(OPENAPI_GEN_BINARY):
-	go get -u -d k8s.io/kube-openapi/cmd/openapi-gen
-	go install k8s.io/kube-openapi/cmd/openapi-gen
+	@go install -mod=vendor k8s.io/kube-openapi/cmd/openapi-gen
 
 $(foreach binary,$(K8S_GEN_BINARIES),$(eval $(call _K8S_GEN_VAR_TARGET_,$(binary))))
 
 $(EMBEDMD_BINARY):
-	@go get github.com/campoy/embedmd
+	@go install -mod=vendor github.com/campoy/embedmd
 
 $(JB_BINARY):
-	go get -u github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
+	@go install -mod=vendor github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 
 $(PO_CRDGEN_BINARY): cmd/po-crdgen/main.go $(OPENAPI_TARGET)
-	go install $(GO_PKG)/cmd/po-crdgen
+	@go install -mod=vendor $(GO_PKG)/cmd/po-crdgen
 
 $(PO_DOCGEN_BINARY): $(shell find cmd/po-docgen -type f) $(TYPES_V1_TARGET)
-	go install $(GO_PKG)/cmd/po-docgen
+	@go install -mod=vendor $(GO_PKG)/cmd/po-docgen
 
 $(GOJSONTOYAML_BINARY):
-	go get -u github.com/brancz/gojsontoyaml
+	@go install -mod=vendor github.com/brancz/gojsontoyaml

@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"reflect"
 	"strings"
@@ -32,8 +33,8 @@ import (
 	"github.com/mitchellh/hashstructure"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	appsv1 "k8s.io/api/apps/v1beta2"
-	"k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -46,6 +47,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -134,25 +136,27 @@ func (labels *Labels) Set(value string) error {
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
-	Host                         string
-	KubeletObject                string
-	TLSInsecure                  bool
-	TLSConfig                    rest.TLSClientConfig
-	ConfigReloaderImage          string
-	PrometheusConfigReloader     string
-	AlertmanagerDefaultBaseImage string
-	PrometheusDefaultBaseImage   string
-	ThanosDefaultBaseImage       string
-	Namespaces                   []string
-	PromInstanceNamespaces       []string //  limits where Prometheus CRDs,their secrets and configmaps are watched for
-	Labels                       Labels
-	CrdGroup                     string
-	CrdKinds                     monitoringv1.CrdKinds
-	EnableValidation             bool
-	LocalHost                    string
-	LogLevel                     string
-	LogFormat                    string
-	ManageCRDs                   bool
+	Host                          string
+	KubeletObject                 string
+	TLSInsecure                   bool
+	TLSConfig                     rest.TLSClientConfig
+	ConfigReloaderImage           string
+	ConfigReloaderCPU             string
+	ConfigReloaderMemory          string
+	PrometheusConfigReloaderImage string
+	AlertmanagerDefaultBaseImage  string
+	PrometheusDefaultBaseImage    string
+	ThanosDefaultBaseImage        string
+	Namespaces                    []string
+	PromInstanceNamespaces        []string //  limits where Prometheus CRDs,their secrets and configmaps are watched for
+	Labels                        Labels
+	CrdGroup                      string
+	CrdKinds                      monitoringv1.CrdKinds
+	EnableValidation              bool
+	LocalHost                     string
+	LogLevel                      string
+	LogFormat                     string
+	ManageCRDs                    bool
 }
 
 type BasicAuthCredentials struct {
@@ -253,21 +257,30 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 	c.cmapInf = cache.NewSharedIndexInformer(
 		listwatch.MultiNamespaceListerWatcher(promNS, func(namespace string) cache.ListerWatcher {
-			return cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "configmaps", namespace, fields.Everything())
+			return &cache.ListWatch{
+				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					options.LabelSelector = labelPrometheusName
+					return c.kclient.CoreV1().ConfigMaps(namespace).List(options)
+				},
+				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+					options.LabelSelector = labelPrometheusName
+					return c.kclient.CoreV1().ConfigMaps(namespace).Watch(options)
+				},
+			}
 		}),
 		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
 	c.secrInf = cache.NewSharedIndexInformer(
 		listwatch.MultiNamespaceListerWatcher(promNS, func(namespace string) cache.ListerWatcher {
-			return cache.NewListWatchFromClient(c.kclient.Core().RESTClient(), "secrets", namespace, fields.Everything())
+			return cache.NewListWatchFromClient(c.kclient.CoreV1().RESTClient(), "secrets", namespace, fields.Everything())
 		}),
 		&v1.Secret{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
 	c.ssetInf = cache.NewSharedIndexInformer(
 		listwatch.MultiNamespaceListerWatcher(promNS, func(namespace string) cache.ListerWatcher {
-			return cache.NewListWatchFromClient(c.kclient.AppsV1beta2().RESTClient(), "statefulsets", namespace, fields.Everything())
+			return cache.NewListWatchFromClient(c.kclient.AppsV1().RESTClient(), "statefulsets", namespace, fields.Everything())
 		}),
 		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
@@ -284,7 +297,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		nsResyncPeriod = resyncPeriod
 	}
 	c.nsInf = cache.NewSharedIndexInformer(
-		listwatch.NewUnprivilegedNamespaceListWatchFromClient(c.kclient.Core().RESTClient(), c.config.Namespaces, fields.Everything()),
+		listwatch.NewUnprivilegedNamespaceListWatchFromClient(c.kclient.CoreV1().RESTClient(), c.config.Namespaces, fields.Everything()),
 		&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
 	)
 	c.smonSecretManager = newSecretManager(c)
@@ -515,6 +528,7 @@ func (c *Operator) handlePrometheusUpdate(old, cur interface{}) {
 }
 
 func (c *Operator) reconcileNodeEndpoints(stopc <-chan struct{}) {
+	c.syncNodeEndpointsWithLogError()
 	ticker := time.NewTicker(3 * time.Minute)
 	defer ticker.Stop()
 	for {
@@ -522,10 +536,7 @@ func (c *Operator) reconcileNodeEndpoints(stopc <-chan struct{}) {
 		case <-stopc:
 			return
 		case <-ticker.C:
-			err := c.syncNodeEndpoints()
-			if err != nil {
-				level.Error(c.logger).Log("msg", "syncing nodes into Endpoints object failed", "err", err)
-			}
+			c.syncNodeEndpointsWithLogError()
 		}
 	}
 }
@@ -572,6 +583,13 @@ func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
 	}
 
 	return addresses, errs
+}
+
+func (c *Operator) syncNodeEndpointsWithLogError() {
+	err := c.syncNodeEndpoints()
+	if err != nil {
+		level.Error(c.logger).Log("msg", "syncing nodes into Endpoints object failed", "err", err)
+	}
 }
 
 func (c *Operator) syncNodeEndpoints() error {
@@ -1051,7 +1069,7 @@ func (c *Operator) sync(key string) error {
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	_, err = sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		if _, err := c.kclient.Core().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
+		if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
 			return errors.Wrap(err, "creating empty config file failed")
 		}
 	}
@@ -1060,12 +1078,12 @@ func (c *Operator) sync(key string) error {
 	}
 
 	// Create governing service if it doesn't exist.
-	svcClient := c.kclient.Core().Services(p.Namespace)
+	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if err := k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(p, c.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
-	ssetClient := c.kclient.AppsV1beta2().StatefulSets(p.Namespace)
+	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
 	// Ensure we have a StatefulSet running Prometheus deployed.
 	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(prometheusKeyToStatefulSetKey(key))
 	if err != nil {
@@ -1077,13 +1095,13 @@ func (c *Operator) sync(key string) error {
 		return err
 	}
 
+	sset, err := makeStatefulSet(*p, &c.config, ruleConfigMapNames, newSSetInputHash)
+	if err != nil {
+		return errors.Wrap(err, "making statefulset failed")
+	}
+
 	if !exists {
 		level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
-		sset, err := makeStatefulSet(*p, "", &c.config, ruleConfigMapNames, newSSetInputHash)
-		if err != nil {
-			return errors.Wrap(err, "making statefulset failed")
-		}
-
 		level.Debug(c.logger).Log("msg", "creating Prometheus statefulset")
 		if _, err := ssetClient.Create(sset); err != nil {
 			return errors.Wrap(err, "creating statefulset failed")
@@ -1095,11 +1113,6 @@ func (c *Operator) sync(key string) error {
 	if newSSetInputHash == oldSSetInputHash {
 		level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 		return nil
-	}
-
-	sset, err := makeStatefulSet(*p, obj.(*appsv1.StatefulSet).Spec.PodManagementPolicy, &c.config, ruleConfigMapNames, newSSetInputHash)
-	if err != nil {
-		return errors.Wrap(err, "making statefulset failed")
 	}
 
 	level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
@@ -1157,11 +1170,11 @@ func ListOptions(name string) metav1.ListOptions {
 func PrometheusStatus(kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
 	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
-	pods, err := kclient.Core().Pods(p.Namespace).List(ListOptions(p.Name))
+	pods, err := kclient.CoreV1().Pods(p.Namespace).List(ListOptions(p.Name))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.AppsV1beta2().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
+	sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 	}
@@ -1207,7 +1220,7 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	return false
 }
 
-func loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
+func (c *Operator) loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySelector, s *v1.SecretList) ([]byte, error) {
 	if additionalScrapeConfigs != nil {
 		for _, secret := range s.Items {
 			if secret.Name == additionalScrapeConfigs.Name {
@@ -1218,33 +1231,68 @@ func loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1.SecretKeySele
 				return nil, fmt.Errorf("key %v could not be found in Secret %v", additionalScrapeConfigs.Key, additionalScrapeConfigs.Name)
 			}
 		}
-		return nil, fmt.Errorf("secret %v could not be found", additionalScrapeConfigs.Name)
+		if additionalScrapeConfigs.Optional == nil || !*additionalScrapeConfigs.Optional {
+			return nil, fmt.Errorf("secret %v could not be found", additionalScrapeConfigs.Name)
+		}
+		level.Debug(c.logger).Log("msg", fmt.Sprintf("secret %v could not be found", additionalScrapeConfigs.Name))
 	}
 	return nil, nil
+}
+
+func extractCredKey(secret *v1.Secret, sel v1.SecretKeySelector, cred string) (string, error) {
+	if s, ok := secret.Data[sel.Key]; ok {
+		return string(s), nil
+	}
+	return "", fmt.Errorf("secret %s key %q in secret %q not found", cred, sel.Key, sel.Name)
+}
+
+func getCredFromSecret(c corev1client.SecretInterface, sel v1.SecretKeySelector, cred string, cacheKey string, cache map[string]*v1.Secret) (_ string, err error) {
+	var s *v1.Secret
+	var ok bool
+
+	if s, ok = cache[cacheKey]; !ok {
+		if s, err = c.Get(sel.Name, metav1.GetOptions{}); err != nil {
+			return "", fmt.Errorf("unable to fetch %s secret %q: %s", cred, sel.Name, err)
+		}
+		cache[cacheKey] = s
+	}
+	return extractCredKey(s, sel, cred)
+}
+
+func loadBasicAuthSecretFromAPI(basicAuth *monitoringv1.BasicAuth, c corev1client.CoreV1Interface, ns string, cache map[string]*v1.Secret) (BasicAuthCredentials, error) {
+	var username string
+	var password string
+	var err error
+
+	sClient := c.Secrets(ns)
+
+	if username, err = getCredFromSecret(sClient, basicAuth.Username, "username", ns+"/"+basicAuth.Username.Name, cache); err != nil {
+		return BasicAuthCredentials{}, err
+	}
+
+	if password, err = getCredFromSecret(sClient, basicAuth.Password, "password", ns+"/"+basicAuth.Password.Name, cache); err != nil {
+		return BasicAuthCredentials{}, err
+	}
+
+	return BasicAuthCredentials{username: username, password: password}, nil
 }
 
 func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (BasicAuthCredentials, error) {
 	var username string
 	var password string
+	var err error
 
 	for _, secret := range s.Items {
 
 		if secret.Name == basicAuth.Username.Name {
-
-			if u, ok := secret.Data[basicAuth.Username.Key]; ok {
-				username = string(u)
-			} else {
-				return BasicAuthCredentials{}, fmt.Errorf("secret username key %q in secret %q not found", basicAuth.Username.Key, secret.Name)
+			if username, err = extractCredKey(&secret, basicAuth.Username, "username"); err != nil {
+				return BasicAuthCredentials{}, err
 			}
-
 		}
 
 		if secret.Name == basicAuth.Password.Name {
-
-			if p, ok := secret.Data[basicAuth.Password.Key]; ok {
-				password = string(p)
-			} else {
-				return BasicAuthCredentials{}, fmt.Errorf("secret password key %q in secret %q not found", basicAuth.Password.Key, secret.Name)
+			if password, err = extractCredKey(&secret, basicAuth.Password, "password"); err != nil {
+				return BasicAuthCredentials{}, err
 			}
 
 		}
@@ -1261,6 +1309,15 @@ func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (B
 
 }
 
+func gzipConfig(buf *bytes.Buffer, conf []byte) error {
+	w := gzip.NewWriter(buf)
+	defer w.Close()
+	if _, err := w.Write(conf); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *Operator) loadBasicAuthSecrets(
 	mons map[string]*monitoringv1.ServiceMonitor,
 	remoteReads []monitoringv1.RemoteReadSpec,
@@ -1269,25 +1326,12 @@ func (c *Operator) loadBasicAuthSecrets(
 	SecretsInPromNS *v1.SecretList,
 ) (map[string]BasicAuthCredentials, error) {
 
-	sMonSecretMap := make(map[string]*v1.SecretList)
-	for _, mon := range mons {
-		smNamespace := mon.Namespace
-		if sMonSecretMap[smNamespace] == nil {
-			msClient := c.kclient.CoreV1().Secrets(smNamespace)
-			listSecrets, err := msClient.List(metav1.ListOptions{})
-
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to retrieve secrets in namespace '%v' for servicemonitor '%v'", smNamespace, mon.Name)
-			}
-			sMonSecretMap[smNamespace] = listSecrets
-		}
-	}
-
 	secrets := map[string]BasicAuthCredentials{}
+	nsSecretCache := make(map[string]*v1.Secret)
 	for _, mon := range mons {
 		for i, ep := range mon.Spec.Endpoints {
 			if ep.BasicAuth != nil {
-				credentials, err := loadBasicAuthSecret(ep.BasicAuth, sMonSecretMap[mon.Namespace])
+				credentials, err := loadBasicAuthSecretFromAPI(ep.BasicAuth, c.kclient.CoreV1(), mon.Namespace, nsSecretCache)
 				if err != nil {
 					return nil, fmt.Errorf("could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
 				}
@@ -1346,15 +1390,15 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		return err
 	}
 
-	additionalScrapeConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
+	additionalScrapeConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional scrape configs from Secret failed")
 	}
-	additionalAlertRelabelConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
+	additionalAlertRelabelConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertRelabelConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert relabel configs from Secret failed")
 	}
-	additionalAlertManagerConfigs, err := loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
+	additionalAlertManagerConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalAlertManagerConfigs, SecretsInPromNS)
 	if err != nil {
 		return errors.Wrap(err, "loading additional alert manager configs from Secret failed")
 	}
@@ -1377,7 +1421,13 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	s.ObjectMeta.Annotations = map[string]string{
 		"generated": "true",
 	}
-	s.Data[configFilename] = []byte(conf)
+
+	// Compress config to avoid 1mb secret limit for a while
+	var buf bytes.Buffer
+	if err = gzipConfig(&buf, conf); err != nil {
+		return errors.Wrap(err, "couldnt gzip config")
+	}
+	s.Data[configFilename] = buf.Bytes()
 
 	curSecret, err := sClient.Get(s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {

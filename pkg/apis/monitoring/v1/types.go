@@ -15,7 +15,7 @@
 package v1
 
 import (
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -96,6 +96,11 @@ type PrometheusSpec struct {
 	// When a Prometheus deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
 	Paused bool `json:"paused,omitempty"`
+	// Image if specified has precedence over baseImage, tag and sha
+	// combinations. Specifying the version is still necessary to ensure the
+	// Prometheus Operator knows what version of Prometheus is being
+	// configured.
+	Image *string `json:"image,omitempty"`
 	// Base image to use for a Prometheus deployment.
 	BaseImage string `json:"baseImage,omitempty"`
 	// An optional list of references to secrets in the same namespace
@@ -104,18 +109,39 @@ type PrometheusSpec struct {
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Number of instances to deploy for a Prometheus deployment.
 	Replicas *int32 `json:"replicas,omitempty"`
+	// Name of Prometheus external label used to denote replica name.
+	// Defaults to the value of `prometheus_replica`. External label will
+	// _not_ be added when value is set to empty string (`""`).
+	ReplicaExternalLabelName *string `json:"replicaExternalLabelName,omitempty"`
+	// Name of Prometheus external label used to denote Prometheus instance
+	// name. Defaults to the value of `prometheus`. External label will
+	// _not_ be added when value is set to empty string (`""`).
+	PrometheusExternalLabelName *string `json:"prometheusExternalLabelName,omitempty"`
 	// Time duration Prometheus shall retain data for. Default is '24h',
 	// and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).
 	Retention string `json:"retention,omitempty"`
+	// Maximum amount of disk space used by blocks.
+	RetentionSize string `json:"retentionSize,omitempty"`
 	// Log level for Prometheus to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
+	// Log format for Prometheus to be configured with.
+	LogFormat string `json:"logFormat,omitempty"`
 	// Interval between consecutive scrapes.
 	ScrapeInterval string `json:"scrapeInterval,omitempty"`
 	// Interval between consecutive evaluations.
 	EvaluationInterval string `json:"evaluationInterval,omitempty"`
+	// /--rules.*/ command-line arguments.
+	Rules Rules `json:"rules,omitempty"`
 	// The labels to add to any time series or alerts when communicating with
 	// external systems (federation, remote storage, Alertmanager).
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`
+	// Enable access to prometheus web admin API. Defaults to the value of `false`.
+	// WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+	// shutdown Prometheus, and more. Enabling this should be done with care and the
+	// user is advised to add additional authentication authorization via a proxy to
+	// ensure only clients authorized to perform these actions can do so.
+	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
+	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
 	// The external URL the Prometheus instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Prometheus is not
 	// served from root of a DNS name.
@@ -125,6 +151,8 @@ type PrometheusSpec struct {
 	// and the actual ExternalURL is still true, but the server serves requests
 	// under a different route prefix. For example for use with `kubectl proxy`.
 	RoutePrefix string `json:"routePrefix,omitempty"`
+	// QuerySpec defines the query command line flags when starting Prometheus.
+	Query *QuerySpec `json:"query,omitempty"`
 	// Storage spec to specify how storage shall be used.
 	Storage *StorageSpec `json:"storage,omitempty"`
 	// A selector to select which PrometheusRules to mount for loading alerting
@@ -162,21 +190,26 @@ type PrometheusSpec struct {
 	// If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way.
 	RemoteRead []RemoteReadSpec `json:"remoteRead,omitempty"`
 	// SecurityContext holds pod-level security attributes and common container settings.
-	// This defaults to non root user with uid 1000 and gid 2000 for Prometheus >v2.0 and
-	// default PodSecurityContext for other versions.
+	// This defaults to the default PodSecurityContext.
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 	// ListenLocal makes the Prometheus server listen on loopback, so that it
 	// does not bind against the Pod IP.
 	ListenLocal bool `json:"listenLocal,omitempty"`
-	// Containers allows injecting additional containers. This is meant to
-	// allow adding an authentication proxy to a Prometheus pod.
+	// Containers allows injecting additional containers or modifying operator generated
+	// containers. This can be used to allow adding an authentication proxy to a Prometheus pod or
+	// to change the behavior of an operator generated container. Containers described here modify
+	// an operator generated container if they share the same name and modifications are done via a
+	// strategic merge patch. The current container names are: `prometheus`,
+	// `prometheus-config-reloader`, `rules-configmap-reloader`, and `thanos-sidecar`. Overriding
+	// containers is entirely outside the scope of what the maintainers will support and by doing
+	// so, you accept that this behaviour may break at any time without notice.
 	Containers []v1.Container `json:"containers,omitempty"`
 	// AdditionalScrapeConfigs allows specifying a key of a Secret containing
 	// additional Prometheus scrape configurations. Scrape configurations
 	// specified are appended to the configurations generated by the Prometheus
 	// Operator. Job configurations specified must have the form as specified
 	// in the official Prometheus documentation:
-	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<scrape_config>.
+	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config.
 	// As scrape configs are appended, the user is responsible to make sure it
 	// is valid. Note that using this feature may expose the possibility to
 	// break upgrades of Prometheus. It is advised to review Prometheus release
@@ -200,7 +233,7 @@ type PrometheusSpec struct {
 	// specified are appended to the configurations generated by the Prometheus
 	// Operator. Job configurations specified must have the form as specified
 	// in the official Prometheus documentation:
-	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<alertmanager_config>.
+	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config.
 	// As AlertManager configs are appended, the user is responsible to make sure it
 	// is valid. Note that using this feature may expose the possibility to
 	// break upgrades of Prometheus. It is advised to review Prometheus release
@@ -265,11 +298,29 @@ type StorageSpec struct {
 	VolumeClaimTemplate v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 }
 
+// QuerySpec defines the query command line flags when starting Prometheus.
+// +k8s:openapi-gen=true
+type QuerySpec struct {
+	// The delta difference allowed for retrieving metrics during expression evaluations.
+	LookbackDelta *string `json:"lookbackDelta,omitempty"`
+	// Number of concurrent queries that can be run at once.
+	MaxConcurrency *int32 `json:"maxConcurrency,omitempty"`
+	// Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return.
+	MaxSamples *int32 `json:"maxSamples,omitempty"`
+	// Maximum time a query may take before being aborted.
+	Timeout *string `json:"timeout,omitempty"`
+}
+
 // ThanosSpec defines parameters for a Prometheus server within a Thanos deployment.
 // +k8s:openapi-gen=true
 type ThanosSpec struct {
 	// Peers is a DNS name for Thanos to discover peers through.
 	Peers *string `json:"peers,omitempty"`
+	// Image if specified has precedence over baseImage, tag and sha
+	// combinations. Specifying the version is still necessary to ensure the
+	// Prometheus Operator knows what version of Thanos is being
+	// configured.
+	Image *string `json:"image,omitempty"`
 	// Version describes the version of Thanos to use.
 	Version *string `json:"version,omitempty"`
 	// Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`.
@@ -284,14 +335,25 @@ type ThanosSpec struct {
 	// Resources defines the resource requirements for the Thanos sidecar.
 	// If not provided, no requests/limits will be set
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
-	// GCS configures use of GCS in Thanos.
+	// Deprecated: GCS should be configured with an ObjectStorageConfig secret
+	// starting with Thanos v0.2.0. This field will be removed.
 	GCS *ThanosGCSSpec `json:"gcs,omitempty"`
-	// S3 configures use of S3 in Thanos.
+	// Deprecated: S3 should be configured with an ObjectStorageConfig secret
+	// starting with Thanos v0.2.0. This field will be removed.
 	S3 *ThanosS3Spec `json:"s3,omitempty"`
+	// ObjectStorageConfig configures object storage in Thanos.
+	ObjectStorageConfig *v1.SecretKeySelector `json:"objectStorageConfig,omitempty"`
+	// Explicit (external) host:port address to advertise for gRPC StoreAPI in gossip cluster.
+	// If empty, 'grpc-address' will be used.
+	GrpcAdvertiseAddress *string `json:"grpcAdvertiseAddress,omitempty"`
+	// Explicit (external) ip:port address to advertise for gossip in gossip cluster.
+	// Used internally for membership only.
+	ClusterAdvertiseAddress *string `json:"clusterAdvertiseAddress,omitempty"`
 }
 
-// ThanosGCSSpec defines parameters for use of Google Cloud Storage (GCS) with
-// Thanos.
+// Deprecated: ThanosGCSSpec should be configured with an ObjectStorageConfig
+// secret starting with Thanos v0.2.0. ThanosGCSSpec will be removed.
+//
 // +k8s:openapi-gen=true
 type ThanosGCSSpec struct {
 	// Google Cloud Storage bucket name for stored blocks. If empty it won't
@@ -301,8 +363,9 @@ type ThanosGCSSpec struct {
 	SecretKey *v1.SecretKeySelector `json:"credentials,omitempty"`
 }
 
-// ThanosS3Spec defines parameters for of AWS Simple Storage Service (S3) with
-// Thanos. (S3 compatible services apply as well)
+// Deprecated: ThanosS3Spec should be configured with an ObjectStorageConfig
+// secret starting with Thanos v0.2.0. ThanosS3Spec will be removed.
+//
 // +k8s:openapi-gen=true
 type ThanosS3Spec struct {
 	// S3-Compatible API bucket name for stored blocks.
@@ -350,6 +413,8 @@ type RemoteWriteSpec struct {
 type QueueConfig struct {
 	// Capacity is the number of samples to buffer per shard before we start dropping them.
 	Capacity int `json:"capacity,omitempty"`
+	// MinShards is the minimum number of shards, i.e. amount of concurrency.
+	MinShards int `json:"minShards,omitempty"`
 	// MaxShards is the maximum number of shards, i.e. amount of concurrency.
 	MaxShards int `json:"maxShards,omitempty"`
 	// MaxSamplesPerSend is the maximum number of samples per send.
@@ -514,7 +579,7 @@ type Endpoint struct {
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
 	// RelabelConfigs to apply to samples before ingestion.
-	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#<relabel_config>
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
 	ProxyURL *string `json:"proxyUrl,omitempty"`
@@ -635,6 +700,11 @@ type AlertmanagerSpec struct {
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
 	// Metadata Labels and Annotations gets propagated to the prometheus pods.
 	PodMetadata *metav1.ObjectMeta `json:"podMetadata,omitempty"`
+	// Image if specified has precedence over baseImage, tag and sha
+	// combinations. Specifying the version is still necessary to ensure the
+	// Prometheus Operator knows what version of Alertmanager is being
+	// configured.
+	Image *string `json:"image,omitempty"`
 	// Version the cluster should be on.
 	Version string `json:"version,omitempty"`
 	// Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.
@@ -660,6 +730,8 @@ type AlertmanagerSpec struct {
 	ConfigMaps []string `json:"configMaps,omitempty"`
 	// Log level for Alertmanager to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
+	// Log format for Alertmanager to be configured with.
+	LogFormat string `json:"logFormat,omitempty"`
 	// Size is the expected size of the alertmanager cluster. The controller will
 	// eventually make the size of the running cluster equal to the expected
 	// size.
@@ -691,7 +763,7 @@ type AlertmanagerSpec struct {
 	// If specified, the pod's tolerations.
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// SecurityContext holds pod-level security attributes and common container settings.
-	// This defaults to non root user with uid 1000 and gid 2000.
+	// This defaults to the default PodSecurityContext.
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
@@ -755,6 +827,24 @@ type NamespaceSelector struct {
 	// TODO(fabxc): this should embed metav1.LabelSelector eventually.
 	// Currently the selector is only used for namespaces which require more complex
 	// implementation to support label selections.
+}
+
+// /--rules.*/ command-line arguments
+// +k8s:openapi-gen=true
+type Rules struct {
+	Alert RulesAlert `json:"alert,omitempty"`
+}
+
+// /--rules.alert.*/ command-line arguments
+// +k8s:openapi-gen=true
+type RulesAlert struct {
+	// Max time to tolerate prometheus outage for restoring 'for' state of alert.
+	ForOutageTolerance string `json:"forOutageTolerance,omitempty"`
+	// Minimum duration between alert and restored 'for' state.
+	// This is maintained only for alerts with configured 'for' time greater than grace period.
+	ForGracePeriod string `json:"forGracePeriod,omitempty"`
+	// Minimum amount of time to wait before resending an alert to Alertmanager.
+	ResendDelay string `json:"resendDelay,omitempty"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.

@@ -1,9 +1,63 @@
+## Next release
+
+## 0.30.0 / 2019-05-10
+
+Note: Both kube-prometheus (#2554) and the Helm Chart (#2416) have been removed from this repository.
+kube-prometheus is not hosted as github.com/coroes/kube-prometheus and the helm chart is available at https://github.com/helm/charts/tree/master/stable/prometheus-operator
+
+* [CHANGE] Drop support for Alertmanager < v0.15.0 (#2568)
+* [FEATURE] Add Prometheus Config Reloader CPU and Memory flags (#2466)
+* [FEATURE] Support `--max-samples` flag in QuerySpec (#2505)
+* [FEATURE] Adding kustomization files for remote bases (#2497)
+* [FEATURE] Allow disabling limits on sidecars (#2560)
+* [FEATURE] Modify arbitrary parts of the operator generated containers (#2445)
+* [ENHANCEMENT] Add proper Operator labels as recommended by SIG-Apps (#2427)
+* [ENHANCEMENT] Watch ConfigMaps having the prometheus-name selector (#2454)
+* [ENHANCEMENT] Add prometheusExternalLabelName field to Prometheus object (#2430)
+* [ENHANCEMENT] Optional secret in scrapeconfig (#2511)
+* [ENHANCEMENT] Update PodSecurityContext docs (#2569)
+* [ENHANCEMENT] Update Kubernetes client libraries to 1.14.0 (#2570)
+* [ENHANCEMENT] Use Go modules with Kubernetes 1.14 (#2571)
+* [ENHANCEMENT] Update to Alertmanager v0.17.0 (#2587)
+* [ENHANCEMENT] Add support for setting Log Format for Alertmanager (#2577)
+* [ENHANCEMENT] Switch Deployments and StatefulSets from apps/v1beta to apps/v1 (#2593)
+* [ENHANCEMENT] Add Service and Servicemonitor to bundle.yaml (#2595)
+* [BUGFIX] Fix startup nodeSyncEndpoints (#2475)
+* [BUGIFX] Update Thanos vendoring to include config reloader fixes (#2504)
+
+## 0.29.0 / 2019-02-19
+
+* [FEATURE] Thanos sidecar supports external Thanos clusters (#2412)
+* [FEATURE] Make replicas external label name configurable (#2411)
+* [FEATURE] Flags for config reloader memory and cpu limits (#2403)
+* [ENHANCEMENT] Update to Prometheus v2.7.1 as default (#2374)
+* [ENHANCEMENT] Update to Alertmanager v0.16.1 as default (#2362)
+
+## 0.28.0 / 2019-01-24
+
+* [FEATURE] CLI tool to lint YAML against CRD definitions (#2269)
+* [FEATURE] Support Thanos v0.2 arbitrary object storage configuration (#2264)
+* [ENHANCEMENT] Update Alertmanager to v0.16.0 (#2145)
+* [ENHANCEMENT] Added AlertResendDelay to Prometheus resource (#2265)
+* [ENHANCEMENT] Support min_shards configuration of the queueConfig (#2284)
+* [ENHANCEMENT] Write compressed Prometheus config into Kubernetes Secret (#2243)
+* [ENHANCEMENT] Add flag to enable Prometheus web admin API (#2300)
+* [ENHANCEMENT] Add logFormat support for Prometheus (#2307)
+* [ENHANCEMENT] Configure Thanos sidecar with route prefix (#2345)
+* [BUGFIX] Fix omitting source_labels where they are unnecessary (#2292)
+* [BUGFIX] Guard against nil targetPort (#2318)
+
+## 0.27.0 / 2019-01-08
+
+* [FEATURE] Add `image` field to specify full Prometheus, Alertmanager and Thanos images.
+* [FEATURE] Add prometheus query options (lookback-delta, max-concurrency, timeout).
+
 ## 0.26.0 / 2018-11-30
 
 * [CHANGE] Remove attempting to set "secure" security context (#2109).
 * [CHANGE] Remove deprecated StorageSpec fields (#2132).
 * [ENHANCEMENT] Better handling for pod/node labels from ServiceMonitors (#2089).
-* [ENHANCEMENT] Update to Proemtheus v2.5.0 as default (#2101).
+* [ENHANCEMENT] Update to Prometheus v2.5.0 as default (#2101).
 * [ENHANCEMENT] Update to Alertmanager v0.15.3 as default (#2128).
 * [ENHANCEMENT] Increase CPU limits for small containers to not being throttled as much (#2144).
 * [BUGFIX] Sanitize thanos secret volume mount name (#2159).
@@ -179,7 +233,7 @@ This release adds validations as a beta feature. It will only be installed on ne
 * [FEATURE] Add ability to specify log level.
 * [FEATURE] Add support for dropping metrics at scrape time.
 * [ENHANCEMENT] Ensure that resource limit can't make Pods unschedulable.
-* [ENHANCEMENT] Allow configuring emtpyDir volumes
+* [ENHANCEMENT] Allow configuring emptyDir volumes
 * [BUGFIX] Use `--storage.tsdb.no-lockfile` for Prometheus 2.0.
 * [BUGFIX] Fix Alertmanager default storage.path.
 
@@ -332,7 +386,7 @@ be created properly.
 * [FEATURE] Allow not tagging targets with the `namespace` label.
 * [FEATURE] Allow specifying `ServiceAccountName` to be used by Prometheus pods.
 * [ENHANCEMENT] Label governing services to uniquely identify them.
-* [ENHANCEMENT] Reconcile Serive and Endpoints objects.
+* [ENHANCEMENT] Reconcile Service and Endpoints objects.
 * [ENHANCEMENT] General stability improvements.
 * [BUGFIX] Hostname cannot be fqdn when syncing kubelets into Endpoints object.
 

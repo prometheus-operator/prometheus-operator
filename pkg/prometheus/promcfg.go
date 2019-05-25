@@ -90,8 +90,35 @@ func addTLStoYaml(cfg yaml.MapSlice, tls *v1.TLSConfig) yaml.MapSlice {
 func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	m := map[string]string{}
 
-	m["prometheus"] = fmt.Sprintf("%s/%s", p.Namespace, p.Name)
-	m["prometheus_replica"] = "$(POD_NAME)"
+	// Use "prometheus" external label name by default if field is missing.
+	// Do not add external label if field is set to empty string.
+	prometheusExternalLabelName := "prometheus"
+	if p.Spec.PrometheusExternalLabelName != nil {
+		if *p.Spec.PrometheusExternalLabelName != "" {
+			prometheusExternalLabelName = *p.Spec.PrometheusExternalLabelName
+		} else {
+			prometheusExternalLabelName = ""
+		}
+	}
+
+	// Use defaultReplicaExternalLabelName constant by default if field is missing.
+	// Do not add external label if field is set to empty string.
+	replicaExternalLabelName := defaultReplicaExternalLabelName
+	if p.Spec.ReplicaExternalLabelName != nil {
+		if *p.Spec.ReplicaExternalLabelName != "" {
+			replicaExternalLabelName = *p.Spec.ReplicaExternalLabelName
+		} else {
+			replicaExternalLabelName = ""
+		}
+	}
+
+	if prometheusExternalLabelName != "" {
+		m[prometheusExternalLabelName] = fmt.Sprintf("%s/%s", p.Namespace, p.Name)
+	}
+
+	if replicaExternalLabelName != "" {
+		m[replicaExternalLabelName] = "$(POD_NAME)"
+	}
 
 	for n, v := range p.Spec.ExternalLabels {
 		m[n] = v
@@ -194,12 +221,23 @@ func (cg *configGenerator) generateConfig(
 
 	var alertRelabelConfigs []yaml.MapSlice
 
+	// Use defaultReplicaExternalLabelName constant by default if field is missing.
+	// Do not add external label if field is set to empty string.
+	replicaExternalLabelName := defaultReplicaExternalLabelName
+	if p.Spec.ReplicaExternalLabelName != nil {
+		if *p.Spec.ReplicaExternalLabelName != "" {
+			replicaExternalLabelName = *p.Spec.ReplicaExternalLabelName
+		} else {
+			replicaExternalLabelName = ""
+		}
+	}
+
 	// action 'labeldrop' is not supported <= v1.4.1
-	if version.GT(semver.MustParse("1.4.1")) {
-		// Drop 'prometheus_replica' label, to make alerts from two Prometheus replicas alike
+	if replicaExternalLabelName != "" && version.GT(semver.MustParse("1.4.1")) {
+		// Drop replica label, to make alerts from multiple Prometheus replicas alike
 		alertRelabelConfigs = append(alertRelabelConfigs, yaml.MapSlice{
 			{Key: "action", Value: "labeldrop"},
-			{Key: "regex", Value: "prometheus_replica"},
+			{Key: "regex", Value: regexp.QuoteMeta(replicaExternalLabelName)},
 		})
 	}
 
@@ -382,18 +420,20 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}},
 			{Key: "regex", Value: ep.Port},
 		})
-	} else if ep.TargetPort.StrVal != "" {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_name"}},
-			{Key: "regex", Value: ep.TargetPort.String()},
-		})
-	} else if ep.TargetPort.IntVal != 0 {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
-			{Key: "regex", Value: ep.TargetPort.String()},
-		})
+	} else if ep.TargetPort != nil {
+		if ep.TargetPort.StrVal != "" {
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_name"}},
+				{Key: "regex", Value: ep.TargetPort.String()},
+			})
+		} else if ep.TargetPort.IntVal != 0 {
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
+				{Key: "regex", Value: ep.TargetPort.String()},
+			})
+		}
 	}
 
 	// Relabel namespace and pod and service labels into proper labels.
@@ -470,7 +510,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 			{Key: "target_label", Value: "endpoint"},
 			{Key: "replacement", Value: ep.Port},
 		})
-	} else if ep.TargetPort.String() != "" {
+	} else if ep.TargetPort != nil && ep.TargetPort.String() != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "target_label", Value: "endpoint"},
 			{Key: "replacement", Value: ep.TargetPort.String()},
@@ -750,8 +790,10 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, spe
 		if spec.WriteRelabelConfigs != nil {
 			relabelings := []yaml.MapSlice{}
 			for _, c := range spec.WriteRelabelConfigs {
-				relabeling := yaml.MapSlice{
-					{Key: "source_labels", Value: c.SourceLabels},
+				relabeling := yaml.MapSlice{}
+
+				if len(c.SourceLabels) > 0 {
+					relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
 				}
 
 				if c.Separator != "" {
@@ -814,6 +856,12 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, spe
 
 			if spec.QueueConfig.Capacity != int(0) {
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "capacity", Value: spec.QueueConfig.Capacity})
+			}
+
+			if version.GTE(semver.MustParse("2.6.0")) {
+				if spec.QueueConfig.MinShards != int(0) {
+					queueConfig = append(queueConfig, yaml.MapItem{Key: "min_shards", Value: spec.QueueConfig.MinShards})
+				}
 			}
 
 			if spec.QueueConfig.MaxShards != int(0) {

@@ -1,5 +1,0 @@
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-## Custom Labels to be added to ServiceMonitor
-##
-additionalServiceMonitorLabels: {}

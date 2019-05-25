@@ -1,6 +1,7 @@
 # Prometheus Operator
 [![Build Status](https://travis-ci.org/coreos/prometheus-operator.svg?branch=master)](https://travis-ci.org/coreos/prometheus-operator)
 [![Go Report Card](https://goreportcard.com/badge/coreos/prometheus-operator "Go Report Card")](https://goreportcard.com/report/coreos/prometheus-operator)
+[![Slack](https://img.shields.io/badge/join%20slack-%23prometheus--operator-brightgreen.svg)](http://slack.k8s.io/)
 
 **Project status: *beta*** Not all planned features are completed. The API, spec, status and other user facing objects may change, but in a backward compatible way.
 
@@ -27,7 +28,7 @@ The Prometheus Operator makes the Prometheus configuration Kubernetes native
 and manages and operates Prometheus and Alertmanager clusters. It is a piece of
 the puzzle regarding full end-to-end monitoring.
 
-[kube-prometheus](contrib/kube-prometheus) combines the Prometheus Operator
+[kube-prometheus](https://github.com/coreos/kube-prometheus) combines the Prometheus Operator
 with a collection of manifests to help getting started with monitoring
 Kubernetes itself and applications running on top of it.
 
@@ -63,7 +64,7 @@ at the [design doc](Documentation/design.md).
 
 ## Quickstart
 
-Note that this quickstart does not provision an entire monitoring stack; if that is what you are looking for see the [kube-prometheus](contrib/kube-prometheus) sub-project. If you want the whole stack, but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
+Note that this quickstart does not provision an entire monitoring stack; if that is what you are looking for see the [kube-prometheus](https://github.com/coreos/kube-prometheus) project. If you want the whole stack, but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
 
 To quickly try out _just_ the Prometheus Operator inside a cluster, run the following command:
 
@@ -77,7 +78,7 @@ To run the Operator outside of a cluster:
 
 ```sh
 make
-hack/run-external.sh <kubectl cluster name>
+scripts/run-external.sh <kubectl cluster name>
 ```
 
 ## Removal
@@ -108,7 +109,8 @@ done
 kubectl delete --ignore-not-found customresourcedefinitions \
   prometheuses.monitoring.coreos.com \
   servicemonitors.monitoring.coreos.com \
-  alertmanagers.monitoring.coreos.com
+  alertmanagers.monitoring.coreos.com \
+  prometheusrules.monitoring.coreos.com
 ```
 
 ## Development
@@ -133,7 +135,7 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 #### Running *end-to-end* tests on local minikube cluster:
 
 1. `minikube start --kubernetes-version=v1.10.0 --memory=4096
-    --extra-config=apiserver.Authorization.Mode=RBAC`
+    --extra-config=apiserver.authorization-mode=RBAC`
 2. `eval $(minikube docker-env) && make image` - build Prometheus Operator
     docker image on minikube's docker
 3. `make test-e2e`
@@ -154,3 +156,5 @@ auto-generated. E.g. `bundle.yaml` originates from the _Jsonnet_ files in
 If you find a security vulnerability related to the Prometheus Operator, please
 do not report it by opening a GitHub issue, but instead please send an e-mail to
 the maintainers of the project found in the [OWNERS](OWNERS) file.
+
+[operator-vs-kube]: https://github.com/coreos/prometheus-operator/issues/2510#issuecomment-476692399

@@ -19,6 +19,10 @@ To follow this getting started you will need a Kubernetes cluster you have acces
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/version: v0.30.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -32,6 +36,10 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/version: v0.30.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -75,11 +83,13 @@ rules:
   - ""
   resources:
   - services
+  - services/finalizers
   - endpoints
   verbs:
   - get
   - create
   - update
+  - delete
 - apiGroups:
   - ""
   resources:
@@ -100,26 +110,31 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   labels:
-    k8s-app: prometheus-operator
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/version: v0.30.0
   name: prometheus-operator
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: prometheus-operator
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/name: prometheus-operator
   template:
     metadata:
       labels:
-        k8s-app: prometheus-operator
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/name: prometheus-operator
+        app.kubernetes.io/version: v0.30.0
     spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --logtostderr=true
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.26.0
-        image: quay.io/coreos/prometheus-operator:v0.26.0
+        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.29.0
+        image: quay.io/coreos/prometheus-operator:v0.29.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -144,6 +159,10 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/version: v0.30.0
   name: prometheus-operator
   namespace: default
 ```
@@ -168,7 +187,7 @@ First, deploy three instances of a simple example application, which listens and
 
 [embedmd]:# (../../example/user-guides/getting-started/example-app-deployment.yaml)
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: example-app
@@ -295,6 +314,7 @@ spec:
   resources:
     requests:
       memory: 400Mi
+  enableAdminAPI: false
 ```
 
 > If you have RBAC authorization activated, use the RBAC aware [Prometheus manifest][prometheus-manifest] instead.
@@ -326,6 +346,33 @@ spec:
 Once this Service is created the Prometheus web UI is available under the node's IP address on port `30900`. The targets page in the web UI now shows that the instances of the example application have successfully been discovered.
 
 > Exposing the Prometheus web UI may not be an applicable solution. Read more about the possibilities of exposing it in the [exposing Prometheus and Alertmanager guide][exposing-prom].
+
+## Expose the Prometheus Admin API
+
+Prometheus Admin API allows access to delete series for a certain time range, cleanup tombstones, capture snapshots, etc. More information about the admin API can be found in [Prometheus official documentation](https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis)
+This API access is disabled by default and can be toggled using this boolean flag. The following example exposes the admin API:
+
+> WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,
+> shutdown Prometheus, and more. Enabling this should be done with care and the
+> user is advised to add additional authentication authorization via a proxy to
+> ensure only clients authorized to perform these actions can do so.
+
+[embedmd]:# (../../example/user-guides/getting-started/prometheus.yaml)
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+spec:
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    matchLabels:
+      team: frontend
+  resources:
+    requests:
+      memory: 400Mi
+  enableAdminAPI: false
+```
 
 Further reading:
 

@@ -20,7 +20,7 @@ import (
 	"path"
 	"strings"
 
-	appsv1 "k8s.io/api/apps/v1beta2"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,8 +33,10 @@ import (
 )
 
 const (
-	governingServiceName   = "alertmanager-operated"
-	defaultVersion         = "v0.15.3"
+	governingServiceName = "alertmanager-operated"
+	// DefaultVersion specifies which version of Alertmanager the Prometheus
+	// Operator uses by default.
+	DefaultVersion         = "v0.17.0"
 	defaultRetention       = "120h"
 	secretsDir             = "/etc/alertmanager/secrets/"
 	configmapsDir          = "/etc/alertmanager/configmaps/"
@@ -57,7 +59,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 		am.Spec.BaseImage = config.AlertmanagerDefaultBaseImage
 	}
 	if am.Spec.Version == "" {
-		am.Spec.Version = defaultVersion
+		am.Spec.Version = DefaultVersion
 	}
 	if am.Spec.Replicas == nil {
 		am.Spec.Replicas = &minReplicas
@@ -195,6 +197,9 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	if a.Spec.SHA != "" {
 		image = fmt.Sprintf("%s@sha256:%s", a.Spec.BaseImage, a.Spec.SHA)
 	}
+	if a.Spec.Image != nil && *a.Spec.Image != "" {
+		image = *a.Spec.Image
+	}
 
 	versionStr := strings.TrimLeft(a.Spec.Version, "v")
 
@@ -230,15 +235,28 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		amArgs = append(amArgs, fmt.Sprintf("--log.level=%s", a.Spec.LogLevel))
 	}
 
+	if version.GTE(semver.MustParse("0.16.0")) {
+		if a.Spec.LogFormat != "" && a.Spec.LogFormat != "logfmt" {
+			amArgs = append(amArgs, fmt.Sprintf("--log.format=%s", a.Spec.LogFormat))
+		}
+	}
+
 	localReloadURL := &url.URL{
 		Scheme: "http",
 		Host:   config.LocalHost + ":9093",
 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
-	probeHandler := v1.Handler{
+	livenessProbeHandler := v1.Handler{
 		HTTPGet: &v1.HTTPGetAction{
-			Path: path.Clean(webRoutePrefix + "/api/v1/status"),
+			Path: path.Clean(webRoutePrefix + "/-/healthy"),
+			Port: intstr.FromString("web"),
+		},
+	}
+
+	readinessProbeHandler := v1.Handler{
+		HTTPGet: &v1.HTTPGetAction{
+			Path: path.Clean(webRoutePrefix + "/-/ready"),
 			Port: intstr.FromString("web"),
 		},
 	}
@@ -247,13 +265,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	var readinessProbe *v1.Probe
 	if !a.Spec.ListenLocal {
 		livenessProbe = &v1.Probe{
-			Handler:          probeHandler,
+			Handler:          livenessProbeHandler,
 			TimeoutSeconds:   probeTimeoutSeconds,
 			FailureThreshold: 10,
 		}
 
 		readinessProbe = &v1.Probe{
-			Handler:             probeHandler,
+			Handler:             readinessProbeHandler,
 			InitialDelaySeconds: 3,
 			TimeoutSeconds:      3,
 			PeriodSeconds:       5,
@@ -309,6 +327,9 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	}
 
 	// Adjust Alertmanager command line args to specified AM version
+	//
+	// Alertmanager versions < v0.15.0 are only supported on a best effort basis
+	// starting with Prometheus Operator v0.30.0.
 	switch version.Major {
 	case 0:
 		if version.Minor < 15 {
@@ -402,6 +423,14 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		})
 	}
 
+	resources := v1.ResourceRequirements{Limits: v1.ResourceList{}}
+	if config.ConfigReloaderCPU != "0" {
+		resources.Limits[v1.ResourceCPU] = resource.MustParse(config.ConfigReloaderCPU)
+	}
+	if config.ConfigReloaderMemory != "0" {
+		resources.Limits[v1.ResourceMemory] = resource.MustParse(config.ConfigReloaderMemory)
+	}
+
 	terminationGracePeriod := int64(0)
 	finalLabels := config.Labels.Merge(podLabels)
 	return &appsv1.StatefulSetSpec{
@@ -457,12 +486,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 								MountPath: alertmanagerConfDir,
 							},
 						},
-						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
-								v1.ResourceCPU:    resource.MustParse("50m"),
-								v1.ResourceMemory: resource.MustParse("10Mi"),
-							},
-						},
+						Resources: resources,
 					},
 				}, a.Spec.Containers...),
 				Volumes:            volumes,

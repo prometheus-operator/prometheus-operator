@@ -73,8 +73,3 @@ var _ clientset.Interface = &Clientset{}
 func (c *Clientset) MonitoringV1() monitoringv1.MonitoringV1Interface {
 	return &fakemonitoringv1.FakeMonitoringV1{Fake: &c.Fake}
 }
-
-// Monitoring retrieves the MonitoringV1Client
-func (c *Clientset) Monitoring() monitoringv1.MonitoringV1Interface {
-	return &fakemonitoringv1.FakeMonitoringV1{Fake: &c.Fake}
-}

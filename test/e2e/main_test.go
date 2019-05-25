@@ -81,10 +81,10 @@ func TestAllNS(t *testing.T) {
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-		"k8s-app": "prometheus-operator",
+		"app.kubernetes.io/name": "prometheus-operator",
 	})).String()}
 
-	pl, err := framework.KubeClient.Core().Pods(ns).List(opts)
+	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,8 @@ func testAllNS(t *testing.T) {
 		"AMVersionMigration":              testAMVersionMigration,
 		"AMStorageUpdate":                 testAMStorageUpdate,
 		"AMExposingWithKubernetesAPI":     testAMExposingWithKubernetesAPI,
-		"AMMeshInitialization":            testAMMeshInitialization,
+		"AMClusterInitialization":         testAMClusterInitialization,
+		"AMClusterAfterRollingUpdate":     testAMClusterAfterRollingUpdate,
 		"AMClusterGossipSilences":         testAMClusterGossipSilences,
 		"AMReloadConfig":                  testAMReloadConfig,
 		"AMZeroDowntimeRollingDeployment": testAMZeroDowntimeRollingDeployment,

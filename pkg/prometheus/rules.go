@@ -23,7 +23,7 @@ import (
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 
@@ -31,6 +31,8 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 )
+
+const labelPrometheusName = "prometheus-name"
 
 // The maximum `Data` size of a ConfigMap seems to differ between
 // environments. This is probably due to different meta data sizes which count
@@ -128,7 +130,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 }
 
 func prometheusRulesConfigMapSelector(prometheusName string) metav1.ListOptions {
-	return metav1.ListOptions{LabelSelector: fmt.Sprintf("prometheus-name=%v", prometheusName)}
+	return metav1.ListOptions{LabelSelector: fmt.Sprintf("%v=%v", labelPrometheusName, prometheusName)}
 }
 
 func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, error) {
@@ -264,7 +266,7 @@ func bucketSize(bucket map[string]string) int {
 func makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string) v1.ConfigMap {
 	boolTrue := true
 
-	labels := map[string]string{"prometheus-name": p.Name}
+	labels := map[string]string{labelPrometheusName: p.Name}
 	for k, v := range managedByOperatorLabels {
 		labels[k] = v
 	}
