@@ -182,6 +182,10 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
 	}
 
+	if _, err := labels.Parse(conf.PromSelector); err != nil {
+		return nil, errors.Wrap(err, "can not parse prometheus selector value")
+	}
+
 	kubeletObjectName := ""
 	kubeletObjectNamespace := ""
 	kubeletSyncEnabled := false
