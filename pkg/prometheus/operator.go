@@ -152,6 +152,7 @@ type Config struct {
 	LogLevel                      string
 	LogFormat                     string
 	ManageCRDs                    bool
+	PromSelector                  string
 }
 
 type BasicAuthCredentials struct {
@@ -213,9 +214,13 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
 			return &cache.ListWatch{
 				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					options.LabelSelector = c.config.PromSelector
 					return mclient.MonitoringV1().Prometheuses(namespace).List(options)
 				},
-				WatchFunc: mclient.MonitoringV1().Prometheuses(namespace).Watch,
+				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+					options.LabelSelector = c.config.PromSelector
+					return mclient.MonitoringV1().Prometheuses(namespace).Watch(options)
+				},
 			}
 		}),
 		&monitoringv1.Prometheus{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
