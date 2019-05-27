@@ -12,8 +12,10 @@ RUN curl -Lso - https://github.com/google/jsonnet/archive/v${JSONNET_VERSION}.ta
 RUN go get github.com/brancz/gojsontoyaml
 RUN go get github.com/campoy/embedmd
 RUN go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
+RUN go get -u github.com/jteeuwen/go-bindata/...
 
-RUN mkdir -p /go/src/github.com/coreos/prometheus-operator
+RUN mkdir -p /go/src/github.com/coreos/prometheus-operator /.cache
 WORKDIR /go/src/github.com/coreos/prometheus-operator
 
-RUN chmod -R 777 /go
+
+RUN chmod -R 777 /go /.cache
