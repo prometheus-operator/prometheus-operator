@@ -17,12 +17,12 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
     versions+:: {
       prometheusOperator: 'v0.30.0',
       prometheusConfigReloader: self.prometheusOperator,
-      configmapReloader: 'v0.0.1',
+      configmapReloader: 'v0.2.2',
     },
 
     imageRepos+:: {
       prometheusOperator: 'quay.io/coreos/prometheus-operator',
-      configmapReloader: 'quay.io/coreos/configmap-reload',
+      configmapReloader: 'jimmidyson/configmap-reload',
       prometheusConfigReloader: 'quay.io/coreos/prometheus-config-reloader',
     },
   },
