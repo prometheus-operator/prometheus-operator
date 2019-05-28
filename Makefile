@@ -34,6 +34,7 @@ CONTAINER_CMD:=docker run --rm \
 		-v "$(PWD):/go/src/$(GO_PKG):Z" \
 		-w "/go/src/$(GO_PKG)" \
 		-e GO111MODULE=on \
+		-e USER=deadbeef \
 		quay.io/coreos/jsonnet-ci
 
 .PHONY: all
