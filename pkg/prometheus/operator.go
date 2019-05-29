@@ -1606,46 +1606,15 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 	if p.Spec.ArbitraryFSAccessThroughSMs.Deny {
 		for namespaceAndName, sm := range res {
 			for _, endpoint := range sm.Spec.Endpoints {
-				if endpoint.BearerTokenFile != "" {
+				if err := testForArbitraryFSAccess(endpoint); err != nil {
 					delete(res, namespaceAndName)
 					level.Warn(c.logger).Log(
-						"msg", fmt.Sprintf(
-							"skipping servicemonitor %v as it accesses file system via bearer token file which Prometheus specification prohibits",
-							namespaceAndName,
-						),
+						"msg", "skipping servicemonitor",
+						"error", err.Error(),
+						"servicemonitor", namespaceAndName,
 						"namespace", p.Namespace,
 						"prometheus", p.Name,
 					)
-
-					continue
-				}
-
-				tlsConf := endpoint.TLSConfig
-				if tlsConf == nil {
-					continue
-				}
-
-				if err := endpoint.TLSConfig.Validate(); err != nil {
-					level.Warn(c.logger).Log(
-						"msg", fmt.Sprintf("skipping servicemonitor %v: %v", namespaceAndName, err.Error()),
-						"namespace", p.Namespace,
-						"prometheus", p.Name,
-					)
-					continue
-				}
-
-				if tlsConf.CAFile != "" || tlsConf.CertFile != "" || tlsConf.KeyFile != "" {
-					delete(res, namespaceAndName)
-					level.Warn(c.logger).Log(
-						"msg", fmt.Sprintf(
-							"skipping servicemonitor %v as it accesses file system via tls config which Prometheus specification prohibits",
-							namespaceAndName,
-						),
-						"namespace", p.Namespace,
-						"prometheus", p.Name,
-					)
-
-					continue
 				}
 			}
 		}
@@ -1658,6 +1627,27 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 	level.Debug(c.logger).Log("msg", "selected ServiceMonitors", "servicemonitors", strings.Join(serviceMonitors, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	return res, nil
+}
+
+func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
+	if e.BearerTokenFile != "" {
+		return errors.New("it accesses file system via bearer token file which Prometheus specification prohibits")
+	}
+
+	tlsConf := e.TLSConfig
+	if tlsConf == nil {
+		return nil
+	}
+
+	if err := e.TLSConfig.Validate(); err != nil {
+		return err
+	}
+
+	if tlsConf.CAFile != "" || tlsConf.CertFile != "" || tlsConf.KeyFile != "" {
+		return errors.New("it accesses file system via tls config which Prometheus specification prohibits")
+	}
+
+	return nil
 }
 
 // listMatchingNamespaces lists all the namespaces that match the provided
