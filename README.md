@@ -13,7 +13,7 @@ Once installed, the Prometheus Operator provides the following features:
 * **Create/Destroy**: Easily launch a Prometheus instance for your Kubernetes namespace,
   a specific application or team easily using the Operator.
 
-* **Simple Configuration**: Configure the fundamentals of Prometheus like versions, persistence, 
+* **Simple Configuration**: Configure the fundamentals of Prometheus like versions, persistence,
   retention policies, and replicas from a native Kubernetes resource.
 
 * **Target Services via Labels**: Automatically generate monitoring target configurations based
@@ -22,7 +22,7 @@ Once installed, the Prometheus Operator provides the following features:
 For an introduction to the Prometheus Operator, see the initial [blog
 post](https://coreos.com/blog/the-prometheus-operator.html).
 
-## Prometheus Operator vs. kube-prometheus
+## Prometheus Operator vs. kube-prometheus vs. community helm chart
 
 The Prometheus Operator makes the Prometheus configuration Kubernetes native
 and manages and operates Prometheus and Alertmanager clusters. It is a piece of
@@ -31,6 +31,10 @@ the puzzle regarding full end-to-end monitoring.
 [kube-prometheus](https://github.com/coreos/kube-prometheus) combines the Prometheus Operator
 with a collection of manifests to help getting started with monitoring
 Kubernetes itself and applications running on top of it.
+
+The [stable/prometheus-operator](https://github.com/helm/charts/tree/master/stable/prometheus-operator)
+helm chart provides a similar feature set to kube-prometheus. This chart is maintained by the community.
+For more information, please see the [chart's readme](https://github.com/helm/charts/tree/master/stable/prometheus-operator#prometheus-operator)
 
 ## Prerequisites
 
