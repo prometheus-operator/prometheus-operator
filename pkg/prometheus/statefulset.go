@@ -680,27 +680,32 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			thanosImage = *p.Spec.Thanos.Image
 		}
 
+		thanosVersion := semver.MustParse(strings.TrimPrefix(*p.Spec.Thanos.Version, "v"))
+		clusterSupport := thanosVersion.LT(semver.MustParse("0.5.0-rc.0"))
+
 		thanosArgs := []string{
 			"sidecar",
 			fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
 			fmt.Sprintf("--tsdb.path=%s", storageDir),
-			fmt.Sprintf("--cluster.address=[$(POD_IP)]:%d", 10900),
 			fmt.Sprintf("--grpc-address=[$(POD_IP)]:%d", 10901),
 		}
 
-		if p.Spec.Thanos.Peers != nil {
-			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.peers=%s", *p.Spec.Thanos.Peers))
+		if clusterSupport {
+			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.address=[$(POD_IP)]:%d", 10900))
+			if p.Spec.Thanos.Peers != nil {
+				thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.peers=%s", *p.Spec.Thanos.Peers))
+			}
+			if p.Spec.Thanos.ClusterAdvertiseAddress != nil {
+				thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.advertise-address=%s", *p.Spec.Thanos.ClusterAdvertiseAddress))
+			}
+			if p.Spec.Thanos.GrpcAdvertiseAddress != nil {
+				thanosArgs = append(thanosArgs, fmt.Sprintf("--grpc-advertise-address=%s", *p.Spec.Thanos.GrpcAdvertiseAddress))
+			}
 		}
-		if p.Spec.Thanos.ClusterAdvertiseAddress != nil {
-			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.advertise-address=%s", *p.Spec.Thanos.ClusterAdvertiseAddress))
-		}
-		if p.Spec.Thanos.GrpcAdvertiseAddress != nil {
-			thanosArgs = append(thanosArgs, fmt.Sprintf("--grpc-advertise-address=%s", *p.Spec.Thanos.GrpcAdvertiseAddress))
-		}
+
 		if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
 			thanosArgs = append(thanosArgs, fmt.Sprintf("--log.level=%s", p.Spec.LogLevel))
 		}
-		thanosVersion := semver.MustParse(strings.TrimPrefix(*p.Spec.Thanos.Version, "v"))
 		if thanosVersion.GTE(semver.MustParse("0.2.0")) {
 			if p.Spec.LogFormat != "" && p.Spec.LogFormat != "logfmt" {
 				thanosArgs = append(thanosArgs, fmt.Sprintf("--log.format=%s", p.Spec.LogFormat))
@@ -823,14 +828,16 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					Name:          "grpc",
 					ContainerPort: 10901,
 				},
-				{
-					Name:          "cluster",
-					ContainerPort: 10900,
-				},
 			},
 			Env:          envVars,
 			VolumeMounts: thanosVolumeMounts,
 			Resources:    p.Spec.Thanos.Resources,
+		}
+		if clusterSupport {
+			c.Ports = append(c.Ports, v1.ContainerPort{
+				Name:          "cluster",
+				ContainerPort: 10900,
+			})
 		}
 
 		additionalContainers = append(additionalContainers, c)
