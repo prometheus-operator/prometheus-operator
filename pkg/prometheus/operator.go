@@ -26,6 +26,7 @@ import (
 	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/listwatch"
+	"github.com/coreos/prometheus-operator/pkg/watchmanager"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -43,6 +44,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -70,6 +72,8 @@ type Operator struct {
 	secrInf cache.SharedIndexInformer
 	ssetInf cache.SharedIndexInformer
 	nsInf   cache.SharedIndexInformer
+
+	smonSecretManager watchmanager.Manager
 
 	queue workqueue.RateLimitingInterface
 
@@ -144,6 +148,7 @@ type Config struct {
 	PrometheusDefaultBaseImage    string
 	ThanosDefaultBaseImage        string
 	Namespaces                    []string
+	PromInstanceNamespaces        []string //  limits where Prometheus CRDs,their secrets and configmaps are watched for
 	Labels                        Labels
 	CrdGroup                      string
 	CrdKinds                      monitoringv1.CrdKinds
@@ -214,8 +219,13 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		configGenerator:        NewConfigGenerator(logger),
 	}
 
+	promNS := c.config.PromInstanceNamespaces
+	if len(promNS) == 0 {
+		promNS = c.config.Namespaces
+	}
+
 	c.promInf = cache.NewSharedIndexInformer(
-		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+		listwatch.MultiNamespaceListerWatcher(promNS, func(namespace string) cache.ListerWatcher {
 			return &cache.ListWatch{
 				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 					options.LabelSelector = c.config.PromSelector
@@ -255,7 +265,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	)
 
 	c.cmapInf = cache.NewSharedIndexInformer(
-		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+		listwatch.MultiNamespaceListerWatcher(promNS, func(namespace string) cache.ListerWatcher {
 			return &cache.ListWatch{
 				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 					options.LabelSelector = labelPrometheusName
@@ -271,14 +281,14 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 	)
 
 	c.secrInf = cache.NewSharedIndexInformer(
-		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+		listwatch.MultiNamespaceListerWatcher(promNS, func(namespace string) cache.ListerWatcher {
 			return cache.NewListWatchFromClient(c.kclient.CoreV1().RESTClient(), "secrets", namespace, fields.Everything())
 		}),
 		&v1.Secret{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
 	c.ssetInf = cache.NewSharedIndexInformer(
-		listwatch.MultiNamespaceListerWatcher(c.config.Namespaces, func(namespace string) cache.ListerWatcher {
+		listwatch.MultiNamespaceListerWatcher(promNS, func(namespace string) cache.ListerWatcher {
 			return cache.NewListWatchFromClient(c.kclient.AppsV1().RESTClient(), "statefulsets", namespace, fields.Everything())
 		}),
 		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
@@ -299,8 +309,48 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		listwatch.NewUnprivilegedNamespaceListWatchFromClient(c.kclient.CoreV1().RESTClient(), c.config.Namespaces, fields.Everything()),
 		&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
 	)
-
+	c.smonSecretManager = newSecretManager(c)
 	return c, nil
+}
+
+// secretManager tracks ServiceMonitor and establishes single-item informers for
+// all secrets it references. If same Secret is referenced multiple times by
+// multiple ServicMonitoris only single informer is created. Any change to secrets
+// trigger same event handling function as normal Operator.secrInf
+func newSecretManager(c *Operator) watchmanager.Manager {
+	listSecrets := func(namespace string, options metav1.ListOptions) (runtime.Object, error) {
+		return c.kclient.CoreV1().Secrets(namespace).List(options)
+	}
+	watchSecrets := func(namespace string, options metav1.ListOptions) (watch.Interface, error) {
+		return c.kclient.CoreV1().Secrets(namespace).Watch(options)
+	}
+	secretEventsHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleSecretAdd,
+		DeleteFunc: c.handleSecretDelete,
+		UpdateFunc: c.handleSecretUpdate,
+	}
+	getReferencedSecrets := func(smon *monitoringv1.ServiceMonitor) sets.String {
+		result := sets.NewString()
+		for _, ep := range smon.Spec.Endpoints {
+			if ep.BasicAuth != nil {
+				if secretName := ep.BasicAuth.Username.Name; secretName != "" {
+					result.Insert(secretName)
+				}
+				if secretName := ep.BasicAuth.Password.Name; secretName != "" {
+					result.Insert(secretName)
+				}
+			}
+		}
+		return result
+	}
+
+	return watchmanager.NewObjectCache(
+		listSecrets,
+		watchSecrets,
+		func() runtime.Object { return &v1.Secret{} },
+		v1.Resource("secret"),
+		secretEventsHandler,
+		getReferencedSecrets)
 }
 
 // RegisterMetrics registers Prometheus metrics on the given Prometheus
@@ -625,12 +675,22 @@ func (c *Operator) syncNodeEndpoints() error {
 	return nil
 }
 
+func sMonFromObj(obj interface{}) (*monitoringv1.ServiceMonitor, bool) {
+	staleObj, stale := obj.(cache.DeletedFinalStateUnknown)
+	if stale {
+		obj = staleObj
+	}
+	o, ok := obj.(*monitoringv1.ServiceMonitor)
+	return o, ok
+}
+
 // TODO: Don't enque just for the namespace
 func (c *Operator) handleSmonAdd(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := sMonFromObj(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor added")
 		c.triggerByCounter.WithLabelValues(monitoringv1.ServiceMonitorsKind, "add").Inc()
+		c.smonSecretManager.RegisterSMon(o)
 
 		c.enqueueForNamespace(o.GetNamespace())
 	}
@@ -638,26 +698,29 @@ func (c *Operator) handleSmonAdd(obj interface{}) {
 
 // TODO: Don't enque just for the namespace
 func (c *Operator) handleSmonUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.ServiceMonitor).ResourceVersion == cur.(*monitoringv1.ServiceMonitor).ResourceVersion {
+	oldSmon, okOld := sMonFromObj(old)
+	curSmon, okCur := sMonFromObj(cur)
+
+	if okOld && okCur && oldSmon.GetResourceVersion() == curSmon.GetResourceVersion() {
 		return
 	}
 
-	o, ok := c.getObject(cur)
-	if ok {
+	if okCur {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor updated")
 		c.triggerByCounter.WithLabelValues(monitoringv1.ServiceMonitorsKind, "update").Inc()
+		c.smonSecretManager.RegisterSMon(curSmon)
 
-		c.enqueueForNamespace(o.GetNamespace())
+		c.enqueueForNamespace(curSmon.GetNamespace())
 	}
 }
 
 // TODO: Don't enque just for the namespace
 func (c *Operator) handleSmonDelete(obj interface{}) {
-	o, ok := c.getObject(obj)
+	o, ok := sMonFromObj(obj)
 	if ok {
 		level.Debug(c.logger).Log("msg", "ServiceMonitor delete")
 		c.triggerByCounter.WithLabelValues(monitoringv1.ServiceMonitorsKind, "delete").Inc()
-
+		c.smonSecretManager.UnregisterSMon(o)
 		c.enqueueForNamespace(o.GetNamespace())
 	}
 }

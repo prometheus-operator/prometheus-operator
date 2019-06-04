@@ -1,0 +1,27 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-operator-rules-watcher
+  annotations:
+    description: |
+       Role which allows Prometheus Operator observe ServiceMonitor and PrometheusRules resources.
+       Suitable for RoleBind'ing into individual namespaces where apps deployed
+rules:
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  - prometheusrules
+  verbs:
+  - '*'
+# ServiceMonitor's Endpoint can reference Secrets in it's basicAuth
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - watch
+# - list
+  resourceNames:
+  - secret-from-smon

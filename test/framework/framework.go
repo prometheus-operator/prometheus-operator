@@ -80,7 +80,7 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 // CreatePrometheusOperator creates a Prometheus Operator Kubernetes Deployment
 // inside the specified namespace using the specified operator image. In addition
 // one can specify the namespaces to watch, which defaults to all namespaces.
-func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespacesToWatch []string) error {
+func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespacesToWatch []string, promInstanceNamespaces []string) error {
 	_, err := CreateServiceAccount(
 		f.KubeClient,
 		ns,
@@ -130,6 +130,13 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespacesToWat
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
 			fmt.Sprintf("--namespaces=%v", ns),
+		)
+	}
+
+	for _, ns := range promInstanceNamespaces {
+		deploy.Spec.Template.Spec.Containers[0].Args = append(
+			deploy.Spec.Template.Spec.Containers[0].Args,
+			fmt.Sprintf("--prometheus-instance-namespaces=%v", ns),
 		)
 	}
 

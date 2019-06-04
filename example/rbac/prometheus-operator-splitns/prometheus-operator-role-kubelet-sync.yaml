@@ -1,0 +1,20 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prometheus-operator-kubelet-sync
+  namespace: kube-system
+  description: |
+    Bind this role in a namespace used in --kubelet-sync=<namespace>/kubelet
+    arg to Prometheus operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  verbs:
+  - get
+  - create
+  - update
+ resourceNames:
+ - kubelet
