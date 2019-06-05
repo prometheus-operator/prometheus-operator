@@ -19,13 +19,21 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	appsv1 "k8s.io/api/apps/v1beta2"
+	appsv1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 )
+
+func GetDeployment(kubeCilent kubernetes.Interface, ns, name string) (*appsv1.Deployment, error) {
+	return kubeCilent.AppsV1().Deployments(ns).Get(name, metav1.GetOptions{})
+}
+
+func UpdateDeployment(kubeCilent kubernetes.Interface, deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
+	return kubeCilent.AppsV1().Deployments(deployment.Namespace).Update(deployment)
+}
 
 func MakeDeployment(pathToYaml string) (*appsv1.Deployment, error) {
 	manifest, err := PathToOSFile(pathToYaml)
@@ -42,7 +50,7 @@ func MakeDeployment(pathToYaml string) (*appsv1.Deployment, error) {
 
 func CreateDeployment(kubeClient kubernetes.Interface, namespace string, d *appsv1.Deployment) error {
 	d.Namespace = namespace
-	_, err := kubeClient.AppsV1beta2().Deployments(namespace).Create(d)
+	_, err := kubeClient.AppsV1().Deployments(namespace).Create(d)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
 	}
@@ -50,7 +58,7 @@ func CreateDeployment(kubeClient kubernetes.Interface, namespace string, d *apps
 }
 
 func DeleteDeployment(kubeClient kubernetes.Interface, namespace, name string) error {
-	d, err := kubeClient.AppsV1beta2().Deployments(namespace).Get(name, metav1.GetOptions{})
+	d, err := kubeClient.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -58,7 +66,7 @@ func DeleteDeployment(kubeClient kubernetes.Interface, namespace, name string) e
 	zero := int32(0)
 	d.Spec.Replicas = &zero
 
-	d, err = kubeClient.AppsV1beta2().Deployments(namespace).Update(d)
+	d, err = kubeClient.AppsV1().Deployments(namespace).Update(d)
 	if err != nil {
 		return err
 	}

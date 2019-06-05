@@ -19,6 +19,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/coreos/prometheus-operator/pkg/admission"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -29,7 +30,7 @@ import (
 
 	alertmanagercontroller "github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/api"
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring"
+	"github.com/coreos/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/coreos/prometheus-operator/pkg/version"
@@ -39,7 +40,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	"k8s.io/klog"
 )
 
@@ -89,6 +90,16 @@ func (n namespaces) asSlice() []string {
 		ns = append(ns, v1.NamespaceAll)
 	}
 	return ns
+}
+
+func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
+	return func() error {
+		logger.Log("msg", "Staring insecure server on :8080")
+		if err := srv.Serve(listener); err != http.ErrServerClosed {
+			return err
+		}
+		return nil
+	}
 }
 
 var (
@@ -187,8 +198,10 @@ func Main() int {
 		fmt.Fprint(os.Stderr, "instantiating api failed: ", err)
 		return 1
 	}
+	admit := admission.New(log.With(logger, "component", "admissionwebhook"))
 
 	web.Register(mux)
+	admit.Register(mux)
 	l, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		fmt.Fprint(os.Stderr, "listening port 8080 failed", err)
@@ -206,12 +219,29 @@ func Main() int {
 			" triggered the Prometheus Operator to reconcile an object",
 	}, []string{"controller", "triggered_by", "action"})
 
+	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_rule_validation_triggered_total",
+		Help: "Number of times a prometheusRule object triggered validation",
+	})
+
+	validationErrorsCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_rule_validation_errors_total",
+		Help: "Number of errors that occurred while validating a prometheusRules object",
+	})
+
 	r := prometheus.NewRegistry()
 	r.MustRegister(
 		prometheus.NewGoCollector(),
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 		reconcileErrorsCounter,
 		triggerByCounter,
+		validationTriggeredCounter,
+		validationErrorsCounter,
+	)
+
+	admit.RegisterMetrics(
+		&validationTriggeredCounter,
+		&validationErrorsCounter,
 	)
 
 	prometheusLabels := prometheus.Labels{"controller": "prometheus"}
@@ -242,7 +272,7 @@ func Main() int {
 	wg.Go(func() error { return ao.Run(ctx.Done()) })
 
 	srv := &http.Server{Handler: mux}
-	go srv.Serve(l)
+	wg.Go(serve(srv, l, logger))
 
 	term := make(chan os.Signal)
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
@@ -251,6 +281,10 @@ func Main() int {
 	case <-term:
 		logger.Log("msg", "Received SIGTERM, exiting gracefully...")
 	case <-ctx.Done():
+	}
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Log("msg", "Server shutdown error", "err", err)
 	}
 
 	cancel()

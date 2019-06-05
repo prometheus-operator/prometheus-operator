@@ -16,6 +16,7 @@ package framework
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"time"
 
 	"github.com/pkg/errors"
@@ -24,6 +25,19 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 )
+
+func MakeService(pathToYaml string) (*v1.Service, error) {
+	manifest, err := PathToOSFile(pathToYaml)
+	if err != nil {
+		return nil, err
+	}
+	resource := v1.Service{}
+	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&resource); err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to decode file %s", pathToYaml))
+	}
+
+	return &resource, nil
+}
 
 func CreateServiceAndWaitUntilReady(kubeClient kubernetes.Interface, namespace string, service *v1.Service) (finalizerFn, error) {
 	finalizerFn := func() error { return DeleteServiceAndWaitUntilGone(kubeClient, namespace, service.Name) }

@@ -64,6 +64,7 @@ var (
 )
 
 func (api *API) Register(mux *http.ServeMux) {
+	mux.HandleFunc("/healthz", ok)
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		if prometheusRoute.MatchString(req.URL.Path) {
 			api.prometheusStatus(w, req)
@@ -120,4 +121,8 @@ func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	w.Write(b)
+}
+
+func ok(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }

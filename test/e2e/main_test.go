@@ -67,9 +67,13 @@ func TestAllNS(t *testing.T) {
 
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 
-	err := framework.CreatePrometheusOperator(ns, *opImage, nil)
+	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, true)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	for _, f := range finalizers {
+		ctx.AddFinalizerFn(f)
 	}
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
@@ -95,8 +99,8 @@ func TestAllNS(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to retrieve restart count of Prometheus Operator pod: %v", err)
 	}
-	if len(restarts) != 1 {
-		t.Fatalf("expected to have 1 container but got %d", len(restarts))
+	if len(restarts) != 2 {
+		t.Fatalf("expected to have 2 containers but got %d", len(restarts))
 	}
 	for _, restart := range restarts {
 		if restart != 0 {
@@ -136,6 +140,8 @@ func testAllNS(t *testing.T) {
 		"PromMultiplePrometheusRulesSameNS":      testPromMultiplePrometheusRulesSameNS,
 		"PromMultiplePrometheusRulesDifferentNS": testPromMultiplePrometheusRulesDifferentNS,
 		"PromRulesExceedingConfigMapLimit":       testPromRulesExceedingConfigMapLimit,
+		"PromRulesMustBeAnnotated":               testPromRulesMustBeAnnotated,
+		"PromtestInvalidRulesAreRejected":        testInvalidRulesAreRejected,
 		"PromOnlyUpdatedOnRelevantChanges":       testPromOnlyUpdatedOnRelevantChanges,
 		"PromWhenDeleteCRDCleanUpViaOwnerRef":    testPromWhenDeleteCRDCleanUpViaOwnerRef,
 		"PromDiscovery":                          testPromDiscovery,

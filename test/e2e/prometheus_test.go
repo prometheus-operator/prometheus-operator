@@ -731,6 +731,53 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	}
 }
 
+func testPromRulesMustBeAnnotated(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "admission"
+	admissionAlert := "admissionAlert"
+
+	_, err := framework.MakeAndCreateFiringRule(ns, name, admissionAlert)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rule, err := framework.GetRule(ns, name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	val, ok := rule.Annotations["prometheus-operator-validated"]
+	if !ok {
+		t.Fatal("Expected prometheusrule to be annotated")
+	}
+	if val != "true" {
+		t.Fatal("Expected prometheusrule annotation to be 'true'")
+	}
+}
+
+func testInvalidRulesAreRejected(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "admission"
+	admissionAlert := "admissionAlert"
+
+	_, err := framework.MakeAndCreateInvalidRule(ns, name, admissionAlert)
+	if err == nil {
+		t.Fatal("Expected invalid prometheusrule to be rejected")
+	}
+}
+
 // generateHugePrometheusRule returns a Prometheus rule instance that would fill
 // more than half of the space of a Kubernetes ConfigMap.
 func generateHugePrometheusRule(ns, identifier string) *monitoringv1.PrometheusRule {
@@ -1448,7 +1495,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches single namespace mainNS, not arbitraryNS.
-		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{mainNS})
+		_, err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{mainNS}, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1518,7 +1565,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches prometheusNS and ruleNS, not arbitraryNS.
-		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{prometheusNS, ruleNS})
+		_, err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{prometheusNS, ruleNS}, false)
 		if err != nil {
 			t.Fatal(err)
 		}

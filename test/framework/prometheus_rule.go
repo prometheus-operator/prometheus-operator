@@ -49,6 +49,15 @@ func (f *Framework) CreateRule(ns string, ar *monitoringv1.PrometheusRule) (*mon
 	return result, nil
 }
 
+func (f *Framework) GetRule(ns, name string) (*monitoringv1.PrometheusRule, error) {
+	result, err := f.MonClientV1.PrometheusRules(ns).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("getting %v Rule failed: %v", name, err)
+	}
+
+	return result, nil
+}
+
 func (f *Framework) MakeAndCreateFiringRule(ns, name, alertName string) (*monitoringv1.PrometheusRule, error) {
 	groups := []monitoringv1.RuleGroup{
 		{
@@ -57,6 +66,28 @@ func (f *Framework) MakeAndCreateFiringRule(ns, name, alertName string) (*monito
 				{
 					Alert: alertName,
 					Expr:  intstr.FromString("vector(1)"),
+				},
+			},
+		},
+	}
+	file := f.MakeBasicRule(ns, name, groups)
+
+	result, err := f.CreateRule(ns, file)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (f *Framework) MakeAndCreateInvalidRule(ns, name, alertName string) (*monitoringv1.PrometheusRule, error) {
+	groups := []monitoringv1.RuleGroup{
+		{
+			Name: alertName,
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: alertName,
+					Expr:  intstr.FromString("vector(1))"),
 				},
 			},
 		},
