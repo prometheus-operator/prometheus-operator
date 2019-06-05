@@ -750,9 +750,6 @@ scrape_configs:
     - __meta_kubernetes_pod_container_port_name
     regex: web
   - source_labels:
-    - __meta_kubernetes_pod_node_name
-    target_label: node
-  - source_labels:
     - __meta_kubernetes_namespace
     target_label: namespace
   - source_labels:
@@ -761,12 +758,6 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_name
     target_label: pod
-  - source_labels:
-    - __meta_kubernetes_pod_phase
-    target_label: pod_phase
-  - source_labels:
-    - __meta_kubernetes_pod_ready
-    target_label: pod_ready
   - source_labels:
     - __meta_kubernetes_pod_label_example
     target_label: example

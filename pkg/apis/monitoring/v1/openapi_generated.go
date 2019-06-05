@@ -1539,7 +1539,7 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 					},
 					"podMonitorSelector": {
 						SchemaProps: spec.SchemaProps{
-							Description: "PodMonitors to be selected for target discovery.",
+							Description: "*Experimental* PodMonitors to be selected for target discovery.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 						},
 					},
