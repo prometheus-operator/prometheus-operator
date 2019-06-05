@@ -10,9 +10,7 @@ RUN curl -Lso - https://github.com/google/jsonnet/archive/v${JSONNET_VERSION}.ta
     make && mv jsonnetfmt /usr/local/bin && \
     rm -rf /tmp/jsonnet-${JSONNET_VERSION}
 
-ENV GO111MODULE=on
-RUN go get github.com/google/go-jsonnet/cmd/jsonnet@v${JSONNET_VERSION}
-
+RUN GO111MODULE=on go get github.com/google/go-jsonnet/cmd/jsonnet@v${JSONNET_VERSION}
 RUN go get github.com/brancz/gojsontoyaml
 RUN go get github.com/campoy/embedmd
 RUN go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
