@@ -88,7 +88,7 @@ type PrometheusSpec struct {
 	// Namespaces to be selected for ServiceMonitor discovery. If nil, only
 	// check own namespace.
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
-	// PodMonitors to be selected for target discovery.
+	// *Experimental* PodMonitors to be selected for target discovery.
 	PodMonitorSelector *metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
 	// Namespaces to be selected for PodMonitor discovery. If nil, only
 	// check own namespace.

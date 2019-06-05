@@ -444,10 +444,6 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version, m *v
 	// Relabel namespace and pod and service labels into proper labels.
 	relabelings = append(relabelings, []yaml.MapSlice{
 		{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_node_name"}},
-			{Key: "target_label", Value: "node"},
-		},
-		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
 			{Key: "target_label", Value: "namespace"},
 		},
@@ -458,14 +454,6 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version, m *v
 		{
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_name"}},
 			{Key: "target_label", Value: "pod"},
-		},
-		{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_phase"}},
-			{Key: "target_label", Value: "pod_phase"},
-		},
-		{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_ready"}},
-			{Key: "target_label", Value: "pod_ready"},
 		},
 	}...)
 
