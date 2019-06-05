@@ -314,8 +314,6 @@ type QuerySpec struct {
 // ThanosSpec defines parameters for a Prometheus server within a Thanos deployment.
 // +k8s:openapi-gen=true
 type ThanosSpec struct {
-	// Peers is a DNS name for Thanos to discover peers through.
-	Peers *string `json:"peers,omitempty"`
 	// Image if specified has precedence over baseImage, tag and sha
 	// combinations. Specifying the version is still necessary to ensure the
 	// Prometheus Operator knows what version of Thanos is being
@@ -335,53 +333,8 @@ type ThanosSpec struct {
 	// Resources defines the resource requirements for the Thanos sidecar.
 	// If not provided, no requests/limits will be set
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
-	// Deprecated: GCS should be configured with an ObjectStorageConfig secret
-	// starting with Thanos v0.2.0. This field will be removed.
-	GCS *ThanosGCSSpec `json:"gcs,omitempty"`
-	// Deprecated: S3 should be configured with an ObjectStorageConfig secret
-	// starting with Thanos v0.2.0. This field will be removed.
-	S3 *ThanosS3Spec `json:"s3,omitempty"`
 	// ObjectStorageConfig configures object storage in Thanos.
 	ObjectStorageConfig *v1.SecretKeySelector `json:"objectStorageConfig,omitempty"`
-	// Explicit (external) host:port address to advertise for gRPC StoreAPI in gossip cluster.
-	// If empty, 'grpc-address' will be used.
-	GrpcAdvertiseAddress *string `json:"grpcAdvertiseAddress,omitempty"`
-	// Explicit (external) ip:port address to advertise for gossip in gossip cluster.
-	// Used internally for membership only.
-	ClusterAdvertiseAddress *string `json:"clusterAdvertiseAddress,omitempty"`
-}
-
-// Deprecated: ThanosGCSSpec should be configured with an ObjectStorageConfig
-// secret starting with Thanos v0.2.0. ThanosGCSSpec will be removed.
-//
-// +k8s:openapi-gen=true
-type ThanosGCSSpec struct {
-	// Google Cloud Storage bucket name for stored blocks. If empty it won't
-	// store any block inside Google Cloud Storage.
-	Bucket *string `json:"bucket,omitempty"`
-	// Secret to access our Bucket.
-	SecretKey *v1.SecretKeySelector `json:"credentials,omitempty"`
-}
-
-// Deprecated: ThanosS3Spec should be configured with an ObjectStorageConfig
-// secret starting with Thanos v0.2.0. ThanosS3Spec will be removed.
-//
-// +k8s:openapi-gen=true
-type ThanosS3Spec struct {
-	// S3-Compatible API bucket name for stored blocks.
-	Bucket *string `json:"bucket,omitempty"`
-	// S3-Compatible API endpoint for stored blocks.
-	Endpoint *string `json:"endpoint,omitempty"`
-	// AccessKey for an S3-Compatible API.
-	AccessKey *v1.SecretKeySelector `json:"accessKey,omitempty"`
-	// SecretKey for an S3-Compatible API.
-	SecretKey *v1.SecretKeySelector `json:"secretKey,omitempty"`
-	// Whether to use an insecure connection with an S3-Compatible API.
-	Insecure *bool `json:"insecure,omitempty"`
-	// Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used.
-	SignatureVersion2 *bool `json:"signatureVersion2,omitempty"`
-	// Whether to use Server Side Encryption
-	EncryptSSE *bool `json:"encryptsse,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.

@@ -41,8 +41,6 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ServiceMonitorSpec](#servicemonitorspec)
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
-* [ThanosGCSSpec](#thanosgcsspec)
-* [ThanosS3Spec](#thanoss3spec)
 * [ThanosSpec](#thanosspec)
 
 ## APIServerConfig
@@ -522,50 +520,18 @@ TLSConfig specifies TLS configuration parameters.
 
 [Back to TOC](#table-of-contents)
 
-## ThanosGCSSpec
-
-Deprecated: ThanosGCSSpec should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosGCSSpec will be removed.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| bucket | Google Cloud Storage bucket name for stored blocks. If empty it won't store any block inside Google Cloud Storage. | *string | false |
-| credentials | Secret to access our Bucket. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
-
-[Back to TOC](#table-of-contents)
-
-## ThanosS3Spec
-
-Deprecated: ThanosS3Spec should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosS3Spec will be removed.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| bucket | S3-Compatible API bucket name for stored blocks. | *string | false |
-| endpoint | S3-Compatible API endpoint for stored blocks. | *string | false |
-| accessKey | AccessKey for an S3-Compatible API. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
-| secretKey | SecretKey for an S3-Compatible API. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
-| insecure | Whether to use an insecure connection with an S3-Compatible API. | *bool | false |
-| signatureVersion2 | Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used. | *bool | false |
-| encryptsse | Whether to use Server Side Encryption | *bool | false |
-
-[Back to TOC](#table-of-contents)
-
 ## ThanosSpec
 
 ThanosSpec defines parameters for a Prometheus server within a Thanos deployment.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| peers | Peers is a DNS name for Thanos to discover peers through. | *string | false |
 | image | Image if specified has precedence over baseImage, tag and sha combinations. Specifying the version is still necessary to ensure the Prometheus Operator knows what version of Thanos is being configured. | *string | false |
 | version | Version describes the version of Thanos to use. | *string | false |
 | tag | Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. | *string | false |
 | sha | SHA of Thanos container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. | *string | false |
 | baseImage | Thanos base image if other than default. | *string | false |
 | resources | Resources defines the resource requirements for the Thanos sidecar. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
-| gcs | Deprecated: GCS should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. This field will be removed. | *[ThanosGCSSpec](#thanosgcsspec) | false |
-| s3 | Deprecated: S3 should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. This field will be removed. | *[ThanosS3Spec](#thanoss3spec) | false |
 | objectStorageConfig | ObjectStorageConfig configures object storage in Thanos. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
-| grpcAdvertiseAddress | Explicit (external) host:port address to advertise for gRPC StoreAPI in gossip cluster. If empty, 'grpc-address' will be used. | *string | false |
-| clusterAdvertiseAddress | Explicit (external) ip:port address to advertise for gossip in gossip cluster. Used internally for membership only. | *string | false |
 
 [Back to TOC](#table-of-contents)
