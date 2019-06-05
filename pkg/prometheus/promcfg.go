@@ -467,16 +467,15 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version, m *v
 		})
 	}
 
-	// By default, generate a safe job name from the pod name.  We also keep
+	// By default, generate a safe job name from the PodMonitor. We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
 	// value for it. A single pod may potentially have multiple metrics
 	// endpoints, therefore the endpoints labels is filled with the ports name or
 	// as a fallback the port number.
 
 	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_name"}},
 		{Key: "target_label", Value: "job"},
-		{Key: "replacement", Value: "${1}"},
+		{Key: "replacement", Value: fmt.Sprintf("%s/%s", m.GetNamespace(), m.GetName())},
 	})
 	if m.Spec.JobLabel != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
