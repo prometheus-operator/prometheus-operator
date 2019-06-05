@@ -21,7 +21,7 @@ configured.
 Now please take the time to look at the Thanos README and read through the documentation before continuing with the Prometheus Operator integration.
 
 https://github.com/improbable-eng/thanos/  
-https://github.com/improbable-eng/thanos/blob/master/docs/getting_started.md
+https://github.com/improbable-eng/thanos/blob/master/docs/getting-started.md
 
 ## Prometheus Operator
 
