@@ -25,7 +25,7 @@ K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(FIRST_GOPATH)/bin/$(bin))
 K8S_GEN_DEPS+=$(OPENAPI_GEN_BINARY)
 
-GO_BUILD_RECIPE=GOOS=linux CGO_ENABLED=0 go build -mod=vendor -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
+GO_BUILD_RECIPE=GOOS=linux CGO_ENABLED=0 GO111MODULE=on go build -mod=vendor -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/ | grep -v /contrib/)
 
 CONTAINER_CMD:=docker run --rm \
