@@ -773,6 +773,13 @@ func schema_pkg_apis_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallback
 							},
 						},
 					},
+					"hostNetwork": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Use the host's network namespace. If this option is set, the ports that will be used must be specified.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
@@ -1614,6 +1621,13 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 						SchemaProps: spec.SchemaProps{
 							Description: "Priority class assigned to the Pods",
 							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"hostNetwork": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Use the host's network namespace. If this option is set, the ports that will be used must be specified.",
+							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},

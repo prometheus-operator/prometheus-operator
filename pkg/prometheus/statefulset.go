@@ -437,6 +437,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				Protocol:      v1.ProtocolTCP,
 			},
 		}
+
+		if p.Spec.HostNetwork {
+			for i := range ports {
+				if ports[i].HostPort == 0 {
+					ports[i].HostPort = ports[i].ContainerPort
+				}
+			}
+		}
 	}
 
 	if version.Major == 2 {
@@ -925,6 +933,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				Volumes:                       volumes,
 				Tolerations:                   p.Spec.Tolerations,
 				Affinity:                      p.Spec.Affinity,
+				HostNetwork:                   p.Spec.HostNetwork,
 			},
 		},
 	}, nil

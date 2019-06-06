@@ -792,3 +792,30 @@ func TestAdditionalContainers(t *testing.T) {
 		}
 	}
 }
+
+func TestHostNetwork(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			HostNetwork: true,
+		},
+	}, defaultTestConfig, nil, "")
+
+	require.NoError(t, err)
+
+	if sset.Spec.Template.Spec.HostNetwork != true {
+		t.Fatal("HostNetwork is not properly being propagated to the StatefulSet")
+	}
+
+	pass := true
+	for i := range sset.Spec.Template.Spec.Containers {
+		for j := range sset.Spec.Template.Spec.Containers[i].Ports {
+			if sset.Spec.Template.Spec.Containers[i].Ports[j].HostPort != sset.Spec.Template.Spec.Containers[i].Ports[j].ContainerPort {
+				pass = false
+			}
+		}
+	}
+
+	if !pass {
+		t.Fatal("HostPort is not properly being propagated to the StatefulSet")
+	}
+}

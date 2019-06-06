@@ -1450,6 +1450,10 @@ spec:
                 under. This is necessary to generate correct URLs. This is necessary
                 if Alertmanager is not served from root of a DNS name.
               type: string
+            hostNetwork:
+              description: Use the host's network namespace. If this option is set,
+                the ports that will be used must be specified.
+              type: boolean
             image:
               description: Image if specified has precedence over baseImage, tag and
                 sha combinations. Specifying the version is still necessary to ensure
