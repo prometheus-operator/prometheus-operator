@@ -19,7 +19,7 @@ require (
 	github.com/googleapis/gnostic v0.1.0 // indirect
 	github.com/hashicorp/go-version v1.1.0
 	github.com/imdario/mergo v0.3.5 // indirect
-	github.com/improbable-eng/thanos v0.4.0
+	github.com/improbable-eng/thanos v0.5.0
 	github.com/jsonnet-bundler/jsonnet-bundler v0.1.0
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452
