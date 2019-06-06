@@ -206,7 +206,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespacesToWat
 		return  f.MonClientV1.PodMonitors(v1.NamespaceAll).List(opts)
 	})
 	if err != nil {
-		return errors.Wrap(err, "PodMonitor CRD not ready: %v\n")
+		return nil, errors.Wrap(err, "PodMonitor CRD not ready: %v\n")
 	}
 
 	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {

@@ -512,6 +512,41 @@ type ServiceMonitorSpec struct {
 	SampleLimit uint64 `json:"sampleLimit,omitempty"`
 }
 
+// Endpoint defines a scrapeable endpoint serving Prometheus metrics.
+// +k8s:openapi-gen=true
+type Endpoint struct {
+	// Name of the service port this endpoint refers to. Mutually exclusive with targetPort.
+	Port string `json:"port,omitempty"`
+	// Name or number of the target port of the endpoint. Mutually exclusive with port.
+	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
+	// HTTP path to scrape for metrics.
+	Path string `json:"path,omitempty"`
+	// HTTP scheme to use for scraping.
+	Scheme string `json:"scheme,omitempty"`
+	// Optional HTTP URL parameters
+	Params map[string][]string `json:"params,omitempty"`
+	// Interval at which metrics should be scraped
+	Interval string `json:"interval,omitempty"`
+	// Timeout after which the scrape is ended
+	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
+	// TLS configuration to use when scraping the endpoint
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+	// File to read bearer token for scraping targets.
+	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
+	// HonorLabels chooses the metric's labels on collisions with target labels.
+	HonorLabels bool `json:"honorLabels,omitempty"`
+	// BasicAuth allow an endpoint to authenticate over basic authentication
+	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
+	// MetricRelabelConfigs to apply to samples before ingestion.
+	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
+	// RelabelConfigs to apply to samples before ingestion.
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
+	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
+	ProxyURL *string `json:"proxyUrl,omitempty"`
+}
+
 // PodMonitor defines monitoring for a set of pods.
 // +genclient
 // +k8s:openapi-gen=true
@@ -546,41 +581,6 @@ type PodMonitorSpec struct {
 // +k8s:openapi-gen=true
 type PodMetricsEndpoint struct {
 	// Name of the port this endpoint refers to. Mutually exclusive with targetPort.
-	Port string `json:"port,omitempty"`
-	// Name or number of the target port of the endpoint. Mutually exclusive with port.
-	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
-	// HTTP path to scrape for metrics.
-	Path string `json:"path,omitempty"`
-	// HTTP scheme to use for scraping.
-	Scheme string `json:"scheme,omitempty"`
-	// Optional HTTP URL parameters
-	Params map[string][]string `json:"params,omitempty"`
-	// Interval at which metrics should be scraped
-	Interval string `json:"interval,omitempty"`
-	// Timeout after which the scrape is ended
-	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
-	// TLS configuration to use when scraping the endpoint
-	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-	// File to read bearer token for scraping targets.
-	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
-	// HonorLabels chooses the metric's labels on collisions with target labels.
-	HonorLabels bool `json:"honorLabels,omitempty"`
-	// BasicAuth allow an endpoint to authenticate over basic authentication
-	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
-	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// MetricRelabelConfigs to apply to samples before ingestion.
-	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
-	// RelabelConfigs to apply to samples before ingestion.
-	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
-	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
-	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
-	ProxyURL *string `json:"proxyUrl,omitempty"`
-}
-
-// Endpoint defines a scrapeable endpoint serving Prometheus metrics.
-// +k8s:openapi-gen=true
-type Endpoint struct {
-	// Name of the service port this endpoint refers to. Mutually exclusive with targetPort.
 	Port string `json:"port,omitempty"`
 	// Name or number of the target port of the endpoint. Mutually exclusive with port.
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
