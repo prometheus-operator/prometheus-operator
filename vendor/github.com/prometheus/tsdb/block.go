@@ -28,6 +28,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/tsdb/chunkenc"
 	"github.com/prometheus/tsdb/chunks"
+	tsdb_errors "github.com/prometheus/tsdb/errors"
+	"github.com/prometheus/tsdb/fileutil"
 	"github.com/prometheus/tsdb/index"
 	"github.com/prometheus/tsdb/labels"
 )
@@ -229,12 +231,17 @@ func readMetaFile(dir string) (*BlockMeta, error) {
 	return &m, nil
 }
 
-func writeMetaFile(dir string, meta *BlockMeta) error {
+func writeMetaFile(logger log.Logger, dir string, meta *BlockMeta) error {
 	meta.Version = 1
 
 	// Make any changes to the file appear atomic.
 	path := filepath.Join(dir, metaFilename)
 	tmp := path + ".tmp"
+	defer func() {
+		if err := os.RemoveAll(tmp); err != nil {
+			level.Error(logger).Log("msg", "remove tmp file", "err", err.Error())
+		}
+	}()
 
 	f, err := os.Create(tmp)
 	if err != nil {
@@ -244,16 +251,20 @@ func writeMetaFile(dir string, meta *BlockMeta) error {
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "\t")
 
-	var merr MultiError
-
+	var merr tsdb_errors.MultiError
 	if merr.Add(enc.Encode(meta)); merr.Err() != nil {
+		merr.Add(f.Close())
+		return merr.Err()
+	}
+	// Force the kernel to persist the file on disk to avoid data loss if the host crashes.
+	if merr.Add(f.Sync()); merr.Err() != nil {
 		merr.Add(f.Close())
 		return merr.Err()
 	}
 	if err := f.Close(); err != nil {
 		return err
 	}
-	return renameFile(tmp, path)
+	return fileutil.Replace(tmp, path)
 }
 
 // Block represents a directory of time series data covering a continuous time range.
@@ -272,6 +283,8 @@ type Block struct {
 	chunkr     ChunkReader
 	indexr     IndexReader
 	tombstones TombstoneReader
+
+	logger log.Logger
 }
 
 // OpenBlock opens the block in the directory. It can be passed a chunk pool, which is used
@@ -283,7 +296,7 @@ func OpenBlock(logger log.Logger, dir string, pool chunkenc.Pool) (pb *Block, er
 	var closers []io.Closer
 	defer func() {
 		if err != nil {
-			var merr MultiError
+			var merr tsdb_errors.MultiError
 			merr.Add(err)
 			merr.Add(closeAll(closers))
 			err = merr.Err()
@@ -316,7 +329,7 @@ func OpenBlock(logger log.Logger, dir string, pool chunkenc.Pool) (pb *Block, er
 	// that would be the logical place for a block size to be calculated.
 	bs := blockSize(cr, ir, tsr)
 	meta.Stats.NumBytes = bs
-	err = writeMetaFile(dir, meta)
+	err = writeMetaFile(logger, dir, meta)
 	if err != nil {
 		level.Warn(logger).Log("msg", "couldn't write the meta file for the block size", "block", dir, "err", err)
 	}
@@ -328,6 +341,7 @@ func OpenBlock(logger log.Logger, dir string, pool chunkenc.Pool) (pb *Block, er
 		indexr:          ir,
 		tombstones:      tr,
 		symbolTableSize: ir.SymbolTableSize(),
+		logger:          logger,
 	}
 	return pb, nil
 }
@@ -350,7 +364,7 @@ func (pb *Block) Close() error {
 
 	pb.pendingReaders.Wait()
 
-	var merr MultiError
+	var merr tsdb_errors.MultiError
 
 	merr.Add(pb.chunkr.Close())
 	merr.Add(pb.indexr.Close())
@@ -423,7 +437,7 @@ func (pb *Block) GetSymbolTableSize() uint64 {
 
 func (pb *Block) setCompactionFailed() error {
 	pb.meta.Compaction.Failed = true
-	return writeMetaFile(pb.dir, &pb.meta)
+	return writeMetaFile(pb.logger, pb.dir, &pb.meta)
 }
 
 type blockIndexReader struct {
@@ -547,10 +561,10 @@ Outer:
 	pb.tombstones = stones
 	pb.meta.Stats.NumTombstones = pb.tombstones.Total()
 
-	if err := writeTombstoneFile(pb.dir, pb.tombstones); err != nil {
+	if err := writeTombstoneFile(pb.logger, pb.dir, pb.tombstones); err != nil {
 		return err
 	}
-	return writeMetaFile(pb.dir, &pb.meta)
+	return writeMetaFile(pb.logger, pb.dir, &pb.meta)
 }
 
 // CleanTombstones will remove the tombstones and rewrite the block (only if there are any tombstones).

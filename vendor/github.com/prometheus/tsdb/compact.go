@@ -31,6 +31,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/tsdb/chunkenc"
 	"github.com/prometheus/tsdb/chunks"
+	tsdb_errors "github.com/prometheus/tsdb/errors"
 	"github.com/prometheus/tsdb/fileutil"
 	"github.com/prometheus/tsdb/index"
 	"github.com/prometheus/tsdb/labels"
@@ -266,8 +267,8 @@ func (c *LeveledCompactor) selectDirs(ds []dirMeta) []dirMeta {
 	return nil
 }
 
-// selectOverlappingDirs returns all dirs with overlaping time ranges.
-// It expects sorted input by mint.
+// selectOverlappingDirs returns all dirs with overlapping time ranges.
+// It expects sorted input by mint and returns the overlapping dirs in the same order as received.
 func (c *LeveledCompactor) selectOverlappingDirs(ds []dirMeta) []string {
 	if len(ds) < 2 {
 		return nil
@@ -280,6 +281,8 @@ func (c *LeveledCompactor) selectOverlappingDirs(ds []dirMeta) []string {
 				overlappingDirs = append(overlappingDirs, ds[i].dir)
 			}
 			overlappingDirs = append(overlappingDirs, d.dir)
+		} else if len(overlappingDirs) > 0 {
+			break
 		}
 		if d.meta.MaxTime > globalMaxt {
 			globalMaxt = d.meta.MaxTime
@@ -309,7 +312,7 @@ func splitByRange(ds []dirMeta, tr int64) [][]dirMeta {
 		}
 		// Skip blocks that don't fall into the range. This can happen via mis-alignment or
 		// by being the multiple of the intended range.
-		if ds[i].meta.MinTime < t0 || ds[i].meta.MaxTime > t0+tr {
+		if m.MaxTime > t0+tr {
 			i++
 			continue
 		}
@@ -317,7 +320,7 @@ func splitByRange(ds []dirMeta, tr int64) [][]dirMeta {
 		// Add all dirs to the current group that are within [t0, t0+tr].
 		for ; i < len(ds); i++ {
 			// Either the block falls into the next range or doesn't fit at all (checked above).
-			if ds[i].meta.MinTime < t0 || ds[i].meta.MaxTime > t0+tr {
+			if ds[i].meta.MaxTime > t0+tr {
 				break
 			}
 			group = append(group, ds[i])
@@ -423,7 +426,7 @@ func (c *LeveledCompactor) Compact(dest string, dirs []string, open []*Block) (u
 		if meta.Stats.NumSamples == 0 {
 			for _, b := range bs {
 				b.meta.Compaction.Deletable = true
-				if err = writeMetaFile(b.dir, &b.meta); err != nil {
+				if err = writeMetaFile(c.logger, b.dir, &b.meta); err != nil {
 					level.Error(c.logger).Log(
 						"msg", "Failed to write 'Deletable' to meta file after compaction",
 						"ulid", b.meta.ULID,
@@ -451,7 +454,7 @@ func (c *LeveledCompactor) Compact(dest string, dirs []string, open []*Block) (u
 		return uid, nil
 	}
 
-	var merr MultiError
+	var merr tsdb_errors.MultiError
 	merr.Add(err)
 	if err != context.Canceled {
 		for _, b := range bs {
@@ -529,7 +532,7 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 	tmp := dir + ".tmp"
 	var closers []io.Closer
 	defer func(t time.Time) {
-		var merr MultiError
+		var merr tsdb_errors.MultiError
 		merr.Add(err)
 		merr.Add(closeAll(closers))
 		err = merr.Err()
@@ -592,7 +595,7 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 	// though these are covered under defer. This is because in Windows,
 	// you cannot delete these unless they are closed and the defer is to
 	// make sure they are closed if the function exits due to an error above.
-	var merr MultiError
+	var merr tsdb_errors.MultiError
 	for _, w := range closers {
 		merr.Add(w.Close())
 	}
@@ -606,12 +609,12 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 		return nil
 	}
 
-	if err = writeMetaFile(tmp, meta); err != nil {
+	if err = writeMetaFile(c.logger, tmp, meta); err != nil {
 		return errors.Wrap(err, "write merged meta")
 	}
 
 	// Create an empty tombstones file.
-	if err := writeTombstoneFile(tmp, newMemTombstones()); err != nil {
+	if err := writeTombstoneFile(c.logger, tmp, newMemTombstones()); err != nil {
 		return errors.Wrap(err, "write new tombstones file")
 	}
 
@@ -625,7 +628,7 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 		}
 	}()
 
-	if err := fileutil.Fsync(df); err != nil {
+	if err := df.Sync(); err != nil {
 		return errors.Wrap(err, "sync temporary dir file")
 	}
 
@@ -636,7 +639,7 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 	df = nil
 
 	// Block successfully written, make visible and remove old ones.
-	if err := renameFile(tmp, dir); err != nil {
+	if err := fileutil.Replace(tmp, dir); err != nil {
 		return errors.Wrap(err, "rename block dir")
 	}
 
@@ -658,7 +661,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		overlapping bool
 	)
 	defer func() {
-		var merr MultiError
+		var merr tsdb_errors.MultiError
 		merr.Add(err)
 		merr.Add(closeAll(closers))
 		err = merr.Err()
@@ -1009,25 +1012,4 @@ func (c *compactionMerger) Err() error {
 
 func (c *compactionMerger) At() (labels.Labels, []chunks.Meta, Intervals) {
 	return c.l, c.c, c.intervals
-}
-
-func renameFile(from, to string) error {
-	if err := os.RemoveAll(to); err != nil {
-		return err
-	}
-	if err := os.Rename(from, to); err != nil {
-		return err
-	}
-
-	// Directory was renamed; sync parent dir to persist rename.
-	pdir, err := fileutil.OpenDir(filepath.Dir(to))
-	if err != nil {
-		return err
-	}
-
-	if err = fileutil.Fsync(pdir); err != nil {
-		pdir.Close()
-		return err
-	}
-	return pdir.Close()
 }
