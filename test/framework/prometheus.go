@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -143,21 +143,22 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 	return service
 }
 
-func (f *Framework) MakeThanosService(name string) *v1.Service {
+func (f *Framework) MakeThanosSidecarService(name string) *v1.Service {
 	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name: fmt.Sprintf("thanos-sidecar-%s", name),
 		},
 		Spec: v1.ServiceSpec{
+			ClusterIP: "None",
 			Ports: []v1.ServicePort{
 				{
-					Name:       "cluster",
-					Port:       10900,
-					TargetPort: intstr.FromString("cluster"),
+					Name:       "grpc",
+					Port:       10901,
+					TargetPort: intstr.FromString("grpc"),
 				},
 			},
 			Selector: map[string]string{
-				"thanos-peer": "true",
+				"prometheus": name,
 			},
 		},
 	}

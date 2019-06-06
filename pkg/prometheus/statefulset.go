@@ -35,7 +35,7 @@ import (
 const (
 	governingServiceName            = "prometheus-operated"
 	DefaultPrometheusVersion        = "v2.7.1"
-	DefaultThanosVersion            = "v0.2.1"
+	DefaultThanosVersion            = "v0.4.0"
 	defaultRetention                = "24h"
 	defaultReplicaExternalLabelName = "prometheus_replica"
 	storageDir                      = "/prometheus"
@@ -660,15 +660,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	}
 
 	if p.Spec.Thanos != nil {
-		thanosBaseImage := c.ThanosDefaultBaseImage
-		if p.Spec.Thanos.BaseImage != nil {
-			thanosBaseImage = *p.Spec.Thanos.BaseImage
-		}
-
 		// Version is used by default.
 		// If the tag is specified, we use the tag to identify the container image.
 		// If the sha is specified, we use the sha to identify the container image,
 		// as it has even stronger immutable guarantees to identify the image.
+		thanosBaseImage := c.ThanosDefaultBaseImage
+		if p.Spec.Thanos.BaseImage != nil {
+			thanosBaseImage = *p.Spec.Thanos.BaseImage
+		}
 		thanosImage := fmt.Sprintf("%s:%s", thanosBaseImage, *p.Spec.Thanos.Version)
 		if p.Spec.Thanos.Tag != nil {
 			thanosImage = fmt.Sprintf("%s:%s", thanosBaseImage, *p.Spec.Thanos.Tag)
@@ -680,145 +679,25 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			thanosImage = *p.Spec.Thanos.Image
 		}
 
-		thanosVersion := semver.MustParse(strings.TrimPrefix(*p.Spec.Thanos.Version, "v"))
-		clusterSupport := thanosVersion.LT(semver.MustParse("0.5.0-rc.0"))
-
-		thanosArgs := []string{
-			"sidecar",
-			fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
-			fmt.Sprintf("--tsdb.path=%s", storageDir),
-			fmt.Sprintf("--grpc-address=[$(POD_IP)]:%d", 10901),
-		}
-
-		if clusterSupport {
-			thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.address=[$(POD_IP)]:%d", 10900))
-			if p.Spec.Thanos.Peers != nil {
-				thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.peers=%s", *p.Spec.Thanos.Peers))
-			}
-			if p.Spec.Thanos.ClusterAdvertiseAddress != nil {
-				thanosArgs = append(thanosArgs, fmt.Sprintf("--cluster.advertise-address=%s", *p.Spec.Thanos.ClusterAdvertiseAddress))
-			}
-			if p.Spec.Thanos.GrpcAdvertiseAddress != nil {
-				thanosArgs = append(thanosArgs, fmt.Sprintf("--grpc-advertise-address=%s", *p.Spec.Thanos.GrpcAdvertiseAddress))
-			}
-		}
-
-		if p.Spec.LogLevel != "" && p.Spec.LogLevel != "info" {
-			thanosArgs = append(thanosArgs, fmt.Sprintf("--log.level=%s", p.Spec.LogLevel))
-		}
-		if thanosVersion.GTE(semver.MustParse("0.2.0")) {
-			if p.Spec.LogFormat != "" && p.Spec.LogFormat != "logfmt" {
-				thanosArgs = append(thanosArgs, fmt.Sprintf("--log.format=%s", p.Spec.LogFormat))
-			}
-		}
-
-		thanosVolumeMounts := []v1.VolumeMount{
-			{
-				Name:      volName,
-				MountPath: storageDir,
-				SubPath:   subPathForStorage(p.Spec.Storage),
-			},
-		}
-
-		envVars := []v1.EnvVar{
-			{
-				// Necessary for '--cluster.address', '--grpc-address' flags
-				Name: "POD_IP",
-				ValueFrom: &v1.EnvVarSource{
-					FieldRef: &v1.ObjectFieldSelector{
-						FieldPath: "status.podIP",
-					},
-				},
-			},
-			{
-				Name: "HOST_IP",
-				ValueFrom: &v1.EnvVarSource{
-					FieldRef: &v1.ObjectFieldSelector{
-						FieldPath: "status.hostIP",
-					},
-				},
-			},
-		}
-
-		if p.Spec.Thanos.ObjectStorageConfig != nil {
-			envVars = append(envVars, v1.EnvVar{
-				Name: "OBJSTORE_CONFIG",
-				ValueFrom: &v1.EnvVarSource{
-					SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
-				},
-			})
-			thanosArgs = append(thanosArgs, "--objstore.config=$(OBJSTORE_CONFIG)")
-		}
-
-		if p.Spec.Thanos.GCS != nil {
-			if p.Spec.Thanos.GCS.Bucket != nil {
-				thanosArgs = append(thanosArgs, fmt.Sprintf("--gcs.bucket=%s", *p.Spec.Thanos.GCS.Bucket))
-			}
-			if p.Spec.Thanos.GCS.SecretKey != nil {
-				secretFileName := "service-account.json"
-				if p.Spec.Thanos.GCS.SecretKey.Key != "" {
-					secretFileName = p.Spec.Thanos.GCS.SecretKey.Key
-				}
-				secretDir := path.Join("/var/run/secrets/prometheus.io", p.Spec.Thanos.GCS.SecretKey.Name)
-				envVars = append(envVars, v1.EnvVar{
-					Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-					Value: path.Join(secretDir, secretFileName),
-				})
-				volumeName := k8sutil.SanitizeVolumeName("secret-" + p.Spec.Thanos.GCS.SecretKey.Name)
-				volumes = append(volumes, v1.Volume{
-					Name: volumeName,
-					VolumeSource: v1.VolumeSource{
-						Secret: &v1.SecretVolumeSource{
-							SecretName: p.Spec.Thanos.GCS.SecretKey.Name,
-						},
-					},
-				})
-				thanosVolumeMounts = append(thanosVolumeMounts, v1.VolumeMount{
-					Name:      volumeName,
-					ReadOnly:  true,
-					MountPath: secretDir,
-				})
-			}
-		}
-
-		if p.Spec.Thanos.S3 != nil {
-			if p.Spec.Thanos.S3.Bucket != nil {
-				thanosArgs = append(thanosArgs, fmt.Sprintf("--s3.bucket=%s", *p.Spec.Thanos.S3.Bucket))
-			}
-			if p.Spec.Thanos.S3.Endpoint != nil {
-				thanosArgs = append(thanosArgs, fmt.Sprintf("--s3.endpoint=%s", *p.Spec.Thanos.S3.Endpoint))
-			}
-			if p.Spec.Thanos.S3.Insecure != nil && *p.Spec.Thanos.S3.Insecure {
-				thanosArgs = append(thanosArgs, "--s3.insecure")
-			}
-			if p.Spec.Thanos.S3.SignatureVersion2 != nil && *p.Spec.Thanos.S3.SignatureVersion2 {
-				thanosArgs = append(thanosArgs, "--s3.signature-version2")
-			}
-			if p.Spec.Thanos.S3.AccessKey != nil {
-				envVars = append(envVars, v1.EnvVar{
-					Name: "S3_ACCESS_KEY",
-					ValueFrom: &v1.EnvVarSource{
-						SecretKeyRef: p.Spec.Thanos.S3.AccessKey,
-					},
-				})
-			}
-			if p.Spec.Thanos.S3.EncryptSSE != nil && *p.Spec.Thanos.S3.EncryptSSE {
-				thanosArgs = append(thanosArgs, "--s3.encrypt-sse")
-			}
-			if p.Spec.Thanos.S3.SecretKey != nil {
-				envVars = append(envVars, v1.EnvVar{
-					Name: "S3_SECRET_KEY",
-					ValueFrom: &v1.EnvVarSource{
-						SecretKeyRef: p.Spec.Thanos.S3.SecretKey,
-					},
-				})
-			}
-		}
-
-		c := v1.Container{
+		container := v1.Container{
 			Name:  "thanos-sidecar",
 			Image: thanosImage,
-			Args:  thanosArgs,
+			Args: []string{
+				"sidecar",
+				fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
+				fmt.Sprintf("--tsdb.path=%s", storageDir),
+				"--grpc-address=[$(POD_IP)]:10901",
+			},
+			Env: []v1.EnvVar{
+				{
+					Name: "POD_IP",
+					ValueFrom: &v1.EnvVarSource{
+						FieldRef: &v1.ObjectFieldSelector{
+							FieldPath: "status.podIP",
+						},
+					},
+				},
+			},
 			Ports: []v1.ContainerPort{
 				{
 					Name:          "http",
@@ -829,18 +708,34 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					ContainerPort: 10901,
 				},
 			},
-			Env:          envVars,
-			VolumeMounts: thanosVolumeMounts,
-			Resources:    p.Spec.Thanos.Resources,
+			VolumeMounts: []v1.VolumeMount{
+				{
+					Name:      volName,
+					MountPath: storageDir,
+					SubPath:   subPathForStorage(p.Spec.Storage),
+				},
+			},
+			Resources: p.Spec.Thanos.Resources,
 		}
-		if clusterSupport {
-			c.Ports = append(c.Ports, v1.ContainerPort{
-				Name:          "cluster",
-				ContainerPort: 10900,
+
+		if p.Spec.Thanos.ObjectStorageConfig != nil {
+			container.Args = append(container.Args, "--objstore.config=$(OBJSTORE_CONFIG)")
+			container.Env = append(container.Env, v1.EnvVar{
+				Name: "OBJSTORE_CONFIG",
+				ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
+				},
 			})
 		}
 
-		additionalContainers = append(additionalContainers, c)
+		if p.Spec.LogLevel != "" {
+			container.Args = append(container.Args, fmt.Sprintf("--log.level=%s", p.Spec.LogLevel))
+		}
+		if p.Spec.LogFormat != "" {
+			container.Args = append(container.Args, fmt.Sprintf("--log.format=%s", p.Spec.LogFormat))
+		}
+
+		additionalContainers = append(additionalContainers, container)
 		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h", "--storage.tsdb.max-block-duration=2h")
 	}
 

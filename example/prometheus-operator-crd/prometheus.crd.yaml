@@ -3219,42 +3219,6 @@ spec:
                 baseImage:
                   description: Thanos base image if other than default.
                   type: string
-                clusterAdvertiseAddress:
-                  description: Explicit (external) ip:port address to advertise for
-                    gossip in gossip cluster. Used internally for membership only.
-                  type: string
-                gcs:
-                  description: 'Deprecated: ThanosGCSSpec should be configured with
-                    an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosGCSSpec
-                    will be removed.'
-                  properties:
-                    bucket:
-                      description: Google Cloud Storage bucket name for stored blocks.
-                        If empty it won't store any block inside Google Cloud Storage.
-                      type: string
-                    credentials:
-                      description: SecretKeySelector selects a key of a Secret.
-                      properties:
-                        key:
-                          description: The key of the secret to select from.  Must
-                            be a valid secret key.
-                          type: string
-                        name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                          type: string
-                        optional:
-                          description: Specify whether the Secret or it's key must
-                            be defined
-                          type: boolean
-                      required:
-                      - key
-                      type: object
-                  type: object
-                grpcAdvertiseAddress:
-                  description: Explicit (external) host:port address to advertise
-                    for gRPC StoreAPI in gossip cluster. If empty, 'grpc-address'
-                    will be used.
-                  type: string
                 image:
                   description: Image if specified has precedence over baseImage, tag
                     and sha combinations. Specifying the version is still necessary
@@ -3278,9 +3242,6 @@ spec:
                   required:
                   - key
                   type: object
-                peers:
-                  description: Peers is a DNS name for Thanos to discover peers through.
-                  type: string
                 resources:
                   description: ResourceRequirements describes the compute resource
                     requirements.
@@ -3295,63 +3256,6 @@ spec:
                         it defaults to Limits if that is explicitly specified, otherwise
                         to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                       type: object
-                  type: object
-                s3:
-                  description: 'Deprecated: ThanosS3Spec should be configured with
-                    an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosS3Spec
-                    will be removed.'
-                  properties:
-                    accessKey:
-                      description: SecretKeySelector selects a key of a Secret.
-                      properties:
-                        key:
-                          description: The key of the secret to select from.  Must
-                            be a valid secret key.
-                          type: string
-                        name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                          type: string
-                        optional:
-                          description: Specify whether the Secret or it's key must
-                            be defined
-                          type: boolean
-                      required:
-                      - key
-                      type: object
-                    bucket:
-                      description: S3-Compatible API bucket name for stored blocks.
-                      type: string
-                    encryptsse:
-                      description: Whether to use Server Side Encryption
-                      type: boolean
-                    endpoint:
-                      description: S3-Compatible API endpoint for stored blocks.
-                      type: string
-                    insecure:
-                      description: Whether to use an insecure connection with an S3-Compatible
-                        API.
-                      type: boolean
-                    secretKey:
-                      description: SecretKeySelector selects a key of a Secret.
-                      properties:
-                        key:
-                          description: The key of the secret to select from.  Must
-                            be a valid secret key.
-                          type: string
-                        name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                          type: string
-                        optional:
-                          description: Specify whether the Secret or it's key must
-                            be defined
-                          type: boolean
-                      required:
-                      - key
-                      type: object
-                    signatureVersion2:
-                      description: Whether to use S3 Signature Version 2; otherwise
-                        Signature Version 4 will be used.
-                      type: boolean
                   type: object
                 sha:
                   description: SHA of Thanos container image to be deployed. Defaults

@@ -59,8 +59,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ServiceMonitorSpec":    schema_pkg_apis_monitoring_v1_ServiceMonitorSpec(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.StorageSpec":           schema_pkg_apis_monitoring_v1_StorageSpec(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.TLSConfig":             schema_pkg_apis_monitoring_v1_TLSConfig(ref),
-		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosGCSSpec":         schema_pkg_apis_monitoring_v1_ThanosGCSSpec(ref),
-		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosS3Spec":          schema_pkg_apis_monitoring_v1_ThanosS3Spec(ref),
 		"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosSpec":            schema_pkg_apis_monitoring_v1_ThanosSpec(ref),
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
 		"k8s.io/api/core/v1.Affinity":                                    schema_k8sio_api_core_v1_Affinity(ref),
@@ -2424,96 +2422,6 @@ func schema_pkg_apis_monitoring_v1_TLSConfig(ref common.ReferenceCallback) commo
 	}
 }
 
-func schema_pkg_apis_monitoring_v1_ThanosGCSSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Deprecated: ThanosGCSSpec should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosGCSSpec will be removed.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"bucket": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Google Cloud Storage bucket name for stored blocks. If empty it won't store any block inside Google Cloud Storage.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"credentials": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Secret to access our Bucket.",
-							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/api/core/v1.SecretKeySelector"},
-	}
-}
-
-func schema_pkg_apis_monitoring_v1_ThanosS3Spec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Deprecated: ThanosS3Spec should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. ThanosS3Spec will be removed.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"bucket": {
-						SchemaProps: spec.SchemaProps{
-							Description: "S3-Compatible API bucket name for stored blocks.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"endpoint": {
-						SchemaProps: spec.SchemaProps{
-							Description: "S3-Compatible API endpoint for stored blocks.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"accessKey": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AccessKey for an S3-Compatible API.",
-							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
-						},
-					},
-					"secretKey": {
-						SchemaProps: spec.SchemaProps{
-							Description: "SecretKey for an S3-Compatible API.",
-							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
-						},
-					},
-					"insecure": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Whether to use an insecure connection with an S3-Compatible API.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"signatureVersion2": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"encryptsse": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Whether to use Server Side Encryption",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/api/core/v1.SecretKeySelector"},
-	}
-}
-
 func schema_pkg_apis_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -2521,13 +2429,6 @@ func schema_pkg_apis_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) comm
 				Description: "ThanosSpec defines parameters for a Prometheus server within a Thanos deployment.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"peers": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Peers is a DNS name for Thanos to discover peers through.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"image": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Image if specified has precedence over baseImage, tag and sha combinations. Specifying the version is still necessary to ensure the Prometheus Operator knows what version of Thanos is being configured.",
@@ -2569,43 +2470,17 @@ func schema_pkg_apis_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) comm
 							Ref:         ref("k8s.io/api/core/v1.ResourceRequirements"),
 						},
 					},
-					"gcs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Deprecated: GCS should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. This field will be removed.",
-							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosGCSSpec"),
-						},
-					},
-					"s3": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Deprecated: S3 should be configured with an ObjectStorageConfig secret starting with Thanos v0.2.0. This field will be removed.",
-							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosS3Spec"),
-						},
-					},
 					"objectStorageConfig": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ObjectStorageConfig configures object storage in Thanos.",
 							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
-					"grpcAdvertiseAddress": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Explicit (external) host:port address to advertise for gRPC StoreAPI in gossip cluster. If empty, 'grpc-address' will be used.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"clusterAdvertiseAddress": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Explicit (external) ip:port address to advertise for gossip in gossip cluster. Used internally for membership only.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosGCSSpec", "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ThanosS3Spec", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector"},
+			"k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.SecretKeySelector"},
 	}
 }
 
