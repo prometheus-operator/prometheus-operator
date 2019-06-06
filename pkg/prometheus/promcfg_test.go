@@ -768,10 +768,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
-  - source_labels:
-    - __meta_kubernetes_pod_name
-    target_label: job
-    replacement: ${1}
+  - target_label: job
+    replacement: default/testpodmonitor1
   - target_label: endpoint
     replacement: web
 alerting:
