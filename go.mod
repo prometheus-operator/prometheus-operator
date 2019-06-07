@@ -14,22 +14,19 @@ require (
 	github.com/go-openapi/jsonreference v0.19.0 // indirect
 	github.com/go-openapi/spec v0.17.2
 	github.com/go-openapi/swag v0.17.2 // indirect
-	github.com/gogo/protobuf v1.2.1 // indirect
-	github.com/golang/protobuf v1.2.0
+	github.com/golang/protobuf v1.3.1
 	github.com/googleapis/gnostic v0.1.0 // indirect
 	github.com/hashicorp/go-version v1.1.0
 	github.com/imdario/mergo v0.3.5 // indirect
-	github.com/improbable-eng/thanos v0.4.0
+	github.com/improbable-eng/thanos v0.5.0
 	github.com/jsonnet-bundler/jsonnet-bundler v0.1.0
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452
 	github.com/oklog/run v1.0.0
 	github.com/pkg/errors v0.8.1
-	github.com/prometheus/client_golang v0.9.2
-	github.com/prometheus/prometheus v0.0.0-20190328180107-4d60eb36dcbe
+	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
+	github.com/prometheus/prometheus v2.9.2+incompatible
 	github.com/stretchr/testify v1.3.0
-	golang.org/x/crypto v0.0.0-20190424203555-c05e17bb3b2d // indirect
-	golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6 // indirect
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a // indirect
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	golang.org/x/sys v0.0.0-20190425145619-16072639606e // indirect
