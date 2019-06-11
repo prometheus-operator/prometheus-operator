@@ -492,9 +492,8 @@ func (cg *configGenerator) generateServiceMonitorConfig(version semver.Version, 
 	// as a fallback the port number.
 
 	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
 		{Key: "target_label", Value: "job"},
-		{Key: "replacement", Value: "${1}"},
+		{Key: "replacement", Value: fmt.Sprintf("%s/%s", m.GetNamespace(), m.GetName())},
 	})
 	if m.Spec.JobLabel != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
