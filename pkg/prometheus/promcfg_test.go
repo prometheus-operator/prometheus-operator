@@ -497,10 +497,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
-  - source_labels:
-    - __meta_kubernetes_service_name
-    target_label: job
-    replacement: ${1}
+  - target_label: job
+    replacement: default/testservicemonitor1
   - target_label: endpoint
     replacement: web
 alerting:
@@ -618,10 +616,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
-  - source_labels:
-    - __meta_kubernetes_service_name
-    target_label: job
-    replacement: ${1}
+  - target_label: job
+    replacement: default/testservicemonitor1
   - target_label: endpoint
     replacement: web
 alerting:
@@ -723,10 +719,8 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_name
     target_label: pod
-  - source_labels:
-    - __meta_kubernetes_service_name
-    target_label: job
-    replacement: ${1}
+  - target_label: job
+    replacement: default/test
 alerting:
   alert_relabel_configs:
   - action: labeldrop
