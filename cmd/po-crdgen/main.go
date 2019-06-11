@@ -48,7 +48,7 @@ func initFlags(crdkind monitoringv1.CrdKind, flagset *flag.FlagSet) *flag.FlagSe
 func init() {
 	var command *flag.FlagSet
 	if len(os.Args) == 1 {
-		fmt.Println("usage: po-crdgen [prometheus | alertmanager | servicemonitor | prometheusrule] [<options>]")
+		fmt.Println("usage: po-crdgen [prometheus | alertmanager | servicemonitor | prometheusrule | podmonitor] [<options>]")
 		os.Exit(1)
 	}
 	switch os.Args[1] {
@@ -60,8 +60,10 @@ func init() {
 		command = initFlags(monitoringv1.DefaultCrdKinds.Alertmanager, flag.NewFlagSet("alertmanager", flag.ExitOnError))
 	case "prometheusrule":
 		command = initFlags(monitoringv1.DefaultCrdKinds.PrometheusRule, flag.NewFlagSet("prometheusrule", flag.ExitOnError))
+	case "podmonitor":
+		command = initFlags(monitoringv1.DefaultCrdKinds.PodMonitor, flag.NewFlagSet("podmonitor", flag.ExitOnError))
 	default:
-		fmt.Printf("%q is not valid command.\n choices: [prometheus, alertmanager, servicemonitor, prometheusrule]", os.Args[1])
+		fmt.Printf("%q is not valid command.\n choices: [prometheus, alertmanager, servicemonitor, prometheusrule, podmonitor]", os.Args[1])
 		os.Exit(2)
 	}
 	command.Parse(os.Args[2:])

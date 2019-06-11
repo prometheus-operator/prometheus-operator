@@ -68,7 +68,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 
 	cg := &configGenerator{}
 
-	c := cg.generateK8SSDConfig(getNamespacesFromServiceMonitor(sm), nil, nil)
+	c := cg.generateK8SSDConfig(getNamespacesFromServiceMonitor(sm), nil, nil, kubernetesSDRoleEndpoint)
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	if err != nil {
 		t.Fatal(err)
@@ -83,6 +83,42 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 
 	result := string(s)
 
+	if expected != result {
+		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	}
+}
+
+func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
+	pm := &monitoringv1.PodMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testpodmonitor1",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
+			},
+		},
+		Spec: monitoringv1.PodMonitorSpec{
+			NamespaceSelector: monitoringv1.NamespaceSelector{
+				MatchNames: []string{"test"},
+			},
+		},
+	}
+
+	cg := &configGenerator{}
+	c := cg.generateK8SSDConfig(getNamespacesFromPodMonitor(pm), nil, nil, kubernetesSDRolePod)
+	s, err := yaml.Marshal(yaml.MapSlice{c})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `kubernetes_sd_configs:
+- role: pod
+  namespaces:
+    names:
+    - test
+`
+
+	result := string(s)
 	if expected != result {
 		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
 	}
@@ -155,6 +191,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			getNamespacesFromServiceMonitor(sm),
 			tc.apiserverConfig,
 			tc.basicAuthSecrets,
+			kubernetesSDRoleEndpoint,
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {
@@ -189,6 +226,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
 		nil,
@@ -263,6 +301,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
 		nil,
@@ -341,6 +380,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
 		nil,
@@ -433,6 +473,7 @@ func TestTargetLabels(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		map[string]BasicAuthCredentials{},
 		nil,
 		nil,
@@ -554,6 +595,7 @@ func TestPodTargetLabels(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		map[string]BasicAuthCredentials{},
 		nil,
 		nil,
@@ -639,6 +681,112 @@ alerting:
 	}
 }
 
+func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				ServiceMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+			},
+		},
+		nil,
+		map[string]*monitoringv1.PodMonitor{
+			"testpodmonitor1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodTargetLabels: []string{"example", "env"},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		map[string]BasicAuthCredentials{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testpodmonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_label_example
+    target_label: example
+    regex: (.+)
+    replacement: ${1}
+  - source_labels:
+    - __meta_kubernetes_pod_label_env
+    target_label: env
+    regex: (.+)
+    replacement: ${1}
+  - target_label: job
+    replacement: default/testpodmonitor1
+  - target_label: endpoint
+    replacement: web
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	result := string(cfg)
+
+	if expected != result {
+		fmt.Println(pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
 func TestEmptyEndointPorts(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
@@ -667,6 +815,7 @@ func TestEmptyEndointPorts(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		map[string]BasicAuthCredentials{},
 		nil,
 		nil,
@@ -771,6 +920,11 @@ func generateTestConfig(version string) ([]byte, error) {
 						"group": "group1",
 					},
 				},
+				PodMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
 				RuleSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"role": "rulefile",
@@ -790,6 +944,7 @@ func generateTestConfig(version string) ([]byte, error) {
 			},
 		},
 		makeServiceMonitors(),
+		makePodMonitors(),
 		map[string]BasicAuthCredentials{},
 		nil,
 		nil,
@@ -926,6 +1081,161 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "replace",
+							Regex:        "(.*)",
+							Replacement:  "$1",
+							SourceLabels: []string{"__meta_kubernetes_pod_ready"},
+							TargetLabel:  "pod_ready",
+						},
+						{
+							Action:       "replace",
+							Regex:        "(.*)",
+							Replacement:  "$1",
+							SourceLabels: []string{"__meta_kubernetes_pod_node_name"},
+							TargetLabel:  "nodename",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	return res
+}
+
+func makePodMonitors() map[string]*monitoringv1.PodMonitor {
+	res := map[string]*monitoringv1.PodMonitor{}
+
+	res["podmonitor1"] = &monitoringv1.PodMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testpodmonitor1",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
+			},
+		},
+		Spec: monitoringv1.PodMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": "group1",
+				},
+			},
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
+				},
+			},
+		},
+	}
+
+	res["podmonitor2"] = &monitoringv1.PodMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testpodmonitor2",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group2",
+			},
+		},
+		Spec: monitoringv1.PodMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group":  "group2",
+					"group3": "group3",
+				},
+			},
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
+				},
+			},
+		},
+	}
+
+	res["podmonitor3"] = &monitoringv1.PodMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testpodmonitor3",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group4",
+			},
+		},
+		Spec: monitoringv1.PodMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group":  "group4",
+					"group3": "group5",
+				},
+			},
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
+					Path:     "/federate",
+					Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
+				},
+			},
+		},
+	}
+
+	res["podmonitor4"] = &monitoringv1.PodMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testpodmonitor4",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group6",
+			},
+		},
+		Spec: monitoringv1.PodMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group":  "group6",
+					"group3": "group7",
+				},
+			},
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "drop",
+							Regex:        "my-job-pod-.+",
+							SourceLabels: []string{"pod_name"},
+						},
+						{
+							Action:       "drop",
+							Regex:        "test",
+							SourceLabels: []string{"namespace"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	res["podmonitor5"] = &monitoringv1.PodMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testpodmonitor4",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group8",
+			},
+		},
+		Spec: monitoringv1.PodMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group":  "group8",
+					"group3": "group9",
+				},
+			},
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
 					Port:     "web",
 					Interval: "30s",

@@ -53,6 +53,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=monitoring.coreos.com, Version=v1
 	case v1.SchemeGroupVersion.WithResource("alertmanagers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().Alertmanagers().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("podmonitors"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().PodMonitors().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("prometheuses"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().Prometheuses().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("prometheusrules"):
