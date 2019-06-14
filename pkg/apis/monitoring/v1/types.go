@@ -79,6 +79,10 @@ type PrometheusList struct {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
+	// Standard object's metadata. More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// Metadata Labels and Annotations gets propagated to the prometheus statefulsets.
+	StatefulSetMetadata *metav1.ObjectMeta `json:"statefulSetMetadata,omitempty"`
 	// Standard object’s metadata. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
 	// Metadata Labels and Annotations gets propagated to the prometheus pods.

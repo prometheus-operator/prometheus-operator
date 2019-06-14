@@ -158,6 +158,22 @@ func makeStatefulSet(
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
 
+	if p.Spec.StatefulSetMetadata != nil {
+		if p.Spec.StatefulSetMetadata.Labels != nil {
+			for k, v := range p.Spec.StatefulSetMetadata.Labels {
+				p.ObjectMeta.Labels[k] = v
+			}
+		}
+	}
+
+	if p.Spec.StatefulSetMetadata != nil {
+		if p.Spec.StatefulSetMetadata.Annotations != nil {
+			for k, v := range p.Spec.StatefulSetMetadata.Annotations {
+				p.ObjectMeta.Annotations[k] = v
+			}
+		}
+	}
+
 	boolTrue := true
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
