@@ -31,9 +31,12 @@ spec:
           values:
           - main
     ports:
-    - port: 6783
+    - port: 9094
       protocol: TCP
+    - port: 9094
+      protocol: UDP
   podSelector:
     matchLabels:
       alertmanager: main
       app: alertmanager
+

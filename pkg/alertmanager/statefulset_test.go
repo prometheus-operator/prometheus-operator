@@ -211,7 +211,7 @@ func TestListenLocal(t *testing.T) {
 		t.Fatal("Alertmanager readiness probe expected to be empty")
 	}
 
-	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 1 {
+	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 2 {
 		t.Fatal("Alertmanager container should only have one port defined")
 	}
 }
