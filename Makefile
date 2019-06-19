@@ -137,7 +137,7 @@ generate: $(DEEPCOPY_TARGET) $(OPENAPI_TARGET) $(shell find jsonnet/prometheus-o
 
 .PHONY: generate-in-docker
 generate-in-docker:
-	$(CONTAINER_CMD) $(MAKE) $(MFLAGS) generate
+	$(CONTAINER_CMD) $(MAKE) $(MFLAGS) --always-make generate
 
 example/prometheus-operator-crd/**.crd.yaml: $(OPENAPI_TARGET) $(PO_CRDGEN_BINARY)
 	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
