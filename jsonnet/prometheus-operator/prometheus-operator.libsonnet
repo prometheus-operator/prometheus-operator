@@ -1,4 +1,4 @@
-local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
+local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
 
 {
   _config+:: {
@@ -121,15 +121,15 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       clusterRole.withRules(rules),
 
     deployment:
-      local deployment = k.apps.v1beta2.deployment;
-      local container = k.apps.v1beta2.deployment.mixin.spec.template.spec.containersType;
+      local deployment = k.apps.v1.deployment;
+      local container = k.apps.v1.deployment.mixin.spec.template.spec.containersType;
       local containerPort = container.portsType;
 
       local targetPort = 8080;
 
       local operatorContainer =
         container.new('prometheus-operator', $._config.imageRepos.prometheusOperator + ':' + $._config.versions.prometheusOperator) +
-        container.withPorts(containerPort.newNamed('http', targetPort)) +
+        container.withPorts(containerPort.newNamed(targetPort, 'http')) +
         container.withArgs([
           '--kubelet-service=kube-system/kubelet',
           // Prometheus Operator is run with a read-only root file system. By
@@ -139,7 +139,6 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
           '--prometheus-config-reloader=' + $._config.imageRepos.prometheusConfigReloader + ':' + $._config.versions.prometheusConfigReloader,
         ]) +
         container.mixin.securityContext.withAllowPrivilegeEscalation(false) +
-        container.mixin.securityContext.withReadOnlyRootFilesystem(true) +
         container.mixin.resources.withRequests({ cpu: '100m', memory: '100Mi' }) +
         container.mixin.resources.withLimits({ cpu: '200m', memory: '200Mi' });
 
