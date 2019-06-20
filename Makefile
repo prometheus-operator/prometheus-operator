@@ -172,7 +172,7 @@ jsonnet/prometheus-operator/prometheus-operator.libsonnet: VERSION
 		jsonnet/prometheus-operator/prometheus-operator.libsonnet;
 
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
-TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(wildcard Documentation/*.md))
+TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
 
 Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET)
 	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) > $@
@@ -180,9 +180,8 @@ Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET)
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
 
-# TODO: Disable after moving kube-prometheus out - need to update docs first
-# $(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example)
-# 	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
+$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) bundle.yaml
+	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
 
 
 ##############
