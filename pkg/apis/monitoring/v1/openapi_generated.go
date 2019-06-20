@@ -260,6 +260,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.VolumeSource":                                schema_k8sio_api_core_v1_VolumeSource(ref),
 		"k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource":              schema_k8sio_api_core_v1_VsphereVirtualDiskVolumeSource(ref),
 		"k8s.io/api/core/v1.WeightedPodAffinityTerm":                     schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref),
+		"k8s.io/api/core/v1.WindowsSecurityContextOptions":               schema_k8sio_api_core_v1_WindowsSecurityContextOptions(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                  schema_pkg_apis_meta_v1_APIGroup(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":              schema_pkg_apis_meta_v1_APIGroupList(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":               schema_pkg_apis_meta_v1_APIResource(ref),
@@ -289,6 +290,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                 schema_pkg_apis_meta_v1_MicroTime(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                schema_pkg_apis_meta_v1_ObjectMeta(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":            schema_pkg_apis_meta_v1_OwnerReference(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":     schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList": schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                     schema_pkg_apis_meta_v1_Patch(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":              schema_pkg_apis_meta_v1_PatchOptions(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":             schema_pkg_apis_meta_v1_Preconditions(ref),
@@ -297,6 +300,11 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                    schema_pkg_apis_meta_v1_Status(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":               schema_pkg_apis_meta_v1_StatusCause(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":             schema_pkg_apis_meta_v1_StatusDetails(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                     schema_pkg_apis_meta_v1_Table(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":     schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":              schema_pkg_apis_meta_v1_TableOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                  schema_pkg_apis_meta_v1_TableRow(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":         schema_pkg_apis_meta_v1_TableRowCondition(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                      schema_pkg_apis_meta_v1_Time(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                 schema_pkg_apis_meta_v1_Timestamp(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                  schema_pkg_apis_meta_v1_TypeMeta(ref),
@@ -3146,6 +3154,12 @@ func schema_k8sio_api_core_v1_CSIPersistentVolumeSource(ref common.ReferenceCall
 							Ref:         ref("k8s.io/api/core/v1.SecretReference"),
 						},
 					},
+					"controllerExpandSecretRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ControllerExpandSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI ControllerExpandVolume call. This is an alpha field and requires enabling ExpandCSIVolumes feature gate. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.",
+							Ref:         ref("k8s.io/api/core/v1.SecretReference"),
+						},
+					},
 				},
 				Required: []string{"driver", "volumeHandle"},
 			},
@@ -3748,7 +3762,7 @@ func schema_k8sio_api_core_v1_ConfigMapKeySelector(ref common.ReferenceCallback)
 					},
 					"optional": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specify whether the ConfigMap or it's key must be defined",
+							Description: "Specify whether the ConfigMap or its key must be defined",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -3887,7 +3901,7 @@ func schema_k8sio_api_core_v1_ConfigMapProjection(ref common.ReferenceCallback) 
 					},
 					"optional": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specify whether the ConfigMap or it's keys must be defined",
+							Description: "Specify whether the ConfigMap or its keys must be defined",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -3936,7 +3950,7 @@ func schema_k8sio_api_core_v1_ConfigMapVolumeSource(ref common.ReferenceCallback
 					},
 					"optional": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specify whether the ConfigMap or it's keys must be defined",
+							Description: "Specify whether the ConfigMap or its keys must be defined",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -5168,7 +5182,7 @@ func schema_k8sio_api_core_v1_EventSeries(ref common.ReferenceCallback) common.O
 					},
 					"state": {
 						SchemaProps: spec.SchemaProps{
-							Description: "State of this Series: Ongoing or Finished",
+							Description: "State of this Series: Ongoing or Finished Deprecated. Planned removal for 1.18",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -8961,6 +8975,12 @@ func schema_k8sio_api_core_v1_PodSecurityContext(ref common.ReferenceCallback) c
 							Ref:         ref("k8s.io/api/core/v1.SELinuxOptions"),
 						},
 					},
+					"windowsOptions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Windows security options.",
+							Ref:         ref("k8s.io/api/core/v1.WindowsSecurityContextOptions"),
+						},
+					},
 					"runAsUser": {
 						SchemaProps: spec.SchemaProps{
 							Description: "The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container.",
@@ -9020,7 +9040,7 @@ func schema_k8sio_api_core_v1_PodSecurityContext(ref common.ReferenceCallback) c
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.SELinuxOptions", "k8s.io/api/core/v1.Sysctl"},
+			"k8s.io/api/core/v1.SELinuxOptions", "k8s.io/api/core/v1.Sysctl", "k8s.io/api/core/v1.WindowsSecurityContextOptions"},
 	}
 }
 
@@ -9327,7 +9347,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 					},
 					"runtimeClassName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RuntimeClassName refers to a RuntimeClass object in the node.k8s.io group, which should be used to run this pod.  If no RuntimeClass resource matches the named class, the pod will not be run. If unset or empty, the \"legacy\" RuntimeClass will be used, which is an implicit class with an empty definition that uses the default runtime handler. More info: https://git.k8s.io/enhancements/keps/sig-node/runtime-class.md This is an alpha feature and may change in the future.",
+							Description: "RuntimeClassName refers to a RuntimeClass object in the node.k8s.io group, which should be used to run this pod.  If no RuntimeClass resource matches the named class, the pod will not be run. If unset or empty, the \"legacy\" RuntimeClass will be used, which is an implicit class with an empty definition that uses the default runtime handler. More info: https://git.k8s.io/enhancements/keps/sig-node/runtime-class.md This is a beta feature as of Kubernetes v1.14.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -9336,6 +9356,13 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 						SchemaProps: spec.SchemaProps{
 							Description: "EnableServiceLinks indicates whether information about services should be injected into pod's environment variables, matching the syntax of Docker links. Optional: Defaults to true.",
 							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"preemptionPolicy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PreemptionPolicy is the Policy for preempting pods with lower priority. One of Never, PreemptLowerPriority. Defaults to PreemptLowerPriority if unset. This field is alpha-level and is only honored by servers that enable the NonPreemptingPriority feature.",
+							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
@@ -11029,7 +11056,7 @@ func schema_k8sio_api_core_v1_SecretKeySelector(ref common.ReferenceCallback) co
 					},
 					"optional": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specify whether the Secret or it's key must be defined",
+							Description: "Specify whether the Secret or its key must be defined",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -11195,7 +11222,7 @@ func schema_k8sio_api_core_v1_SecretVolumeSource(ref common.ReferenceCallback) c
 					},
 					"optional": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specify whether the Secret or it's keys must be defined",
+							Description: "Specify whether the Secret or its keys must be defined",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -11232,6 +11259,12 @@ func schema_k8sio_api_core_v1_SecurityContext(ref common.ReferenceCallback) comm
 						SchemaProps: spec.SchemaProps{
 							Description: "The SELinux context to be applied to the container. If unspecified, the container runtime will allocate a random SELinux context for each container.  May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.",
 							Ref:         ref("k8s.io/api/core/v1.SELinuxOptions"),
+						},
+					},
+					"windowsOptions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Windows security options.",
+							Ref:         ref("k8s.io/api/core/v1.WindowsSecurityContextOptions"),
 						},
 					},
 					"runAsUser": {
@@ -11280,7 +11313,7 @@ func schema_k8sio_api_core_v1_SecurityContext(ref common.ReferenceCallback) comm
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.Capabilities", "k8s.io/api/core/v1.SELinuxOptions"},
+			"k8s.io/api/core/v1.Capabilities", "k8s.io/api/core/v1.SELinuxOptions", "k8s.io/api/core/v1.WindowsSecurityContextOptions"},
 	}
 }
 
@@ -12450,7 +12483,7 @@ func schema_k8sio_api_core_v1_VolumeMount(ref common.ReferenceCallback) common.O
 					},
 					"subPathExpr": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Expanded path within the volume from which the container's volume should be mounted. Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment. Defaults to \"\" (volume's root). SubPathExpr and SubPath are mutually exclusive. This field is alpha in 1.14.",
+							Description: "Expanded path within the volume from which the container's volume should be mounted. Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment. Defaults to \"\" (volume's root). SubPathExpr and SubPath are mutually exclusive. This field is beta in 1.15.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -12773,6 +12806,33 @@ func schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref common.ReferenceCallba
 		},
 		Dependencies: []string{
 			"k8s.io/api/core/v1.PodAffinityTerm"},
+	}
+}
+
+func schema_k8sio_api_core_v1_WindowsSecurityContextOptions(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "WindowsSecurityContextOptions contain Windows-specific options and credentials.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"gmsaCredentialSpecName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "GMSACredentialSpecName is the name of the GMSA credential spec to use. This field is alpha-level and is only honored by servers that enable the WindowsGMSA feature flag.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"gmsaCredentialSpec": {
+						SchemaProps: spec.SchemaProps{
+							Description: "GMSACredentialSpec is where the GMSA admission webhook (https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the GMSA credential spec named by the GMSACredentialSpecName field. This field is alpha-level and is only honored by servers that enable the WindowsGMSA feature flag.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -13564,7 +13624,7 @@ func schema_pkg_apis_meta_v1_InternalEvent(ref common.ReferenceCallback) common.
 					},
 					"Object": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Object is:\n * If Type is Added or Modified: the new state of the object.\n * If Type is Deleted: the state of the object immediately before deletion.\n * If Type is Error: *api.Status is recommended; other types may make sense\n   depending on context.",
+							Description: "Object is:\n * If Type is Added or Modified: the new state of the object.\n * If Type is Deleted: the state of the object immediately before deletion.\n * If Type is Bookmark: the object (instance of a type being watched) where\n   only ResourceVersion field is set. On successful restart of watch from a\n   bookmark resourceVersion, client is guaranteed to not get repeat event\n   nor miss any events.\n * If Type is Error: *api.Status is recommended; other types may make sense\n   depending on context.",
 							Ref:         ref("k8s.io/apimachinery/pkg/runtime.Object"),
 						},
 					},
@@ -13745,6 +13805,13 @@ func schema_pkg_apis_meta_v1_ListMeta(ref common.ReferenceCallback) common.OpenA
 							Format:      "",
 						},
 					},
+					"remainingItemCount": {
+						SchemaProps: spec.SchemaProps{
+							Description: "remainingItemCount is the number of subsequent items in the list which are not included in this list response. If the list request contained label or field selectors, then the number of remaining items is unknown and the field will be left unset and omitted during serialization. If the list is complete (either because it is not chunking or because this is the last chunk), then there are no more remaining items and this field will be left unset and omitted during serialization. Servers older than v1.15 do not set this field. The intended use of the remainingItemCount is *estimating* the size of a collection. Clients should not rely on the remainingItemCount to be set or to be exact.\n\nThis field is alpha and can be changed or removed without notice.",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
 				},
 			},
 		},
@@ -13789,6 +13856,13 @@ func schema_pkg_apis_meta_v1_ListOptions(ref common.ReferenceCallback) common.Op
 					"watch": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Watch for changes to the described resources and return them as a stream of add, update, and remove notifications. Specify resourceVersion.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"allowWatchBookmarks": {
+						SchemaProps: spec.SchemaProps{
+							Description: "allowWatchBookmarks requests watch events with type \"BOOKMARK\". Servers that do not implement bookmarks may ignore this flag and bookmarks are sent at the server's discretion. Clients should not assume bookmarks are returned at any specific interval, nor may they assume the server will send any BOOKMARK event during a session. If this is not a watch, this field is ignored. If the feature gate WatchBookmarks is not enabled in apiserver, this field is ignored.\n\nThis field is alpha and can be changed or removed without notice.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -14120,6 +14194,90 @@ func schema_pkg_apis_meta_v1_OwnerReference(ref common.ReferenceCallback) common
 	}
 }
 
+func schema_pkg_apis_meta_v1_PartialObjectMetadata(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PartialObjectMetadata is a generic representation of any object with ObjectMeta. It allows clients to get access to a particular ObjectMeta schema without knowing the details of the version.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PartialObjectMetadataList contains a list of objects containing only their metadata",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Description: "items contains each of the included items.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata"},
+	}
+}
+
 func schema_pkg_apis_meta_v1_Patch(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -14432,6 +14590,242 @@ func schema_pkg_apis_meta_v1_StatusDetails(ref common.ReferenceCallback) common.
 		},
 		Dependencies: []string{
 			"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause"},
+	}
+}
+
+func schema_pkg_apis_meta_v1_Table(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Table is a tabular representation of a set of API resources. The server transforms the object into a set of preferred columns for quickly reviewing the objects.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"columnDefinitions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "columnDefinitions describes each column in the returned items array. The number of cells per row will always match the number of column definitions.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition"),
+									},
+								},
+							},
+						},
+					},
+					"rows": {
+						SchemaProps: spec.SchemaProps{
+							Description: "rows is the list of items in the table.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.TableRow"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"columnDefinitions", "rows"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition", "k8s.io/apimachinery/pkg/apis/meta/v1.TableRow"},
+	}
+}
+
+func schema_pkg_apis_meta_v1_TableColumnDefinition(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "TableColumnDefinition contains information about a column returned in the Table.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "name is a human readable name for the column.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "type is an OpenAPI type definition for this column, such as number, integer, string, or array. See https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#data-types for more.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"format": {
+						SchemaProps: spec.SchemaProps{
+							Description: "format is an optional OpenAPI type modifier for this column. A format modifies the type and imposes additional rules, like date or time formatting for a string. The 'name' format is applied to the primary identifier column which has type 'string' to assist in clients identifying column is the resource name. See https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#data-types for more.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "description is a human readable description of this column.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"priority": {
+						SchemaProps: spec.SchemaProps{
+							Description: "priority is an integer defining the relative importance of this column compared to others. Lower numbers are considered higher priority. Columns that may be omitted in limited space scenarios should be given a higher priority.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+				},
+				Required: []string{"name", "type", "format", "description", "priority"},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_meta_v1_TableOptions(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "TableOptions are used when a Table is requested by the caller.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"includeObject": {
+						SchemaProps: spec.SchemaProps{
+							Description: "includeObject decides whether to include each object along with its columnar information. Specifying \"None\" will return no object, specifying \"Object\" will return the full object contents, and specifying \"Metadata\" (the default) will return the object's metadata in the PartialObjectMetadata kind in version v1beta1 of the meta.k8s.io API group.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_meta_v1_TableRow(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "TableRow is an individual row in a table.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"cells": {
+						SchemaProps: spec.SchemaProps{
+							Description: "cells will be as wide as the column definitions array and may contain strings, numbers (float64 or int64), booleans, simple maps, lists, or null. See the type field of the column definition for a more detailed description.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"object"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions describe additional status of a row that are relevant for a human user. These conditions apply to the row, not to the object, and will be specific to table output. The only defined condition type is 'Completed', for a row that indicates a resource that has run to completion and can be given less visual priority.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition"),
+									},
+								},
+							},
+						},
+					},
+					"object": {
+						SchemaProps: spec.SchemaProps{
+							Description: "This field contains the requested additional information about each object based on the includeObject policy when requesting the Table. If \"None\", this field is empty, if \"Object\" this will be the default serialization of the object for the current API version, and if \"Metadata\" (the default) will contain the object metadata. Check the returned kind and apiVersion of the object before parsing. The media type of the object will always match the enclosing list - if this as a JSON table, these will be JSON encoded objects.",
+							Ref:         ref("k8s.io/apimachinery/pkg/runtime.RawExtension"),
+						},
+					},
+				},
+				Required: []string{"cells"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition", "k8s.io/apimachinery/pkg/runtime.RawExtension"},
+	}
+}
+
+func schema_pkg_apis_meta_v1_TableRowCondition(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "TableRowCondition allows a row to be marked with additional information.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type of row condition. The only defined value is 'Completed' indicating that the object this row represents has reached a completed state and may be given less visual priority than other rows. Clients are not required to honor any conditions but should be consistent where possible about handling the conditions.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status of the condition, one of True, False, Unknown.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"reason": {
+						SchemaProps: spec.SchemaProps{
+							Description: "(brief) machine readable reason for the condition's last transition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Human readable message indicating details about last transition.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"type", "status"},
+			},
+		},
 	}
 }
 

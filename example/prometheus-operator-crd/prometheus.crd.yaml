@@ -38,7 +38,7 @@ spec:
                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                   type: string
                 optional:
-                  description: Specify whether the Secret or it's key must be defined
+                  description: Specify whether the Secret or its key must be defined
                   type: boolean
               required:
               - key
@@ -54,7 +54,7 @@ spec:
                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                   type: string
                 optional:
-                  description: Specify whether the Secret or it's key must be defined
+                  description: Specify whether the Secret or its key must be defined
                   type: boolean
               required:
               - key
@@ -70,7 +70,7 @@ spec:
                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                   type: string
                 optional:
-                  description: Specify whether the Secret or it's key must be defined
+                  description: Specify whether the Secret or its key must be defined
                   type: boolean
               required:
               - key
@@ -738,7 +738,7 @@ spec:
                           description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                           type: string
                         optional:
-                          description: Specify whether the Secret or it's key must
+                          description: Specify whether the Secret or its key must
                             be defined
                           type: boolean
                       required:
@@ -755,7 +755,7 @@ spec:
                           description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                           type: string
                         optional:
-                          description: Specify whether the Secret or it's key must
+                          description: Specify whether the Secret or its key must
                             be defined
                           type: boolean
                       required:
@@ -878,7 +878,7 @@ spec:
                                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                                   type: string
                                 optional:
-                                  description: Specify whether the ConfigMap or it's
+                                  description: Specify whether the ConfigMap or its
                                     key must be defined
                                   type: boolean
                               required:
@@ -925,8 +925,8 @@ spec:
                                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                                   type: string
                                 optional:
-                                  description: Specify whether the Secret or it's
-                                    key must be defined
+                                  description: Specify whether the Secret or its key
+                                    must be defined
                                   type: boolean
                               required:
                               - key
@@ -1519,6 +1519,25 @@ spec:
                               to the container.
                             type: string
                         type: object
+                      windowsOptions:
+                        description: WindowsSecurityContextOptions contain Windows-specific
+                          options and credentials.
+                        properties:
+                          gmsaCredentialSpec:
+                            description: GMSACredentialSpec is where the GMSA admission
+                              webhook (https://github.com/kubernetes-sigs/windows-gmsa)
+                              inlines the contents of the GMSA credential spec named
+                              by the GMSACredentialSpecName field. This field is alpha-level
+                              and is only honored by servers that enable the WindowsGMSA
+                              feature flag.
+                            type: string
+                          gmsaCredentialSpecName:
+                            description: GMSACredentialSpecName is the name of the
+                              GMSA credential spec to use. This field is alpha-level
+                              and is only honored by servers that enable the WindowsGMSA
+                              feature flag.
+                            type: string
+                        type: object
                     type: object
                   stdin:
                     description: Whether this container should allocate a buffer for
@@ -1613,7 +1632,7 @@ spec:
                             to SubPath but environment variable references $(VAR_NAME)
                             are expanded using the container's environment. Defaults
                             to "" (volume's root). SubPathExpr and SubPath are mutually
-                            exclusive. This field is alpha in 1.14.
+                            exclusive. This field is beta in 1.15.
                           type: string
                       required:
                       - name
@@ -1873,6 +1892,13 @@ spec:
                                 be identical to the value in the first response, unless
                                 you have received this token from an error message.
                               type: string
+                            remainingItemCount:
+                              description: |-
+                                remainingItemCount is the number of subsequent items in the list which are not included in this list response. If the list request contained label or field selectors, then the number of remaining items is unknown and the field will be left unset and omitted during serialization. If the list is complete (either because it is not chunking or because this is the last chunk), then there are no more remaining items and this field will be left unset and omitted during serialization. Servers older than v1.15 do not set this field. The intended use of the remainingItemCount is *estimating* the size of a collection. Clients should not rely on the remainingItemCount to be set or to be exact.
+
+                                This field is alpha and can be changed or removed without notice.
+                              format: int64
+                              type: integer
                             resourceVersion:
                               description: 'String that identifies the server''s internal
                                 version of this object that can be used by clients
@@ -2157,7 +2183,7 @@ spec:
                             description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                             type: string
                           optional:
-                            description: Specify whether the Secret or it's key must
+                            description: Specify whether the Secret or its key must
                               be defined
                             type: boolean
                         required:
@@ -2174,7 +2200,7 @@ spec:
                             description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                             type: string
                           optional:
-                            description: Specify whether the Secret or it's key must
+                            description: Specify whether the Secret or its key must
                               be defined
                             type: boolean
                         required:
@@ -2249,7 +2275,7 @@ spec:
                             description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                             type: string
                           optional:
-                            description: Specify whether the Secret or it's key must
+                            description: Specify whether the Secret or its key must
                               be defined
                             type: boolean
                         required:
@@ -2266,7 +2292,7 @@ spec:
                             description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                             type: string
                           optional:
-                            description: Specify whether the Secret or it's key must
+                            description: Specify whether the Secret or its key must
                               be defined
                             type: boolean
                         required:
@@ -2641,6 +2667,24 @@ spec:
                     - value
                     type: object
                   type: array
+                windowsOptions:
+                  description: WindowsSecurityContextOptions contain Windows-specific
+                    options and credentials.
+                  properties:
+                    gmsaCredentialSpec:
+                      description: GMSACredentialSpec is where the GMSA admission
+                        webhook (https://github.com/kubernetes-sigs/windows-gmsa)
+                        inlines the contents of the GMSA credential spec named by
+                        the GMSACredentialSpecName field. This field is alpha-level
+                        and is only honored by servers that enable the WindowsGMSA
+                        feature flag.
+                      type: string
+                    gmsaCredentialSpecName:
+                      description: GMSACredentialSpecName is the name of the GMSA
+                        credential spec to use. This field is alpha-level and is only
+                        honored by servers that enable the WindowsGMSA feature flag.
+                      type: string
+                  type: object
               type: object
             serviceAccountName:
               description: ServiceAccountName is the name of the ServiceAccount to
@@ -2975,6 +3019,13 @@ spec:
                                         you have received this token from an error
                                         message.
                                       type: string
+                                    remainingItemCount:
+                                      description: |-
+                                        remainingItemCount is the number of subsequent items in the list which are not included in this list response. If the list request contained label or field selectors, then the number of remaining items is unknown and the field will be left unset and omitted during serialization. If the list is complete (either because it is not chunking or because this is the last chunk), then there are no more remaining items and this field will be left unset and omitted during serialization. Servers older than v1.15 do not set this field. The intended use of the remainingItemCount is *estimating* the size of a collection. Clients should not rely on the remainingItemCount to be set or to be exact.
+
+                                        This field is alpha and can be changed or removed without notice.
+                                      format: int64
+                                      type: integer
                                     resourceVersion:
                                       description: 'String that identifies the server''s
                                         internal version of this object that can be
@@ -3324,8 +3375,7 @@ spec:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                       type: string
                     optional:
-                      description: Specify whether the Secret or it's key must be
-                        defined
+                      description: Specify whether the Secret or its key must be defined
                       type: boolean
                   required:
                   - key

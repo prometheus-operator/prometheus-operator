@@ -48,7 +48,7 @@ spec:
                             description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                             type: string
                           optional:
-                            description: Specify whether the Secret or it's key must
+                            description: Specify whether the Secret or its key must
                               be defined
                             type: boolean
                         required:
@@ -65,7 +65,7 @@ spec:
                             description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                             type: string
                           optional:
-                            description: Specify whether the Secret or it's key must
+                            description: Specify whether the Secret or its key must
                               be defined
                             type: boolean
                         required:
