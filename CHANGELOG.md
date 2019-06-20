@@ -1,5 +1,15 @@
 ## Next release
 
+## 0.31.0 / 2019-06-20
+
+* [CHANGE] Remove gossip configuration from Thanos sidecar. This means only non-gossip configurations can be used going forward. (#2623, #2629)
+* [FEATURE] Add PodMonitor, allowing monitoring pods directly without the necessity to go through a Endpoints of a Service, this is an experimental feature, it may break at any time without notice. (#2566)
+* [FEATURE] Add admission webhook to validate `PrometheusRule` objects with Prometheus' promtool linting. (#2551)
+* [FEATURE] Add ability to select subset of Prometheus objects to reconcile against, configurable with `--prometheus-instance-selector` flag. (#2615)
+* [FEATURE] Add ability to configure size based retention on Prometheus. (#2608)
+* [FEATURE] Add ability to use StatefulSet ordinal in external labels. (#2591)
+* [ENHANCEMENT] Use /-/healthy and /-/ready for probes in Alertmanager. (#2600)
+
 ## 0.30.0 / 2019-05-10
 
 Note: Both kube-prometheus (#2554) and the Helm Chart (#2416) have been removed from this repository.
