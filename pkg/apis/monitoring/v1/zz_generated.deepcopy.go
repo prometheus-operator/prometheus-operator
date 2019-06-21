@@ -123,7 +123,7 @@ func (in *AlertmanagerEndpoints) DeepCopy() *AlertmanagerEndpoints {
 func (in *AlertmanagerList) DeepCopyInto(out *AlertmanagerList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Alertmanager, len(*in))
@@ -483,7 +483,7 @@ func (in *PodMonitor) DeepCopy() *PodMonitor {
 func (in *PodMonitorList) DeepCopyInto(out *PodMonitorList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]*PodMonitor, len(*in))
@@ -566,7 +566,7 @@ func (in *Prometheus) DeepCopy() *Prometheus {
 func (in *PrometheusList) DeepCopyInto(out *PrometheusList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]*Prometheus, len(*in))
@@ -614,7 +614,7 @@ func (in *PrometheusRule) DeepCopy() *PrometheusRule {
 func (in *PrometheusRuleList) DeepCopyInto(out *PrometheusRuleList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]*PrometheusRule, len(*in))
@@ -1112,7 +1112,7 @@ func (in *ServiceMonitor) DeepCopy() *ServiceMonitor {
 func (in *ServiceMonitorList) DeepCopyInto(out *ServiceMonitorList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]*ServiceMonitor, len(*in))
