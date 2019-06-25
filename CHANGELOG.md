@@ -1,5 +1,8 @@
 ## Next release
 
+## 0.31.1 / 2019-06-25
+* [BUGFIX] Increase terminationGracePeriod for alertmanager statefulSet as it cannot be 0. (#2657)
+
 ## 0.31.0 / 2019-06-20
 
 * [CHANGE] Remove gossip configuration from Thanos sidecar. This means only non-gossip configurations can be used going forward. (#2623, #2629)
