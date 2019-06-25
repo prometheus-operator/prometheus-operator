@@ -431,7 +431,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		resources.Limits[v1.ResourceMemory] = resource.MustParse(config.ConfigReloaderMemory)
 	}
 
-	terminationGracePeriod := int64(0)
+	terminationGracePeriod := int64(120)
 	finalLabels := config.Labels.Merge(podLabels)
 	return &appsv1.StatefulSetSpec{
 		ServiceName: governingServiceName,
