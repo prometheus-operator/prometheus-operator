@@ -266,8 +266,8 @@ k8s.io/apimachinery/pkg/fields
 k8s.io/apimachinery/pkg/labels
 k8s.io/apimachinery/pkg/util/intstr
 k8s.io/apimachinery/pkg/util/runtime
-k8s.io/apimachinery/pkg/runtime/schema
 k8s.io/apimachinery/pkg/watch
+k8s.io/apimachinery/pkg/runtime/schema
 k8s.io/apimachinery/pkg/runtime/serializer
 k8s.io/apimachinery/pkg/types
 k8s.io/apimachinery/pkg/util/strategicpatch
@@ -282,10 +282,10 @@ k8s.io/apimachinery/pkg/util/errors
 k8s.io/apimachinery/pkg/util/naming
 k8s.io/apimachinery/pkg/util/sets
 k8s.io/apimachinery/pkg/util/validation/field
+k8s.io/apimachinery/pkg/util/net
 k8s.io/apimachinery/pkg/util/cache
 k8s.io/apimachinery/pkg/util/clock
 k8s.io/apimachinery/pkg/util/diff
-k8s.io/apimachinery/pkg/util/net
 k8s.io/apimachinery/pkg/version
 k8s.io/apimachinery/pkg/runtime/serializer/streaming
 k8s.io/apimachinery/pkg/runtime/serializer/json
