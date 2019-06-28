@@ -41,6 +41,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -82,6 +83,7 @@ type Config struct {
 	CrdGroup                     string
 	EnableValidation             bool
 	ManageCRDs                   bool
+	AlertManagerSelector         string
 }
 
 // New creates a new controller.
@@ -125,6 +127,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 			Labels:                       c.Labels,
 			EnableValidation:             c.EnableValidation,
 			ManageCRDs:                   c.ManageCRDs,
+			AlertManagerSelector:         c.AlertManagerSelector,
 		},
 	}
 
@@ -132,9 +135,13 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		listwatch.MultiNamespaceListerWatcher(o.config.Namespaces, func(namespace string) cache.ListerWatcher {
 			return &cache.ListWatch{
 				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+					options.LabelSelector = o.config.AlertManagerSelector
 					return o.mclient.MonitoringV1().Alertmanagers(namespace).List(options)
 				},
-				WatchFunc: o.mclient.MonitoringV1().Alertmanagers(namespace).Watch,
+				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+					options.LabelSelector = o.config.AlertManagerSelector
+					return o.mclient.MonitoringV1().Alertmanagers(namespace).Watch(options)
+				},
 			}
 		}),
 		&monitoringv1.Alertmanager{}, resyncPeriod, cache.Indexers{},

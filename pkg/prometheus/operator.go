@@ -154,6 +154,7 @@ type Config struct {
 	LogFormat                     string
 	ManageCRDs                    bool
 	PromSelector                  string
+	AlertManagerSelector          string
 }
 
 type BasicAuthCredentials struct {
@@ -185,6 +186,10 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 	if _, err := labels.Parse(conf.PromSelector); err != nil {
 		return nil, errors.Wrap(err, "can not parse prometheus selector value")
+	}
+
+	if _, err := labels.Parse(conf.AlertManagerSelector); err != nil {
+		return nil, errors.Wrap(err, "can not parse alertmanager selector value")
 	}
 
 	kubeletObjectName := ""
