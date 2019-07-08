@@ -44,6 +44,10 @@ The versions of Prometheus compatible to be run with the Prometheus Operator are
 * v2.6.1
 * v2.7.0
 * v2.7.1
+* v2.7.2
+* v2.8.1
+* v2.9.2
+* v2.10.0
 
 ## Alertmanager
 
