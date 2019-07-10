@@ -54,14 +54,10 @@ kubectl -n monitoring create secret generic thanos-objstore-config --from-file=t
 ### Prometheus Custom Resource with Thanos Sidecar
 
 The `Prometheus` CRD has support for adding a Thanos sidecar to the Prometheus
-Pod. To enable the sidecar, reference the following examples. These examples
-assume that the Thanos components have been configured to use the
-`thanos-peers.monitoring.svc:10900` service for querier peers to connect to,
-which is important for getting high availability to work with Thanos.
+Pod. To enable the sidecar, reference the following examples.
 
 This is the simplest configuration change that needs to be made to your
-Prometheus Custom Resource, after creating the secret, and is the only configuration needed to
-provide high availability benefits.
+Prometheus Custom Resource, after creating the secret.
 
 ```
 ...
@@ -70,7 +66,6 @@ spec:
   thanos:
     baseImage: improbable/thanos
     version: v0.2.1
-    peers: thanos-peers.monitoring.svc:10900
     objectStorageConfig:
       key: thanos.yaml
       name: thanos-objstore-config
