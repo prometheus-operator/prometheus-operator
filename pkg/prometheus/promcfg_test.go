@@ -51,40 +51,65 @@ func TestConfigGeneration(t *testing.T) {
 }
 
 func TestNamespaceSetCorrectly(t *testing.T) {
-	sm := &monitoringv1.ServiceMonitor{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "testservicemonitor1",
-			Namespace: "default",
-			Labels: map[string]string{
-				"group": "group1",
-			},
-		},
-		Spec: monitoringv1.ServiceMonitorSpec{
-			NamespaceSelector: monitoringv1.NamespaceSelector{
-				MatchNames: []string{"test"},
-			},
-		},
+	type testCase struct {
+		ServiceMonitor *monitoringv1.ServiceMonitor
+		Expected       string
 	}
 
-	cg := &configGenerator{}
-
-	c := cg.generateK8SSDConfig(getNamespacesFromServiceMonitor(sm), nil, nil, kubernetesSDRoleEndpoint)
-	s, err := yaml.Marshal(yaml.MapSlice{c})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `kubernetes_sd_configs:
+	testcases := []testCase{
+		{
+			ServiceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					NamespaceSelector: monitoringv1.NamespaceSelector{
+						MatchNames: []string{"test"},
+					},
+				},
+			},
+			Expected: `kubernetes_sd_configs:
 - role: endpoints
   namespaces:
     names:
     - test
-`
+`,
+		},
+		{
+			ServiceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor2",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					NamespaceSelector: monitoringv1.NamespaceSelector{
+						Any: true,
+					},
+				},
+			},
+			Expected: `kubernetes_sd_configs:
+- role: endpoints
+`,
+		},
+	}
+	cg := &configGenerator{}
 
-	result := string(s)
-
-	if expected != result {
-		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	for _, tc := range testcases {
+		c := cg.generateK8SSDConfig(getNamespacesFromServiceMonitor(tc.ServiceMonitor), nil, nil, kubernetesSDRoleEndpoint)
+		s, err := yaml.Marshal(yaml.MapSlice{c})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if tc.Expected != string(s) {
+			t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", string(s), tc.Expected)
+		}
 	}
 }
 
