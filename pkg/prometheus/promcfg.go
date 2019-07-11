@@ -863,7 +863,7 @@ func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverCon
 		},
 	}
 
-	if namespaces != nil {
+	if len(namespaces) != 0 {
 		k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
 			Key: "namespaces",
 			Value: yaml.MapSlice{
