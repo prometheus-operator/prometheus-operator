@@ -1844,6 +1844,10 @@ spec:
                     Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
                   type: string
               type: object
+            portName:
+              description: Port name used for the pods and governing service. This
+                defaults to web
+              type: string
             priorityClassName:
               description: Priority class assigned to the Pods
               type: string

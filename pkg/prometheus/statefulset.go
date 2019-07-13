@@ -47,6 +47,7 @@ const (
 	configFilename                  = "prometheus.yaml.gz"
 	configEnvsubstFilename          = "prometheus.env.yaml"
 	sSetInputHashName               = "prometheus-operator-input-hash"
+	defaultPortName                 = "web"
 )
 
 var (
@@ -119,6 +120,10 @@ func makeStatefulSet(
 	if p.Spec.Thanos != nil && p.Spec.Thanos.Version == nil {
 		v := DefaultThanosVersion
 		p.Spec.Thanos.Version = &v
+	}
+
+	if p.Spec.PortName == "" {
+		p.Spec.PortName = defaultPortName
 	}
 
 	versionStr := strings.TrimLeft(p.Spec.Version, "v")
@@ -257,6 +262,12 @@ func makeConfigSecret(p *monitoringv1.Prometheus, config Config) *v1.Secret {
 }
 
 func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Service {
+	p = p.DeepCopy()
+
+	if p.Spec.PortName == "" {
+		p.Spec.PortName = defaultPortName
+	}
+
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: governingServiceName,
@@ -276,9 +287,9 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Servi
 			ClusterIP: "None",
 			Ports: []v1.ServicePort{
 				{
-					Name:       "web",
+					Name:       p.Spec.PortName,
 					Port:       9090,
-					TargetPort: intstr.FromString("web"),
+					TargetPort: intstr.FromString(p.Spec.PortName),
 				},
 			},
 			Selector: map[string]string{
@@ -444,7 +455,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	} else {
 		ports = []v1.ContainerPort{
 			{
-				Name:          "web",
+				Name:          p.Spec.PortName,
 				ContainerPort: 9090,
 				Protocol:      v1.ProtocolTCP,
 			},
@@ -579,13 +590,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		livenessProbeHandler = v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
 				Path: path.Clean(webRoutePrefix + "/-/healthy"),
-				Port: intstr.FromString("web"),
+				Port: intstr.FromString(p.Spec.PortName),
 			},
 		}
 		readinessProbeHandler = v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
 				Path: path.Clean(webRoutePrefix + "/-/ready"),
-				Port: intstr.FromString("web"),
+				Port: intstr.FromString(p.Spec.PortName),
 			},
 		}
 		livenessFailureThreshold = 6
@@ -593,7 +604,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		livenessProbeHandler = v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
 				Path: path.Clean(webRoutePrefix + "/status"),
-				Port: intstr.FromString("web"),
+				Port: intstr.FromString(p.Spec.PortName),
 			},
 		}
 		readinessProbeHandler = livenessProbeHandler

@@ -2130,6 +2130,10 @@ spec:
                     are ANDed.
                   type: object
               type: object
+            portName:
+              description: Port name used for the pods and governing service. This
+                defaults to web
+              type: string
             priorityClassName:
               description: Priority class assigned to the Pods
               type: string

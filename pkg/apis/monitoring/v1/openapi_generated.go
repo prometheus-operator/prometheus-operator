@@ -783,6 +783,13 @@ func schema_pkg_apis_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallback
 							},
 						},
 					},
+					"portName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Port name used for the pods and governing service. This defaults to web",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
@@ -1914,6 +1921,13 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 					"priorityClassName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Priority class assigned to the Pods",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"portName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Port name used for the pods and governing service. This defaults to web",
 							Type:        []string{"string"},
 							Format:      "",
 						},
