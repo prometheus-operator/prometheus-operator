@@ -18,15 +18,16 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"time"
 
 	crdutils "github.com/ant31/crd-validation/pkg"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	version "github.com/hashicorp/go-version"
+	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +37,11 @@ import (
 	"k8s.io/client-go/discovery"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
+
+// KubeConfigEnv (optionally) specify the location of kubeconfig file
+const KubeConfigEnv = "KUBECONFIG"
 
 var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
 
@@ -86,23 +91,32 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 	var cfg *rest.Config
 	var err error
 
-	if len(host) == 0 {
-		if cfg, err = rest.InClusterConfig(); err != nil {
-			return nil, err
+	kubeconfigFile := os.Getenv(KubeConfigEnv)
+	if kubeconfigFile != "" {
+		cfg, err = clientcmd.BuildConfigFromFlags("", kubeconfigFile)
+		if err != nil {
+			return nil, fmt.Errorf("Error creating config from specified file: %s %v\n", kubeconfigFile, err)
 		}
 	} else {
-		cfg = &rest.Config{
-			Host: host,
-		}
-		hostURL, err := url.Parse(host)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing host url %s : %v", host, err)
-		}
-		if hostURL.Scheme == "https" {
-			cfg.TLSClientConfig = *tlsConfig
-			cfg.Insecure = tlsInsecure
+		if len(host) == 0 {
+			if cfg, err = rest.InClusterConfig(); err != nil {
+				return nil, err
+			}
+		} else {
+			cfg = &rest.Config{
+				Host: host,
+			}
+			hostURL, err := url.Parse(host)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing host url %s : %v", host, err)
+			}
+			if hostURL.Scheme == "https" {
+				cfg.TLSClientConfig = *tlsConfig
+				cfg.Insecure = tlsInsecure
+			}
 		}
 	}
+
 	cfg.QPS = 100
 	cfg.Burst = 100
 
