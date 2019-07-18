@@ -276,7 +276,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Servi
 			ClusterIP: "None",
 			Ports: []v1.ServicePort{
 				{
-					Name:       "web",
+					Name:       "http",
 					Port:       9090,
 					TargetPort: intstr.FromString("web"),
 				},

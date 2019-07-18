@@ -71,9 +71,9 @@ func (f *Framework) MakeAlertmanagerService(name, group string, serviceType v1.S
 			Type: serviceType,
 			Ports: []v1.ServicePort{
 				{
-					Name:       "web",
+					Name:       "http",
 					Port:       9093,
-					TargetPort: intstr.FromString("web"),
+					TargetPort: intstr.FromString("http"),
 				},
 			},
 			Selector: map[string]string{

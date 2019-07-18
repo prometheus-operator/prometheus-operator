@@ -1137,7 +1137,7 @@ func testPromExposingWithKubernetesAPI(t *testing.T) {
 	}
 
 	ProxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
-	request := ProxyGet("", service.Name, "web", "/metrics", make(map[string]string))
+	request := ProxyGet("", service.Name, "http", "/metrics", make(map[string]string))
 	_, err := request.DoRaw()
 	if err != nil {
 		t.Fatal(err)
@@ -1419,7 +1419,7 @@ func testPromGetBasicAuthSecret(t *testing.T) {
 			Type: v1.ServiceTypeLoadBalancer,
 			Ports: []v1.ServicePort{
 				v1.ServicePort{
-					Name: "web",
+					Name: "http",
 					Port: 8080,
 				},
 			},

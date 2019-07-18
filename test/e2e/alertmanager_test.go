@@ -198,7 +198,7 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 	}
 
 	proxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
-	request := proxyGet("", alertmanagerService.Name, "web", "/", make(map[string]string))
+	request := proxyGet("", alertmanagerService.Name, "http", "/", make(map[string]string))
 	_, err := request.DoRaw()
 	if err != nil {
 		t.Fatal(err)
@@ -448,7 +448,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 							Image: "quay.io/coreos/prometheus-alertmanager-test-webhook",
 							Ports: []v1.ContainerPort{
 								{
-									Name:          "web",
+									Name:          "http",
 									ContainerPort: 5001,
 								},
 							},
@@ -466,9 +466,9 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 			Type: v1.ServiceTypeClusterIP,
 			Ports: []v1.ServicePort{
 				{
-					Name:       "web",
+					Name:       "http",
 					Port:       5001,
-					TargetPort: intstr.FromString("web"),
+					TargetPort: intstr.FromString("http"),
 				},
 			},
 			Selector: map[string]string{

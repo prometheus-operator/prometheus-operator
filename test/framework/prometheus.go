@@ -67,7 +67,7 @@ func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name
 			{
 				Namespace: ns,
 				Name:      fmt.Sprintf("alertmanager-%s", name),
-				Port:      intstr.FromString("web"),
+				Port:      intstr.FromString("http"),
 			},
 		},
 	}
@@ -89,7 +89,7 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:     "web",
+					Port:     "http",
 					Interval: "30s",
 				},
 			},
@@ -109,9 +109,9 @@ func (f *Framework) MakePrometheusService(name, group string, serviceType v1.Ser
 			Type: serviceType,
 			Ports: []v1.ServicePort{
 				{
-					Name:       "web",
+					Name:       "http",
 					Port:       9090,
-					TargetPort: intstr.FromString("web"),
+					TargetPort: intstr.FromString("http"),
 				},
 			},
 			Selector: map[string]string{
@@ -276,7 +276,7 @@ func (f *Framework) WaitForTargets(ns, svcName string, amount int) error {
 
 func (f *Framework) QueryPrometheusSVC(ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
-	request := ProxyGet("", svcName, "web", endpoint, query)
+	request := ProxyGet("", svcName, "http", endpoint, query)
 	return request.DoRaw()
 }
 
