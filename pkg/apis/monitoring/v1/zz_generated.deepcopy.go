@@ -715,6 +715,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.WALCompression != nil {
+		in, out := &in.WALCompression, &out.WALCompression
+		*out = new(bool)
+		**out = **in
+	}
 	out.Rules = in.Rules
 	if in.ExternalLabels != nil {
 		in, out := &in.ExternalLabels, &out.ExternalLabels

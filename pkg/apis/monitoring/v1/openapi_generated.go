@@ -1647,6 +1647,13 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"walCompression": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Enable compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"logLevel": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Log level for Prometheus to be configured with.",

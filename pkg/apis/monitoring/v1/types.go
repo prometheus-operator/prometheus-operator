@@ -131,6 +131,9 @@ type PrometheusSpec struct {
 	Retention string `json:"retention,omitempty"`
 	// Maximum amount of disk space used by blocks.
 	RetentionSize string `json:"retentionSize,omitempty"`
+	// Enable compression of the write-ahead log using Snappy. This flag is
+	// only available in versions of Prometheus >= 2.11.0.
+	WALCompression *bool `json:"walCompression,omitempty"`
 	// Log level for Prometheus to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for Prometheus to be configured with.
