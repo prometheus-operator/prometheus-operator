@@ -430,6 +430,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		}
 	}
 
+	if version.GTE(semver.MustParse("2.11.0")) && p.Spec.WALCompression != nil {
+		if *p.Spec.WALCompression {
+			promArgs = append(promArgs, "-storage.tsdb.wal-compression")
+		} else {
+			promArgs = append(promArgs, "-no-storage.tsdb.wal-compression")
+		}
+	}
+
 	var ports []v1.ContainerPort
 	if p.Spec.ListenLocal {
 		promArgs = append(promArgs, "-web.listen-address=127.0.0.1:9090")

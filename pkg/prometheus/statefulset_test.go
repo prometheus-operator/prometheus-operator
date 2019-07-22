@@ -792,3 +792,59 @@ func TestAdditionalContainers(t *testing.T) {
 		}
 	}
 }
+
+func TestWALCompression(t *testing.T) {
+	var (
+		tr = true
+		fa = false
+	)
+	tests := []struct {
+		version       string
+		enabled       *bool
+		expectedArg   string
+		shouldContain bool
+	}{
+		// Nil should not have either flag.
+		{"v1.8.2", nil, "-no-storage.tsdb.wal-compression", false},
+		{"v1.8.2", nil, "-storage.tsdb.wal-compression", false},
+		{"v1.8.2", &fa, "-no-storage.tsdb.wal-compression", false},
+		{"v1.8.2", &tr, "-storage.tsdb.wal-compression", false},
+		{"v2.10.0", nil, "--no-storage.tsdb.wal-compression", false},
+		{"v2.10.0", nil, "--storage.tsdb.wal-compression", false},
+		{"v2.10.0", &fa, "--no-storage.tsdb.wal-compression", false},
+		{"v2.10.0", &tr, "--storage.tsdb.wal-compression", false},
+		{"v2.11.0", nil, "--no-storage.tsdb.wal-compression", false},
+		{"v2.11.0", nil, "--storage.tsdb.wal-compression", false},
+		{"v2.11.0", &fa, "--no-storage.tsdb.wal-compression", true},
+		{"v2.11.0", &tr, "--storage.tsdb.wal-compression", true},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSet(monitoringv1.Prometheus{
+			Spec: monitoringv1.PrometheusSpec{
+				Version:        test.version,
+				WALCompression: test.enabled,
+			},
+		}, defaultTestConfig, nil, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		promArgs := sset.Spec.Template.Spec.Containers[0].Args
+		found := false
+		for _, flag := range promArgs {
+			if flag == test.expectedArg {
+				found = true
+				break
+			}
+		}
+
+		if found != test.shouldContain {
+			if test.shouldContain {
+				t.Fatalf("expected Prometheus args to contain %v, but got %v", test.expectedArg, promArgs)
+			} else {
+				t.Fatalf("expected Prometheus args to NOT contain %v, but got %v", test.expectedArg, promArgs)
+			}
+		}
+	}
+}
