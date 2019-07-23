@@ -142,7 +142,7 @@ spec:
                       to proxy through this endpoint.
                     type: string
                   relabelings:
-                    description: 'RelabelConfigs to apply to samples before ingestion.
+                    description: 'RelabelConfigs to apply to samples before scraping.
                       More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
                     items:
                       description: 'RelabelConfig allows dynamic rewriting of the
