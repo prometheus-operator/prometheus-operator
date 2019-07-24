@@ -8,7 +8,7 @@ set -u
 # print each command before executing it
 set -x
 
-export MINIKUBE_VERSION=v0.35.0
+export MINIKUBE_VERSION=v1.2.0
 export KUBERNETES_VERSION=v1.13.4
 
 sudo mount --make-rshared /
