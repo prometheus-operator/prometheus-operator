@@ -319,7 +319,7 @@ PrometheusRuleSpec contains specification parameters for a Rule.
 
 ## PrometheusSpec
 
-PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |

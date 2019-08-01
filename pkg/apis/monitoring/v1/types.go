@@ -76,7 +76,7 @@ type PrometheusList struct {
 }
 
 // PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info:
-// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
 	// Standard object’s metadata. More info:
