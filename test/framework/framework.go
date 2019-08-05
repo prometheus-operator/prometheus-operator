@@ -16,17 +16,17 @@ package framework
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -34,7 +34,6 @@ import (
 
 	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-
 	"github.com/pkg/errors"
 )
 
@@ -88,7 +87,7 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 // inside the specified namespace using the specified operator image. In addition
 // one can specify the namespaces to watch, which defaults to all namespaces.
 // Returns the CA, which can bs used to access the operator over TLS
-func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespacesToWatch []string, createRuleAdmissionHooks bool) ([]finalizerFn, error) {
+func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowlist, namespaceDenylist []string, createRuleAdmissionHooks bool) ([]finalizerFn, error) {
 	tru := true
 	fals := false
 	var finalizers []finalizerFn
@@ -148,10 +147,17 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespacesToWat
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=all")
 	deploy.Name = prometheusOperatorServiceDeploymentName
 
-	for _, ns := range namespacesToWatch {
+	for _, ns := range namespaceAllowlist {
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
 			fmt.Sprintf("--namespaces=%v", ns),
+		)
+	}
+
+	for _, ns := range namespaceDenylist {
+		deploy.Spec.Template.Spec.Containers[0].Args = append(
+			deploy.Spec.Template.Spec.Containers[0].Args,
+			fmt.Sprintf("--deny-namespaces=%v", ns),
 		)
 	}
 
@@ -203,7 +209,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespacesToWat
 	}
 
 	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (object runtime.Object, e error) {
-		return  f.MonClientV1.PodMonitors(v1.NamespaceAll).List(opts)
+		return f.MonClientV1.PodMonitors(v1.NamespaceAll).List(opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "PodMonitor CRD not ready: %v\n")

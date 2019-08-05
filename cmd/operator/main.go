@@ -19,7 +19,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/coreos/prometheus-operator/pkg/admission"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -28,6 +27,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/coreos/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/api"
 	"github.com/coreos/prometheus-operator/pkg/apis/monitoring"
@@ -40,7 +40,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
 )
 
@@ -59,7 +59,8 @@ const (
 )
 
 var (
-	ns = namespaces{}
+	ns       = namespaces{}
+	deniedNs = namespaces{}
 )
 
 type namespaces map[string]struct{}
@@ -85,9 +86,6 @@ func (n namespaces) asSlice() []string {
 	var ns []string
 	for k := range n {
 		ns = append(ns, k)
-	}
-	if len(ns) == 0 {
-		ns = append(ns, v1.NamespaceAll)
 	}
 	return ns
 }
@@ -139,7 +137,8 @@ func init() {
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", "quay.io/prometheus/alertmanager", "Alertmanager default base image")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", "quay.io/prometheus/prometheus", "Prometheus default base image")
 	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", "improbable/thanos", "Thanos default base image")
-	flagset.Var(ns, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver.")
+	flagset.Var(ns, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.")
+	flagset.Var(deniedNs, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
 	flagset.StringVar(&cfg.CrdGroup, "crd-apigroup", monitoring.GroupName, "prometheus CRD  API group name")
 	flagset.Var(&cfg.CrdKinds, "crd-kinds", " - EXPERIMENTAL (could be removed in future releases) - customize CRD kind names")
@@ -151,7 +150,13 @@ func init() {
 	flagset.StringVar(&cfg.PromSelector, "prometheus-instance-selector", "", "Label selector to filter Prometheus CRDs to manage")
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager CRDs to manage")
 	flagset.Parse(os.Args[1:])
+
 	cfg.Namespaces = ns.asSlice()
+	if len(cfg.Namespaces) == 0 {
+		cfg.Namespaces = append(cfg.Namespaces, v1.NamespaceAll)
+	}
+
+	cfg.DeniedNamespaces = deniedNs.asSlice()
 }
 
 func Main() int {
@@ -180,6 +185,11 @@ func Main() int {
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	logger.Log("msg", fmt.Sprintf("Starting Prometheus Operator version '%v'.", version.Version))
+
+	if len(ns) > 0 && len(deniedNs) > 0 {
+		fmt.Fprint(os.Stderr, "--namespaces and --deny-namespaces are mutually exclusive. Please provide only one of them.\n")
+		return 1
+	}
 
 	po, err := prometheuscontroller.New(cfg, log.With(logger, "component", "prometheusoperator"))
 	if err != nil {

@@ -11,6 +11,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-kit/kit v0.8.0
 	github.com/go-openapi/spec v0.17.2
+	github.com/gogo/protobuf v1.2.1
 	github.com/golang/protobuf v1.3.1
 	github.com/googleapis/gnostic v0.1.0 // indirect
 	github.com/hashicorp/go-version v1.1.0

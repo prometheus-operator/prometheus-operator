@@ -67,7 +67,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 
-	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, true)
+	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,6 +163,18 @@ func testAllNS(t *testing.T) {
 func TestMultiNS(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
 		"OperatorNSScope": testOperatorNSScope,
+	}
+
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
+// TestDenylist tests the Prometheus Operator configured not to watch specific namespaces.
+func TestDenylist(t *testing.T) {
+	testFuncs := map[string]func(t *testing.T){
+		"Prometheus":     testDenyPrometheus,
+		"ServiceMonitor": testDenyServiceMonitor,
 	}
 
 	for name, f := range testFuncs {
