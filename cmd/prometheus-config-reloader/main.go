@@ -51,6 +51,9 @@ func main() {
 	cfgSubstFile := app.Flag("config-envsubst-file", "output file for environment variable substituted config file").
 		String()
 
+	cfgFileWatchInterval := app.Flag("config-file-watch-interval", "time interval for watching config file changes").
+		Default("3m").Duration()
+
 	createStatefulsetOrdinalFrom := app.Flag(
 		"statefulset-ordinal-from-envvar",
 		fmt.Sprintf("parse this environment variable to create %s, containing the statefulset ordinal number", statefulsetOrdinalEnvvar)).
@@ -88,6 +91,7 @@ func main() {
 	{
 		ctx, cancel := context.WithCancel(context.Background())
 		rel := reloader.New(logger, *reloadURL, *cfgFile, *cfgSubstFile, []string{})
+		rel.WithWatchInterval(*cfgFileWatchInterval)
 
 		g.Add(func() error {
 			return rel.Watch(ctx)
