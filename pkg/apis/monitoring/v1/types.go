@@ -268,6 +268,9 @@ type PrometheusSpec struct {
 	Thanos *ThanosSpec `json:"thanos,omitempty"`
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
+	// Port name used for the pods and governing service.
+	// This defaults to web
+	PortName string `json:"portName,omitempty"`
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not
@@ -813,6 +816,9 @@ type AlertmanagerSpec struct {
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.
 	AdditionalPeers []string `json:"additionalPeers,omitempty"`
+	// Port name used for the pods and governing service.
+	// This defaults to web
+	PortName string `json:"portName,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.

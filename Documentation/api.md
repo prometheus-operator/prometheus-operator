@@ -143,6 +143,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | containers | Containers allows injecting additional containers. This is meant to allow adding an authentication proxy to an Alertmanager pod. | []v1.Container | false |
 | priorityClassName | Priority class assigned to the Pods | string | false |
 | additionalPeers | AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster. | []string | false |
+| portName | Port name used for the pods and governing service. This defaults to web | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -373,6 +374,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | apiserverConfig | APIServerConfig allows specifying a host and auth methods to access apiserver. If left empty, Prometheus is assumed to run inside of the cluster and will discover API servers automatically and use the pod's CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/. | *[APIServerConfig](#apiserverconfig) | false |
 | thanos | Thanos configuration allows configuring various aspects of a Prometheus server in a Thanos environment.\n\nThis section is experimental, it may change significantly without deprecation notice in any release.\n\nThis is experimental and may change significantly without backward compatibility in any release. | *[ThanosSpec](#thanosspec) | false |
 | priorityClassName | Priority class assigned to the Pods | string | false |
+| portName | Port name used for the pods and governing service. This defaults to web | string | false |
 
 [Back to TOC](#table-of-contents)
 

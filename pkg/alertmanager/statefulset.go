@@ -43,6 +43,7 @@ const (
 	alertmanagerConfDir    = "/etc/alertmanager/config"
 	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
 	alertmanagerStorageDir = "/alertmanager"
+	defaultPortName        = "web"
 )
 
 var (
@@ -57,6 +58,9 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 
 	if am.Spec.BaseImage == "" {
 		am.Spec.BaseImage = config.AlertmanagerDefaultBaseImage
+	}
+	if am.Spec.PortName == "" {
+		am.Spec.PortName = defaultPortName
 	}
 	if am.Spec.Version == "" {
 		am.Spec.Version = DefaultVersion
@@ -142,6 +146,11 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 }
 
 func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Service {
+
+	if p.Spec.PortName == "" {
+		p.Spec.PortName = defaultPortName
+	}
+
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: governingServiceName,
@@ -161,7 +170,7 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 			ClusterIP: "None",
 			Ports: []v1.ServicePort{
 				{
-					Name:       "web",
+					Name:       p.Spec.PortName,
 					Port:       9093,
 					TargetPort: intstr.FromInt(9093),
 					Protocol:   v1.ProtocolTCP,
@@ -256,14 +265,14 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	livenessProbeHandler := v1.Handler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/healthy"),
-			Port: intstr.FromString("web"),
+			Port: intstr.FromString(a.Spec.PortName),
 		},
 	}
 
 	readinessProbeHandler := v1.Handler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/ready"),
-			Port: intstr.FromString("web"),
+			Port: intstr.FromString(a.Spec.PortName),
 		},
 	}
 
@@ -325,7 +334,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	if !a.Spec.ListenLocal {
 		ports = append([]v1.ContainerPort{
 			{
-				Name:          "web",
+				Name:          a.Spec.PortName,
 				ContainerPort: 9093,
 				Protocol:      v1.ProtocolTCP,
 			},
