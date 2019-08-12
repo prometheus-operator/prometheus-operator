@@ -2,17 +2,17 @@
 
 _Note: This guide is valid for Prometheus Operator v0.28+ and Thanos v0.2+ and above._
 
-[Thanos](https://github.com/improbable-eng/thanos/) is a set of components
+[Thanos](https://github.com/thanos-io/thanos/) is a set of components
 that can be composed into a highly available
 metric system with unlimited storage capacity, if your Object Storage allows for it.
 The Prometheus Operator provides integration for allowing Prometheus to connect to Thanos.
 
-Thanos components include the queries and stores, which Thanos needs to
+Thanos components include the rulers, compactors, queries and stores, which Thanos needs to
 be fully functional, and should be deployed independently of the Prometheus
 Operator and its Thanos configuration. The
-[kube-prometheus](contrib/kube-prometheus/) project has some experimental
+[kube-thanos](https://github.com/metalmatze/kube-thanos/) project has some experimental
 starting points as well as the [thanos
-project](https://github.com/improbable-eng/thanos/tree/master/kube/manifests).
+project](https://github.com/thanos-io/thanos/blob/master/tutorials/kubernetes-demo/manifests).
 
 In short, for the Thanos integration using the Prometheus Operator to work
 correctly you will need to have these extra components installed and
@@ -20,8 +20,8 @@ configured.
 
 Now please take the time to look at the Thanos README and read through the documentation before continuing with the Prometheus Operator integration.
 
-https://github.com/improbable-eng/thanos/  
-https://github.com/improbable-eng/thanos/blob/master/docs/getting-started.md
+https://github.com/thanos-io/thanos 
+https://github.com/thanos-io/thanos/blob/master/docs/getting-started.md
 
 ## Prometheus Operator
 
@@ -31,7 +31,7 @@ Beginning with Thanos v0.2 the sidecar assumes an existing Kubernetes Secret con
 Inside this secret you configure how to run Thanos with your object storage.
 
 For more information and examples about the configuration itself, take a look at the Thanos documentation:  
-https://github.com/improbable-eng/thanos/blob/master/docs/storage.md
+https://github.com/thanos-io/thanos/blob/master/docs/storage.md
 
 Once you have written your configuration save it to a file.  
 Here's an example:
@@ -72,50 +72,16 @@ spec:
 ...
 ```
 
-## Thanos and kube-prometheus
+## Thanos and kube-thanos
 
 Deploying the sidecar was the first step towards getting Thanos up and running, but there are more components to be deployed, that complete Thanos.
 
 * Store
-* Query
+* Querier
 * Compactor
 
 Again, take a look at the Thanos documentation for more details on these components:  
-https://github.com/improbable-eng/thanos/blob/master/docs/getting_started.md#store-api
+https://github.com/thanos-io/thanos/blob/master/docs/getting-started.md#store-api
 
-kube-prometheus has built-in support for these extra components.
-To enabled these, you need to change the [contrib/kube-prometheus/example.jsonnet](https://github.com/coreos/prometheus-operator/blob/master/contrib/kube-prometheus/example.jsonnet)
-file slightly:
-
-```diff
-diff --git a/contrib/kube-prometheus/example.jsonnet b/contrib/kube-prometheus/example.jsonnet
-index fcd2bb01..bcf01c75 100644
---- a/contrib/kube-prometheus/example.jsonnet
-+++ b/contrib/kube-prometheus/example.jsonnet
-@@ -1,5 +1,6 @@
- local kp =
--  (import 'kube-prometheus/kube-prometheus.libsonnet') + {
-+  (import 'kube-prometheus/kube-prometheus.libsonnet') +
-+  (import 'kube-prometheus/kube-prometheus-thanos.libsonnet') + {
-     _config+:: {
-       namespace: 'monitoring',
-     },
-
-```
-
-Now you can rebuild the manifests by running `./build.sh` and all necessary changes will be written to `manifests/`.
-
-`git status -s manifests`:
-```
- M manifests/prometheus-prometheus.yaml
-?? manifests/prometheus-serviceMonitorThanosPeer.yaml
-?? manifests/prometheus-thanosPeerService.yaml
-?? manifests/prometheus-thanosQueryDeployment.yaml
-?? manifests/prometheus-thanosQueryService.yaml
-?? manifests/prometheus-thanosStoreStatefulset.yaml
-```
-
-Now you can `kubectl apply -f manifests` like always.
-The store will know configured itself with the same `thanos-objstore-config` secret that the sidecar uses.
-
-We also deployed a ServiceMonitor that automatically starts to scrape your Thanos components.
+Although kube-thanos project is still in early stage, it has already supported several thanos components. 
+For more details, please checkout [kube-thanos](https://github.com/metalmatze/kube-thanos/).
