@@ -710,6 +710,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
 				fmt.Sprintf("--tsdb.path=%s", storageDir),
 				"--grpc-address=[$(POD_IP)]:10901",
+				"--http-address=[$(POD_IP)]:10902",
 			},
 			Env: []v1.EnvVar{
 				{
