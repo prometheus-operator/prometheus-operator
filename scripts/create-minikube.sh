@@ -9,7 +9,7 @@ set -u
 set -x
 
 export MINIKUBE_VERSION=v1.2.0
-export KUBERNETES_VERSION=v1.13.4
+export KUBERNETES_VERSION=v1.14.5
 
 sudo mount --make-rshared /
 sudo mount --make-rshared /proc
