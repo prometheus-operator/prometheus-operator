@@ -122,12 +122,13 @@ func TestMultiWatchStop(t *testing.T) {
 }
 
 type mockListerWatcher struct {
-	evCh    chan watch.Event
-	stopped bool
+	listResult runtime.Object
+	evCh       chan watch.Event
+	stopped    bool
 }
 
 func (m *mockListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
-	return nil, nil
+	return m.listResult, nil
 }
 
 func (m *mockListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
