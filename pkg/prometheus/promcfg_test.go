@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	yaml "gopkg.in/yaml.v2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -749,6 +749,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 			},
 		},
 		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
 		nil,
 		nil,
 		nil,
