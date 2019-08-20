@@ -46,16 +46,16 @@ func newNamespace(name string) *v1.Namespace {
 	}
 }
 
-func TestDenylistList(t *testing.T) {
+func TestBlacklistList(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	cases := []struct {
-		name           string
-		items          []runtime.RawExtension
-		denylist, want []string
+		name            string
+		items           []runtime.RawExtension
+		blacklist, want []string
 	}{
 		{
-			name: "deny one",
+			name: "black one",
 			items: []runtime.RawExtension{
 				{
 					Object: newUnstructured("monitoring"),
@@ -67,11 +67,11 @@ func TestDenylistList(t *testing.T) {
 					Object: newUnstructured("kube-system"),
 				},
 			},
-			denylist: []string{"monitoring"},
-			want:     []string{"default", "kube-system"},
+			blacklist: []string{"monitoring"},
+			want:      []string{"default", "kube-system"},
 		},
 		{
-			name: "namespaces deny one",
+			name: "namespaces black one",
 			items: []runtime.RawExtension{
 				{
 					Object: newNamespace("monitoring"),
@@ -83,11 +83,11 @@ func TestDenylistList(t *testing.T) {
 					Object: newNamespace("kube-system"),
 				},
 			},
-			denylist: []string{"monitoring"},
-			want:     []string{"default", "kube-system"},
+			blacklist: []string{"monitoring"},
+			want:      []string{"default", "kube-system"},
 		},
 		{
-			name: "deny many",
+			name: "black many",
 			items: []runtime.RawExtension{
 				{
 					Object: newUnstructured("monitoring"),
@@ -99,11 +99,11 @@ func TestDenylistList(t *testing.T) {
 					Object: newUnstructured("kube-system"),
 				},
 			},
-			denylist: []string{"monitoring", "kube-system"},
-			want:     []string{"default"},
+			blacklist: []string{"monitoring", "kube-system"},
+			want:      []string{"default"},
 		},
 		{
-			name: "namespaces deny many",
+			name: "namespaces black many",
 			items: []runtime.RawExtension{
 				{
 					Object: newNamespace("monitoring"),
@@ -115,11 +115,11 @@ func TestDenylistList(t *testing.T) {
 					Object: newNamespace("kube-system"),
 				},
 			},
-			denylist: []string{"monitoring", "kube-system"},
-			want:     []string{"default"},
+			blacklist: []string{"monitoring", "kube-system"},
+			want:      []string{"default"},
 		},
 		{
-			name: "deny none",
+			name: "black none",
 			items: []runtime.RawExtension{
 				{
 					Object: newUnstructured("monitoring"),
@@ -143,7 +143,7 @@ func TestDenylistList(t *testing.T) {
 				listResult: &l,
 			}
 
-			lw := newDenylistListerWatcher(logger, tc.denylist, mock)
+			lw := newBlacklistListerWatcher(logger, tc.blacklist, mock)
 			result, err := lw.List(metav1.ListOptions{})
 			if err != nil {
 				t.Error(err)
@@ -172,92 +172,92 @@ func TestDenylistList(t *testing.T) {
 	}
 }
 
-func TestDenylistWatch(t *testing.T) {
+func TestBlacklistWatch(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	cases := []struct {
-		name           string
-		items          []runtime.Object
-		denylist, want []string
+		name            string
+		items           []runtime.Object
+		blacklist, want []string
 	}{
 		{
-			name: "deny one",
+			name: "black one",
 			items: []runtime.Object{
 				newUnstructured("monitoring"),
 				newUnstructured("default"),
 				newUnstructured("kube-system"),
 			},
-			denylist: []string{"monitoring"},
-			want:     []string{"default", "kube-system"},
+			blacklist: []string{"monitoring"},
+			want:      []string{"default", "kube-system"},
 		},
 		{
-			name: "namespaces deny one",
+			name: "namespaces black one",
 			items: []runtime.Object{
 				newNamespace("monitoring"),
 				newNamespace("default"),
 				newNamespace("kube-system"),
 			},
-			denylist: []string{"monitoring"},
-			want:     []string{"default", "kube-system"},
+			blacklist: []string{"monitoring"},
+			want:      []string{"default", "kube-system"},
 		},
 		{
-			name: "deny many",
+			name: "black many",
 			items: []runtime.Object{
 				newUnstructured("monitoring"),
 				newUnstructured("default"),
 				newUnstructured("kube-system"),
 			},
-			denylist: []string{"monitoring", "kube-system"},
-			want:     []string{"default"},
+			blacklist: []string{"monitoring", "kube-system"},
+			want:      []string{"default"},
 		},
 		{
-			name: "namespces deny many",
+			name: "namespces black many",
 			items: []runtime.Object{
 				newNamespace("monitoring"),
 				newNamespace("default"),
 				newNamespace("kube-system"),
 			},
-			denylist: []string{"monitoring", "kube-system"},
-			want:     []string{"default"},
+			blacklist: []string{"monitoring", "kube-system"},
+			want:      []string{"default"},
 		},
 		{
-			name: "denylist contains empty string",
+			name: "blacklist contains empty string",
 			items: []runtime.Object{
 				newUnstructured("default"),
 				newUnstructured("kube-system"),
 			},
-			denylist: []string{""},
-			want:     []string{"default", "kube-system"},
+			blacklist: []string{""},
+			want:      []string{"default", "kube-system"},
 		},
 		{
-			name: "namespaces denylist contains empty string",
+			name: "namespaces blacklist contains empty string",
 			items: []runtime.Object{
 				newNamespace("default"),
 				newNamespace("kube-system"),
 			},
-			denylist: []string{""},
-			want:     []string{"default", "kube-system"},
+			blacklist: []string{""},
+			want:      []string{"default", "kube-system"},
 		},
 		{
-			name: "empty denylist",
+			name: "empty blacklist",
 			items: []runtime.Object{
 				newUnstructured("default"),
 				newUnstructured("kube-system"),
 			},
-			denylist: []string{},
-			want:     []string{"default", "kube-system"},
+			blacklist: []string{},
+			want:      []string{"default", "kube-system"},
 		},
 		{
-			name: "namespaces empty denylist",
+			name: "namespaces empty blacklist",
 			items: []runtime.Object{
 				newNamespace("default"),
 				newNamespace("kube-system"),
 			},
-			denylist: []string{},
-			want:     []string{"default", "kube-system"},
+			blacklist: []string{},
+			want:      []string{"default", "kube-system"},
 		},
 		{
-			name: "nil denylist",
+			name: "nil blacklist",
 			items: []runtime.Object{
 				newUnstructured("default"),
 				newUnstructured("kube-system"),
@@ -265,7 +265,7 @@ func TestDenylistWatch(t *testing.T) {
 			want: []string{"default", "kube-system"},
 		},
 		{
-			name: "namespaces nil denylist",
+			name: "namespaces nil blacklist",
 			items: []runtime.Object{
 				newNamespace("default"),
 				newNamespace("kube-system"),
@@ -287,7 +287,7 @@ func TestDenylistWatch(t *testing.T) {
 			mock := &mockListerWatcher{
 				evCh: events,
 			}
-			lw := newDenylistListerWatcher(logger, tc.denylist, mock)
+			lw := newBlacklistListerWatcher(logger, tc.blacklist, mock)
 			w, err := lw.Watch(metav1.ListOptions{})
 			if err != nil {
 				t.Error(err)

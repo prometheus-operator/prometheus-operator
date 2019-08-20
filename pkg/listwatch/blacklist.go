@@ -28,39 +28,39 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// denylistListerWatcher implements cache.ListerWatcher
+// blacklistListerWatcher implements cache.ListerWatcher
 // which wraps a cache.ListerWatcher,
-// filtering list results and watch events by denied namespaces.
-type denylistListerWatcher struct {
-	denylist map[string]struct{}
-	next     cache.ListerWatcher
-	logger   log.Logger
+// filtering list results and watch events by blacklisted namespaces.
+type blacklistListerWatcher struct {
+	blacklist map[string]struct{}
+	next      cache.ListerWatcher
+	logger    log.Logger
 }
 
-// newDenylistListerWatcher creates a cache.ListerWatcher
+// newBlacklistListerWatcher creates a cache.ListerWatcher
 // wrapping the given next cache.ListerWatcher
 // filtering lists and watch events by the given namespaces.
-func newDenylistListerWatcher(l log.Logger, namespaces []string, next cache.ListerWatcher) cache.ListerWatcher {
+func newBlacklistListerWatcher(l log.Logger, namespaces []string, next cache.ListerWatcher) cache.ListerWatcher {
 	if len(namespaces) == 0 {
 		return next
 	}
 
-	denylist := make(map[string]struct{})
+	blacklist := make(map[string]struct{})
 
 	for _, ns := range namespaces {
-		denylist[ns] = struct{}{}
+		blacklist[ns] = struct{}{}
 	}
 
-	return &denylistListerWatcher{
-		denylist: denylist,
-		next:     next,
-		logger:   l,
+	return &blacklistListerWatcher{
+		blacklist: blacklist,
+		next:      next,
+		logger:    l,
 	}
 }
 
 // List lists the wrapped next listerwatcher List result,
-// but filtering denied namespaces from the result.
-func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
+// but filtering blacklisted namespaces from the result.
+func (w *blacklistListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
 	var (
 		l     = metav1.List{}
 		error = level.Error(w.logger)
@@ -94,8 +94,8 @@ func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object
 
 		debugDetailed := log.With(debug, "selflink", acc.GetSelfLink())
 
-		if _, denied := w.denylist[getNamespace(acc)]; denied {
-			debugDetailed.Log("msg", "denied")
+		if _, blacklisted := w.blacklist[getNamespace(acc)]; blacklisted {
+			debugDetailed.Log("msg", "blacklisted")
 			continue
 		}
 
@@ -108,24 +108,25 @@ func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object
 	return &l, nil
 }
 
-// Watch
-func (w *denylistListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
+// Watch returns a watcher that filters events from the
+// blacklisted namespaces.
+func (w *blacklistListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
 	nextWatch, err := w.next.Watch(options)
 	if err != nil {
 		return nil, err
 	}
 
-	return newDenylistWatch(w.logger, w.denylist, nextWatch), nil
+	return newBlacklistWatch(w.logger, w.blacklist, nextWatch), nil
 }
 
-// newDenylistWatch creates a new watch.Interface,
+// newBlacklistWatch creates a new watch.Interface,
 // wrapping the given next watcher,
 // and filtering watch events by the given namespaces.
 //
 // It starts a new goroutine until either
 // a) the result channel of the wrapped next watcher is closed, or
 // b) Stop() was invoked on the returned watcher.
-func newDenylistWatch(l log.Logger, denylist map[string]struct{}, next watch.Interface) watch.Interface {
+func newBlacklistWatch(l log.Logger, blacklist map[string]struct{}, next watch.Interface) watch.Interface {
 	var (
 		result  = make(chan watch.Event)
 		proxy   = watch.NewProxyWatcher(result)
@@ -135,7 +136,7 @@ func newDenylistWatch(l log.Logger, denylist map[string]struct{}, next watch.Int
 
 	go func() {
 		defer func() {
-			debug.Log("msg", "stopped denylist watcher")
+			debug.Log("msg", "stopped blacklist watcher")
 			// According to watch.Interface the result channel is supposed to be called
 			// in case of error or if the listwach is closed, see [1].
 			//
@@ -160,8 +161,9 @@ func newDenylistWatch(l log.Logger, denylist map[string]struct{}, next watch.Int
 				}
 
 				debugDetailed := log.With(debug, "selflink", acc.GetSelfLink())
-				if _, denied := denylist[getNamespace(acc)]; denied {
-					debugDetailed.Log("msg", "denied")
+
+				if _, blacklisted := blacklist[getNamespace(acc)]; blacklisted {
+					debugDetailed.Log("msg", "blacklisted")
 					continue
 				}
 
