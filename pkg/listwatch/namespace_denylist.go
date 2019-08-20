@@ -20,6 +20,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -93,7 +94,7 @@ func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object
 
 		debugDetailed := log.With(debug, "selflink", acc.GetSelfLink())
 
-		if _, denied := w.denylist[acc.GetNamespace()]; denied {
+		if _, denied := w.denylist[getNamespace(acc)]; denied {
 			debugDetailed.Log("msg", "denied")
 			continue
 		}
@@ -152,15 +153,14 @@ func newDenylistWatch(l log.Logger, denylist map[string]struct{}, next watch.Int
 
 				acc, err := meta.Accessor(event.Object)
 				if err != nil {
-					// ignore this event, it doesn't implement the Object interfaces,
+					// ignore this event, it doesn't implement the metav1.Object interface,
 					// hence we cannot determine its namespace.
 					warning.Log("msg", fmt.Sprintf("unexpected object type in event (%T): %v", event.Object, event.Object))
 					continue
 				}
 
 				debugDetailed := log.With(debug, "selflink", acc.GetSelfLink())
-
-				if _, denied := denylist[acc.GetNamespace()]; denied {
+				if _, denied := denylist[getNamespace(acc)]; denied {
 					debugDetailed.Log("msg", "denied")
 					continue
 				}
@@ -182,4 +182,14 @@ func newDenylistWatch(l log.Logger, denylist map[string]struct{}, next watch.Int
 	}()
 
 	return proxy
+}
+
+// getNamespace returns the namespace of the given object.
+// If the object is itself a namespace, it returns the object's
+// name.
+func getNamespace(obj metav1.Object) string {
+	if _, ok := obj.(*v1.Namespace); ok {
+		return obj.GetName()
+	}
+	return obj.GetNamespace()
 }
