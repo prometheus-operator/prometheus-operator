@@ -739,6 +739,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		if p.Spec.Thanos.Image != nil && *p.Spec.Thanos.Image != "" {
 			thanosImage = *p.Spec.Thanos.Image
 		}
+		bindAddress := "[$(POD_IP)]"
+		if p.Spec.Thanos.ListenLocal {
+			bindAddress = "127.0.0.1"
+		}
 
 		container := v1.Container{
 			Name:  "thanos-sidecar",
@@ -747,8 +751,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				"sidecar",
 				fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
 				fmt.Sprintf("--tsdb.path=%s", storageDir),
-				"--grpc-address=[$(POD_IP)]:10901",
-				"--http-address=[$(POD_IP)]:10902",
+				fmt.Sprintf("--grpc-address=%s:10901", bindAddress),
+				fmt.Sprintf("--http-address=%s:10902", bindAddress),
 			},
 			Env: []v1.EnvVar{
 				{

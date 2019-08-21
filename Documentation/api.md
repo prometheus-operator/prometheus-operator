@@ -604,5 +604,6 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | baseImage | Thanos base image if other than default. | *string | false |
 | resources | Resources defines the resource requirements for the Thanos sidecar. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
 | objectStorageConfig | ObjectStorageConfig configures object storage in Thanos. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| listenLocal | Whether Thanos should listen for both gRPC and HTTP calls on local loopback so that it does not bind against the Pod IP. | bool | false |
 
 [Back to TOC](#table-of-contents)

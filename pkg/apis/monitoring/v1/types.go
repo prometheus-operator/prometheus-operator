@@ -360,6 +360,9 @@ type ThanosSpec struct {
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// ObjectStorageConfig configures object storage in Thanos.
 	ObjectStorageConfig *v1.SecretKeySelector `json:"objectStorageConfig,omitempty"`
+	// ListenLocal makes the Thanos sidecar listen on loopback, so that it
+	// does not bind against the Pod IP.
+	ListenLocal bool `json:"listenLocal,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.
