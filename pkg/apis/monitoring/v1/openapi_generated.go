@@ -2862,6 +2862,13 @@ func schema_pkg_apis_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) comm
 							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
 						},
 					},
+					"listenLocal": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ListenLocal makes the Thanos sidecar listen on loopback, so that it does not bind against the Pod IP.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
