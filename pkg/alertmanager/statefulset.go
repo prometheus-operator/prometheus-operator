@@ -443,6 +443,24 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		})
 	}
 
+	for cm, mount := range a.Spec.ConfigMapsMounts {
+		volumes = append(volumes, v1.Volume{
+			Name: k8sutil.SanitizeVolumeName("configmap-" + cm),
+			VolumeSource: v1.VolumeSource{
+				ConfigMap: &v1.ConfigMapVolumeSource{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: cm,
+					},
+				},
+			},
+		})
+		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+			Name:      k8sutil.SanitizeVolumeName("configmap-" + cm),
+			ReadOnly:  true,
+			MountPath: mount,
+		})
+	}
+
 	resources := v1.ResourceRequirements{Limits: v1.ResourceList{}}
 	if config.ConfigReloaderCPU != "0" {
 		resources.Limits[v1.ResourceCPU] = resource.MustParse(config.ConfigReloaderCPU)

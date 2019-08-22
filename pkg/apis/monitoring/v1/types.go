@@ -765,6 +765,10 @@ type AlertmanagerSpec struct {
 	// object, which shall be mounted into the Alertmanager Pods.
 	// The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name>.
 	ConfigMaps []string `json:"configMaps,omitempty"`
+	// ConfigMapsMounts is a list of ConfigMaps in the same namespace as the Alertmanager
+	// object, which shall be mounted into the Alertmanager Pods.
+	// The ConfigMaps are mounted into mounted name specified.
+	ConfigMapsMounts map[string]string `json:"configMapsMounts,omitempty"`
 	// Log level for Alertmanager to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for Alertmanager to be configured with.
