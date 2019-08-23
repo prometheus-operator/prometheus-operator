@@ -627,6 +627,11 @@ spec:
               items:
                 type: string
               type: array
+            configMapsMounts:
+              description: ConfigMapsMounts is a list of ConfigMaps in the same namespace
+                as the Alertmanager object, which shall be mounted into the Alertmanager
+                Pods. The ConfigMaps are mounted into mounted name specified.
+              type: object
             containers:
               description: Containers allows injecting additional containers. This
                 is meant to allow adding an authentication proxy to an Alertmanager
