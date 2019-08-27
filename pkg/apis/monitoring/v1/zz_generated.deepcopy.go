@@ -738,6 +738,13 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(StorageSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Volumes != nil {
+		in, out := &in.Volumes, &out.Volumes
+		*out = make([]corev1.Volume, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.RuleSelector != nil {
 		in, out := &in.RuleSelector, &out.RuleSelector
 		*out = new(metav1.LabelSelector)
