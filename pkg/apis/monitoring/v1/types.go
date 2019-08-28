@@ -782,6 +782,10 @@ type AlertmanagerSpec struct {
 	// Storage is the definition of how storage will be used by the Alertmanager
 	// instances.
 	Storage *StorageSpec `json:"storage,omitempty"`
+	// Volumes allows configuration of additional volumes on the output StatefulSet definition.
+	// Volumes specified will be appended to other volumes that are generated as a result of
+	// StorageSpec objects.
+	Volumes []v1.Volume `json:"volumes,omitempty"`
 	// The external URL the Alertmanager instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Alertmanager is not
 	// served from root of a DNS name.
