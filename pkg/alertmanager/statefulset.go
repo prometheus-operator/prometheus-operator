@@ -478,6 +478,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				NodeSelector:                  a.Spec.NodeSelector,
 				PriorityClassName:             a.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
+				InitContainers:                a.Spec.InitContainers,
 				Containers: append([]v1.Container{
 					{
 						Args:           amArgs,
