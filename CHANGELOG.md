@@ -1,5 +1,15 @@
 ## Next release
 
+## 0.32.0 / 2019-08-30
+
+* [CHANGE] Change PodManagement policy to parallel in Alertmanager (#2676)
+* [FEATURE] Adding label selector for Alertmanager objects discovery filtering (#2662)
+* [FEATURE] Provide option to turn on WAL compression (#2683)
+* [FEATURE] Support namespace denylist for listwatcher (#2710)
+* [FEATURE] Add support for Volumes to Prometheus Custom Resource (#2734)
+* [FEATURE] Add support for Volumes to Alertmanager Custom Resource (#2737)
+* [FEATURE] Add support for InitContainers to Prometheus Custom Resource (#2522)
+
 ## 0.31.1 / 2019-06-25
 * [BUGFIX] Increase terminationGracePeriod for alertmanager statefulSet as it cannot be 0. (#2657)
 
