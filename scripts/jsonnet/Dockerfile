@@ -30,7 +30,7 @@ COPY --from=0 /go/bin/gojsontoyaml /bin
 COPY --from=0 /go/bin/embedmd /bin
 COPY --from=0 /go/bin/jb /bin
 
-RUN apt-get update -y && apt-get install -y make git jq gawk && \
+RUN apt-get update -y && apt-get install -y make git jq gawk python-yaml && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /go/src/github.com/coreos/prometheus-operator /.cache
