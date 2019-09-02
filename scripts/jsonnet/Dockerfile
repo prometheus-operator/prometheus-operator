@@ -20,19 +20,6 @@ RUN go get github.com/campoy/embedmd
 RUN go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 RUN go get -u github.com/jteeuwen/go-bindata/...
 
-FROM golang:1.12-stretch
-
-COPY --from=0 /usr/local/bin/jsonnetfmt /bin
-COPY --from=0 /go/bin/jsonnet /bin
-COPY --from=0 /go/bin/promtool /bin
-COPY --from=0 /go/bin/golangci-lint /bin
-COPY --from=0 /go/bin/gojsontoyaml /bin
-COPY --from=0 /go/bin/embedmd /bin
-COPY --from=0 /go/bin/jb /bin
-
-RUN apt-get update -y && apt-get install -y make git jq gawk python-yaml && \
-    rm -rf /var/lib/apt/lists/*
-
 RUN mkdir -p /go/src/github.com/coreos/prometheus-operator /.cache
 WORKDIR /go/src/github.com/coreos/prometheus-operator
 
