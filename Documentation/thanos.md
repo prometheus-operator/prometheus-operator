@@ -64,7 +64,7 @@ Prometheus Custom Resource, after creating the secret.
 spec:
   ...
   thanos:
-    baseImage: improbable/thanos
+    baseImage: quay.io/thanos/thanos
     version: v0.2.1
     objectStorageConfig:
       key: thanos.yaml
