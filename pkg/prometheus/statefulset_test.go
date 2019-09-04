@@ -36,7 +36,7 @@ var (
 		ConfigReloaderMemory:          "25Mi",
 		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
 		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
-		ThanosDefaultBaseImage:        "improbable/thanos",
+		ThanosDefaultBaseImage:        "quay.io/thanos/thanos",
 	}
 )
 
@@ -470,7 +470,7 @@ func TestThanosTagAndShaAndVersion(t *testing.T) {
 		}
 
 		image := sset.Spec.Template.Spec.Containers[2].Image
-		expected := "improbable/thanos:my-unrelated-tag"
+		expected := "quay.io/thanos/thanos:my-unrelated-tag"
 		if image != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 		}
@@ -493,7 +493,7 @@ func TestThanosTagAndShaAndVersion(t *testing.T) {
 		}
 
 		image := sset.Spec.Template.Spec.Containers[2].Image
-		expected := "improbable/thanos@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
+		expected := "quay.io/thanos/thanos@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
 		if image != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 		}
@@ -701,7 +701,7 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 		ConfigReloaderMemory:          "50Mi",
 		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
 		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
-		ThanosDefaultBaseImage:        "improbable/thanos",
+		ThanosDefaultBaseImage:        "quay.io/thanos/thanos:v0.7.0",
 	}
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{},
@@ -727,7 +727,7 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 		ConfigReloaderMemory:          "0",
 		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
 		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
-		ThanosDefaultBaseImage:        "improbable/thanos",
+		ThanosDefaultBaseImage:        "quay.io/thanos/thanos:v0.7.0",
 	}
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{},

@@ -136,7 +136,7 @@ func init() {
 	flagset.StringVar(&cfg.ConfigReloaderMemory, "config-reloader-memory", "25Mi", "Config Reloader Memory. Value \"0\" disables it and causes no limit to be configured.")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", "quay.io/prometheus/alertmanager", "Alertmanager default base image")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", "quay.io/prometheus/prometheus", "Prometheus default base image")
-	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", "improbable/thanos", "Thanos default base image")
+	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", "quay.io/thanos/thanos", "Thanos default base image")
 	flagset.Var(ns, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.")
 	flagset.Var(deniedNs, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")

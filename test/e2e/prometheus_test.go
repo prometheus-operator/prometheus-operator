@@ -1298,7 +1298,7 @@ func testThanos(t *testing.T) {
 		t.Fatal("Making thanos query deployment failed: ", err)
 	}
 	// override image
-	qryImage := "improbable/thanos:" + version
+	qryImage := "quay.io/thanos/thanos:" + version
 	t.Log("setting up query with image: ", qryImage)
 	qryDep.Spec.Template.Spec.Containers[0].Image = qryImage
 	// override args
