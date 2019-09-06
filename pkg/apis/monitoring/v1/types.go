@@ -292,13 +292,12 @@ type PrometheusSpec struct {
 // arbitrary files on the file system of the Prometheus container. This is the case
 // when e.g. a service monitor specifies a BearerTokenFile in an endpoint. A
 // malicious user could create a service monitor selecting arbitrary secret files
-// in the Prometheus container. Those secrets would then be send with a scrape
+// in the Prometheus container. Those secrets would then be sent with a scrape
 // request by Prometheus to a malicious target. Denying the above would prevent the
 // attack, users can instead use the BearerTokenSecret field.
 type ArbitraryFSAccessThroughSMsConfig struct {
 	Deny bool
-	// TODO: To be implemented.
-	// ServiceMonitorWhitelist
+	// ServiceMonitorAllowlist
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not

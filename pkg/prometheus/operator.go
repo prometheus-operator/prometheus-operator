@@ -1463,7 +1463,6 @@ func (c *Operator) loadTLSAssetsFromSecrets(mons map[string]*monitoringv1.Servic
 					sClient,
 					*selector,
 					"tls config",
-					// TODO: Is the cache key really necessary? Can't this be part of `getCredFromSecret`?
 					key,
 					nsSecretCache,
 				)
@@ -1620,7 +1619,6 @@ func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) erro
 		tlsAssetsSecret.Data[key] = []byte(asset)
 	}
 
-	oldSecretExists := true
 	_, err = sClient.Get(tlsAssetsSecret.Name, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
@@ -1631,18 +1629,13 @@ func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) erro
 				p.Namespace,
 			)
 		}
-
-		oldSecretExists = false
-	}
-
-	if oldSecretExists {
-		_, err = sClient.Update(tlsAssetsSecret)
-	} else {
 		_, err = sClient.Create(tlsAssetsSecret)
+	} else {
+		_, err = sClient.Update(tlsAssetsSecret)
 	}
 
 	if err != nil {
-		return errors.Wrapf(err, "failed to create tls assets secret for Prometheus %v in namespace %v", p.Name, p.Namespace)
+		return errors.Wrapf(err, "failed to create TLS assets secret for Prometheus %v in namespace %v", p.Name, p.Namespace)
 	}
 
 	return nil
