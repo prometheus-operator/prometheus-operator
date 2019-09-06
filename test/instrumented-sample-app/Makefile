@@ -1,13 +1,18 @@
-REG := quay.io/mxinden
+REG := quay.io/coreos
 APP := instrumented-sample-app
 VERSION ?= $(shell cat VERSION)
+GO111MODULE?=on
+GOPROXY?=http://proxy.golang.org
+export GO111MODULE
+export GOPROXY
 
-all: build push
+all: container push
 
 build:
 	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor -o instrumented-sample-app main.go
-	@docker build --build-arg VERSION=$(VERSION) -t $(REG)/$(APP):$(VERSION) --file $(APP).dockerfile .
-	@rm $(APP)
+
+container:
+	@docker build -t $(REG)/$(APP):$(VERSION) --file Dockerfile ../../
 
 push:
 	@docker push $(REG)/$(APP):$(VERSION)
