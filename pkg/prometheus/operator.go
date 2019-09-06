@@ -1630,8 +1630,11 @@ func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) erro
 			)
 		}
 		_, err = sClient.Create(tlsAssetsSecret)
+		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
+
 	} else {
 		_, err = sClient.Update(tlsAssetsSecret)
+		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 	}
 
 	if err != nil {
