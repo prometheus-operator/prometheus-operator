@@ -143,28 +143,6 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 	return service
 }
 
-func (f *Framework) MakeThanosSidecarService(name string) *v1.Service {
-	service := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("thanos-sidecar-%s", name),
-		},
-		Spec: v1.ServiceSpec{
-			ClusterIP: "None",
-			Ports: []v1.ServicePort{
-				{
-					Name:       "grpc",
-					Port:       10901,
-					TargetPort: intstr.FromString("grpc"),
-				},
-			},
-			Selector: map[string]string{
-				"prometheus": name,
-			},
-		},
-	}
-	return service
-}
-
 func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
 	result, err := f.MonClientV1.Prometheuses(ns).Create(p)
 	if err != nil {

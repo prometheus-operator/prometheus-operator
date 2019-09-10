@@ -1288,11 +1288,6 @@ func testThanos(t *testing.T) {
 		t.Fatal("Creating ServiceMonitor failed: ", err)
 	}
 
-	sidecarSvc := framework.MakeThanosSidecarService(prom.Name)
-	if _, err := framework.KubeClient.CoreV1().Services(ns).Create(sidecarSvc); err != nil {
-		t.Fatal("Creating thanos sidecar service failed: ", err)
-	}
-
 	qryDep, err := testFramework.MakeDeployment("../../example/thanos/query-deployment.yaml")
 	if err != nil {
 		t.Fatal("Making thanos query deployment failed: ", err)
@@ -1306,7 +1301,7 @@ func testThanos(t *testing.T) {
 		"query",
 		"--log.level=debug",
 		"--query.replica-label=prometheus_replica",
-		fmt.Sprintf("--store=dnssrv+_grpc._tcp.%s.%s.svc.cluster.local", sidecarSvc.Name, ns),
+		fmt.Sprintf("--store=dnssrv+_grpc._tcp.prometheus-operated.%s.svc.cluster.local", ns),
 	}
 	t.Log("setting up query with args: ", qryArgs)
 	qryDep.Spec.Template.Spec.Containers[0].Args = qryArgs
