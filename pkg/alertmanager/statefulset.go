@@ -447,6 +447,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		})
 	}
 
+	amVolumeMounts = append(amVolumeMounts, a.Spec.VolumeMounts...)
+
 	resources := v1.ResourceRequirements{Limits: v1.ResourceList{}}
 	if config.ConfigReloaderCPU != "0" {
 		resources.Limits[v1.ResourceCPU] = resource.MustParse(config.ConfigReloaderCPU)
@@ -457,6 +459,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 
 	terminationGracePeriod := int64(120)
 	finalLabels := config.Labels.Merge(podLabels)
+
 	// PodManagementPolicy is set to Parallel to mitigate issues in kuberentes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
