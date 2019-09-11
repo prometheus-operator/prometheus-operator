@@ -301,6 +301,15 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Servi
 			},
 		},
 	}
+
+	if p.Spec.Thanos != nil {
+		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
+			Name:       "grpc",
+			Port:       10901,
+			TargetPort: intstr.FromString("grpc"),
+		})
+	}
+
 	return svc
 }
 
