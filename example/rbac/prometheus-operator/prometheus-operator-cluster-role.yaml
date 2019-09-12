@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.32.0
+    app.kubernetes.io/version: v0.33.0
   name: prometheus-operator
 rules:
 - apiGroups:

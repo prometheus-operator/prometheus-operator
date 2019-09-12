@@ -22,7 +22,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.32.0
+    app.kubernetes.io/version: v0.33.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -39,7 +39,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.32.0
+    app.kubernetes.io/version: v0.33.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -113,7 +113,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.32.0
+    app.kubernetes.io/version: v0.33.0
   name: prometheus-operator
   namespace: default
 spec:
@@ -127,15 +127,15 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: v0.32.0
+        app.kubernetes.io/version: v0.33.0
     spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --logtostderr=true
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.32.0
-        image: quay.io/coreos/prometheus-operator:v0.32.0
+        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.33.0
+        image: quay.io/coreos/prometheus-operator:v0.33.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -162,7 +162,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.32.0
+    app.kubernetes.io/version: v0.33.0
   name: prometheus-operator
   namespace: default
 ---
@@ -172,7 +172,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.32.0
+    app.kubernetes.io/version: v0.33.0
   name: prometheus-operator
   namespace: default
 spec:
