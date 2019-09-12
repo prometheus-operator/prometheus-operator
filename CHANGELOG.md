@@ -1,5 +1,11 @@
 ## Next release
 
+## 0.33.0 / 2019-09-12
+
+* [FEATURE] Add Thanos service port to governing service (#2754)
+* [FEATURE] Add VolumeMounts to Alertmanager (#2755)
+* [ENHANCEMENT] Bump default thanos image and version (#2746)
+
 ## 0.32.0 / 2019-08-30
 
 * [CHANGE] Change PodManagement policy to parallel in Alertmanager (#2676)
