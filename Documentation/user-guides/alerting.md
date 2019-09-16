@@ -58,7 +58,7 @@ Alertmanager instances require the secret resource naming to follow the format
 $ kubectl create secret generic alertmanager-example --from-file=alertmanager.yaml
 ```
 
-Note that Altermanager configurations can use templates (`.tmpl` files), which can be added on the secret along with the `alertmanager.yaml` config file. For example:
+Note that Alertmanager configurations can use templates (`.tmpl` files), which can be added on the secret along with the `alertmanager.yaml` config file. For example:
 
 ```yaml
 apiVersion: v1
