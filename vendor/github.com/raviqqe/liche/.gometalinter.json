@@ -1,0 +1,11 @@
+{
+  "Disable": ["vetshadow"],
+  "Enable": [
+    "deadcode",
+    "gochecknoinits",
+    "gofmt",
+    "goimports",
+    "misspell",
+    "unparam"
+  ]
+}

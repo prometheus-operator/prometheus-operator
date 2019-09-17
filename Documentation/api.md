@@ -177,7 +177,7 @@ BasicAuth allow an endpoint to authenticate over basic authentication More info:
 
 ## Endpoint
 
-Endpoint defines a scrapeable endpoint serving Prometheus metrics.
+Endpoint defines a scrape-able endpoint serving Prometheus metrics.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |

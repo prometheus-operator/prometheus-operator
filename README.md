@@ -128,12 +128,9 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 ### Testing
 
-> Ensure that you're running tests in the following path:
-> `$GOPATH/src/github.com/coreos/prometheus-operator` as tests expect paths to
-> match. If you're working from a fork, just add the forked repo as a remote and
-> pull against your local coreos checkout before running tests.
+#### Unit tests
 
-#### Running *unit tests*:
+For short unit tests run:
 
 `make test-unit`
 
@@ -155,6 +152,30 @@ auto-generated. E.g. `bundle.yaml` originates from the _Jsonnet_ files in
 2. Run `make generate-in-docker`.
 3. Commit the generated changes.
 
+## How to add / remove Go dependencies
+
+This project uses [go module](https://github.com/golang/go/wiki/Modules).
+
+We do "vendoring" (committing dependencies code into project).
+
+Once you upgrade `go.mod` or via `go get` command, make sure to do `go mod vendor` to download 
+all to `vendor` folder. Once done, commit changes in the same PR.
+
+### Tooling
+
+Adding tools (e.g for CI) written in Go is also via done via go modules. To add new tool to CI:
+
+* Add import path with version to `go.mod`
+* Add fake import to [`scripts/tools.go`](scripts/tools.go)
+* Add installation entry to [Makefile](Makefile):
+
+    ```makefile
+    
+    $(MISSPELL_BINARY):
+        @go install -mod=vendor github.com/client9/misspell/cmd/misspell
+    ```
+  
+* Run `go mod vendor` && commit changes.
 
 ## Security
 

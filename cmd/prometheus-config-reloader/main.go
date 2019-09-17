@@ -24,7 +24,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/version"
 
 	"github.com/go-kit/kit/log"
-	"github.com/improbable-eng/thanos/pkg/reloader"
+	"github.com/thanos-io/thanos/pkg/reloader"
 	"github.com/oklog/run"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
