@@ -600,19 +600,43 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	var readinessProbeHandler v1.Handler
 	var livenessFailureThreshold int32
 	if (version.Major == 1 && version.Minor >= 8) || version.Major == 2 {
-		livenessProbeHandler = v1.Handler{
-			HTTPGet: &v1.HTTPGetAction{
-				Path: path.Clean(webRoutePrefix + "/-/healthy"),
-				Port: intstr.FromString(p.Spec.PortName),
-			},
+		{
+			healthyPath := path.Clean(webRoutePrefix + "/-/healthy")
+			if p.Spec.ListenLocal {
+				livenessProbeHandler.Exec = &v1.ExecAction{
+					Command: []string{
+						"wget",
+						"-q",
+						fmt.Sprintf("http://localhost:9090%s", healthyPath),
+					},
+				}
+			} else {
+				livenessProbeHandler.HTTPGet = &v1.HTTPGetAction{
+					Path: healthyPath,
+					Port: intstr.FromString(p.Spec.PortName),
+				}
+			}
 		}
-		readinessProbeHandler = v1.Handler{
-			HTTPGet: &v1.HTTPGetAction{
-				Path: path.Clean(webRoutePrefix + "/-/ready"),
-				Port: intstr.FromString(p.Spec.PortName),
-			},
+		{
+			readyPath := path.Clean(webRoutePrefix + "/-/ready")
+			if p.Spec.ListenLocal {
+				readinessProbeHandler.Exec = &v1.ExecAction{
+					Command: []string{
+						"wget",
+						"-q",
+						fmt.Sprintf("http://localhost:9090%s", readyPath),
+					},
+				}
+			} else {
+				readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
+					Path: readyPath,
+					Port: intstr.FromString(p.Spec.PortName),
+				}
+			}
 		}
+
 		livenessFailureThreshold = 6
+
 	} else {
 		livenessProbeHandler = v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
@@ -626,21 +650,17 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		livenessFailureThreshold = 60
 	}
 
-	var livenessProbe *v1.Probe
-	var readinessProbe *v1.Probe
-	if !p.Spec.ListenLocal {
-		livenessProbe = &v1.Probe{
-			Handler:          livenessProbeHandler,
-			PeriodSeconds:    5,
-			TimeoutSeconds:   probeTimeoutSeconds,
-			FailureThreshold: livenessFailureThreshold,
-		}
-		readinessProbe = &v1.Probe{
-			Handler:          readinessProbeHandler,
-			TimeoutSeconds:   probeTimeoutSeconds,
-			PeriodSeconds:    5,
-			FailureThreshold: 120, // Allow up to 10m on startup for data recovery
-		}
+	livenessProbe := &v1.Probe{
+		Handler:          livenessProbeHandler,
+		PeriodSeconds:    5,
+		TimeoutSeconds:   probeTimeoutSeconds,
+		FailureThreshold: livenessFailureThreshold,
+	}
+	readinessProbe := &v1.Probe{
+		Handler:          readinessProbeHandler,
+		TimeoutSeconds:   probeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 120, // Allow up to 10m on startup for data recovery
 	}
 
 	podAnnotations := map[string]string{}
