@@ -528,7 +528,7 @@ type ServiceMonitorSpec struct {
 	SampleLimit uint64 `json:"sampleLimit,omitempty"`
 }
 
-// Endpoint defines a scrapeable endpoint serving Prometheus metrics.
+// Endpoint defines a scrapable endpoint serving Prometheus metrics.
 // +k8s:openapi-gen=true
 type Endpoint struct {
 	// Name of the service port this endpoint refers to. Mutually exclusive with targetPort.
@@ -593,7 +593,7 @@ type PodMonitorSpec struct {
 	SampleLimit uint64 `json:"sampleLimit,omitempty"`
 }
 
-// PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Prometheus metrics.
+// PodMetricsEndpoint defines a scrapable endpoint of a Kubernetes Pod serving Prometheus metrics.
 // +k8s:openapi-gen=true
 type PodMetricsEndpoint struct {
 	// Name of the port this endpoint refers to. Mutually exclusive with targetPort.

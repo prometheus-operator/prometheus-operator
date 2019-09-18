@@ -46,7 +46,7 @@ spec:
             podMetricsEndpoints:
               description: A list of endpoints allowed as part of this PodMonitor.
               items:
-                description: PodMetricsEndpoint defines a scrapeable endpoint of a
+                description: PodMetricsEndpoint defines a scrapable endpoint of a
                   Kubernetes Pod serving Prometheus metrics.
                 properties:
                   honorLabels:

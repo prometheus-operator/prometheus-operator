@@ -142,12 +142,15 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 ## Contributing
 
-Many files (documentation, manifests, ...) in this repository are
-auto-generated. E.g. `bundle.yaml` originates from the _Jsonnet_ files in
-`/jsonnet/prometheus-operator`. Before proposing a pull request:
+Many files (documentation, manifests, ...) in this repository are auto-generated. E.g:
+ 
+ * `bundle.yaml` originates from the _Jsonnet_ files in `/jsonnet/prometheus-operator`. 
+ * examples and __Jsonnet__ files [in jsonnet/prometheus-operator](jsonnet/prometheus-operator) are generated from [`pkg/apis/monitoring/v1/types.go`](pkg/apis/monitoring/v1/types.go)
+
+If you want to change those, before proposing a pull request:
 
 1. Commit your changes.
-2. Run `make generate-in-docker`.
+2. Run `GOCACHE=$(pwd)/.cache make generate-in-docker`.
 3. Commit the generated changes.
 
 ## How to add / remove Go dependencies

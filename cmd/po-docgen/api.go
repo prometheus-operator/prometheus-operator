@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	firstParagraph = `<br>
+	firstParagraphFmt = `<br>
 <div class="alert alert-info" role="alert">
     <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
 </div>
@@ -35,7 +35,8 @@ const (
 
 This Document documents the types introduced by the Prometheus Operator to be consumed by users.
 
-> Note this document is generated from code comments. When contributing a change to this document please do so by changing the code comments.`
+> Note this document is generated from code comments [in this file](%s). When contributing a change to this document please do so by changing the code comments.
+`
 )
 
 var (
@@ -68,7 +69,7 @@ func printTOC(types []KubeTypes) {
 }
 
 func printAPIDocs(path string) {
-	fmt.Println(firstParagraph)
+	fmt.Printf(firstParagraphFmt, path)
 
 	types := ParseDocumentationFrom(path)
 	for _, t := range types {

@@ -917,7 +917,7 @@ func schema_pkg_apis_monitoring_v1_Endpoint(ref common.ReferenceCallback) common
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Endpoint defines a scrapeable endpoint serving Prometheus metrics.",
+				Description: "Endpoint defines a scrapable endpoint serving Prometheus metrics.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"port": {
@@ -1088,7 +1088,7 @@ func schema_pkg_apis_monitoring_v1_PodMetricsEndpoint(ref common.ReferenceCallba
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Prometheus metrics.",
+				Description: "PodMetricsEndpoint defines a scrapable endpoint of a Kubernetes Pod serving Prometheus metrics.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"port": {
