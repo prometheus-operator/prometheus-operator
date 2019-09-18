@@ -177,7 +177,7 @@ BasicAuth allow an endpoint to authenticate over basic authentication More info:
 
 ## Endpoint
 
-Endpoint defines a scrape-able endpoint serving Prometheus metrics.
+Endpoint defines a scrapable endpoint serving Prometheus metrics.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -211,7 +211,7 @@ NamespaceSelector is a selector for selecting either all namespaces or a list of
 
 ## PodMetricsEndpoint
 
-PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Prometheus metrics.
+PodMetricsEndpoint defines a scrapable endpoint of a Kubernetes Pod serving Prometheus metrics.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |

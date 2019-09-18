@@ -128,13 +128,13 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 ### Testing
 
-#### Unit tests
+#### Running *unit tests*
 
 For short unit tests run:
 
 `make test-unit`
 
-#### Running *end-to-end* tests on local minikube cluster:
+#### Running *end-to-end* tests on local minikube cluster
 
 1. `minikube start --kubernetes-version=v1.10.0 --memory=4096
     --extra-config=apiserver.authorization-mode=RBAC`
@@ -154,16 +154,17 @@ auto-generated. E.g. `bundle.yaml` originates from the _Jsonnet_ files in
 
 ## How to add / remove Go dependencies
 
-This project uses [go module](https://github.com/golang/go/wiki/Modules).
+This project uses [go modules](https://github.com/golang/go/wiki/Modules).
 
-We do "vendoring" (committing dependencies code into project).
+For this project, the vendor directory is committed to the repository.
 
-Once you upgrade `go.mod` or via `go get` command, make sure to do `go mod vendor` to download 
-all to `vendor` folder. Once done, commit changes in the same PR.
+After updating the dependencies in the `go.mod`, which can also be done by using the `go get github.com/example/repo`, 
+execute the `go mod tidy` to clean up and `go mod vendor` to update the vendor directory.
+Once all the files are updated, commit the changes made to `go.mod`, `go.sum` and the vendor directory.
 
 ### Tooling
 
-Adding tools (e.g for CI) written in Go is also via done via go modules. To add new tool to CI:
+Adding tools (e.g for CI) written in Go is also via done via go modules. To add a new tool to CI:
 
 * Add import path with version to `go.mod`
 * Add fake import to [`scripts/tools.go`](scripts/tools.go)
