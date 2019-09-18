@@ -130,8 +130,6 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 #### Running *unit tests*
 
-For short unit tests run:
-
 `make test-unit`
 
 #### Running *end-to-end* tests on local minikube cluster
