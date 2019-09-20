@@ -30,7 +30,7 @@ spec:
             endpoints:
               description: A list of endpoints allowed as part of this ServiceMonitor.
               items:
-                description: Endpoint defines a scrapeable endpoint serving Prometheus
+                description: Endpoint defines a scrapable endpoint serving Prometheus
                   metrics.
                 properties:
                   basicAuth:

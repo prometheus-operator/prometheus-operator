@@ -128,16 +128,11 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 ### Testing
 
-> Ensure that you're running tests in the following path:
-> `$GOPATH/src/github.com/coreos/prometheus-operator` as tests expect paths to
-> match. If you're working from a fork, just add the forked repo as a remote and
-> pull against your local coreos checkout before running tests.
-
-#### Running *unit tests*:
+#### Running *unit tests*
 
 `make test-unit`
 
-#### Running *end-to-end* tests on local minikube cluster:
+#### Running *end-to-end* tests on local minikube cluster
 
 1. `minikube start --kubernetes-version=v1.10.0 --memory=4096
     --extra-config=apiserver.authorization-mode=RBAC`
@@ -147,14 +142,42 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 ## Contributing
 
-Many files (documentation, manifests, ...) in this repository are
-auto-generated. E.g. `bundle.yaml` originates from the _Jsonnet_ files in
-`/jsonnet/prometheus-operator`. Before proposing a pull request:
+Many files (documentation, manifests, ...) in this repository are auto-generated. E.g:
+ 
+ * `bundle.yaml` originates from the _Jsonnet_ files in `/jsonnet/prometheus-operator`. 
+ * examples and __Jsonnet__ files [in jsonnet/prometheus-operator](jsonnet/prometheus-operator) are generated from [`pkg/apis/monitoring/v1/types.go`](pkg/apis/monitoring/v1/types.go)
+
+If you want to change those, before proposing a pull request:
 
 1. Commit your changes.
-2. Run `make generate-in-docker`.
+2. Run `GOCACHE=$(pwd)/.cache make generate-in-docker`.
 3. Commit the generated changes.
 
+## How to add / remove Go dependencies
+
+This project uses [go modules](https://github.com/golang/go/wiki/Modules).
+
+For this project, the vendor directory is committed to the repository.
+
+After updating the dependencies in the `go.mod`, which can also be done by using the `go get github.com/example/repo`, 
+execute the `go mod tidy` to clean up and `go mod vendor` to update the vendor directory.
+Once all the files are updated, commit the changes made to `go.mod`, `go.sum` and the vendor directory.
+
+### Tooling
+
+Adding tools (e.g for CI) written in Go is also via done via go modules. To add a new tool to CI:
+
+* Add import path with version to `go.mod`
+* Add fake import to [`scripts/tools.go`](scripts/tools.go)
+* Add installation entry to [Makefile](Makefile):
+
+    ```makefile
+    
+    $(MISSPELL_BINARY):
+        @go install -mod=vendor github.com/client9/misspell/cmd/misspell
+    ```
+  
+* Run `go mod vendor` && commit changes.
 
 ## Security
 

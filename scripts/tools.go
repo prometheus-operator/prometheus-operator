@@ -22,9 +22,11 @@ import (
 	_ "github.com/brancz/gojsontoyaml"
 	_ "github.com/campoy/embedmd"
 	_ "github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb"
+	_ "github.com/client9/misspell/cmd/misspell"
 	_ "k8s.io/code-generator/cmd/client-gen"
 	_ "k8s.io/code-generator/cmd/deepcopy-gen"
 	_ "k8s.io/code-generator/cmd/informer-gen"
 	_ "k8s.io/code-generator/cmd/lister-gen"
 	_ "k8s.io/kube-openapi/cmd/openapi-gen"
+	_ "github.com/raviqqe/liche"
 )

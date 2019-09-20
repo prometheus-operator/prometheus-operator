@@ -7,12 +7,16 @@ TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
 FIRST_GOPATH:=$(firstword $(subst :, ,$(shell go env GOPATH)))
-PO_CRDGEN_BINARY:=$(FIRST_GOPATH)/bin/po-crdgen
-OPENAPI_GEN_BINARY:=$(FIRST_GOPATH)/bin/openapi-gen
-GOJSONTOYAML_BINARY:=$(FIRST_GOPATH)/bin/gojsontoyaml
-JB_BINARY:=$(FIRST_GOPATH)/bin/jb
-PO_DOCGEN_BINARY:=$(FIRST_GOPATH)/bin/po-docgen
-EMBEDMD_BINARY:=$(FIRST_GOPATH)/bin/embedmd
+GOBIN ?=$(FIRST_GOPATH)/bin/
+
+PO_CRDGEN_BINARY:=po-crdgen
+OPENAPI_GEN_BINARY:=$(GOBIN)/openapi-gen
+GOJSONTOYAML_BINARY:=$(GOBIN)/gojsontoyaml
+JB_BINARY:=$(GOBIN)/jb
+PO_DOCGEN_BINARY:=$(GOBIN)/po-docgen
+EMBEDMD_BINARY:=$(GOBIN)/embedmd
+MISSPELL_BINARY:=$(GOBIN)/misspell
+LICHE_BINARY:=$(GOBIN)/liche
 
 TYPES_V1_TARGET:=pkg/apis/monitoring/v1/types.go
 
@@ -183,13 +187,12 @@ Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.g
 $(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) bundle.yaml
 	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
 
-
 ##############
 # Formatting #
 ##############
 
 .PHONY: format
-format: go-fmt check-license shellcheck
+format: go-fmt check-license shellcheck misspell check-docs
 
 .PHONY: go-fmt
 go-fmt:
@@ -202,6 +205,15 @@ check-license:
 .PHONY: shellcheck
 shellcheck:
 	docker run -v "${PWD}:/mnt" koalaman/shellcheck:stable $(shell find . -type f -name "*.sh" -not -path "*vendor*")
+
+.PHONY: misspell
+misspell: $(MISSPELL_BINARY)
+	find . -type f | grep -v vendor/ | grep -vE '\./\..*' | xargs $(MISSPELL_BINARY) -error
+
+.PHONY: check-docs
+check-docs: $(LICHE_BINARY)
+	$(LICHE_BINARY) --recursive Documentation --exclude="http://proxyserver:2195|127.0.0.1|localhost" --document-root . *.md
+	$(LICHE_BINARY) --document-root . *.md
 
 ###########
 # Testing #
@@ -260,3 +272,9 @@ $(PO_DOCGEN_BINARY): $(shell find cmd/po-docgen -type f) $(TYPES_V1_TARGET)
 
 $(GOJSONTOYAML_BINARY):
 	@go install -mod=vendor github.com/brancz/gojsontoyaml
+
+$(MISSPELL_BINARY):
+	@go install -mod=vendor github.com/client9/misspell/cmd/misspell
+
+$(LICHE_BINARY):
+	@go install -mod=vendor github.com/raviqqe/liche

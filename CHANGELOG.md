@@ -359,7 +359,7 @@ but causes this change.
 * [CHANGE] Default to Alertmanager v0.7.0.
 * [FEATURE] Add route prefix support to Alertmanager resource.
 * [FEATURE] Add metrics on expected replicas.
-* [FEATURE] Support for runing Alertmanager v0.7.0.
+* [FEATURE] Support for running Alertmanager v0.7.0.
 * [BUGFIX] Fix sensitive rollout triggering.
 
 ## 0.9.1 / 2017-05-18
