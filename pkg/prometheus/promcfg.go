@@ -83,11 +83,17 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.M
 		if tls.CASecret != nil {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathPrefix + "_" + tls.CASecret.Name + "_" + tls.CASecret.Key})
 		}
+		if tls.CAConfigMap != nil {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathPrefix + "_" + tls.CAConfigMap.Name + "_" + tls.CAConfigMap.Key})
+		}
 		if tls.CertFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
 		}
 		if tls.CertSecret != nil {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathPrefix + "_" + tls.CertSecret.Name + "_" + tls.CertSecret.Key})
+		}
+		if tls.CertConfigMap != nil {
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathPrefix + "_" + tls.CertConfigMap.Name + "_" + tls.CertConfigMap.Key})
 		}
 		if tls.KeyFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})

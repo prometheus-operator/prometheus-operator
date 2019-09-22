@@ -1287,6 +1287,23 @@ func getCredFromSecret(c corev1client.SecretInterface, sel v1.SecretKeySelector,
 	return extractCredKey(s, sel, cred)
 }
 
+func getCredFromConfigMap(c corev1client.ConfigMapInterface, sel v1.ConfigMapKeySelector, cred string, cacheKey string, cache map[string]*v1.ConfigMap) (_ string, err error) {
+	var s *v1.ConfigMap
+	var ok bool
+
+	if s, ok = cache[cacheKey]; !ok {
+		if s, err = c.Get(sel.Name, metav1.GetOptions{}); err != nil {
+			return "", fmt.Errorf("unable to fetch %s configmap %q: %s", cred, sel.Name, err)
+		}
+		cache[cacheKey] = s
+	}
+
+	if a, ok := s.Data[sel.Key]; ok {
+		return string(a), nil
+	}
+	return "", fmt.Errorf("config %s key %q in configmap %q not found", cred, sel.Key, sel.Name)
+}
+
 func loadBasicAuthSecretFromAPI(basicAuth *monitoringv1.BasicAuth, c corev1client.CoreV1Interface, ns string, cache map[string]*v1.Secret) (BasicAuthCredentials, error) {
 	var username string
 	var password string
@@ -1434,9 +1451,10 @@ func (c *Operator) loadBearerTokensFromSecrets(mons map[string]*monitoringv1.Ser
 	return tokens, nil
 }
 
-func (c *Operator) loadTLSAssetsFromSecrets(mons map[string]*monitoringv1.ServiceMonitor) (map[string]TLSAsset, error) {
+func (c *Operator) loadTLSAssets(mons map[string]*monitoringv1.ServiceMonitor) (map[string]TLSAsset, error) {
 	assets := map[string]TLSAsset{}
 	nsSecretCache := make(map[string]*v1.Secret)
+	nsConfigMapCache := make(map[string]*v1.ConfigMap)
 
 	for _, mon := range mons {
 		for _, ep := range mon.Spec.Endpoints {
@@ -1450,11 +1468,18 @@ func (c *Operator) loadTLSAssetsFromSecrets(mons map[string]*monitoringv1.Servic
 				secretSelectors[prefix+ep.TLSConfig.CASecret.Name+"/"+ep.TLSConfig.CASecret.Key] = ep.TLSConfig.CASecret
 			}
 			if ep.TLSConfig.CertSecret != nil {
-
 				secretSelectors[prefix+ep.TLSConfig.CertSecret.Name+"/"+ep.TLSConfig.CertSecret.Key] = ep.TLSConfig.CertSecret
 			}
 			if ep.TLSConfig.KeySecret != nil {
 				secretSelectors[prefix+ep.TLSConfig.KeySecret.Name+"/"+ep.TLSConfig.KeySecret.Key] = ep.TLSConfig.KeySecret
+			}
+
+			configMapSelectors := map[string]*v1.ConfigMapKeySelector{}
+			if ep.TLSConfig.CAConfigMap != nil {
+				configMapSelectors[prefix+ep.TLSConfig.CAConfigMap.Name+"/"+ep.TLSConfig.CAConfigMap.Key] = ep.TLSConfig.CAConfigMap
+			}
+			if ep.TLSConfig.CertConfigMap != nil {
+				configMapSelectors[prefix+ep.TLSConfig.CertConfigMap.Name+"/"+ep.TLSConfig.CertConfigMap.Key] = ep.TLSConfig.CertConfigMap
 			}
 
 			for key, selector := range secretSelectors {
@@ -1473,14 +1498,36 @@ func (c *Operator) loadTLSAssetsFromSecrets(mons map[string]*monitoringv1.Servic
 					)
 				}
 
-				// TODO: Namespacing via underscores seems rather hacky.
 				assets[fmt.Sprintf(
 					"%v_%v_%v",
 					mon.Namespace,
 					selector.Name,
 					selector.Key,
 				)] = TLSAsset(asset)
+			}
 
+			for key, selector := range configMapSelectors {
+				sClient := c.kclient.CoreV1().ConfigMaps(mon.Namespace)
+				asset, err := getCredFromConfigMap(
+					sClient,
+					*selector,
+					"tls config",
+					key,
+					nsConfigMapCache,
+				)
+				if err != nil {
+					return nil, fmt.Errorf(
+						"failed to extract endpoint tls asset for servicemonitor %v from configmap %v and key %v in namespace %v",
+						mon.Name, selector.Name, selector.Key, mon.Namespace,
+					)
+				}
+
+				assets[fmt.Sprintf(
+					"%v_%v_%v",
+					mon.Namespace,
+					selector.Name,
+					selector.Key,
+				)] = TLSAsset(asset)
 			}
 
 		}
@@ -1592,7 +1639,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) erro
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
 
-	tlsAssets, err := c.loadTLSAssetsFromSecrets(smons)
+	tlsAssets, err := c.loadTLSAssets(smons)
 	if err != nil {
 		return err
 	}

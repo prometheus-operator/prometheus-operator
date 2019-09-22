@@ -664,11 +664,15 @@ type TLSConfig struct {
 	CAFile string `json:"caFile,omitempty"`
 	// Secret containing the CA cert to use for the targets.
 	CASecret *v1.SecretKeySelector `json:"caSecret,omitempty"`
+	// ConfigMap containing the CA cert to use for the targets.
+	CAConfigMap *v1.ConfigMapKeySelector `json:"caConfigMap,omitempty"`
 
 	// Path to the client cert file in the Prometheus container for the targets.
 	CertFile string `json:"certFile,omitempty"`
 	// Secret containing the client cert file for the targets.
 	CertSecret *v1.SecretKeySelector `json:"certSecret,omitempty"`
+	// ConfigMap containing the client cert file for the targets.
+	CertConfigMap *v1.ConfigMapKeySelector `json:"certConfigMap,omitempty"`
 
 	// Path to the client key file in the Prometheus container for the targets.
 	KeyFile string `json:"keyFile,omitempty"`
@@ -697,9 +701,21 @@ func (c *TLSConfig) Validate() error {
 	if c.CAFile != "" && c.CASecret != nil {
 		return &TLSConfigValidationError{"tls config can not both specify CAFile and CASecret"}
 	}
+	if c.CAFile != "" && c.CAConfigMap != nil {
+		return &TLSConfigValidationError{"tls config can not both specify CAFile and CAConfigMap"}
+	}
+	if c.CASecret != nil && c.CAConfigMap != nil {
+		return &TLSConfigValidationError{"tls config can not both specify CASecret and CAConfigMap"}
+	}
 
 	if c.CertFile != "" && c.CertSecret != nil {
 		return &TLSConfigValidationError{"tls config can not both specify CertFile and CertSecret"}
+	}
+	if c.CertFile != "" && c.CertConfigMap != nil {
+		return &TLSConfigValidationError{"tls config can not both specify CertFile and CertConfigMap"}
+	}
+	if c.CertSecret != nil && c.CertConfigMap != nil {
+		return &TLSConfigValidationError{"tls config can not both specify CertSecret and CertConfigMap"}
 	}
 
 	if c.KeyFile != "" && c.KeySecret != nil {
