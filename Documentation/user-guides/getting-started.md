@@ -329,7 +329,7 @@ kind: Prometheus
 metadata:
   name: prometheus
 spec:
-  serviceAccountName: prometheus
+  serviceAccountName: prometheus-operator
   serviceMonitorSelector:
     matchLabels:
       team: frontend
@@ -386,7 +386,7 @@ kind: Prometheus
 metadata:
   name: prometheus
 spec:
-  serviceAccountName: prometheus
+  serviceAccountName: prometheus-operator
   serviceMonitorSelector:
     matchLabels:
       team: frontend

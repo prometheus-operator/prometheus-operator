@@ -56,7 +56,7 @@ metadata:
     prometheus: prometheus
 spec:
   replicas: 2
-  serviceAccountName: prometheus
+  serviceAccountName: prometheus-operator
   serviceMonitorSelector:
     matchLabels:
       team: frontend
