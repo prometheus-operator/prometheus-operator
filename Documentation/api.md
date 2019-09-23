@@ -598,8 +598,10 @@ TLSConfig specifies TLS configuration parameters.
 | ----- | ----------- | ------ | -------- |
 | caFile | Path to the CA cert in the Prometheus container to use for the targets. | string | false |
 | caSecret | Secret containing the CA cert to use for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| caConfigMap | ConfigMap containing the CA cert to use for the targets. | *v1.ConfigMapKeySelector | false |
 | certFile | Path to the client cert file in the Prometheus container for the targets. | string | false |
 | certSecret | Secret containing the client cert file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| certConfigMap | ConfigMap containing the client cert file for the targets. | *v1.ConfigMapKeySelector | false |
 | keyFile | Path to the client key file in the Prometheus container for the targets. | string | false |
 | keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 | serverName | Used to verify the hostname for the targets. | string | false |

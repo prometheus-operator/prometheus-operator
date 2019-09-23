@@ -694,6 +694,22 @@ spec:
                       tlsConfig:
                         description: TLSConfig specifies TLS configuration parameters.
                         properties:
+                          caConfigMap:
+                            description: Selects a key from a ConfigMap.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
                           caFile:
                             description: Path to the CA cert in the Prometheus container
                               to use for the targets.
@@ -711,6 +727,22 @@ spec:
                               optional:
                                 description: Specify whether the Secret or its key
                                   must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                          certConfigMap:
+                            description: Selects a key from a ConfigMap.
+                            properties:
+                              key:
+                                description: The key to select.
+                                type: string
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                                type: string
+                              optional:
+                                description: Specify whether the ConfigMap or its
+                                  key must be defined
                                 type: boolean
                             required:
                             - key
@@ -829,6 +861,22 @@ spec:
                 tlsConfig:
                   description: TLSConfig specifies TLS configuration parameters.
                   properties:
+                    caConfigMap:
+                      description: Selects a key from a ConfigMap.
+                      properties:
+                        key:
+                          description: The key to select.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          type: string
+                        optional:
+                          description: Specify whether the ConfigMap or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
                     caFile:
                       description: Path to the CA cert in the Prometheus container
                         to use for the targets.
@@ -845,6 +893,22 @@ spec:
                           type: string
                         optional:
                           description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    certConfigMap:
+                      description: Selects a key from a ConfigMap.
+                      properties:
+                        key:
+                          description: The key to select.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          type: string
+                        optional:
+                          description: Specify whether the ConfigMap or its key must
                             be defined
                           type: boolean
                       required:
@@ -3272,6 +3336,22 @@ spec:
                   tlsConfig:
                     description: TLSConfig specifies TLS configuration parameters.
                     properties:
+                      caConfigMap:
+                        description: Selects a key from a ConfigMap.
+                        properties:
+                          key:
+                            description: The key to select.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                            type: string
+                          optional:
+                            description: Specify whether the ConfigMap or its key
+                              must be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
                       caFile:
                         description: Path to the CA cert in the Prometheus container
                           to use for the targets.
@@ -3289,6 +3369,22 @@ spec:
                           optional:
                             description: Specify whether the Secret or its key must
                               be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      certConfigMap:
+                        description: Selects a key from a ConfigMap.
+                        properties:
+                          key:
+                            description: The key to select.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                            type: string
+                          optional:
+                            description: Specify whether the ConfigMap or its key
+                              must be defined
                             type: boolean
                         required:
                         - key
@@ -3452,6 +3548,22 @@ spec:
                   tlsConfig:
                     description: TLSConfig specifies TLS configuration parameters.
                     properties:
+                      caConfigMap:
+                        description: Selects a key from a ConfigMap.
+                        properties:
+                          key:
+                            description: The key to select.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                            type: string
+                          optional:
+                            description: Specify whether the ConfigMap or its key
+                              must be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
                       caFile:
                         description: Path to the CA cert in the Prometheus container
                           to use for the targets.
@@ -3469,6 +3581,22 @@ spec:
                           optional:
                             description: Specify whether the Secret or its key must
                               be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      certConfigMap:
+                        description: Selects a key from a ConfigMap.
+                        properties:
+                          key:
+                            description: The key to select.
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                            type: string
+                          optional:
+                            description: Specify whether the ConfigMap or its key
+                              must be defined
                             type: boolean
                         required:
                         - key

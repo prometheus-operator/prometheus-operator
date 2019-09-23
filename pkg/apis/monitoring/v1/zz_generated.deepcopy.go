@@ -1260,9 +1260,19 @@ func (in *TLSConfig) DeepCopyInto(out *TLSConfig) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.CAConfigMap != nil {
+		in, out := &in.CAConfigMap, &out.CAConfigMap
+		*out = new(corev1.ConfigMapKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.CertSecret != nil {
 		in, out := &in.CertSecret, &out.CertSecret
 		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.CertConfigMap != nil {
+		in, out := &in.CertConfigMap, &out.CertConfigMap
+		*out = new(corev1.ConfigMapKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.KeySecret != nil {
