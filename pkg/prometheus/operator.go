@@ -1464,22 +1464,23 @@ func (c *Operator) loadTLSAssets(mons map[string]*monitoringv1.ServiceMonitor) (
 
 			prefix := mon.Namespace + "/"
 			secretSelectors := map[string]*v1.SecretKeySelector{}
-			if ep.TLSConfig.CASecret != nil {
-				secretSelectors[prefix+ep.TLSConfig.CASecret.Name+"/"+ep.TLSConfig.CASecret.Key] = ep.TLSConfig.CASecret
+			configMapSelectors := map[string]*v1.ConfigMapKeySelector{}
+			if ep.TLSConfig.CA != (monitoringv1.SecretOrConfigMap{}) {
+				if ep.TLSConfig.CA.Secret != (&v1.SecretKeySelector{}) {
+					secretSelectors[prefix+ep.TLSConfig.CA.Secret.Name+"/"+ep.TLSConfig.CA.Secret.Key] = ep.TLSConfig.CA.Secret
+				} else {
+					configMapSelectors[prefix+ep.TLSConfig.CA.ConfigMap.Name+"/"+ep.TLSConfig.CA.ConfigMap.Key] = ep.TLSConfig.CA.ConfigMap
+				}
 			}
-			if ep.TLSConfig.CertSecret != nil {
-				secretSelectors[prefix+ep.TLSConfig.CertSecret.Name+"/"+ep.TLSConfig.CertSecret.Key] = ep.TLSConfig.CertSecret
+			if ep.TLSConfig.Cert != (monitoringv1.SecretOrConfigMap{}) {
+				if ep.TLSConfig.Cert.Secret != (&v1.SecretKeySelector{}) {
+					secretSelectors[prefix+ep.TLSConfig.Cert.Secret.Name+"/"+ep.TLSConfig.Cert.Secret.Key] = ep.TLSConfig.Cert.Secret
+				} else {
+					configMapSelectors[prefix+ep.TLSConfig.Cert.ConfigMap.Name+"/"+ep.TLSConfig.Cert.ConfigMap.Key] = ep.TLSConfig.Cert.ConfigMap
+				}
 			}
 			if ep.TLSConfig.KeySecret != nil {
 				secretSelectors[prefix+ep.TLSConfig.KeySecret.Name+"/"+ep.TLSConfig.KeySecret.Key] = ep.TLSConfig.KeySecret
-			}
-
-			configMapSelectors := map[string]*v1.ConfigMapKeySelector{}
-			if ep.TLSConfig.CAConfigMap != nil {
-				configMapSelectors[prefix+ep.TLSConfig.CAConfigMap.Name+"/"+ep.TLSConfig.CAConfigMap.Key] = ep.TLSConfig.CAConfigMap
-			}
-			if ep.TLSConfig.CertConfigMap != nil {
-				configMapSelectors[prefix+ep.TLSConfig.CertConfigMap.Name+"/"+ep.TLSConfig.CertConfigMap.Key] = ep.TLSConfig.CertConfigMap
 			}
 
 			for key, selector := range secretSelectors {

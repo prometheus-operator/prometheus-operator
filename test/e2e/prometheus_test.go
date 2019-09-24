@@ -1773,17 +1773,21 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
 					InsecureSkipVerify: true,
-					CASecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
 						},
-						Key: "cert.pem",
 					},
-					CertSecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
 						},
-						Key: "cert.pem",
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
@@ -1804,17 +1808,21 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
 					InsecureSkipVerify: true,
-					CASecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
 						},
-						Key: "cert.pem",
 					},
-					CertSecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
 						},
-						Key: "cert.pem",
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
@@ -2013,17 +2021,21 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 			Scheme:   "https",
 			TLSConfig: &monitoringv1.TLSConfig{
 				InsecureSkipVerify: true,
-				CASecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: tlsCertsSecret.Name,
+				CA: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: tlsCertsSecret.Name,
+						},
+						Key: "cert.pem",
 					},
-					Key: "cert.pem",
 				},
-				CertSecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: tlsCertsSecret.Name,
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: tlsCertsSecret.Name,
+						},
+						Key: "cert.pem",
 					},
-					Key: "cert.pem",
 				},
 				KeySecret: &v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{

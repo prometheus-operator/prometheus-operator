@@ -657,22 +657,46 @@ type BasicAuth struct {
 	Password v1.SecretKeySelector `json:"password,omitempty"`
 }
 
+// SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mutually exclusive.
+type SecretOrConfigMap struct {
+	// Secret containing data to use for the targets.
+	Secret *v1.SecretKeySelector `json:"secret,omitempty"`
+	// ConfigMap containing data to use for the targets.
+	ConfigMap *v1.ConfigMapKeySelector `json:"configMap,omitempty"`
+}
+
+// SecretOrConfigMapValidationError is returned by SecretOrConfigMap.Validate()
+// on semantically invalid configurations.
+// +k8s:openapi-gen=false
+type SecretOrConfigMapValidationError struct {
+	err string
+}
+
+func (e *SecretOrConfigMapValidationError) Error() string {
+	return e.err
+}
+
+// Validate semantically validates the given TLSConfig.
+func (c *SecretOrConfigMap) Validate() error {
+	if &c.Secret != nil && &c.ConfigMap != nil {
+		return &SecretOrConfigMapValidationError{"SecretOrConfigMap can not specify both Secret and ConfigMap"}
+	}
+
+	return nil
+}
+
 // TLSConfig specifies TLS configuration parameters.
 // +k8s:openapi-gen=true
 type TLSConfig struct {
 	// Path to the CA cert in the Prometheus container to use for the targets.
 	CAFile string `json:"caFile,omitempty"`
-	// Secret containing the CA cert to use for the targets.
-	CASecret *v1.SecretKeySelector `json:"caSecret,omitempty"`
-	// ConfigMap containing the CA cert to use for the targets.
-	CAConfigMap *v1.ConfigMapKeySelector `json:"caConfigMap,omitempty"`
+	// Stuct containing the CA cert to use for the targets.
+	CA SecretOrConfigMap `json:"ca,omitempty"`
 
 	// Path to the client cert file in the Prometheus container for the targets.
 	CertFile string `json:"certFile,omitempty"`
-	// Secret containing the client cert file for the targets.
-	CertSecret *v1.SecretKeySelector `json:"certSecret,omitempty"`
-	// ConfigMap containing the client cert file for the targets.
-	CertConfigMap *v1.ConfigMapKeySelector `json:"certConfigMap,omitempty"`
+	// Struct containing the client cert file for the targets.
+	Cert SecretOrConfigMap `json:"cert,omitempty"`
 
 	// Path to the client key file in the Prometheus container for the targets.
 	KeyFile string `json:"keyFile,omitempty"`
@@ -698,24 +722,22 @@ func (e *TLSConfigValidationError) Error() string {
 
 // Validate semantically validates the given TLSConfig.
 func (c *TLSConfig) Validate() error {
-	if c.CAFile != "" && c.CASecret != nil {
-		return &TLSConfigValidationError{"tls config can not both specify CAFile and CASecret"}
-	}
-	if c.CAFile != "" && c.CAConfigMap != nil {
-		return &TLSConfigValidationError{"tls config can not both specify CAFile and CAConfigMap"}
-	}
-	if c.CASecret != nil && c.CAConfigMap != nil {
-		return &TLSConfigValidationError{"tls config can not both specify CASecret and CAConfigMap"}
+	if c.CA != (SecretOrConfigMap{}) {
+		if c.CAFile != "" {
+			return &TLSConfigValidationError{"tls config can not both specify CAFile and CA"}
+		}
+		if err := c.CA.Validate(); err != nil {
+			return err
+		}
 	}
 
-	if c.CertFile != "" && c.CertSecret != nil {
-		return &TLSConfigValidationError{"tls config can not both specify CertFile and CertSecret"}
-	}
-	if c.CertFile != "" && c.CertConfigMap != nil {
-		return &TLSConfigValidationError{"tls config can not both specify CertFile and CertConfigMap"}
-	}
-	if c.CertSecret != nil && c.CertConfigMap != nil {
-		return &TLSConfigValidationError{"tls config can not both specify CertSecret and CertConfigMap"}
+	if c.Cert != (SecretOrConfigMap{}) {
+		if c.CertFile != "" {
+			return &TLSConfigValidationError{"tls config can not both specify CertFile and Cert"}
+		}
+		if err := c.Cert.Validate(); err != nil {
+			return err
+		}
 	}
 
 	if c.KeyFile != "" && c.KeySecret != nil {
