@@ -908,7 +908,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 }
 
 func configSecretName(name string) string {
-	return fmt.Sprintf("%s-config", prefixedName(name))
+	return prefixedName(name)
 }
 
 func tlsAssetsSecretName(name string) string {
