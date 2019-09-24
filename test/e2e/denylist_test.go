@@ -37,7 +37,7 @@ func testDenyPrometheus(t *testing.T) {
 
 	ctx.SetupPrometheusRBAC(t, operatorNamespace, framework.KubeClient)
 
-	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, false)
+	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, nil, nil, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func testDenyServiceMonitor(t *testing.T) {
 
 	ctx.SetupPrometheusRBAC(t, operatorNamespace, framework.KubeClient)
 
-	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, false)
+	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, nil, nil, false)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -59,8 +59,10 @@ const (
 )
 
 var (
-	ns       = namespaces{}
-	deniedNs = namespaces{}
+	ns             = namespaces{}
+	deniedNs       = namespaces{}
+	prometheusNs   = namespaces{}
+	alertmanagerNs = namespaces{}
 )
 
 type namespaces map[string]struct{}
@@ -139,6 +141,8 @@ func init() {
 	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", "quay.io/thanos/thanos", "Thanos default base image")
 	flagset.Var(ns, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.")
 	flagset.Var(deniedNs, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
+	flagset.Var(prometheusNs, "prometheus-instance-namespaces", "Namespaces where Prometheus custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.")
+	flagset.Var(alertmanagerNs, "alertmanager-instance-namespaces", "Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
 	flagset.StringVar(&cfg.CrdGroup, "crd-apigroup", monitoring.GroupName, "prometheus CRD  API group name")
 	flagset.Var(&cfg.CrdKinds, "crd-kinds", " - EXPERIMENTAL (could be removed in future releases) - customize CRD kind names")
@@ -151,12 +155,22 @@ func init() {
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager CRDs to manage")
 	flagset.Parse(os.Args[1:])
 
-	cfg.Namespaces = ns.asSlice()
-	if len(cfg.Namespaces) == 0 {
-		cfg.Namespaces = append(cfg.Namespaces, v1.NamespaceAll)
+	cfg.Namespaces.AllowList = ns.asSlice()
+	if len(cfg.Namespaces.AllowList) == 0 {
+		cfg.Namespaces.AllowList = append(cfg.Namespaces.AllowList, v1.NamespaceAll)
 	}
 
-	cfg.DeniedNamespaces = deniedNs.asSlice()
+	cfg.Namespaces.DenyList = deniedNs.asSlice()
+	cfg.Namespaces.PrometheusAllowList = prometheusNs.asSlice()
+	cfg.Namespaces.AlertmanagerAllowList = alertmanagerNs.asSlice()
+
+	if len(cfg.Namespaces.PrometheusAllowList) == 0 {
+		cfg.Namespaces.PrometheusAllowList = cfg.Namespaces.AllowList
+	}
+
+	if len(cfg.Namespaces.AlertmanagerAllowList) == 0 {
+		cfg.Namespaces.AlertmanagerAllowList = cfg.Namespaces.AllowList
+	}
 }
 
 func Main() int {
