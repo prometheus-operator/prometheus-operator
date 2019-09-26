@@ -7,11 +7,10 @@ require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/brancz/gojsontoyaml v0.0.0-20190425155809-e8bd32d46b3d
 	github.com/campoy/embedmd v1.0.0
-	github.com/emicklei/go-restful v2.6.0+incompatible // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-kit/kit v0.8.0
-	github.com/go-openapi/spec v0.17.2
-	github.com/gogo/protobuf v1.2.1
+	github.com/go-openapi/spec v0.19.2
+	github.com/gogo/protobuf v1.2.2-0.20190723190241-65acae22fc9d
 	github.com/golang/protobuf v1.3.1
 	github.com/googleapis/gnostic v0.1.0 // indirect
 	github.com/hashicorp/go-version v1.1.0
@@ -25,27 +24,23 @@ require (
 	github.com/prometheus/prometheus v2.9.2+incompatible
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
-	golang.org/x/sys v0.0.0-20190425145619-16072639606e // indirect
-	golang.org/x/text v0.3.1 // indirect
-	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2 // indirect
-	golang.org/x/tools v0.0.0-20190425150028-36563e24a262 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.2.2
-	k8s.io/api v0.0.0-20190620084959-7cf5895f2711
+	k8s.io/api v0.0.0-20190918155943-95b840bb6a1f
 	k8s.io/apiextensions-apiserver v0.0.0-20190620085554-14e95df34f1f
-	k8s.io/apimachinery v0.0.0-20190612205821-1799e75a0719
+	k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655
 	k8s.io/client-go v2.0.0-alpha.0.0.20181121191925-a47917edff34+incompatible
-	k8s.io/code-generator v0.0.0-20190612205613-18da4a14b22b
-	k8s.io/klog v0.3.1
-	k8s.io/kube-openapi v0.0.0-20190228160746-b3a7cee44a30
+	k8s.io/code-generator v0.0.0-20190912054826-cd179ad6a269
+	k8s.io/klog v0.4.0
+	k8s.io/kube-openapi v0.0.0-20190816220812-743ec37842bf
 )
 
 replace (
-	k8s.io/api => k8s.io/api v0.0.0-20190620084959-7cf5895f2711
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190620085554-14e95df34f1f
-	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190612205821-1799e75a0719
-	k8s.io/client-go => k8s.io/client-go v0.0.0-20190620085101-78d2af792bab
-	k8s.io/code-generator => k8s.io/code-generator v0.0.0-20190612205613-18da4a14b22b
+	k8s.io/api => k8s.io/api v0.0.0-20190918155943-95b840bb6a1f
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783
+	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655
+	k8s.io/client-go => k8s.io/client-go v0.0.0-20190918160344-1fbdaa4c8d90
+	k8s.io/code-generator => k8s.io/code-generator v0.0.0-20190912054826-cd179ad6a269
 	k8s.io/klog => k8s.io/klog v0.3.1
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20190228160746-b3a7cee44a30
 )
