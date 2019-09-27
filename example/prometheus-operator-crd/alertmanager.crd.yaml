@@ -16,12 +16,12 @@ spec:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
           description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         spec:
           description: 'AlertmanagerSpec is a specification of the desired behavior
@@ -1052,7 +1052,8 @@ spec:
                       successThreshold:
                         description: Minimum consecutive successes for the probe to
                           be considered successful after having failed. Defaults to
-                          1. Must be 1 for liveness. Minimum value is 1.
+                          1. Must be 1 for liveness and startup. Minimum value is
+                          1.
                         format: int32
                         type: integer
                       tcpSocket:
@@ -1204,7 +1205,8 @@ spec:
                       successThreshold:
                         description: Minimum consecutive successes for the probe to
                           be considered successful after having failed. Defaults to
-                          1. Must be 1 for liveness. Minimum value is 1.
+                          1. Must be 1 for liveness and startup. Minimum value is
+                          1.
                         format: int32
                         type: integer
                       tcpSocket:
@@ -1353,7 +1355,124 @@ spec:
                               and is only honored by servers that enable the WindowsGMSA
                               feature flag.
                             type: string
+                          runAsUserName:
+                            description: The UserName in Windows to run the entrypoint
+                              of the container process. Defaults to the user specified
+                              in image metadata if unspecified. May also be set in
+                              PodSecurityContext. If set in both SecurityContext and
+                              PodSecurityContext, the value specified in SecurityContext
+                              takes precedence. This field is alpha-level and it is
+                              only honored by servers that enable the WindowsRunAsUserName
+                              feature flag.
+                            type: string
                         type: object
+                    type: object
+                  startupProbe:
+                    description: Probe describes a health check to be performed against
+                      a container to determine whether it is alive or ready to receive
+                      traffic.
+                    properties:
+                      exec:
+                        description: ExecAction describes a "run in container" action.
+                        properties:
+                          command:
+                            description: Command is the command line to execute inside
+                              the container, the working directory for the command  is
+                              root ('/') in the container's filesystem. The command
+                              is simply exec'd, it is not run inside a shell, so traditional
+                              shell instructions ('|', etc) won't work. To use a shell,
+                              you need to explicitly call out to that shell. Exit
+                              status of 0 is treated as live/healthy and non-zero
+                              is unhealthy.
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      failureThreshold:
+                        description: Minimum consecutive failures for the probe to
+                          be considered failed after having succeeded. Defaults to
+                          3. Minimum value is 1.
+                        format: int32
+                        type: integer
+                      httpGet:
+                        description: HTTPGetAction describes an action based on HTTP
+                          Get requests.
+                        properties:
+                          host:
+                            description: Host name to connect to, defaults to the
+                              pod IP. You probably want to set "Host" in httpHeaders
+                              instead.
+                            type: string
+                          httpHeaders:
+                            description: Custom headers to set in the request. HTTP
+                              allows repeated headers.
+                            items:
+                              description: HTTPHeader describes a custom header to
+                                be used in HTTP probes
+                              properties:
+                                name:
+                                  description: The header field name
+                                  type: string
+                                value:
+                                  description: The header field value
+                                  type: string
+                              required:
+                              - name
+                              - value
+                              type: object
+                            type: array
+                          path:
+                            description: Path to access on the HTTP server.
+                            type: string
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
+                          scheme:
+                            description: Scheme to use for connecting to the host.
+                              Defaults to HTTP.
+                            type: string
+                        required:
+                        - port
+                        type: object
+                      initialDelaySeconds:
+                        description: 'Number of seconds after the container has started
+                          before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                        format: int32
+                        type: integer
+                      periodSeconds:
+                        description: How often (in seconds) to perform the probe.
+                          Default to 10 seconds. Minimum value is 1.
+                        format: int32
+                        type: integer
+                      successThreshold:
+                        description: Minimum consecutive successes for the probe to
+                          be considered successful after having failed. Defaults to
+                          1. Must be 1 for liveness and startup. Minimum value is
+                          1.
+                        format: int32
+                        type: integer
+                      tcpSocket:
+                        description: TCPSocketAction describes an action based on
+                          opening a socket
+                        properties:
+                          host:
+                            description: 'Optional: Host name to connect to, defaults
+                              to the pod IP.'
+                            type: string
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
+                        required:
+                        - port
+                        type: object
+                      timeoutSeconds:
+                        description: 'Number of seconds after which the probe times
+                          out. Defaults to 1 second. Minimum value is 1. More info:
+                          https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                        format: int32
+                        type: integer
                     type: object
                   stdin:
                     description: Whether this container should allocate a buffer for
@@ -1919,7 +2038,8 @@ spec:
                       successThreshold:
                         description: Minimum consecutive successes for the probe to
                           be considered successful after having failed. Defaults to
-                          1. Must be 1 for liveness. Minimum value is 1.
+                          1. Must be 1 for liveness and startup. Minimum value is
+                          1.
                         format: int32
                         type: integer
                       tcpSocket:
@@ -2071,7 +2191,8 @@ spec:
                       successThreshold:
                         description: Minimum consecutive successes for the probe to
                           be considered successful after having failed. Defaults to
-                          1. Must be 1 for liveness. Minimum value is 1.
+                          1. Must be 1 for liveness and startup. Minimum value is
+                          1.
                         format: int32
                         type: integer
                       tcpSocket:
@@ -2220,7 +2341,124 @@ spec:
                               and is only honored by servers that enable the WindowsGMSA
                               feature flag.
                             type: string
+                          runAsUserName:
+                            description: The UserName in Windows to run the entrypoint
+                              of the container process. Defaults to the user specified
+                              in image metadata if unspecified. May also be set in
+                              PodSecurityContext. If set in both SecurityContext and
+                              PodSecurityContext, the value specified in SecurityContext
+                              takes precedence. This field is alpha-level and it is
+                              only honored by servers that enable the WindowsRunAsUserName
+                              feature flag.
+                            type: string
                         type: object
+                    type: object
+                  startupProbe:
+                    description: Probe describes a health check to be performed against
+                      a container to determine whether it is alive or ready to receive
+                      traffic.
+                    properties:
+                      exec:
+                        description: ExecAction describes a "run in container" action.
+                        properties:
+                          command:
+                            description: Command is the command line to execute inside
+                              the container, the working directory for the command  is
+                              root ('/') in the container's filesystem. The command
+                              is simply exec'd, it is not run inside a shell, so traditional
+                              shell instructions ('|', etc) won't work. To use a shell,
+                              you need to explicitly call out to that shell. Exit
+                              status of 0 is treated as live/healthy and non-zero
+                              is unhealthy.
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      failureThreshold:
+                        description: Minimum consecutive failures for the probe to
+                          be considered failed after having succeeded. Defaults to
+                          3. Minimum value is 1.
+                        format: int32
+                        type: integer
+                      httpGet:
+                        description: HTTPGetAction describes an action based on HTTP
+                          Get requests.
+                        properties:
+                          host:
+                            description: Host name to connect to, defaults to the
+                              pod IP. You probably want to set "Host" in httpHeaders
+                              instead.
+                            type: string
+                          httpHeaders:
+                            description: Custom headers to set in the request. HTTP
+                              allows repeated headers.
+                            items:
+                              description: HTTPHeader describes a custom header to
+                                be used in HTTP probes
+                              properties:
+                                name:
+                                  description: The header field name
+                                  type: string
+                                value:
+                                  description: The header field value
+                                  type: string
+                              required:
+                              - name
+                              - value
+                              type: object
+                            type: array
+                          path:
+                            description: Path to access on the HTTP server.
+                            type: string
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
+                          scheme:
+                            description: Scheme to use for connecting to the host.
+                              Defaults to HTTP.
+                            type: string
+                        required:
+                        - port
+                        type: object
+                      initialDelaySeconds:
+                        description: 'Number of seconds after the container has started
+                          before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                        format: int32
+                        type: integer
+                      periodSeconds:
+                        description: How often (in seconds) to perform the probe.
+                          Default to 10 seconds. Minimum value is 1.
+                        format: int32
+                        type: integer
+                      successThreshold:
+                        description: Minimum consecutive successes for the probe to
+                          be considered successful after having failed. Defaults to
+                          1. Must be 1 for liveness and startup. Minimum value is
+                          1.
+                        format: int32
+                        type: integer
+                      tcpSocket:
+                        description: TCPSocketAction describes an action based on
+                          opening a socket
+                        properties:
+                          host:
+                            description: 'Optional: Host name to connect to, defaults
+                              to the pod IP.'
+                            type: string
+                          port:
+                            anyOf:
+                            - type: string
+                            - type: integer
+                        required:
+                        - port
+                        type: object
+                      timeoutSeconds:
+                        description: 'Number of seconds after which the probe times
+                          out. Defaults to 1 second. Minimum value is 1. More info:
+                          https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                        format: int32
+                        type: integer
                     type: object
                   stdin:
                     description: Whether this container should allocate a buffer for
@@ -2398,179 +2636,13 @@ spec:
 
                     If this field is specified and the generated name exists, the server will NOT return a 409 - instead, it will either return 201 Created or 500 with Reason ServerTimeout indicating a unique name could not be found in the time allotted, and the client should retry (optionally after the time indicated in the Retry-After header).
 
-                    Applied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#idempotency
+                    Applied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency
                   type: string
                 generation:
                   description: A sequence number representing a specific generation
                     of the desired state. Populated by the system. Read-only.
                   format: int64
                   type: integer
-                initializers:
-                  description: Initializers tracks the progress of initialization.
-                  properties:
-                    pending:
-                      description: Pending is a list of initializers that must execute
-                        in order before this object is visible. When the last pending
-                        initializer is removed, and no failing result is set, the
-                        initializers struct will be set to nil and the object is considered
-                        as initialized and visible to all clients.
-                      items:
-                        description: Initializer is information about an initializer
-                          that has not yet completed.
-                        properties:
-                          name:
-                            description: name of the process that is responsible for
-                              initializing this object.
-                            type: string
-                        required:
-                        - name
-                        type: object
-                      type: array
-                    result:
-                      description: Status is a return value for calls that don't return
-                        other objects.
-                      properties:
-                        apiVersion:
-                          description: 'APIVersion defines the versioned schema of
-                            this representation of an object. Servers should convert
-                            recognized schemas to the latest internal value, and may
-                            reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
-                          type: string
-                        code:
-                          description: Suggested HTTP return code for this status,
-                            0 if not set.
-                          format: int32
-                          type: integer
-                        details:
-                          description: StatusDetails is a set of additional properties
-                            that MAY be set by the server to provide additional information
-                            about a response. The Reason field of a Status object
-                            defines what attributes will be set. Clients must ignore
-                            fields that do not match the defined type of each attribute,
-                            and should assume that any attribute may be empty, invalid,
-                            or under defined.
-                          properties:
-                            causes:
-                              description: The Causes array includes more details
-                                associated with the StatusReason failure. Not all
-                                StatusReasons may provide detailed causes.
-                              items:
-                                description: StatusCause provides more information
-                                  about an api.Status failure, including cases when
-                                  multiple errors are encountered.
-                                properties:
-                                  field:
-                                    description: |-
-                                      The field of the resource that has caused this error, as named by its JSON serialization. May include dot and postfix notation for nested attributes. Arrays are zero-indexed.  Fields may appear more than once in an array of causes due to fields having multiple errors. Optional.
-
-                                      Examples:
-                                        "name" - the field "name" on the current resource
-                                        "items[0].name" - the field "name" on the first array entry in "items"
-                                    type: string
-                                  message:
-                                    description: A human-readable description of the
-                                      cause of the error.  This field may be presented
-                                      as-is to a reader.
-                                    type: string
-                                  reason:
-                                    description: A machine-readable description of
-                                      the cause of the error. If this value is empty
-                                      there is no information available.
-                                    type: string
-                                type: object
-                              type: array
-                            group:
-                              description: The group attribute of the resource associated
-                                with the status StatusReason.
-                              type: string
-                            kind:
-                              description: 'The kind attribute of the resource associated
-                                with the status StatusReason. On some operations may
-                                differ from the requested resource Kind. More info:
-                                https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
-                              type: string
-                            name:
-                              description: The name attribute of the resource associated
-                                with the status StatusReason (when there is a single
-                                name which can be described).
-                              type: string
-                            retryAfterSeconds:
-                              description: If specified, the time in seconds before
-                                the operation should be retried. Some errors may indicate
-                                the client must take an alternate action - for those
-                                errors this field may indicate how long to wait before
-                                taking the alternate action.
-                              format: int32
-                              type: integer
-                            uid:
-                              description: 'UID of the resource. (when there is a
-                                single resource which can be described). More info:
-                                http://kubernetes.io/docs/user-guide/identifiers#uids'
-                              type: string
-                          type: object
-                        kind:
-                          description: 'Kind is a string value representing the REST
-                            resource this object represents. Servers may infer this
-                            from the endpoint the client submits requests to. Cannot
-                            be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
-                          type: string
-                        message:
-                          description: A human-readable description of the status
-                            of this operation.
-                          type: string
-                        metadata:
-                          description: ListMeta describes metadata that synthetic
-                            resources must have, including lists and various status
-                            objects. A resource may have only one of {ObjectMeta,
-                            ListMeta}.
-                          properties:
-                            continue:
-                              description: continue may be set if the user set a limit
-                                on the number of items returned, and indicates that
-                                the server has more data available. The value is opaque
-                                and may be used to issue another request to the endpoint
-                                that served this list to retrieve the next set of
-                                available objects. Continuing a consistent list may
-                                not be possible if the server configuration has changed
-                                or more than a few minutes have passed. The resourceVersion
-                                field returned when using this continue value will
-                                be identical to the value in the first response, unless
-                                you have received this token from an error message.
-                              type: string
-                            remainingItemCount:
-                              description: |-
-                                remainingItemCount is the number of subsequent items in the list which are not included in this list response. If the list request contained label or field selectors, then the number of remaining items is unknown and the field will be left unset and omitted during serialization. If the list is complete (either because it is not chunking or because this is the last chunk), then there are no more remaining items and this field will be left unset and omitted during serialization. Servers older than v1.15 do not set this field. The intended use of the remainingItemCount is *estimating* the size of a collection. Clients should not rely on the remainingItemCount to be set or to be exact.
-
-                                This field is alpha and can be changed or removed without notice.
-                              format: int64
-                              type: integer
-                            resourceVersion:
-                              description: 'String that identifies the server''s internal
-                                version of this object that can be used by clients
-                                to determine when objects have changed. Value must
-                                be treated as opaque by clients and passed unmodified
-                                back to the server. Populated by the system. Read-only.
-                                More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency'
-                              type: string
-                            selfLink:
-                              description: selfLink is a URL representing this object.
-                                Populated by the system. Read-only.
-                              type: string
-                          type: object
-                        reason:
-                          description: A machine-readable description of why this
-                            operation is in the "Failure" status. If this value is
-                            empty there is no information available. A Reason clarifies
-                            an HTTP status code but does not override it.
-                          type: string
-                        status:
-                          description: 'Status of the operation. One of: "Success"
-                            or "Failure". More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status'
-                          type: string
-                      type: object
-                  required:
-                  - pending
-                  type: object
                 labels:
                   description: 'Map of string keys and values that can be used to
                     organize and categorize (scope and select) objects. May match
@@ -2578,10 +2650,13 @@ spec:
                     http://kubernetes.io/docs/user-guide/labels'
                   type: object
                 managedFields:
-                  description: |-
-                    ManagedFields maps workflow-id and version to the set of fields that are managed by that workflow. This is mostly for internal housekeeping, and users typically shouldn't need to set or understand this field. A workflow can be the user's name, a controller's name, or the name of a specific apply path like "ci-cd". The set of fields is always in the version that the workflow used when modifying the object.
-
-                    This field is alpha and can be changed or removed without notice.
+                  description: ManagedFields maps workflow-id and version to the set
+                    of fields that are managed by that workflow. This is mostly for
+                    internal housekeeping, and users typically shouldn't need to set
+                    or understand this field. A workflow can be the user's name, a
+                    controller's name, or the name of a specific apply path like "ci-cd".
+                    The set of fields is always in the version that the workflow used
+                    when modifying the object.
                   items:
                     description: ManagedFieldsEntry is a workflow-id, a FieldSet and
                       the group version of the resource that the fieldset applies
@@ -2594,9 +2669,18 @@ spec:
                           to track the version of a field set because it cannot be
                           automatically converted.
                         type: string
-                      fields:
-                        description: 'Fields stores a set of fields in a data structure
-                          like a Trie. To understand how this is used, see: https://github.com/kubernetes-sigs/structured-merge-diff'
+                      fieldsType:
+                        description: 'FieldsType is the discriminator for the different
+                          fields format and version. There is currently only one possible
+                          value: "FieldsV1"'
+                        type: string
+                      fieldsV1:
+                        description: |-
+                          FieldsV1 stores a set of fields in a data structure like a Trie, in JSON format.
+
+                          Each key is either a '.' representing the field itself, and will always map to an empty set, or a string representing a sub-field or item. The string will follow one of these four formats: 'f:<name>', where <name> is the name of a field in a struct, or key in a map 'v:<value>', where <value> is the exact json formatted value of a list item 'i:<index>', where <index> is position of a item in a list 'k:<keys>', where <keys> is a map of  a list item's key fields to their unique values If a key maps to an empty Fields value, the field that key represents is part of the set.
+
+                          The exact format is defined in sigs.k8s.io/structured-merge-diff
                         type: object
                       manager:
                         description: Manager is an identifier of the workflow managing
@@ -2655,7 +2739,7 @@ spec:
                           controller.
                         type: boolean
                       kind:
-                        description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                        description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
                         type: string
                       name:
                         description: 'Name of the referent. More info: http://kubernetes.io/docs/user-guide/identifiers#names'
@@ -2674,11 +2758,13 @@ spec:
                   description: |-
                     An opaque value that represents the internal version of this object that can be used by clients to determine when objects have changed. May be used for optimistic concurrency, change detection, and the watch operation on a resource or set of resources. Clients must treat these values as opaque and passed unmodified back to the server. They may only be valid for a particular resource or set of resources.
 
-                    Populated by the system. Read-only. Value must be treated as opaque by clients and . More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency
+                    Populated by the system. Read-only. Value must be treated as opaque by clients and . More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
                   type: string
                 selfLink:
-                  description: SelfLink is a URL representing this object. Populated
-                    by the system. Read-only.
+                  description: |-
+                    SelfLink is a URL representing this object. Populated by the system. Read-only.
+
+                    DEPRECATED Kubernetes will stop propagating this field in 1.20 release and the field is planned to be removed in 1.21 release.
                   type: string
                 uid:
                   description: |-
@@ -2836,6 +2922,15 @@ spec:
                         credential spec to use. This field is alpha-level and is only
                         honored by servers that enable the WindowsGMSA feature flag.
                       type: string
+                    runAsUserName:
+                      description: The UserName in Windows to run the entrypoint of
+                        the container process. Defaults to the user specified in image
+                        metadata if unspecified. May also be set in PodSecurityContext.
+                        If set in both SecurityContext and PodSecurityContext, the
+                        value specified in SecurityContext takes precedence. This
+                        field is alpha-level and it is only honored by servers that
+                        enable the WindowsRunAsUserName feature flag.
+                      type: string
                   type: object
               type: object
             serviceAccountName:
@@ -2873,13 +2968,13 @@ spec:
                       description: 'APIVersion defines the versioned schema of this
                         representation of an object. Servers should convert recognized
                         schemas to the latest internal value, and may reject unrecognized
-                        values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                        values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
                       type: string
                     kind:
                       description: 'Kind is a string value representing the REST resource
                         this object represents. Servers may infer this from the endpoint
                         the client submits requests to. Cannot be updated. In CamelCase.
-                        More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
                       type: string
                     metadata:
                       description: ObjectMeta is metadata that all persisted resources
@@ -2935,190 +3030,13 @@ spec:
 
                             If this field is specified and the generated name exists, the server will NOT return a 409 - instead, it will either return 201 Created or 500 with Reason ServerTimeout indicating a unique name could not be found in the time allotted, and the client should retry (optionally after the time indicated in the Retry-After header).
 
-                            Applied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#idempotency
+                            Applied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency
                           type: string
                         generation:
                           description: A sequence number representing a specific generation
                             of the desired state. Populated by the system. Read-only.
                           format: int64
                           type: integer
-                        initializers:
-                          description: Initializers tracks the progress of initialization.
-                          properties:
-                            pending:
-                              description: Pending is a list of initializers that
-                                must execute in order before this object is visible.
-                                When the last pending initializer is removed, and
-                                no failing result is set, the initializers struct
-                                will be set to nil and the object is considered as
-                                initialized and visible to all clients.
-                              items:
-                                description: Initializer is information about an initializer
-                                  that has not yet completed.
-                                properties:
-                                  name:
-                                    description: name of the process that is responsible
-                                      for initializing this object.
-                                    type: string
-                                required:
-                                - name
-                                type: object
-                              type: array
-                            result:
-                              description: Status is a return value for calls that
-                                don't return other objects.
-                              properties:
-                                apiVersion:
-                                  description: 'APIVersion defines the versioned schema
-                                    of this representation of an object. Servers should
-                                    convert recognized schemas to the latest internal
-                                    value, and may reject unrecognized values. More
-                                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
-                                  type: string
-                                code:
-                                  description: Suggested HTTP return code for this
-                                    status, 0 if not set.
-                                  format: int32
-                                  type: integer
-                                details:
-                                  description: StatusDetails is a set of additional
-                                    properties that MAY be set by the server to provide
-                                    additional information about a response. The Reason
-                                    field of a Status object defines what attributes
-                                    will be set. Clients must ignore fields that do
-                                    not match the defined type of each attribute,
-                                    and should assume that any attribute may be empty,
-                                    invalid, or under defined.
-                                  properties:
-                                    causes:
-                                      description: The Causes array includes more
-                                        details associated with the StatusReason failure.
-                                        Not all StatusReasons may provide detailed
-                                        causes.
-                                      items:
-                                        description: StatusCause provides more information
-                                          about an api.Status failure, including cases
-                                          when multiple errors are encountered.
-                                        properties:
-                                          field:
-                                            description: |-
-                                              The field of the resource that has caused this error, as named by its JSON serialization. May include dot and postfix notation for nested attributes. Arrays are zero-indexed.  Fields may appear more than once in an array of causes due to fields having multiple errors. Optional.
-
-                                              Examples:
-                                                "name" - the field "name" on the current resource
-                                                "items[0].name" - the field "name" on the first array entry in "items"
-                                            type: string
-                                          message:
-                                            description: A human-readable description
-                                              of the cause of the error.  This field
-                                              may be presented as-is to a reader.
-                                            type: string
-                                          reason:
-                                            description: A machine-readable description
-                                              of the cause of the error. If this value
-                                              is empty there is no information available.
-                                            type: string
-                                        type: object
-                                      type: array
-                                    group:
-                                      description: The group attribute of the resource
-                                        associated with the status StatusReason.
-                                      type: string
-                                    kind:
-                                      description: 'The kind attribute of the resource
-                                        associated with the status StatusReason. On
-                                        some operations may differ from the requested
-                                        resource Kind. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
-                                      type: string
-                                    name:
-                                      description: The name attribute of the resource
-                                        associated with the status StatusReason (when
-                                        there is a single name which can be described).
-                                      type: string
-                                    retryAfterSeconds:
-                                      description: If specified, the time in seconds
-                                        before the operation should be retried. Some
-                                        errors may indicate the client must take an
-                                        alternate action - for those errors this field
-                                        may indicate how long to wait before taking
-                                        the alternate action.
-                                      format: int32
-                                      type: integer
-                                    uid:
-                                      description: 'UID of the resource. (when there
-                                        is a single resource which can be described).
-                                        More info: http://kubernetes.io/docs/user-guide/identifiers#uids'
-                                      type: string
-                                  type: object
-                                kind:
-                                  description: 'Kind is a string value representing
-                                    the REST resource this object represents. Servers
-                                    may infer this from the endpoint the client submits
-                                    requests to. Cannot be updated. In CamelCase.
-                                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
-                                  type: string
-                                message:
-                                  description: A human-readable description of the
-                                    status of this operation.
-                                  type: string
-                                metadata:
-                                  description: ListMeta describes metadata that synthetic
-                                    resources must have, including lists and various
-                                    status objects. A resource may have only one of
-                                    {ObjectMeta, ListMeta}.
-                                  properties:
-                                    continue:
-                                      description: continue may be set if the user
-                                        set a limit on the number of items returned,
-                                        and indicates that the server has more data
-                                        available. The value is opaque and may be
-                                        used to issue another request to the endpoint
-                                        that served this list to retrieve the next
-                                        set of available objects. Continuing a consistent
-                                        list may not be possible if the server configuration
-                                        has changed or more than a few minutes have
-                                        passed. The resourceVersion field returned
-                                        when using this continue value will be identical
-                                        to the value in the first response, unless
-                                        you have received this token from an error
-                                        message.
-                                      type: string
-                                    remainingItemCount:
-                                      description: |-
-                                        remainingItemCount is the number of subsequent items in the list which are not included in this list response. If the list request contained label or field selectors, then the number of remaining items is unknown and the field will be left unset and omitted during serialization. If the list is complete (either because it is not chunking or because this is the last chunk), then there are no more remaining items and this field will be left unset and omitted during serialization. Servers older than v1.15 do not set this field. The intended use of the remainingItemCount is *estimating* the size of a collection. Clients should not rely on the remainingItemCount to be set or to be exact.
-
-                                        This field is alpha and can be changed or removed without notice.
-                                      format: int64
-                                      type: integer
-                                    resourceVersion:
-                                      description: 'String that identifies the server''s
-                                        internal version of this object that can be
-                                        used by clients to determine when objects
-                                        have changed. Value must be treated as opaque
-                                        by clients and passed unmodified back to the
-                                        server. Populated by the system. Read-only.
-                                        More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency'
-                                      type: string
-                                    selfLink:
-                                      description: selfLink is a URL representing
-                                        this object. Populated by the system. Read-only.
-                                      type: string
-                                  type: object
-                                reason:
-                                  description: A machine-readable description of why
-                                    this operation is in the "Failure" status. If
-                                    this value is empty there is no information available.
-                                    A Reason clarifies an HTTP status code but does
-                                    not override it.
-                                  type: string
-                                status:
-                                  description: 'Status of the operation. One of: "Success"
-                                    or "Failure". More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status'
-                                  type: string
-                              type: object
-                          required:
-                          - pending
-                          type: object
                         labels:
                           description: 'Map of string keys and values that can be
                             used to organize and categorize (scope and select) objects.
@@ -3126,10 +3044,14 @@ spec:
                             More info: http://kubernetes.io/docs/user-guide/labels'
                           type: object
                         managedFields:
-                          description: |-
-                            ManagedFields maps workflow-id and version to the set of fields that are managed by that workflow. This is mostly for internal housekeeping, and users typically shouldn't need to set or understand this field. A workflow can be the user's name, a controller's name, or the name of a specific apply path like "ci-cd". The set of fields is always in the version that the workflow used when modifying the object.
-
-                            This field is alpha and can be changed or removed without notice.
+                          description: ManagedFields maps workflow-id and version
+                            to the set of fields that are managed by that workflow.
+                            This is mostly for internal housekeeping, and users typically
+                            shouldn't need to set or understand this field. A workflow
+                            can be the user's name, a controller's name, or the name
+                            of a specific apply path like "ci-cd". The set of fields
+                            is always in the version that the workflow used when modifying
+                            the object.
                           items:
                             description: ManagedFieldsEntry is a workflow-id, a FieldSet
                               and the group version of the resource that the fieldset
@@ -3142,10 +3064,18 @@ spec:
                                   field. It is necessary to track the version of a
                                   field set because it cannot be automatically converted.
                                 type: string
-                              fields:
-                                description: 'Fields stores a set of fields in a data
-                                  structure like a Trie. To understand how this is
-                                  used, see: https://github.com/kubernetes-sigs/structured-merge-diff'
+                              fieldsType:
+                                description: 'FieldsType is the discriminator for
+                                  the different fields format and version. There is
+                                  currently only one possible value: "FieldsV1"'
+                                type: string
+                              fieldsV1:
+                                description: |-
+                                  FieldsV1 stores a set of fields in a data structure like a Trie, in JSON format.
+
+                                  Each key is either a '.' representing the field itself, and will always map to an empty set, or a string representing a sub-field or item. The string will follow one of these four formats: 'f:<name>', where <name> is the name of a field in a struct, or key in a map 'v:<value>', where <value> is the exact json formatted value of a list item 'i:<index>', where <index> is position of a item in a list 'k:<keys>', where <keys> is a map of  a list item's key fields to their unique values If a key maps to an empty Fields value, the field that key represents is part of the set.
+
+                                  The exact format is defined in sigs.k8s.io/structured-merge-diff
                                 type: object
                               manager:
                                 description: Manager is an identifier of the workflow
@@ -3209,7 +3139,7 @@ spec:
                                   managing controller.
                                 type: boolean
                               kind:
-                                description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                                description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
                                 type: string
                               name:
                                 description: 'Name of the referent. More info: http://kubernetes.io/docs/user-guide/identifiers#names'
@@ -3228,11 +3158,13 @@ spec:
                           description: |-
                             An opaque value that represents the internal version of this object that can be used by clients to determine when objects have changed. May be used for optimistic concurrency, change detection, and the watch operation on a resource or set of resources. Clients must treat these values as opaque and passed unmodified back to the server. They may only be valid for a particular resource or set of resources.
 
-                            Populated by the system. Read-only. Value must be treated as opaque by clients and . More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency
+                            Populated by the system. Read-only. Value must be treated as opaque by clients and . More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
                           type: string
                         selfLink:
-                          description: SelfLink is a URL representing this object.
-                            Populated by the system. Read-only.
+                          description: |-
+                            SelfLink is a URL representing this object. Populated by the system. Read-only.
+
+                            DEPRECATED Kubernetes will stop propagating this field in 1.20 release and the field is planned to be removed in 1.21 release.
                           type: string
                         uid:
                           description: |-
@@ -3598,7 +3530,7 @@ spec:
                     properties:
                       monitors:
                         description: 'Required: Monitors is a collection of Ceph monitors
-                          More info: https://releases.k8s.io/HEAD/examples/volumes/cephfs/README.md#how-to-use-it'
+                          More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it'
                         items:
                           type: string
                         type: array
@@ -3609,11 +3541,11 @@ spec:
                       readOnly:
                         description: 'Optional: Defaults to false (read/write). ReadOnly
                           here will force the ReadOnly setting in VolumeMounts. More
-                          info: https://releases.k8s.io/HEAD/examples/volumes/cephfs/README.md#how-to-use-it'
+                          info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it'
                         type: boolean
                       secretFile:
                         description: 'Optional: SecretFile is the path to key ring
-                          for User, default is /etc/ceph/user.secret More info: https://releases.k8s.io/HEAD/examples/volumes/cephfs/README.md#how-to-use-it'
+                          for User, default is /etc/ceph/user.secret More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it'
                         type: string
                       secretRef:
                         description: LocalObjectReference contains enough information
@@ -3626,7 +3558,7 @@ spec:
                         type: object
                       user:
                         description: 'Optional: User is the rados user name, default
-                          is admin More info: https://releases.k8s.io/HEAD/examples/volumes/cephfs/README.md#how-to-use-it'
+                          is admin More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it'
                         type: string
                     required:
                     - monitors
@@ -3641,12 +3573,12 @@ spec:
                         description: 'Filesystem type to mount. Must be a filesystem
                           type supported by the host operating system. Examples: "ext4",
                           "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
-                          More info: https://releases.k8s.io/HEAD/examples/mysql-cinder-pd/README.md'
+                          More info: https://examples.k8s.io/mysql-cinder-pd/README.md'
                         type: string
                       readOnly:
                         description: 'Optional: Defaults to false (read/write). ReadOnly
                           here will force the ReadOnly setting in VolumeMounts. More
-                          info: https://releases.k8s.io/HEAD/examples/mysql-cinder-pd/README.md'
+                          info: https://examples.k8s.io/mysql-cinder-pd/README.md'
                         type: boolean
                       secretRef:
                         description: LocalObjectReference contains enough information
@@ -3658,8 +3590,8 @@ spec:
                             type: string
                         type: object
                       volumeID:
-                        description: 'volume id used to identify the volume in cinder
-                          More info: https://releases.k8s.io/HEAD/examples/mysql-cinder-pd/README.md'
+                        description: 'volume id used to identify the volume in cinder.
+                          More info: https://examples.k8s.io/mysql-cinder-pd/README.md'
                         type: string
                     required:
                     - volumeID
@@ -3982,16 +3914,16 @@ spec:
                     properties:
                       endpoints:
                         description: 'EndpointsName is the endpoint name that details
-                          Glusterfs topology. More info: https://releases.k8s.io/HEAD/examples/volumes/glusterfs/README.md#create-a-pod'
+                          Glusterfs topology. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod'
                         type: string
                       path:
                         description: 'Path is the Glusterfs volume path. More info:
-                          https://releases.k8s.io/HEAD/examples/volumes/glusterfs/README.md#create-a-pod'
+                          https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod'
                         type: string
                       readOnly:
                         description: 'ReadOnly here will force the Glusterfs volume
                           to be mounted with read-only permissions. Defaults to false.
-                          More info: https://releases.k8s.io/HEAD/examples/volumes/glusterfs/README.md#create-a-pod'
+                          More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod'
                         type: boolean
                     required:
                     - endpoints
@@ -4438,24 +4370,24 @@ spec:
                           https://kubernetes.io/docs/concepts/storage/volumes#rbd'
                         type: string
                       image:
-                        description: 'The rados image name. More info: https://releases.k8s.io/HEAD/examples/volumes/rbd/README.md#how-to-use-it'
+                        description: 'The rados image name. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it'
                         type: string
                       keyring:
                         description: 'Keyring is the path to key ring for RBDUser.
-                          Default is /etc/ceph/keyring. More info: https://releases.k8s.io/HEAD/examples/volumes/rbd/README.md#how-to-use-it'
+                          Default is /etc/ceph/keyring. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it'
                         type: string
                       monitors:
-                        description: 'A collection of Ceph monitors. More info: https://releases.k8s.io/HEAD/examples/volumes/rbd/README.md#how-to-use-it'
+                        description: 'A collection of Ceph monitors. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it'
                         items:
                           type: string
                         type: array
                       pool:
                         description: 'The rados pool name. Default is rbd. More info:
-                          https://releases.k8s.io/HEAD/examples/volumes/rbd/README.md#how-to-use-it'
+                          https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it'
                         type: string
                       readOnly:
                         description: 'ReadOnly here will force the ReadOnly setting
-                          in VolumeMounts. Defaults to false. More info: https://releases.k8s.io/HEAD/examples/volumes/rbd/README.md#how-to-use-it'
+                          in VolumeMounts. Defaults to false. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it'
                         type: boolean
                       secretRef:
                         description: LocalObjectReference contains enough information
@@ -4468,7 +4400,7 @@ spec:
                         type: object
                       user:
                         description: 'The rados user name. Default is admin. More
-                          info: https://releases.k8s.io/HEAD/examples/volumes/rbd/README.md#how-to-use-it'
+                          info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it'
                         type: string
                     required:
                     - monitors
