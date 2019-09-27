@@ -28,9 +28,9 @@ import (
 	text_template "text/template"
 
 	"github.com/pkg/errors"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
-
 	"github.com/prometheus/prometheus/promql"
 	"github.com/prometheus/prometheus/util/strutil"
 )
@@ -230,7 +230,7 @@ func NewTemplateExpander(
 					if minutes != 0 {
 						return fmt.Sprintf("%s%dm %ds", sign, minutes, seconds)
 					}
-					// For seconds, we display 4 significant digts.
+					// For seconds, we display 4 significant digits.
 					return fmt.Sprintf("%s%.4gs", sign, v)
 				}
 				prefix := ""
@@ -242,6 +242,9 @@ func NewTemplateExpander(
 					v *= 1000
 				}
 				return fmt.Sprintf("%.4g%ss", v, prefix)
+			},
+			"humanizePercentage": func(v float64) string {
+				return fmt.Sprintf("%.4g%%", v*100)
 			},
 			"humanizeTimestamp": func(v float64) string {
 				if math.IsNaN(v) || math.IsInf(v, 0) {
@@ -261,13 +264,15 @@ func NewTemplateExpander(
 }
 
 // AlertTemplateData returns the interface to be used in expanding the template.
-func AlertTemplateData(labels map[string]string, value float64) interface{} {
+func AlertTemplateData(labels map[string]string, externalLabels map[string]string, value float64) interface{} {
 	return struct {
-		Labels map[string]string
-		Value  float64
+		Labels         map[string]string
+		ExternalLabels map[string]string
+		Value          float64
 	}{
-		Labels: labels,
-		Value:  value,
+		Labels:         labels,
+		ExternalLabels: externalLabels,
+		Value:          value,
 	}
 }
 
