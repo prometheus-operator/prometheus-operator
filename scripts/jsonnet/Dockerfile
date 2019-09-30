@@ -1,8 +1,8 @@
 FROM golang:1.12-stretch
 
-ENV JSONNET_VERSION 0.13.0
+ENV JSONNET_VERSION 0.14.0
 ENV PROMTOOL_VERSION 2.12.0
-ENV GOLANGCILINT_VERSION 1.17.1
+ENV GOLANGCILINT_VERSION 1.19.1
 
 RUN apt-get update -y && apt-get install -y g++ make git jq gawk python-yaml && \
     rm -rf /var/lib/apt/lists/*
