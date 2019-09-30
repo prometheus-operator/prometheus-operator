@@ -1,5 +1,7 @@
 ## Next release
 
+* [BUGFIX] Update prometheus dependency to v2.12.0 to fix validation failure for .externalLabels admission webhook (#2774)
+
 ## 0.33.0 / 2019-09-12
 
 * [FEATURE] Add Thanos service port to governing service (#2754)
