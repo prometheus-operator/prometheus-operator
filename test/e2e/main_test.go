@@ -67,7 +67,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 
-	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, true)
+	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,6 +175,31 @@ func TestDenylist(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
 		"Prometheus":     testDenyPrometheus,
 		"ServiceMonitor": testDenyServiceMonitor,
+	}
+
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
+// TestPromInstanceNs tests prometheus operator in different scenarios when --prometheus-instance-namespace is given
+func TestPromInstanceNs(t *testing.T) {
+	testFuncs := map[string]func(t *testing.T){
+		"AllNs":     testPrometheusInstanceNamespaces_AllNs,
+		"AllowList": testPrometheusInstanceNamespaces_AllowList,
+		"DenyList":  testPrometheusInstanceNamespaces_DenyList,
+	}
+
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
+// TestAlertmanagerInstanceNs tests prometheus operator in different scenarios when --alertmanager-instance-namespace is given
+func TestAlertmanagerInstanceNs(t *testing.T) {
+	testFuncs := map[string]func(t *testing.T){
+		"AllNs":  testAlertmanagerInstanceNamespaces_AllNs,
+		"DenyNs": testAlertmanagerInstanceNamespaces_DenyNs,
 	}
 
 	for name, f := range testFuncs {

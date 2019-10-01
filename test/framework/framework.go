@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,6 +35,7 @@ import (
 
 	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 )
 
@@ -83,11 +85,73 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 	return f, nil
 }
 
+func (f *Framework) MakeEchoService(name, group string, serviceType v1.ServiceType) *v1.Service {
+	service := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("echo-%s", name),
+			Labels: map[string]string{
+				"group": group,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Type: serviceType,
+			Ports: []v1.ServicePort{
+				{
+					Name:       "web",
+					Port:       9090,
+					TargetPort: intstr.FromString("web"),
+				},
+			},
+			Selector: map[string]string{
+				"echo": name,
+			},
+		},
+	}
+	return service
+}
+
+func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "echoserver",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: proto.Int32(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"echo": group,
+				},
+			},
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"echo": group,
+					},
+				},
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:  "echoserver",
+							Image: "k8s.gcr.io/echoserver:1.10",
+							Ports: []v1.ContainerPort{
+								{
+									Name:          "web",
+									ContainerPort: 8443,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 // CreatePrometheusOperator creates a Prometheus Operator Kubernetes Deployment
 // inside the specified namespace using the specified operator image. In addition
 // one can specify the namespaces to watch, which defaults to all namespaces.
 // Returns the CA, which can bs used to access the operator over TLS
-func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowlist, namespaceDenylist []string, createRuleAdmissionHooks bool) ([]finalizerFn, error) {
+func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowlist, namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces []string, createRuleAdmissionHooks bool) ([]finalizerFn, error) {
 	tru := true
 	fals := false
 	var finalizers []finalizerFn
@@ -158,6 +222,20 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
 			fmt.Sprintf("--deny-namespaces=%v", ns),
+		)
+	}
+
+	for _, ns := range prometheusInstanceNamespaces {
+		deploy.Spec.Template.Spec.Containers[0].Args = append(
+			deploy.Spec.Template.Spec.Containers[0].Args,
+			fmt.Sprintf("--prometheus-instance-namespaces=%v", ns),
+		)
+	}
+
+	for _, ns := range alertmanagerInstanceNamespaces {
+		deploy.Spec.Template.Spec.Containers[0].Args = append(
+			deploy.Spec.Template.Spec.Containers[0].Args,
+			fmt.Sprintf("--alertmanager-instance-namespaces=%v", ns),
 		)
 	}
 

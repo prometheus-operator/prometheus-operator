@@ -321,7 +321,8 @@ func (f *Framework) WaitForPrometheusFiringAlert(ns, svcName, alertName string) 
 }
 
 type Target struct {
-	ScrapeURL string `json:"scrapeUrl"`
+	ScrapeURL string            `json:"scrapeUrl"`
+	Labels    map[string]string `json:"labels"`
 }
 
 type targetDiscovery struct {
