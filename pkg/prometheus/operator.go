@@ -1466,16 +1466,18 @@ func (c *Operator) loadTLSAssets(mons map[string]*monitoringv1.ServiceMonitor) (
 			secretSelectors := map[string]*v1.SecretKeySelector{}
 			configMapSelectors := map[string]*v1.ConfigMapKeySelector{}
 			if ep.TLSConfig.CA != (monitoringv1.SecretOrConfigMap{}) {
-				if ep.TLSConfig.CA.Secret != (&v1.SecretKeySelector{}) {
+				switch {
+				case ep.TLSConfig.CA.Secret != nil:
 					secretSelectors[prefix+ep.TLSConfig.CA.Secret.Name+"/"+ep.TLSConfig.CA.Secret.Key] = ep.TLSConfig.CA.Secret
-				} else {
+				case ep.TLSConfig.CA.ConfigMap != nil:
 					configMapSelectors[prefix+ep.TLSConfig.CA.ConfigMap.Name+"/"+ep.TLSConfig.CA.ConfigMap.Key] = ep.TLSConfig.CA.ConfigMap
 				}
 			}
 			if ep.TLSConfig.Cert != (monitoringv1.SecretOrConfigMap{}) {
-				if ep.TLSConfig.Cert.Secret != (&v1.SecretKeySelector{}) {
+				switch {
+				case ep.TLSConfig.Cert.Secret != nil:
 					secretSelectors[prefix+ep.TLSConfig.Cert.Secret.Name+"/"+ep.TLSConfig.Cert.Secret.Key] = ep.TLSConfig.Cert.Secret
-				} else {
+				case ep.TLSConfig.Cert.ConfigMap != nil:
 					configMapSelectors[prefix+ep.TLSConfig.Cert.ConfigMap.Name+"/"+ep.TLSConfig.Cert.ConfigMap.Key] = ep.TLSConfig.Cert.ConfigMap
 				}
 			}

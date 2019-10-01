@@ -300,7 +300,7 @@ scrape_configs:
 
 	cfg := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("prometheus-%s-config", name),
+			Name: fmt.Sprintf("prometheus-%s", name),
 		},
 		Data: map[string][]byte{
 			"prometheus.yaml.gz": firstConfigCompressed,
@@ -863,7 +863,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					KubeClient.
 					CoreV1().
 					Secrets(ns).
-					Get("prometheus-"+prometheusName+"-config", metav1.GetOptions{})
+					Get("prometheus-"+prometheusName, metav1.GetOptions{})
 			},
 			MaxExpectedChanges: 2,
 		},
@@ -1067,7 +1067,7 @@ func testPromDiscovery(t *testing.T) {
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s-config", prometheusName), metav1.GetOptions{})
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
 	if err != nil {
 		t.Fatal("Generated Secret could not be retrieved: ", err)
 	}
@@ -1110,7 +1110,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 		t.Fatalf("Creating ServiceMonitor failed: %v", err)
 	}
 
-	_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s-config", prometheusName), metav1.GetOptions{})
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Generated Secret could not be retrieved: %v", err)
 	}
@@ -1204,7 +1204,7 @@ func testPromDiscoverTargetPort(t *testing.T) {
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	_, err := framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s-config", prometheusName), metav1.GetOptions{})
+	_, err := framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
 	if err != nil {
 		t.Fatal("Generated Secret could not be retrieved: ", err)
 	}
@@ -1832,7 +1832,77 @@ func testPromArbitraryFSAcc(t *testing.T) {
 					},
 				},
 			},
+			expectTargets: false,
+		},
+		{
+			name: "allowed-tls-configmap",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: false,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
+					},
+				},
+			},
 			expectTargets: true,
+		},
+		{
+			name: "denied-tls-configmap",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: true,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+			expectTargets: false,
 		},
 	}
 
@@ -1847,8 +1917,8 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			ns := ctx.CreateNamespace(t, framework.KubeClient)
 			ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
-			// Create secret either used by bearer token secret key ref, or tls
-			// asset key ref.
+			// Create secret either used by bearer token secret key ref, tls
+			// asset key ref or tls configmap key ref.
 			cert, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
 			if err != nil {
 				t.Fatalf("failed to load cert.pem: %v", err)
@@ -1871,6 +1941,19 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			}
 
 			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(tlsCertsSecret); err != nil {
+				t.Fatal(err)
+			}
+
+			tlsCertsConfigMap := &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+				},
+				Data: map[string]string{
+					"cert.pem": string(cert),
+				},
+			}
+
+			if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(tlsCertsConfigMap); err != nil {
 				t.Fatal(err)
 			}
 
