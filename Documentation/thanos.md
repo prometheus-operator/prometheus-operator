@@ -71,6 +71,7 @@ spec:
       name: thanos-objstore-config
 ...
 ```
+Note: If you're using Istio you may need to also set `ListenLocal` on the Thanos spec due to Istio's forwarding of traffic to localhost.
 
 ## Thanos and kube-thanos
 

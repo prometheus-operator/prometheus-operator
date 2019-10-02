@@ -878,3 +878,30 @@ func TestWALCompression(t *testing.T) {
 		}
 	}
 }
+
+func TestThanosListenLocal(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				ListenLocal: true,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+	foundGrpcFlag := false
+	foundHTTPFlag := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[2].Args {
+		if flag == "--grpc-address=127.0.0.1:10901" {
+			foundGrpcFlag = true
+		}
+		if flag == "--http-address=127.0.0.1:10902" {
+			foundHTTPFlag = true
+		}
+	}
+
+	if !foundGrpcFlag || !foundHTTPFlag {
+		t.Fatal("Thanos not listening on loopback when it should.")
+	}
+}

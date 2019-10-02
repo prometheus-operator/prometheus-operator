@@ -4143,6 +4143,10 @@ spec:
                     to ensure the Prometheus Operator knows what version of Thanos
                     is being configured.
                   type: string
+                listenLocal:
+                  description: ListenLocal makes the Thanos sidecar listen on loopback,
+                    so that it does not bind against the Pod IP.
+                  type: boolean
                 objectStorageConfig:
                   description: SecretKeySelector selects a key of a Secret.
                   properties:
