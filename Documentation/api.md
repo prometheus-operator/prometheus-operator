@@ -41,6 +41,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [RuleGroup](#rulegroup)
 * [Rules](#rules)
 * [RulesAlert](#rulesalert)
+* [SecretOrConfigMap](#secretorconfigmap)
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
@@ -541,6 +542,17 @@ RuleGroup is a list of sequentially evaluated recording and alerting rules.
 
 [Back to TOC](#table-of-contents)
 
+## SecretOrConfigMap
+
+SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mutually exclusive.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| secret | Secret containing data to use for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| configMap | ConfigMap containing data to use for the targets. | *v1.ConfigMapKeySelector | false |
+
+[Back to TOC](#table-of-contents)
+
 ## ServiceMonitor
 
 ServiceMonitor defines monitoring for a set of services.
@@ -597,11 +609,9 @@ TLSConfig specifies TLS configuration parameters.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | caFile | Path to the CA cert in the Prometheus container to use for the targets. | string | false |
-| caSecret | Secret containing the CA cert to use for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
-| caConfigMap | ConfigMap containing the CA cert to use for the targets. | *v1.ConfigMapKeySelector | false |
+| ca | Stuct containing the CA cert to use for the targets. | [SecretOrConfigMap](#secretorconfigmap) | false |
 | certFile | Path to the client cert file in the Prometheus container for the targets. | string | false |
-| certSecret | Secret containing the client cert file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
-| certConfigMap | ConfigMap containing the client cert file for the targets. | *v1.ConfigMapKeySelector | false |
+| cert | Struct containing the client cert file for the targets. | [SecretOrConfigMap](#secretorconfigmap) | false |
 | keyFile | Path to the client key file in the Prometheus container for the targets. | string | false |
 | keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 | serverName | Used to verify the hostname for the targets. | string | false |

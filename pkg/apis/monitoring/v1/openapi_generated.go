@@ -2787,16 +2787,10 @@ func schema_pkg_apis_monitoring_v1_TLSConfig(ref common.ReferenceCallback) commo
 							Format:      "",
 						},
 					},
-					"caSecret": {
+					"ca": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Secret containing the CA cert to use for the targets.",
-							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
-						},
-					},
-					"caConfigMap": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ConfigMap containing the CA cert to use for the targets.",
-							Ref:         ref("k8s.io/api/core/v1.ConfigMapKeySelector"),
+							Description: "Stuct containing the CA cert to use for the targets.",
+							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.SecretOrConfigMap"),
 						},
 					},
 					"certFile": {
@@ -2806,16 +2800,10 @@ func schema_pkg_apis_monitoring_v1_TLSConfig(ref common.ReferenceCallback) commo
 							Format:      "",
 						},
 					},
-					"certSecret": {
+					"cert": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Secret containing the client cert file for the targets.",
-							Ref:         ref("k8s.io/api/core/v1.SecretKeySelector"),
-						},
-					},
-					"certConfigMap": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ConfigMap containing the client cert file for the targets.",
-							Ref:         ref("k8s.io/api/core/v1.ConfigMapKeySelector"),
+							Description: "Struct containing the client cert file for the targets.",
+							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.SecretOrConfigMap"),
 						},
 					},
 					"keyFile": {
@@ -2849,7 +2837,7 @@ func schema_pkg_apis_monitoring_v1_TLSConfig(ref common.ReferenceCallback) commo
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.ConfigMapKeySelector", "k8s.io/api/core/v1.SecretKeySelector"},
+			"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.SecretOrConfigMap", "k8s.io/api/core/v1.SecretKeySelector"},
 	}
 }
 
