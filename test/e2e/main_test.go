@@ -149,7 +149,9 @@ func testAllNS(t *testing.T) {
 		"PromExposingWithKubernetesAPI":          testPromExposingWithKubernetesAPI,
 		"PromDiscoverTargetPort":                 testPromDiscoverTargetPort,
 		"PromOpMatchPromAndServMonInDiffNSs":     testPromOpMatchPromAndServMonInDiffNSs,
-		"PromGetBasicAuthSecret":                 testPromGetBasicAuthSecret,
+		"PromGetAuthSecret":                      testPromGetAuthSecret,
+		"PromArbitraryFSAcc":                     testPromArbitraryFSAcc,
+		"PromTLSConfigViaSecret":                 testPromTLSConfigViaSecret,
 		"Thanos":                                 testThanos,
 	}
 

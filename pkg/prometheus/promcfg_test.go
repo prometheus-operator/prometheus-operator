@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	yaml "gopkg.in/yaml.v2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -254,6 +254,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -329,6 +330,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
 		nil,
 		[]byte(`- action: drop
   source_labels: [__meta_kubernetes_node_name]
@@ -408,6 +410,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
 		nil,
 		nil,
 		[]byte(`- static_configs:
@@ -500,6 +503,7 @@ func TestTargetLabels(t *testing.T) {
 		},
 		nil,
 		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -622,6 +626,7 @@ func TestPodTargetLabels(t *testing.T) {
 		},
 		nil,
 		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -744,6 +749,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 			},
 		},
 		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -842,6 +848,7 @@ func TestEmptyEndointPorts(t *testing.T) {
 		},
 		nil,
 		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -971,6 +978,7 @@ func generateTestConfig(version string) ([]byte, error) {
 		makeServiceMonitors(),
 		makePodMonitors(),
 		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
 		nil,
 		nil,
 		nil,

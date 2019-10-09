@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: basic-auth-test-app
+  name: instrumented-sample-app
   labels:
     group: test
 spec:
@@ -16,8 +16,10 @@ spec:
     spec:
       containers:
       - name: example-app
-        image: quay.io/coreos/basic-auth-test-app:0.1.0
+        image: quay.io/coreos/instrumented-sample-app:0.2.0-bearer-mtls-1
         imagePullPolicy: IfNotPresent
         ports:
         - name: web
           containerPort: 8080
+        - name: mtls
+          containerPort: 8081

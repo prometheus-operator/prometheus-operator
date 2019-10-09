@@ -63,7 +63,9 @@ func printTOC(types []KubeTypes) {
 	fmt.Printf("\n## Table of Contents\n")
 	for _, t := range types {
 		strukt := t[0]
-		fmt.Printf("* [%s](#%s)\n", strukt.Name, toSectionLink(strukt.Name))
+		if len(t) > 1 {
+			fmt.Printf("* [%s](#%s)\n", strukt.Name, toSectionLink(strukt.Name))
+		}
 	}
 }
 
@@ -83,16 +85,18 @@ func printAPIDocs(path string) {
 
 	for _, t := range types {
 		strukt := t[0]
-		fmt.Printf("\n## %s\n\n%s\n\n", strukt.Name, strukt.Doc)
+		if len(t) > 1 {
+			fmt.Printf("\n## %s\n\n%s\n\n", strukt.Name, strukt.Doc)
 
-		fmt.Println("| Field | Description | Scheme | Required |")
-		fmt.Println("| ----- | ----------- | ------ | -------- |")
-		fields := t[1:(len(t))]
-		for _, f := range fields {
-			fmt.Println("|", f.Name, "|", f.Doc, "|", f.Type, "|", f.Mandatory, "|")
+			fmt.Println("| Field | Description | Scheme | Required |")
+			fmt.Println("| ----- | ----------- | ------ | -------- |")
+			fields := t[1:(len(t))]
+			for _, f := range fields {
+				fmt.Println("|", f.Name, "|", f.Doc, "|", f.Type, "|", f.Mandatory, "|")
+			}
+			fmt.Println("")
+			fmt.Println("[Back to TOC](#table-of-contents)")
 		}
-		fmt.Println("")
-		fmt.Println("[Back to TOC](#table-of-contents)")
 	}
 }
 

@@ -18,6 +18,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"sort"
+	"strings"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -252,14 +255,94 @@ func (f *Framework) WaitForTargets(ns, svcName string, amount int) error {
 	return nil
 }
 
-func (f *Framework) QueryPrometheusSVC(ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
+func (f *Framework) WaitForDiscoveryWorking(ns, svcName, prometheusName string) error {
+	var loopErr error
+
+	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
+		pods, loopErr := f.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(prometheusName))
+		if loopErr != nil {
+			return false, loopErr
+		}
+		if 1 != len(pods.Items) {
+			return false, nil
+		}
+		podIP := pods.Items[0].Status.PodIP
+		expectedTargets := []string{fmt.Sprintf("http://%s:9090/metrics", podIP)}
+
+		activeTargets, loopErr := f.GetActiveTargets(ns, svcName)
+		if loopErr != nil {
+			return false, loopErr
+		}
+
+		if loopErr = assertExpectedTargets(activeTargets, expectedTargets); loopErr != nil {
+			return false, nil
+		}
+
+		working, loopErr := f.basicQueryWorking(ns, svcName)
+		if loopErr != nil {
+			return false, loopErr
+		}
+		if !working {
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for Prometheus to discover targets failed: %v: %v", err, loopErr)
+	}
+
+	return nil
+}
+
+func (f *Framework) basicQueryWorking(ns, svcName string) (bool, error) {
+	response, err := f.PrometheusSVCGetRequest(ns, svcName, "/api/v1/query", map[string]string{"query": "up"})
+	if err != nil {
+		return false, err
+	}
+
+	rq := PrometheusQueryAPIResponse{}
+	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&rq); err != nil {
+		return false, err
+	}
+
+	if rq.Status != "success" && rq.Data.Result[0].Value[1] == "1" {
+		fmt.Printf("Query Response not successful.")
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func assertExpectedTargets(targets []*Target, expectedTargets []string) error {
+	existingTargets := []string{}
+
+	for _, t := range targets {
+		existingTargets = append(existingTargets, t.ScrapeURL)
+	}
+
+	sort.Strings(expectedTargets)
+	sort.Strings(existingTargets)
+
+	if !reflect.DeepEqual(expectedTargets, existingTargets) {
+		return fmt.Errorf(
+			"expected targets %q but got %q", strings.Join(expectedTargets, ","),
+			strings.Join(existingTargets, ","),
+		)
+	}
+
+	return nil
+}
+
+func (f *Framework) PrometheusSVCGetRequest(ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := ProxyGet("", svcName, "web", endpoint, query)
 	return request.DoRaw()
 }
 
 func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
-	response, err := f.QueryPrometheusSVC(ns, svcName, "/api/v1/targets", map[string]string{})
+	response, err := f.PrometheusSVCGetRequest(ns, svcName, "/api/v1/targets", map[string]string{})
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +356,7 @@ func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
 }
 
 func (f *Framework) CheckPrometheusFiringAlert(ns, svcName, alertName string) (bool, error) {
-	response, err := f.QueryPrometheusSVC(
+	response, err := f.PrometheusSVCGetRequest(
 		ns,
 		svcName,
 		"/api/v1/query",
@@ -283,7 +366,7 @@ func (f *Framework) CheckPrometheusFiringAlert(ns, svcName, alertName string) (b
 		return false, err
 	}
 
-	q := prometheusQueryAPIResponse{}
+	q := PrometheusQueryAPIResponse{}
 	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&q); err != nil {
 		return false, err
 	}
@@ -334,15 +417,17 @@ type prometheusTargetAPIResponse struct {
 	Data   *targetDiscovery `json:"data"`
 }
 
-type prometheusQueryResult struct {
+type PrometheusQueryResult struct {
 	Metric map[string]string `json:"metric"`
+	Value  []interface{}     `json:"value"`
 }
 
-type prometheusQueryData struct {
-	Result []prometheusQueryResult `json:"result"`
+type PrometheusQueryData struct {
+	ResultType string                  `json:"resultType"`
+	Result     []PrometheusQueryResult `json:"result"`
 }
 
-type prometheusQueryAPIResponse struct {
+type PrometheusQueryAPIResponse struct {
 	Status string               `json:"status"`
-	Data   *prometheusQueryData `json:"data"`
+	Data   *PrometheusQueryData `json:"data"`
 }
