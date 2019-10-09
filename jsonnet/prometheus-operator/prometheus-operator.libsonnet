@@ -28,6 +28,19 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
   },
 
   prometheusOperator+:: {
+    local po = self,
+
+    namespace:: $._config.namespace,
+    commonLabels:: $._config.prometheusOperator.commonLabels,
+    deploymentSelectorLabels:: $._config.prometheusOperator.deploymentSelectorLabels,
+
+    image:: $._config.imageRepos.prometheusOperator,
+    version:: $._config.versions.prometheusOperator,
+    configReloaderImage:: $._config.imageRepos.configmapReloader,
+    configReloaderVersion:: $._config.versions.configmapReloader,
+    prometheusConfigReloaderImage:: $._config.imageRepos.prometheusConfigReloader,
+    prometheusConfigReloaderVersion:: $._config.versions.prometheusConfigReloader,
+
     // Prefixing with 0 to ensure these manifests are listed and therefore created first.
     '0alertmanagerCustomResourceDefinition': import 'alertmanager-crd.libsonnet',
     '0prometheusCustomResourceDefinition': import 'prometheus-crd.libsonnet',
@@ -39,12 +52,12 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       local clusterRoleBinding = k.rbac.v1.clusterRoleBinding;
 
       clusterRoleBinding.new() +
-      clusterRoleBinding.mixin.metadata.withLabels($._config.prometheusOperator.commonLabels) +
+      clusterRoleBinding.mixin.metadata.withLabels(po.commonLabels) +
       clusterRoleBinding.mixin.metadata.withName('prometheus-operator') +
       clusterRoleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
       clusterRoleBinding.mixin.roleRef.withName('prometheus-operator') +
       clusterRoleBinding.mixin.roleRef.mixinInstance({ kind: 'ClusterRole' }) +
-      clusterRoleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-operator', namespace: $._config.namespace }]),
+      clusterRoleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-operator', namespace: po.namespace }]),
 
     clusterRole:
       local clusterRole = k.rbac.v1.clusterRole;
@@ -118,7 +131,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       local rules = [apiExtensionsRule, monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
 
       clusterRole.new() +
-      clusterRole.mixin.metadata.withLabels($._config.prometheusOperator.commonLabels) +
+      clusterRole.mixin.metadata.withLabels(po.commonLabels) +
       clusterRole.mixin.metadata.withName('prometheus-operator') +
       clusterRole.withRules(rules),
 
@@ -130,24 +143,24 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       local targetPort = 8080;
 
       local operatorContainer =
-        container.new('prometheus-operator', $._config.imageRepos.prometheusOperator + ':' + $._config.versions.prometheusOperator) +
+        container.new('prometheus-operator', po.image + ':' + po.version) +
         container.withPorts(containerPort.newNamed(targetPort, 'http')) +
         container.withArgs([
           '--kubelet-service=kube-system/kubelet',
           // Prometheus Operator is run with a read-only root file system. By
           // default glog saves logfiles to /tmp. Make it log to stderr instead.
           '--logtostderr=true',
-          '--config-reloader-image=' + $._config.imageRepos.configmapReloader + ':' + $._config.versions.configmapReloader,
-          '--prometheus-config-reloader=' + $._config.imageRepos.prometheusConfigReloader + ':' + $._config.versions.prometheusConfigReloader,
+          '--config-reloader-image=' + po.configReloaderImage + ':' + po.configReloaderVersion,
+          '--prometheus-config-reloader=' + po.prometheusConfigReloaderImage + ':' + po.prometheusConfigReloaderVersion,
         ]) +
         container.mixin.securityContext.withAllowPrivilegeEscalation(false) +
         container.mixin.resources.withRequests({ cpu: '100m', memory: '100Mi' }) +
         container.mixin.resources.withLimits({ cpu: '200m', memory: '200Mi' });
 
-      deployment.new('prometheus-operator', 1, operatorContainer, $._config.prometheusOperator.commonLabels) +
-      deployment.mixin.metadata.withNamespace($._config.namespace) +
-      deployment.mixin.metadata.withLabels($._config.prometheusOperator.commonLabels) +
-      deployment.mixin.spec.selector.withMatchLabels($._config.prometheusOperator.deploymentSelectorLabels) +
+      deployment.new('prometheus-operator', 1, operatorContainer, po.commonLabels) +
+      deployment.mixin.metadata.withNamespace(po.namespace) +
+      deployment.mixin.metadata.withLabels(po.commonLabels) +
+      deployment.mixin.spec.selector.withMatchLabels(po.deploymentSelectorLabels) +
       deployment.mixin.spec.template.spec.withNodeSelector({ 'beta.kubernetes.io/os': 'linux' }) +
       deployment.mixin.spec.template.spec.securityContext.withRunAsNonRoot(true) +
       deployment.mixin.spec.template.spec.securityContext.withRunAsUser(65534) +
@@ -157,8 +170,8 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       local serviceAccount = k.core.v1.serviceAccount;
 
       serviceAccount.new('prometheus-operator') +
-      serviceAccount.mixin.metadata.withLabels($._config.prometheusOperator.commonLabels) +
-      serviceAccount.mixin.metadata.withNamespace($._config.namespace),
+      serviceAccount.mixin.metadata.withLabels(po.commonLabels) +
+      serviceAccount.mixin.metadata.withNamespace(po.namespace),
 
     service:
       local service = k.core.v1.service;
@@ -166,9 +179,9 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
 
       local poServicePort = servicePort.newNamed('http', 8080, 'http');
 
-      service.new('prometheus-operator', $.prometheusOperator.deployment.spec.selector.matchLabels, [poServicePort]) +
-      service.mixin.metadata.withLabels($._config.prometheusOperator.commonLabels) +
-      service.mixin.metadata.withNamespace($._config.namespace) +
+      service.new('prometheus-operator', po.deployment.spec.selector.matchLabels, [poServicePort]) +
+      service.mixin.metadata.withLabels(po.commonLabels) +
+      service.mixin.metadata.withNamespace(po.namespace) +
       service.mixin.spec.withClusterIp('None'),
     serviceMonitor:
       {
@@ -176,8 +189,8 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
         kind: 'ServiceMonitor',
         metadata: {
           name: 'prometheus-operator',
-          namespace: $._config.namespace,
-          labels: $._config.prometheusOperator.commonLabels,
+          namespace: po.namespace,
+          labels: po.commonLabels,
         },
         spec: {
           endpoints: [
@@ -187,7 +200,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
             },
           ],
           selector: {
-            matchLabels: $._config.prometheusOperator.commonLabels,
+            matchLabels: po.commonLabels,
           },
         },
       },
