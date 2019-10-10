@@ -2014,7 +2014,6 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 						},
 					},
 				},
-				Required: []string{"arbitraryFSAccessThroughSMs"},
 			},
 		},
 		Dependencies: []string{
