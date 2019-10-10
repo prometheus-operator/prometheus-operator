@@ -41,11 +41,11 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 	p2.Spec.Version = "v1.7.2"
 	c := Config{}
 
-	p1Hash, err := createSSetInputHash(p1, c, []string{})
+	p1Hash, err := createSSetInputHash(p1, c, []string{}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	p2Hash, err := createSSetInputHash(p2, c, []string{})
+	p2Hash, err := createSSetInputHash(p2, c, []string{}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
