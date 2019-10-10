@@ -5481,8 +5481,6 @@ spec:
               description: Enable compression of the write-ahead log using Snappy.
                 This flag is only available in versions of Prometheus >= 2.11.0.
               type: boolean
-          required:
-          - arbitraryFSAccessThroughSMs
           type: object
         status:
           description: 'PrometheusStatus is the most recent observed status of the

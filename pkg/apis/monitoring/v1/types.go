@@ -284,7 +284,7 @@ type PrometheusSpec struct {
 	// ArbitraryFSAccessThroughSMs configures whether configuration
 	// based on a service monitor can access arbitrary files on the file system
 	// of the Prometheus container e.g. bearer token files.
-	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs"`
+	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs,omitempty"`
 }
 
 // ArbitraryFSAccessThroughSMsConfig enables users to configure, whether
