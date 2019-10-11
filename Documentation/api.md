@@ -394,6 +394,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | priorityClassName | Priority class assigned to the Pods | string | false |
 | portName | Port name used for the pods and governing service. This defaults to web | string | false |
 | arbitraryFSAccessThroughSMs | ArbitraryFSAccessThroughSMs configures whether configuration based on a service monitor can access arbitrary files on the file system of the Prometheus container e.g. bearer token files. | [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig) | false |
+| overrideHonorLabels | OverrideHonorLabels if set to true overrides all user configured honor_labels. If HonorLabels is set in ServiceMonitor or PodMonitor to true, this overrides honor_labels to false. | bool | false |
 
 [Back to TOC](#table-of-contents)
 

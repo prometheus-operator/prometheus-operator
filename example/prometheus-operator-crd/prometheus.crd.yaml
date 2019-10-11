@@ -2826,6 +2826,11 @@ spec:
             nodeSelector:
               description: Define which Nodes the Pods are scheduled on.
               type: object
+            overrideHonorLabels:
+              description: OverrideHonorLabels if set to true overrides all user configured
+                honor_labels. If HonorLabels is set in ServiceMonitor or PodMonitor
+                to true, this overrides honor_labels to false.
+              type: boolean
             paused:
               description: When a Prometheus deployment is paused, no actions except
                 for deletion will be performed on the underlying objects.
