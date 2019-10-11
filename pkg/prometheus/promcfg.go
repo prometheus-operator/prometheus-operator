@@ -28,7 +28,7 @@ import (
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	v1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 const (
@@ -224,12 +224,12 @@ func (cg *configGenerator) generateConfig(
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range sMonIdentifiers {
 		for i, ep := range sMons[identifier].Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, cg.generateServiceMonitorConfig(version, sMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, bearerTokens))
+			scrapeConfigs = append(scrapeConfigs, cg.generateServiceMonitorConfig(version, sMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, bearerTokens, p.Spec.OverrideHonorLabels))
 		}
 	}
 	for _, identifier := range pMonIdentifiers {
 		for i, ep := range pMons[identifier].Spec.PodMetricsEndpoints {
-			scrapeConfigs = append(scrapeConfigs, cg.generatePodMonitorConfig(version, pMons[identifier], ep, i, apiserverConfig, basicAuthSecrets))
+			scrapeConfigs = append(scrapeConfigs, cg.generatePodMonitorConfig(version, pMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, p.Spec.OverrideHonorLabels))
 		}
 	}
 
@@ -312,7 +312,24 @@ func (cg *configGenerator) generateConfig(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *configGenerator) generatePodMonitorConfig(version semver.Version, m *v1.PodMonitor, ep v1.PodMetricsEndpoint, i int, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
+// honorLabels determinates the value of honor_labels.
+// if overrideHonorLabels is true and user tries to set the
+// value to true, we want to set honor_labels to false.
+func honorLabels(userHonorLabels, overrideHonorLabels bool) bool {
+	if userHonorLabels && overrideHonorLabels {
+		return false
+	}
+	return userHonorLabels
+}
+
+func (cg *configGenerator) generatePodMonitorConfig(version semver.Version,
+	m *v1.PodMonitor,
+	ep v1.PodMetricsEndpoint,
+	i int, apiserverConfig *v1.APIServerConfig,
+	basicAuthSecrets map[string]BasicAuthCredentials,
+	ignoreHonorLabels bool) yaml.MapSlice {
+
+	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -320,7 +337,7 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version, m *v
 		},
 		{
 			Key:   "honor_labels",
-			Value: ep.HonorLabels,
+			Value: hl,
 		},
 	}
 
@@ -549,7 +566,9 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]BasicAuthCredentials,
 	bearerTokens map[string]BearerToken,
-) yaml.MapSlice {
+	overrideHonorLabels bool) yaml.MapSlice {
+
+	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -557,7 +576,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		},
 		{
 			Key:   "honor_labels",
-			Value: ep.HonorLabels,
+			Value: hl,
 		},
 	}
 
