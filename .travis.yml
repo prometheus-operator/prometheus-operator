@@ -21,14 +21,16 @@ jobs:
     stage: test
     # Check generated contents are up to date and code & docs files are formatted.
     script: make --always-make format generate-in-docker && git diff --exit-code
-    # Build Prometheus Operator rule config map to rule file CRDs CLI tool.
-  - script: cd cmd/po-rule-migration && go install
-    # Ensure vendor folder matches vendor.json .
-  - script: make --always-make vendor && git diff --exit-code vendor/
-    # Run unit tests.
-  - script: make test-unit
-    # Run e2e tests.
-  - script: ./scripts/travis-e2e.sh
+  - name: "Build Prometheus Operator rule config map to rule file CRDs CLI tool"
+    script: cd cmd/po-rule-migration && go install
+  - name: "Ensure vendor folder matches vendor.json"
+    script: make --always-make vendor && git diff --exit-code vendor/
+  - name: "Run unit tests"
+    script: make test-unit
+  - name: "Run e2e tests (Alertmanager)"
+    script: EXCLUDE_PROMETHEUS_TESTS=true ./scripts/travis-e2e.sh
+  - name: "Run e2e tests (Prometheus)"
+    script: EXCLUDE_ALERTMANAGER_TESTS=true ./scripts/travis-e2e.sh
 
   - name: "Push Docker Image"
     stage: push-docker-image
