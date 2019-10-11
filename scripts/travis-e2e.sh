@@ -13,6 +13,7 @@ SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 "${SCRIPT_DIR}"/create-minikube.sh
 
 make build image
+export TEST_RUN_ARGS="-failfast"
 make test-e2e
 
 "${SCRIPT_DIR}"/delete-minikube.sh
