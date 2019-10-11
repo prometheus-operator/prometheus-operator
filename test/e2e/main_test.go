@@ -31,6 +31,18 @@ var (
 	opImage   *string
 )
 
+func skipPrometheusTests(t *testing.T) {
+	if os.Getenv("EXCLUDE_PROMETHEUS_TESTS") != "" {
+		t.Skip("Skipping Prometheus tests")
+	}
+}
+
+func skipAlertmanagerTests(t *testing.T) {
+	if os.Getenv("EXCLUDE_ALERTMANAGER_TESTS") != "" {
+		t.Skip("Skipping Alertmanager tests")
+	}
+}
+
 func TestMain(m *testing.M) {
 	kubeconfig := flag.String(
 		"kubeconfig",
@@ -80,8 +92,10 @@ func TestAllNS(t *testing.T) {
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
 	// (or at least did not fail before calling t.Parallel). As all tests in
 	// testAllNS are parallel, the defered ctx.Cleanup above would be run before
-	// all tests finished. Wrapping it in testAllNS fixes this.
-	t.Run("x", testAllNS)
+	// all tests finished. Wrapping it in testAllNSPrometheus and testAllNSAlertmanager
+	// fixes this.
+	t.Run("x", testAllNSAlertmanager)
+	t.Run("y", testAllNSPrometheus)
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -112,9 +126,9 @@ func TestAllNS(t *testing.T) {
 	}
 }
 
-func testAllNS(t *testing.T) {
+func testAllNSAlertmanager(t *testing.T) {
+	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		// Alertmanager
 		"AMCreateDeleteCluster":           testAMCreateDeleteCluster,
 		"AMScaling":                       testAMScaling,
 		"AMVersionMigration":              testAMVersionMigration,
@@ -125,8 +139,16 @@ func testAllNS(t *testing.T) {
 		"AMClusterGossipSilences":         testAMClusterGossipSilences,
 		"AMReloadConfig":                  testAMReloadConfig,
 		"AMZeroDowntimeRollingDeployment": testAMZeroDowntimeRollingDeployment,
+	}
 
-		// Prometheus
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
+func testAllNSPrometheus(t *testing.T) {
+	skipPrometheusTests(t)
+	testFuncs := map[string]func(t *testing.T){
 		"PromCreateDeleteCluster":                testPromCreateDeleteCluster,
 		"PromScaleUpDownCluster":                 testPromScaleUpDownCluster,
 		"PromNoServiceMonitorSelector":           testPromNoServiceMonitorSelector,
@@ -174,6 +196,7 @@ func TestMultiNS(t *testing.T) {
 
 // TestDenylist tests the Prometheus Operator configured not to watch specific namespaces.
 func TestDenylist(t *testing.T) {
+	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"Prometheus":     testDenyPrometheus,
 		"ServiceMonitor": testDenyServiceMonitor,
@@ -186,6 +209,7 @@ func TestDenylist(t *testing.T) {
 
 // TestPromInstanceNs tests prometheus operator in different scenarios when --prometheus-instance-namespace is given
 func TestPromInstanceNs(t *testing.T) {
+	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"AllNs":     testPrometheusInstanceNamespaces_AllNs,
 		"AllowList": testPrometheusInstanceNamespaces_AllowList,
@@ -199,6 +223,7 @@ func TestPromInstanceNs(t *testing.T) {
 
 // TestAlertmanagerInstanceNs tests prometheus operator in different scenarios when --alertmanager-instance-namespace is given
 func TestAlertmanagerInstanceNs(t *testing.T) {
+	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"AllNs":  testAlertmanagerInstanceNamespaces_AllNs,
 		"DenyNs": testAlertmanagerInstanceNamespaces_DenyNs,
