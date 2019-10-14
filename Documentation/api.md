@@ -172,7 +172,7 @@ ArbitraryFSAccessThroughSMsConfig enables users to configure, whether a service 
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| Deny |  | bool | false |
+| deny |  | bool | false |
 
 [Back to TOC](#table-of-contents)
 

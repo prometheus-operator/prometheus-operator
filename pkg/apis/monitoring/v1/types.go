@@ -299,8 +299,7 @@ type PrometheusSpec struct {
 // request by Prometheus to a malicious target. Denying the above would prevent the
 // attack, users can instead use the BearerTokenSecret field.
 type ArbitraryFSAccessThroughSMsConfig struct {
-	Deny bool
-	// ServiceMonitorAllowlist
+	Deny bool `json:"deny,omitempty"`
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not
