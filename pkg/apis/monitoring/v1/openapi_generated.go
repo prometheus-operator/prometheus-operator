@@ -2013,6 +2013,13 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.ArbitraryFSAccessThroughSMsConfig"),
 						},
 					},
+					"overrideHonorLabels": {
+						SchemaProps: spec.SchemaProps{
+							Description: "OverrideHonorLabels if set to true overrides all user configured honor_labels. If HonorLabels is set in ServiceMonitor or PodMonitor to true, this overrides honor_labels to false.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},

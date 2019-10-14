@@ -285,6 +285,9 @@ type PrometheusSpec struct {
 	// based on a service monitor can access arbitrary files on the file system
 	// of the Prometheus container e.g. bearer token files.
 	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs,omitempty"`
+	// OverrideHonorLabels if set to true overrides all user configured honor_labels.
+	// If HonorLabels is set in ServiceMonitor or PodMonitor to true, this overrides honor_labels to false.
+	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
 }
 
 // ArbitraryFSAccessThroughSMsConfig enables users to configure, whether
