@@ -224,12 +224,32 @@ func (cg *configGenerator) generateConfig(
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range sMonIdentifiers {
 		for i, ep := range sMons[identifier].Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, cg.generateServiceMonitorConfig(version, sMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, bearerTokens, p.Spec.OverrideHonorLabels, p.Spec.OverrideHonorTimestamps, p.Spec.IgnoreNamespaceSelectors))
+			scrapeConfigs = append(scrapeConfigs,
+				cg.generateServiceMonitorConfig(
+					version,
+					sMons[identifier],
+					ep, i,
+					apiserverConfig,
+					basicAuthSecrets,
+					bearerTokens,
+					p.Spec.OverrideHonorLabels,
+					p.Spec.OverrideHonorTimestamps,
+					p.Spec.IgnoreNamespaceSelectors,
+					p.Spec.EnforcedNamespaceLabel))
 		}
 	}
 	for _, identifier := range pMonIdentifiers {
 		for i, ep := range pMons[identifier].Spec.PodMetricsEndpoints {
-			scrapeConfigs = append(scrapeConfigs, cg.generatePodMonitorConfig(version, pMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, p.Spec.OverrideHonorLabels, p.Spec.OverrideHonorTimestamps, p.Spec.IgnoreNamespaceSelectors))
+			scrapeConfigs = append(scrapeConfigs,
+				cg.generatePodMonitorConfig(
+					version,
+					pMons[identifier], ep, i,
+					apiserverConfig,
+					basicAuthSecrets,
+					p.Spec.OverrideHonorLabels,
+					p.Spec.OverrideHonorTimestamps,
+					p.Spec.IgnoreNamespaceSelectors,
+					p.Spec.EnforcedNamespaceLabel))
 		}
 	}
 
@@ -348,7 +368,8 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	basicAuthSecrets map[string]BasicAuthCredentials,
 	ignoreHonorLabels bool,
 	overrideHonorTimestamps bool,
-	ignoreNamespaceSelectors bool) yaml.MapSlice {
+	ignoreNamespaceSelectors bool,
+	enforcedNamespaceLabel string) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
@@ -531,6 +552,9 @@ func (cg *configGenerator) generatePodMonitorConfig(
 		for _, c := range ep.RelabelConfigs {
 			relabelings = append(relabelings, generateRelabelConfig(c))
 		}
+		// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
+		// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
+		relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
@@ -542,6 +566,9 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	if ep.MetricRelabelConfigs != nil {
 		var metricRelabelings []yaml.MapSlice
 		for _, c := range ep.MetricRelabelConfigs {
+			if c.TargetLabel != "" && enforcedNamespaceLabel != "" && c.TargetLabel == enforcedNamespaceLabel {
+				continue
+			}
 			relabeling := generateRelabelConfig(c)
 
 			metricRelabelings = append(metricRelabelings, relabeling)
@@ -562,7 +589,8 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	bearerTokens map[string]BearerToken,
 	overrideHonorLabels bool,
 	overrideHonorTimestamps bool,
-	ignoreNamespaceSelectors bool) yaml.MapSlice {
+	ignoreNamespaceSelectors bool,
+	enforcedNamespaceLabel string) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
@@ -792,6 +820,9 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		for _, c := range ep.RelabelConfigs {
 			relabelings = append(relabelings, generateRelabelConfig(c))
 		}
+		// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
+		// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
+		relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
@@ -803,6 +834,9 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	if ep.MetricRelabelConfigs != nil {
 		var metricRelabelings []yaml.MapSlice
 		for _, c := range ep.MetricRelabelConfigs {
+			if c.TargetLabel != "" && enforcedNamespaceLabel != "" && c.TargetLabel == enforcedNamespaceLabel {
+				continue
+			}
 			relabeling := generateRelabelConfig(c)
 
 			metricRelabelings = append(metricRelabelings, relabeling)
@@ -846,6 +880,12 @@ func appendPre17RelabelConfig(
 		{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
 		{Key: "regex", Value: nsRegex},
 	})
+}
+
+func enforceNamespaceLabel(relabelings []yaml.MapSlice, namespace, enforcedNamespaceLabel string) []yaml.MapSlice {
+	return append(relabelings, yaml.MapSlice{
+		{Key: "target_label", Value: enforcedNamespaceLabel},
+		{Key: "replacement", Value: namespace}})
 }
 
 func generateRelabelConfig(c *v1.RelabelConfig) yaml.MapSlice {
