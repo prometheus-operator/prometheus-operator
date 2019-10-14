@@ -1118,7 +1118,12 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "retrieving statefulset failed")
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames)
+	spec := appsv1.StatefulSetSpec{}
+	if obj != nil {
+		ss := obj.(*appsv1.StatefulSet)
+		spec = ss.Spec
+	}
+	newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, spec)
 	if err != nil {
 		return err
 	}
@@ -1164,18 +1169,19 @@ func (c *Operator) sync(key string) error {
 	return nil
 }
 
-func createSSetInputHash(p monitoringv1.Prometheus, c Config, ruleConfigMapNames []string) (string, error) {
+func createSSetInputHash(p monitoringv1.Prometheus, c Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
 	hash, err := hashstructure.Hash(struct {
 		P monitoringv1.Prometheus
 		C Config
+		S interface{}
 		R []string `hash:"set"`
-	}{p, c, ruleConfigMapNames},
+	}{p, c, ss, ruleConfigMapNames},
 		nil,
 	)
 	if err != nil {
 		return "", errors.Wrap(
 			err,
-			"failed to calculate combined hash of Prometheus CRD, config and"+
+			"failed to calculate combined hash of Prometheus StatefulSet, Prometheus CRD, config and"+
 				" rule ConfigMap names",
 		)
 	}
