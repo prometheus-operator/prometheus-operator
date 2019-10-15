@@ -50,6 +50,120 @@ func TestConfigGeneration(t *testing.T) {
 	}
 }
 
+func TestGlobalSettings(t *testing.T) {
+	type testCase struct {
+		EvaluationInterval string
+		ScrapeInterval     string
+		ExternalLabels     map[string]string
+		Expected           string
+	}
+
+	testcases := []testCase{
+		{
+			Expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`,
+		},
+		{
+			EvaluationInterval: "60s",
+			Expected: `global:
+  evaluation_interval: 60s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`,
+		},
+		{
+			ScrapeInterval: "60s",
+			Expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 60s
+  external_labels:
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`,
+		},
+		{
+			ExternalLabels: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+			},
+			Expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    key1: value1
+    key2: value2
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`,
+		},
+	}
+
+	for _, tc := range testcases {
+		cg := &configGenerator{}
+		cfg, err := cg.generateConfig(
+			&monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{},
+				Spec: monitoringv1.PrometheusSpec{
+					EvaluationInterval: tc.EvaluationInterval,
+					ScrapeInterval:     tc.ScrapeInterval,
+					ExternalLabels:     tc.ExternalLabels,
+				},
+			},
+			map[string]*monitoringv1.ServiceMonitor{},
+			nil,
+			map[string]BasicAuthCredentials{},
+			map[string]BearerToken{},
+			nil,
+			nil,
+			nil,
+			nil,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		result := string(cfg)
+		if tc.Expected != string(cfg) {
+			fmt.Println(pretty.Compare(tc.Expected, result))
+			t.Fatal("expected Prometheus configuration and actual configuration do not match")
+		}
+	}
+}
+
 func TestNamespaceSetCorrectly(t *testing.T) {
 	type testCase struct {
 		ServiceMonitor *monitoringv1.ServiceMonitor
