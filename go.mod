@@ -30,6 +30,7 @@ require (
 	github.com/go-kit/kit v0.9.0
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-openapi/spec v0.19.2
+	github.com/go-openapi/swag v0.19.4
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/gogo/protobuf v1.2.2-0.20190730201129-28a6bbf47e48
 	github.com/golang/protobuf v1.3.2

@@ -288,6 +288,8 @@ type PrometheusSpec struct {
 	// OverrideHonorLabels if set to true overrides all user configured honor_labels.
 	// If HonorLabels is set in ServiceMonitor or PodMonitor to true, this overrides honor_labels to false.
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
+	// OverrideHonorTimestamps allows to globally enforce honoring timestamps in all scrape configs.
+	OverrideHonorTimestamps bool `json:"overrideHonorTimestamps,omitempty"`
 	// IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from
 	// the podmonitor and servicemonitor configs, and they will only discover endpoints
 	// within their current namespace.  Defaults to false.
@@ -581,6 +583,8 @@ type Endpoint struct {
 	BearerTokenSecret v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	HonorLabels bool `json:"honorLabels,omitempty"`
+	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
+	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 	// BasicAuth allow an endpoint to authenticate over basic authentication
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
@@ -642,6 +646,8 @@ type PodMetricsEndpoint struct {
 	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	HonorLabels bool `json:"honorLabels,omitempty"`
+	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
+	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
 	// RelabelConfigs to apply to samples before ingestion.
