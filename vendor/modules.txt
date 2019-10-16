@@ -112,6 +112,8 @@ github.com/modern-go/reflect2
 github.com/oklog/run
 # github.com/oklog/ulid v1.3.1
 github.com/oklog/ulid
+# github.com/openshift/prom-label-proxy v0.1.1-0.20191016113035-b8153a7f39f1
+github.com/openshift/prom-label-proxy/injectproxy
 # github.com/opentracing/opentracing-go v1.1.0
 github.com/opentracing/opentracing-go
 github.com/opentracing/opentracing-go/log
@@ -132,13 +134,13 @@ github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
 # github.com/prometheus/procfs v0.0.3
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
-# github.com/prometheus/prometheus v0.0.0-20190818123050-43acd0e2e93f
+# github.com/prometheus/prometheus v2.3.2+incompatible => github.com/prometheus/prometheus v0.0.0-20190818123050-43acd0e2e93f
 github.com/prometheus/prometheus/pkg/rulefmt
-github.com/prometheus/prometheus/pkg/timestamp
+github.com/prometheus/prometheus/pkg/labels
 github.com/prometheus/prometheus/promql
+github.com/prometheus/prometheus/pkg/timestamp
 github.com/prometheus/prometheus/template
 github.com/prometheus/prometheus/pkg/gate
-github.com/prometheus/prometheus/pkg/labels
 github.com/prometheus/prometheus/pkg/textparse
 github.com/prometheus/prometheus/pkg/value
 github.com/prometheus/prometheus/storage
