@@ -75,6 +75,31 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	}
 }
 
+func TestStatefulSetMetaDataLabelingAndAnnotations(t *testing.T) {
+	annotations := map[string]string{
+		"testannotation": "testvalue",
+	}
+	labels := map[string]string{
+		"testlabel": "testlabel",
+	}
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.PrometheusSpec{
+			StatefulSetMetadata: &metav1.ObjectMeta{
+				Annotations: annotations,
+				Labels:	     labels,
+			},			
+		},
+	}, defaultTestConfig, nil, "")
+	require.NoError(t, err)
+	if _, ok := sset.ObjectMeta.Labels["testlabel"]; !ok {
+		t.Fatal("StatefulSet labels are not properly propagated")
+	}
+	if !reflect.DeepEqual(annotations, sset.ObjectMeta.Annotations) {
+		t.Fatal("StatefulSet annotations are not properly propagated")
+	}
+}
+
 func TestPodLabelsAnnotations(t *testing.T) {
 	annotations := map[string]string{
 		"testannotation": "testvalue",
