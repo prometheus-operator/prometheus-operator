@@ -25,7 +25,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -44,7 +44,7 @@ type configGenerator struct {
 	logger log.Logger
 }
 
-func NewConfigGenerator(logger log.Logger) *configGenerator {
+func newConfigGenerator(logger log.Logger) *configGenerator {
 	cg := &configGenerator{
 		logger: logger,
 	}
@@ -341,17 +341,12 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version,
 		},
 	}
 
-	switch version.Major {
-	case 1:
-		if version.Minor < 7 {
-			if apiserverConfig != nil {
-				level.Info(cg.logger).Log("msg", "custom apiserver config is set but it will not take effect because prometheus version is < 1.7")
-			}
-			cfg = append(cfg, cg.generateK8SSDConfig(nil, nil, nil, kubernetesSDRolePod))
-		} else {
-			cfg = append(cfg, cg.generateK8SSDConfig(getNamespacesFromPodMonitor(m), apiserverConfig, basicAuthSecrets, kubernetesSDRolePod))
+	if version.Major == 1 && version.Minor < 7 {
+		if apiserverConfig != nil {
+			level.Info(cg.logger).Log("msg", "custom apiserver config is set but it will not take effect because prometheus version is < 1.7")
 		}
-	case 2:
+		cfg = append(cfg, cg.generateK8SSDConfig(nil, nil, nil, kubernetesSDRolePod))
+	} else {
 		cfg = append(cfg, cg.generateK8SSDConfig(getNamespacesFromPodMonitor(m), apiserverConfig, basicAuthSecrets, kubernetesSDRolePod))
 	}
 
@@ -424,33 +419,7 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version,
 	}
 
 	if version.Major == 1 && version.Minor < 7 {
-		// Filter targets based on the namespace selection configuration.
-		// By default we only discover services within the namespace of the
-		// PodMonitor.
-		// Selections allow extending this to all namespaces or to a subset
-		// of them specified by label or name matching.
-		//
-		// Label selections are not supported yet as they require either supported
-		// in the upstream SD integration or require out-of-band implementation
-		// in the operator with configuration reload.
-		//
-		// There's no explicit nil for the selector, we decide for the default
-		// case if it's all zero values.
-		nsel := m.Spec.NamespaceSelector
-
-		if !nsel.Any && len(nsel.MatchNames) == 0 {
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-				{Key: "regex", Value: m.Namespace},
-			})
-		} else if len(nsel.MatchNames) > 0 {
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-				{Key: "regex", Value: strings.Join(nsel.MatchNames, "|")},
-			})
-		}
+		relabelings = appendPre17RelabelConfig(relabelings, m.Namespace, m.Spec.NamespaceSelector)
 	}
 
 	// Filter targets based on correct port for the endpoint.
@@ -580,17 +549,12 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		},
 	}
 
-	switch version.Major {
-	case 1:
-		if version.Minor < 7 {
-			if apiserverConfig != nil {
-				level.Info(cg.logger).Log("msg", "custom apiserver config is set but it will not take effect because prometheus version is < 1.7")
-			}
-			cfg = append(cfg, cg.generateK8SSDConfig(nil, nil, nil, kubernetesSDRoleEndpoint))
-		} else {
-			cfg = append(cfg, cg.generateK8SSDConfig(getNamespacesFromServiceMonitor(m), apiserverConfig, basicAuthSecrets, kubernetesSDRoleEndpoint))
+	if version.Major == 1 && version.Minor < 7 {
+		if apiserverConfig != nil {
+			level.Info(cg.logger).Log("msg", "custom apiserver config is set but it will not take effect because prometheus version is < 1.7")
 		}
-	case 2:
+		cfg = append(cfg, cg.generateK8SSDConfig(nil, nil, nil, kubernetesSDRoleEndpoint))
+	} else {
 		cfg = append(cfg, cg.generateK8SSDConfig(getNamespacesFromServiceMonitor(m), apiserverConfig, basicAuthSecrets, kubernetesSDRoleEndpoint))
 	}
 
@@ -686,33 +650,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	}
 
 	if version.Major == 1 && version.Minor < 7 {
-		// Filter targets based on the namespace selection configuration.
-		// By default we only discover services within the namespace of the
-		// ServiceMonitor.
-		// Selections allow extending this to all namespaces or to a subset
-		// of them specified by label or name matching.
-		//
-		// Label selections are not supported yet as they require either supported
-		// in the upstream SD integration or require out-of-band implementation
-		// in the operator with configuration reload.
-		//
-		// There's no explicit nil for the selector, we decide for the default
-		// case if it's all zero values.
-		nsel := m.Spec.NamespaceSelector
-
-		if !nsel.Any && len(nsel.MatchNames) == 0 {
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-				{Key: "regex", Value: m.Namespace},
-			})
-		} else if len(nsel.MatchNames) > 0 {
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-				{Key: "regex", Value: strings.Join(nsel.MatchNames, "|")},
-			})
-		}
+		relabelings = appendPre17RelabelConfig(relabelings, m.Namespace, m.Spec.NamespaceSelector)
 	}
 
 	// Filter targets based on correct port for the endpoint.
@@ -842,6 +780,38 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	}
 
 	return cfg
+}
+
+// appendPre17RelabelConfig appends relabel config to pre-1.7 prometheus versions
+// for filtering targets based on the namespace selection configuration.
+// By default we only discover services within the current namespace.
+// Selections allow extending this to all namespaces or to a subset
+// of them specified by label or name matching.
+//
+// Label selections are not supported yet as they require either support
+// in the upstream SD integration or require out-of-band implementation
+// in the operator with configuration reload.
+//
+// There's no explicit nil for the selector, we decide for the default
+// case if it's all zero values.
+func appendPre17RelabelConfig(
+	relabelings []yaml.MapSlice,
+	namespace string,
+	nsel v1.NamespaceSelector,
+) []yaml.MapSlice {
+
+	nsRegex := namespace
+	if len(nsel.MatchNames) > 0 {
+		nsRegex = strings.Join(nsel.MatchNames, "|")
+	} else if nsel.Any {
+		// no additional relabelings necessary, just keep everything
+		return relabelings
+	}
+	return append(relabelings, yaml.MapSlice{
+		{Key: "action", Value: "keep"},
+		{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
+		{Key: "regex", Value: nsRegex},
+	})
 }
 
 func generateRelabelConfig(c *v1.RelabelConfig) yaml.MapSlice {

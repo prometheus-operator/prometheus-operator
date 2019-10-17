@@ -234,7 +234,7 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 		kubeletObjectNamespace: kubeletObjectNamespace,
 		kubeletSyncEnabled:     kubeletSyncEnabled,
 		config:                 conf,
-		configGenerator:        NewConfigGenerator(logger),
+		configGenerator:        newConfigGenerator(logger),
 	}
 
 	c.promInf = cache.NewSharedIndexInformer(
