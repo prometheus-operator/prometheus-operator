@@ -216,7 +216,8 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 	cg := &configGenerator{}
 
 	for _, tc := range testcases {
-		c := cg.generateK8SSDConfig(getNamespacesFromServiceMonitor(tc.ServiceMonitor), nil, nil, kubernetesSDRoleEndpoint)
+		selectedNamespaces := getNamespacesFromNamespaceSelector(&tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, false)
+		c := cg.generateK8SSDConfig(selectedNamespaces, nil, nil, kubernetesSDRoleEndpoint)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {
 			t.Fatal(err)
@@ -244,7 +245,8 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	}
 
 	cg := &configGenerator{}
-	c := cg.generateK8SSDConfig(getNamespacesFromPodMonitor(pm), nil, nil, kubernetesSDRolePod)
+	selectedNamespaces := getNamespacesFromNamespaceSelector(&pm.Spec.NamespaceSelector, pm.Namespace, false)
+	c := cg.generateK8SSDConfig(selectedNamespaces, nil, nil, kubernetesSDRolePod)
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	if err != nil {
 		t.Fatal(err)
@@ -327,7 +329,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 
 	for _, tc := range testcases {
 		c := cg.generateK8SSDConfig(
-			getNamespacesFromServiceMonitor(sm),
+			getNamespacesFromNamespaceSelector(&sm.Spec.NamespaceSelector, sm.Namespace, false),
 			tc.apiserverConfig,
 			tc.basicAuthSecrets,
 			kubernetesSDRoleEndpoint,

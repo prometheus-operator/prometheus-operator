@@ -224,12 +224,12 @@ func (cg *configGenerator) generateConfig(
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range sMonIdentifiers {
 		for i, ep := range sMons[identifier].Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, cg.generateServiceMonitorConfig(version, sMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, bearerTokens, p.Spec.OverrideHonorLabels))
+			scrapeConfigs = append(scrapeConfigs, cg.generateServiceMonitorConfig(version, sMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, bearerTokens, p.Spec.OverrideHonorLabels, p.Spec.IgnoreNamespaceSelectors))
 		}
 	}
 	for _, identifier := range pMonIdentifiers {
 		for i, ep := range pMons[identifier].Spec.PodMetricsEndpoints {
-			scrapeConfigs = append(scrapeConfigs, cg.generatePodMonitorConfig(version, pMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, p.Spec.OverrideHonorLabels))
+			scrapeConfigs = append(scrapeConfigs, cg.generatePodMonitorConfig(version, pMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, p.Spec.OverrideHonorLabels, p.Spec.IgnoreNamespaceSelectors))
 		}
 	}
 
@@ -327,7 +327,8 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version,
 	ep v1.PodMetricsEndpoint,
 	i int, apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]BasicAuthCredentials,
-	ignoreHonorLabels bool) yaml.MapSlice {
+	ignoreHonorLabels bool,
+	ignoreNamespaceSelectors bool) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
@@ -347,7 +348,8 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version,
 		}
 		cfg = append(cfg, cg.generateK8SSDConfig(nil, nil, nil, kubernetesSDRolePod))
 	} else {
-		cfg = append(cfg, cg.generateK8SSDConfig(getNamespacesFromPodMonitor(m), apiserverConfig, basicAuthSecrets, kubernetesSDRolePod))
+		selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
+		cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, basicAuthSecrets, kubernetesSDRolePod))
 	}
 
 	if ep.Interval != "" {
@@ -419,7 +421,7 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version,
 	}
 
 	if version.Major == 1 && version.Minor < 7 {
-		relabelings = appendPre17RelabelConfig(relabelings, m.Namespace, m.Spec.NamespaceSelector)
+		relabelings = appendPre17RelabelConfig(relabelings, m.Namespace, m.Spec.NamespaceSelector, ignoreNamespaceSelectors)
 	}
 
 	// Filter targets based on correct port for the endpoint.
@@ -535,7 +537,8 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]BasicAuthCredentials,
 	bearerTokens map[string]BearerToken,
-	overrideHonorLabels bool) yaml.MapSlice {
+	overrideHonorLabels bool,
+	ignoreNamespaceSelectors bool) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
@@ -555,7 +558,8 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		}
 		cfg = append(cfg, cg.generateK8SSDConfig(nil, nil, nil, kubernetesSDRoleEndpoint))
 	} else {
-		cfg = append(cfg, cg.generateK8SSDConfig(getNamespacesFromServiceMonitor(m), apiserverConfig, basicAuthSecrets, kubernetesSDRoleEndpoint))
+		selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
+		cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, basicAuthSecrets, kubernetesSDRoleEndpoint))
 	}
 
 	if ep.Interval != "" {
@@ -650,7 +654,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	}
 
 	if version.Major == 1 && version.Minor < 7 {
-		relabelings = appendPre17RelabelConfig(relabelings, m.Namespace, m.Spec.NamespaceSelector)
+		relabelings = appendPre17RelabelConfig(relabelings, m.Namespace, m.Spec.NamespaceSelector, ignoreNamespaceSelectors)
 	}
 
 	// Filter targets based on correct port for the endpoint.
@@ -798,10 +802,13 @@ func appendPre17RelabelConfig(
 	relabelings []yaml.MapSlice,
 	namespace string,
 	nsel v1.NamespaceSelector,
+	ignoreNamespaceSelectors bool,
 ) []yaml.MapSlice {
 
 	nsRegex := namespace
-	if len(nsel.MatchNames) > 0 {
+	if ignoreNamespaceSelectors {
+		// namespace regex is the default/current namespace
+	} else if len(nsel.MatchNames) > 0 {
 		nsRegex = strings.Join(nsel.MatchNames, "|")
 	} else if nsel.Any {
 		// no additional relabelings necessary, just keep everything
@@ -848,32 +855,17 @@ func generateRelabelConfig(c *v1.RelabelConfig) yaml.MapSlice {
 	return relabeling
 }
 
-func getNamespacesFromServiceMonitor(m *v1.ServiceMonitor) []string {
-	nsel := m.Spec.NamespaceSelector
-	namespaces := []string{}
-	if !nsel.Any && len(nsel.MatchNames) == 0 {
-		namespaces = append(namespaces, m.Namespace)
+// getNamespacesFromNamespaceSelector gets a list of namespaces to select based on
+// the given namespace selector, the given default namespace, and whether to ignore namespace selectors
+func getNamespacesFromNamespaceSelector(nsel *v1.NamespaceSelector, namespace string, ignoreNamespaceSelectors bool) []string {
+	if ignoreNamespaceSelectors {
+		return []string{namespace}
+	} else if nsel.Any {
+		return []string{}
+	} else if len(nsel.MatchNames) == 0 {
+		return []string{namespace}
 	}
-	if !nsel.Any && len(nsel.MatchNames) > 0 {
-		for i := range nsel.MatchNames {
-			namespaces = append(namespaces, nsel.MatchNames[i])
-		}
-	}
-	return namespaces
-}
-
-func getNamespacesFromPodMonitor(m *v1.PodMonitor) []string {
-	nsel := m.Spec.NamespaceSelector
-	namespaces := []string{}
-	if !nsel.Any && len(nsel.MatchNames) == 0 {
-		namespaces = append(namespaces, m.Namespace)
-	}
-	if !nsel.Any && len(nsel.MatchNames) > 0 {
-		for i := range nsel.MatchNames {
-			namespaces = append(namespaces, nsel.MatchNames[i])
-		}
-	}
-	return namespaces
+	return nsel.MatchNames
 }
 
 func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]BasicAuthCredentials, role string) yaml.MapItem {
