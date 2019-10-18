@@ -22,7 +22,7 @@ import (
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -524,6 +524,21 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 	for _, c := range sset.Spec.Template.Spec.Containers {
 		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
 			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+		}
+	}
+}
+
+func TestTerminationPolicy(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, defaultTestConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.TerminationMessagePolicy != v1.TerminationMessageFallbackToLogsOnError {
+			t.Fatalf("Unexpected TermintationMessagePolicy. Expected %v got %v", v1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy)
 		}
 	}
 }

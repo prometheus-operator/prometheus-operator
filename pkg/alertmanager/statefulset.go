@@ -503,6 +503,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 								},
 							},
 						},
+						TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 					}, {
 						Name:  "config-reloader",
 						Image: config.ConfigReloaderImage,
@@ -517,7 +518,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 								MountPath: alertmanagerConfDir,
 							},
 						},
-						Resources: resources,
+						Resources:                resources,
+						TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 					},
 				}, a.Spec.Containers...),
 				Volumes:            volumes,

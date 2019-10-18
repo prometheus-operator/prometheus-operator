@@ -711,8 +711,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			Args: []string{
 				fmt.Sprintf("--webhook-url=%s", localReloadURL),
 			},
-			VolumeMounts: []v1.VolumeMount{},
-			Resources:    v1.ResourceRequirements{Limits: v1.ResourceList{}},
+			VolumeMounts:             []v1.VolumeMount{},
+			Resources:                v1.ResourceRequirements{Limits: v1.ResourceList{}},
+			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		}
 
 		if c.ConfigReloaderCPU != "0" {
@@ -759,8 +760,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		}
 
 		container := v1.Container{
-			Name:  "thanos-sidecar",
-			Image: thanosImage,
+			Name:                     "thanos-sidecar",
+			Image:                    thanosImage,
+			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			Args: []string{
 				"sidecar",
 				fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
@@ -844,17 +846,19 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 	operatorContainers := append([]v1.Container{
 		{
-			Name:           "prometheus",
-			Image:          prometheusImage,
-			Ports:          ports,
-			Args:           promArgs,
-			VolumeMounts:   promVolumeMounts,
-			LivenessProbe:  livenessProbe,
-			ReadinessProbe: readinessProbe,
-			Resources:      p.Spec.Resources,
+			Name:                     "prometheus",
+			Image:                    prometheusImage,
+			Ports:                    ports,
+			Args:                     promArgs,
+			VolumeMounts:             promVolumeMounts,
+			LivenessProbe:            livenessProbe,
+			ReadinessProbe:           readinessProbe,
+			Resources:                p.Spec.Resources,
+			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		}, {
-			Name:  "prometheus-config-reloader",
-			Image: c.PrometheusConfigReloaderImage,
+			Name:                     "prometheus-config-reloader",
+			Image:                    c.PrometheusConfigReloaderImage,
+			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			Env: []v1.EnvVar{
 				{
 					Name: "POD_NAME",
