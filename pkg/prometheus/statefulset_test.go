@@ -921,3 +921,16 @@ func TestThanosListenLocal(t *testing.T) {
 		t.Fatal("Thanos not listening on loopback when it should.")
 	}
 }
+
+func TestTerminationPolicy(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{}}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.TerminationMessagePolicy != v1.TerminationMessageFallbackToLogsOnError {
+			t.Fatalf("Unexpected TermintationMessagePolicy. Expected %v got %v", v1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy)
+		}
+	}
+}
