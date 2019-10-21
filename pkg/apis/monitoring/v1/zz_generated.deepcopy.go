@@ -369,6 +369,11 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.BearerTokenSecret.DeepCopyInto(&out.BearerTokenSecret)
+	if in.HonorTimestamps != nil {
+		in, out := &in.HonorTimestamps, &out.HonorTimestamps
+		*out = new(bool)
+		**out = **in
+	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		*out = new(BasicAuth)
@@ -457,6 +462,11 @@ func (in *PodMetricsEndpoint) DeepCopyInto(out *PodMetricsEndpoint) {
 			}
 			(*out)[key] = outVal
 		}
+	}
+	if in.HonorTimestamps != nil {
+		in, out := &in.HonorTimestamps, &out.HonorTimestamps
+		*out = new(bool)
+		**out = **in
 	}
 	if in.MetricRelabelConfigs != nil {
 		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
