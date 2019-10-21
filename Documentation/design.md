@@ -11,6 +11,7 @@ The custom resources that the Prometheus Operator introduces are:
 
 * `Prometheus`
 * `ServiceMonitor`
+* `PodMonitor` 
 * `Alertmanager`
 * `PrometheusRule`
 
@@ -39,6 +40,27 @@ The `endpoints` section of the `ServiceMonitorSpec`, is used to configure which 
 > Note: `endpoints` (lowercase) is the field in the `ServiceMonitor` CRD, while `Endpoints` (capitalized) is the Kubernetes object kind.
 
 Both `ServiceMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring. Using the `ServiceMonitorNamespaceSelector` of the `PrometheusSpec`, one can restrict the namespaces `ServiceMonitor`s are selected from by the respective Prometheus server. Using the `namespaceSelector` of the `ServiceMonitorSpec`, one can restrict the namespaces the `Endpoints` objects are allowed to be discovered from.
+To discover targets in all namespaces the `namespaceSelector` has to be empty:
+```yaml
+spec:
+  namespaceSelector:
+    any: true
+```
+
+## PodMonitor
+
+The `PodMonitor` custom resource definition (CRD) allows to declaratively define how a dynamic set of pods should be monitored.
+Which pods are selected to be monitored with the desired configuration is defined using label selections.
+This allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new pods are automatically discovered, without the need to reconfigure the system.
+
+A `Pod` is a collection of one or more containers which can expose Prometheus metrics on a number of ports.
+
+The `PodMonitor` object introduced by the Prometheus Operator discovers these pods and generates the relevant configuration for the Prometheus server in order to monitor them. 
+
+The `PodMetricsEndpoints` section of the `PodMonitorSpec`, is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.
+
+Both `PodMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
+Using the `namespaceSelector` of the `PodMonitorSpec`, one can restrict the namespaces the `Pods` are allowed to be discovered from.
 To discover targets in all namespaces the `namespaceSelector` has to be empty:
 ```yaml
 spec:

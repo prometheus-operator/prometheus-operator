@@ -56,6 +56,10 @@ The Operator acts on the following [custom resource definitions (CRDs)](https://
   of services should be monitored. The Operator automatically generates Prometheus scrape configuration
   based on the definition.
 
+* **`PodMonitor`**, which declaratively specifies how groups
+  of pods should be monitored. The Operator automatically generates Prometheus scrape configuration
+  based on the definition.
+
 * **`PrometheusRule`**, which defines a desired Prometheus rule file, which can
   be loaded by a Prometheus instance containing Prometheus alerting and
   recording rules.
@@ -92,7 +96,7 @@ operator will automatically shut down and remove Prometheus and Alertmanager pod
 
 ```sh
 for n in $(kubectl get namespaces -o jsonpath={..metadata.name}); do
-  kubectl delete --all --namespace=$n prometheus,servicemonitor,alertmanager
+  kubectl delete --all --namespace=$n prometheus,servicemonitor,podmonitor,alertmanager
 done
 ```
 
