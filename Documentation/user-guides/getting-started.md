@@ -358,9 +358,6 @@ spec:
   serviceMonitorSelector:
     matchLabels:
       team: frontend
-  podMonitorSelector:
-    matchLabels:
-      team: frontend
   resources:
     requests:
       memory: 400Mi

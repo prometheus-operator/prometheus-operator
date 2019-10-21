@@ -59,7 +59,7 @@ The `PodMonitor` object introduced by the Prometheus Operator discovers these po
 
 The `PodMetricsEndpoints` section of the `PodMonitorSpec`, is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.
 
-Both `PodMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring. Using the `namespaceSelector` of the `PodMonitorSpec`, one can restrict the namespaces `PodMonitor`s are selected from by the respective Prometheus server.
+Both `PodMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
 Using the `namespaceSelector` of the `PodMonitorSpec`, one can restrict the namespaces the `Pods` are allowed to be discovered from.
 To discover targets in all namespaces the `namespaceSelector` has to be empty:
 ```yaml
