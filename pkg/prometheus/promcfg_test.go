@@ -166,11 +166,13 @@ alerting:
 
 func TestNamespaceSetCorrectly(t *testing.T) {
 	type testCase struct {
-		ServiceMonitor *monitoringv1.ServiceMonitor
-		Expected       string
+		ServiceMonitor           *monitoringv1.ServiceMonitor
+		IgnoreNamespaceSelectors bool
+		Expected                 string
 	}
 
 	testcases := []testCase{
+		// Test that namespaces from 'MatchNames' are returned instead of the current namespace
 		{
 			ServiceMonitor: &monitoringv1.ServiceMonitor{
 				ObjectMeta: metav1.ObjectMeta{
@@ -182,17 +184,20 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
 					NamespaceSelector: monitoringv1.NamespaceSelector{
-						MatchNames: []string{"test"},
+						MatchNames: []string{"test1", "test2"},
 					},
 				},
 			},
+			IgnoreNamespaceSelectors: false,
 			Expected: `kubernetes_sd_configs:
 - role: endpoints
   namespaces:
     names:
-    - test
+    - test1
+    - test2
 `,
 		},
+		// Test that 'Any' returns an empty list instead of the current namespace
 		{
 			ServiceMonitor: &monitoringv1.ServiceMonitor{
 				ObjectMeta: metav1.ObjectMeta{
@@ -208,15 +213,64 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 					},
 				},
 			},
+			IgnoreNamespaceSelectors: false,
 			Expected: `kubernetes_sd_configs:
 - role: endpoints
+`,
+		},
+		// Test that Any takes precedence over MatchNames
+		{
+			ServiceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor2",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					NamespaceSelector: monitoringv1.NamespaceSelector{
+						Any:        true,
+						MatchNames: []string{"foo", "bar"},
+					},
+				},
+			},
+			IgnoreNamespaceSelectors: false,
+			Expected: `kubernetes_sd_configs:
+- role: endpoints
+`,
+		},
+		// Test that IgnoreNamespaceSelectors overrides Any and MatchNames
+		{
+			ServiceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor2",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					NamespaceSelector: monitoringv1.NamespaceSelector{
+						Any:        true,
+						MatchNames: []string{"foo", "bar"},
+					},
+				},
+			},
+			IgnoreNamespaceSelectors: true,
+			Expected: `kubernetes_sd_configs:
+- role: endpoints
+  namespaces:
+    names:
+    - default
 `,
 		},
 	}
 	cg := &configGenerator{}
 
 	for _, tc := range testcases {
-		c := cg.generateK8SSDConfig(getNamespacesFromServiceMonitor(tc.ServiceMonitor), nil, nil, kubernetesSDRoleEndpoint)
+		selectedNamespaces := getNamespacesFromNamespaceSelector(&tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, tc.IgnoreNamespaceSelectors)
+		c := cg.generateK8SSDConfig(selectedNamespaces, nil, nil, kubernetesSDRoleEndpoint)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		if err != nil {
 			t.Fatal(err)
@@ -244,7 +298,8 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	}
 
 	cg := &configGenerator{}
-	c := cg.generateK8SSDConfig(getNamespacesFromPodMonitor(pm), nil, nil, kubernetesSDRolePod)
+	selectedNamespaces := getNamespacesFromNamespaceSelector(&pm.Spec.NamespaceSelector, pm.Namespace, false)
+	c := cg.generateK8SSDConfig(selectedNamespaces, nil, nil, kubernetesSDRolePod)
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	if err != nil {
 		t.Fatal(err)
@@ -327,7 +382,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 
 	for _, tc := range testcases {
 		c := cg.generateK8SSDConfig(
-			getNamespacesFromServiceMonitor(sm),
+			getNamespacesFromNamespaceSelector(&sm.Spec.NamespaceSelector, sm.Namespace, false),
 			tc.apiserverConfig,
 			tc.basicAuthSecrets,
 			kubernetesSDRoleEndpoint,

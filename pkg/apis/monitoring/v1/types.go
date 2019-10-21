@@ -288,6 +288,10 @@ type PrometheusSpec struct {
 	// OverrideHonorLabels if set to true overrides all user configured honor_labels.
 	// If HonorLabels is set in ServiceMonitor or PodMonitor to true, this overrides honor_labels to false.
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
+	// IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from
+	// the podmonitor and servicemonitor configs, and they will only discover endpoints
+	// within their current namespace.  Defaults to false.
+	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
 }
 
 // ArbitraryFSAccessThroughSMsConfig enables users to configure, whether

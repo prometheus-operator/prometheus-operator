@@ -1832,6 +1832,12 @@ spec:
                 under. This is necessary to generate correct URLs. This is necessary
                 if Prometheus is not served from root of a DNS name.
               type: string
+            ignoreNamespaceSelectors:
+              description: IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector
+                settings from the podmonitor and servicemonitor configs, and they
+                will only discover endpoints within their current namespace.  Defaults
+                to false.
+              type: boolean
             image:
               description: Image if specified has precedence over baseImage, tag and
                 sha combinations. Specifying the version is still necessary to ensure
