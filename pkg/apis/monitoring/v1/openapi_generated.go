@@ -1013,6 +1013,13 @@ func schema_pkg_apis_monitoring_v1_Endpoint(ref common.ReferenceCallback) common
 							Format:      "",
 						},
 					},
+					"honorTimestamps": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"basicAuth": {
 						SchemaProps: spec.SchemaProps{
 							Description: "BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints",
@@ -1167,6 +1174,13 @@ func schema_pkg_apis_monitoring_v1_PodMetricsEndpoint(ref common.ReferenceCallba
 					"honorLabels": {
 						SchemaProps: spec.SchemaProps{
 							Description: "HonorLabels chooses the metric's labels on collisions with target labels.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"honorTimestamps": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -2016,6 +2030,13 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 					"overrideHonorLabels": {
 						SchemaProps: spec.SchemaProps{
 							Description: "OverrideHonorLabels if set to true overrides all user configured honor_labels. If HonorLabels is set in ServiceMonitor or PodMonitor to true, this overrides honor_labels to false.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"overrideHonorTimestamps": {
+						SchemaProps: spec.SchemaProps{
+							Description: "OverrideHonorTimestamps allows to globally enforce honoring timestamps in all scrape configs.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},

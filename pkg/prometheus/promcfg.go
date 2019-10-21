@@ -224,12 +224,12 @@ func (cg *configGenerator) generateConfig(
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range sMonIdentifiers {
 		for i, ep := range sMons[identifier].Spec.Endpoints {
-			scrapeConfigs = append(scrapeConfigs, cg.generateServiceMonitorConfig(version, sMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, bearerTokens, p.Spec.OverrideHonorLabels, p.Spec.IgnoreNamespaceSelectors))
+			scrapeConfigs = append(scrapeConfigs, cg.generateServiceMonitorConfig(version, sMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, bearerTokens, p.Spec.OverrideHonorLabels, p.Spec.OverrideHonorTimestamps, p.Spec.IgnoreNamespaceSelectors))
 		}
 	}
 	for _, identifier := range pMonIdentifiers {
 		for i, ep := range pMons[identifier].Spec.PodMetricsEndpoints {
-			scrapeConfigs = append(scrapeConfigs, cg.generatePodMonitorConfig(version, pMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, p.Spec.OverrideHonorLabels, p.Spec.IgnoreNamespaceSelectors))
+			scrapeConfigs = append(scrapeConfigs, cg.generatePodMonitorConfig(version, pMons[identifier], ep, i, apiserverConfig, basicAuthSecrets, p.Spec.OverrideHonorLabels, p.Spec.OverrideHonorTimestamps, p.Spec.IgnoreNamespaceSelectors))
 		}
 	}
 
@@ -322,12 +322,32 @@ func honorLabels(userHonorLabels, overrideHonorLabels bool) bool {
 	return userHonorLabels
 }
 
-func (cg *configGenerator) generatePodMonitorConfig(version semver.Version,
+// honorTimestamps adds option to enforce honor_timestamps option in scrape_config.
+// We want to disable honoring timestamps when user specified it or when global
+// override is set. For backwards compatibility with prometheus <2.9.0 we don't
+// set honor_timestamps when that option wasn't specified anywhere
+func honorTimestamps(cfg yaml.MapSlice, userHonorTimestamps *bool, overrideHonorTimestamps bool) yaml.MapSlice {
+	// Ensuring backwards compatibility by checking if user set any option
+	if userHonorTimestamps == nil && !overrideHonorTimestamps {
+		return cfg
+	}
+
+	honor := false
+	if userHonorTimestamps != nil {
+		honor = *userHonorTimestamps
+	}
+
+	return append(cfg, yaml.MapItem{Key: "honor_timestamps", Value: honor && !overrideHonorTimestamps})
+}
+
+func (cg *configGenerator) generatePodMonitorConfig(
+	version semver.Version,
 	m *v1.PodMonitor,
 	ep v1.PodMetricsEndpoint,
 	i int, apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]BasicAuthCredentials,
 	ignoreHonorLabels bool,
+	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
@@ -340,6 +360,9 @@ func (cg *configGenerator) generatePodMonitorConfig(version semver.Version,
 			Key:   "honor_labels",
 			Value: hl,
 		},
+	}
+	if version.Major == 2 && version.Minor >= 9 {
+		cfg = honorTimestamps(cfg, ep.HonorTimestamps, overrideHonorTimestamps)
 	}
 
 	if version.Major == 1 && version.Minor < 7 {
@@ -538,6 +561,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	basicAuthSecrets map[string]BasicAuthCredentials,
 	bearerTokens map[string]BearerToken,
 	overrideHonorLabels bool,
+	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
@@ -550,6 +574,9 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 			Key:   "honor_labels",
 			Value: hl,
 		},
+	}
+	if version.Major == 2 && version.Minor >= 9 {
+		cfg = honorTimestamps(cfg, ep.HonorTimestamps, overrideHonorTimestamps)
 	}
 
 	if version.Major == 1 && version.Minor < 7 {

@@ -96,6 +96,10 @@ spec:
                     description: HonorLabels chooses the metric's labels on collisions
                       with target labels.
                     type: boolean
+                  honorTimestamps:
+                    description: HonorTimestamps controls whether Prometheus respects
+                      the timestamps present in scraped data.
+                    type: boolean
                   interval:
                     description: Interval at which metrics should be scraped
                     type: string
