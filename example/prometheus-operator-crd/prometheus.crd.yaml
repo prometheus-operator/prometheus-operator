@@ -1820,6 +1820,11 @@ spec:
                 authentication authorization via a proxy to ensure only clients authorized
                 to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis'
               type: boolean
+            enforcedNamespaceLabel:
+              description: EnforcedNamespaceLabel enforces adding a namespace label
+                of origin for each alert and metric that is user created. The label
+                value will always be the namespace of the object that is being created.
+              type: string
             evaluationInterval:
               description: Interval between consecutive evaluations.
               type: string
