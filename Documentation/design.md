@@ -53,7 +53,7 @@ The `PodMonitor` custom resource definition (CRD) allows to declaratively define
 Which pods are selected to be monitored with the desired configuration is defined using label selections.
 This allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new pods are automatically discovered, without the need to reconfigure the system.
 
-A `Pod` is a collection of one ore more containers which can expose Prometheus metrics on a number of ports.
+A `Pod` is a collection of one or more containers which can expose Prometheus metrics on a number of ports.
 
 The `PodMonitor` object introduced by the Prometheus Operator discovers these pods and generates the relevant configuration for the Prometheus server in order to monitor them. 
 
