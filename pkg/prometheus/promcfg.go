@@ -552,11 +552,10 @@ func (cg *configGenerator) generatePodMonitorConfig(
 		for _, c := range ep.RelabelConfigs {
 			relabelings = append(relabelings, generateRelabelConfig(c))
 		}
-		// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
-		// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
-		relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 	}
-
+	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
+	// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
+	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.SampleLimit > 0 {
@@ -820,11 +819,10 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		for _, c := range ep.RelabelConfigs {
 			relabelings = append(relabelings, generateRelabelConfig(c))
 		}
-		// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
-		// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
-		relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 	}
-
+	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
+	// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
+	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.SampleLimit > 0 {
@@ -883,6 +881,9 @@ func appendPre17RelabelConfig(
 }
 
 func enforceNamespaceLabel(relabelings []yaml.MapSlice, namespace, enforcedNamespaceLabel string) []yaml.MapSlice {
+	if enforcedNamespaceLabel == "" {
+		return relabelings
+	}
 	return append(relabelings, yaml.MapSlice{
 		{Key: "target_label", Value: enforcedNamespaceLabel},
 		{Key: "replacement", Value: namespace}})
