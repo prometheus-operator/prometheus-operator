@@ -557,6 +557,152 @@ alerting:
 	}
 }
 
+func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "ns-value",
+			},
+			Spec: monitoringv1.PrometheusSpec{},
+		},
+		map[string]*monitoringv1.ServiceMonitor{
+			"test": &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:        "https-metrics",
+							HonorLabels: true,
+							Interval:    "30s",
+							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									Action:       "drop",
+									Regex:        "container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)",
+									SourceLabels: []string{"__name__"},
+								},
+							},
+							RelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									Action:       "replace",
+									Regex:        "(.+)(?::d+)",
+									Replacement:  "$1:9537",
+									SourceLabels: []string{"__address__"},
+									TargetLabel:  "__address__",
+								},
+								{
+									Action:      "replace",
+									Replacement: "crio",
+									TargetLabel: "job",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		nil,
+		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: ns-value/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/test/0
+  honor_labels: true
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_service_label_foo
+    regex: bar
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: https-metrics
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: https-metrics
+  - source_labels:
+    - __address__
+    target_label: __address__
+    regex: (.+)(?::d+)
+    replacement: $1:9537
+    action: replace
+  - target_label: job
+    replacement: crio
+    action: replace
+  metric_relabel_configs:
+  - source_labels:
+    - __name__
+    regex: container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)
+    action: drop
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	result := string(cfg)
+	if expected != result {
+		fmt.Println(pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
 func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
