@@ -638,6 +638,13 @@ func schema_pkg_apis_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallback
 							},
 						},
 					},
+					"configSecret": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ConfigSecret is the name of a Kubernetes Secret in the same namespace as the Alertmanager object, which contains configuration for this Alertmanager instance. Defaults to 'alertmanager-<alertmanager-name>' The secret is mounted into /etc/alertmanager/config.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"logLevel": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Log level for Alertmanager to be configured with.",

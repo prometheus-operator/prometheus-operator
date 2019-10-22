@@ -627,6 +627,12 @@ spec:
               items:
                 type: string
               type: array
+            configSecret:
+              description: ConfigSecret is the name of a Kubernetes Secret in the
+                same namespace as the Alertmanager object, which contains configuration
+                for this Alertmanager instance. Defaults to 'alertmanager-<alertmanager-name>'
+                The secret is mounted into /etc/alertmanager/config.
+              type: string
             containers:
               description: Containers allows injecting additional containers. This
                 is meant to allow adding an authentication proxy to an Alertmanager
