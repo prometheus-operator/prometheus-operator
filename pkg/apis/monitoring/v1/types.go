@@ -51,16 +51,16 @@ const (
 type Prometheus struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// +k8s:openapi-gen=false
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Prometheus cluster. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	Spec PrometheusSpec `json:"spec"`
 	// Most recent observed status of the Prometheus cluster. Read-only. Not
 	// included when requesting from the apiserver, only from the Prometheus
 	// Operator API itself. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	Status *PrometheusStatus `json:"status,omitempty"`
 }
 
@@ -69,7 +69,7 @@ type Prometheus struct {
 type PrometheusList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Prometheuses
 	Items []*Prometheus `json:"items"`
@@ -80,7 +80,7 @@ type PrometheusList struct {
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
 	// Standard object’s metadata. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// Metadata Labels and Annotations gets propagated to the prometheus pods.
 	PodMetadata *metav1.ObjectMeta `json:"podMetadata,omitempty"`
 	// ServiceMonitors to be selected for target discovery.
@@ -315,7 +315,7 @@ type ArbitraryFSAccessThroughSMsConfig struct {
 // PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not
 // included when requesting from the apiserver, only from the Prometheus
 // Operator API itself. More info:
-// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusStatus struct {
 	// Represents whether any actions on the underlaying managed objects are
@@ -533,7 +533,7 @@ type AlertmanagerEndpoints struct {
 type ServiceMonitor struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// +k8s:openapi-gen=false
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired Service selection for target discrovery by
@@ -607,7 +607,7 @@ type Endpoint struct {
 type PodMonitor struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// +k8s:openapi-gen=false
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired Pod selection for target discovery by Prometheus.
@@ -768,7 +768,7 @@ func (c *TLSConfig) Validate() error {
 type ServiceMonitorList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of ServiceMonitors
 	Items []*ServiceMonitor `json:"items"`
@@ -779,7 +779,7 @@ type ServiceMonitorList struct {
 type PodMonitorList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of PodMonitors
 	Items []*PodMonitor `json:"items"`
@@ -790,7 +790,7 @@ type PodMonitorList struct {
 type PrometheusRuleList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
-	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Rules
 	Items []*PrometheusRule `json:"items"`
@@ -802,7 +802,7 @@ type PrometheusRuleList struct {
 type PrometheusRule struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
-	// http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired alerting rule definitions for Prometheus.
 	Spec PrometheusRuleSpec `json:"spec"`
@@ -843,25 +843,25 @@ type Rule struct {
 type Alertmanager struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// +k8s:openapi-gen=false
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of the desired behavior of the Alertmanager cluster. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	Spec AlertmanagerSpec `json:"spec"`
 	// Most recent observed status of the Alertmanager cluster. Read-only. Not
 	// included when requesting from the apiserver, only from the Prometheus
 	// Operator API itself. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	Status *AlertmanagerStatus `json:"status,omitempty"`
 }
 
 // AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info:
-// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type AlertmanagerSpec struct {
 	// Standard object’s metadata. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// Metadata Labels and Annotations gets propagated to the prometheus pods.
 	PodMetadata *metav1.ObjectMeta `json:"podMetadata,omitempty"`
 	// Image if specified has precedence over baseImage, tag and sha
@@ -968,7 +968,7 @@ type AlertmanagerSpec struct {
 type AlertmanagerList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
-	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Alertmanagers
 	Items []Alertmanager `json:"items"`
@@ -977,7 +977,7 @@ type AlertmanagerList struct {
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not
 // included when requesting from the apiserver, only from the Prometheus
 // Operator API itself. More info:
-// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type AlertmanagerStatus struct {
 	// Represents whether any actions on the underlaying managed objects are

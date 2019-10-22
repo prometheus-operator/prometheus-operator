@@ -418,13 +418,13 @@ func schema_pkg_apis_monitoring_v1_Alertmanager(ref common.ReferenceCallback) co
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specification of the desired behavior of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+							Description: "Specification of the desired behavior of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
 							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.AlertmanagerSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Most recent observed status of the Alertmanager cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+							Description: "Most recent observed status of the Alertmanager cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
 							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.AlertmanagerStatus"),
 						},
 					},
@@ -523,7 +523,7 @@ func schema_pkg_apis_monitoring_v1_AlertmanagerList(ref common.ReferenceCallback
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata",
+							Description: "Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
@@ -553,12 +553,12 @@ func schema_pkg_apis_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallback
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+				Description: "AlertmanagerSpec is a specification of the desired behavior of the Alertmanager cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"podMetadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods.",
+							Description: "Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
@@ -845,7 +845,7 @@ func schema_pkg_apis_monitoring_v1_AlertmanagerStatus(ref common.ReferenceCallba
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+				Description: "AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"paused": {
@@ -1285,7 +1285,7 @@ func schema_pkg_apis_monitoring_v1_PodMonitorList(ref common.ReferenceCallback) 
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata",
+							Description: "Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
@@ -1403,13 +1403,13 @@ func schema_pkg_apis_monitoring_v1_Prometheus(ref common.ReferenceCallback) comm
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+							Description: "Specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
 							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PrometheusSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+							Description: "Most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
 							Ref:         ref("github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PrometheusStatus"),
 						},
 					},
@@ -1445,7 +1445,7 @@ func schema_pkg_apis_monitoring_v1_PrometheusList(ref common.ReferenceCallback) 
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata",
+							Description: "Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
@@ -1494,7 +1494,7 @@ func schema_pkg_apis_monitoring_v1_PrometheusRule(ref common.ReferenceCallback) 
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard object’s metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
+							Description: "Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
@@ -1536,7 +1536,7 @@ func schema_pkg_apis_monitoring_v1_PrometheusRuleList(ref common.ReferenceCallba
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard list metadata More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
+							Description: "Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
@@ -1599,7 +1599,7 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 				Properties: map[string]spec.Schema{
 					"podMetadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods.",
+							Description: "Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
@@ -2067,7 +2067,7 @@ func schema_pkg_apis_monitoring_v1_PrometheusStatus(ref common.ReferenceCallback
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status",
+				Description: "PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"paused": {
@@ -2678,7 +2678,7 @@ func schema_pkg_apis_monitoring_v1_ServiceMonitorList(ref common.ReferenceCallba
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata",
+							Description: "Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
