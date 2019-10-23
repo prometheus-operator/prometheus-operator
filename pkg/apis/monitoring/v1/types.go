@@ -892,6 +892,11 @@ type AlertmanagerSpec struct {
 	// object, which shall be mounted into the Alertmanager Pods.
 	// The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name>.
 	ConfigMaps []string `json:"configMaps,omitempty"`
+	// ConfigSecret is the name of a Kubernetes Secret in the same namespace as the
+	// Alertmanager object, which contains configuration for this Alertmanager
+	// instance. Defaults to 'alertmanager-<alertmanager-name>'
+	// The secret is mounted into /etc/alertmanager/config.
+	ConfigSecret string `json:"configSecret,omitempty"`
 	// Log level for Alertmanager to be configured with.
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for Alertmanager to be configured with.
