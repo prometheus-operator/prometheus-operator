@@ -427,7 +427,6 @@ Further reading:
 
 
 [alerting-guide]: alerting.md
-[cluster-monitoring]: cluster-monitoring.md
 [design-doc]: ../design.md
 [exposing-prom]: exposing-prometheus-and-alertmanager.md
 [introducing-operators]: https://coreos.com/blog/introducing-operators.html

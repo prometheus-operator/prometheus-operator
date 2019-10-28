@@ -81,7 +81,3 @@ resource, discovered targets may come from any namespace. This allows
 cross-namespace monitoring use cases, for example, for meta-monitoring. Use the
 `namespaceSelector` of the `ServiceMonitorSpec` to restrict the
 namespaces from which Endpoints objects may be discovered.
-
-
-
-[cluster-monitoring]: cluster-monitoring.md
