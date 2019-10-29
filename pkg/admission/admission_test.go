@@ -182,7 +182,8 @@ var goodRulesWithAnnotations = `
               {
                 "alert": "Test",
                 "annotations": {
-                  "message": "Test rule"
+                  "message": "Test rule",
+                  "humanizePercentage": "Should work {{ $value | humanizePercentage }}"
                 },
                 "expr": "vector(1)",
                 "for": "5m",
