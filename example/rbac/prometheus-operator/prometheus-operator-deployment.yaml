@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.33.0
+    app.kubernetes.io/version: v0.34.0
   name: prometheus-operator
   namespace: default
 spec:
@@ -18,15 +18,15 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: v0.33.0
+        app.kubernetes.io/version: v0.34.0
     spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --logtostderr=true
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.33.0
-        image: quay.io/coreos/prometheus-operator:v0.33.0
+        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.34.0
+        image: quay.io/coreos/prometheus-operator:v0.34.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
