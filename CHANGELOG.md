@@ -1,6 +1,24 @@
 ## Next release
 
-* [BUGFIX] Update prometheus dependency to v2.12.0 to fix validation failure for .externalLabels admission webhook (#2774)
+## 0.34.0 / 2019-10-31
+
+* [CHANGE] Make arbitraryFSAccessThroughSMs optional (#2797)
+* [FEATURE] Add [prometheus,alertmanager]-instance-namespaces cmdline parameter (#2783)
+* [FEATURE] Add configSecret element to the AlertmanagerSpec (#2827)
+* [FEATURE] Add enforcedNamespaceLabel to Prometheus CRD (#2820)
+* [FEATURE] Add exec probes against localhost:9090 to Prometheus if listenLocal is set to true (#2763)
+* [FEATURE] Add honorTimestamps field to Prometheus, Podmonitor, and ServiceMonitor CRD (#2800)
+* [FEATURE] Add ignoreNamespaceSelectors field to Prometheus CRD (#2816)
+* [FEATURE] Add local configuration options in jsonnet/prometheus-operator (#2794)
+* [FEATURE] Add overrideHonorLabels to Prometheus CRD (#2806)
+* [FEATURE] Reference secrets instead of local files (#2716)
+* [ENHANCEMENT] Add missing json struct tag for ArbitraryFSAccessThroughSMsConfig (#2808)
+* [ENHANCEMENT] Ensure containers have "FallbackToLogsOnError" termination policy (#2819)
+* [ENHANCEMENT] Improve detection of StatefulSet changes (#2801)
+* [ENHANCEMENT] Only append relabelings if EnforcedNamespaceLabel value is set (#2830)
+* [ENHANCEMENT] Remove unneeded Ownership change in prometheus-config-reloader (#2761)
+* [ENHANCEMENT] Update k8s client to 1.16 (#2778)
+* [BUGFIX] Update prometheus dependency to v2.12.0 to fix validation failure for .externalLabels admission webhook (#2779)
 
 ## 0.33.0 / 2019-09-12
 
