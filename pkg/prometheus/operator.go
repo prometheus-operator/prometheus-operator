@@ -1097,13 +1097,9 @@ func (c *Operator) sync(key string) error {
 		return err
 	}
 
-	// If no service monitor selectors or additional scrape configs are configured,
-	// the user wants to manage configuration themselves.
-	if p.Spec.ServiceMonitorSelector != nil || p.Spec.AdditionalScrapeConfigs != nil {
-		// We just always regenerate the configuration to be safe.
-		if err := c.createOrUpdateConfigurationSecret(p, ruleConfigMapNames); err != nil {
-			return errors.Wrap(err, "creating config failed")
-		}
+	// We just always regenerate the configuration to be safe.
+	if err := c.createOrUpdateConfigurationSecret(p, ruleConfigMapNames); err != nil {
+		return errors.Wrap(err, "creating config failed")
 	}
 
 	// Create empty Secret if it doesn't exist. See comment above.
