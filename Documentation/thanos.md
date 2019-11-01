@@ -14,8 +14,8 @@ Please before continuing with Prometheus Operator Thanos integration, read more 
 
 Prometheus Operator allows your to optionally add Thanos sidecar to Prometheus. Sidecar allows to hook into Thanos
 querying system as well as **optionally** back up your data in object storage.
- 
-Thanos system includes other components like the queries or rulers. To get advantage of object storage it also requires compactors, and stores.
+
+Thanos system includes other components like queriers or rulers. To get the advantage of object storage it also requires compactors and stores.
 
 All beside the sidecar should be deployed independently of the Prometheus Operator and its Thanos configuration. The
 [kube-thanos](https://github.com/thanos-io/kube-thanos/) project has some starting points for other Thanos components deployments.
@@ -50,7 +50,7 @@ Note: If you're using Istio you may need to also set `ListenLocal` on the Thanos
 
 If you want sidecar to be able to upload blocks to object storage you need to tell Prometheus Operator about it.
 
-In this mode sidecar assumes athexisting Kubernetes Secret containing the Thanos configuration.
+In this mode, sidecar assumes an existing Kubernetes Secret containing the Thanos configuration.
 Inside this secret you configure how to run Thanos with your object storage.
 
 For more information and examples about the configuration itself, take a look at the Thanos documentation:  
