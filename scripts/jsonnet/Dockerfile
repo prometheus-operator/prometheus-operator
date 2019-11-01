@@ -1,10 +1,10 @@
-FROM golang:1.12-stretch
+FROM golang:1.12 as builder
 
 ENV JSONNET_VERSION 0.14.0
 ENV PROMTOOL_VERSION 2.12.0
 ENV GOLANGCILINT_VERSION 1.19.1
 
-RUN apt-get update -y && apt-get install -y g++ make git jq gawk python-yaml && \
+RUN apt-get update -y && apt-get install -y g++ make git && \
     rm -rf /var/lib/apt/lists/*
 RUN curl -Lso - https://github.com/google/jsonnet/archive/v${JSONNET_VERSION}.tar.gz | \
     tar xfz - -C /tmp && \
@@ -20,7 +20,13 @@ RUN go get github.com/campoy/embedmd
 RUN go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 RUN go get -u github.com/jteeuwen/go-bindata/...
 
-RUN mkdir -p /go/src/github.com/coreos/prometheus-operator /.cache
-WORKDIR /go/src/github.com/coreos/prometheus-operator
+FROM golang:1.12
+RUN apt-get update -y && apt-get install -y make git jq gawk python-yaml && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=builder /usr/local/bin/jsonnetfmt /usr/local/bin/jsonnetfmt
+COPY --from=builder /go/bin/* /go/bin/
 
-RUN chmod -R 777 /go /.cache
+RUN mkdir -p /go/src/github.com/coreos/prometheus-operator /.cache && \
+	chmod -R 777 /go /.cache
+
+WORKDIR /go/src/github.com/coreos/prometheus-operator
