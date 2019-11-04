@@ -35,7 +35,7 @@ import (
 const (
 	governingServiceName            = "prometheus-operated"
 	DefaultPrometheusVersion        = "v2.7.1"
-	DefaultThanosVersion            = "v0.7.0"
+	DefaultThanosVersion            = "v0.8.1"
 	defaultRetention                = "24h"
 	defaultReplicaExternalLabelName = "prometheus_replica"
 	storageDir                      = "/prometheus"
@@ -808,6 +808,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
 				},
 			})
+			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
+			// to avoid races during upload, if the uploads are configured.
+			promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
 		}
 
 		if p.Spec.LogLevel != "" {
@@ -816,9 +819,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		if p.Spec.LogFormat != "" {
 			container.Args = append(container.Args, fmt.Sprintf("--log.format=%s", p.Spec.LogFormat))
 		}
-
 		additionalContainers = append(additionalContainers, container)
-		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h", "--storage.tsdb.max-block-duration=2h")
 	}
 
 	// Version is used by default.

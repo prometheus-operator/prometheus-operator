@@ -17,6 +17,7 @@ package prometheus
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -615,6 +616,31 @@ func TestThanosResourcesSet(t *testing.T) {
 	}
 }
 
+func TestThanosNoObjectStorage(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].Name != "prometheus" {
+		t.Fatalf("expected 1st containers to be prometheus, got %s", sset.Spec.Template.Spec.Containers[0].Name)
+	}
+
+	if sset.Spec.Template.Spec.Containers[2].Name != "thanos-sidecar" {
+		t.Fatalf("expected 3rd containers to be thanos-sidecar, got %s", sset.Spec.Template.Spec.Containers[2].Name)
+	}
+
+	for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+		if strings.HasPrefix(arg, "--storage.tsdb.max-block-duration=2h") {
+			t.Fatal("Prometheus compaction should be enabled")
+		}
+	}
+}
+
 func TestThanosObjectStorage(t *testing.T) {
 	testKey := "thanos-config-secret-test"
 
@@ -631,11 +657,20 @@ func TestThanosObjectStorage(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
+	if sset.Spec.Template.Spec.Containers[0].Name != "prometheus" {
+		t.Fatalf("expected 1st containers to be prometheus, got %s", sset.Spec.Template.Spec.Containers[0].Name)
+	}
+
+	if sset.Spec.Template.Spec.Containers[2].Name != "thanos-sidecar" {
+		t.Fatalf("expected 3rd containers to be thanos-sidecar, got %s", sset.Spec.Template.Spec.Containers[2].Name)
+	}
+
 	var containsEnvVar bool
 	for _, env := range sset.Spec.Template.Spec.Containers[2].Env {
 		if env.Name == "OBJSTORE_CONFIG" {
 			if env.ValueFrom.SecretKeyRef.Key == testKey {
 				containsEnvVar = true
+				break
 			}
 		}
 	}
@@ -643,15 +678,31 @@ func TestThanosObjectStorage(t *testing.T) {
 		t.Fatalf("Thanos sidecar is missing expected OBJSTORE_CONFIG env var with correct value")
 	}
 
-	var containsArg bool
-	const expectedArg = "--objstore.config=$(OBJSTORE_CONFIG)"
-	for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
-		if arg == expectedArg {
-			containsArg = true
+	{
+		var containsArg bool
+		const expectedArg = "--objstore.config=$(OBJSTORE_CONFIG)"
+		for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
+			if arg == expectedArg {
+				containsArg = true
+				break
+			}
+		}
+		if !containsArg {
+			t.Fatalf("Thanos sidecar is missing expected argument: %s", expectedArg)
 		}
 	}
-	if !containsArg {
-		t.Fatalf("Thanos sidecar is missing expected argument: %s", expectedArg)
+	{
+		var containsArg bool
+		const expectedArg = "--storage.tsdb.max-block-duration=2h"
+		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+			if arg == expectedArg {
+				containsArg = true
+				break
+			}
+		}
+		if !containsArg {
+			t.Fatalf("Prometheus is missing expected argument: %s", expectedArg)
+		}
 	}
 }
 

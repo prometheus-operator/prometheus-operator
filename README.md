@@ -149,6 +149,15 @@ kubectl delete --ignore-not-found customresourcedefinitions \
     docker image on minikube's docker
 3. `make test-e2e`
 
+#### Running *end-to-end* tests on local kind cluster:
+
+1. `kind create cluster --image=kindest/node:<latest>`. e.g `v1.16.2` version. 
+2. `export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"`
+3. `make image` - build Prometheus Operator  docker image locally.
+4. `for n in "operator" "config-reloader"; do kind load docker-image "quay.io/coreos/prometheus-$n:$(git rev-parse --short HEAD)"; done` - publish 
+built locally images to be accessible inside kind. 
+5. `make test-e2e`
+
 ## Contributing
 
 Many files (documentation, manifests, ...) in this repository are
