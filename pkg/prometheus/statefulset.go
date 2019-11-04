@@ -808,7 +808,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
 				},
 			})
-			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn of compaction of Prometheus
+			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
 			// to avoid races during upload, if the uploads are configured.
 			promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
 		}
