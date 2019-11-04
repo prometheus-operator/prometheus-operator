@@ -34,7 +34,7 @@ import (
 
 const (
 	governingServiceName            = "prometheus-operated"
-	DefaultPrometheusVersion        = "v2.13.1"
+	DefaultPrometheusVersion        = "v2.7.1"
 	DefaultThanosVersion            = "v0.8.1"
 	defaultRetention                = "24h"
 	defaultReplicaExternalLabelName = "prometheus_replica"
