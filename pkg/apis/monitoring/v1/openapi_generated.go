@@ -2266,7 +2266,7 @@ func schema_pkg_apis_monitoring_v1_RelabelConfig(ref common.ReferenceCallback) c
 					},
 					"regex": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Regular expression against which the extracted value is matched. defailt is '(.*)'",
+							Description: "Regular expression against which the extracted value is matched. Default is '(.*)'",
 							Type:        []string{"string"},
 							Format:      "",
 						},
