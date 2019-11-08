@@ -478,7 +478,7 @@ type RelabelConfig struct {
 	//Label to which the resulting value is written in a replace action.
 	//It is mandatory for replace actions. Regex capture groups are available.
 	TargetLabel string `json:"targetLabel,omitempty"`
-	//Regular expression against which the extracted value is matched. defailt is '(.*)'
+	//Regular expression against which the extracted value is matched. Default is '(.*)'
 	Regex string `json:"regex,omitempty"`
 	// Modulus to take of the hash of the source label values.
 	Modulus uint64 `json:"modulus,omitempty"`
