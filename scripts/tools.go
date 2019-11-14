@@ -14,7 +14,7 @@
 
 //+build tools
 
-// Package tools tracks dependencies for tools that are required to generate the protobuf code.
+// Package tools tracks dependencies for tools that used in the build process.
 // See https://github.com/golang/go/issues/25922
 package tools
 
@@ -27,4 +27,5 @@ import (
 	_ "k8s.io/code-generator/cmd/informer-gen"
 	_ "k8s.io/code-generator/cmd/lister-gen"
 	_ "k8s.io/kube-openapi/cmd/openapi-gen"
+	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
 )
