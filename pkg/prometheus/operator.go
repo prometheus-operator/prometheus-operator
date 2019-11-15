@@ -1157,7 +1157,7 @@ func (c *Operator) sync(key string) error {
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
 		c.stsDeleteCreateCounter.With(prometheus.Labels{}).Inc()
-		level.Debug(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet")
+		level.Info(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet", "details", sErr.ErrStatus.Details)
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(sset.GetName(), &metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
