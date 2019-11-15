@@ -132,6 +132,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 		})
 	} else {
 		pvcTemplate := storageSpec.VolumeClaimTemplate
+		pvcTemplate.CreationTimestamp = metav1.Time{}
 		if pvcTemplate.Name == "" {
 			pvcTemplate.Name = volumeName(am.Name)
 		}

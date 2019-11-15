@@ -217,6 +217,7 @@ func makeStatefulSet(
 		})
 	} else {
 		pvcTemplate := storageSpec.VolumeClaimTemplate
+		pvcTemplate.CreationTimestamp = metav1.Time{}
 		if pvcTemplate.Name == "" {
 			pvcTemplate.Name = volumeName(p.Name)
 		}
