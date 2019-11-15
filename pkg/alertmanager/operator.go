@@ -67,6 +67,7 @@ type Operator struct {
 
 	reconcileErrorsCounter *prometheus.CounterVec
 	triggerByCounter       *prometheus.CounterVec
+	stsDeleteCreateCounter *prometheus.CounterVec
 
 	config Config
 }
@@ -155,9 +156,10 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 	return o, nil
 }
 
-func (c *Operator) RegisterMetrics(r prometheus.Registerer, reconcileErrorsCounter *prometheus.CounterVec, triggerByCounter *prometheus.CounterVec) {
+func (c *Operator) RegisterMetrics(r prometheus.Registerer, reconcileErrorsCounter *prometheus.CounterVec, triggerByCounter *prometheus.CounterVec, stsDeleteCreateCounter *prometheus.CounterVec) {
 	c.reconcileErrorsCounter = reconcileErrorsCounter
 	c.triggerByCounter = triggerByCounter
+	c.stsDeleteCreateCounter = stsDeleteCreateCounter
 
 	c.reconcileErrorsCounter.With(prometheus.Labels{}).Add(0)
 
@@ -494,6 +496,7 @@ func (c *Operator) sync(key string) error {
 	sErr, ok := err.(*apierrors.StatusError)
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
+		c.stsDeleteCreateCounter.With(prometheus.Labels{}).Inc()
 		level.Debug(c.logger).Log("msg", "resolving illegal update of Alertmanager StatefulSet")
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(sset.GetName(), &metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {

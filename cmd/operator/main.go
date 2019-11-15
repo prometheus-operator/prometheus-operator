@@ -233,7 +233,7 @@ func Main() int {
 
 	reconcileErrorsCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "prometheus_operator_reconcile_errors_total",
-		Help: "Number of errors that occurred while reconciling the alertmanager statefulset",
+		Help: "Number of errors that occurred while reconciling the statefulset",
 	}, []string{"controller"})
 
 	triggerByCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -241,6 +241,11 @@ func Main() int {
 		Help: "Number of times a Kubernetes object add, delete or update event" +
 			" triggered the Prometheus Operator to reconcile an object",
 	}, []string{"controller", "triggered_by", "action"})
+
+	stsDeleteCreateCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "prometheus_operator_reconcile_sts_delete_create_total",
+		Help: "Number of times that reconciling a statefulset required deleting and re-creating it",
+	}, []string{"controller"})
 
 	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_rule_validation_triggered_total",
@@ -258,6 +263,7 @@ func Main() int {
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 		reconcileErrorsCounter,
 		triggerByCounter,
+		stsDeleteCreateCounter,
 		validationTriggeredCounter,
 		validationErrorsCounter,
 	)
@@ -272,6 +278,7 @@ func Main() int {
 		prometheus.WrapRegistererWith(prometheusLabels, r),
 		reconcileErrorsCounter.MustCurryWith(prometheusLabels),
 		triggerByCounter.MustCurryWith(prometheusLabels),
+		stsDeleteCreateCounter.MustCurryWith(prometheusLabels),
 	)
 
 	alertmanagerLabels := prometheus.Labels{"controller": "alertmanager"}
@@ -279,6 +286,7 @@ func Main() int {
 		prometheus.WrapRegistererWith(alertmanagerLabels, r),
 		reconcileErrorsCounter.MustCurryWith(alertmanagerLabels),
 		triggerByCounter.MustCurryWith(alertmanagerLabels),
+		stsDeleteCreateCounter.MustCurryWith(alertmanagerLabels),
 	)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
