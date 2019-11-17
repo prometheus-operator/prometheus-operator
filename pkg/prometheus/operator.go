@@ -76,6 +76,7 @@ type Operator struct {
 	queue workqueue.RateLimitingInterface
 
 	reconcileErrorsCounter *prometheus.CounterVec
+	stsDeleteCreateCounter *prometheus.CounterVec
 
 	// triggerByCounter is a set of counters keeping track of the amount
 	// of times Prometheus Operator was triggered to reconcile its created
@@ -340,9 +341,10 @@ func New(conf Config, logger log.Logger) (*Operator, error) {
 
 // RegisterMetrics registers Prometheus metrics on the given Prometheus
 // registerer.
-func (c *Operator) RegisterMetrics(r prometheus.Registerer, reconcileErrorsCounter *prometheus.CounterVec, triggerByCounter *prometheus.CounterVec) {
+func (c *Operator) RegisterMetrics(r prometheus.Registerer, reconcileErrorsCounter *prometheus.CounterVec, triggerByCounter *prometheus.CounterVec, stsDeleteCreateCounter *prometheus.CounterVec) {
 	c.reconcileErrorsCounter = reconcileErrorsCounter
 	c.triggerByCounter = triggerByCounter
+	c.stsDeleteCreateCounter = stsDeleteCreateCounter
 
 	c.reconcileErrorsCounter.With(prometheus.Labels{}).Add(0)
 
@@ -1154,7 +1156,8 @@ func (c *Operator) sync(key string) error {
 	sErr, ok := err.(*apierrors.StatusError)
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
-		level.Debug(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet")
+		c.stsDeleteCreateCounter.With(prometheus.Labels{}).Inc()
+		level.Info(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet", "details", sErr.ErrStatus.Details)
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(sset.GetName(), &metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
