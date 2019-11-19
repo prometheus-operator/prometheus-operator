@@ -291,7 +291,6 @@ k8s.io/apimachinery/pkg/util/validation
 k8s.io/apimachinery/pkg/util/wait
 k8s.io/apimachinery/pkg/conversion
 k8s.io/apimachinery/pkg/selection
-k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
 k8s.io/apimachinery/pkg/util/json
 k8s.io/apimachinery/pkg/conversion/queryparams
 k8s.io/apimachinery/pkg/util/errors
@@ -308,6 +307,7 @@ k8s.io/apimachinery/pkg/runtime/serializer/json
 k8s.io/apimachinery/pkg/runtime/serializer/protobuf
 k8s.io/apimachinery/pkg/runtime/serializer/recognizer
 k8s.io/apimachinery/pkg/runtime/serializer/versioning
+k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
 k8s.io/apimachinery/pkg/util/mergepatch
 k8s.io/apimachinery/third_party/forked/golang/json
 k8s.io/apimachinery/third_party/forked/golang/reflect
@@ -385,13 +385,11 @@ k8s.io/client-go/util/connrotation
 k8s.io/client-go/tools/clientcmd/api/v1
 # k8s.io/code-generator v0.0.0-20190912054826-cd179ad6a269 => k8s.io/code-generator v0.0.0-20190912054826-cd179ad6a269
 k8s.io/code-generator/cmd/client-gen
-k8s.io/code-generator/cmd/deepcopy-gen
 k8s.io/code-generator/cmd/informer-gen
 k8s.io/code-generator/cmd/lister-gen
 k8s.io/code-generator/cmd/client-gen/args
 k8s.io/code-generator/cmd/client-gen/generators
 k8s.io/code-generator/pkg/util
-k8s.io/code-generator/cmd/deepcopy-gen/args
 k8s.io/code-generator/cmd/informer-gen/args
 k8s.io/code-generator/cmd/informer-gen/generators
 k8s.io/code-generator/cmd/lister-gen/args
@@ -404,7 +402,6 @@ k8s.io/code-generator/cmd/client-gen/path
 k8s.io/code-generator/pkg/namer
 # k8s.io/gengo v0.0.0-20190822140433-26a664648505
 k8s.io/gengo/args
-k8s.io/gengo/examples/deepcopy-gen/generators
 k8s.io/gengo/generator
 k8s.io/gengo/namer
 k8s.io/gengo/types

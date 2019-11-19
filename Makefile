@@ -17,7 +17,7 @@ EMBEDMD_BINARY:=$(FIRST_GOPATH)/bin/embedmd
 TYPES_V1_TARGET:=pkg/apis/monitoring/v1/types.go
 
 K8S_GEN_VERSION:=release-1.14
-K8S_GEN_BINARIES:=deepcopy-gen informer-gen lister-gen client-gen
+K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
 K8S_GEN_ARGS:=--go-header-file $(FIRST_GOPATH)/src/$(GO_PKG)/.header --v=1 --logtostderr
 
 K8S_GEN_DEPS:=.header
@@ -61,12 +61,9 @@ prometheus-config-reloader:
 	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
 
 DEEPCOPY_TARGET := pkg/apis/monitoring/v1/zz_generated.deepcopy.go
-$(DEEPCOPY_TARGET): $(K8S_GEN_DEPS)
-	$(DEEPCOPY_GEN_BINARY) \
-	$(K8S_GEN_ARGS) \
-	--input-dirs    "$(GO_PKG)/pkg/apis/monitoring/v1" \
-	--bounding-dirs "$(GO_PKG)/pkg/apis/monitoring" \
-	--output-file-base zz_generated.deepcopy
+$(DEEPCOPY_TARGET): $(CONTROLLER_GEN_BINARY)
+	$(CONTROLLER_GEN_BINARY) object:headerFile=./.header \
+		paths=./pkg/apis/monitoring/v1
 
 CLIENT_TARGET := pkg/client/versioned/clientset.go
 $(CLIENT_TARGET): $(K8S_GEN_DEPS)
