@@ -355,7 +355,7 @@ metadata:
   name: prometheus
 spec:
   serviceAccountName: prometheus
-  serviceMonitorSelector:
+  podMonitorSelector:
     matchLabels:
       team: frontend
   resources:
