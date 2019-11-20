@@ -620,6 +620,16 @@ spec:
             baseImage:
               description: Base image that is used to deploy pods, without tag.
               type: string
+            clusterListenAddress:
+              description: Specify to which address Alertmanager will bind to. Note
+                this is only for the Alertmanager cluster (gossip communication),
+                not the ui. This option takes precedence over ListenLocal.
+              type: string
+            clusterListenLocal:
+              description: ListenLocal makes the Alertmanager cluster listen on loopback,
+                so that it does not bind against the Pod IP. Note this is only for
+                the Alertmanager cluster (gossip communication), not the ui.
+              type: boolean
             configMaps:
               description: ConfigMaps is a list of ConfigMaps in the same namespace
                 as the Alertmanager object, which shall be mounted into the Alertmanager
@@ -2575,6 +2585,11 @@ spec:
                 - name
                 type: object
               type: array
+            listenAddress:
+              description: Specify to which address Alertmanager will bind to. Note
+                this is only for the Alertmanager UI, not the gossip communication.
+                This option takes precedence over ListenLocal.
+              type: string
             listenLocal:
               description: ListenLocal makes the Alertmanager server listen on loopback,
                 so that it does not bind against the Pod IP. Note this is only for

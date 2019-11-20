@@ -2824,6 +2824,11 @@ spec:
                 - name
                 type: object
               type: array
+            listenAddress:
+              description: ListenAddress makes the Prometheus server listen on the
+                provided address instead of binding against the Pod IP. This option
+                takes precedence over ListenLocal.
+              type: string
             listenLocal:
               description: ListenLocal makes the Prometheus server listen on loopback,
                 so that it does not bind against the Pod IP.
@@ -4251,6 +4256,11 @@ spec:
                     and sha combinations. Specifying the version is still necessary
                     to ensure the Prometheus Operator knows what version of Thanos
                     is being configured.
+                  type: string
+                listenAddress:
+                  description: ListenAddress makes the Thanos sidecar listen on the
+                    provided address instead of binding against the Pod IP. This option
+                    takes precedence over ListenLocal.
                   type: string
                 listenLocal:
                   description: ListenLocal makes the Thanos sidecar listen on loopback,

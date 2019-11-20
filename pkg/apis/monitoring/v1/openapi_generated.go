@@ -786,6 +786,27 @@ func schema_pkg_apis_monitoring_v1_AlertmanagerSpec(ref common.ReferenceCallback
 							Format:      "",
 						},
 					},
+					"listenAddress": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specify to which address Alertmanager will bind to. Note this is only for the Alertmanager UI, not the gossip communication. This option takes precedence over ListenLocal.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"clusterListenLocal": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ListenLocal makes the Alertmanager cluster listen on loopback, so that it does not bind against the Pod IP. Note this is only for the Alertmanager cluster (gossip communication), not the ui.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"clusterListenAddress": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specify to which address Alertmanager will bind to. Note this is only for the Alertmanager cluster (gossip communication), not the ui. This option takes precedence over ListenLocal.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"containers": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Containers allows injecting additional containers. This is meant to allow adding an authentication proxy to an Alertmanager pod.",
@@ -1958,6 +1979,13 @@ func schema_pkg_apis_monitoring_v1_PrometheusSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"listenAddress": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ListenAddress makes the Prometheus server listen on the provided address instead of binding against the Pod IP. This option takes precedence over ListenLocal.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"containers": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Containers allows injecting additional containers or modifying operator generated containers. This can be used to allow adding an authentication proxy to a Prometheus pod or to change the behavior of an operator generated container. Containers described here modify an operator generated container if they share the same name and modifications are done via a strategic merge patch. The current container names are: `prometheus`, `prometheus-config-reloader`, `rules-configmap-reloader`, and `thanos-sidecar`. Overriding containers is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice.",
@@ -2947,6 +2975,13 @@ func schema_pkg_apis_monitoring_v1_ThanosSpec(ref common.ReferenceCallback) comm
 						SchemaProps: spec.SchemaProps{
 							Description: "ListenLocal makes the Thanos sidecar listen on loopback, so that it does not bind against the Pod IP.",
 							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"listenAddress": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ListenAddress makes the Thanos sidecar listen on the provided address instead of binding against the Pod IP. This option takes precedence over ListenLocal.",
+							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
