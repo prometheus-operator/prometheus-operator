@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	crdutils "github.com/ant31/crd-validation/pkg"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
+	yaml "gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -194,18 +194,22 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	return ver.Segments()[1], nil
 }
 
+// NewCustomResourceDefinition creates a CustomResourceDefinition by unmarshalling
+// the associated yaml asset
 func NewCustomResourceDefinition(crdKind monitoringv1.CrdKind, group string, labels map[string]string, validation bool) *extensionsobj.CustomResourceDefinition {
-	return crdutils.NewCustomResourceDefinition(crdutils.Config{
-		SpecDefinitionName:    crdKind.SpecName,
-		EnableValidation:      validation,
-		Labels:                crdutils.Labels{LabelsMap: labels},
-		ResourceScope:         string(extensionsobj.NamespaceScoped),
-		Group:                 group,
-		Kind:                  crdKind.Kind,
-		Version:               monitoringv1.Version,
-		Plural:                crdKind.Plural,
-		GetOpenAPIDefinitions: monitoringv1.GetOpenAPIDefinitions,
-	})
+	crdName := strings.ToLower(crdKind.Plural)
+	if crdName == "prometheuses" {
+		crdName = "prometheus"
+	}
+	assetPath := "example/prometheus-operator-crd/" + group + "_" + crdName + ".yaml"
+	data := monitoringv1.MustAsset(assetPath)
+	crd := &extensionsobj.CustomResourceDefinition{}
+	err := yaml.Unmarshal(data, crd)
+	if err != nil {
+		panic("unable to unmarshal crd asset for " + assetPath + ": " + err.Error())
+	}
+	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + crd.Spec.Group
+	return crd
 }
 
 // SanitizeVolumeName ensures that the given volume name is a valid DNS-1123 label

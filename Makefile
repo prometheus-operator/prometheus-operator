@@ -8,13 +8,20 @@ VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
 FIRST_GOPATH:=$(firstword $(subst :, ,$(shell go env GOPATH)))
 CONTROLLER_GEN_BINARY := $(FIRST_GOPATH)/bin/controller-gen
-OPENAPI_GEN_BINARY:=$(FIRST_GOPATH)/bin/openapi-gen
+GO_BINDATA_BINARY := $(FIRST_GOPATH)/bin/go-bindata
 GOJSONTOYAML_BINARY:=$(FIRST_GOPATH)/bin/gojsontoyaml
 JB_BINARY:=$(FIRST_GOPATH)/bin/jb
 PO_DOCGEN_BINARY:=$(FIRST_GOPATH)/bin/po-docgen
 EMBEDMD_BINARY:=$(FIRST_GOPATH)/bin/embedmd
 
 TYPES_V1_TARGET:=pkg/apis/monitoring/v1/types.go
+
+CRD_YAML_FILES := example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
+CRD_YAML_FILES += example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
+CRD_YAML_FILES += example/prometheus-operator-crd/monitoring.coreos.com_prometheus.yaml
+CRD_YAML_FILES += example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
+CRD_YAML_FILES += example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+
 
 K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
@@ -23,7 +30,6 @@ K8S_GEN_ARGS:=--go-header-file $(FIRST_GOPATH)/src/$(GO_PKG)/.header --v=1 --log
 K8S_GEN_DEPS:=.header
 K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(FIRST_GOPATH)/bin/$(bin))
-K8S_GEN_DEPS+=$(OPENAPI_GEN_BINARY)
 
 GO_BUILD_RECIPE=GOOS=linux CGO_ENABLED=0 go build -mod=vendor -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/ | grep -v /contrib/)
@@ -49,8 +55,10 @@ clean:
 # Building #
 ############
 
+BINDATA_TARGET := pkg/apis/monitoring/v1/bindata.go
+
 .PHONY: build
-build: operator prometheus-config-reloader k8s-gen
+build: $(BINDATA_TARGET) operator prometheus-config-reloader k8s-gen
 
 .PHONY: operator
 operator:
@@ -90,12 +98,13 @@ $(INFORMER_TARGET): $(K8S_GEN_DEPS) $(LISTER_TARGET) $(CLIENT_TARGET)
 	--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1" \
 	--output-package  "$(GO_PKG)/pkg/client/informers"
 
-OPENAPI_TARGET := pkg/apis/monitoring/v1/openapi_generated.go
-$(OPENAPI_TARGET): $(K8S_GEN_DEPS)
-	$(OPENAPI_GEN_BINARY) \
-	$(K8S_GEN_ARGS) \
-	-i $(GO_PKG)/pkg/apis/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1 \
-	-p $(GO_PKG)/pkg/apis/monitoring/v1
+BINDATA_TARGET := pkg/apis/monitoring/v1/bindata.go
+$(BINDATA_TARGET): $(GO_BINDATA_BINARY) $(CRD_YAML_FILES)
+	$(GO_BINDATA_BINARY) \
+	-mode 420 -modtime 1 \
+	-o  $(BINDATA_TARGET) \
+	-pkg v1 \
+	example/prometheus-operator-crd
 
 .PHONY: k8s-gen
 k8s-gen: \
@@ -130,13 +139,13 @@ vendor:
 	go mod vendor
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGET) $(OPENAPI_TARGET) $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGET) $(BINDATA_TARGET) $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml $(shell find Documentation -type f)
 
 .PHONY: generate-in-docker
 generate-in-docker:
 	$(CONTAINER_CMD) $(MAKE) $(MFLAGS) --always-make generate
 
-example/prometheus-operator-crd/monitoring.coreos.com_**.yaml: $(OPENAPI_TARGET) $(CONTROLLER_GEN_BINARY)
+$(CRD_YAML_FILES): $(TYPES_V1_TARGET) $(CONTROLLER_GEN_BINARY)
 	$(CONTROLLER_GEN_BINARY) crd paths=./pkg/apis/monitoring/v1 output:crd:dir=./example/prometheus-operator-crd
 
 jsonnet/prometheus-operator/**-crd.libsonnet: $(shell find example/prometheus-operator-crd/monitoring.coreos.com_*.yaml -type f) $(GOJSONTOYAML_BINARY)
@@ -237,8 +246,8 @@ $(FIRST_GOPATH)/bin/$(1):
 
 endef
 
-$(OPENAPI_GEN_BINARY):
-	@go install -mod=vendor k8s.io/kube-openapi/cmd/openapi-gen
+$(GO_BINDATA_BINARY):
+	@go install -mod=vendor github.com/go-bindata/go-bindata/go-bindata
 
 $(foreach binary,$(K8S_GEN_BINARIES),$(eval $(call _K8S_GEN_VAR_TARGET_,$(binary))))
 

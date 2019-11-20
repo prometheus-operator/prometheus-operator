@@ -3,14 +3,13 @@ module github.com/coreos/prometheus-operator
 go 1.12
 
 require (
-	github.com/ant31/crd-validation v0.0.0-20180702145049-30f8a35d0ac2
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/brancz/gojsontoyaml v0.0.0-20190425155809-e8bd32d46b3d
 	github.com/campoy/embedmd v1.0.0
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-bindata/go-bindata v3.1.2+incompatible
 	github.com/go-kit/kit v0.9.0
-	github.com/go-openapi/spec v0.19.2
 	github.com/go-openapi/swag v0.19.4
 	github.com/gogo/protobuf v1.2.2-0.20190730201129-28a6bbf47e48
 	github.com/golang/protobuf v1.3.2
@@ -35,7 +34,6 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/code-generator v0.0.0-20190912054826-cd179ad6a269
 	k8s.io/klog v0.4.0
-	k8s.io/kube-openapi v0.0.0-20190816220812-743ec37842bf
 	sigs.k8s.io/controller-tools v0.2.2
 )
 
