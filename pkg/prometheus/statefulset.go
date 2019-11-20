@@ -465,7 +465,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	}
 
 	var ports []v1.ContainerPort
-	if p.Spec.ListenLocal {
+	if p.Spec.ListenAddress != "" {
+		promArgs = append(promArgs, fmt.Sprintf("-web.listen-address=%s:9090", p.Spec.ListenAddress))
+	} else if p.Spec.ListenLocal {
 		promArgs = append(promArgs, "-web.listen-address=127.0.0.1:9090")
 	} else {
 		ports = []v1.ContainerPort{
@@ -758,6 +760,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		bindAddress := "[$(POD_IP)]"
 		if p.Spec.Thanos.ListenLocal {
 			bindAddress = "127.0.0.1"
+		}
+		if p.Spec.Thanos.ListenAddress != "" {
+			bindAddress = p.Spec.Thanos.ListenAddress
 		}
 
 		container := v1.Container{

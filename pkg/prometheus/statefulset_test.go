@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"reflect"
 	"strings"
 	"testing"
@@ -397,6 +398,137 @@ func TestListenLocal(t *testing.T) {
 
 	if !found {
 		t.Fatal("Prometheus not listening on loopback when it should.")
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		Handler: v1.Handler{
+			Exec: &v1.ExecAction{
+				Command: []string{
+					`sh`,
+					`-c`,
+					`if [ -x "$(command -v curl)" ]; then curl http://localhost:9090/-/ready; elif [ -x "$(command -v wget)" ]; then wget -q http://localhost:9090/-/ready; else exit 1; fi`,
+				},
+			},
+		},
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 120,
+	}
+	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
+		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
+	}
+
+	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
+	expectedLivenessProbe := &v1.Probe{
+		Handler: v1.Handler{
+			Exec: &v1.ExecAction{
+				Command: []string{
+					`sh`,
+					`-c`,
+					`if [ -x "$(command -v curl)" ]; then curl http://localhost:9090/-/healthy; elif [ -x "$(command -v wget)" ]; then wget -q http://localhost:9090/-/healthy; else exit 1; fi`,
+				},
+			},
+		},
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
+		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %v\n\nGot: %v", expectedLivenessProbe, actualLivenessProbe)
+	}
+
+	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 0 {
+		t.Fatal("Prometheus container should have 0 ports defined")
+	}
+}
+
+func TestListenAddress(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			ListenAddress: "0.0.0.0",
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--web.listen-address=0.0.0.0:9090" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus not listening on the provided address when it should.")
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		Handler: v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path: "/-/ready",
+				Port: intstr.IntOrString{
+					Type:   1,
+					IntVal: 0,
+					StrVal: "web",
+				},
+			},
+		},
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 120,
+	}
+	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
+		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
+	}
+
+	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
+	expectedLivenessProbe := &v1.Probe{
+		Handler: v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path: "/-/healthy",
+				Port: intstr.IntOrString{
+					Type:   1,
+					IntVal: 0,
+					StrVal: "web",
+				},
+			},
+		},
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
+		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %v\n\nGot: %v", expectedLivenessProbe, actualLivenessProbe)
+	}
+
+	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 0 {
+		t.Fatal("Prometheus container should have 0 ports defined")
+	}
+}
+
+func TestListenAddressWithListenLocal(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			ListenLocal:   true,
+			ListenAddress: "0.0.0.0",
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--web.listen-address=0.0.0.0:9090" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus not listening on the provided address when it should.")
 	}
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
@@ -970,6 +1102,61 @@ func TestThanosListenLocal(t *testing.T) {
 
 	if !foundGrpcFlag || !foundHTTPFlag {
 		t.Fatal("Thanos not listening on loopback when it should.")
+	}
+}
+
+func TestThanosListenAddress(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				ListenAddress: "0.0.0.0",
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+	foundGrpcFlag := false
+	foundHTTPFlag := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[2].Args {
+		if flag == "--grpc-address=0.0.0.0:10901" {
+			foundGrpcFlag = true
+		}
+		if flag == "--http-address=0.0.0.0:10902" {
+			foundHTTPFlag = true
+		}
+	}
+
+	if !foundGrpcFlag || !foundHTTPFlag {
+		t.Fatal("Thanos not listening on the provided address when it should.")
+	}
+}
+
+func TestThanosListenAddressWithListenLocal(t *testing.T) {
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				ListenLocal:   true,
+				ListenAddress: "0.0.0.0",
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+	foundGrpcFlag := false
+	foundHTTPFlag := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[2].Args {
+		if flag == "--grpc-address=0.0.0.0:10901" {
+			foundGrpcFlag = true
+		}
+		if flag == "--http-address=0.0.0.0:10902" {
+			foundHTTPFlag = true
+		}
+	}
+
+	if !foundGrpcFlag || !foundHTTPFlag {
+		t.Fatal("Thanos not listening on the provided address when it should.")
 	}
 }
 

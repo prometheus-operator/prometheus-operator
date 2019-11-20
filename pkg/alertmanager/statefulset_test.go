@@ -182,6 +182,7 @@ func TestStatefulEmptyDir(t *testing.T) {
 		t.Fatal("Error adding EmptyDir Spec to StatefulSetSpec")
 	}
 }
+
 func TestListenLocal(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
@@ -201,6 +202,63 @@ func TestListenLocal(t *testing.T) {
 
 	if !found {
 		t.Fatal("Alertmanager not listening on loopback when it should.")
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].ReadinessProbe != nil {
+		t.Fatal("Alertmanager readiness probe expected to be empty")
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].LivenessProbe != nil {
+		t.Fatal("Alertmanager readiness probe expected to be empty")
+	}
+
+	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 2 {
+		t.Fatal("Alertmanager container should only have one port defined")
+	}
+}
+
+func TestListenAddress(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			ListenAddress: "0.0.0.0",
+		},
+	}, nil, defaultTestConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--web.listen-address=0.0.0.0:9093" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Alertmanager not listening on specified address when it should.")
+	}
+}
+
+func TestListenLocalWithListenAddress(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			ListenLocal:   true,
+			ListenAddress: "0.0.0.0",
+		},
+	}, nil, defaultTestConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--web.listen-address=0.0.0.0:9093" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Alertmanager not listening on the provided address when it should.")
 	}
 
 	if sset.Spec.Template.Spec.Containers[0].ReadinessProbe != nil {

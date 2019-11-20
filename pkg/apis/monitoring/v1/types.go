@@ -210,6 +210,9 @@ type PrometheusSpec struct {
 	// ListenLocal makes the Prometheus server listen on loopback, so that it
 	// does not bind against the Pod IP.
 	ListenLocal bool `json:"listenLocal,omitempty"`
+	// ListenAddress makes the Prometheus server listen on the provided address
+	// instead of binding against the Pod IP. This option takes precedence over ListenLocal.
+	ListenAddress string `json:"listenAddress,omitempty"`
 	// Containers allows injecting additional containers or modifying operator generated
 	// containers. This can be used to allow adding an authentication proxy to a Prometheus pod or
 	// to change the behavior of an operator generated container. Containers described here modify
@@ -392,6 +395,9 @@ type ThanosSpec struct {
 	// ListenLocal makes the Thanos sidecar listen on loopback, so that it
 	// does not bind against the Pod IP.
 	ListenLocal bool `json:"listenLocal,omitempty"`
+	// ListenAddress makes the Thanos sidecar listen on the provided address
+	// instead of binding against the Pod IP. This option takes precedence over ListenLocal.
+	ListenAddress string `json:"listenAddress,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.
@@ -949,6 +955,18 @@ type AlertmanagerSpec struct {
 	// does not bind against the Pod IP. Note this is only for the Alertmanager
 	// UI, not the gossip communication.
 	ListenLocal bool `json:"listenLocal,omitempty"`
+	// Specify to which address Alertmanager will bind to. Note this is only for
+	// the Alertmanager UI, not the gossip communication.
+	// This option takes precedence over ListenLocal.
+	ListenAddress string `json:"listenAddress,omitempty"`
+	// ListenLocal makes the Alertmanager cluster listen on loopback, so that it
+	// does not bind against the Pod IP. Note this is only for the Alertmanager
+	// cluster (gossip communication), not the ui.
+	ClusterListenLocal bool `json:"clusterListenLocal,omitempty"`
+	// Specify to which address Alertmanager will bind to. Note this is only for
+	// the Alertmanager cluster (gossip communication), not the ui.
+	// This option takes precedence over ListenLocal.
+	ClusterListenAddress string `json:"clusterListenAddress,omitempty"`
 	// Containers allows injecting additional containers. This is meant to
 	// allow adding an authentication proxy to an Alertmanager pod.
 	Containers []v1.Container `json:"containers,omitempty"`

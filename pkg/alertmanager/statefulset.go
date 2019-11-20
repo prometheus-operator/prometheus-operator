@@ -233,15 +233,24 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 
 	amArgs := []string{
 		fmt.Sprintf("--config.file=%s", alertmanagerConfFile),
-		fmt.Sprintf("--cluster.listen-address=[$(POD_IP)]:%d", 9094),
 		fmt.Sprintf("--storage.path=%s", alertmanagerStorageDir),
 		fmt.Sprintf("--data.retention=%s", a.Spec.Retention),
 	}
 
-	if a.Spec.ListenLocal {
+	if a.Spec.ListenAddress != "" {
+		amArgs = append(amArgs, fmt.Sprintf("--web.listen-address=%s:9093", a.Spec.ListenAddress))
+	} else if a.Spec.ListenLocal {
 		amArgs = append(amArgs, "--web.listen-address=127.0.0.1:9093")
 	} else {
 		amArgs = append(amArgs, "--web.listen-address=:9093")
+	}
+
+	if a.Spec.ClusterListenAddress != "" {
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.listen-address=%s:9094", a.Spec.ListenAddress))
+	} else if a.Spec.ClusterListenLocal {
+		amArgs = append(amArgs, "--cluster.listen-address=127.0.0.1:9094")
+	} else {
+		amArgs = append(amArgs, "--cluster.listen-address=[$(POD_IP)]:9094")
 	}
 
 	if a.Spec.ExternalURL != "" {
