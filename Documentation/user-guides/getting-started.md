@@ -322,7 +322,7 @@ For more information, see the [Prometheus Operator RBAC guide][prom-rbac].
 
 A Prometheus object defines the `serviceMonitorSelector` to specify which ServiceMonitors should be included. Above the label `team: frontend` was specified, so that's what the Prometheus object selects by.
 
-[embedmd]:# (../../example/user-guides/getting-started/prometheus.yaml)
+[embedmd]:# (../../example/user-guides/getting-started/prometheus-service-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
@@ -347,7 +347,7 @@ This enables the frontend team to create new ServiceMonitors and Services which 
 
 Finally, a Prometheus object defines the `podMonitorSelector` to specify which PodMonitors should be included. Above the label `team: frontend` was specified, so that's what the Prometheus object selects by.
 
-[embedmd]:# (../../example/user-guides/getting-started/prometheus.yaml)
+[embedmd]:# (../../example/user-guides/getting-started/prometheus-pod-monitor.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
@@ -355,7 +355,7 @@ metadata:
   name: prometheus
 spec:
   serviceAccountName: prometheus
-  serviceMonitorSelector:
+  podMonitorSelector:
     matchLabels:
       team: frontend
   resources:
@@ -404,7 +404,7 @@ This API access is disabled by default and can be toggled using this boolean fla
 > user is advised to add additional authentication authorization via a proxy to
 > ensure only clients authorized to perform these actions can do so.
 
-[embedmd]:# (../../example/user-guides/getting-started/prometheus.yaml)
+[embedmd]:# (../../example/user-guides/getting-started/prometheus-admin-api.yaml)
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
@@ -418,7 +418,7 @@ spec:
   resources:
     requests:
       memory: 400Mi
-  enableAdminAPI: false
+  enableAdminAPI: true
 ```
 
 Further reading:
