@@ -198,9 +198,6 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 // the associated yaml asset
 func NewCustomResourceDefinition(crdKind monitoringv1.CrdKind, group string, labels map[string]string, validation bool) *extensionsobj.CustomResourceDefinition {
 	crdName := strings.ToLower(crdKind.Plural)
-	if crdName == "prometheuses" {
-		crdName = "prometheus"
-	}
 	assetPath := "example/prometheus-operator-crd/" + group + "_" + crdName + ".yaml"
 	data := monitoringv1.MustAsset(assetPath)
 	crd := &extensionsobj.CustomResourceDefinition{}
@@ -209,6 +206,8 @@ func NewCustomResourceDefinition(crdKind monitoringv1.CrdKind, group string, lab
 		panic("unable to unmarshal crd asset for " + assetPath + ": " + err.Error())
 	}
 	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + crd.Spec.Group
+	crd.ObjectMeta.Labels = labels
+	crd.Spec.Group = group
 	return crd
 }
 

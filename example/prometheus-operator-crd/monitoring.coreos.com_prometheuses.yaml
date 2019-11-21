@@ -12,7 +12,7 @@ spec:
   names:
     kind: Prometheus
     listKind: PrometheusList
-    plural: prometheus
+    plural: prometheuses
     singular: prometheus
   scope: ""
   validation:
