@@ -7,8 +7,8 @@ TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
 FIRST_GOPATH:=$(firstword $(subst :, ,$(shell go env GOPATH)))
-PO_CRDGEN_BINARY:=$(FIRST_GOPATH)/bin/po-crdgen
-OPENAPI_GEN_BINARY:=$(FIRST_GOPATH)/bin/openapi-gen
+CONTROLLER_GEN_BINARY := $(FIRST_GOPATH)/bin/controller-gen
+GO_BINDATA_BINARY := $(FIRST_GOPATH)/bin/go-bindata
 GOJSONTOYAML_BINARY:=$(FIRST_GOPATH)/bin/gojsontoyaml
 JB_BINARY:=$(FIRST_GOPATH)/bin/jb
 PO_DOCGEN_BINARY:=$(FIRST_GOPATH)/bin/po-docgen
@@ -16,14 +16,24 @@ EMBEDMD_BINARY:=$(FIRST_GOPATH)/bin/embedmd
 
 TYPES_V1_TARGET:=pkg/apis/monitoring/v1/types.go
 
+CRD_TYPES := alertmanagers podmonitors prometheuses prometheusrules servicemonitors
+CRD_YAML_FILES := $(foreach name,$(CRD_TYPES),example/prometheus-operator-crd/monitoring.coreos.com_$(name).yaml)
+
+CRD_JSONNET_FILES := jsonnet/prometheus-operator/alertmanager-crd.libsonnet
+CRD_JSONNET_FILES += jsonnet/prometheus-operator/podmonitor-crd.libsonnet
+CRD_JSONNET_FILES += jsonnet/prometheus-operator/prometheus-crd.libsonnet
+CRD_JSONNET_FILES += jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
+CRD_JSONNET_FILES += jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
+
+BINDATA_TARGET := pkg/apis/monitoring/v1/bindata.go
+
 K8S_GEN_VERSION:=release-1.14
-K8S_GEN_BINARIES:=deepcopy-gen informer-gen lister-gen client-gen
+K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
 K8S_GEN_ARGS:=--go-header-file $(FIRST_GOPATH)/src/$(GO_PKG)/.header --v=1 --logtostderr
 
 K8S_GEN_DEPS:=.header
 K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(FIRST_GOPATH)/bin/$(bin))
-K8S_GEN_DEPS+=$(OPENAPI_GEN_BINARY)
 
 GO_BUILD_RECIPE=GOOS=linux CGO_ENABLED=0 go build -mod=vendor -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/ | grep -v /contrib/)
@@ -50,7 +60,7 @@ clean:
 ############
 
 .PHONY: build
-build: operator prometheus-config-reloader k8s-gen
+build: $(BINDATA_TARGET) operator prometheus-config-reloader k8s-gen
 
 .PHONY: operator
 operator:
@@ -61,12 +71,9 @@ prometheus-config-reloader:
 	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
 
 DEEPCOPY_TARGET := pkg/apis/monitoring/v1/zz_generated.deepcopy.go
-$(DEEPCOPY_TARGET): $(K8S_GEN_DEPS)
-	$(DEEPCOPY_GEN_BINARY) \
-	$(K8S_GEN_ARGS) \
-	--input-dirs    "$(GO_PKG)/pkg/apis/monitoring/v1" \
-	--bounding-dirs "$(GO_PKG)/pkg/apis/monitoring" \
-	--output-file-base zz_generated.deepcopy
+$(DEEPCOPY_TARGET): $(CONTROLLER_GEN_BINARY)
+	$(CONTROLLER_GEN_BINARY) object:headerFile=./.header \
+		paths=./pkg/apis/monitoring/v1
 
 CLIENT_TARGET := pkg/client/versioned/clientset.go
 $(CLIENT_TARGET): $(K8S_GEN_DEPS)
@@ -93,12 +100,12 @@ $(INFORMER_TARGET): $(K8S_GEN_DEPS) $(LISTER_TARGET) $(CLIENT_TARGET)
 	--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1" \
 	--output-package  "$(GO_PKG)/pkg/client/informers"
 
-OPENAPI_TARGET := pkg/apis/monitoring/v1/openapi_generated.go
-$(OPENAPI_TARGET): $(K8S_GEN_DEPS)
-	$(OPENAPI_GEN_BINARY) \
-	$(K8S_GEN_ARGS) \
-	-i $(GO_PKG)/pkg/apis/monitoring/v1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/api/core/v1 \
-	-p $(GO_PKG)/pkg/apis/monitoring/v1
+$(BINDATA_TARGET): $(GO_BINDATA_BINARY) $(CRD_YAML_FILES)
+	$(GO_BINDATA_BINARY) \
+	-mode 420 -modtime 1 \
+	-o  $(BINDATA_TARGET) \
+	-pkg v1 \
+	example/prometheus-operator-crd
 
 .PHONY: k8s-gen
 k8s-gen: \
@@ -133,25 +140,25 @@ vendor:
 	go mod vendor
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGET) $(OPENAPI_TARGET) $(shell find jsonnet/prometheus-operator/*-crd.libsonnet -type f) bundle.yaml $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGET) $(BINDATA_TARGET) $(CRD_JSONNET_FILES) bundle.yaml $(shell find Documentation -type f)
 
 .PHONY: generate-in-docker
 generate-in-docker:
 	$(CONTAINER_CMD) $(MAKE) $(MFLAGS) --always-make generate
 
-example/prometheus-operator-crd/**.crd.yaml: $(OPENAPI_TARGET) $(PO_CRDGEN_BINARY)
-	po-crdgen prometheus > example/prometheus-operator-crd/prometheus.crd.yaml
-	po-crdgen alertmanager > example/prometheus-operator-crd/alertmanager.crd.yaml
-	po-crdgen servicemonitor > example/prometheus-operator-crd/servicemonitor.crd.yaml
-	po-crdgen podmonitor > example/prometheus-operator-crd/podmonitor.crd.yaml
-	po-crdgen prometheusrule > example/prometheus-operator-crd/prometheusrule.crd.yaml
+$(CRD_YAML_FILES): $(CONTROLLER_GEN_BINARY) $(TYPES_V1_TARGET)
+	$(CONTROLLER_GEN_BINARY) crd paths=./pkg/apis/monitoring/v1 output:crd:dir=./example/prometheus-operator-crd
+	cat ./example/prometheus-operator-crd/monitoring.coreos.com_prometheus.yaml | \
+	sed s/plural\:\ prometheus/plural\:\ prometheuses/ \
+	> ./example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
+	rm ./example/prometheus-operator-crd/monitoring.coreos.com_prometheus.yaml
 
-jsonnet/prometheus-operator/**-crd.libsonnet: $(shell find example/prometheus-operator-crd/*.crd.yaml -type f) $(GOJSONTOYAML_BINARY)
-	cat example/prometheus-operator-crd/alertmanager.crd.yaml   | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/alertmanager-crd.libsonnet
-	cat example/prometheus-operator-crd/prometheus.crd.yaml     | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheus-crd.libsonnet
-	cat example/prometheus-operator-crd/servicemonitor.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
-	cat example/prometheus-operator-crd/podmonitor.crd.yaml     | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/podmonitor-crd.libsonnet
-	cat example/prometheus-operator-crd/prometheusrule.crd.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
+$(CRD_JSONNET_FILES): $(GOJSONTOYAML_BINARY) $(CRD_YAML_FILES)
+	cat example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml   | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/alertmanager-crd.libsonnet
+	cat example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml    | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheus-crd.libsonnet
+	cat example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
+	cat example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml     | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/podmonitor-crd.libsonnet
+	cat example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
 
 bundle.yaml: $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh
@@ -244,8 +251,8 @@ $(FIRST_GOPATH)/bin/$(1):
 
 endef
 
-$(OPENAPI_GEN_BINARY):
-	@go install -mod=vendor k8s.io/kube-openapi/cmd/openapi-gen
+$(GO_BINDATA_BINARY):
+	@go install -mod=vendor github.com/go-bindata/go-bindata/go-bindata
 
 $(foreach binary,$(K8S_GEN_BINARIES),$(eval $(call _K8S_GEN_VAR_TARGET_,$(binary))))
 
@@ -255,8 +262,8 @@ $(EMBEDMD_BINARY):
 $(JB_BINARY):
 	@go install -mod=vendor github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
 
-$(PO_CRDGEN_BINARY): cmd/po-crdgen/main.go $(OPENAPI_TARGET)
-	@go install -mod=vendor $(GO_PKG)/cmd/po-crdgen
+$(CONTROLLER_GEN_BINARY):
+	@go install -mod=vendor sigs.k8s.io/controller-tools/cmd/controller-gen 
 
 $(PO_DOCGEN_BINARY): $(shell find cmd/po-docgen -type f) $(TYPES_V1_TARGET)
 	@go install -mod=vendor $(GO_PKG)/cmd/po-docgen

@@ -1,14 +1,8 @@
-# github.com/PuerkitoBio/purell v1.1.1
-github.com/PuerkitoBio/purell
-# github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
-github.com/PuerkitoBio/urlesc
 # github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 github.com/alecthomas/template
 github.com/alecthomas/template/parse
 # github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4
 github.com/alecthomas/units
-# github.com/ant31/crd-validation v0.0.0-20180702145049-30f8a35d0ac2
-github.com/ant31/crd-validation/pkg
 # github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
 # github.com/blang/semver v3.5.1+incompatible
@@ -24,9 +18,6 @@ github.com/cespare/xxhash
 github.com/davecgh/go-spew/spew
 # github.com/edsrzf/mmap-go v1.0.0
 github.com/edsrzf/mmap-go
-# github.com/emicklei/go-restful v2.9.5+incompatible
-github.com/emicklei/go-restful
-github.com/emicklei/go-restful/log
 # github.com/evanphx/json-patch v4.5.0+incompatible
 github.com/evanphx/json-patch
 # github.com/fatih/color v1.7.0
@@ -35,19 +26,18 @@ github.com/fatih/color
 github.com/fsnotify/fsnotify
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
+# github.com/go-bindata/go-bindata v3.1.2+incompatible
+github.com/go-bindata/go-bindata/go-bindata
+github.com/go-bindata/go-bindata
 # github.com/go-kit/kit v0.9.0
 github.com/go-kit/kit/log
 github.com/go-kit/kit/log/level
 # github.com/go-logfmt/logfmt v0.4.0
 github.com/go-logfmt/logfmt
-# github.com/go-openapi/jsonpointer v0.19.2
-github.com/go-openapi/jsonpointer
-# github.com/go-openapi/jsonreference v0.19.2
-github.com/go-openapi/jsonreference
-# github.com/go-openapi/spec v0.19.2
-github.com/go-openapi/spec
 # github.com/go-openapi/swag v0.19.4
 github.com/go-openapi/swag
+# github.com/gobuffalo/flect v0.1.5
+github.com/gobuffalo/flect
 # github.com/gogo/protobuf v1.2.2-0.20190730201129-28a6bbf47e48
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
@@ -81,6 +71,8 @@ github.com/imdario/mergo
 # github.com/improbable-eng/thanos v0.3.2
 github.com/improbable-eng/thanos/pkg/reloader
 github.com/improbable-eng/thanos/pkg/runutil
+# github.com/inconshreveable/mousetrap v1.0.0
+github.com/inconshreveable/mousetrap
 # github.com/json-iterator/go v1.1.7
 github.com/json-iterator/go
 # github.com/jsonnet-bundler/jsonnet-bundler v0.1.0
@@ -96,9 +88,9 @@ github.com/kylelemons/godebug/diff
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
 github.com/mailru/easyjson/buffer
-# github.com/mattn/go-colorable v0.0.9
+# github.com/mattn/go-colorable v0.1.2
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.6
+# github.com/mattn/go-isatty v0.0.8
 github.com/mattn/go-isatty
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
@@ -159,6 +151,8 @@ github.com/prometheus/prometheus/tsdb/fileutil
 github.com/prometheus/prometheus/tsdb/goversion
 github.com/prometheus/prometheus/tsdb/index
 github.com/prometheus/prometheus/tsdb/wal
+# github.com/spf13/cobra v0.0.5
+github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
 # github.com/stretchr/testify v1.3.0
@@ -182,25 +176,24 @@ golang.org/x/sync/errgroup
 golang.org/x/sys/windows
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2
-golang.org/x/text/unicode/norm
-golang.org/x/text/width
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
 golang.org/x/text/transform
 # golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 golang.org/x/time/rate
 # golang.org/x/tools v0.0.0-20190813034749-528a2984e271
-golang.org/x/tools/imports
-golang.org/x/tools/internal/imports
-golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/packages
-golang.org/x/tools/internal/gopathwalk
-golang.org/x/tools/internal/module
+golang.org/x/tools/imports
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/packagesdriver
+golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/semver
-golang.org/x/tools/internal/fastwalk
+golang.org/x/tools/internal/imports
 golang.org/x/tools/go/internal/gcimporter
+golang.org/x/tools/internal/fastwalk
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/internal/module
 # google.golang.org/appengine v1.6.1
 google.golang.org/appengine/urlfetch
 google.golang.org/appengine/internal
@@ -215,6 +208,8 @@ gopkg.in/alecthomas/kingpin.v2
 gopkg.in/inf.v0
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20190905181640-827449938966
+gopkg.in/yaml.v3
 # k8s.io/api v0.0.0-20190918155943-95b840bb6a1f => k8s.io/api v0.0.0-20190918155943-95b840bb6a1f
 k8s.io/api/core/v1
 k8s.io/api/admission/v1beta1
@@ -255,7 +250,7 @@ k8s.io/api/settings/v1alpha1
 k8s.io/api/storage/v1
 k8s.io/api/storage/v1alpha1
 k8s.io/api/storage/v1beta1
-# k8s.io/apiextensions-apiserver v0.0.0-20190620085554-14e95df34f1f => k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783
+# k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783 => k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions
@@ -283,10 +278,9 @@ k8s.io/apimachinery/pkg/util/validation
 k8s.io/apimachinery/pkg/util/wait
 k8s.io/apimachinery/pkg/conversion
 k8s.io/apimachinery/pkg/selection
-k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
-k8s.io/apimachinery/pkg/util/json
 k8s.io/apimachinery/pkg/conversion/queryparams
 k8s.io/apimachinery/pkg/util/errors
+k8s.io/apimachinery/pkg/util/json
 k8s.io/apimachinery/pkg/util/naming
 k8s.io/apimachinery/pkg/util/sets
 k8s.io/apimachinery/pkg/util/validation/field
@@ -300,6 +294,7 @@ k8s.io/apimachinery/pkg/runtime/serializer/json
 k8s.io/apimachinery/pkg/runtime/serializer/protobuf
 k8s.io/apimachinery/pkg/runtime/serializer/recognizer
 k8s.io/apimachinery/pkg/runtime/serializer/versioning
+k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
 k8s.io/apimachinery/pkg/util/mergepatch
 k8s.io/apimachinery/third_party/forked/golang/json
 k8s.io/apimachinery/third_party/forked/golang/reflect
@@ -377,13 +372,11 @@ k8s.io/client-go/util/connrotation
 k8s.io/client-go/tools/clientcmd/api/v1
 # k8s.io/code-generator v0.0.0-20190912054826-cd179ad6a269 => k8s.io/code-generator v0.0.0-20190912054826-cd179ad6a269
 k8s.io/code-generator/cmd/client-gen
-k8s.io/code-generator/cmd/deepcopy-gen
 k8s.io/code-generator/cmd/informer-gen
 k8s.io/code-generator/cmd/lister-gen
 k8s.io/code-generator/cmd/client-gen/args
 k8s.io/code-generator/cmd/client-gen/generators
 k8s.io/code-generator/pkg/util
-k8s.io/code-generator/cmd/deepcopy-gen/args
 k8s.io/code-generator/cmd/informer-gen/args
 k8s.io/code-generator/cmd/informer-gen/generators
 k8s.io/code-generator/cmd/lister-gen/args
@@ -396,26 +389,33 @@ k8s.io/code-generator/cmd/client-gen/path
 k8s.io/code-generator/pkg/namer
 # k8s.io/gengo v0.0.0-20190822140433-26a664648505
 k8s.io/gengo/args
-k8s.io/gengo/examples/deepcopy-gen/generators
 k8s.io/gengo/generator
 k8s.io/gengo/namer
 k8s.io/gengo/types
 k8s.io/gengo/parser
-k8s.io/gengo/examples/set-gen/sets
 # k8s.io/klog v0.4.0 => k8s.io/klog v0.3.1
 k8s.io/klog
 # k8s.io/kube-openapi v0.0.0-20190816220812-743ec37842bf => k8s.io/kube-openapi v0.0.0-20190228160746-b3a7cee44a30
-k8s.io/kube-openapi/pkg/common
-k8s.io/kube-openapi/cmd/openapi-gen
 k8s.io/kube-openapi/pkg/util/proto
-k8s.io/kube-openapi/cmd/openapi-gen/args
-k8s.io/kube-openapi/pkg/generators
-k8s.io/kube-openapi/pkg/generators/rules
-k8s.io/kube-openapi/pkg/util/sets
 # k8s.io/utils v0.0.0-20190809000727-6c36bc71fc4a
 k8s.io/utils/pointer
 k8s.io/utils/buffer
 k8s.io/utils/trace
 k8s.io/utils/integer
+# sigs.k8s.io/controller-tools v0.2.2
+sigs.k8s.io/controller-tools/cmd/controller-gen
+sigs.k8s.io/controller-tools/pkg/crd
+sigs.k8s.io/controller-tools/pkg/deepcopy
+sigs.k8s.io/controller-tools/pkg/genall
+sigs.k8s.io/controller-tools/pkg/genall/help
+sigs.k8s.io/controller-tools/pkg/genall/help/pretty
+sigs.k8s.io/controller-tools/pkg/markers
+sigs.k8s.io/controller-tools/pkg/rbac
+sigs.k8s.io/controller-tools/pkg/schemapatcher
+sigs.k8s.io/controller-tools/pkg/version
+sigs.k8s.io/controller-tools/pkg/webhook
+sigs.k8s.io/controller-tools/pkg/crd/markers
+sigs.k8s.io/controller-tools/pkg/loader
+sigs.k8s.io/controller-tools/pkg/schemapatcher/internal/yaml
 # sigs.k8s.io/yaml v1.1.0
 sigs.k8s.io/yaml
