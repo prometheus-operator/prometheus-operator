@@ -184,13 +184,13 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 					Protocol:   v1.ProtocolTCP,
 				},
 				{
-					Name:       "mesh-tcp",
+					Name:       "tcp-mesh",
 					Port:       9094,
 					TargetPort: intstr.FromInt(9094),
 					Protocol:   v1.ProtocolTCP,
 				},
 				{
-					Name:       "mesh-udp",
+					Name:       "udp-mesh",
 					Port:       9094,
 					TargetPort: intstr.FromInt(9094),
 					Protocol:   v1.ProtocolUDP,
