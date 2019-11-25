@@ -148,8 +148,8 @@ generate-in-docker:
 
 $(CRD_YAML_FILES): $(CONTROLLER_GEN_BINARY) $(TYPES_V1_TARGET)
 	$(CONTROLLER_GEN_BINARY) crd paths=./pkg/apis/monitoring/v1 output:crd:dir=./example/prometheus-operator-crd
-	cat ./example/prometheus-operator-crd/monitoring.coreos.com_prometheus.yaml | \
-	sed s/plural\:\ prometheus/plural\:\ prometheuses/ \
+	sed s/plural\:\ prometheus/plural\:\ prometheuses/ | \
+	sed s/prometheus.monitoring.coreos.com/prometheuses.monitoring.coreos.com/ \
 	> ./example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
 	rm ./example/prometheus-operator-crd/monitoring.coreos.com_prometheus.yaml
 
