@@ -6,7 +6,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.2
   creationTimestamp: null
-  name: prometheus.monitoring.coreos.com
+  name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
   names:
