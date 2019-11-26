@@ -2100,6 +2100,9 @@ spec:
                 - name
                 type: object
               type: array
+            disableCompaction:
+              description: Disable prometheus compaction.
+              type: boolean
             enableAdminAPI:
               description: 'Enable access to prometheus web admin API. Defaults to
                 the value of `false`. WARNING: Enabling the admin APIs enables mutating

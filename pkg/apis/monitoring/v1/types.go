@@ -131,6 +131,8 @@ type PrometheusSpec struct {
 	Retention string `json:"retention,omitempty"`
 	// Maximum amount of disk space used by blocks.
 	RetentionSize string `json:"retentionSize,omitempty"`
+	// Disable prometheus compaction.
+	DisableCompaction bool `json:"disableCompaction,omitempty"`
 	// Enable compression of the write-ahead log using Snappy. This flag is
 	// only available in versions of Prometheus >= 2.11.0.
 	WALCompression *bool `json:"walCompression,omitempty"`
