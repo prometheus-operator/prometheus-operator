@@ -1029,6 +1029,12 @@ func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 	}
 
+	if version.Major > 2 || (version.Major == 2 && version.Minor >= 11) {
+		if am.APIVersion == "v1" || am.APIVersion == "v2" {
+			cfg = append(cfg, yaml.MapItem{Key: "api_version", Value: am.APIVersion})
+		}
+	}
+
 	var relabelings []yaml.MapSlice
 
 	relabelings = append(relabelings, yaml.MapSlice{
