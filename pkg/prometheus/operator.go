@@ -356,11 +356,11 @@ func (c *Operator) RegisterMetrics(r prometheus.Registerer, reconcileErrorsCount
 	})
 	c.nodeEndpointSyncs = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_node_syncs_total",
-		Help: "Number of times node endpoints have been synchronized",
+		Help: "Number of node endpoints synchronisations",
 	})
 	c.nodeEndpointSyncErrors = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "prometheus_operator_node_syncs_failed_total",
-		Help: "Number of times node endpoints couldn't be synchronized",
+		Help: "Number of node endpoints synchronisation failures",
 	})
 
 	r.MustRegister(
