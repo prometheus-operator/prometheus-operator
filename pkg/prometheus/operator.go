@@ -84,6 +84,8 @@ type Operator struct {
 	// corresponding actions (add, delete, update).
 	triggerByCounter        *prometheus.CounterVec
 	nodeAddressLookupErrors prometheus.Counter
+	nodeEndpointSyncs       prometheus.Counter
+	nodeEndpointSyncErrors  prometheus.Counter
 
 	host                   string
 	kubeletObjectName      string
@@ -352,9 +354,19 @@ func (c *Operator) RegisterMetrics(r prometheus.Registerer, reconcileErrorsCount
 		Name: "prometheus_operator_node_address_lookup_errors_total",
 		Help: "Number of times a node IP address could not be determined",
 	})
+	c.nodeEndpointSyncs = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_node_syncs_total",
+		Help: "Number of node endpoints synchronisations",
+	})
+	c.nodeEndpointSyncErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_node_syncs_failed_total",
+		Help: "Number of node endpoints synchronisation failures",
+	})
 
 	r.MustRegister(
 		c.nodeAddressLookupErrors,
+		c.nodeEndpointSyncs,
+		c.nodeEndpointSyncErrors,
 		NewPrometheusCollector(c.promInf.GetStore()),
 	)
 }
@@ -589,8 +601,10 @@ func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
 }
 
 func (c *Operator) syncNodeEndpointsWithLogError() {
+	c.nodeEndpointSyncs.Inc()
 	err := c.syncNodeEndpoints()
 	if err != nil {
+		c.nodeEndpointSyncErrors.Inc()
 		level.Error(c.logger).Log("msg", "syncing nodes into Endpoints object failed", "err", err)
 	}
 }
