@@ -737,6 +737,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		additionalContainers = append(additionalContainers, container)
 	}
 
+	disableCompaction := p.Spec.DisableCompaction
 	if p.Spec.Thanos != nil {
 		// Version is used by default.
 		// If the tag is specified, we use the tag to identify the container image.
@@ -812,7 +813,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			})
 			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
 			// to avoid races during upload, if the uploads are configured.
-			promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
+			disableCompaction = true
 		}
 
 		if p.Spec.LogLevel != "" {
@@ -822,6 +823,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			container.Args = append(container.Args, fmt.Sprintf("--log.format=%s", p.Spec.LogFormat))
 		}
 		additionalContainers = append(additionalContainers, container)
+	}
+	if disableCompaction {
+		promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
 	}
 
 	// Version is used by default.
