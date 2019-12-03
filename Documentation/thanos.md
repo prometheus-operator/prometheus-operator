@@ -2,22 +2,22 @@
 
 _Note: This guide is valid for Prometheus Operator v0.28+ and Thanos v0.2+ and above._
 
-[Thanos](https://github.com/thanos-io/thanos/) is a set of components that can be composed into a highly available, multi
-Prometheus metric system with potentially unlimited storage capacity, if your Object Storage allows for it.
+[Thanos](https://github.com/thanos-io/thanos/) is a set of components that can be composed into a highly available,
+multi Prometheus metric system with potentially unlimited storage capacity, if your Object Storage allows for it.
 
 ## What Prometheus Operator helps with?
 
-Prometheus Operator operates Prometheus, not Thanos. However Thanos system integrates with existing setup by adding
-sidecar to each Prometheus running in the system.
+Prometheus Operator operates Prometheus, not Thanos. However, the Thanos system integrates with existing setup
+by adding a sidecar to each Prometheus instance running in the system.
 
 Please before continuing with Prometheus Operator Thanos integration, read more about Thanos in the [documentation](https://thanos.io/getting-started.md/).
 
-Prometheus Operator allows your to optionally add Thanos sidecar to Prometheus. Sidecar allows to hook into Thanos
-querying system as well as **optionally** back up your data in object storage.
+Prometheus Operator allows you to optionally add a Thanos sidecar to each Prometheus instance. This Sidecar
+can hook into the Thanos querying system as well as **optionally** back up your data in object storage.
 
-Thanos system includes other components like queriers or rulers. To get the advantage of object storage it also requires compactors and stores.
+Thanos includes other components like queriers or rulers. To get the advantage of object storage it also requires compactors and stores.
 
-All beside the sidecar should be deployed independently of the Prometheus Operator and its Thanos configuration. The
+Each component other than the sidecar is deployed independently of the Prometheus Operator and its Thanos configuration. The
 [kube-thanos](https://github.com/thanos-io/kube-thanos/) project has some starting points for other Thanos components deployments.
 
 In short, for the Thanos integration using the Prometheus Operator to work correctly you will need to have these extra

@@ -33,7 +33,7 @@ spec:
           description: 'Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata'
           type: object
         spec:
-          description: Specification of desired Service selection for target discrovery
+          description: Specification of desired Service selection for target discovery
             by Prometheus.
           properties:
             endpoints:
