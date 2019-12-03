@@ -699,6 +699,10 @@ spec:
                       Endpoints object containing alertmanager IPs to fire alerts
                       against.
                     properties:
+                      apiVersion:
+                        description: Version of the Alertmanager API that Prometheus
+                          uses to send alerts. It can be "v1" or "v2".
+                        type: string
                       bearerTokenFile:
                         description: BearerTokenFile to read from filesystem to use
                           when authenticating to Alertmanager.

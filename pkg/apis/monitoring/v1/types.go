@@ -525,6 +525,9 @@ type AlertmanagerEndpoints struct {
 	// BearerTokenFile to read from filesystem to use when authenticating to
 	// Alertmanager.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
+	// Version of the Alertmanager API that Prometheus uses to send alerts. It
+	// can be "v1" or "v2".
+	APIVersion string `json:"apiVersion,omitempty"`
 }
 
 // ServiceMonitor defines monitoring for a set of services.

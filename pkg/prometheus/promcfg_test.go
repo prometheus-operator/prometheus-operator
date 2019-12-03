@@ -477,6 +477,84 @@ alerting:
 	}
 }
 
+func TestAlertmanagerAPIVersion(t *testing.T) {
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				Version: "v2.11.0",
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Name:       "alertmanager-main",
+							Namespace:  "default",
+							Port:       intstr.FromString("web"),
+							APIVersion: "v2",
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		map[string]BasicAuthCredentials{},
+		map[string]BearerToken{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// If this becomes an endless sink of maintenance, then we should just
+	// change this to check that just the `api_version` is set with
+	// something like json-path.
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    api_version: v2
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: alertmanager-main
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web
+`
+
+	result := string(cfg)
+
+	if expected != result {
+		fmt.Println(pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
 func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
