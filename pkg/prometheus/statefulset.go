@@ -34,7 +34,6 @@ import (
 
 const (
 	governingServiceName            = "prometheus-operated"
-	DefaultPrometheusVersion        = "v2.7.1"
 	DefaultThanosVersion            = "v0.8.1"
 	defaultRetention                = "24h"
 	defaultReplicaExternalLabelName = "prometheus_replica"
@@ -61,7 +60,8 @@ var (
 	}
 	probeTimeoutSeconds int32 = 3
 
-	CompatibilityMatrix = []string{
+	DefaultPrometheusVersion = CompatibilityMatrix[len(CompatibilityMatrix)-1]
+	CompatibilityMatrix      = []string{
 		"v1.4.0",
 		"v1.4.1",
 		"v1.5.0",
