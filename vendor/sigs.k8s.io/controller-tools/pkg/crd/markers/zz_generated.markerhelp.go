@@ -329,3 +329,25 @@ func (UniqueItems) Help() *markers.DefinitionHelp {
 		FieldHelp: map[string]markers.DetailedHelp{},
 	}
 }
+
+func (XEmbeddedResource) Help() *markers.DefinitionHelp {
+	return &markers.DefinitionHelp{
+		Category: "CRD validation",
+		DetailedHelp: markers.DetailedHelp{
+			Summary: "EmbeddedResource marks a fields as an embedded resource with apiVersion, kind and metadata fields. ",
+			Details: "An embedded resource is a value that has apiVersion, kind and metadata fields. They are validated implicitly according to the semantics of the currently running apiserver. It is not necessary to add any additional schema for these field, yet it is possible. This can be combined with PreserveUnknownFields.",
+		},
+		FieldHelp: map[string]markers.DetailedHelp{},
+	}
+}
+
+func (XPreserveUnknownFields) Help() *markers.DefinitionHelp {
+	return &markers.DefinitionHelp{
+		Category: "CRD processing",
+		DetailedHelp: markers.DetailedHelp{
+			Summary: "PreserveUnknownFields stops the apiserver from pruning fields which are not specified. ",
+			Details: "By default the apiserver drops unknown fields from the request payload during the decoding step. This marker stops the API server from doing so. It affects fields recursively, but switches back to normal pruning behaviour if nested  properties or additionalProperties are specified in the schema. This can either be true or undefined. False is forbidden.",
+		},
+		FieldHelp: map[string]markers.DetailedHelp{},
+	}
+}

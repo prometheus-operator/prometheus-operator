@@ -402,7 +402,7 @@ k8s.io/utils/pointer
 k8s.io/utils/buffer
 k8s.io/utils/trace
 k8s.io/utils/integer
-# sigs.k8s.io/controller-tools v0.2.2
+# sigs.k8s.io/controller-tools v0.2.4
 sigs.k8s.io/controller-tools/cmd/controller-gen
 sigs.k8s.io/controller-tools/pkg/crd
 sigs.k8s.io/controller-tools/pkg/deepcopy

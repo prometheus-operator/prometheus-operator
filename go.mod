@@ -34,7 +34,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/code-generator v0.0.0-20190912054826-cd179ad6a269
 	k8s.io/klog v0.4.0
-	sigs.k8s.io/controller-tools v0.2.2
+	sigs.k8s.io/controller-tools v0.2.4
 )
 
 replace (
