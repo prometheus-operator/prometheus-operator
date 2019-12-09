@@ -8,6 +8,7 @@ VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
 FIRST_GOPATH:=$(firstword $(subst :, ,$(shell go env GOPATH)))
 CONTROLLER_GEN_BINARY := $(FIRST_GOPATH)/bin/controller-gen
+CRD_OPTIONS ?= "crd:preserveUnknownFields=false"
 GO_BINDATA_BINARY := $(FIRST_GOPATH)/bin/go-bindata
 GOJSONTOYAML_BINARY:=$(FIRST_GOPATH)/bin/gojsontoyaml
 JB_BINARY:=$(FIRST_GOPATH)/bin/jb
@@ -147,7 +148,7 @@ generate-in-docker:
 	$(CONTAINER_CMD) $(MAKE) $(MFLAGS) --always-make generate
 
 $(CRD_YAML_FILES): $(CONTROLLER_GEN_BINARY) $(TYPES_V1_TARGET)
-	$(CONTROLLER_GEN_BINARY) crd paths=./pkg/apis/monitoring/v1 output:crd:dir=./example/prometheus-operator-crd
+	$(CONTROLLER_GEN_BINARY) $(CRD_OPTIONS) paths=./pkg/apis/monitoring/v1 output:crd:dir=./example/prometheus-operator-crd
 	cat ./example/prometheus-operator-crd/monitoring.coreos.com_prometheus.yaml | \
 	sed s/plural\:\ prometheus/plural\:\ prometheuses/ | \
 	sed s/prometheus.monitoring.coreos.com/prometheuses.monitoring.coreos.com/ \
