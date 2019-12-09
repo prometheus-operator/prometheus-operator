@@ -14,6 +14,7 @@ spec:
     listKind: PodMonitorList
     plural: podmonitors
     singular: podmonitor
+  preserveUnknownFields: false
   scope: Namespaced
   validation:
     openAPIV3Schema:

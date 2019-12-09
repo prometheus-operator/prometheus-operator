@@ -14,6 +14,7 @@ spec:
     listKind: AlertmanagerList
     plural: alertmanagers
     singular: alertmanager
+  preserveUnknownFields: false
   scope: Namespaced
   validation:
     openAPIV3Schema:

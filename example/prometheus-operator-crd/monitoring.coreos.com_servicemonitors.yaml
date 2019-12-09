@@ -14,6 +14,7 @@ spec:
     listKind: ServiceMonitorList
     plural: servicemonitors
     singular: servicemonitor
+  preserveUnknownFields: false
   scope: Namespaced
   validation:
     openAPIV3Schema:
