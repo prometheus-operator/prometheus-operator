@@ -16,7 +16,7 @@ limitations under the License.
 package crd
 
 import (
-	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	"sigs.k8s.io/controller-tools/pkg/loader"
 )
@@ -77,15 +77,22 @@ var KnownPackages = map[string]PackageOverride{
 
 	"k8s.io/apimachinery/pkg/util/intstr": func(p *Parser, pkg *loader.Package) {
 		p.Schemata[TypeIdent{Name: "IntOrString", Package: pkg}] = apiext.JSONSchemaProps{
+			XIntOrString: true,
 			AnyOf: []apiext.JSONSchemaProps{
-				{Type: "string"},
 				{Type: "integer"},
+				{Type: "string"},
 			},
 		}
 		// No point in calling AddPackage, this is the sole inhabitant
 	},
 
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1": func(p *Parser, pkg *loader.Package) {
+		p.Schemata[TypeIdent{Name: "JSON", Package: pkg}] = apiext.JSONSchemaProps{
+			XPreserveUnknownFields: boolPtr(true),
+		}
+		p.AddPackage(pkg) // get the rest of the types
+	},
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1": func(p *Parser, pkg *loader.Package) {
 		p.Schemata[TypeIdent{Name: "JSON", Package: pkg}] = apiext.JSONSchemaProps{
 			XPreserveUnknownFields: boolPtr(true),
 		}
