@@ -24,9 +24,9 @@ import (
 	"time"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	yaml "github.com/ghodss/yaml"
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -205,7 +205,7 @@ func NewCustomResourceDefinition(crdKind monitoringv1.CrdKind, group string, lab
 	if err != nil {
 		panic("unable to unmarshal crd asset for " + assetPath + ": " + err.Error())
 	}
-	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + crd.Spec.Group
+	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + group
 	crd.ObjectMeta.Labels = labels
 	crd.Spec.Group = group
 	return crd

@@ -23,6 +23,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	apiclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -45,11 +46,12 @@ const (
 )
 
 type Framework struct {
-	KubeClient     kubernetes.Interface
-	MonClientV1    monitoringclient.MonitoringV1Interface
-	HTTPClient     *http.Client
-	MasterHost     string
-	DefaultTimeout time.Duration
+	KubeClient      kubernetes.Interface
+	MonClientV1     monitoringclient.MonitoringV1Interface
+	APIServerClient apiclient.Interface
+	HTTPClient      *http.Client
+	MasterHost      string
+	DefaultTimeout  time.Duration
 }
 
 // New setups a test framework and returns it.
@@ -60,6 +62,11 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 	}
 
 	cli, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating new kube-client failed")
+	}
+
+	apiCli, err := apiclient.NewForConfig(config)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating new kube-client failed")
 	}
@@ -75,11 +82,12 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 	}
 
 	f := &Framework{
-		MasterHost:     config.Host,
-		KubeClient:     cli,
-		MonClientV1:    mClientV1,
-		HTTPClient:     httpc,
-		DefaultTimeout: time.Minute,
+		MasterHost:      config.Host,
+		KubeClient:      cli,
+		MonClientV1:     mClientV1,
+		APIServerClient: apiCli,
+		HTTPClient:      httpc,
+		DefaultTimeout:  time.Minute,
 	}
 
 	return f, nil
