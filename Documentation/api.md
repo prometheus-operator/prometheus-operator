@@ -48,6 +48,10 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
 * [ThanosSpec](#thanosspec)
+* [ThanosRuler](#thanosruler)
+* [ThanosRulerList](#thanosrulerlist)
+* [ThanosRulerSpec](#thanosrulerspec)
+* [ThanosRulerStatus](#thanosrulerstatus)
 
 ## APIServerConfig
 
@@ -519,13 +523,14 @@ Rule describes an alerting or recording rule.
 
 ## RuleGroup
 
-RuleGroup is a list of sequentially evaluated recording and alerting rules.
+RuleGroup is a list of sequentially evaluated recording and alerting rules. Note: PartialResponseStrategy is only used by ThanosRuler and will be ignored by Prometheus instances.  Valid values for this field are 'warn' or 'abort'.  More info: https://github.com/thanos-io/thanos/blob/master/docs/components/rule.md#partial-response
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | name |  | string | true |
 | interval |  | string | false |
 | rules |  | [][Rule](#rule) | true |
+| partial_response_strategy |  | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -642,5 +647,70 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | resources | Resources defines the resource requirements for the Thanos sidecar. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
 | objectStorageConfig | ObjectStorageConfig configures object storage in Thanos. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
 | listenLocal | ListenLocal makes the Thanos sidecar listen on loopback, so that it does not bind against the Pod IP. | bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## ThanosRuler
+
+ThanosRuler defines a ThanosRuler deployment.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
+| spec | Specification of the desired behavior of the ThanosRuler cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | [ThanosRulerSpec](#thanosrulerspec) | true |
+| status | Most recent observed status of the ThanosRuler cluster. Read-only. Not included when requesting from the apiserver, only from the ThanosRuler Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | *[ThanosRulerStatus](#thanosrulerstatus) | false |
+
+[Back to TOC](#table-of-contents)
+
+## ThanosRulerList
+
+ThanosRulerList is a list of ThanosRulers.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata | Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#listmeta-v1-meta) | false |
+| items | List of Prometheuses | []*[ThanosRuler](#thanosruler) | true |
+
+[Back to TOC](#table-of-contents)
+
+## ThanosRulerSpec
+
+ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
+| image | Thanos container image URL. | string | false |
+| imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling thanos images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | false |
+| paused | When a ThanosRuler deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
+| replicas | Number of thanos ruler instances to deploy. | *int32 | false |
+| resources | Resources defines the resource requirements for the Thanos sidecar. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
+| storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
+| volumes | Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will be appended to other volumes that are generated as a result of StorageSpec objects. | []v1.Volume | false |
+| objectStorageConfig | ObjectStorageConfig configures object storage in Thanos. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| listenLocal | ListenLocal makes the Thanos ruler listen on loopback, so that it does not bind against the Pod IP. | bool | false |
+| queryEndpoints | QueryEndpoints defines Thanos querier endpoints from which to query metrics. Maps to the --query flag of thanos ruler. | []string | true |
+| alertmanagersUrl | Define URL to send alerts to alertmanager.  For Thanos v0.10.0 and higher, AlertManagersConfig should be used instead. Maps to the `alertmanagers.url` arg. | string | false |
+| alertmanagersConfig | Define configuration for connecting to alertmanager.  Only available with thanos v0.10.0 and higher.  Maps to the `alertmanagers.config` arg. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| ruleSelector | A label selector to select which PrometheusRules to mount for alerting and recording. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
+| ruleNamespaceSelector | Namespaces to be selected for Rules discovery. If unspecified, only the same namespace as the ThanosRuler object is in is used. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
+| enforcedNamespaceLabel | EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert and metric that is user created. The label value will always be the namespace of the object that is being created. | string | false |
+| logLevel | Log level for ThanosRuler to be configured with. | string | false |
+| logFormat | Log format for ThanosRuler to be configured with. | string | false |
+| portName | Port name used for the pods and governing service. This defaults to web | string | false |
+
+[Back to TOC](#table-of-contents)
+
+## ThanosRulerStatus
+
+ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| paused | Represents whether any actions on the underlying managed objects are being performed. Only delete actions will be performed. | bool | true |
+| replicas | Total number of non-terminated pods targeted by this ThanosRuler deployment (their labels match the selector). | int32 | true |
+| updatedReplicas | Total number of non-terminated pods targeted by this ThanosRuler deployment that have the desired version spec. | int32 | true |
+| availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this ThanosRuler deployment. | int32 | true |
+| unavailableReplicas | Total number of unavailable pods targeted by this ThanosRuler deployment. | int32 | true |
 
 [Back to TOC](#table-of-contents)

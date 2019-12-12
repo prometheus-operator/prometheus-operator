@@ -55,3 +55,11 @@ type ServiceMonitorListerExpansion interface{}
 // ServiceMonitorNamespaceListerExpansion allows custom methods to be added to
 // ServiceMonitorNamespaceLister.
 type ServiceMonitorNamespaceListerExpansion interface{}
+
+// ThanosRulerListerExpansion allows custom methods to be added to
+// ThanosRulerLister.
+type ThanosRulerListerExpansion interface{}
+
+// ThanosRulerNamespaceListerExpansion allows custom methods to be added to
+// ThanosRulerNamespaceLister.
+type ThanosRulerNamespaceListerExpansion interface{}

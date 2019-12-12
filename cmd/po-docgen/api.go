@@ -69,17 +69,17 @@ func printTOC(types []KubeTypes) {
 	}
 }
 
-func printAPIDocs(path string) {
+func printAPIDocs(paths []string) {
 	fmt.Println(firstParagraph)
 
-	types := ParseDocumentationFrom(path)
+	types := ParseDocumentationFrom(paths)
 	for _, t := range types {
 		strukt := t[0]
 		selfLinks[strukt.Name] = "#" + strings.ToLower(strukt.Name)
 	}
 
 	// we need to parse once more to now add the self links
-	types = ParseDocumentationFrom(path)
+	types = ParseDocumentationFrom(paths)
 
 	printTOC(types)
 
@@ -113,25 +113,27 @@ type KubeTypes []Pair
 // array. Each type is again represented as an array (we have to use arrays as we
 // need to be sure for the order of the fields). This function returns fields and
 // struct definitions that have no documentation as {name, ""}.
-func ParseDocumentationFrom(src string) []KubeTypes {
+func ParseDocumentationFrom(srcs []string) []KubeTypes {
 	var docForTypes []KubeTypes
 
-	pkg := astFrom(src)
+	for _, src := range srcs {
+		pkg := astFrom(src)
 
-	for _, kubType := range pkg.Types {
-		if structType, ok := kubType.Decl.Specs[0].(*ast.TypeSpec).Type.(*ast.StructType); ok {
-			var ks KubeTypes
-			ks = append(ks, Pair{kubType.Name, fmtRawDoc(kubType.Doc), "", false})
+		for _, kubType := range pkg.Types {
+			if structType, ok := kubType.Decl.Specs[0].(*ast.TypeSpec).Type.(*ast.StructType); ok {
+				var ks KubeTypes
+				ks = append(ks, Pair{kubType.Name, fmtRawDoc(kubType.Doc), "", false})
 
-			for _, field := range structType.Fields.List {
-				typeString := fieldType(field.Type)
-				fieldMandatory := fieldRequired(field)
-				if n := fieldName(field); n != "-" {
-					fieldDoc := fmtRawDoc(field.Doc.Text())
-					ks = append(ks, Pair{n, fieldDoc, typeString, fieldMandatory})
+				for _, field := range structType.Fields.List {
+					typeString := fieldType(field.Type)
+					fieldMandatory := fieldRequired(field)
+					if n := fieldName(field); n != "-" {
+						fieldDoc := fmtRawDoc(field.Doc.Text())
+						ks = append(ks, Pair{n, fieldDoc, typeString, fieldMandatory})
+					}
 				}
+				docForTypes = append(docForTypes, ks)
 			}
-			docForTypes = append(docForTypes, ks)
 		}
 	}
 

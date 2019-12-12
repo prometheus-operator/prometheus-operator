@@ -38,12 +38,16 @@ spec:
             groups:
               description: Content of Prometheus rule file
               items:
-                description: RuleGroup is a list of sequentially evaluated recording
-                  and alerting rules.
+                description: 'RuleGroup is a list of sequentially evaluated recording
+                  and alerting rules. Note: PartialResponseStrategy is only used by
+                  ThanosRuler and will be ignored by Prometheus instances.  Valid
+                  values for this field are ''warn'' or ''abort''.  More info: https://github.com/thanos-io/thanos/blob/master/docs/components/rule.md#partial-response'
                 properties:
                   interval:
                     type: string
                   name:
+                    type: string
+                  partial_response_strategy:
                     type: string
                   rules:
                     items:

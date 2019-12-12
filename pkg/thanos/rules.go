@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright 2020 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package prometheus
+package thanos
 
 import (
 	"fmt"
@@ -36,7 +36,7 @@ import (
 	"github.com/prometheus/prometheus/promql"
 )
 
-const labelPrometheusName = "prometheus-name"
+const labelThanosRulerName = "thanos-ruler-name"
 
 // The maximum `Data` size of a ConfigMap seems to differ between
 // environments. This is probably due to different meta data sizes which count
@@ -44,20 +44,20 @@ const labelPrometheusName = "prometheus-name"
 // large buffer.
 var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
-func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]string, error) {
-	cClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
+func (o *Operator) createOrUpdateRuleConfigMaps(t *monitoringv1.ThanosRuler) ([]string, error) {
+	cClient := o.kclient.CoreV1().ConfigMaps(t.Namespace)
 
-	namespaces, err := c.selectRuleNamespaces(p)
+	namespaces, err := o.selectRuleNamespaces(t)
 	if err != nil {
 		return nil, err
 	}
 
-	newRules, err := c.selectRules(p, namespaces)
+	newRules, err := o.selectRules(t, namespaces)
 	if err != nil {
 		return nil, err
 	}
 
-	currentConfigMapList, err := cClient.List(prometheusRulesConfigMapSelector(p.Name))
+	currentConfigMapList, err := cClient.List(prometheusRulesConfigMapSelector(t.Name))
 	if err != nil {
 		return nil, err
 	}
@@ -72,10 +72,10 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 
 	equal := reflect.DeepEqual(newRules, currentRules)
 	if equal && len(currentConfigMaps) != 0 {
-		level.Debug(c.logger).Log(
+		level.Debug(o.logger).Log(
 			"msg", "no PrometheusRule changes",
-			"namespace", p.Namespace,
-			"prometheus", p.Name,
+			"namespace", t.Namespace,
+			"prometheus", t.Name,
 		)
 		currentConfigMapNames := []string{}
 		for _, cm := range currentConfigMaps {
@@ -84,7 +84,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 		return currentConfigMapNames, nil
 	}
 
-	newConfigMaps, err := makeRulesConfigMaps(p, newRules)
+	newConfigMaps, err := makeRulesConfigMaps(t, newRules)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to make rules ConfigMaps")
 	}
@@ -95,10 +95,10 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 	}
 
 	if len(currentConfigMaps) == 0 {
-		level.Debug(c.logger).Log(
+		level.Debug(o.logger).Log(
 			"msg", "no PrometheusRule configmap found, creating new one",
-			"namespace", p.Namespace,
-			"prometheus", p.Name,
+			"namespace", t.Namespace,
+			"prometheus", t.Name,
 		)
 		for _, cm := range newConfigMaps {
 			_, err = cClient.Create(&cm)
@@ -118,10 +118,10 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 		}
 	}
 
-	level.Debug(c.logger).Log(
+	level.Debug(o.logger).Log(
 		"msg", "updating PrometheusRule",
-		"namespace", p.Namespace,
-		"prometheus", p.Name,
+		"namespace", t.Namespace,
+		"prometheus", t.Name,
 	)
 	for _, cm := range newConfigMaps {
 		_, err = cClient.Create(&cm)
@@ -134,10 +134,10 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 }
 
 func prometheusRulesConfigMapSelector(prometheusName string) metav1.ListOptions {
-	return metav1.ListOptions{LabelSelector: fmt.Sprintf("%v=%v", labelPrometheusName, prometheusName)}
+	return metav1.ListOptions{LabelSelector: fmt.Sprintf("%v=%v", labelThanosRulerName, prometheusName)}
 }
 
-func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, error) {
+func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, error) {
 	namespaces := []string{}
 
 	// If 'RuleNamespaceSelector' is nil, only check own namespace.
@@ -149,13 +149,13 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 			return namespaces, errors.Wrap(err, "convert rule namespace label selector to selector")
 		}
 
-		namespaces, err = c.listMatchingNamespaces(ruleNamespaceSelector)
+		namespaces, err = o.listMatchingNamespaces(ruleNamespaceSelector)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	level.Debug(c.logger).Log(
+	level.Debug(o.logger).Log(
 		"msg", "selected RuleNamespaces",
 		"namespaces", strings.Join(namespaces, ","),
 		"namespace", p.Namespace,
@@ -165,19 +165,19 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 	return namespaces, nil
 }
 
-func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) (map[string]string, error) {
+func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string) (map[string]string, error) {
 	rules := map[string]string{}
 
-	ruleSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleSelector)
+	ruleSelector, err := metav1.LabelSelectorAsSelector(t.Spec.RuleSelector)
 	if err != nil {
 		return rules, errors.Wrap(err, "convert rule label selector to selector")
 	}
 
 	for _, ns := range namespaces {
 		var marshalErr error
-		err := cache.ListAllByNamespace(c.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
+		err := cache.ListAllByNamespace(o.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
 			promRule := obj.(*monitoringv1.PrometheusRule)
-			content, err := generateContent(promRule.Spec, p.Spec.EnforcedNamespaceLabel, promRule.Namespace)
+			content, err := generateContent(promRule.Spec, t.Spec.EnforcedNamespaceLabel, promRule.Namespace)
 			if err != nil {
 				marshalErr = err
 				return
@@ -197,20 +197,20 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 		ruleNames = append(ruleNames, name)
 	}
 
-	level.Debug(c.logger).Log(
+	level.Debug(o.logger).Log(
 		"msg", "selected Rules",
 		"rules", strings.Join(ruleNames, ","),
-		"namespace", p.Namespace,
-		"prometheus", p.Name,
+		"namespace", t.Namespace,
+		"prometheus", t.Name,
 	)
 
 	return rules, nil
 }
 
 func generateContent(promRule monitoringv1.PrometheusRuleSpec, enforcedNsLabel, ns string) (string, error) {
+
 	if enforcedNsLabel != "" {
 		for gi, group := range promRule.Groups {
-			group.PartialResponseStrategy = ""
 			for ri, r := range group.Rules {
 				if len(promRule.Groups[gi].Rules[ri].Labels) == 0 {
 					promRule.Groups[gi].Rules[ri].Labels = map[string]string{}
@@ -250,7 +250,7 @@ func generateContent(promRule monitoringv1.PrometheusRuleSpec, enforcedNsLabel, 
 // future this can be replaced by a more sophisticated algorithm, but for now
 // simplicity should be sufficient.
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
-func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string) ([]v1.ConfigMap, error) {
+func makeRulesConfigMaps(t *monitoringv1.ThanosRuler, ruleFiles map[string]string) ([]v1.ConfigMap, error) {
 	//check if none of the rule files is too large for a single ConfigMap
 	for filename, file := range ruleFiles {
 		if len(file) > maxConfigMapDataSize {
@@ -285,7 +285,7 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 
 	ruleFileConfigMaps := []v1.ConfigMap{}
 	for i, bucket := range buckets {
-		cm := makeRulesConfigMap(p, bucket)
+		cm := makeRulesConfigMap(t, bucket)
 		cm.Name = cm.Name + "-" + strconv.Itoa(i)
 		ruleFileConfigMaps = append(ruleFileConfigMaps, cm)
 	}
@@ -302,26 +302,26 @@ func bucketSize(bucket map[string]string) int {
 	return totalSize
 }
 
-func makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string) v1.ConfigMap {
+func makeRulesConfigMap(t *monitoringv1.ThanosRuler, ruleFiles map[string]string) v1.ConfigMap {
 	boolTrue := true
 
-	labels := map[string]string{labelPrometheusName: p.Name}
+	labels := map[string]string{labelThanosRulerName: t.Name}
 	for k, v := range managedByOperatorLabels {
 		labels[k] = v
 	}
 
 	return v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   prometheusRuleConfigMapName(p.Name),
+			Name:   thanosRuleConfigMapName(t.Name),
 			Labels: labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
-					APIVersion:         p.APIVersion,
+					APIVersion:         t.APIVersion,
 					BlockOwnerDeletion: &boolTrue,
 					Controller:         &boolTrue,
-					Kind:               p.Kind,
-					Name:               p.Name,
-					UID:                p.UID,
+					Kind:               t.Kind,
+					Name:               t.Name,
+					UID:                t.UID,
 				},
 			},
 		},
@@ -329,6 +329,6 @@ func makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string)
 	}
 }
 
-func prometheusRuleConfigMapName(prometheusName string) string {
-	return "prometheus-" + prometheusName + "-rulefiles"
+func thanosRuleConfigMapName(name string) string {
+	return "thanos-ruler" + name + "-rulefiles"
 }

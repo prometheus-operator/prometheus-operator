@@ -32,6 +32,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/api"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
+	thanoscontroller "github.com/coreos/prometheus-operator/pkg/thanos"
 	"github.com/coreos/prometheus-operator/pkg/version"
 
 	"github.com/go-kit/kit/log"
@@ -62,6 +63,7 @@ var (
 	deniedNs       = namespaces{}
 	prometheusNs   = namespaces{}
 	alertmanagerNs = namespaces{}
+	thanosRulerNs  = namespaces{}
 )
 
 type namespaces map[string]struct{}
@@ -142,6 +144,7 @@ func init() {
 	flagset.Var(deniedNs, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
 	flagset.Var(prometheusNs, "prometheus-instance-namespaces", "Namespaces where Prometheus custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.")
 	flagset.Var(alertmanagerNs, "alertmanager-instance-namespaces", "Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.")
+	flagset.Var(thanosRulerNs, "thanos-ruler-instance-namespaces", "Namespaces where ThanosRuler custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for ThanosRuler custom resources.")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
 	flagset.Var(&cfg.CrdKinds, "crd-kinds", " - EXPERIMENTAL (could be removed in future releases) - customize CRD kind names")
 	flagset.BoolVar(&cfg.EnableValidation, "with-validation", true, "Include the validation spec in the CRD")
@@ -151,6 +154,7 @@ func init() {
 	flagset.BoolVar(&cfg.ManageCRDs, "manage-crds", true, "Manage all CRDs with the Prometheus Operator.")
 	flagset.StringVar(&cfg.PromSelector, "prometheus-instance-selector", "", "Label selector to filter Prometheus CRDs to manage")
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager CRDs to manage")
+	flagset.StringVar(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "", "Label selector to filter ThanosRuler CRDs to manage")
 	flagset.Parse(os.Args[1:])
 
 	cfg.Namespaces.AllowList = ns.asSlice()
@@ -161,6 +165,7 @@ func init() {
 	cfg.Namespaces.DenyList = deniedNs.asSlice()
 	cfg.Namespaces.PrometheusAllowList = prometheusNs.asSlice()
 	cfg.Namespaces.AlertmanagerAllowList = alertmanagerNs.asSlice()
+	cfg.Namespaces.ThanosRulerAllowList = thanosRulerNs.asSlice()
 
 	if len(cfg.Namespaces.PrometheusAllowList) == 0 {
 		cfg.Namespaces.PrometheusAllowList = cfg.Namespaces.AllowList
@@ -168,6 +173,10 @@ func init() {
 
 	if len(cfg.Namespaces.AlertmanagerAllowList) == 0 {
 		cfg.Namespaces.AlertmanagerAllowList = cfg.Namespaces.AllowList
+	}
+
+	if len(cfg.Namespaces.ThanosRulerAllowList) == 0 {
+		cfg.Namespaces.ThanosRulerAllowList = cfg.Namespaces.AllowList
 	}
 }
 
@@ -213,6 +222,12 @@ func Main() int {
 	ao, err := alertmanagercontroller.New(cfg, log.With(logger, "component", "alertmanageroperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
+		return 1
+	}
+
+	to, err := thanoscontroller.New(cfg, log.With(logger, "component", "thanosoperator"), r)
+	if err != nil {
+		fmt.Fprint(os.Stderr, "instantiating thanos controller failed: ", err)
 		return 1
 	}
 
@@ -266,6 +281,7 @@ func Main() int {
 
 	wg.Go(func() error { return po.Run(ctx.Done()) })
 	wg.Go(func() error { return ao.Run(ctx.Done()) })
+	wg.Go(func() error { return to.Run(ctx.Done()) })
 
 	srv := &http.Server{Handler: mux}
 	wg.Go(serve(srv, l, logger))
