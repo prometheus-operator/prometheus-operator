@@ -462,6 +462,7 @@ func (c *Operator) sync(key string) error {
 	}
 
 	level.Info(c.logger).Log("msg", "sync alertmanager", "key", key)
+	checkAlertmanagerSpecDeprecation(key, am, c.logger)
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
@@ -510,6 +511,20 @@ func (c *Operator) sync(key string) error {
 	}
 
 	return nil
+}
+
+//checkAlertmanagerSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
+func checkAlertmanagerSpecDeprecation(key string, a *monitoringv1.Alertmanager, logger log.Logger) {
+	deprecationWarningf := "alertmanager key=%v, field %v is deprecated, '%v' field should be used instead"
+	if a.Spec.BaseImage != "" {
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.baseImage", "spec.image"))
+	}
+	if a.Spec.Tag != "" {
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.tag", "spec.image"))
+	}
+	if a.Spec.SHA != "" {
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.sha", "spec.image"))
+	}
 }
 
 func ListOptions(name string) metav1.ListOptions {
