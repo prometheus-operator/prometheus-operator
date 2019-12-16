@@ -1086,7 +1086,7 @@ func (c *Operator) sync(key string) error {
 	}
 
 	level.Info(c.logger).Log("msg", "sync prometheus", "key", key)
-
+	checkPrometheusSpecDeprecation(key, p, c.logger)
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(p)
 	if err != nil {
 		return err
@@ -1184,6 +1184,31 @@ func (c *Operator) sync(key string) error {
 	}
 
 	return nil
+}
+
+//checkPrometheusSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
+func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logger log.Logger) {
+	deprecationWarningf := "prometheus key=%v, field %v is deprecated, '%v' field should be used instead"
+	if p.Spec.BaseImage != "" {
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.baseImage", "spec.image"))
+	}
+	if p.Spec.Tag != "" {
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.tag", "spec.image"))
+	}
+	if p.Spec.SHA != "" {
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.sha", "spec.image"))
+	}
+	if p.Spec.Thanos != nil {
+		if p.Spec.BaseImage != "" {
+			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.baseImage", "spec.thanos.image"))
+		}
+		if p.Spec.Tag != "" {
+			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.tag", "spec.thanos.image"))
+		}
+		if p.Spec.SHA != "" {
+			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.sha", "spec.thanos.image"))
+		}
+	}
 }
 
 func createSSetInputHash(p monitoringv1.Prometheus, c Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
