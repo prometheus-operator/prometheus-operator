@@ -75,7 +75,7 @@ Let's assume you saved this file to `/tmp/thanos-config.yaml`. You can use the f
 kubectl -n monitoring create secret generic thanos-objstore-config --from-file=thanos.yaml=/tmp/thanos-config.yaml
 ```
 
-And then you can specify this secret inside Thanose part of the Prometheus CRD we mentioned [earlier](#prometheus-custom-resource-with-thanos-sidecar):
+And then you can specify this secret inside Thanos part of the Prometheus CRD we mentioned [earlier](#prometheus-custom-resource-with-thanos-sidecar):
 
 ```
 ...
