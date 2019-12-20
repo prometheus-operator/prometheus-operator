@@ -25,6 +25,7 @@ import (
 	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/listwatch"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
 	"github.com/go-kit/kit/log"
@@ -65,9 +66,7 @@ type Operator struct {
 
 	queue workqueue.RateLimitingInterface
 
-	reconcileErrorsCounter *prometheus.CounterVec
-	triggerByCounter       *prometheus.CounterVec
-	stsDeleteCreateCounter *prometheus.CounterVec
+	metrics *operator.Metrics
 
 	config Config
 }
@@ -88,7 +87,7 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
+func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -115,6 +114,7 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 		crdclient: crdclient,
 		logger:    logger,
 		queue:     workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "alertmanager"),
+		metrics:   operator.NewMetrics("alertmanager", r),
 		config: Config{
 			Host:                         c.Host,
 			LocalHost:                    c.LocalHost,
@@ -132,40 +132,33 @@ func New(c prometheusoperator.Config, logger log.Logger) (*Operator, error) {
 	}
 
 	o.alrtInf = cache.NewSharedIndexInformer(
-		listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-			return &cache.ListWatch{
-				ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-					options.LabelSelector = o.config.AlertManagerSelector
-					return o.mclient.MonitoringV1().Alertmanagers(namespace).List(options)
-				},
-				WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-					options.LabelSelector = o.config.AlertManagerSelector
-					return o.mclient.MonitoringV1().Alertmanagers(namespace).Watch(options)
-				},
-			}
-		}),
+		o.metrics.NewInstrumentedListerWatcher(
+			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
+				return &cache.ListWatch{
+					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+						options.LabelSelector = o.config.AlertManagerSelector
+						return o.mclient.MonitoringV1().Alertmanagers(namespace).List(options)
+					},
+					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+						options.LabelSelector = o.config.AlertManagerSelector
+						return o.mclient.MonitoringV1().Alertmanagers(namespace).Watch(options)
+					},
+				}
+			}),
+		),
 		&monitoringv1.Alertmanager{}, resyncPeriod, cache.Indexers{},
 	)
+	o.metrics.MustRegister(NewAlertmanagerCollector(o.alrtInf.GetStore()))
 	o.ssetInf = cache.NewSharedIndexInformer(
-		listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-			return cache.NewListWatchFromClient(o.kclient.AppsV1().RESTClient(), "statefulsets", namespace, fields.Everything())
-		}),
+		o.metrics.NewInstrumentedListerWatcher(
+			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
+				return cache.NewListWatchFromClient(o.kclient.AppsV1().RESTClient(), "statefulsets", namespace, fields.Everything())
+			}),
+		),
 		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
 
 	return o, nil
-}
-
-func (c *Operator) RegisterMetrics(r prometheus.Registerer, reconcileErrorsCounter *prometheus.CounterVec, triggerByCounter *prometheus.CounterVec, stsDeleteCreateCounter *prometheus.CounterVec) {
-	c.reconcileErrorsCounter = reconcileErrorsCounter
-	c.triggerByCounter = triggerByCounter
-	c.stsDeleteCreateCounter = stsDeleteCreateCounter
-
-	c.reconcileErrorsCounter.With(prometheus.Labels{}).Add(0)
-
-	r.MustRegister(
-		NewAlertmanagerCollector(c.alrtInf.GetStore()),
-	)
 }
 
 // waitForCacheSync waits for the informers' caches to be synced.
@@ -325,7 +318,7 @@ func (c *Operator) processNextWorkItem() bool {
 		return true
 	}
 
-	c.reconcileErrorsCounter.With(prometheus.Labels{}).Inc()
+	c.metrics.ReconcileErrorsCounter().Inc()
 	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("Sync %q failed", key)))
 	c.queue.AddRateLimited(key)
 
@@ -375,7 +368,7 @@ func (c *Operator) handleAlertmanagerAdd(obj interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Alertmanager added", "key", key)
-	c.triggerByCounter.WithLabelValues(monitoringv1.AlertmanagersKind, "add").Inc()
+	c.metrics.TriggerByCounter(monitoringv1.AlertmanagersKind, "add").Inc()
 	c.enqueue(key)
 }
 
@@ -386,7 +379,7 @@ func (c *Operator) handleAlertmanagerDelete(obj interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Alertmanager deleted", "key", key)
-	c.triggerByCounter.WithLabelValues(monitoringv1.AlertmanagersKind, "delete").Inc()
+	c.metrics.TriggerByCounter(monitoringv1.AlertmanagersKind, "delete").Inc()
 	c.enqueue(key)
 }
 
@@ -397,7 +390,7 @@ func (c *Operator) handleAlertmanagerUpdate(old, cur interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Alertmanager updated", "key", key)
-	c.triggerByCounter.WithLabelValues(monitoringv1.AlertmanagersKind, "update").Inc()
+	c.metrics.TriggerByCounter(monitoringv1.AlertmanagersKind, "update").Inc()
 	c.enqueue(key)
 }
 
@@ -497,7 +490,7 @@ func (c *Operator) sync(key string) error {
 	sErr, ok := err.(*apierrors.StatusError)
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
-		c.stsDeleteCreateCounter.With(prometheus.Labels{}).Inc()
+		c.metrics.StsDeleteCreateCounter().Inc()
 		level.Info(c.logger).Log("msg", "resolving illegal update of Alertmanager StatefulSet", "details", sErr.ErrStatus.Details)
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(sset.GetName(), &metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
