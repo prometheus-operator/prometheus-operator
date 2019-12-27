@@ -791,6 +791,69 @@ func TestRetention(t *testing.T) {
 	}
 }
 
+func TestRetentionWhenRetentionSizeGiven(t *testing.T) {
+	tests := []struct {
+		version                    string
+		specRetention              string
+		specRetentionSize          string
+		expectedRetentionArg       string
+		expectedRetentionSizeArg   string
+		shouldContainRetention     bool
+		shouldContainRetentionSize bool
+	}{
+		{"v1.8.2", "1d", "512MB", "-storage.local.retention=1d", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v1.8.2", "", "512MB", "-storage.local.retention=24h", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.5.0", "1d", "512MB", "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.5.0", "", "512MB", "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.7.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		{"v2.7.0", "", "512MB", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSet(monitoringv1.Prometheus{
+			Spec: monitoringv1.PrometheusSpec{
+				Version:       test.version,
+				Retention:     test.specRetention,
+				RetentionSize: test.specRetentionSize,
+			},
+		}, defaultTestConfig, nil, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		promArgs := sset.Spec.Template.Spec.Containers[0].Args
+		foundRetention := false
+		foundRetentionSize := false
+
+		for _, flag := range promArgs {
+			if flag == test.expectedRetentionArg {
+				foundRetention = true
+			} else if flag == test.expectedRetentionSizeArg {
+				foundRetentionSize = true
+			}
+		}
+
+		formatArgsContainsMessage(t, test.expectedRetentionArg, promArgs, test.shouldContainRetention, foundRetention)
+		formatArgsContainsMessage(t, test.expectedRetentionSizeArg, promArgs, test.shouldContainRetentionSize, foundRetentionSize)
+	}
+}
+
+func formatArgsContainsMessage(
+	t *testing.T,
+	expectedArg string,
+	promArgs []string,
+	shouldContain bool,
+	found bool,
+) {
+	if shouldContain != found {
+		if shouldContain {
+			t.Fatalf("expected Prometheus args to contain %v, but got %v", expectedArg, promArgs)
+		} else {
+			t.Fatalf("expected Prometheus args to NOT contain %v, but got %v", expectedArg, promArgs)
+		}
+	}
+}
+
 func TestSidecarsNoCPULimits(t *testing.T) {
 	testConfig := &Config{
 		ConfigReloaderImage:           "quay.io/coreos/configmap-reload:latest",

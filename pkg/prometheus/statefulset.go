@@ -142,9 +142,6 @@ func makeStatefulSet(
 	if p.Spec.Replicas != nil && *p.Spec.Replicas < 0 {
 		p.Spec.Replicas = &intZero
 	}
-	if p.Spec.Retention == "" {
-		p.Spec.Retention = defaultRetention
-	}
 
 	if p.Spec.Resources.Requests == nil {
 		p.Spec.Resources.Requests = v1.ResourceList{}
@@ -339,6 +336,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 	switch version.Major {
 	case 1:
+		if p.Spec.Retention == "" {
+			p.Spec.Retention = defaultRetention
+		}
+
 		promArgs = append(promArgs,
 			"-storage.local.retention="+p.Spec.Retention,
 			"-storage.local.num-fingerprint-mutexes=4096",
@@ -378,15 +379,24 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				promArgs = append(promArgs,
 					fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
 				)
+			} else if p.Spec.Retention == "" {
+				p.Spec.Retention = defaultRetention
 			}
+		} else if p.Spec.Retention == "" {
+			p.Spec.Retention = defaultRetention
 		}
 		promArgs = append(promArgs,
 			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
 			fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
-			retentionTimeFlag+p.Spec.Retention,
 			"-web.enable-lifecycle",
 			"-storage.tsdb.no-lockfile",
 		)
+
+		if p.Spec.Retention != "" {
+			promArgs = append(promArgs,
+				retentionTimeFlag+p.Spec.Retention,
+			)
+		}
 
 		if p.Spec.Query != nil && p.Spec.Query.LookbackDelta != nil {
 			promArgs = append(promArgs,
