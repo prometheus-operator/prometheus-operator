@@ -406,7 +406,7 @@ func TestListenLocal(t *testing.T) {
 				Command: []string{
 					`sh`,
 					`-c`,
-					`if [ -x "$(command -v curl)" ]; then curl http://localhost:9090/-/ready; elif [ -x "$(command -v wget)" ]; then wget -q http://localhost:9090/-/ready; else exit 1; fi`,
+					`if [ -x "$(command -v curl)" ]; then curl http://localhost:9090/-/ready; elif [ -x "$(command -v wget)" ]; then wget -q -O /dev/null http://localhost:9090/-/ready; else exit 1; fi`,
 				},
 			},
 		},
@@ -425,7 +425,7 @@ func TestListenLocal(t *testing.T) {
 				Command: []string{
 					`sh`,
 					`-c`,
-					`if [ -x "$(command -v curl)" ]; then curl http://localhost:9090/-/healthy; elif [ -x "$(command -v wget)" ]; then wget -q http://localhost:9090/-/healthy; else exit 1; fi`,
+					`if [ -x "$(command -v curl)" ]; then curl http://localhost:9090/-/healthy; elif [ -x "$(command -v wget)" ]; then wget -q -O /dev/null http://localhost:9090/-/healthy; else exit 1; fi`,
 				},
 			},
 		},
