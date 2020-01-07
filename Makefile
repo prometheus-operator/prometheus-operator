@@ -91,7 +91,7 @@ $(CLIENT_TARGET): $(K8S_GEN_DEPS)
 	--output-package "$(GO_PKG)/pkg/client"
 
 LISTER_TARGET := pkg/client/listers/monitoring/v1/prometheus.go
-$(LISTER_TARGET): $(K8S_GEN_DEPS	)
+$(LISTER_TARGET): $(K8S_GEN_DEPS)
 	$(LISTER_GEN_BINARY) \
 	$(K8S_GEN_ARGS) \
 	--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1" \
