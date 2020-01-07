@@ -3,6 +3,7 @@ SHELL=/bin/bash -o pipefail
 GO_PKG=github.com/coreos/prometheus-operator
 REPO?=quay.io/coreos/prometheus-operator
 REPO_PROMETHEUS_CONFIG_RELOADER?=quay.io/coreos/prometheus-config-reloader
+REPO_PROMETHEUS_OPERATOR_LINT?=quay.io/coreos/prometheus-operator-lint
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
@@ -61,7 +62,7 @@ clean:
 ############
 
 .PHONY: build
-build: $(BINDATA_TARGET) operator prometheus-config-reloader k8s-gen
+build: $(BINDATA_TARGET) operator prometheus-config-reloader k8s-gen lint
 
 .PHONY: operator
 operator:
@@ -70,6 +71,10 @@ operator:
 .PHONY: prometheus-config-reloader
 prometheus-config-reloader:
 	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
+
+.PHONY: lint
+lint:
+	$(GO_BUILD_RECIPE) -o lint cmd/lint/main.go
 
 DEEPCOPY_TARGET := pkg/apis/monitoring/v1/zz_generated.deepcopy.go
 $(DEEPCOPY_TARGET): $(CONTROLLER_GEN_BINARY)
@@ -86,7 +91,7 @@ $(CLIENT_TARGET): $(K8S_GEN_DEPS)
 	--output-package "$(GO_PKG)/pkg/client"
 
 LISTER_TARGET := pkg/client/listers/monitoring/v1/prometheus.go
-$(LISTER_TARGET): $(K8S_GEN_DEPS)
+$(LISTER_TARGET): $(K8S_GEN_DEPS	)
 	$(LISTER_GEN_BINARY) \
 	$(K8S_GEN_ARGS) \
 	--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1" \
@@ -117,7 +122,7 @@ k8s-gen: \
 	$(OPENAPI_TARGET)
 
 .PHONY: image
-image: .hack-operator-image .hack-prometheus-config-reloader-image
+image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-lint-image
 
 .hack-operator-image: Dockerfile operator
 # Create empty target file, for the sole purpose of recording when this target
@@ -131,6 +136,13 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
 	docker build -t $(REPO_PROMETHEUS_CONFIG_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	touch $@
+
+.hack-lint-image: cmd/lint/Dockerfile lint
+# Create empty target file, for the sole purpose of recording when this target
+# was last executed via the last-modification timestamp on the file. See
+# https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+	docker build -t $(REPO_PROMETHEUS_OPERATOR_LINT):$(TAG) -f cmd/lint/Dockerfile .
 	touch $@
 
 ##############

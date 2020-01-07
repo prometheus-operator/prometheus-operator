@@ -14,9 +14,11 @@ trap defer EXIT
 # Push to Quay '-dev' repo if it's not a git tag or master branch build.
 export REPO="quay.io/coreos/prometheus-operator"
 export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader"
+export REPO_PROMETHEUS_OPERATOR_LINT="quay.io/coreos/prometheus-operator-lint"
 if [[ "${TRAVIS_TAG}" == "" ]] && [[ "${TRAVIS_BRANCH}" != master ]]; then
 	export REPO="quay.io/coreos/prometheus-operator-dev"
 	export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader-dev"
+  export REPO_PROMETHEUS_OPERATOR_LINT="quay.io/coreos/prometheus-operator-lint-dev"
 fi
 
 # For both git tags and git branches 'TRAVIS_BRANCH' contains the name.
@@ -27,3 +29,4 @@ make image
 echo "${QUAY_PASSWORD}" | docker login -u "${QUAY_USERNAME}" --password-stdin quay.io
 docker push "${REPO}:${TAG}"
 docker push "${REPO_PROMETHEUS_CONFIG_RELOADER}:${TAG}"
+docker push "${REPO_PROMETHEUS_OPERATOR_LINT}:${TAG}"
