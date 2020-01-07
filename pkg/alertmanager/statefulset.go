@@ -324,7 +324,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	podLabels["alertmanager"] = a.Name
 
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
-		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s.%s.svc:9094", prefixedName(a.Name), i, governingServiceName, a.Namespace))
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s.%s.svc.:9094", prefixedName(a.Name), i, governingServiceName, a.Namespace))
 	}
 
 	for _, peer := range a.Spec.AdditionalPeers {
