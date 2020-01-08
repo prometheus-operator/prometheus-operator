@@ -70,6 +70,8 @@ The Operator acts on the following [custom resource definitions (CRDs)](https://
 To learn more about the CRDs introduced by the Prometheus Operator have a look
 at the [design doc](Documentation/design.md).
 
+To automate validation of your CRD configuration files see about [linting](Documentation/user-guides/linting.md).
+
 ## Quickstart
 
 Note that this quickstart does not provision an entire monitoring stack; if that is what you are looking for see the [kube-prometheus](https://github.com/coreos/kube-prometheus) project. If you want the whole stack, but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).

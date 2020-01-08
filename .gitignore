@@ -1,5 +1,6 @@
 /operator
-prometheus-config-reloader
+/lint
+/prometheus-config-reloader
 .build/
 *~
 *.tgz
