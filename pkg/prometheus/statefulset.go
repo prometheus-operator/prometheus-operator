@@ -170,11 +170,19 @@ func makeStatefulSet(
 	}
 
 	boolTrue := true
+	// do not transfer kubectl annotations to the statefulset so it is not
+	// pruned by kubectl
+	annotations := make(map[string]string)
+	for key, value := range p.ObjectMeta.Annotations {
+		if !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
+			annotations[key] = value
+		}
+	}
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(p.Name),
 			Labels:      config.Labels.Merge(p.ObjectMeta.Labels),
-			Annotations: p.ObjectMeta.Annotations,
+			Annotations: annotations,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         p.APIVersion,

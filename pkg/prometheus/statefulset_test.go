@@ -47,6 +47,14 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	}
 	annotations := map[string]string{
 		"testannotation": "testannotationvalue",
+		"kubectl.kubernetes.io/last-applied-configuration": "something",
+		"kubectl.kubernetes.io/something":                  "something",
+	}
+	// kubectl annotations must not be on the statefulset so kubectl does
+	// not manage the generated object
+	expectedAnnotations := map[string]string{
+		"prometheus-operator-input-hash": "",
+		"testannotation":                 "testannotationvalue",
 	}
 
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
@@ -61,13 +69,6 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	if !reflect.DeepEqual(labels, sset.Labels) {
 		fmt.Println(pretty.Compare(labels, sset.Labels))
 		t.Fatal("Labels are not properly being propagated to the StatefulSet")
-	}
-
-	expectedAnnotations := map[string]string{
-		"prometheus-operator-input-hash": "",
-	}
-	for k, v := range annotations {
-		expectedAnnotations[k] = v
 	}
 
 	if !reflect.DeepEqual(expectedAnnotations, sset.Annotations) {
