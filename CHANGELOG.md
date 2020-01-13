@@ -1,5 +1,22 @@
 ## Next release
 
+## 0.35.0 / 2020-01-13
+
+* [CHANGE] Deprecate baseImage, tag, and sha fields in custom resources (#2914)
+* [FEATURE] Add APIVersion field to Prometheus.Spec.Alerting (#2884)
+* [FEATURE] Add an option to disable compaction (#2886)
+* [FEATURE] Allow configuring PVC access mode (#978)
+* [ENHANCEMENT] Do not disable compaction on sidecar without object storage configuration (#2845)
+* [ENHANCEMENT] Fix StatefulSet being needlessly re-created (#2857)
+* [ENHANCEMENT] Add metric for statefulset re-create (#2859)
+* [ENHANCEMENT] Rename `mesh` ports to be prefixed with protocol (#2863)
+* [ENHANCEMENT] Use kubebuilder controller-gen for creating CRDs (#2855)
+* [ENHANCEMENT] Add metrics about node endpoints synchronization (#2887)
+* [ENHANCEMENT] Turn off preserveUnknownFields to enable kubectl explain (#2903)
+* [ENHANCEMENT] Instrument operator's list and watch operations (#2893)
+* [BUGFIX] Modified prometheus wget probe when listenLocal=true (#2929)
+* [BUGFIX] Fix generated statefulset being pruned by kubectl (#2944)
+
 ## 0.34.0 / 2019-10-31
 
 * [CHANGE] Make arbitraryFSAccessThroughSMs optional (#2797)
