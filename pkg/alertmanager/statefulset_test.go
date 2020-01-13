@@ -29,7 +29,7 @@ import (
 
 var (
 	defaultTestConfig = Config{
-		ConfigReloaderImage:          "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderImage:          "jimmidyson/configmap-reload:latest",
 		ConfigReloaderCPU:            "100m",
 		ConfigReloaderMemory:         "25Mi",
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
@@ -478,7 +478,7 @@ func sliceContains(slice []string, match string) bool {
 
 func TestSidecarsNoCPULimits(t *testing.T) {
 	testConfig := Config{
-		ConfigReloaderImage:          "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderImage:          "jimmidyson/configmap-reload:latest",
 		ConfigReloaderCPU:            "0",
 		ConfigReloaderMemory:         "25Mi",
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
@@ -504,7 +504,7 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 
 func TestSidecarsNoMemoryLimits(t *testing.T) {
 	testConfig := Config{
-		ConfigReloaderImage:          "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderImage:          "jimmidyson/configmap-reload:latest",
 		ConfigReloaderCPU:            "100m",
 		ConfigReloaderMemory:         "0",
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
