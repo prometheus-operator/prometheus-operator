@@ -32,7 +32,7 @@ import (
 
 var (
 	defaultTestConfig = &Config{
-		ConfigReloaderImage:           "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderImage:           "jimmidyson/configmap-reload:latest",
 		ConfigReloaderCPU:             "100m",
 		ConfigReloaderMemory:          "25Mi",
 		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
@@ -794,7 +794,7 @@ func TestRetention(t *testing.T) {
 
 func TestSidecarsNoCPULimits(t *testing.T) {
 	testConfig := &Config{
-		ConfigReloaderImage:           "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderImage:           "jimmidyson/configmap-reload:latest",
 		ConfigReloaderCPU:             "0",
 		ConfigReloaderMemory:          "50Mi",
 		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
@@ -820,7 +820,7 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 
 func TestSidecarsNoMemoryLimits(t *testing.T) {
 	testConfig := &Config{
-		ConfigReloaderImage:           "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderImage:           "jimmidyson/configmap-reload:latest",
 		ConfigReloaderCPU:             "100m",
 		ConfigReloaderMemory:          "0",
 		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
