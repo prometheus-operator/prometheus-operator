@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -211,7 +211,7 @@ func amImage(version string) string {
 
 func (f *Framework) WaitForAlertmanagerInitializedCluster(ns, name string, amountPeers int) error {
 	var pollError error
-	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+	err := wait.Poll(time.Second, time.Minute*10, func() (bool, error) {
 		amStatus, err := f.GetAlertmanagerStatus(ns, name)
 		if err != nil {
 			return false, err
