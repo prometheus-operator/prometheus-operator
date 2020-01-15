@@ -808,9 +808,14 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	expectedResources := v1.ResourceRequirements{Limits: v1.ResourceList{
-		v1.ResourceMemory: resource.MustParse("50Mi"),
-	}}
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+	}
 	for _, c := range sset.Spec.Template.Spec.Containers {
 		if (c.Name == "prometheus-config-reloader" || c.Name == "rules-configmap-reloader") && !reflect.DeepEqual(c.Resources, expectedResources) {
 			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
@@ -834,9 +839,14 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	expectedResources := v1.ResourceRequirements{Limits: v1.ResourceList{
-		v1.ResourceCPU: resource.MustParse("100m"),
-	}}
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU: resource.MustParse("100m"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU: resource.MustParse("100m"),
+		},
+	}
 	for _, c := range sset.Spec.Template.Spec.Containers {
 		if (c.Name == "prometheus-config-reloader" || c.Name == "rules-configmap-reloader") && !reflect.DeepEqual(c.Resources, expectedResources) {
 			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
