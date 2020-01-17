@@ -838,6 +838,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	}
 	if disableCompaction {
 		promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
+	} else {
+		if p.Spec.BlockMinDuration != "" {
+			promArgs = append(promArgs, fmt.Sprintf("--storage.tsdb.min-block-duration=%s", p.Spec.BlockMinDuration))
+		}
+		if p.Spec.BlockMaxDuration != "" {
+			promArgs = append(promArgs, fmt.Sprintf("--storage.tsdb.max-block-duration=%s", p.Spec.BlockMaxDuration))
+		}
 	}
 
 	// Version is used by default.
