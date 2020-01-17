@@ -62,7 +62,7 @@ clean:
 ############
 
 .PHONY: build
-build: $(BINDATA_TARGET) operator prometheus-config-reloader k8s-gen lint
+build: $(BINDATA_TARGET) operator prometheus-config-reloader k8s-gen po-lint
 
 .PHONY: operator
 operator:
@@ -72,9 +72,9 @@ operator:
 prometheus-config-reloader:
 	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
 
-.PHONY: lint
-lint:
-	$(GO_BUILD_RECIPE) -o lint cmd/lint/main.go
+.PHONY: po-lint
+po-lint:
+	$(GO_BUILD_RECIPE) -o po-lint cmd/po-lint/main.go
 
 DEEPCOPY_TARGET := pkg/apis/monitoring/v1/zz_generated.deepcopy.go
 $(DEEPCOPY_TARGET): $(CONTROLLER_GEN_BINARY)
@@ -138,11 +138,11 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-lint-im
 	docker build -t $(REPO_PROMETHEUS_CONFIG_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
-.hack-lint-image: cmd/lint/Dockerfile lint
+.hack-lint-image: cmd/po-lint/Dockerfile po-lint
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build -t $(REPO_PROMETHEUS_OPERATOR_LINT):$(TAG) -f cmd/lint/Dockerfile .
+	docker build -t $(REPO_PROMETHEUS_OPERATOR_LINT):$(TAG) -f cmd/po-lint/Dockerfile .
 	touch $@
 
 ##############
