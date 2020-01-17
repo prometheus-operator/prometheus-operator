@@ -362,6 +362,8 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | retention | Time duration Prometheus shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | string | false |
 | retentionSize | Maximum amount of disk space used by blocks. | string | false |
 | disableCompaction | Disable prometheus compaction. | bool | false |
+| blockMinDuration | Minimum duration of a data block before being persisted. Default is '2h'. Ignoring if DisableCompaction enabled. | string | false |
+| blockMaxDuration | Maximum duration compacted blocks may span. Default calculating by prometheus as 10% of retention time. Ignoring if DisableCompaction enabled. | string | false |
 | walCompression | Enable compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0. | *bool | false |
 | logLevel | Log level for Prometheus to be configured with. | string | false |
 | logFormat | Log format for Prometheus to be configured with. | string | false |
