@@ -725,16 +725,19 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			Args: []string{
 				fmt.Sprintf("--webhook-url=%s", localReloadURL),
 			},
-			VolumeMounts:             []v1.VolumeMount{},
-			Resources:                v1.ResourceRequirements{Limits: v1.ResourceList{}},
+			VolumeMounts: []v1.VolumeMount{},
+			Resources: v1.ResourceRequirements{
+				Limits: v1.ResourceList{}, Requests: v1.ResourceList{}},
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		}
 
 		if c.ConfigReloaderCPU != "0" {
 			container.Resources.Limits[v1.ResourceCPU] = resource.MustParse(c.ConfigReloaderCPU)
+			container.Resources.Requests[v1.ResourceCPU] = resource.MustParse(c.ConfigReloaderCPU)
 		}
 		if c.ConfigReloaderMemory != "0" {
 			container.Resources.Limits[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
+			container.Resources.Requests[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
 		}
 
 		for _, name := range ruleConfigMapNames {
@@ -855,12 +858,15 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		prometheusImage = *p.Spec.Image
 	}
 
-	prometheusConfigReloaderResources := v1.ResourceRequirements{Limits: v1.ResourceList{}}
+	prometheusConfigReloaderResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{}, Requests: v1.ResourceList{}}
 	if c.ConfigReloaderCPU != "0" {
 		prometheusConfigReloaderResources.Limits[v1.ResourceCPU] = resource.MustParse(c.ConfigReloaderCPU)
+		prometheusConfigReloaderResources.Requests[v1.ResourceCPU] = resource.MustParse(c.ConfigReloaderCPU)
 	}
 	if c.ConfigReloaderMemory != "0" {
 		prometheusConfigReloaderResources.Limits[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
+		prometheusConfigReloaderResources.Requests[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
 	}
 
 	operatorContainers := append([]v1.Container{
