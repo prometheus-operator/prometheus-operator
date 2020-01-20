@@ -19,8 +19,6 @@ kind: Prometheus
 metadata:
   name: main
 spec:
-  replicas: 1
-  version: v1.7.1
   resources:
     requests:
       memory: 400Mi
@@ -56,7 +54,6 @@ metadata:
   name: main
 spec:
   replicas: 3
-  version: v0.7.1
   resources:
     requests:
       memory: 400Mi
@@ -119,8 +116,6 @@ kind: Prometheus
 metadata:
   name: main
 spec:
-  replicas: 1
-  version: v1.7.1
   externalUrl: http://127.0.0.1:8001/api/v1/proxy/namespaces/default/services/prometheus-main:web/
   resources:
     requests:
@@ -140,7 +135,6 @@ metadata:
   name: main
 spec:
   replicas: 3
-  version: v0.7.1
   externalUrl: http://127.0.0.1:8001/api/v1/proxy/namespaces/default/services/alertmanager-main:web/
   resources:
     requests:
@@ -173,11 +167,7 @@ Then it will be available under http://127.0.0.1:8001/api/v1/proxy/namespaces/de
 
 Exposing the Prometheus or Alertmanager web UI through an Ingress object requires a running Ingress controller. For more information, see the Kubernetes documentation on [Ingress][ingress-doc].
 
-This example was tested with the [NGINX Ingress Controller][nginx-ingress]. For a quick-start for running the NGINX Ingress Controller run:
-
-```
-kubectl create -f https://raw.githubusercontent.com/kubernetes/ingress/master/examples/deployment/nginx/nginx-ingress-controller.yaml
-```
+This example was tested with the [NGINX Ingress Controller][nginx-ingress]. For a quick-start for running the NGINX Ingress Controller follow the instructions in the [NGINX Ingress installation guide][nginx-ingress-installation-guide]. 
 
 > Be certain to evaluate available Ingress controllers for the specifics of your  production environment. The NGINX Ingress Controller may or may not be suitable. Consider other solutions, like HA Proxy, Traefik, GCE, or AWS.
 
@@ -247,8 +237,6 @@ kind: Prometheus
 metadata:
   name: main
 spec:
-  replicas: 1
-  version: v1.7.1
   externalUrl: http://monitoring.my.systems/prometheus
   resources:
     requests:
@@ -260,7 +248,6 @@ metadata:
   name: main
 spec:
   replicas: 3
-  version: v0.7.1
   externalUrl: http://monitoring.my.systems/alertmanager
   resources:
     requests:
@@ -270,7 +257,8 @@ spec:
 > Note the path `/prometheus` at the end of the `externalUrl`, as specified in the `Ingress` object.
 
 
-[ingress-doc]: https://kubernetes.io/docs/user-guide/ingress/
-[nginx-ingress]: https://github.com/kubernetes/ingress/tree/master/controllers/nginx
-[external-auth]: https://github.com/kubernetes/ingress/blob/858e3ff2354fb0f5066a88774b904b2427fb9433/examples/external-auth/nginx/README.md
-[whitelist-ip]: https://github.com/kubernetes/ingress/blob/7ca7652ab26e1a5775f3066f53f28d5ea5eb3bb7/controllers/nginx/configuration.md#whitelist-source-range
+[ingress-doc]: https://kubernetes.io/docs/concepts/services-networking/ingress/
+[nginx-ingress]: https://github.com/kubernetes/ingress-nginx
+[nginx-ingress-installation-guide]: https://github.com/kubernetes/ingress-nginx/blob/master/docs/deploy/index.md
+[external-auth]: https://github.com/kubernetes/ingress-nginx/blob/351ce5394a5ec37153344135c8112f71539b5af4/docs/examples/auth/external-auth/README.md
+[whitelist-ip]: https://github.com/kubernetes/ingress-nginx/blob/351ce5394a5ec37153344135c8112f71539b5af4/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range
