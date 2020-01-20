@@ -1,7 +1,7 @@
 FROM quay.io/prometheus/busybox:latest
 
-ADD lint /bin/lint
+ADD po-lint /bin/po-lint
 
 USER nobody
 
-ENTRYPOINT ["/bin/lint"]
+ENTRYPOINT ["/bin/po-lint"]
