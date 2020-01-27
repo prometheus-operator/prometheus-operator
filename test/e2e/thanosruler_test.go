@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright 2020 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package e2e
 
 import (
-	"os"
+	"testing"
 )
 
-func main() {
-	switch os.Args[1] {
-	case "api":
-		printAPIDocs(os.Args[2:])
-	case "compatibility":
-		printCompatMatrixDocs()
+func testTRCreateDeleteCluster(t *testing.T) {
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "test"
+
+	if _, err := framework.CreateThanosRulerAndWaitUntilReady(ns, framework.MakeBasicThanosRuler(name)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.DeleteThanosRulerAndWaitUntilGone(ns, name); err != nil {
+		t.Fatal(err)
 	}
 }

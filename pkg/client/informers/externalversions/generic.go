@@ -61,6 +61,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().PrometheusRules().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("servicemonitors"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().ServiceMonitors().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("thanosrulers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitoring().V1().ThanosRulers().Informer()}, nil
 
 	}
 

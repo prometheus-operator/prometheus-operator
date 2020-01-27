@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright 2020 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package thanos
 
 import (
-	"os"
+	"testing"
 )
 
-func main() {
-	switch os.Args[1] {
-	case "api":
-		printAPIDocs(os.Args[2:])
-	case "compatibility":
-		printCompatMatrixDocs()
+func TestListOptions(t *testing.T) {
+	for i := 0; i < 1000; i++ {
+		o := ListOptions("test")
+		if o.LabelSelector != "app=thanosruler,thanosruler=test" && o.LabelSelector != "thanosruler=test,app=thanosruler" {
+			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app=thanosruler,thanosruler=test\"\n\nGot:      %#+v", o.LabelSelector)
+		}
 	}
 }

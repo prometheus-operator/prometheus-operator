@@ -153,13 +153,14 @@ type Config struct {
 	ManageCRDs                    bool
 	PromSelector                  string
 	AlertManagerSelector          string
+	ThanosRulerSelector           string
 }
 
 type Namespaces struct {
 	// allow list/deny list for common custom resources
 	AllowList, DenyList []string
 	// allow list for prometheus/alertmanager custom resources
-	PrometheusAllowList, AlertmanagerAllowList []string
+	PrometheusAllowList, AlertmanagerAllowList, ThanosRulerAllowList []string
 }
 
 // BasicAuthCredentials represents a username password pair to be used with

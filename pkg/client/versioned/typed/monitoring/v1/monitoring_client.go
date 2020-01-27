@@ -29,6 +29,7 @@ type MonitoringV1Interface interface {
 	PrometheusesGetter
 	PrometheusRulesGetter
 	ServiceMonitorsGetter
+	ThanosRulersGetter
 }
 
 // MonitoringV1Client is used to interact with features provided by the monitoring.coreos.com group.
@@ -54,6 +55,10 @@ func (c *MonitoringV1Client) PrometheusRules(namespace string) PrometheusRuleInt
 
 func (c *MonitoringV1Client) ServiceMonitors(namespace string) ServiceMonitorInterface {
 	return newServiceMonitors(c, namespace)
+}
+
+func (c *MonitoringV1Client) ThanosRulers(namespace string) ThanosRulerInterface {
+	return newThanosRulers(c, namespace)
 }
 
 // NewForConfig creates a new MonitoringV1Client for the given config.

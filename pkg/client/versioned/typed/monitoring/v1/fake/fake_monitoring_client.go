@@ -46,6 +46,10 @@ func (c *FakeMonitoringV1) ServiceMonitors(namespace string) v1.ServiceMonitorIn
 	return &FakeServiceMonitors{c, namespace}
 }
 
+func (c *FakeMonitoringV1) ThanosRulers(namespace string) v1.ThanosRulerInterface {
+	return &FakeThanosRulers{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeMonitoringV1) RESTClient() rest.Interface {

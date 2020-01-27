@@ -32,6 +32,8 @@ type Interface interface {
 	PrometheusRules() PrometheusRuleInformer
 	// ServiceMonitors returns a ServiceMonitorInformer.
 	ServiceMonitors() ServiceMonitorInformer
+	// ThanosRulers returns a ThanosRulerInformer.
+	ThanosRulers() ThanosRulerInformer
 }
 
 type version struct {
@@ -68,4 +70,9 @@ func (v *version) PrometheusRules() PrometheusRuleInformer {
 // ServiceMonitors returns a ServiceMonitorInformer.
 func (v *version) ServiceMonitors() ServiceMonitorInformer {
 	return &serviceMonitorInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ThanosRulers returns a ThanosRulerInformer.
+func (v *version) ThanosRulers() ThanosRulerInformer {
+	return &thanosRulerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
