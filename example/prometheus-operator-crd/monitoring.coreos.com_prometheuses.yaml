@@ -8,6 +8,18 @@ metadata:
   creationTimestamp: null
   name: prometheuses.monitoring.coreos.com
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.version
+    description: The version of Prometheus
+    name: Version
+    type: string
+  - JSONPath: .spec.replicas
+    description: The desired replicas number of Prometheuses
+    name: Replicas
+    type: integer
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: monitoring.coreos.com
   names:
     kind: Prometheus
@@ -16,6 +28,7 @@ spec:
     singular: prometheus
   preserveUnknownFields: false
   scope: Namespaced
+  subresources: {}
   validation:
     openAPIV3Schema:
       description: Prometheus defines a Prometheus deployment.
