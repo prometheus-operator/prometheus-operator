@@ -130,6 +130,11 @@ type PrometheusSpec struct {
 	RetentionSize string `json:"retentionSize,omitempty"`
 	// Disable prometheus compaction.
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
+	// Minimum duration of a data block before being persisted. Default is '2h'. Ignoring if DisableCompaction enabled.
+	BlockMinDuration string `json:"blockMinDuration,omitempty"`
+	// Maximum duration compacted blocks may span. Default calculating by prometheus as 10% of retention time.
+	// Ignoring if DisableCompaction enabled.
+	BlockMaxDuration string `json:"blockMaxDuration,omitempty"`
 	// Enable compression of the write-ahead log using Snappy. This flag is
 	// only available in versions of Prometheus >= 2.11.0.
 	WALCompression *bool `json:"walCompression,omitempty"`
