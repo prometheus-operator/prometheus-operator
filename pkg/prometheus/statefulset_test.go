@@ -53,7 +53,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	// kubectl annotations must not be on the statefulset so kubectl does
 	// not manage the generated object
 	expectedAnnotations := map[string]string{
-		"prometheus-operator-input-hash": "",
+		"prometheus-operator-input-hash": "10689339640183164791",
 		"testannotation":                 "testannotationvalue",
 	}
 
@@ -62,7 +62,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 
 	require.NoError(t, err)
 
@@ -92,7 +92,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 				Labels:      labels,
 			},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	require.NoError(t, err)
 	if _, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok {
 		t.Fatal("Pod labes are not properly propagated")
@@ -132,7 +132,7 @@ func TestStatefulSetPVC(t *testing.T) {
 				VolumeClaimTemplate: pvc,
 			},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 
 	require.NoError(t, err)
 	ssetPvc := sset.Spec.VolumeClaimTemplates[0]
@@ -164,7 +164,7 @@ func TestStatefulSetEmptyDir(t *testing.T) {
 				EmptyDir: &emptyDir,
 			},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
@@ -278,7 +278,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 				"test-secret1",
 			},
 		},
-	}, defaultTestConfig, []string{"rules-configmap-one"}, "")
+	}, defaultTestConfig, []string{"rules-configmap-one"})
 
 	require.NoError(t, err)
 
@@ -304,7 +304,7 @@ func TestMemoryRequestNotAdjustedWhenLimitLarger2Gi(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -326,7 +326,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			ConfigMaps: []string{"test-cm1"},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -362,7 +362,7 @@ func TestMemoryRequestAdjustedWhenOnlyLimitGiven(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -384,7 +384,7 @@ func TestListenLocal(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			ListenLocal: true,
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -450,7 +450,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 				Tag:     "my-unrelated-tag",
 				Version: "v2.3.2",
 			},
-		}, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -468,7 +468,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 				Tag:     "my-unrelated-tag",
 				Version: "v2.3.2",
 			},
-		}, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -488,7 +488,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 				Version: "v2.3.2",
 				Image:   &image,
 			},
-		}, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -512,7 +512,7 @@ func TestThanosTagAndShaAndVersion(t *testing.T) {
 					Tag:     &thanosTag,
 				},
 			},
-		}, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -535,7 +535,7 @@ func TestThanosTagAndShaAndVersion(t *testing.T) {
 					Tag:     &thanosTag,
 				},
 			},
-		}, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -560,7 +560,7 @@ func TestThanosTagAndShaAndVersion(t *testing.T) {
 					Image:   &thanosImage,
 				},
 			},
-		}, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -578,7 +578,7 @@ func TestThanosResourcesNotSet(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -606,7 +606,7 @@ func TestThanosResourcesSet(t *testing.T) {
 				Resources: expected,
 			},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -622,7 +622,7 @@ func TestThanosNoObjectStorage(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -653,7 +653,7 @@ func TestThanosObjectStorage(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -728,7 +728,7 @@ func TestRetentionSize(t *testing.T) {
 				Version:       test.version,
 				RetentionSize: test.specRetentionSize,
 			},
-		}, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -772,7 +772,7 @@ func TestRetention(t *testing.T) {
 				Version:   test.version,
 				Retention: test.specRetention,
 			},
-		}, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -803,7 +803,7 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{},
-	}, testConfig, nil, "")
+	}, testConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -834,7 +834,7 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 	}
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{},
-	}, testConfig, nil, "")
+	}, testConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -856,7 +856,7 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 
 func TestAdditionalContainers(t *testing.T) {
 	// The base to compare everything against
-	baseSet, err := makeStatefulSet(monitoringv1.Prometheus{}, defaultTestConfig, nil, "")
+	baseSet, err := makeStatefulSet(monitoringv1.Prometheus{}, defaultTestConfig, nil)
 
 	// Add an extra container
 	addSset, err := makeStatefulSet(monitoringv1.Prometheus{
@@ -867,7 +867,7 @@ func TestAdditionalContainers(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	require.NoError(t, err)
 
 	if len(baseSet.Spec.Template.Spec.Containers)+1 != len(addSset.Spec.Template.Spec.Containers) {
@@ -886,7 +886,7 @@ func TestAdditionalContainers(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	require.NoError(t, err)
 
 	if len(baseSet.Spec.Template.Spec.Containers) != len(modSset.Spec.Template.Spec.Containers) {
@@ -933,7 +933,7 @@ func TestWALCompression(t *testing.T) {
 				Version:        test.version,
 				WALCompression: test.enabled,
 			},
-		}, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -964,7 +964,7 @@ func TestThanosListenLocal(t *testing.T) {
 				ListenLocal: true,
 			},
 		},
-	}, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -985,7 +985,7 @@ func TestThanosListenLocal(t *testing.T) {
 }
 
 func TestTerminationPolicy(t *testing.T) {
-	sset, err := makeStatefulSet(monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{}}, defaultTestConfig, nil, "")
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{}}, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}

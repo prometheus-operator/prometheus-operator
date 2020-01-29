@@ -29,6 +29,7 @@ import (
 	"github.com/blang/semver"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/mitchellh/hashstructure"
 	"github.com/pkg/errors"
 )
 
@@ -48,6 +49,7 @@ const (
 	configFilename                  = "prometheus.yaml.gz"
 	configEnvsubstFilename          = "prometheus.env.yaml"
 	sSetInputHashName               = "prometheus-operator-input-hash"
+	sSetSpecHashName                = "prometheus-statefulset-spec-hash"
 	defaultPortName                 = "web"
 )
 
@@ -101,7 +103,6 @@ func makeStatefulSet(
 	p monitoringv1.Prometheus,
 	config *Config,
 	ruleConfigMapNames []string,
-	inputHash string,
 ) (*appsv1.StatefulSet, error) {
 	// p is passed in by value, not by reference. But p contains references like
 	// to annotation map, that do not get copied on function invocation. Ensure to
@@ -178,6 +179,12 @@ func makeStatefulSet(
 			annotations[key] = value
 		}
 	}
+	hash, err := createSSetInputHash(p, config, ruleConfigMapNames)
+	if err != nil {
+		return nil, err
+	}
+	annotations[sSetInputHashName] = hash
+
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(p.Name),
@@ -195,14 +202,6 @@ func makeStatefulSet(
 			},
 		},
 		Spec: *spec,
-	}
-
-	if statefulset.ObjectMeta.Annotations == nil {
-		statefulset.ObjectMeta.Annotations = map[string]string{
-			sSetInputHashName: inputHash,
-		}
-	} else {
-		statefulset.ObjectMeta.Annotations[sSetInputHashName] = inputHash
 	}
 
 	if p.Spec.ImagePullSecrets != nil && len(p.Spec.ImagePullSecrets) > 0 {
@@ -245,6 +244,52 @@ func makeStatefulSet(
 	}
 
 	return statefulset, nil
+}
+
+func createSSetInputHash(p monitoringv1.Prometheus, c *Config, ruleConfigMapNames []string) (string, error) {
+	hash, err := hashstructure.Hash(struct {
+		P monitoringv1.Prometheus
+		C Config
+		R []string `hash:"set"`
+	}{p, *c, ruleConfigMapNames},
+		nil,
+	)
+	if err != nil {
+		return "", errors.Wrap(
+			err,
+			"failed to calculate combined hash of Prometheus StatefulSet, Prometheus CRD, config and"+
+				" rule ConfigMap names",
+		)
+	}
+
+	return fmt.Sprintf("%d", hash), nil
+}
+
+// createSSetSpecHash creates a hash based on fields in the statefulset spec
+// Skips certain fields such as VolumeClaimTemplates which include a Status
+// field which changes over time.
+func createSSetSpecHash(spec appsv1.StatefulSetSpec) (string, error) {
+	hash, err := hashstructure.Hash(struct {
+		*int32
+		v1.PodTemplateSpec
+		appsv1.StatefulSetUpdateStrategy
+	}{spec.Replicas, spec.Template, spec.UpdateStrategy},
+		nil,
+	)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to calculate hash of Prometheus StatefulSet spec")
+	}
+
+	return fmt.Sprintf("%d", hash), nil
+}
+
+// sanitizeSTSUpdate removes values for APIVersion and Kind from the VolumeClaimTemplates.
+// This prevents update failures due to these fields changing when applied.
+func sanitizeSTSUpdate(sts *appsv1.StatefulSet) {
+	for i := range sts.Spec.VolumeClaimTemplates {
+		sts.Spec.VolumeClaimTemplates[i].APIVersion = ""
+		sts.Spec.VolumeClaimTemplates[i].Kind = ""
+	}
 }
 
 func makeEmptyConfigurationSecret(p *monitoringv1.Prometheus, config Config) (*v1.Secret, error) {

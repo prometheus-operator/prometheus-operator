@@ -31,7 +31,6 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/mitchellh/hashstructure"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -1131,39 +1130,54 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "retrieving statefulset failed")
 	}
 
-	spec := appsv1.StatefulSetSpec{}
-	if obj != nil {
-		ss := obj.(*appsv1.StatefulSet)
-		spec = ss.Spec
-	}
-	newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, spec)
-	if err != nil {
-		return err
-	}
-
-	sset, err := makeStatefulSet(*p, &c.config, ruleConfigMapNames, newSSetInputHash)
+	sset, err := makeStatefulSet(*p, &c.config, ruleConfigMapNames)
 	if err != nil {
 		return errors.Wrap(err, "making statefulset failed")
 	}
 
 	if !exists {
-		level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
-		level.Debug(c.logger).Log("msg", "creating Prometheus statefulset")
-		if _, err := ssetClient.Create(sset); err != nil {
+		level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found, creating")
+		newSTS, err := ssetClient.Create(sset)
+		if err != nil {
 			return errors.Wrap(err, "creating statefulset failed")
+		}
+		if err := annotateSTSHash(newSTS); err != nil {
+			return errors.Wrap(err, "annotating statefulset with spec hash failed")
+		}
+		if _, err := ssetClient.Update(newSTS); err != nil {
+			return errors.Wrap(err, "annotating statefulset with spec hash failed")
 		}
 		return nil
 	}
 
-	oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
+	oldSset := obj.(*appsv1.StatefulSet)
+	oldSSetInputHash := oldSset.ObjectMeta.Annotations[sSetInputHashName]
+	newSSetInputHash := sset.ObjectMeta.Annotations[sSetInputHashName]
 	if newSSetInputHash == oldSSetInputHash {
-		level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
-		return nil
+		oldSpecHash, err := createSSetSpecHash(oldSset.Spec)
+		if err != nil {
+			return errors.Wrap(err, "failed to calculate hash on existing statefulset spec")
+		}
+		if oldSpecHash == oldSset.ObjectMeta.Annotations[sSetSpecHashName] {
+			level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+			return nil
+		}
+		level.Warn(c.logger).Log("msg", "detected manual change in prometheus statefulset", "key", key)
 	}
 
 	level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
 
-	_, err = ssetClient.Update(sset)
+	sanitizeSTSUpdate(sset)
+	updatedSTS, err := ssetClient.Update(sset)
+	if err == nil {
+		if err := annotateSTSHash(updatedSTS); err != nil {
+			return errors.Wrap(err, "annotating statefulset with spec hash failed")
+		}
+		if _, err := ssetClient.Update(updatedSTS); err != nil {
+			return errors.Wrap(err, "annotating statefulset with spec hash failed")
+		}
+		return nil
+	}
 	sErr, ok := err.(*apierrors.StatusError)
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
@@ -1180,6 +1194,18 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "updating StatefulSet failed")
 	}
 
+	return nil
+}
+
+func annotateSTSHash(sts *appsv1.StatefulSet) error {
+	ssetSpecHash, err := createSSetSpecHash(sts.Spec)
+	if err != nil {
+		return err
+	}
+	if sts.ObjectMeta.Annotations == nil {
+		sts.ObjectMeta.Annotations = map[string]string{}
+	}
+	sts.ObjectMeta.Annotations[sSetSpecHashName] = ssetSpecHash
 	return nil
 }
 
@@ -1206,26 +1232,6 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.sha", "spec.thanos.image"))
 		}
 	}
-}
-
-func createSSetInputHash(p monitoringv1.Prometheus, c Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
-	hash, err := hashstructure.Hash(struct {
-		P monitoringv1.Prometheus
-		C Config
-		S interface{}
-		R []string `hash:"set"`
-	}{p, c, ss, ruleConfigMapNames},
-		nil,
-	)
-	if err != nil {
-		return "", errors.Wrap(
-			err,
-			"failed to calculate combined hash of Prometheus StatefulSet, Prometheus CRD, config and"+
-				" rule ConfigMap names",
-		)
-	}
-
-	return fmt.Sprintf("%d", hash), nil
 }
 
 func ListOptions(name string) metav1.ListOptions {
