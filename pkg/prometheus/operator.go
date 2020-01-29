@@ -1144,6 +1144,7 @@ func (c *Operator) sync(key string) error {
 	if err != nil {
 		return errors.Wrap(err, "making statefulset failed")
 	}
+	sanitizeSTS(sset)
 
 	if !exists {
 		level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
@@ -1180,6 +1181,15 @@ func (c *Operator) sync(key string) error {
 	}
 
 	return nil
+}
+
+// sanitizeSTS removes values for APIVersion and Kind from the VolumeClaimTemplates.
+// This prevents update failures due to these fields changing when applied.
+func sanitizeSTS(sts *appsv1.StatefulSet) {
+	for i := range sts.Spec.VolumeClaimTemplates {
+		sts.Spec.VolumeClaimTemplates[i].APIVersion = ""
+		sts.Spec.VolumeClaimTemplates[i].Kind = ""
+	}
 }
 
 //checkPrometheusSpecDeprecation checks for deprecated fields in the prometheus spec and logs a warning if applicable
