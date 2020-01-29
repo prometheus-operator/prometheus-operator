@@ -65,6 +65,9 @@ spec:
                 of origin for each alert and metric that is user created. The label
                 value will always be the namespace of the object that is being created.
               type: string
+            evaluationInterval:
+              description: Interval between consecutive evaluations.
+              type: string
             image:
               description: Thanos container image URL.
               type: string
@@ -150,6 +153,11 @@ spec:
                     value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                   type: object
               type: object
+            retention:
+              description: Time duration ThanosRuler shall retain data for. Default
+                is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
+                (milliseconds seconds minutes hours days weeks years).
+              type: string
             ruleNamespaceSelector:
               description: Namespaces to be selected for Rules discovery. If unspecified,
                 only the same namespace as the ThanosRuler object is in is used.

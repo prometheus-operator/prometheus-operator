@@ -28,11 +28,13 @@ import (
 )
 
 const (
-	DefaultThanosVersion = "v0.10.0"
-	rulesDir             = "/etc/thanos/rules"
-	storageDir           = "/thanos/data"
-	governingServiceName = "thanos-ruler-operated"
-	defaultPortName      = "web"
+	DefaultThanosVersion      = "v0.10.0"
+	rulesDir                  = "/etc/thanos/rules"
+	storageDir                = "/thanos/data"
+	governingServiceName      = "thanos-ruler-operated"
+	defaultPortName           = "web"
+	defaultRetention          = "24h"
+	defaultEvaluationInterval = "15s"
 )
 
 var (
@@ -140,10 +142,18 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires at least one query endpoint")
 	}
 
+	if tr.Spec.EvaluationInterval == "" {
+		tr.Spec.EvaluationInterval = defaultEvaluationInterval
+	}
+	if tr.Spec.Retention == "" {
+		tr.Spec.Retention = defaultRetention
+	}
+
 	trCLIArgs := []string{
 		"rule",
-		fmt.Sprintf("--eval-interval=%s", "15s"),
 		fmt.Sprintf("--data-dir=%s", storageDir),
+		fmt.Sprintf("--eval-interval=%s", tr.Spec.EvaluationInterval),
+		fmt.Sprintf("--tsdb.retention=%s", tr.Spec.Retention),
 	}
 	trEnvVars := []v1.EnvVar{}
 
