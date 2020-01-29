@@ -10,9 +10,9 @@ RUN apt-get update -y && apt-get install -y g++ make git && \
     rm -rf /var/lib/apt/lists/*
 RUN curl -Lso - https://github.com/google/jsonnet/archive/${JSONNET_VERSION}.tar.gz | \
     tar xfz - -C /tmp && \
-    cd /tmp/jsonnet-${JSONNET_VERSION} && \
+    cd /tmp/jsonnet-${JSONNET_VERSION#v} && \
     make && mv jsonnetfmt /usr/local/bin && \
-    rm -rf /tmp/jsonnet-${JSONNET_VERSION}
+    rm -rf /tmp/jsonnet-${JSONNET_VERSION#v}
 
 RUN GO111MODULE=on go get github.com/google/go-jsonnet/cmd/jsonnet@${JSONNET_VERSION}
 RUN GO111MODULE=on go get github.com/prometheus/prometheus/cmd/promtool@${PROMTOOL_VERSION}
