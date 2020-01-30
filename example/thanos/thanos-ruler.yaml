@@ -9,7 +9,7 @@ spec:
   image: quay.io/thanos/thanos
   ruleSelector:
     matchLabels:
-        role: thanos-example
+      role: thanos-example
   queryEndpoints:
   - dnssrv+_http._tcp.thanos-query.monitoring.svc.cluster.local
 ---
@@ -27,6 +27,4 @@ spec:
   - name: ./example-alert.rules
     rules:
     - alert: ExampleAlert
-      expr: vector(1) 
-
-  
+      expr: vector(1)

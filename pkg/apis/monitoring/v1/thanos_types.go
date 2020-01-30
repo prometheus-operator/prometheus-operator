@@ -112,6 +112,11 @@ type ThanosRulerSpec struct {
 	// Port name used for the pods and governing service.
 	// This defaults to web
 	PortName string `json:"portName,omitempty"`
+	// Interval between consecutive evaluations.
+	EvaluationInterval string `json:"evaluationInterval,omitempty"`
+	// Time duration ThanosRuler shall retain data for. Default is '24h',
+	// and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).
+	Retention string `json:"retention,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not

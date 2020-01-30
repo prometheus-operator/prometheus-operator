@@ -698,6 +698,8 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | logLevel | Log level for ThanosRuler to be configured with. | string | false |
 | logFormat | Log format for ThanosRuler to be configured with. | string | false |
 | portName | Port name used for the pods and governing service. This defaults to web | string | false |
+| evaluationInterval | Interval between consecutive evaluations. | string | false |
+| retention | Time duration ThanosRuler shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | string | false |
 
 [Back to TOC](#table-of-contents)
 
