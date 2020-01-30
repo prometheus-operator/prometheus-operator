@@ -369,6 +369,7 @@ func (c *Operator) handleAlertmanagerAdd(obj interface{}) {
 
 	level.Debug(c.logger).Log("msg", "Alertmanager added", "key", key)
 	c.metrics.TriggerByCounter(monitoringv1.AlertmanagersKind, "add").Inc()
+	checkAlertmanagerSpecDeprecation(key, obj.(*monitoringv1.Alertmanager), c.logger)
 	c.enqueue(key)
 }
 
@@ -391,6 +392,7 @@ func (c *Operator) handleAlertmanagerUpdate(old, cur interface{}) {
 
 	level.Debug(c.logger).Log("msg", "Alertmanager updated", "key", key)
 	c.metrics.TriggerByCounter(monitoringv1.AlertmanagersKind, "update").Inc()
+	checkAlertmanagerSpecDeprecation(key, cur.(*monitoringv1.Alertmanager), c.logger)
 	c.enqueue(key)
 }
 
@@ -455,7 +457,6 @@ func (c *Operator) sync(key string) error {
 	}
 
 	level.Info(c.logger).Log("msg", "sync alertmanager", "key", key)
-	checkAlertmanagerSpecDeprecation(key, am, c.logger)
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
