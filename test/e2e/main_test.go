@@ -43,6 +43,12 @@ func skipAlertmanagerTests(t *testing.T) {
 	}
 }
 
+func skipThanosRulerTests(t *testing.T) {
+	if os.Getenv("EXCLUDE_THANOSRULER_TESTS") != "" {
+		t.Skip("Skipping ThanosRuler tests")
+	}
+}
+
 func TestMain(m *testing.M) {
 	kubeconfig := flag.String(
 		"kubeconfig",
@@ -98,6 +104,7 @@ func TestAllNS(t *testing.T) {
 	// fixes this.
 	t.Run("x", testAllNSAlertmanager)
 	t.Run("y", testAllNSPrometheus)
+	t.Run("z", testAllNSThanosRuler)
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -200,6 +207,16 @@ func testAllNSPrometheus(t *testing.T) {
 		"Thanos":                                 testThanos,
 	}
 
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
+func testAllNSThanosRuler(t *testing.T) {
+	skipThanosRulerTests(t)
+	testFuncs := map[string]func(t *testing.T){
+		"ThanosRulerCreateDeleteCluster": testTRCreateDeleteCluster,
+	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
 	}
