@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: thanos-sidecar
+  namespace: default
   labels:
     app: thanos-sidecar
 spec:

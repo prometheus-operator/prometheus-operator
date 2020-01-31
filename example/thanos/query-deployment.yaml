@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: thanos-query
+  namespace: default
   labels:
     app: thanos-query
 spec:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
       - name: thanos-query
-        image: quay.io/thanos/thanos:v0.7.0
+        image: quay.io/thanos/thanos:v0.10.1
         args:
         - query
         - --log.level=debug

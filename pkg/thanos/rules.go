@@ -330,5 +330,5 @@ func makeRulesConfigMap(t *monitoringv1.ThanosRuler, ruleFiles map[string]string
 }
 
 func thanosRuleConfigMapName(name string) string {
-	return "thanos-ruler" + name + "-rulefiles"
+	return "thanos-ruler-" + name + "-rulefiles"
 }
