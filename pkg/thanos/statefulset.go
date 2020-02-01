@@ -202,7 +202,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		Scheme: "http",
 		Host:   config.LocalHost + ":10902",
 		// TODO: add web prefix
-		Path:   path.Clean("/-/reload"),
+		Path: path.Clean("/-/reload"),
 	}
 
 	operatorContainers := []v1.Container{}
@@ -310,7 +310,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 	}
 
-	operatorContainers = append(operatorContainers, trContainer)
+	operatorContainers = append([]v1.Container{trContainer}, operatorContainers...)
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
@@ -329,7 +329,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			},
 			Spec: v1.PodSpec{
 				Containers: operatorContainers,
-				Volumes: trVolumes,
+				Volumes:    trVolumes,
 			},
 		},
 	}, nil
