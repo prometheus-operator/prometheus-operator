@@ -17,6 +17,8 @@ package thanos
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"path"
 	"strings"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -196,6 +198,46 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
+	localReloadURL := &url.URL{
+		Scheme: "http",
+		Host:   config.LocalHost + ":9090",
+		// TODO: add web prefix
+		Path:   path.Clean("/-/reload"),
+	}
+
+	var reloader v1.Container
+	if len(ruleConfigMapNames) != 0 {
+		reloader = v1.Container{
+			Name:  "rules-configmap-reloader",
+			Image: config.ConfigReloaderImage,
+			Args: []string{
+				fmt.Sprintf("--webhook-url=%s", localReloadURL),
+			},
+			VolumeMounts: []v1.VolumeMount{},
+			Resources: v1.ResourceRequirements{
+				Limits: v1.ResourceList{}, Requests: v1.ResourceList{}},
+			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		}
+
+		if config.ConfigReloaderCPU != "0" {
+			reloader.Resources.Limits[v1.ResourceCPU] = resource.MustParse(config.ConfigReloaderCPU)
+			reloader.Resources.Requests[v1.ResourceCPU] = resource.MustParse(config.ConfigReloaderCPU)
+		}
+		if config.ConfigReloaderMemory != "0" {
+			reloader.Resources.Limits[v1.ResourceMemory] = resource.MustParse(config.ConfigReloaderMemory)
+			reloader.Resources.Requests[v1.ResourceMemory] = resource.MustParse(config.ConfigReloaderMemory)
+		}
+
+		for _, name := range ruleConfigMapNames {
+			mountPath := rulesDir + "/" + name
+			reloader.VolumeMounts = append(reloader.VolumeMounts, v1.VolumeMount{
+				Name:      name,
+				MountPath: mountPath,
+			})
+			reloader.Args = append(reloader.Args, fmt.Sprintf("--volume-dir=%s", mountPath))
+		}
+	}
+
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	if tr.Spec.PodMetadata != nil {
@@ -267,6 +309,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 	}
 
+	operatorsContainers := []v1.Container{trContainer, reloader}
+
 	// PodManagementPolicy is set to Parallel to mitigate issues in kuberentes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
@@ -284,9 +328,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
-				Containers: []v1.Container{
-					trContainer,
-				},
+				Containers: operatorsContainers,
 				Volumes: trVolumes,
 			},
 		},
