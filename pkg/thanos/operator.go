@@ -135,7 +135,7 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 			TLSConfig:              conf.TLSConfig,
 			ConfigReloaderImage:    conf.ConfigReloaderImage,
 			ConfigReloaderCPU:      conf.ConfigReloaderCPU,
-			ConfigReloaderMemory:   conf.ConfigReloaderImage,
+			ConfigReloaderMemory:   conf.ConfigReloaderMemory,
 			ThanosDefaultBaseImage: conf.ThanosDefaultBaseImage,
 			Namespaces:             conf.Namespaces,
 			Labels:                 conf.Labels,

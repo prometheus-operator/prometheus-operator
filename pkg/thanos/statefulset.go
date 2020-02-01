@@ -200,14 +200,14 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	localReloadURL := &url.URL{
 		Scheme: "http",
-		Host:   config.LocalHost + ":9090",
+		Host:   config.LocalHost + ":10902",
 		// TODO: add web prefix
 		Path:   path.Clean("/-/reload"),
 	}
 
-	var reloader v1.Container
+	operatorContainers := []v1.Container{}
 	if len(ruleConfigMapNames) != 0 {
-		reloader = v1.Container{
+		reloader := v1.Container{
 			Name:  "rules-configmap-reloader",
 			Image: config.ConfigReloaderImage,
 			Args: []string{
@@ -236,6 +236,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			})
 			reloader.Args = append(reloader.Args, fmt.Sprintf("--volume-dir=%s", mountPath))
 		}
+		operatorContainers = append(operatorContainers, reloader)
 	}
 
 	podAnnotations := map[string]string{}
@@ -309,9 +310,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 	}
 
-	operatorsContainers := []v1.Container{trContainer, reloader}
-
-	// PodManagementPolicy is set to Parallel to mitigate issues in kuberentes: https://github.com/kubernetes/kubernetes/issues/60164
+	operatorContainers = append(operatorContainers, trContainer)
+	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
 		Replicas:            tr.Spec.Replicas,
@@ -328,7 +328,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
-				Containers: operatorsContainers,
+				Containers: operatorContainers,
 				Volumes: trVolumes,
 			},
 		},
