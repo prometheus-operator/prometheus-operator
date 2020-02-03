@@ -466,6 +466,25 @@ spec:
                       type: object
                   type: object
               type: object
+            tracingConfig:
+              description: TracingConfig configures tracing in Thanos. This is an
+                experimental feature, it may change in any upcoming release in a breaking
+                way.
+              properties:
+                key:
+                  description: The key of the secret to select from.  Must be a valid
+                    secret key.
+                  type: string
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+                optional:
+                  description: Specify whether the Secret or its key must be defined
+                  type: boolean
+              required:
+              - key
+              type: object
             volumes:
               description: Volumes allows configuration of additional volumes on the
                 output StatefulSet definition. Volumes specified will be appended

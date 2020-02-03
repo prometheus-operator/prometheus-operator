@@ -198,6 +198,16 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
+	if tr.Spec.TracingConfig != nil {
+		trCLIArgs = append(trCLIArgs, "--tracing.config=$(TRACING_CONFIG)")
+		trEnvVars = append(trEnvVars, v1.EnvVar{
+			Name: "TRACING_CONFIG",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: tr.Spec.TracingConfig,
+			},
+		})
+	}
+
 	localReloadURL := &url.URL{
 		Scheme: "http",
 		Host:   config.LocalHost + ":10902",

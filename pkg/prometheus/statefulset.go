@@ -831,6 +831,16 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			disableCompaction = true
 		}
 
+		if p.Spec.Thanos.TracingConfig != nil {
+			container.Args = append(container.Args, "--tracing.config=$(TRACING_CONFIG)")
+			container.Env = append(container.Env, v1.EnvVar{
+				Name: "TRACING_CONFIG",
+				ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: p.Spec.Thanos.TracingConfig,
+				},
+			})
+		}
+
 		if p.Spec.LogLevel != "" {
 			container.Args = append(container.Args, fmt.Sprintf("--log.level=%s", p.Spec.LogLevel))
 		}
