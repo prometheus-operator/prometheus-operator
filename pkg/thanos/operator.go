@@ -81,6 +81,9 @@ type Config struct {
 	Host                   string
 	TLSInsecure            bool
 	TLSConfig              rest.TLSClientConfig
+	ConfigReloaderImage    string
+	ConfigReloaderCPU      string
+	ConfigReloaderMemory   string
 	ThanosDefaultBaseImage string
 	Namespaces             prometheusoperator.Namespaces
 	Labels                 prometheusoperator.Labels
@@ -130,6 +133,9 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 			Host:                   conf.Host,
 			TLSInsecure:            conf.TLSInsecure,
 			TLSConfig:              conf.TLSConfig,
+			ConfigReloaderImage:    conf.ConfigReloaderImage,
+			ConfigReloaderCPU:      conf.ConfigReloaderCPU,
+			ConfigReloaderMemory:   conf.ConfigReloaderMemory,
 			ThanosDefaultBaseImage: conf.ThanosDefaultBaseImage,
 			Namespaces:             conf.Namespaces,
 			Labels:                 conf.Labels,

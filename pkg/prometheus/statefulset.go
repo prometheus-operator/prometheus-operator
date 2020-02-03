@@ -903,7 +903,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to merge containers spec")
 	}
-	// PodManagementPolicy is set to Parallel to mitigate issues in kuberentes: https://github.com/kubernetes/kubernetes/issues/60164
+	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
 		ServiceName:         governingServiceName,
