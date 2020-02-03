@@ -38,6 +38,7 @@ const (
 	defaultPortName           = "web"
 	defaultRetention          = "24h"
 	defaultEvaluationInterval = "15s"
+	defaultReplicaLabelName   = "thanos_ruler_replica"
 )
 
 var (
@@ -158,7 +159,27 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		fmt.Sprintf("--eval-interval=%s", tr.Spec.EvaluationInterval),
 		fmt.Sprintf("--tsdb.retention=%s", tr.Spec.Retention),
 	}
-	trEnvVars := []v1.EnvVar{}
+	trEnvVars := []v1.EnvVar{
+		{
+			Name: "POD_NAME",
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
+			},
+		},
+	}
+
+	if len(tr.Spec.Labels) == 0 {
+		trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="$(POD_NAME)"`, defaultReplicaLabelName))
+		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", defaultReplicaLabelName))
+	} else {
+		for k, v := range tr.Spec.Labels {
+			trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="%s"`, k, v))
+		}
+
+		for _, lb := range tr.Spec.AlertDropLabels {
+			trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--alert.label-drop=%s"`, lb))
+		}
+	}
 
 	if tr.Spec.ListenLocal {
 		trCLIArgs = append(trCLIArgs, "--http-address=localhost:10902")

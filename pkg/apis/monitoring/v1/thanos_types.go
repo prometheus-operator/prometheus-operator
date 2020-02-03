@@ -135,6 +135,10 @@ type ThanosRulerSpec struct {
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 	// TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.
 	TracingConfig *v1.SecretKeySelector `json:"tracingConfig,omitempty"`
+	// Labels configure the label pairs to ThanosRuler.
+	Labels map[string]string `json:"labels,omitempty"`
+	// AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts.
+	AlertDropLabels []string `json:"alertDropLabels,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not
