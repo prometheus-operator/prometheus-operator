@@ -3,15 +3,16 @@ apiVersion: monitoring.coreos.com/v1
 kind: ThanosRuler
 metadata:
   name: thanos-ruler
+  namespace: default
   labels:
     app: thanos-ruler
 spec:
-  image: quay.io/thanos/thanos
+  image: quay.io/thanos/thanos:v0.10.1
   ruleSelector:
     matchLabels:
       role: thanos-example
   queryEndpoints:
-  - dnssrv+_http._tcp.thanos-query.monitoring.svc.cluster.local
+  - dnssrv+_http._tcp.thanos-query.default.svc.cluster.local
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -21,7 +22,7 @@ metadata:
     prometheus: example-alert
     role: thanos-example
   name: prometheus-example-alerts
-  namespace: monitoring
+  namespace: default
 spec:
   groups:
   - name: ./example-alert.rules
