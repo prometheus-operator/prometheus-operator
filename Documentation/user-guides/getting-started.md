@@ -446,4 +446,4 @@ Further reading:
 [introducing-operators]: https://coreos.com/blog/introducing-operators.html
 [prom-rbac]: ../rbac.md
 [prometheus-manifest]: ../../example/rbac/prometheus/prometheus.yaml
-[rbac-auth]: https://kubernetes.io/docs/admin/authorization/
+[rbac-auth]: https://kubernetes.io/docs/reference/access-authn-authz/authorization/
