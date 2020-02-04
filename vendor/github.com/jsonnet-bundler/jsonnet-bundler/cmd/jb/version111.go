@@ -12,12 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+// +build !go1.12
+
+package main
 
 import (
-	"context"
+	"os"
+	"path/filepath"
+
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
-type Interface interface {
-	Install(ctx context.Context, name, dir, version string) (lockVersion string, err error)
+func newApp() *kingpin.Application {
+	a := kingpin.New(filepath.Base(os.Args[0]), "A jsonnet package manager")
+	return a
 }

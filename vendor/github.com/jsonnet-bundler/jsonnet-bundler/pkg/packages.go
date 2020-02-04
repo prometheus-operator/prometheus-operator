@@ -16,188 +16,209 @@ package pkg
 
 import (
 	"context"
-	"encoding/json"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/fatih/color"
-	"github.com/jsonnet-bundler/jsonnet-bundler/spec"
 	"github.com/pkg/errors"
+
+	"github.com/jsonnet-bundler/jsonnet-bundler/pkg/jsonnetfile"
+	"github.com/jsonnet-bundler/jsonnet-bundler/spec"
 )
 
 var (
-	JsonnetFile     = "jsonnetfile.json"
-	JsonnetLockFile = "jsonnetfile.lock.json"
 	VersionMismatch = errors.New("multiple colliding versions specified")
 )
 
-func Install(ctx context.Context, isLock bool, dependencySourceIdentifier string, m spec.JsonnetFile, dir string) (lock *spec.JsonnetFile, err error) {
-	lock = &spec.JsonnetFile{}
-	for _, dep := range m.Dependencies {
-		tmp := filepath.Join(dir, ".tmp")
-		err = os.MkdirAll(tmp, os.ModePerm)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create general tmp dir")
-		}
-		tmpDir, err := ioutil.TempDir(tmp, fmt.Sprintf("jsonnetpkg-%s-%s", dep.Name, dep.Version))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create tmp dir")
-		}
-		defer os.RemoveAll(tmpDir)
+// Ensure receives all direct packages as, the directory to vendor in and all known locks.
+// It then makes sure all direct and nested dependencies are present in vendor at the correct version:
+//
+// If the package is locked and the files in vendor match the sha256 checksum,
+// nothing needs to be done. Otherwise, the package is retrieved from the
+// upstream source and added into vendor. If previously locked, the sums are
+// checked as well.
+// In case a (nested) package is already present in the lock,
+// the one from the lock takes precedence. This allows the user to set the
+// desired version in case by `jb install`ing it.
+//
+// Finally, all unknown files and directories are removed from vendor/
+func Ensure(direct spec.JsonnetFile, vendorDir string, locks map[string]spec.Dependency) (map[string]spec.Dependency, error) {
+	// ensure all required files are in vendor
+	deps, err := ensure(direct.Dependencies, vendorDir, locks)
+	if err != nil {
+		return nil, err
+	}
 
-		subdir := ""
-		var p Interface
-		if dep.Source.GitSource != nil {
-			p = NewGitPackage(dep.Source.GitSource)
-			subdir = dep.Source.GitSource.Subdir
-		}
-
-		lockVersion, err := p.Install(ctx, tmpDir, dep.Version)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to install package")
-		}
-
-		color.Green(">>> Installed %s version %s\n", dep.Name, dep.Version)
-
-		destPath := path.Join(dir, dep.Name)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to find destination path for package")
-		}
-
-		err = os.MkdirAll(path.Dir(destPath), os.ModePerm)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create parent path")
-		}
-
-		err = os.RemoveAll(destPath)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to clean previous destination path")
-		}
-		err = os.Rename(path.Join(tmpDir, subdir), destPath)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to move package")
-		}
-
-		lock.Dependencies, err = insertDependency(lock.Dependencies, spec.Dependency{
-			Name:      dep.Name,
-			Source:    dep.Source,
-			Version:   lockVersion,
-			DepSource: dependencySourceIdentifier,
-		})
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to insert dependency to lock dependencies")
-		}
-
-		// If dependencies are being installed from a lock file, the transitive
-		// dependencies are not questioned, the locked dependencies are just
-		// installed.
-		if isLock {
-			continue
-		}
-
-		filepath, isLock, err := ChooseJsonnetFile(destPath)
-		if err != nil {
-			return nil, err
-		}
-		depsDeps, err := LoadJsonnetfile(filepath)
-		// It is ok for depedencies not to have a JsonnetFile, it just means
-		// they do not have transitive dependencies of their own.
-		if err != nil && !os.IsNotExist(err) {
-			return nil, err
-		}
-
-		depsInstalledByDependency, err := Install(ctx, isLock, filepath, depsDeps, dir)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, d := range depsInstalledByDependency.Dependencies {
-			lock.Dependencies, err = insertDependency(lock.Dependencies, d)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to insert dependency to lock dependencies")
+	// cleanup unknown dirs from vendor/
+	f, err := os.Open(vendorDir)
+	if err != nil {
+		return nil, err
+	}
+	names, err := f.Readdirnames(0)
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range names {
+		if _, ok := deps[name]; !ok {
+			dir := filepath.Join(vendorDir, name)
+			if err := os.RemoveAll(dir); err != nil {
+				return nil, err
+			}
+			if name != ".tmp" {
+				color.Magenta("CLEAN %s", dir)
 			}
 		}
 	}
 
-	return lock, nil
+	// return the final lockfile contents
+	return deps, nil
 }
 
-func insertDependency(deps []spec.Dependency, newDep spec.Dependency) ([]spec.Dependency, error) {
-	if len(deps) == 0 {
-		return []spec.Dependency{newDep}, nil
+func ensure(direct map[string]spec.Dependency, vendorDir string, locks map[string]spec.Dependency) (map[string]spec.Dependency, error) {
+	deps := make(map[string]spec.Dependency)
+
+	for _, d := range direct {
+		l, present := locks[d.Name]
+
+		// already locked and the integrity is intact
+		if present {
+			d.Version = locks[d.Name].Version
+
+			if check(l, vendorDir) {
+				deps[d.Name] = l
+				continue
+			}
+		}
+		expectedSum := locks[d.Name].Sum
+
+		// either not present or not intact: download again
+		dir := filepath.Join(vendorDir, d.Name)
+		os.RemoveAll(dir)
+
+		locked, err := download(d, vendorDir)
+		if err != nil {
+			return nil, errors.Wrap(err, "downloading")
+		}
+		if expectedSum != "" && locked.Sum != expectedSum {
+			return nil, fmt.Errorf("checksum mismatch for %s. Expected %s but got %s", d.Name, expectedSum, locked.Sum)
+		}
+		deps[d.Name] = *locked
+		// we settled on a new version, add it to the locks for recursion
+		locks[d.Name] = *locked
 	}
 
-	res := []spec.Dependency{}
-	newDepPreviouslyPresent := false
 	for _, d := range deps {
-		if d.Name == newDep.Name {
-			if d.Version != newDep.Version {
-				return nil, fmt.Errorf("multiple colliding versions specified for %s: %s (from %s) and %s (from %s)", d.Name, d.Version, d.DepSource, newDep.Version, newDep.DepSource)
+		f, err := jsonnetfile.Load(filepath.Join(vendorDir, d.Name, jsonnetfile.File))
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
 			}
-			res = append(res, d)
-			newDepPreviouslyPresent = true
-		} else {
-			res = append(res, d)
+			return nil, err
+		}
+
+		nested, err := ensure(f.Dependencies, vendorDir, locks)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, d := range nested {
+			if _, ok := deps[d.Name]; !ok {
+				deps[d.Name] = d
+			}
 		}
 	}
-	if !newDepPreviouslyPresent {
-		res = append(res, newDep)
-	}
 
-	return res, nil
+	return deps, nil
 }
 
-func FileExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	if err != nil {
-		return false, err
+// download retrieves a package from a remote upstream. The checksum of the
+// files is generated afterwards.
+func download(d spec.Dependency, vendorDir string) (*spec.Dependency, error) {
+	var p Interface
+	switch {
+	case d.Source.GitSource != nil:
+		p = NewGitPackage(d.Source.GitSource)
+	case d.Source.LocalSource != nil:
+		p = NewLocalPackage(d.Source.LocalSource)
 	}
 
-	return true, nil
+	if p == nil {
+		return nil, errors.New("either git or local source is required")
+	}
+
+	version, err := p.Install(context.TODO(), d.Name, vendorDir, d.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	var sum string
+	if d.Source.LocalSource == nil {
+		sum = hashDir(filepath.Join(vendorDir, d.Name))
+	}
+
+	return &spec.Dependency{
+		Name:    d.Name,
+		Source:  d.Source,
+		Version: version,
+		Sum:     sum,
+	}, nil
 }
 
-func ChooseJsonnetFile(dir string) (string, bool, error) {
-	lockfile := path.Join(dir, JsonnetLockFile)
-	jsonnetfile := path.Join(dir, JsonnetFile)
-	filename := lockfile
-	isLock := true
-
-	lockExists, err := FileExists(filepath.Join(dir, JsonnetLockFile))
-	if err != nil {
-		return "", false, err
+// check returns whether the files present at the vendor/ folder match the
+// sha256 sum of the package. local-directory dependencies are not checked as
+// their purpose is to change during development where integrity checking would
+// be a hindrance.
+func check(d spec.Dependency, vendorDir string) bool {
+	// assume a local dependency is intact as long as it exists
+	if d.Source.LocalSource != nil {
+		x, err := jsonnetfile.Exists(filepath.Join(vendorDir, d.Name))
+		if err != nil {
+			return false
+		}
+		return x
 	}
 
-	if !lockExists {
-		filename = jsonnetfile
-		isLock = false
+	if d.Sum == "" {
+		// no sum available, need to download
+		return false
 	}
 
-	return filename, isLock, err
+	dir := filepath.Join(vendorDir, d.Name)
+	sum := hashDir(dir)
+	return d.Sum == sum
 }
 
-func LoadJsonnetfile(filepath string) (spec.JsonnetFile, error) {
-	m := spec.JsonnetFile{}
+// hashDir computes the checksum of a directory by concatenating all files and
+// hashing this data using sha256. This can be memory heavy with lots of data,
+// but jsonnet files should be fairly small
+func hashDir(dir string) string {
+	hasher := sha256.New()
 
-	if _, err := os.Stat(filepath); err != nil {
-		return m, err
-	}
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-	f, err := os.Open(filepath)
-	if err != nil {
-		return m, err
-	}
-	defer f.Close()
+		if info.IsDir() {
+			return nil
+		}
 
-	err = json.NewDecoder(f).Decode(&m)
-	if err != nil {
-		return m, err
-	}
+		f, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
 
-	return m, nil
+		if _, err := io.Copy(hasher, f); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return base64.StdEncoding.EncodeToString(hasher.Sum(nil))
 }
