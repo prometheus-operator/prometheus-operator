@@ -3,9 +3,8 @@
         {
             "name": "prometheus-operator",
             "source": {
-                "git": {
-                    "remote": "../../",
-                    "subdir": "jsonnet/prometheus-operator"
+                "local": {
+                    "directory": "../../jsonnet/prometheus-operator"
                 }
             },
             "version": "."
