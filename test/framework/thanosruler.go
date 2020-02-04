@@ -26,12 +26,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (f *Framework) MakeBasicThanosRuler(name string) *monitoringv1.ThanosRuler {
+func (f *Framework) MakeBasicThanosRuler(name string, replicas int32) *monitoringv1.ThanosRuler {
 	return &monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 		Spec: monitoringv1.ThanosRulerSpec{
+			Replicas:       &replicas,
 			QueryEndpoints: []string{"test"},
 			LogLevel:       "debug",
 		},
