@@ -1,5 +1,10 @@
 ## Next release
 
+## 0.35.1 / 2020-01-13
+
+* [CHANGE] Restrict api extension RBAC rules (#2981)
+* [BUGFIX] Fix statefulset crash loop on kubernetes v1.17.0 (#3002)
+
 ## 0.35.0 / 2020-01-13
 
 * [CHANGE] Deprecate baseImage, tag, and sha fields in custom resources (#2914)
