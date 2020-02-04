@@ -15,13 +15,14 @@
 package thanos
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"path"
 	"strings"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -215,7 +216,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		Path: path.Clean("/-/reload"),
 	}
 
-	operatorContainers := []v1.Container{}
+	additionalContainers := []v1.Container{}
 	if len(ruleConfigMapNames) != 0 {
 		reloader := v1.Container{
 			Name:  "rules-configmap-reloader",
@@ -246,7 +247,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			})
 			reloader.Args = append(reloader.Args, fmt.Sprintf("--volume-dir=%s", mountPath))
 		}
-		operatorContainers = append(operatorContainers, reloader)
+		additionalContainers = append(additionalContainers, reloader)
 	}
 
 	podAnnotations := map[string]string{}
@@ -298,29 +299,35 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
-	trContainer := v1.Container{
-		Name:         "thanos-ruler",
-		Image:        tr.Spec.Image,
-		Args:         trCLIArgs,
-		Env:          trEnvVars,
-		VolumeMounts: trVolumeMounts,
-		Resources:    tr.Spec.Resources,
-		Ports: []v1.ContainerPort{
-			{
-				Name:          "grpc",
-				ContainerPort: 10901,
-				Protocol:      v1.ProtocolTCP,
+	operatorContainers := append([]v1.Container{
+		{
+			Name:         "thanos-ruler",
+			Image:        tr.Spec.Image,
+			Args:         trCLIArgs,
+			Env:          trEnvVars,
+			VolumeMounts: trVolumeMounts,
+			Resources:    tr.Spec.Resources,
+			Ports: []v1.ContainerPort{
+				{
+					Name:          "grpc",
+					ContainerPort: 10901,
+					Protocol:      v1.ProtocolTCP,
+				},
+				{
+					Name:          "http",
+					ContainerPort: 10902,
+					Protocol:      v1.ProtocolTCP,
+				},
 			},
-			{
-				Name:          "http",
-				ContainerPort: 10902,
-				Protocol:      v1.ProtocolTCP,
-			},
+			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
-		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+	}, additionalContainers...)
+
+	containers, err := k8sutil.MergePatchContainers(operatorContainers, tr.Spec.Containers)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to merge containers spec")
 	}
 
-	operatorContainers = append([]v1.Container{trContainer}, operatorContainers...)
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
@@ -338,8 +345,9 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
-				Containers: operatorContainers,
-				Volumes:    trVolumes,
+				Containers:     containers,
+				InitContainers: tr.Spec.InitContainers,
+				Volumes:        trVolumes,
 			},
 		},
 	}, nil
