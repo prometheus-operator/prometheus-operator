@@ -48,9 +48,11 @@ rules:
   - monitoring.coreos.com
   resources:
   - alertmanagers
+  - alertmanagers/finalizers
   - prometheuses
   - prometheuses/finalizers
-  - alertmanagers/finalizers
+  - thanosrulers
+  - thanosrulers/finalizers
   - servicemonitors
   - podmonitors
   - prometheusrules
