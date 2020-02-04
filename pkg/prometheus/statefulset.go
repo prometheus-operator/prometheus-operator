@@ -34,8 +34,7 @@ import (
 
 const (
 	governingServiceName            = "prometheus-operated"
-	DefaultPrometheusVersion        = "v2.7.1"
-	DefaultThanosVersion            = "v0.8.1"
+	DefaultThanosVersion            = "v0.10.1"
 	defaultRetention                = "24h"
 	defaultReplicaExternalLabelName = "prometheus_replica"
 	storageDir                      = "/prometheus"
@@ -97,6 +96,7 @@ var (
 		"v2.14.0",
 		"v2.15.2",
 	}
+	DefaultPrometheusVersion = CompatibilityMatrix[len(CompatibilityMatrix)-1]
 )
 
 func makeStatefulSet(
