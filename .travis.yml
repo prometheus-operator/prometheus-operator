@@ -28,9 +28,11 @@ jobs:
   - name: "Run unit tests"
     script: make test-unit
   - name: "Run e2e tests (Alertmanager)"
-    script: EXCLUDE_PROMETHEUS_TESTS=true ./scripts/travis-e2e.sh
+    script: EXCLUDE_PROMETHEUS_TESTS=true EXCLUDE_THANOS_TESTS=true ./scripts/travis-e2e.sh
   - name: "Run e2e tests (Prometheus)"
-    script: EXCLUDE_ALERTMANAGER_TESTS=true ./scripts/travis-e2e.sh
+    script: EXCLUDE_ALERTMANAGER_TESTS=true EXCLUDE_THANOS_TESTS=true ./scripts/travis-e2e.sh
+  - name: "Run e2e tests (Thanos)"
+    script: EXCLUDE_PROMETHEUS_TESTS=true EXCLUDE_ALERTMANAGER_TESTS=true ./scripts/travis-e2e.sh
 
   - name: "Push Docker Image"
     stage: push-docker-image
