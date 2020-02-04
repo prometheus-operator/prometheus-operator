@@ -17,7 +17,7 @@ clusterroles.rbac.authorization.k8s.io "prometheus-operator" is forbidden: attem
 <....>
 ````
 
-This is due to the way Container Engine checks permissions. From [Google Container Engine docs](https://cloud.google.com/container-engine/docs/role-based-access-control):
+This is due to the way Container Engine checks permissions. From [Google Kubernetes Engine docs](https://cloud.google.com/kubernetes-engine/docs/how-to/role-based-access-control):
 
 > Because of the way Container Engine checks permissions when you create a Role or ClusterRole, you must first create a RoleBinding that grants you all of the permissions included in the role you want to create.
 > An example workaround is to create a RoleBinding that gives your Google identity a cluster-admin role before attempting to create additional Role or ClusterRole permissions.

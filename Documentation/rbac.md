@@ -229,4 +229,4 @@ subjects:
   namespace: default
 ```
 
-> See [Using Authorization Plugins](https://kubernetes.io/docs/admin/authorization/) for further usage information on RBAC components.
+> See [Using Authorization Plugins](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) for further usage information on RBAC components.

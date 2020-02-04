@@ -194,4 +194,4 @@ Envoy's metrics data model is remarkably similar to that of Prometheus and uses 
 | envoy_cluster_upstream_rq | envoy_cluster_upstream_rq <br></br> envoy_cluster_upstream_rq_xx <br></br> envoy_cluster_upstream_rq_total <br></br> envoy_cluster_upstream_rq_retry | Statistics regarding traffic from Envoy to each upstream service. Tracking this will give you insight to how the request is performing after reaching Ambassador. It will help you pinpoint whether failures are happening in Ambassador or the upstream service. |
 
 
-Envoy collects many more statistics including some regarding rate limiting, circuit breaking, and distributed tracing. See the [Envoy's documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http_conn_man/stats) for more information on the metrics envoy collects.
+Envoy collects many more statistics including some regarding rate limiting, circuit breaking, and distributed tracing. See the [Envoy's documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/stats) for more information on the metrics envoy collects.
