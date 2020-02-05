@@ -1,5 +1,9 @@
 ## Next release
 
+## 0.34.1 / 2020-02-05
+
+* [BUGFIX] Fix statefulset crash loop on kubernetes v1.17.0 (#3002)
+
 ## 0.34.0 / 2019-10-31
 
 * [CHANGE] Make arbitraryFSAccessThroughSMs optional (#2797)
