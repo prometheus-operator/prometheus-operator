@@ -27,7 +27,7 @@ func testTRCreateDeleteCluster(t *testing.T) {
 
 	name := "test"
 
-	if _, err := framework.CreateThanosRulerAndWaitUntilReady(ns, framework.MakeBasicThanosRuler(name)); err != nil {
+	if _, err := framework.CreateThanosRulerAndWaitUntilReady(ns, framework.MakeBasicThanosRuler(name, 1)); err != nil {
 		t.Fatal(err)
 	}
 
