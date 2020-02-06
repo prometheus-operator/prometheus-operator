@@ -36,6 +36,12 @@ spec:
           description: 'Specification of the desired behavior of the ThanosRuler cluster.
             More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
           properties:
+            alertDropLabels:
+              description: AlertDropLabels configure the label names which should
+                be dropped in ThanosRuler alerts.
+              items:
+                type: string
+              type: array
             alertmanagersConfig:
               description: Define configuration for connecting to alertmanager.  Only
                 available with thanos v0.10.0 and higher.  Maps to the `alertmanagers.config`
@@ -2171,6 +2177,11 @@ spec:
                 - name
                 type: object
               type: array
+            labels:
+              additionalProperties:
+                type: string
+              description: Labels configure the label pairs to ThanosRuler.
+              type: object
             listenLocal:
               description: ListenLocal makes the Thanos ruler listen on loopback,
                 so that it does not bind against the Pod IP.
