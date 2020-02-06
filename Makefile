@@ -161,6 +161,7 @@ $(CRD_YAML_FILES): $(CONTROLLER_GEN_BINARY) $(TYPES_V1_TARGET)
 	sed s/prometheus.monitoring.coreos.com/prometheuses.monitoring.coreos.com/ \
 	> ./example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
 	rm ./example/prometheus-operator-crd/monitoring.coreos.com_prometheus.yaml
+	sed -i "/\ \ creationTimestamp\:\ null/d" $(CRD_YAML_FILES)
 
 $(CRD_JSONNET_FILES): $(GOJSONTOYAML_BINARY) $(CRD_YAML_FILES)
 	cat example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml   | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/alertmanager-crd.libsonnet

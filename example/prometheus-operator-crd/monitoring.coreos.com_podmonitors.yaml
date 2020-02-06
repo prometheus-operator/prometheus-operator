@@ -5,7 +5,6 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.4
-  creationTimestamp: null
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
