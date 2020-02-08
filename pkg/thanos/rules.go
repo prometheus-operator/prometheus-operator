@@ -75,7 +75,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(t *monitoringv1.ThanosRuler) ([]
 		level.Debug(o.logger).Log(
 			"msg", "no PrometheusRule changes",
 			"namespace", t.Namespace,
-			"prometheus", t.Name,
+			"thanos", t.Name,
 		)
 		currentConfigMapNames := []string{}
 		for _, cm := range currentConfigMaps {
@@ -98,7 +98,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(t *monitoringv1.ThanosRuler) ([]
 		level.Debug(o.logger).Log(
 			"msg", "no PrometheusRule configmap found, creating new one",
 			"namespace", t.Namespace,
-			"prometheus", t.Name,
+			"thanos", t.Name,
 		)
 		for _, cm := range newConfigMaps {
 			_, err = cClient.Create(&cm)
@@ -121,7 +121,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(t *monitoringv1.ThanosRuler) ([]
 	level.Debug(o.logger).Log(
 		"msg", "updating PrometheusRule",
 		"namespace", t.Namespace,
-		"prometheus", t.Name,
+		"thanos", t.Name,
 	)
 	for _, cm := range newConfigMaps {
 		_, err = cClient.Create(&cm)
@@ -133,8 +133,8 @@ func (o *Operator) createOrUpdateRuleConfigMaps(t *monitoringv1.ThanosRuler) ([]
 	return newConfigMapNames, nil
 }
 
-func prometheusRulesConfigMapSelector(prometheusName string) metav1.ListOptions {
-	return metav1.ListOptions{LabelSelector: fmt.Sprintf("%v=%v", labelThanosRulerName, prometheusName)}
+func prometheusRulesConfigMapSelector(thanosRulerName string) metav1.ListOptions {
+	return metav1.ListOptions{LabelSelector: fmt.Sprintf("%v=%v", labelThanosRulerName, thanosRulerName)}
 }
 
 func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, error) {
@@ -159,7 +159,7 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 		"msg", "selected RuleNamespaces",
 		"namespaces", strings.Join(namespaces, ","),
 		"namespace", p.Namespace,
-		"prometheus", p.Name,
+		"thanos", p.Name,
 	)
 
 	return namespaces, nil
@@ -201,7 +201,7 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 		"msg", "selected Rules",
 		"rules", strings.Join(ruleNames, ","),
 		"namespace", t.Namespace,
-		"prometheus", t.Name,
+		"thanos", t.Name,
 	)
 
 	return rules, nil
@@ -242,9 +242,9 @@ func generateContent(promRule monitoringv1.PrometheusRuleSpec, enforcedNsLabel, 
 	return string(content), nil
 }
 
-// makeRulesConfigMaps takes a Prometheus configuration and rule files and
+// makeRulesConfigMaps takes a ThanosRuler configuration and rule files and
 // returns a list of Kubernetes ConfigMaps to be later on mounted into the
-// Prometheus instance.
+// ThanosRuler instance.
 // If the total size of rule files exceeds the Kubernetes ConfigMap limit,
 // they are split up via the simple first-fit [1] bin packing algorithm. In the
 // future this can be replaced by a more sophisticated algorithm, but for now

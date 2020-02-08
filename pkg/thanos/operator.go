@@ -453,7 +453,7 @@ func (o *Operator) thanosForStatefulSet(sset interface{}) *monitoringv1.ThanosRu
 	thanosKey := statefulSetKeyToThanosKey(key)
 	tr, exists, err := o.thanosRulerInf.GetStore().GetByKey(thanosKey)
 	if err != nil {
-		level.Error(o.logger).Log("msg", "Prometheus lookup failed", "err", err)
+		level.Error(o.logger).Log("msg", "ThanosRuler lookup failed", "err", err)
 		return nil
 	}
 	if !exists {
@@ -780,7 +780,7 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	return false
 }
 
-// enqueueForNamespace enqueues all Prometheus object keys that belong to the
+// enqueueForNamespace enqueues all ThanosRuler object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (o *Operator) enqueueForNamespace(nsName string) {
 	nsObject, exists, err := o.nsInf.GetStore().GetByKey(nsName)
