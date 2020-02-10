@@ -175,10 +175,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		for k, v := range tr.Spec.Labels {
 			trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--label=%s="%s"`, k, v))
 		}
+	}
 
-		for _, lb := range tr.Spec.AlertDropLabels {
-			trCLIArgs = append(trCLIArgs, fmt.Sprintf(`--alert.label-drop=%s"`, lb))
-		}
+	for _, lb := range tr.Spec.AlertDropLabels {
+		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", lb))
 	}
 
 	if tr.Spec.ListenLocal {
