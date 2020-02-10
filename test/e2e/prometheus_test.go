@@ -1742,9 +1742,9 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/ca-certificates/example-ca.pem",
-					CertFile: "/etc/ca-certificates/example-cert.pem",
-					KeyFile:  "/etc/ca-certificates/example-key.pem",
+					CAFile:   "/etc/ca-certificates/cert.pem",
+					CertFile: "/etc/ca-certificates/cert.pem",
+					KeyFile:  "/etc/ca-certificates/key.pem",
 				},
 			},
 			expectTargets: true,
@@ -1757,9 +1757,9 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/ca-certificates/example-ca.pem",
-					CertFile: "/etc/ca-certificates/example-cert.pem",
-					KeyFile:  "/etc/ca-certificates/example-key.pem",
+					CAFile:   "/etc/ca-certificates/cert.pem",
+					CertFile: "/etc/ca-certificates/cert.pem",
+					KeyFile:  "/etc/ca-certificates/key.pem",
 				},
 			},
 			expectTargets: false,
@@ -1961,6 +1961,10 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			prometheusCRD.Namespace = ns
 			prometheusCRD.Spec.ArbitraryFSAccessThroughSMs = test.arbitraryFSAccessThroughSMsConfig
 
+			if strings.HasSuffix(test.name, "-file") {
+				mountTLSFiles(prometheusCRD, name)
+			}
+
 			if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheusCRD); err != nil {
 				t.Fatal(err)
 			}
@@ -1992,6 +1996,32 @@ func testPromArbitraryFSAcc(t *testing.T) {
 		})
 	}
 
+}
+
+// mountTLSFiles is a helper to manually mount TLS certificate files
+// into the prometheus container
+func mountTLSFiles(p *monitoringv1.Prometheus, secretName string) {
+	volumeName := secretName
+	p.Spec.Volumes = append(p.Spec.Volumes,
+		v1.Volume{
+			Name: volumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: secretName,
+				},
+			},
+		})
+	p.Spec.Containers = []v1.Container{
+		v1.Container{
+			Name: "prometheus",
+			VolumeMounts: []v1.VolumeMount{
+				v1.VolumeMount{
+					Name:      volumeName,
+					MountPath: "/etc/ca-certificates",
+				},
+			},
+		},
+	}
 }
 
 // testPromTLSConfigViaSecret tests the service monitor endpoint option to load
