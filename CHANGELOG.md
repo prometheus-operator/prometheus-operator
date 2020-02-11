@@ -1,5 +1,21 @@
 ## Next release
 
+## 0.36.0 / 2020-02-10
+
+* [CHANGE] Rename binary `lint` to `po-lint` (#2964)
+* [CHANGE] Restrict api extension RBAC rules (#2974)
+* [FEATURE] Add operator for Thanos Ruler resources (#2943)
+* [FEATURE] Thanos Ruler Improvements (#2986, #2991, #2993, #2994, #3018, #3019)
+* [FEATURE] Add additional printer columns for custom resources (#2922)
+* [ENHANCEMENT] Set config-reloader containers resources (#2958)
+* [ENHANCEMENT] Fix broken links and remove spec.version in examples (#2961)
+* [ENHANCEMENT] Reduce deprecation warning verbosity (#2978)
+* [ENHANCEMENT] Build tooling improvements (#2979, #2982, #2983)
+* [ENHANCEMENT] Update Prometheus compatible version list (#2998)
+* [ENHANCEMENT] Fix broken links in documentation (#3005)
+* [ENHANCEMENT] Update default container image versions (#3007)
+* [BUGFIX] Fix statefulset crash loop in Kube 1.17 (#2987)
+
 ## 0.35.0 / 2020-01-13
 
 * [CHANGE] Deprecate baseImage, tag, and sha fields in custom resources (#2914)
