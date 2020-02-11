@@ -238,11 +238,16 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
+	webRoutePrefix := "/"
+	if tr.Spec.RoutePrefix != "" {
+		webRoutePrefix = tr.Spec.RoutePrefix
+	}
+	trCLIArgs = append(trCLIArgs, fmt.Sprintf("--web.route-prefix=%s", webRoutePrefix))
+
 	localReloadURL := &url.URL{
 		Scheme: "http",
 		Host:   config.LocalHost + ":10902",
-		// TODO: add web prefix
-		Path: path.Clean("/-/reload"),
+		Path:   path.Clean(webRoutePrefix + "/-/reload"),
 	}
 
 	additionalContainers := []v1.Container{}
