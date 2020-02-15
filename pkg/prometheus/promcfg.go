@@ -182,14 +182,19 @@ func (cg *configGenerator) generateConfig(
 		evaluationInterval = p.Spec.EvaluationInterval
 	}
 
-	cfg = append(cfg, yaml.MapItem{
-		Key: "global",
-		Value: yaml.MapSlice{
-			{Key: "evaluation_interval", Value: evaluationInterval},
-			{Key: "scrape_interval", Value: scrapeInterval},
-			{Key: "external_labels", Value: buildExternalLabels(p)},
-		},
-	})
+	globalItems := yaml.MapSlice{
+		{Key: "evaluation_interval", Value: evaluationInterval},
+		{Key: "scrape_interval", Value: scrapeInterval},
+		{Key: "external_labels", Value: buildExternalLabels(p)},
+	}
+
+	if version.GTE(semver.MustParse("2.16.0")) && p.Spec.QueryLogFile != "" {
+		globalItems = append(globalItems, yaml.MapItem{
+			Key: "query_log_file", Value: p.Spec.QueryLogFile,
+		})
+	}
+
+	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
 	ruleFilePaths := []string{}
 	for _, name := range ruleConfigMapNames {

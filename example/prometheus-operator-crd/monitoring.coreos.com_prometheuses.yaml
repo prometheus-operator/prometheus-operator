@@ -3424,6 +3424,10 @@ spec:
                   description: Maximum time a query may take before being aborted.
                   type: string
               type: object
+            queryLogFile:
+              description: QueryLogFile specifies the file to which PromQL queries
+                are logged. This is only available in versions of Prometheus >= 2.16.0.
+              type: string
             remoteRead:
               description: If specified, the remote_read spec. This is an experimental
                 feature, it may change in any upcoming release in a breaking way.
