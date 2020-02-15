@@ -182,7 +182,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	}
 
 	if tr.Spec.ListenLocal {
-		trCLIArgs = append(trCLIArgs, "--http-address=localhost:10902")
+		trCLIArgs = append(trCLIArgs, "--grpc-address=127.0.0.1:10901")
+		trCLIArgs = append(trCLIArgs, "--http-address=127.0.0.1:10902")
 	}
 	if tr.Spec.LogLevel != "" && tr.Spec.LogLevel != "info" {
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--log.level=%s", tr.Spec.LogLevel))

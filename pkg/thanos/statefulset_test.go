@@ -154,3 +154,30 @@ func TestStatefulSetVolumes(t *testing.T) {
 		t.Fatal("expected volume mounts to match")
 	}
 }
+
+func TestListenLocal(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: []string{""},
+			ListenLocal:    true,
+		},
+	}, nil, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	foundGrpcFlag := false
+	foundHTTPFlag := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--grpc-address=127.0.0.1:10901" {
+			foundGrpcFlag = true
+		}
+		if flag == "--http-address=127.0.0.1:10902" {
+			foundHTTPFlag = true
+		}
+	}
+
+	if !foundGrpcFlag || !foundHTTPFlag {
+		t.Fatal("Thanos Ruler not listening on loopback when it should.")
+	}
+}
