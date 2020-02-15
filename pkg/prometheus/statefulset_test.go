@@ -707,6 +707,58 @@ func TestThanosObjectStorage(t *testing.T) {
 	}
 }
 
+func TestThanosTracing(t *testing.T) {
+	testKey := "thanos-config-secret-test"
+
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				TracingConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].Name != "prometheus" {
+		t.Fatalf("expected 1st containers to be prometheus, got %s", sset.Spec.Template.Spec.Containers[0].Name)
+	}
+
+	if sset.Spec.Template.Spec.Containers[2].Name != "thanos-sidecar" {
+		t.Fatalf("expected 3rd containers to be thanos-sidecar, got %s", sset.Spec.Template.Spec.Containers[2].Name)
+	}
+
+	var containsEnvVar bool
+	for _, env := range sset.Spec.Template.Spec.Containers[2].Env {
+		if env.Name == "TRACING_CONFIG" {
+			if env.ValueFrom.SecretKeyRef.Key == testKey {
+				containsEnvVar = true
+				break
+			}
+		}
+	}
+	if !containsEnvVar {
+		t.Fatalf("Thanos sidecar is missing expected TRACING_CONFIG env var with correct value")
+	}
+
+	{
+		var containsArg bool
+		const expectedArg = "--tracing.config=$(TRACING_CONFIG)"
+		for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
+			if arg == expectedArg {
+				containsArg = true
+				break
+			}
+		}
+		if !containsArg {
+			t.Fatalf("Thanos sidecar is missing expected argument: %s", expectedArg)
+		}
+	}
+}
+
 func TestRetentionSize(t *testing.T) {
 	tests := []struct {
 		version              string
@@ -857,6 +909,7 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 func TestAdditionalContainers(t *testing.T) {
 	// The base to compare everything against
 	baseSet, err := makeStatefulSet(monitoringv1.Prometheus{}, defaultTestConfig, nil, "")
+	require.NoError(t, err)
 
 	// Add an extra container
 	addSset, err := makeStatefulSet(monitoringv1.Prometheus{
