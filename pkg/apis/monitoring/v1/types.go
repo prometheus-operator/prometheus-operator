@@ -300,6 +300,9 @@ type PrometheusSpec struct {
 	// and metric that is user created. The label value will always be the namespace of the object that is
 	// being created.
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
+	// QueryLogFile specifies the file to which PromQL queries are logged.
+	// This is only available in versions of Prometheus >= 2.16.0.
+	QueryLogFile string `json:"queryLogFile,omitempty"`
 }
 
 // ArbitraryFSAccessThroughSMsConfig enables users to configure, whether
