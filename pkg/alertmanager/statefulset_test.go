@@ -63,12 +63,12 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(labels, sset.Labels) {
-		fmt.Println(pretty.Compare(labels, sset.Labels))
+		t.Log(pretty.Compare(labels, sset.Labels))
 		t.Fatal("Labels are not properly being propagated to the StatefulSet")
 	}
 
 	if !reflect.DeepEqual(expectedAnnotations, sset.Annotations) {
-		fmt.Println(pretty.Compare(expectedAnnotations, sset.Annotations))
+		t.Log(pretty.Compare(expectedAnnotations, sset.Annotations))
 		t.Fatal("Annotations are not properly being propagated to the StatefulSet")
 	}
 }
