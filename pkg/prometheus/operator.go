@@ -908,7 +908,6 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 	if !exists {
 		level.Error(c.logger).Log(
 			"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
-			"err", err,
 		)
 		return
 	}
