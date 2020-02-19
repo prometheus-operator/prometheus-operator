@@ -16,16 +16,17 @@ package admission
 
 import (
 	"encoding/json"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
-	"github.com/prometheus/client_golang/prometheus"
 	"io/ioutil"
-	"k8s.io/api/admission/v1beta1"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/api/admission/v1beta1"
 )
 
 func TestMutateRule(t *testing.T) {
@@ -90,6 +91,23 @@ func TestAdmitBadRule(t *testing.T) {
 	if resp.Response.Result.Details.Causes[1].Message !=
 		`group "test.rules", rule 0, "Test": msg=template: __alert_Test:1: unrecognized character in action: U+201C '“'` {
 		t.Error("Expected error about invalid template")
+	}
+}
+
+func TestAdmitBadRuleWithBooleanInAnnotations(t *testing.T) {
+	ts := server(api().servePrometheusRulesValidate)
+	defer ts.Close()
+
+	resp := send(t, ts, badRulesWithBooleanInAnnotations)
+
+	if resp.Response.Allowed {
+		t.Errorf("Expected admission to not be allowed but it was")
+		return
+	}
+
+	if resp.Response.Result.Details.Causes[0].Message !=
+		`json: cannot unmarshal bool into Go struct field Rule.spec.groups.rules.annotations of type string` {
+		t.Error("Expected error about inability to parse query")
 	}
 }
 
@@ -312,6 +330,73 @@ var badRulesNoAnnotations = `
                   "val": "{{ print “%f“ $value }}"
                 },
                 "expr": "vector(1))",
+                "for": "5m",
+                "labels": {
+                  "severity": "critical"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "oldObject": null,
+    "dryRun": false
+  }
+}
+`
+
+var badRulesWithBooleanInAnnotations = `
+{
+  "kind": "AdmissionReview",
+  "apiVersion": "admission.k8s.io/v1beta1",
+  "request": {
+    "uid": "87c5df7f-5090-11e9-b9b4-02425473f309",
+    "kind": {
+      "group": "monitoring.coreos.com",
+      "version": "v1",
+      "kind": "PrometheusRule"
+    },
+    "resource": {
+      "group": "monitoring.coreos.com",
+      "version": "v1",
+      "resource": "prometheusrules"
+    },
+    "namespace": "monitoring",
+    "operation": "CREATE",
+    "userInfo": {
+      "username": "kubernetes-admin",
+      "groups": [
+        "system:masters",
+        "system:authenticated"
+      ]
+    },
+    "object": {
+      "apiVersion": "monitoring.coreos.com/v1",
+      "kind": "PrometheusRule",
+      "metadata": {
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"monitoring.coreos.com/v1\",\"kind\":\"PrometheusRule\",\"metadata\":{\"annotations\":{},\"name\":\"test\",\"namespace\":\"monitoring\"},\"spec\":{\"groups\":[{\"name\":\"test.rules\",\"rules\":[{\"alert\":\"Test\",\"annotations\":{\"message\":\"Test rule\"},\"expr\":\"vector(1))\",\"for\":\"5m\",\"labels\":{\"severity\":\"critical\"}}]}]}}\n"
+        },
+        "creationTimestamp": "2019-03-27T13:02:09Z",
+        "generation": 1,
+        "name": "test",
+        "namespace": "monitoring",
+        "uid": "87c5d31d-5090-11e9-b9b4-02425473f309"
+      },
+      "spec": {
+        "groups": [
+          {
+            "name": "test.rules",
+            "rules": [
+              {
+                "alert": "Test",
+                "annotations": {
+                  "badBoolean": false,
+                  "message": "Test rule",
+                  "humanizePercentage": "Should work {{ $value | humanizePercentage }}"
+                },
+                "expr": "vector(1)",
                 "for": "5m",
                 "labels": {
                   "severity": "critical"
