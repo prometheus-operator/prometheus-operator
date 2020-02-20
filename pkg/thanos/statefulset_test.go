@@ -17,6 +17,7 @@ package thanos
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -35,6 +36,7 @@ var (
 		ConfigReloaderMemory:   "25Mi",
 		ThanosDefaultBaseImage: "quay.io/thanos/thanos",
 	}
+	emptyQueryEndpoints = []string{""}
 )
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
@@ -58,7 +60,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 			Annotations: annotations,
 		},
 		Spec: monitoringv1.ThanosRulerSpec{
-			QueryEndpoints: []string{""},
+			QueryEndpoints: emptyQueryEndpoints,
 		},
 	}, nil, defaultTestConfig, nil)
 
@@ -85,7 +87,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
-			QueryEndpoints: []string{""},
+			QueryEndpoints: emptyQueryEndpoints,
 			PodMetadata: &metav1.ObjectMeta{
 				Annotations: annotations,
 				Labels:      labels,
@@ -153,7 +155,7 @@ func TestStatefulSetVolumes(t *testing.T) {
 			Name: "foo",
 		},
 		Spec: monitoringv1.ThanosRulerSpec{
-			QueryEndpoints: []string{""},
+			QueryEndpoints: emptyQueryEndpoints,
 		},
 	}, nil, defaultTestConfig, []string{"rules-configmap-one"})
 	require.NoError(t, err)
@@ -165,5 +167,238 @@ func TestStatefulSetVolumes(t *testing.T) {
 	if !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts) {
 		fmt.Println(pretty.Compare(expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts))
 		t.Fatal("expected volume mounts to match")
+	}
+}
+
+func TestTracing(t *testing.T) {
+	testKey := "thanos-tracing-config-secret"
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			TracingConfig: &v1.SecretKeySelector{
+				Key: testKey,
+			},
+		},
+	}, nil, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].Name != "thanos-ruler" {
+		t.Fatalf("expected 1st containers to be thanos-ruler, got %s", sset.Spec.Template.Spec.Containers[0].Name)
+	}
+
+	var containsEnvVar bool
+	for _, env := range sset.Spec.Template.Spec.Containers[0].Env {
+		if env.Name == "TRACING_CONFIG" {
+			if env.ValueFrom.SecretKeyRef.Key == testKey {
+				containsEnvVar = true
+				break
+			}
+		}
+	}
+	if !containsEnvVar {
+		t.Fatalf("Thanos ruler is missing expected TRACING_CONFIG env var with correct value")
+	}
+
+	{
+		var containsArg bool
+		const expectedArg = "--tracing.config=$(TRACING_CONFIG)"
+		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+			if arg == expectedArg {
+				containsArg = true
+				break
+			}
+		}
+		if !containsArg {
+			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArg)
+		}
+	}
+}
+
+func TestObjectStorage(t *testing.T) {
+	testKey := "thanos-objstore-config-secret"
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			ObjectStorageConfig: &v1.SecretKeySelector{
+				Key: testKey,
+			},
+		},
+	}, nil, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].Name != "thanos-ruler" {
+		t.Fatalf("expected 1st containers to be thanos-ruler, got %s", sset.Spec.Template.Spec.Containers[0].Name)
+	}
+
+	var containsEnvVar bool
+	for _, env := range sset.Spec.Template.Spec.Containers[0].Env {
+		if env.Name == "OBJSTORE_CONFIG" {
+			if env.ValueFrom.SecretKeyRef.Key == testKey {
+				containsEnvVar = true
+				break
+			}
+		}
+	}
+	if !containsEnvVar {
+		t.Fatalf("Thanos ruler is missing expected OBJSTORE_CONFIG env var with correct value")
+	}
+
+	{
+		var containsArg bool
+		const expectedArg = "--objstore.config=$(OBJSTORE_CONFIG)"
+		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+			if arg == expectedArg {
+				containsArg = true
+				break
+			}
+		}
+		if !containsArg {
+			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArg)
+		}
+	}
+}
+
+func TestLabelsAndAlertDropLabels(t *testing.T) {
+	labelPrefix := "--label="
+	alertDropLabelPrefix := "--alert.label-drop="
+
+	tests := []struct {
+		Labels                  map[string]string
+		AlertDropLabels         []string
+		ExpectedLabels          []string
+		ExpectedAlertDropLabels []string
+	}{
+		{
+			Labels:                  nil,
+			AlertDropLabels:         nil,
+			ExpectedLabels:          []string{`thanos_ruler_replica="$(POD_NAME)"`},
+			ExpectedAlertDropLabels: []string{"thanos_ruler_replica"},
+		},
+		{
+			Labels:                  nil,
+			AlertDropLabels:         []string{"test"},
+			ExpectedLabels:          []string{`thanos_ruler_replica="$(POD_NAME)"`},
+			ExpectedAlertDropLabels: []string{"thanos_ruler_replica", "test"},
+		},
+		{
+			Labels: map[string]string{
+				"test": "test",
+			},
+			AlertDropLabels:         nil,
+			ExpectedLabels:          []string{`test="test"`},
+			ExpectedAlertDropLabels: []string{},
+		},
+		{
+			Labels: map[string]string{
+				"test": "test",
+			},
+			AlertDropLabels:         []string{"test"},
+			ExpectedLabels:          []string{`test="test"`},
+			ExpectedAlertDropLabels: []string{"test"},
+		},
+		{
+			Labels: map[string]string{
+				"thanos_ruler_replica": "$(POD_NAME)",
+				"test":                 "test",
+			},
+			AlertDropLabels:         []string{"test", "aaa"},
+			ExpectedLabels:          []string{`thanos_ruler_replica="$(POD_NAME)"`, `test="test"`},
+			ExpectedAlertDropLabels: []string{"test", "aaa"},
+		},
+	}
+	for _, tc := range tests {
+		actualLabels := []string{}
+		actualDropLabels := []string{}
+		sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+			ObjectMeta: metav1.ObjectMeta{},
+			Spec: monitoringv1.ThanosRulerSpec{
+				QueryEndpoints:  []string{""},
+				Labels:          tc.Labels,
+				AlertDropLabels: tc.AlertDropLabels,
+			},
+		}, nil, defaultTestConfig, nil)
+		if err != nil {
+			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+		}
+
+		ruler := sset.Spec.Template.Spec.Containers[0]
+		if ruler.Name != "thanos-ruler" {
+			t.Fatalf("Expected 1st containers to be thanos-ruler, got %s", ruler.Name)
+		}
+
+		for _, arg := range ruler.Args {
+			if strings.HasPrefix(arg, labelPrefix) {
+				actualLabels = append(actualLabels, strings.TrimPrefix(arg, labelPrefix))
+			} else if strings.HasPrefix(arg, alertDropLabelPrefix) {
+				actualDropLabels = append(actualDropLabels, strings.TrimPrefix(arg, alertDropLabelPrefix))
+			}
+		}
+		if !reflect.DeepEqual(actualLabels, tc.ExpectedLabels) {
+			t.Fatal("label sets mismatch")
+		}
+
+		if !reflect.DeepEqual(actualDropLabels, tc.ExpectedAlertDropLabels) {
+			t.Fatal("alert drop label sets mismatch")
+		}
+	}
+}
+
+func TestAdditionalContainers(t *testing.T) {
+	// The base to compare everything against
+	baseSet, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{QueryEndpoints: emptyQueryEndpoints},
+	}, nil, defaultTestConfig, nil)
+	require.NoError(t, err)
+
+	// Add an extra container
+	addSset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			Containers: []v1.Container{
+				{
+					Name: "extra-container",
+				},
+			},
+		},
+	}, nil, defaultTestConfig, nil)
+	require.NoError(t, err)
+
+	if len(baseSet.Spec.Template.Spec.Containers)+1 != len(addSset.Spec.Template.Spec.Containers) {
+		t.Fatalf("container count mismatch")
+	}
+
+	// Adding a new container with the same name results in a merge and just one container
+	const existingContainerName = "thanos-ruler"
+	const containerImage = "madeUpContainerImage"
+	modSset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			Containers: []v1.Container{
+				{
+					Name:  existingContainerName,
+					Image: containerImage,
+				},
+			},
+		},
+	}, nil, defaultTestConfig, nil)
+	require.NoError(t, err)
+
+	if len(baseSet.Spec.Template.Spec.Containers) != len(modSset.Spec.Template.Spec.Containers) {
+		t.Fatalf("container count mismatch. container %s was added instead of merged", existingContainerName)
+	}
+
+	// Check that adding a container with an existing name results in a single patched container.
+	for _, c := range modSset.Spec.Template.Spec.Containers {
+		if c.Name == existingContainerName && c.Image != containerImage {
+			t.Fatalf("expected container %s to have the image %s but got %s", existingContainerName, containerImage, c.Image)
+		}
 	}
 }
