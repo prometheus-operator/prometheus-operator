@@ -72,9 +72,23 @@ type ThanosRulerSpec struct {
 	Paused bool `json:"paused,omitempty"`
 	// Number of thanos ruler instances to deploy.
 	Replicas *int32 `json:"replicas,omitempty"`
-	// Resources defines the resource requirements for the Thanos sidecar.
+	// Define which Nodes the Pods are scheduled on.
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// Resources defines the resource requirements for single Pods.
 	// If not provided, no requests/limits will be set
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+	// If specified, the pod's scheduling constraints.
+	Affinity *v1.Affinity `json:"affinity,omitempty"`
+	// If specified, the pod's tolerations.
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// SecurityContext holds pod-level security attributes and common container settings.
+	// This defaults to the default PodSecurityContext.
+	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
+	// Priority class assigned to the Pods
+	PriorityClassName string `json:"priorityClassName,omitempty"`
+	// ServiceAccountName is the name of the ServiceAccount to use to run the
+	// Thanos Ruler Pods.
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 	// Storage spec to specify how storage shall be used.
 	Storage *StorageSpec `json:"storage,omitempty"`
 	// Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
