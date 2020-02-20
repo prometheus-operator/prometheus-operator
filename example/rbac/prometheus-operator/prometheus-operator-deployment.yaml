@@ -1,27 +1,32 @@
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    k8s-app: prometheus-operator
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/version: v0.36.0
   name: prometheus-operator
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: prometheus-operator
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/name: prometheus-operator
   template:
     metadata:
       labels:
-        k8s-app: prometheus-operator
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/name: prometheus-operator
+        app.kubernetes.io/version: v0.36.0
     spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --logtostderr=true
-        - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.23.2
-        image: quay.io/coreos/prometheus-operator:v0.23.2
+        - --config-reloader-image=jimmidyson/configmap-reload:v0.3.0
+        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.36.0
+        image: quay.io/coreos/prometheus-operator:v0.36.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -35,7 +40,6 @@ spec:
             memory: 100Mi
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
       nodeSelector:
         beta.kubernetes.io/os: linux
       securityContext:

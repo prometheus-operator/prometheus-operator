@@ -44,4 +44,11 @@ The versions of Prometheus compatible to be run with the Prometheus Operator are
 	for _, v := range prometheus.CompatibilityMatrix {
 		fmt.Printf("* %s\n", v)
 	}
+
+	fmt.Println()
+
+	fmt.Println(`## Alertmanager
+
+We only support Alertmanager v0.15 and above. Everything below v0.15 is on a
+best effort basis.`)
 }

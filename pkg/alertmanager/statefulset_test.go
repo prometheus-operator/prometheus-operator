@@ -20,15 +20,20 @@ import (
 	"strings"
 	"testing"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kylelemons/godebug/pretty"
 )
 
 var (
 	defaultTestConfig = Config{
-		ConfigReloaderImage:          "quay.io/coreos/configmap-reload:latest",
+		ConfigReloaderImage:          "jimmidyson/configmap-reload:latest",
+		ConfigReloaderCPU:            "100m",
+		ConfigReloaderMemory:         "25Mi",
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
 )
@@ -38,6 +43,13 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		"testlabel": "testlabelvalue",
 	}
 	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+		"kubectl.kubernetes.io/last-applied-configuration": "something",
+		"kubectl.kubernetes.io/something":                  "something",
+	}
+	// kubectl annotations must not be on the statefulset so kubectl does
+	// not manage the generated object
+	expectedAnnotations := map[string]string{
 		"testannotation": "testannotationvalue",
 	}
 
@@ -50,8 +62,14 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	require.NoError(t, err)
 
-	if !reflect.DeepEqual(labels, sset.Labels) || !reflect.DeepEqual(annotations, sset.Annotations) {
-		t.Fatal("Labels or Annotations are not properly being propagated to the StatefulSet")
+	if !reflect.DeepEqual(labels, sset.Labels) {
+		t.Log(pretty.Compare(labels, sset.Labels))
+		t.Fatal("Labels are not properly being propagated to the StatefulSet")
+	}
+
+	if !reflect.DeepEqual(expectedAnnotations, sset.Annotations) {
+		t.Log(pretty.Compare(expectedAnnotations, sset.Annotations))
+		t.Fatal("Annotations are not properly being propagated to the StatefulSet")
 	}
 }
 
@@ -208,7 +226,7 @@ func TestListenLocal(t *testing.T) {
 		t.Fatal("Alertmanager readiness probe expected to be empty")
 	}
 
-	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 1 {
+	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 2 {
 		t.Fatal("Alertmanager container should only have one port defined")
 	}
 }
@@ -230,7 +248,7 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 		replicas := int32(3)
 		a.Spec.Replicas = &replicas
 
-		statefulSet, err := makeStatefulSetSpec(&a, Config{})
+		statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -245,121 +263,40 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 	}
 }
 
-// below Alertmanager v0.7.0 the flag 'web.route-prefix' does not exist
 func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
-	tests := []struct {
-		version              string
-		expectWebRoutePrefix bool
-	}{
-		{"v0.6.0", false},
-		{"v0.7.0", true},
+	a := monitoringv1.Alertmanager{}
+	replicas := int32(1)
+	a.Spec.Version = DefaultVersion
+	a.Spec.Replicas = &replicas
+
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	for _, test := range tests {
-		a := monitoringv1.Alertmanager{}
-		a.Spec.Version = test.version
-		replicas := int32(1)
-		a.Spec.Replicas = &replicas
+	amArgs := statefulSet.Template.Spec.Containers[0].Args
 
-		statefulSet, err := makeStatefulSetSpec(&a, Config{})
-		if err != nil {
-			t.Fatal(err)
-		}
+	containsWebRoutePrefix := false
 
-		amArgs := statefulSet.Template.Spec.Containers[0].Args
-
-		containsWebRoutePrefix := false
-
-		for _, arg := range amArgs {
-			if strings.Contains(arg, "-web.route-prefix") {
-				containsWebRoutePrefix = true
-			}
-		}
-
-		if containsWebRoutePrefix != test.expectWebRoutePrefix {
-			t.Fatalf("expected stateful set containing arg '-web.route-prefix' to be: %v", test.expectWebRoutePrefix)
+	for _, arg := range amArgs {
+		if strings.Contains(arg, "-web.route-prefix") {
+			containsWebRoutePrefix = true
 		}
 	}
-}
 
-// below Alertmanager v0.15.0 high availability flags are prefixed with 'mesh' instead of 'cluster'
-func TestMakeStatefulSetSpecMeshClusterFlags(t *testing.T) {
-	tests := []struct {
-		version       string
-		rightHAPrefix string
-		wrongHAPrefix string
-	}{
-		{"v0.14.0", "mesh", "cluster"},
-		{"v0.15.2", "cluster", "mesh"},
-	}
-
-	for _, test := range tests {
-		a := monitoringv1.Alertmanager{}
-		a.Spec.Version = test.version
-		replicas := int32(3)
-		a.Spec.Replicas = &replicas
-
-		statefulSet, err := makeStatefulSetSpec(&a, Config{})
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		haFlags := []string{"--%v.listen-address", "--%v.peer="}
-
-		amArgs := statefulSet.Template.Spec.Containers[0].Args
-
-		for _, flag := range haFlags {
-			if sliceContains(amArgs, fmt.Sprintf(flag, test.wrongHAPrefix)) {
-				t.Fatalf("expected Alertmanager args not to contain %v, but got %v", test.wrongHAPrefix, amArgs)
-			}
-			if !sliceContains(amArgs, fmt.Sprintf(flag, test.rightHAPrefix)) {
-				t.Fatalf("expected Alertmanager args to contain %v, but got %v", test.rightHAPrefix, amArgs)
-			}
-		}
-	}
-}
-
-// below Alertmanager v0.15.0 peer address port specification is not necessary
-func TestMakeStatefulSetSpecPeerFlagPort(t *testing.T) {
-	tests := []struct {
-		version    string
-		portNeeded bool
-	}{
-		{"v0.14.0", false},
-		{"v0.15.2", true},
-	}
-
-	for _, test := range tests {
-		a := monitoringv1.Alertmanager{}
-		a.Spec.Version = test.version
-		replicas := int32(3)
-		a.Spec.Replicas = &replicas
-
-		statefulSet, err := makeStatefulSetSpec(&a, Config{})
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		amArgs := statefulSet.Template.Spec.Containers[0].Args
-
-		for _, arg := range amArgs {
-			if strings.Contains(arg, ".peer") {
-				if strings.Contains(arg, ":6783") != test.portNeeded {
-					t.Fatalf("expected arg '%v' containing port specification to be: %v", arg, test.portNeeded)
-				}
-			}
-		}
+	if !containsWebRoutePrefix {
+		t.Fatal("expected stateful set to contain arg '-web.route-prefix'")
 	}
 }
 
 func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
-	a.Spec.Version = "v0.15.2"
+	a.Spec.Version = "v0.15.3"
 	replicas := int32(1)
 	a.Spec.Replicas = &replicas
 	a.Spec.AdditionalPeers = []string{"example.com"}
 
-	statefulSet, err := makeStatefulSetSpec(&a, Config{})
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -497,7 +434,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 			Spec: monitoringv1.AlertmanagerSpec{
 				Tag:     "my-unrelated-tag",
-				Version: "v0.15.2",
+				Version: "v0.15.3",
 			},
 		}, nil, defaultTestConfig)
 		if err != nil {
@@ -515,7 +452,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{
 				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 				Tag:     "my-unrelated-tag",
-				Version: "v0.15.2",
+				Version: "v0.15.3",
 			},
 		}, nil, defaultTestConfig)
 		if err != nil {
@@ -526,6 +463,26 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 		expected := "quay.io/prometheus/alertmanager@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
 		if image != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
+		}
+	}
+	{
+		image := "my-registry/alertmanager:latest"
+		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+			Spec: monitoringv1.AlertmanagerSpec{
+				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+				Tag:     "my-unrelated-tag",
+				Version: "v0.15.3",
+				Image:   &image,
+			},
+		}, nil, defaultTestConfig)
+		if err != nil {
+			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+		}
+
+		resultImage := sset.Spec.Template.Spec.Containers[0].Image
+		expected := "my-registry/alertmanager:latest"
+		if resultImage != expected {
+			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
 	}
 }
@@ -565,6 +522,37 @@ func TestRetention(t *testing.T) {
 	}
 }
 
+func TestAdditionalConfigMap(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			ConfigMaps: []string{"test-cm1"},
+		},
+	}, nil, defaultTestConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	cmVolumeFound := false
+	for _, v := range sset.Spec.Template.Spec.Volumes {
+		if v.Name == "configmap-test-cm1" {
+			cmVolumeFound = true
+		}
+	}
+	if !cmVolumeFound {
+		t.Fatal("ConfigMap volume not found")
+	}
+
+	cmMounted := false
+	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if v.Name == "configmap-test-cm1" && v.MountPath == "/etc/alertmanager/configmaps/test-cm1" {
+			cmMounted = true
+		}
+	}
+	if !cmMounted {
+		t.Fatal("ConfigMap volume not mounted")
+	}
+}
+
 func sliceContains(slice []string, match string) bool {
 	contains := false
 	for _, s := range slice {
@@ -573,4 +561,71 @@ func sliceContains(slice []string, match string) bool {
 		}
 	}
 	return contains
+}
+
+func TestSidecarsNoCPULimits(t *testing.T) {
+	testConfig := Config{
+		ConfigReloaderImage:          "jimmidyson/configmap-reload:latest",
+		ConfigReloaderCPU:            "0",
+		ConfigReloaderMemory:         "25Mi",
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("25Mi"),
+		},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+		}
+	}
+}
+
+func TestSidecarsNoMemoryLimits(t *testing.T) {
+	testConfig := Config{
+		ConfigReloaderImage:          "jimmidyson/configmap-reload:latest",
+		ConfigReloaderCPU:            "100m",
+		ConfigReloaderMemory:         "0",
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU: resource.MustParse("100m"),
+		},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+		}
+	}
+}
+
+func TestTerminationPolicy(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, defaultTestConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.TerminationMessagePolicy != v1.TerminationMessageFallbackToLogsOnError {
+			t.Fatalf("Unexpected TermintationMessagePolicy. Expected %v got %v", v1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy)
+		}
+	}
 }

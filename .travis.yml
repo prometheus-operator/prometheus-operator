@@ -1,7 +1,15 @@
 sudo: required
+dist: xenial
 language: go
 go:
-- "1.11"
+- "1.12.x"
+go_import_path: github.com/coreos/prometheus-operator
+env:
+  - GO111MODULE=on
+cache:
+  directories:
+  - $GOCACHE
+  - $GOPATH/pkg/mod
 services:
 - docker
 before_install:
@@ -9,27 +17,28 @@ before_install:
   - export PATH=$PATH:$HOME/.local/bin
 jobs:
   include:
-  - stage: Sanity check and tests
-  # Check generated contents are up to date and code is formatted.
+  - name: "Sanity checks and tests"
+    stage: test
+    # Check generated contents are up to date and code & docs files are formatted.
     script: make --always-make format generate-in-docker && git diff --exit-code
-  - script: cd contrib/kube-prometheus && make test-in-docker
-  # Build Prometheus Operator rule config map to rule file crds cli tool
-  - script: cd cmd/po-rule-migration && go install
-  # Ensure vendor folder matches vendor.json
-  - script: ./scripts/golang-dep-ensure.sh
-  # Unit tests
-  - script: make test-unit
-  # E2e tests
-  - script: ./scripts/travis-e2e.sh
-  - script: ./scripts/travis-e2e-helm.sh
+  - name: "Build Prometheus Operator rule config map to rule file CRDs CLI tool"
+    script: cd cmd/po-rule-migration && go install
+  - name: "Ensure vendor folder matches vendor.json"
+    script: make --always-make vendor && git diff --exit-code vendor/
+  - name: "Run unit tests"
+    script: make test-unit
+  - name: "Run e2e tests (Alertmanager)"
+    script: EXCLUDE_PROMETHEUS_TESTS=true EXCLUDE_THANOS_TESTS=true ./scripts/travis-e2e.sh
+  - name: "Run e2e tests (Prometheus)"
+    script: EXCLUDE_ALERTMANAGER_TESTS=true EXCLUDE_THANOS_TESTS=true ./scripts/travis-e2e.sh
+  - name: "Run e2e tests (Thanos)"
+    script: EXCLUDE_PROMETHEUS_TESTS=true EXCLUDE_ALERTMANAGER_TESTS=true ./scripts/travis-e2e.sh
 
-  - stage: deploy
-    script: skip
-    deploy:
-      provider: script
-      script: make helm-sync-s3
-      on:
-        branch: master
-
-  - stage: push-docker-image
+  - name: "Push Docker Image"
+    stage: push-docker-image
     script: ./scripts/travis-push-docker-image.sh
+
+stages:
+  - test
+  - name: push-docker-image
+    if: type != pull_request

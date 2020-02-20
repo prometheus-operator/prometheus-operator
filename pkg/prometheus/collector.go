@@ -15,7 +15,7 @@
 package prometheus
 
 import (
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"
@@ -23,11 +23,11 @@ import (
 
 var (
 	descPrometheusSpecReplicas = prometheus.NewDesc(
-		"prometheus_operator_prometheus_spec_replicas",
-		"Number of expected Prometheus replicas for the Prometheus object.",
+		"prometheus_operator_spec_replicas",
+		"Number of expected replicas for the object.",
 		[]string{
 			"namespace",
-			"prometheus",
+			"name",
 		}, nil,
 	)
 )

@@ -1,57 +1,102 @@
-local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
+local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
 
 {
   _config+:: {
     namespace: 'default',
 
+    prometheusOperator+:: {
+      deploymentSelectorLabels: {
+        'app.kubernetes.io/name': 'prometheus-operator',
+        'app.kubernetes.io/component': 'controller',
+      },
+      commonLabels:
+        $._config.prometheusOperator.deploymentSelectorLabels
+        { 'app.kubernetes.io/version': $._config.versions.prometheusOperator },
+    },
+
     versions+:: {
-      prometheusOperator: 'v0.23.2',
-      configmapReloader: 'v0.0.1',
+      prometheusOperator: 'v0.36.0',
+      prometheusConfigReloader: self.prometheusOperator,
+      configmapReloader: 'v0.3.0',
     },
 
     imageRepos+:: {
       prometheusOperator: 'quay.io/coreos/prometheus-operator',
-      configmapReloader: 'quay.io/coreos/configmap-reload',
+      configmapReloader: 'jimmidyson/configmap-reload',
       prometheusConfigReloader: 'quay.io/coreos/prometheus-config-reloader',
     },
   },
 
   prometheusOperator+:: {
+    local po = self,
+
+    namespace:: $._config.namespace,
+    commonLabels:: $._config.prometheusOperator.commonLabels,
+    deploymentSelectorLabels:: $._config.prometheusOperator.deploymentSelectorLabels,
+
+    image:: $._config.imageRepos.prometheusOperator,
+    version:: $._config.versions.prometheusOperator,
+    configReloaderImage:: $._config.imageRepos.configmapReloader,
+    configReloaderVersion:: $._config.versions.configmapReloader,
+    prometheusConfigReloaderImage:: $._config.imageRepos.prometheusConfigReloader,
+    prometheusConfigReloaderVersion:: $._config.versions.prometheusConfigReloader,
+
     // Prefixing with 0 to ensure these manifests are listed and therefore created first.
     '0alertmanagerCustomResourceDefinition': import 'alertmanager-crd.libsonnet',
     '0prometheusCustomResourceDefinition': import 'prometheus-crd.libsonnet',
     '0servicemonitorCustomResourceDefinition': import 'servicemonitor-crd.libsonnet',
+    '0podmonitorCustomResourceDefinition': import 'podmonitor-crd.libsonnet',
     '0prometheusruleCustomResourceDefinition': import 'prometheusrule-crd.libsonnet',
+    '0thanosrulerCustomResourceDefinition': import 'thanosruler-crd.libsonnet',
 
     clusterRoleBinding:
       local clusterRoleBinding = k.rbac.v1.clusterRoleBinding;
 
       clusterRoleBinding.new() +
+      clusterRoleBinding.mixin.metadata.withLabels(po.commonLabels) +
       clusterRoleBinding.mixin.metadata.withName('prometheus-operator') +
       clusterRoleBinding.mixin.roleRef.withApiGroup('rbac.authorization.k8s.io') +
       clusterRoleBinding.mixin.roleRef.withName('prometheus-operator') +
       clusterRoleBinding.mixin.roleRef.mixinInstance({ kind: 'ClusterRole' }) +
-      clusterRoleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-operator', namespace: $._config.namespace }]),
+      clusterRoleBinding.withSubjects([{ kind: 'ServiceAccount', name: 'prometheus-operator', namespace: po.namespace }]),
 
     clusterRole:
       local clusterRole = k.rbac.v1.clusterRole;
       local policyRule = clusterRole.rulesType;
 
-      local apiExtensionsRule = policyRule.new() +
+      local crdCreateRule = policyRule.new() +
+                            policyRule.withApiGroups(['apiextensions.k8s.io']) +
+                            policyRule.withResources([
+                              'customresourcedefinitions',
+                            ]) +
+                            policyRule.withVerbs(['create']);
+
+      local crdMonitoringRule = policyRule.new() +
                                 policyRule.withApiGroups(['apiextensions.k8s.io']) +
                                 policyRule.withResources([
                                   'customresourcedefinitions',
                                 ]) +
-                                policyRule.withVerbs(['*']);
+                                policyRule.withResourceNames([
+                                  'alertmanagers.monitoring.coreos.com',
+                                  'podmonitors.monitoring.coreos.com',
+                                  'prometheuses.monitoring.coreos.com',
+                                  'prometheusrules.monitoring.coreos.com',
+                                  'servicemonitors.monitoring.coreos.com',
+                                  'thanosrulers.monitoring.coreos.com',
+                                ]) +
+                                policyRule.withVerbs(['get', 'update']);
 
       local monitoringRule = policyRule.new() +
                              policyRule.withApiGroups(['monitoring.coreos.com']) +
                              policyRule.withResources([
                                'alertmanagers',
+                               'alertmanagers/finalizers',
                                'prometheuses',
                                'prometheuses/finalizers',
-                               'alertmanagers/finalizers',
+                               'thanosrulers',
+                               'thanosrulers/finalizers',
                                'servicemonitors',
+                               'podmonitors',
                                'prometheusrules',
                              ]) +
                              policyRule.withVerbs(['*']);
@@ -82,9 +127,10 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                           policyRule.withApiGroups(['']) +
                           policyRule.withResources([
                             'services',
+                            'services/finalizers',
                             'endpoints',
                           ]) +
-                          policyRule.withVerbs(['get', 'create', 'update']);
+                          policyRule.withVerbs(['get', 'create', 'update', 'delete']);
 
       local nodeRule = policyRule.new() +
                        policyRule.withApiGroups(['']) +
@@ -100,40 +146,39 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
                             ]) +
                             policyRule.withVerbs(['get', 'list', 'watch']);
 
-      local rules = [apiExtensionsRule, monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
+      local rules = [crdCreateRule, crdMonitoringRule, monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
 
       clusterRole.new() +
+      clusterRole.mixin.metadata.withLabels(po.commonLabels) +
       clusterRole.mixin.metadata.withName('prometheus-operator') +
       clusterRole.withRules(rules),
 
     deployment:
-      local deployment = k.apps.v1beta2.deployment;
-      local container = k.apps.v1beta2.deployment.mixin.spec.template.spec.containersType;
+      local deployment = k.apps.v1.deployment;
+      local container = k.apps.v1.deployment.mixin.spec.template.spec.containersType;
       local containerPort = container.portsType;
 
       local targetPort = 8080;
-      local podLabels = { 'k8s-app': 'prometheus-operator' };
 
       local operatorContainer =
-        container.new('prometheus-operator', $._config.imageRepos.prometheusOperator + ':' + $._config.versions.prometheusOperator) +
-        container.withPorts(containerPort.newNamed('http', targetPort)) +
+        container.new('prometheus-operator', po.image + ':' + po.version) +
+        container.withPorts(containerPort.newNamed(targetPort, 'http')) +
         container.withArgs([
           '--kubelet-service=kube-system/kubelet',
           // Prometheus Operator is run with a read-only root file system. By
           // default glog saves logfiles to /tmp. Make it log to stderr instead.
           '--logtostderr=true',
-          '--config-reloader-image=' + $._config.imageRepos.configmapReloader + ':' + $._config.versions.configmapReloader,
-          '--prometheus-config-reloader=' + $._config.imageRepos.prometheusConfigReloader + ':' + $._config.versions.prometheusOperator,
+          '--config-reloader-image=' + po.configReloaderImage + ':' + po.configReloaderVersion,
+          '--prometheus-config-reloader=' + po.prometheusConfigReloaderImage + ':' + po.prometheusConfigReloaderVersion,
         ]) +
         container.mixin.securityContext.withAllowPrivilegeEscalation(false) +
-        container.mixin.securityContext.withReadOnlyRootFilesystem(true) +
         container.mixin.resources.withRequests({ cpu: '100m', memory: '100Mi' }) +
         container.mixin.resources.withLimits({ cpu: '200m', memory: '200Mi' });
 
-      deployment.new('prometheus-operator', 1, operatorContainer, podLabels) +
-      deployment.mixin.metadata.withNamespace($._config.namespace) +
-      deployment.mixin.metadata.withLabels(podLabels) +
-      deployment.mixin.spec.selector.withMatchLabels(podLabels) +
+      deployment.new('prometheus-operator', 1, operatorContainer, po.commonLabels) +
+      deployment.mixin.metadata.withNamespace(po.namespace) +
+      deployment.mixin.metadata.withLabels(po.commonLabels) +
+      deployment.mixin.spec.selector.withMatchLabels(po.deploymentSelectorLabels) +
       deployment.mixin.spec.template.spec.withNodeSelector({ 'beta.kubernetes.io/os': 'linux' }) +
       deployment.mixin.spec.template.spec.securityContext.withRunAsNonRoot(true) +
       deployment.mixin.spec.template.spec.securityContext.withRunAsUser(65534) +
@@ -143,7 +188,8 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
       local serviceAccount = k.core.v1.serviceAccount;
 
       serviceAccount.new('prometheus-operator') +
-      serviceAccount.mixin.metadata.withNamespace($._config.namespace),
+      serviceAccount.mixin.metadata.withLabels(po.commonLabels) +
+      serviceAccount.mixin.metadata.withNamespace(po.namespace),
 
     service:
       local service = k.core.v1.service;
@@ -151,9 +197,9 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
 
       local poServicePort = servicePort.newNamed('http', 8080, 'http');
 
-      service.new('prometheus-operator', $.prometheusOperator.deployment.spec.selector.matchLabels, [poServicePort]) +
-      service.mixin.metadata.withLabels({ 'k8s-app': 'prometheus-operator' }) +
-      service.mixin.metadata.withNamespace($._config.namespace) +
+      service.new('prometheus-operator', po.deployment.spec.selector.matchLabels, [poServicePort]) +
+      service.mixin.metadata.withLabels(po.commonLabels) +
+      service.mixin.metadata.withNamespace(po.namespace) +
       service.mixin.spec.withClusterIp('None'),
     serviceMonitor:
       {
@@ -161,10 +207,8 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
         kind: 'ServiceMonitor',
         metadata: {
           name: 'prometheus-operator',
-          namespace: $._config.namespace,
-          labels: {
-            'k8s-app': 'prometheus-operator',
-          },
+          namespace: po.namespace,
+          labels: po.commonLabels,
         },
         spec: {
           endpoints: [
@@ -174,9 +218,7 @@ local k = import 'ksonnet/ksonnet.beta.3/k.libsonnet';
             },
           ],
           selector: {
-            matchLabels: {
-              'k8s-app': 'prometheus-operator',
-            },
+            matchLabels: po.commonLabels,
           },
         },
       },

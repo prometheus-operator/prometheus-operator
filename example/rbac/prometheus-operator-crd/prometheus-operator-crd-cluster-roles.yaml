@@ -1,0 +1,24 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: prometheus-crd-view
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+rules:
+- apiGroups: ["monitoring.coreos.com"]
+  resources: ["alertmanagers", "prometheuses", "prometheusrules", "servicemonitors", "podmonitors"]
+  verbs: ["get", "list", "watch"]
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: prometheus-crd-edit
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+rules:
+- apiGroups: ["monitoring.coreos.com"]
+  resources: ["alertmanagers", "prometheuses", "prometheusrules", "servicemonitors", "podmonitors"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]

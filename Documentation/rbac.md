@@ -18,6 +18,10 @@ Here is a ready to use manifest of a `ClusterRole` that can be used to start the
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/version: v0.36.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -25,15 +29,32 @@ rules:
   resources:
   - customresourcedefinitions
   verbs:
-  - '*'
+  - create
+- apiGroups:
+  - apiextensions.k8s.io
+  resourceNames:
+  - alertmanagers.monitoring.coreos.com
+  - podmonitors.monitoring.coreos.com
+  - prometheuses.monitoring.coreos.com
+  - prometheusrules.monitoring.coreos.com
+  - servicemonitors.monitoring.coreos.com
+  - thanosrulers.monitoring.coreos.com
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - update
 - apiGroups:
   - monitoring.coreos.com
   resources:
   - alertmanagers
+  - alertmanagers/finalizers
   - prometheuses
   - prometheuses/finalizers
-  - alertmanagers/finalizers
+  - thanosrulers
+  - thanosrulers/finalizers
   - servicemonitors
+  - podmonitors
   - prometheusrules
   verbs:
   - '*'
@@ -61,11 +82,13 @@ rules:
   - ""
   resources:
   - services
+  - services/finalizers
   - endpoints
   verbs:
   - get
   - create
   - update
+  - delete
 - apiGroups:
   - ""
   resources:
@@ -146,6 +169,10 @@ Say the Prometheus Operator shall be deployed in the `default` namespace. First 
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/version: v0.36.0
   name: prometheus-operator
   namespace: default
 ```
@@ -159,6 +186,10 @@ And then a `ClusterRoleBinding`:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/version: v0.36.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -200,4 +231,4 @@ subjects:
   namespace: default
 ```
 
-> See [Using Authorization Plugins](https://kubernetes.io/docs/admin/authorization/) for further usage information on RBAC components.
+> See [Using Authorization Plugins](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) for further usage information on RBAC components.

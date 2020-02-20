@@ -1,12 +1,22 @@
 reviewers:
-  - brancz
-  - metalmatze
-  - mxinden
-  - s-urbaniak
-  - squat
+- brancz
+- bwplotka
+- krasi-georgiev
+- LiliC
+- metalmatze
+- paulfantom
+- pgier
+- s-urbaniak
+- simonpasquier
+- squat
 approvers:
-  - brancz
-  - metalmatze
-  - mxinden
-  - s-urbaniak
-  - squat
+- brancz
+- bwplotka
+- krasi-georgiev
+- LiliC
+- metalmatze
+- paulfantom
+- pgier
+- s-urbaniak
+- simonpasquier
+- squat

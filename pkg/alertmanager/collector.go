@@ -15,7 +15,7 @@
 package alertmanager
 
 import (
-	"github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"
@@ -23,11 +23,11 @@ import (
 
 var (
 	descAlertmanagerSpecReplicas = prometheus.NewDesc(
-		"prometheus_operator_alertmanager_spec_replicas",
-		"Number of expected Alertmanager replicas for the Alertmanager object.",
+		"prometheus_operator_spec_replicas",
+		"Number of expected replicas for the object.",
 		[]string{
 			"namespace",
-			"alertmanager",
+			"name",
 		}, nil,
 	)
 )

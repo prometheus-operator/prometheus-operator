@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: alertmanager-web
@@ -7,13 +7,13 @@ spec:
   - from:
     ports:
     - port: 9093
-      protocol: tcp
+      protocol: TCP
   podSelector:
     matchLabels:
       alertmanager: main
       app: alertmanager
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: alertmanager-mesh
@@ -31,9 +31,12 @@ spec:
           values:
           - main
     ports:
-    - port: 6783
-      protocol: tcp
+    - port: 9094
+      protocol: TCP
+    - port: 9094
+      protocol: UDP
   podSelector:
     matchLabels:
       alertmanager: main
       app: alertmanager
+

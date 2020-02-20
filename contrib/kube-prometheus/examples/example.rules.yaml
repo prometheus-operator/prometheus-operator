@@ -1,9 +1,0 @@
-groups:
-- name: example-group
-  rules:
-  - alert: DeadMansSwitch
-    expr: vector(1)
-    labels:
-      severity: "none"
-    annotations:
-      description: This is a DeadMansSwitch meant to ensure that the entire alerting pipeline is functional.

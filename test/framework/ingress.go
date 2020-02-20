@@ -57,7 +57,7 @@ func MakeBasicIngress(serviceName string, servicePort int) *v1beta1.Ingress {
 }
 
 func CreateIngress(kubeClient kubernetes.Interface, namespace string, i *v1beta1.Ingress) error {
-	_, err := kubeClient.Extensions().Ingresses(namespace).Create(i)
+	_, err := kubeClient.ExtensionsV1beta1().Ingresses(namespace).Create(i)
 	return errors.Wrap(err, fmt.Sprintf("creating ingress %v failed", i.Name))
 }
 
@@ -129,7 +129,7 @@ func GetIngressIP(kubeClient kubernetes.Interface, namespace string, ingressName
 	var ingress *v1beta1.Ingress
 	err := wait.Poll(time.Millisecond*500, time.Minute*5, func() (bool, error) {
 		var err error
-		ingress, err = kubeClient.Extensions().Ingresses(namespace).Get(ingressName, metav1.GetOptions{})
+		ingress, err = kubeClient.ExtensionsV1beta1().Ingresses(namespace).Get(ingressName, metav1.GetOptions{})
 		if err != nil {
 			return false, errors.Wrap(err, fmt.Sprintf("requesting the ingress %v failed", ingressName))
 		}

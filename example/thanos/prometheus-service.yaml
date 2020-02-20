@@ -5,6 +5,7 @@ metadata:
     app: prometheus
     prometheus: self
   name: prometheus-self
+  namespace: default
 spec:
   ports:
   - name: web

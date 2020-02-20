@@ -1,0 +1,13 @@
+{
+    "dependencies": [
+        {
+            "name": "prometheus-operator",
+            "source": {
+                "local": {
+                    "directory": "../../jsonnet/prometheus-operator"
+                }
+            },
+            "version": "."
+        }
+    ]
+}

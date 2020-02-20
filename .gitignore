@@ -1,5 +1,6 @@
 /operator
-prometheus-config-reloader
+/po-lint
+/prometheus-config-reloader
 .build/
 *~
 *.tgz
@@ -16,4 +17,4 @@ tmp
 # These are empty target files, created on every docker build. Their sole
 # purpose is to track the last target execution time to evalualte, whether the
 # container needds to be rebuild
-hack/*-image
+.hack-*-image

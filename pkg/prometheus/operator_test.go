@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"testing"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -41,11 +41,11 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 	p2.Spec.Version = "v1.7.2"
 	c := Config{}
 
-	p1Hash, err := createSSetInputHash(p1, c, []string{})
+	p1Hash, err := createSSetInputHash(p1, c, []string{}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	p2Hash, err := createSSetInputHash(p2, c, []string{})
+	p2Hash, err := createSSetInputHash(p2, c, []string{}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

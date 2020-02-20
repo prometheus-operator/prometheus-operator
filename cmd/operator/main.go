@@ -27,18 +27,21 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/coreos/prometheus-operator/pkg/admission"
+	alertmanagercontroller "github.com/coreos/prometheus-operator/pkg/alertmanager"
+	"github.com/coreos/prometheus-operator/pkg/api"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
+	thanoscontroller "github.com/coreos/prometheus-operator/pkg/thanos"
+	"github.com/coreos/prometheus-operator/pkg/version"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
-	"k8s.io/api/core/v1"
-
-	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	"github.com/coreos/prometheus-operator/pkg/api"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
-	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
-	"github.com/coreos/prometheus-operator/pkg/version"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/klog"
 )
 
 const (
@@ -56,7 +59,11 @@ const (
 )
 
 var (
-	ns = namespaces{}
+	ns             = namespaces{}
+	deniedNs       = namespaces{}
+	prometheusNs   = namespaces{}
+	alertmanagerNs = namespaces{}
+	thanosRulerNs  = namespaces{}
 )
 
 type namespaces map[string]struct{}
@@ -83,10 +90,17 @@ func (n namespaces) asSlice() []string {
 	for k := range n {
 		ns = append(ns, k)
 	}
-	if len(ns) == 0 {
-		ns = append(ns, v1.NamespaceAll)
-	}
 	return ns
+}
+
+func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
+	return func() error {
+		logger.Log("msg", "Staring insecure server on :8080")
+		if err := srv.Serve(listener); err != http.ErrServerClosed {
+			return err
+		}
+		return nil
+	}
 }
 
 var (
@@ -108,6 +122,7 @@ var (
 func init() {
 	cfg.CrdKinds = monitoringv1.DefaultCrdKinds
 	flagset := flag.CommandLine
+	klog.InitFlags(flagset)
 	flagset.StringVar(&cfg.Host, "apiserver", "", "API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.")
 	flagset.StringVar(&cfg.TLSConfig.CertFile, "cert-file", "", " - NOT RECOMMENDED FOR PRODUCTION - Path to public TLS certificate file.")
 	flagset.StringVar(&cfg.TLSConfig.KeyFile, "key-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.")
@@ -118,23 +133,51 @@ func init() {
 	// Prometheus Operator image, tagged with the same semver version. Default to
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
-	flagset.StringVar(&cfg.PrometheusConfigReloader, "prometheus-config-reloader", fmt.Sprintf("quay.io/coreos/prometheus-config-reloader:v%v", version.Version), "Prometheus config reloader image")
-	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", "quay.io/coreos/configmap-reload:v0.0.1", "Reload Image")
+	flagset.StringVar(&cfg.PrometheusConfigReloaderImage, "prometheus-config-reloader", fmt.Sprintf("quay.io/coreos/prometheus-config-reloader:v%v", version.Version), "Prometheus config reloader image")
+	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", "jimmidyson/configmap-reload:v0.3.0", "Reload Image")
+	flagset.StringVar(&cfg.ConfigReloaderCPU, "config-reloader-cpu", "100m", "Config Reloader CPU. Value \"0\" disables it and causes no limit to be configured.")
+	flagset.StringVar(&cfg.ConfigReloaderMemory, "config-reloader-memory", "25Mi", "Config Reloader Memory. Value \"0\" disables it and causes no limit to be configured.")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", "quay.io/prometheus/alertmanager", "Alertmanager default base image")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", "quay.io/prometheus/prometheus", "Prometheus default base image")
-	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", "improbable/thanos", "Thanos default base image")
-	flagset.Var(ns, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver.")
+	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", "quay.io/thanos/thanos", "Thanos default base image")
+	flagset.Var(ns, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.")
+	flagset.Var(deniedNs, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
+	flagset.Var(prometheusNs, "prometheus-instance-namespaces", "Namespaces where Prometheus custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.")
+	flagset.Var(alertmanagerNs, "alertmanager-instance-namespaces", "Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.")
+	flagset.Var(thanosRulerNs, "thanos-ruler-instance-namespaces", "Namespaces where ThanosRuler custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for ThanosRuler custom resources.")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
-	flagset.StringVar(&cfg.CrdGroup, "crd-apigroup", monitoringv1.Group, "prometheus CRD  API group name")
 	flagset.Var(&cfg.CrdKinds, "crd-kinds", " - EXPERIMENTAL (could be removed in future releases) - customize CRD kind names")
 	flagset.BoolVar(&cfg.EnableValidation, "with-validation", true, "Include the validation spec in the CRD")
-	flagset.BoolVar(&cfg.DisableAutoUserGroup, "disable-auto-user-group", false, "Disables the Prometheus Operator setting the `runAsUser` and `fsGroup` fields in Pods.")
 	flagset.StringVar(&cfg.LocalHost, "localhost", "localhost", "EXPERIMENTAL (could be removed in future releases) - Host used to communicate between local services on a pod. Fixes issues where localhost resolves incorrectly.")
 	flagset.StringVar(&cfg.LogLevel, "log-level", logLevelInfo, fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(availableLogLevels, ", ")))
 	flagset.StringVar(&cfg.LogFormat, "log-format", logFormatLogfmt, fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", ")))
 	flagset.BoolVar(&cfg.ManageCRDs, "manage-crds", true, "Manage all CRDs with the Prometheus Operator.")
+	flagset.StringVar(&cfg.PromSelector, "prometheus-instance-selector", "", "Label selector to filter Prometheus CRDs to manage")
+	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager CRDs to manage")
+	flagset.StringVar(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "", "Label selector to filter ThanosRuler CRDs to manage")
 	flagset.Parse(os.Args[1:])
-	cfg.Namespaces = ns.asSlice()
+
+	cfg.Namespaces.AllowList = ns.asSlice()
+	if len(cfg.Namespaces.AllowList) == 0 {
+		cfg.Namespaces.AllowList = append(cfg.Namespaces.AllowList, v1.NamespaceAll)
+	}
+
+	cfg.Namespaces.DenyList = deniedNs.asSlice()
+	cfg.Namespaces.PrometheusAllowList = prometheusNs.asSlice()
+	cfg.Namespaces.AlertmanagerAllowList = alertmanagerNs.asSlice()
+	cfg.Namespaces.ThanosRulerAllowList = thanosRulerNs.asSlice()
+
+	if len(cfg.Namespaces.PrometheusAllowList) == 0 {
+		cfg.Namespaces.PrometheusAllowList = cfg.Namespaces.AllowList
+	}
+
+	if len(cfg.Namespaces.AlertmanagerAllowList) == 0 {
+		cfg.Namespaces.AlertmanagerAllowList = cfg.Namespaces.AllowList
+	}
+
+	if len(cfg.Namespaces.ThanosRulerAllowList) == 0 {
+		cfg.Namespaces.ThanosRulerAllowList = cfg.Namespaces.AllowList
+	}
 }
 
 func Main() int {
@@ -164,21 +207,27 @@ func Main() int {
 
 	logger.Log("msg", fmt.Sprintf("Starting Prometheus Operator version '%v'.", version.Version))
 
-	r := prometheus.NewRegistry()
-	r.MustRegister(
-		prometheus.NewGoCollector(),
-		prometheus.NewProcessCollector(os.Getpid(), ""),
-	)
+	if len(ns) > 0 && len(deniedNs) > 0 {
+		fmt.Fprint(os.Stderr, "--namespaces and --deny-namespaces are mutually exclusive. Please provide only one of them.\n")
+		return 1
+	}
 
-	po, err := prometheuscontroller.New(cfg, log.With(logger, "component", "prometheusoperator"))
+	r := prometheus.NewRegistry()
+	po, err := prometheuscontroller.New(cfg, log.With(logger, "component", "prometheusoperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating prometheus controller failed: ", err)
 		return 1
 	}
 
-	ao, err := alertmanager.New(cfg, log.With(logger, "component", "alertmanageroperator"))
+	ao, err := alertmanagercontroller.New(cfg, log.With(logger, "component", "alertmanageroperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
+		return 1
+	}
+
+	to, err := thanoscontroller.New(cfg, log.With(logger, "component", "thanosoperator"), r)
+	if err != nil {
+		fmt.Fprint(os.Stderr, "instantiating thanos controller failed: ", err)
 		return 1
 	}
 
@@ -188,16 +237,38 @@ func Main() int {
 		fmt.Fprint(os.Stderr, "instantiating api failed: ", err)
 		return 1
 	}
+	admit := admission.New(log.With(logger, "component", "admissionwebhook"))
 
 	web.Register(mux)
+	admit.Register(mux)
 	l, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		fmt.Fprint(os.Stderr, "listening port 8080 failed", err)
 		return 1
 	}
 
-	po.RegisterMetrics(r)
-	ao.RegisterMetrics(r)
+	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_rule_validation_triggered_total",
+		Help: "Number of times a prometheusRule object triggered validation",
+	})
+
+	validationErrorsCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "prometheus_operator_rule_validation_errors_total",
+		Help: "Number of errors that occurred while validating a prometheusRules object",
+	})
+
+	r.MustRegister(
+		prometheus.NewGoCollector(),
+		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
+		validationTriggeredCounter,
+		validationErrorsCounter,
+	)
+
+	admit.RegisterMetrics(
+		&validationTriggeredCounter,
+		&validationErrorsCounter,
+	)
+
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 	mux.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
 	mux.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
@@ -210,9 +281,10 @@ func Main() int {
 
 	wg.Go(func() error { return po.Run(ctx.Done()) })
 	wg.Go(func() error { return ao.Run(ctx.Done()) })
+	wg.Go(func() error { return to.Run(ctx.Done()) })
 
 	srv := &http.Server{Handler: mux}
-	go srv.Serve(l)
+	wg.Go(serve(srv, l, logger))
 
 	term := make(chan os.Signal)
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
@@ -221,6 +293,10 @@ func Main() int {
 	case <-term:
 		logger.Log("msg", "Received SIGTERM, exiting gracefully...")
 	case <-ctx.Done():
+	}
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Log("msg", "Server shutdown error", "err", err)
 	}
 
 	cancel()

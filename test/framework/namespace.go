@@ -25,7 +25,7 @@ import (
 )
 
 func CreateNamespace(kubeClient kubernetes.Interface, name string) (*v1.Namespace, error) {
-	namespace, err := kubeClient.Core().Namespaces().Create(&v1.Namespace{
+	namespace, err := kubeClient.CoreV1().Namespaces().Create(&v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
@@ -52,7 +52,7 @@ func (ctx *TestCtx) CreateNamespace(t *testing.T, kubeClient kubernetes.Interfac
 }
 
 func DeleteNamespace(kubeClient kubernetes.Interface, name string) error {
-	return kubeClient.Core().Namespaces().Delete(name, nil)
+	return kubeClient.CoreV1().Namespaces().Delete(name, nil)
 }
 
 func AddLabelsToNamespace(kubeClient kubernetes.Interface, name string, additionalLabels map[string]string) error {

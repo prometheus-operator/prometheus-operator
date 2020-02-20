@@ -16,9 +16,11 @@ package e2e
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"reflect"
 	"sort"
@@ -27,7 +29,7 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,10 +37,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	testFramework "github.com/coreos/prometheus-operator/test/framework"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/pkg/errors"
 )
@@ -56,7 +59,7 @@ func testPromCreateDeleteCluster(t *testing.T) {
 	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
 	prometheusCRD.Namespace = ns
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheusCRD); err != nil {
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheusCRD); err != nil {
 		t.Fatal(err)
 	}
 
@@ -75,15 +78,20 @@ func testPromScaleUpDownCluster(t *testing.T) {
 
 	name := "test"
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, framework.MakeBasicPrometheus(ns, name, name, 1)); err != nil {
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, framework.MakeBasicPrometheus(ns, name, name, 1))
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.UpdatePrometheusAndWaitUntilReady(ns, framework.MakeBasicPrometheus(ns, name, name, 3)); err != nil {
+	p.Spec.Replicas = proto.Int32(3)
+	p, err = framework.UpdatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := framework.UpdatePrometheusAndWaitUntilReady(ns, framework.MakeBasicPrometheus(ns, name, name, 2)); err != nil {
+	p.Spec.Replicas = proto.Int32(2)
+	p, err = framework.UpdatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 }
@@ -99,7 +107,7 @@ func testPromNoServiceMonitorSelector(t *testing.T) {
 	name := "test"
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.ServiceMonitorSelector = nil
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -118,13 +126,15 @@ func testPromVersionMigration(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.Version = startVersion
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	for _, v := range compatibilityMatrix {
 		p.Spec.Version = v
-		if err := framework.UpdatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		p, err = framework.UpdatePrometheusAndWaitUntilReady(ns, p)
+		if err != nil {
 			t.Fatal(err)
 		}
 		if err := framework.WaitForPrometheusRunImageAndReady(ns, p); err != nil {
@@ -150,11 +160,12 @@ func testPromResourceUpdate(t *testing.T) {
 			v1.ResourceMemory: resource.MustParse("100Mi"),
 		},
 	}
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	pods, err := framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+	pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(name))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -169,13 +180,13 @@ func testPromResourceUpdate(t *testing.T) {
 			v1.ResourceMemory: resource.MustParse("200Mi"),
 		},
 	}
-	_, err = framework.MonClientV1.Prometheuses(ns).Update(p)
+	p, err = framework.MonClientV1.Prometheuses(ns).Update(p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(name))
 		if err != nil {
 			return false, err
 		}
@@ -209,12 +220,16 @@ func testPromStorageUpdate(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	p.Spec.Storage = &monitoringv1.StorageSpec{
 		VolumeClaimTemplate: v1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				CreationTimestamp: metav1.Now(),
+			},
 			Spec: v1.PersistentVolumeClaimSpec{
 				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 				Resources: v1.ResourceRequirements{
@@ -225,13 +240,13 @@ func testPromStorageUpdate(t *testing.T) {
 			},
 		},
 	}
-	_, err := framework.MonClientV1.Prometheuses(ns).Update(p)
+	p, err = framework.MonClientV1.Prometheuses(ns).Update(p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.Core().Pods(ns).List(prometheus.ListOptions(name))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(name))
 		if err != nil {
 			return false, err
 		}
@@ -277,13 +292,19 @@ scrape_configs:
         - 111.111.111.111:9090
 `
 
+	var bufOne bytes.Buffer
+	if err := gzipConfig(&bufOne, []byte(firstConfig)); err != nil {
+		t.Fatal(err)
+	}
+	firstConfigCompressed := bufOne.Bytes()
+
 	cfg := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 		},
 		Data: map[string][]byte{
-			"prometheus.yaml": []byte(firstConfig),
-			"configmaps.json": []byte("{}"),
+			"prometheus.yaml.gz": firstConfigCompressed,
+			"configmaps.json":    []byte("{}"),
 		},
 	}
 
@@ -293,7 +314,7 @@ scrape_configs:
 		t.Fatal(err)
 	}
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
 
@@ -319,12 +340,18 @@ scrape_configs:
         - 111.111.111.112:9090
 `
 
+	var bufTwo bytes.Buffer
+	if err := gzipConfig(&bufTwo, []byte(secondConfig)); err != nil {
+		t.Fatal(err)
+	}
+	secondConfigCompressed := bufTwo.Bytes()
+
 	cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Get(cfg.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "could not retrieve previous secret"))
 	}
 
-	cfg.Data["prometheus.yaml"] = []byte(secondConfig)
+	cfg.Data["prometheus.yaml.gz"] = secondConfigCompressed
 	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -376,7 +403,7 @@ func testPromAdditionalScrapeConfig(t *testing.T) {
 		},
 		Key: "prometheus-additional.yaml",
 	}
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
 
@@ -435,7 +462,7 @@ func testPromAdditionalAlertManagerConfig(t *testing.T) {
 		},
 		Key: "prometheus-additional.yaml",
 	}
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
 
@@ -451,7 +478,7 @@ func testPromAdditionalAlertManagerConfig(t *testing.T) {
 	}
 
 	err = wait.Poll(time.Second, 5*time.Minute, func() (done bool, err error) {
-		response, err := framework.QueryPrometheusSVC(ns, svc.Name, "/api/v1/alertmanagers", map[string]string{})
+		response, err := framework.PrometheusSVCGetRequest(ns, svc.Name, "/api/v1/alertmanagers", map[string]string{})
 		if err != nil {
 			return true, err
 		}
@@ -492,7 +519,8 @@ func testPromReloadRules(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.EvaluationInterval = "1s"
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	p, err = framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -519,7 +547,7 @@ func testPromReloadRules(t *testing.T) {
 			},
 		},
 	}
-	err = framework.UpdateRule(ns, ruleFile)
+	ruleFile, err = framework.UpdateRule(ns, ruleFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -550,7 +578,8 @@ func testPromMultiplePrometheusRulesSameNS(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.EvaluationInterval = "1s"
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -606,7 +635,8 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 	p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
 		MatchLabels: ruleFilesNamespaceSelector,
 	}
-	if err := framework.CreatePrometheusAndWaitUntilReady(rootNS, p); err != nil {
+	p, err := framework.CreatePrometheusAndWaitUntilReady(rootNS, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -633,10 +663,10 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
-	prometheusRules := []monitoringv1.PrometheusRule{}
+	prometheusRules := []*monitoringv1.PrometheusRule{}
 	for i := 0; i < 2; i++ {
 		rule := generateHugePrometheusRule(ns, strconv.Itoa(i))
-		err := framework.CreateRule(ns, rule)
+		rule, err := framework.CreateRule(ns, rule)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -647,7 +677,8 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.EvaluationInterval = "1s"
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -681,7 +712,7 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 		}
 	}
 
-	err := framework.DeleteRule(ns, prometheusRules[1].Name)
+	err = framework.DeleteRule(ns, prometheusRules[1].Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -701,9 +732,56 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	}
 }
 
+func testPromRulesMustBeAnnotated(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "admission"
+	admissionAlert := "admissionAlert"
+
+	_, err := framework.MakeAndCreateFiringRule(ns, name, admissionAlert)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rule, err := framework.GetRule(ns, name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	val, ok := rule.Annotations["prometheus-operator-validated"]
+	if !ok {
+		t.Fatal("Expected prometheusrule to be annotated")
+	}
+	if val != "true" {
+		t.Fatal("Expected prometheusrule annotation to be 'true'")
+	}
+}
+
+func testInvalidRulesAreRejected(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "admission"
+	admissionAlert := "admissionAlert"
+
+	_, err := framework.MakeAndCreateInvalidRule(ns, name, admissionAlert)
+	if err == nil {
+		t.Fatal("Expected invalid prometheusrule to be rejected")
+	}
+}
+
 // generateHugePrometheusRule returns a Prometheus rule instance that would fill
 // more than half of the space of a Kubernetes ConfigMap.
-func generateHugePrometheusRule(ns, identifier string) monitoringv1.PrometheusRule {
+func generateHugePrometheusRule(ns, identifier string) *monitoringv1.PrometheusRule {
 	alertName := "my-alert"
 	groups := []monitoringv1.RuleGroup{
 		{
@@ -790,6 +868,17 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 			MaxExpectedChanges: 2,
 		},
 		{
+			Name: "tlsAssetSecret",
+			Getter: func(prometheusName string) (versionedResource, error) {
+				return framework.
+					KubeClient.
+					CoreV1().
+					Secrets(ns).
+					Get("prometheus-"+prometheusName+"-tls-assets", metav1.GetOptions{})
+			},
+			MaxExpectedChanges: 2,
+		},
+		{
 			Name: "statefulset",
 			Getter: func(prometheusName string) (versionedResource, error) {
 				return framework.
@@ -859,7 +948,8 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheus); err != nil {
+	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheus)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -875,12 +965,12 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 		t.Fatal("Creating ServiceMonitor failed: ", err)
 	}
 
-	err := framework.WaitForPrometheusFiringAlert(prometheus.Namespace, pSVC.Name, alertName)
+	err = framework.WaitForPrometheusFiringAlert(prometheus.Namespace, pSVC.Name, alertName)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = isDiscoveryWorking(ns, pSVC.Name, prometheus.Name)
+	err = framework.WaitForDiscoveryWorking(ns, pSVC.Name, prometheus.Name)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
 	}
@@ -924,13 +1014,14 @@ func testPromWhenDeleteCRDCleanUpViaOwnerRef(t *testing.T) {
 	name := "test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	configMapName := fmt.Sprintf("prometheus-%v-rulefiles-0", p.Name)
 
-	_, err := framework.WaitForConfigMapExist(ns, configMapName)
+	_, err = framework.WaitForConfigMapExist(ns, configMapName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -965,7 +1056,8 @@ func testPromDiscovery(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -975,12 +1067,12 @@ func testPromDiscovery(t *testing.T) {
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	_, err := framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
 	if err != nil {
 		t.Fatal("Generated Secret could not be retrieved: ", err)
 	}
 
-	err = isDiscoveryWorking(ns, svc.Name, prometheusName)
+	err = framework.WaitForDiscoveryWorking(ns, svc.Name, prometheusName)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
 	}
@@ -1002,7 +1094,8 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
 	framework.AddAlertingToPrometheus(p, ns, alertmanagerName)
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -1017,12 +1110,12 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 		t.Fatalf("Creating ServiceMonitor failed: %v", err)
 	}
 
-	_, err := framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Generated Secret could not be retrieved: %v", err)
 	}
 
-	if err := framework.CreateAlertmanagerAndWaitUntilReady(ns, framework.MakeBasicAlertmanager(alertmanagerName, 3)); err != nil {
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, framework.MakeBasicAlertmanager(alertmanagerName, 3)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1047,7 +1140,7 @@ func testPromExposingWithKubernetesAPI(t *testing.T) {
 	basicPrometheus := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
 	service := framework.MakePrometheusService(basicPrometheus.Name, "test-group", v1.ServiceTypeClusterIP)
 
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, basicPrometheus); err != nil {
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, basicPrometheus); err != nil {
 		t.Fatal("Creating prometheus failed: ", err)
 	}
 
@@ -1075,6 +1168,7 @@ func testPromDiscoverTargetPort(t *testing.T) {
 	group := "servicediscovery-test"
 	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
 
+	targetPort := intstr.FromInt(9090)
 	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(&monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: prometheusName,
@@ -1090,7 +1184,7 @@ func testPromDiscoverTargetPort(t *testing.T) {
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					TargetPort: intstr.FromInt(9090),
+					TargetPort: &targetPort,
 					Interval:   "30s",
 				},
 			},
@@ -1100,7 +1194,7 @@ func testPromDiscoverTargetPort(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1115,7 +1209,7 @@ func testPromDiscoverTargetPort(t *testing.T) {
 		t.Fatal("Generated Secret could not be retrieved: ", err)
 	}
 
-	err = isDiscoveryWorking(ns, svc.Name, prometheusName)
+	err = framework.WaitForDiscoveryWorking(ns, svc.Name, prometheusName)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
 	}
@@ -1157,7 +1251,7 @@ func testPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 			"team": "frontend",
 		},
 	}
-	if err := framework.CreatePrometheusAndWaitUntilReady(prometheusNSName, p); err != nil {
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(prometheusNSName, p); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1167,7 +1261,7 @@ func testPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	resp, err := framework.QueryPrometheusSVC(prometheusNSName, svc.Name, "/api/v1/status/config", map[string]string{})
+	resp, err := framework.PrometheusSVCGetRequest(prometheusNSName, svc.Name, "/api/v1/status/config", map[string]string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1185,69 +1279,62 @@ func testThanos(t *testing.T) {
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
-	peerServiceName := "thanos-peers"
-	querierServiceName := "thanos-querier"
-	basicPrometheus := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
-	peerServiceDNS := fmt.Sprintf("%s.%s.svc:10900", peerServiceName, ns)
-	version := "v0.1.0"
-	basicPrometheus.Spec.Thanos = &monitoringv1.ThanosSpec{
-		Peers:   &peerServiceDNS,
+	version := prometheus.DefaultThanosVersion
+
+	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
+	prom.Spec.Replicas = proto.Int32(2)
+	prom.Spec.Thanos = &monitoringv1.ThanosSpec{
 		Version: &version,
 	}
-	basicPrometheus.Spec.PodMetadata = &metav1.ObjectMeta{
-		Labels: map[string]string{
-			"thanos-peer": "true",
-		},
-	}
-	replicas := int32(2)
-	basicPrometheus.Spec.Replicas = &replicas
-	pservice := framework.MakePrometheusService(basicPrometheus.Name, "test-group", v1.ServiceTypeClusterIP)
-	tservice := framework.MakeThanosService(peerServiceName)
-	qservice := framework.MakeThanosQuerierService(querierServiceName)
-	s := framework.MakeBasicServiceMonitor("test-group")
-	thanosQuerier, err := testFramework.MakeDeployment("../../example/thanos/querier-deployment.yaml")
-	if err != nil {
-		t.Fatal("Making deployment failed: ", err)
-	}
-	querierArgs := []string{
-		"query",
-		"--log.level=debug",
-		"--query.replica-label=prometheus_replica",
-		fmt.Sprintf("--cluster.peers=%s", peerServiceDNS),
-	}
-	log.Println("setting up querier with args: ", querierArgs)
-	thanosQuerier.Spec.Template.Spec.Containers[0].Args = querierArgs
-
-	if err := testFramework.CreateDeployment(framework.KubeClient, ns, thanosQuerier); err != nil {
-		t.Fatal("Creating Thanos querier failed: ", err)
-	}
-
-	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, qservice); err != nil {
-		t.Fatal("Creating Thanos querier service failed: ", err)
-	}
-
-	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(s); err != nil {
-		t.Fatal("Creating ServiceMonitor failed: ", err)
-	}
-
-	if _, err := framework.KubeClient.CoreV1().Services(ns).Create(pservice); err != nil {
-		t.Fatal("Creating prometheus service failed: ", err)
-	}
-
-	if _, err := framework.MonClientV1.Prometheuses(ns).Create(basicPrometheus); err != nil {
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, prom); err != nil {
 		t.Fatal("Creating prometheus failed: ", err)
 	}
 
-	if _, err := framework.KubeClient.CoreV1().Services(ns).Create(tservice); err != nil {
+	promSvc := framework.MakePrometheusService(prom.Name, "test-group", v1.ServiceTypeClusterIP)
+	if _, err := framework.KubeClient.CoreV1().Services(ns).Create(promSvc); err != nil {
 		t.Fatal("Creating prometheus service failed: ", err)
+	}
+
+	svcMon := framework.MakeBasicServiceMonitor("test-group")
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(svcMon); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	qryDep, err := testFramework.MakeDeployment("../../example/thanos/query-deployment.yaml")
+	if err != nil {
+		t.Fatal("Making thanos query deployment failed: ", err)
+	}
+	// override image
+	qryImage := "quay.io/thanos/thanos:" + version
+	t.Log("setting up query with image: ", qryImage)
+	qryDep.Spec.Template.Spec.Containers[0].Image = qryImage
+	// override args
+	qryArgs := []string{
+		"query",
+		"--log.level=debug",
+		"--query.replica-label=prometheus_replica",
+		fmt.Sprintf("--store=dnssrv+_grpc._tcp.prometheus-operated.%s.svc.cluster.local", ns),
+	}
+	t.Log("setting up query with args: ", qryArgs)
+	qryDep.Spec.Template.Spec.Containers[0].Args = qryArgs
+	if err := testFramework.CreateDeployment(framework.KubeClient, ns, qryDep); err != nil {
+		t.Fatal("Creating Thanos query deployment failed: ", err)
+	}
+
+	qrySvc := framework.MakeThanosQuerierService(qryDep.Name)
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, qrySvc); err != nil {
+		t.Fatal("Creating Thanos query service failed: ", err)
 	}
 
 	err = wait.Poll(5*time.Second, 5*time.Minute, func() (bool, error) {
 		proxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
-		request := proxyGet("http", querierServiceName, "http-query", "/api/v1/query", map[string]string{"query": "prometheus_build_info", "dedup": "false"})
+		request := proxyGet("http", qrySvc.Name, "http-query", "/api/v1/query", map[string]string{
+			"query": "prometheus_build_info",
+			"dedup": "false",
+		})
 		b, err := request.DoRaw()
 		if err != nil {
-			log.Println(fmt.Sprintf("Error performing request against Thanos querier: %v\n\nretrying...", err))
+			t.Logf("Error performing request against Thanos query: %v\n\nretrying...", err)
 			return false, nil
 		}
 
@@ -1268,115 +1355,156 @@ func testThanos(t *testing.T) {
 		// Prometheus replicas by both replicas.
 		expected := 4
 		if result != expected {
-			log.Printf("Unexpected number of results from query. Got %d, expected %d. retrying...\n", result, expected)
+			t.Logf("Unexpected number of results from query. Got %d, expected %d. retrying...", result, expected)
 			return false, nil
 		}
 		return true, nil
 	})
 	if err != nil {
-		t.Fatal("Failed to get correct result from Thanos querier: ", err)
+		t.Fatal("Failed to get correct result from Thanos query: ", err)
 	}
 }
 
-func testPromGetBasicAuthSecret(t *testing.T) {
+func testPromGetAuthSecret(t *testing.T) {
 	t.Parallel()
-
-	ctx := framework.NewTestCtx(t)
-	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBACGlobal(t, ns, framework.KubeClient)
-
 	name := "test"
 
-	maptest := make(map[string]string)
-	maptest["tc"] = ns
-	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
-	prometheusCRD.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
-		MatchLabels: maptest,
-	}
-
-	if err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheusCRD); err != nil {
-		t.Fatal(err)
-	}
-	testNamespace := ctx.CreateNamespace(t, framework.KubeClient)
-
-	err := testFramework.AddLabelsToNamespace(framework.KubeClient, testNamespace, maptest)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	simple, err := testFramework.MakeDeployment("../../test/framework/ressources/basic-auth-app-deployment.yaml")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := testFramework.CreateDeployment(framework.KubeClient, testNamespace, simple); err != nil {
-		t.Fatal("Creating simple basic auth app failed: ", err)
-	}
-
-	authSecret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Data: map[string][]byte{
-			"user":     []byte("user"),
-			"password": []byte("pass"),
-		},
-	}
-
-	if _, err := framework.KubeClient.CoreV1().Secrets(testNamespace).Create(authSecret); err != nil {
-		t.Fatal(err)
-	}
-
-	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			Labels: map[string]string{
-				"group": name,
-			},
-		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeLoadBalancer,
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
-					Name: "web",
-					Port: 8080,
+	tests := []struct {
+		name           string
+		secret         *v1.Secret
+		serviceMonitor func() *monitoringv1.ServiceMonitor
+	}{
+		{
+			name: "basic-auth",
+			secret: &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+				},
+				Data: map[string][]byte{
+					"user":     []byte("user"),
+					"password": []byte("pass"),
 				},
 			},
-			Selector: map[string]string{
-				"group": name,
+			serviceMonitor: func() *monitoringv1.ServiceMonitor {
+				sm := framework.MakeBasicServiceMonitor(name)
+				sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+					Username: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "user",
+					},
+					Password: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "password",
+					},
+				}
+
+				return sm
+			},
+		},
+		{
+			name: "bearer-token",
+			secret: &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+				},
+				Data: map[string][]byte{
+					"bearertoken": []byte("abc"),
+				},
+			},
+			serviceMonitor: func() *monitoringv1.ServiceMonitor {
+				sm := framework.MakeBasicServiceMonitor(name)
+				sm.Spec.Endpoints[0].BearerTokenSecret = v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: name,
+					},
+					Key: "bearertoken",
+				}
+				sm.Spec.Endpoints[0].Path = "/bearer-token"
+				return sm
 			},
 		},
 	}
 
-	sm := framework.MakeBasicServiceMonitor(name)
-	sm.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
-		Username: v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
-				Name: name,
-			},
-			Key: "user",
-		},
-		Password: v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
-				Name: name,
-			},
-			Key: "password",
-		},
-	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := framework.NewTestCtx(t)
+			defer ctx.Cleanup(t)
+			ns := ctx.CreateNamespace(t, framework.KubeClient)
+			ctx.SetupPrometheusRBACGlobal(t, ns, framework.KubeClient)
 
-	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, testNamespace, svc); err != nil {
-		t.Fatal(err)
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
+			maptest := make(map[string]string)
+			maptest["tc"] = ns
+			prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
+			prometheusCRD.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+				MatchLabels: maptest,
+			}
+			prometheusCRD.Spec.ScrapeInterval = "1s"
 
-	if _, err := framework.MonClientV1.ServiceMonitors(testNamespace).Create(sm); err != nil {
-		t.Fatal("Creating ServiceMonitor failed: ", err)
-	}
+			if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheusCRD); err != nil {
+				t.Fatal(err)
+			}
+			testNamespace := ctx.CreateNamespace(t, framework.KubeClient)
 
-	if err := framework.WaitForTargets(ns, "prometheus-operated", 1); err != nil {
-		t.Fatal(err)
+			err := testFramework.AddLabelsToNamespace(framework.KubeClient, testNamespace, maptest)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			simple, err := testFramework.MakeDeployment("../../test/framework/ressources/basic-auth-app-deployment.yaml")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if err := testFramework.CreateDeployment(framework.KubeClient, testNamespace, simple); err != nil {
+				t.Fatal("Creating simple basic auth app failed: ", err)
+			}
+
+			authSecret := test.secret
+			if _, err := framework.KubeClient.CoreV1().Secrets(testNamespace).Create(authSecret); err != nil {
+				t.Fatal(err)
+			}
+
+			svc := &v1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+					Labels: map[string]string{
+						"group": name,
+					},
+				},
+				Spec: v1.ServiceSpec{
+					Type: v1.ServiceTypeLoadBalancer,
+					Ports: []v1.ServicePort{
+						v1.ServicePort{
+							Name: "web",
+							Port: 8080,
+						},
+					},
+					Selector: map[string]string{
+						"group": name,
+					},
+				},
+			}
+
+			sm := test.serviceMonitor()
+			if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, testNamespace, svc); err != nil {
+				t.Fatal(err)
+			} else {
+				ctx.AddFinalizerFn(finalizerFn)
+			}
+
+			if _, err := framework.MonClientV1.ServiceMonitors(testNamespace).Create(sm); err != nil {
+				t.Fatal("Creating ServiceMonitor failed: ", err)
+			}
+
+			if err := framework.WaitForTargets(ns, "prometheus-operated", 1); err != nil {
+				t.Fatal(err)
+			}
+		})
 	}
 
 }
@@ -1412,7 +1540,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches single namespace mainNS, not arbitraryNS.
-		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{mainNS})
+		_, err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{mainNS}, nil, nil, nil, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1434,7 +1562,8 @@ func testOperatorNSScope(t *testing.T) {
 			MatchLabels: prometheusNamespaceSelector,
 		}
 		p.Spec.EvaluationInterval = "1s"
-		if err := framework.CreatePrometheusAndWaitUntilReady(mainNS, p); err != nil {
+		p, err = framework.CreatePrometheusAndWaitUntilReady(mainNS, p)
+		if err != nil {
 			t.Fatal(err)
 		}
 
@@ -1481,7 +1610,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches prometheusNS and ruleNS, not arbitraryNS.
-		err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{prometheusNS, ruleNS})
+		_, err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{prometheusNS, ruleNS}, nil, nil, nil, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1503,7 +1632,8 @@ func testOperatorNSScope(t *testing.T) {
 			MatchLabels: prometheusNamespaceSelector,
 		}
 		p.Spec.EvaluationInterval = "1s"
-		if err := framework.CreatePrometheusAndWaitUntilReady(prometheusNS, p); err != nil {
+		p, err = framework.CreatePrometheusAndWaitUntilReady(prometheusNS, p)
+		if err != nil {
 			t.Fatal(err)
 		}
 
@@ -1530,79 +1660,555 @@ func testOperatorNSScope(t *testing.T) {
 	})
 }
 
-func isDiscoveryWorking(ns, svcName, prometheusName string) error {
-	var loopErr error
+// testPromArbitraryFSAcc tests the
+// github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1.PrometheusSpec.ArbitraryFSAccessThroughSMs
+// configuration with the service monitor bearer token and tls assets option.
+func testPromArbitraryFSAcc(t *testing.T) {
+	t.Parallel()
 
-	err := wait.Poll(time.Second, 5*framework.DefaultTimeout, func() (bool, error) {
-		pods, loopErr := framework.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(prometheusName))
-		if loopErr != nil {
-			return false, loopErr
-		}
-		if 1 != len(pods.Items) {
-			return false, nil
-		}
-		podIP := pods.Items[0].Status.PodIP
-		expectedTargets := []string{fmt.Sprintf("http://%s:9090/metrics", podIP)}
+	name := "test"
 
-		activeTargets, loopErr := framework.GetActiveTargets(ns, svcName)
-		if loopErr != nil {
-			return false, loopErr
-		}
+	tests := []struct {
+		name                              string
+		arbitraryFSAccessThroughSMsConfig monitoringv1.ArbitraryFSAccessThroughSMsConfig
+		endpoint                          monitoringv1.Endpoint
+		expectTargets                     bool
+	}{
+		//
+		// Bearer tokens:
+		//
+		{
+			name: "allowed-bearer-file",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: false,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port:            "web",
+				BearerTokenFile: "abc",
+			},
+			expectTargets: true,
+		},
+		{
+			name: "denied-bearer-file",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: true,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port:            "web",
+				BearerTokenFile: "abc",
+			},
+			expectTargets: false,
+		},
+		{
+			name: "allowed-bearer-secret",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: false,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				BearerTokenSecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: name,
+					},
+					Key: "bearer-token",
+				},
+			},
+			expectTargets: true,
+		},
+		{
+			name: "denied-bearer-secret",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: true,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				BearerTokenSecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: name,
+					},
+					Key: "bearer-token",
+				},
+			},
+			expectTargets: true,
+		},
+		//
+		// TLS assets:
+		//
+		{
+			name: "allowed-tls-file",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: false,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					CAFile:   "/etc/ca-certificates/cert.pem",
+					CertFile: "/etc/ca-certificates/cert.pem",
+					KeyFile:  "/etc/ca-certificates/key.pem",
+				},
+			},
+			expectTargets: true,
+		},
+		{
+			name: "denied-tls-file",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: true,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					CAFile:   "/etc/ca-certificates/cert.pem",
+					CertFile: "/etc/ca-certificates/cert.pem",
+					KeyFile:  "/etc/ca-certificates/key.pem",
+				},
+			},
+			expectTargets: false,
+		},
+		{
+			name: "allowed-tls-secret",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: false,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+			expectTargets: true,
+		},
+		{
+			name: "denied-tls-secret",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: true,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+			expectTargets: false,
+		},
+		{
+			name: "allowed-tls-configmap",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: false,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+			expectTargets: true,
+		},
+		{
+			name: "denied-tls-configmap",
+			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
+				Deny: true,
+			},
+			endpoint: monitoringv1.Endpoint{
+				Port: "web",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+			expectTargets: false,
+		},
+	}
 
-		if loopErr = assertExpectedTargets(activeTargets, expectedTargets); loopErr != nil {
-			return false, nil
-		}
+	for _, test := range tests {
+		test := test
 
-		working, loopErr := basicQueryWorking(ns, svcName)
-		if loopErr != nil {
-			return false, loopErr
-		}
-		if !working {
-			return false, nil
-		}
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 
-		return true, nil
-	})
+			ctx := framework.NewTestCtx(t)
+			defer ctx.Cleanup(t)
+			ns := ctx.CreateNamespace(t, framework.KubeClient)
+			ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
+			// Create secret either used by bearer token secret key ref, tls
+			// asset key ref or tls configmap key ref.
+			cert, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
+			if err != nil {
+				t.Fatalf("failed to load cert.pem: %v", err)
+			}
+
+			key, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
+			if err != nil {
+				t.Fatalf("failed to load key.pem: %v", err)
+			}
+
+			tlsCertsSecret := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+				},
+				Data: map[string][]byte{
+					"cert.pem":     cert,
+					"key.pem":      key,
+					"bearer-token": []byte("abc"),
+				},
+			}
+
+			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(tlsCertsSecret); err != nil {
+				t.Fatal(err)
+			}
+
+			tlsCertsConfigMap := &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+				},
+				Data: map[string]string{
+					"cert.pem": string(cert),
+				},
+			}
+
+			if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(tlsCertsConfigMap); err != nil {
+				t.Fatal(err)
+			}
+
+			prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
+			prometheusCRD.Namespace = ns
+			prometheusCRD.Spec.ArbitraryFSAccessThroughSMs = test.arbitraryFSAccessThroughSMsConfig
+
+			if strings.HasSuffix(test.name, "-file") {
+				mountTLSFiles(prometheusCRD, name)
+			}
+
+			if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheusCRD); err != nil {
+				t.Fatal(err)
+			}
+
+			svc := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
+			if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, svc); err != nil {
+				t.Fatal(err)
+			}
+
+			s := framework.MakeBasicServiceMonitor(name)
+			s.Spec.Endpoints[0] = test.endpoint
+			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(s); err != nil {
+				t.Fatal("creating ServiceMonitor failed: ", err)
+			}
+
+			if test.expectTargets {
+				if err := framework.WaitForTargets(ns, svc.Name, 1); err != nil {
+					t.Fatal(err)
+				}
+
+				return
+			}
+
+			// Make sure Prometheus has enough time to reload.
+			time.Sleep(2 * time.Minute)
+			if err := framework.WaitForTargets(ns, svc.Name, 0); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+
+}
+
+// mountTLSFiles is a helper to manually mount TLS certificate files
+// into the prometheus container
+func mountTLSFiles(p *monitoringv1.Prometheus, secretName string) {
+	volumeName := secretName
+	p.Spec.Volumes = append(p.Spec.Volumes,
+		v1.Volume{
+			Name: volumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: secretName,
+				},
+			},
+		})
+	p.Spec.Containers = []v1.Container{
+		v1.Container{
+			Name: "prometheus",
+			VolumeMounts: []v1.VolumeMount{
+				v1.VolumeMount{
+					Name:      volumeName,
+					MountPath: "/etc/ca-certificates",
+				},
+			},
+		},
+	}
+}
+
+// testPromTLSConfigViaSecret tests the service monitor endpoint option to load
+// certificate assets via Kubernetes secrets into the Prometheus container.
+func testPromTLSConfigViaSecret(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	name := "test"
+
+	//
+	// Setup sample app.
+	//
+
+	cert, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
 	if err != nil {
-		return fmt.Errorf("waiting for Prometheus to discover targets failed: %v: %v", err, loopErr)
+		t.Fatalf("failed to load cert.pem: %v", err)
 	}
 
-	return nil
-}
-
-type resultVector struct {
-	Metric map[string]string `json:"metric"`
-	Value  []interface{}     `json:"value"`
-}
-
-type queryResult struct {
-	ResultType string          `json:"resultType"`
-	Result     []*resultVector `json:"result"`
-}
-
-type prometheusQueryAPIResponse struct {
-	Status string       `json:"status"`
-	Data   *queryResult `json:"data"`
-}
-
-func basicQueryWorking(ns, svcName string) (bool, error) {
-	response, err := framework.QueryPrometheusSVC(ns, svcName, "/api/v1/query", map[string]string{"query": "up"})
+	key, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
 	if err != nil {
-		return false, err
+		t.Fatalf("failed to load key.pem: %v", err)
 	}
 
-	rq := prometheusQueryAPIResponse{}
-	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&rq); err != nil {
-		return false, err
+	tlsCertsSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Data: map[string][]byte{
+			"cert.pem": cert,
+			"key.pem":  key,
+		},
 	}
 
-	if rq.Status != "success" && rq.Data.Result[0].Value[1] == "1" {
-		log.Printf("Query Response not successful.")
-		return false, nil
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(tlsCertsSecret); err != nil {
+		t.Fatal(err)
 	}
 
-	return true, nil
+	simple, err := testFramework.MakeDeployment("../../test/framework/ressources/basic-auth-app-deployment.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	simple.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/certs"}
+
+	simple.Spec.Template.Spec.Volumes = []v1.Volume{
+		v1.Volume{
+			Name: "tls-certs",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: tlsCertsSecret.Name,
+				},
+			},
+		},
+	}
+
+	simple.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
+		{
+			Name:      simple.Spec.Template.Spec.Volumes[0].Name,
+			MountPath: "/etc/certs",
+		},
+	}
+
+	if err := testFramework.CreateDeployment(framework.KubeClient, ns, simple); err != nil {
+		t.Fatal("Creating simple basic auth app failed: ", err)
+	}
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"group": name,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeLoadBalancer,
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name: "web",
+					Port: 8080,
+				},
+				v1.ServicePort{
+					Name: "mtls",
+					Port: 8081,
+				},
+			},
+			Selector: map[string]string{
+				"group": name,
+			},
+		},
+	}
+
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, svc); err != nil {
+		t.Fatal(err)
+	}
+
+	//
+	// Setup monitoring.
+	//
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm.Spec.Endpoints = []monitoringv1.Endpoint{
+		{
+			Port:     "mtls",
+			Interval: "30s",
+			Scheme:   "https",
+			TLSConfig: &monitoringv1.TLSConfig{
+				InsecureSkipVerify: true,
+				CA: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: tlsCertsSecret.Name,
+						},
+						Key: "cert.pem",
+					},
+				},
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: tlsCertsSecret.Name,
+						},
+						Key: "cert.pem",
+					},
+				},
+				KeySecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: tlsCertsSecret.Name,
+					},
+					Key: "key.pem",
+				},
+			},
+		},
+	}
+
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(sm); err != nil {
+		t.Fatal("creating ServiceMonitor failed: ", err)
+	}
+
+	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
+
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheusCRD); err != nil {
+		t.Fatal(err)
+	}
+
+	promSVC := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
+
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, promSVC); err != nil {
+		t.Fatal(err)
+	}
+
+	//
+	// Check for proper scraping.
+	//
+
+	if err := framework.WaitForTargets(ns, promSVC.Name, 1); err != nil {
+		t.Fatal(err)
+	}
+
+	// TODO: Do a poll instead, should speed up things.
+	time.Sleep(30 * time.Second)
+
+	response, err := framework.PrometheusSVCGetRequest(
+		ns,
+		promSVC.Name,
+		"/api/v1/query",
+		map[string]string{"query": fmt.Sprintf(`up{job="%v",endpoint="%v"}`, name, sm.Spec.Endpoints[0].Port)},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	q := testFramework.PrometheusQueryAPIResponse{}
+	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&q); err != nil {
+		t.Fatal(err)
+	}
+
+	if q.Status != "success" {
+		t.Fatalf("expected query status to be 'success' but got %v", q.Status)
+	}
+
+	if q.Data.Result[0].Value[1] != "1" {
+		t.Fatalf("expected query result to be '1' but got %v", q.Data.Result[0].Value[1])
+	}
 }
 
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func() (bool, error) {
@@ -1619,7 +2225,7 @@ func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) fu
 			expectedAlertmanagerTargets = append(expectedAlertmanagerTargets, fmt.Sprintf("http://%s:9093/api/v1/alerts", p.Status.PodIP))
 		}
 
-		response, err := framework.QueryPrometheusSVC(ns, promSVCName, "/api/v1/alertmanagers", map[string]string{})
+		response, err := framework.PrometheusSVCGetRequest(ns, promSVCName, "/api/v1/alertmanagers", map[string]string{})
 		if err != nil {
 			return false, err
 		}
@@ -1635,26 +2241,6 @@ func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) fu
 
 		return false, nil
 	}
-}
-
-func assertExpectedTargets(targets []*testFramework.Target, expectedTargets []string) error {
-	existingTargets := []string{}
-
-	for _, t := range targets {
-		existingTargets = append(existingTargets, t.ScrapeURL)
-	}
-
-	sort.Strings(expectedTargets)
-	sort.Strings(existingTargets)
-
-	if !reflect.DeepEqual(expectedTargets, existingTargets) {
-		return fmt.Errorf(
-			"expected targets %q but got %q", strings.Join(expectedTargets, ","),
-			strings.Join(existingTargets, ","),
-		)
-	}
-
-	return nil
 }
 
 func assertExpectedAlertmanagerTargets(ams []*alertmanagerTarget, expectedTargets []string) bool {
@@ -1688,4 +2274,13 @@ type alertmanagerDiscovery struct {
 type prometheusAlertmanagerAPIResponse struct {
 	Status string                 `json:"status"`
 	Data   *alertmanagerDiscovery `json:"data"`
+}
+
+func gzipConfig(buf *bytes.Buffer, conf []byte) error {
+	w := gzip.NewWriter(buf)
+	defer w.Close()
+	if _, err := w.Write(conf); err != nil {
+		return err
+	}
+	return nil
 }

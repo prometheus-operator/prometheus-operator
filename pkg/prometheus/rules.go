@@ -21,16 +21,22 @@ import (
 	"strconv"
 	"strings"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1"
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/ghodss/yaml"
 	"github.com/go-kit/kit/log/level"
+	"github.com/openshift/prom-label-proxy/injectproxy"
 	"github.com/pkg/errors"
+	"github.com/prometheus/prometheus/pkg/labels"
+	"github.com/prometheus/prometheus/promql"
 )
+
+const labelPrometheusName = "prometheus-name"
 
 // The maximum `Data` size of a ConfigMap seems to differ between
 // environments. This is probably due to different meta data sizes which count
@@ -128,7 +134,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 }
 
 func prometheusRulesConfigMapSelector(prometheusName string) metav1.ListOptions {
-	return metav1.ListOptions{LabelSelector: fmt.Sprintf("prometheus-name=%v", prometheusName)}
+	return metav1.ListOptions{LabelSelector: fmt.Sprintf("%v=%v", labelPrometheusName, prometheusName)}
 }
 
 func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, error) {
@@ -170,13 +176,13 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 	for _, ns := range namespaces {
 		var marshalErr error
 		err := cache.ListAllByNamespace(c.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
-			rule := obj.(*monitoringv1.PrometheusRule)
-			content, err := yaml.Marshal(rule.Spec)
+			promRule := obj.(*monitoringv1.PrometheusRule)
+			content, err := generateContent(promRule.Spec, p.Spec.EnforcedNamespaceLabel, promRule.Namespace)
 			if err != nil {
 				marshalErr = err
 				return
 			}
-			rules[fmt.Sprintf("%v-%v.yaml", rule.Namespace, rule.Name)] = string(content)
+			rules[fmt.Sprintf("%v-%v.yaml", promRule.Namespace, promRule.Name)] = content
 		})
 		if err != nil {
 			return nil, err
@@ -199,6 +205,41 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 	)
 
 	return rules, nil
+}
+
+func generateContent(promRule monitoringv1.PrometheusRuleSpec, enforcedNsLabel, ns string) (string, error) {
+	if enforcedNsLabel != "" {
+		for gi, group := range promRule.Groups {
+			group.PartialResponseStrategy = ""
+			for ri, r := range group.Rules {
+				if len(promRule.Groups[gi].Rules[ri].Labels) == 0 {
+					promRule.Groups[gi].Rules[ri].Labels = map[string]string{}
+				}
+				promRule.Groups[gi].Rules[ri].Labels[enforcedNsLabel] = ns
+
+				expr := r.Expr.String()
+				parsedExpr, err := promql.ParseExpr(expr)
+				if err != nil {
+					return "", errors.Wrap(err, "failed to parse promql expression")
+				}
+				err = injectproxy.SetRecursive(parsedExpr, []*labels.Matcher{{
+					Name:  enforcedNsLabel,
+					Type:  labels.MatchEqual,
+					Value: ns,
+				}})
+				if err != nil {
+					return "", errors.Wrap(err, "failed to inject labels to expression")
+				}
+
+				promRule.Groups[gi].Rules[ri].Expr = intstr.FromString(parsedExpr.String())
+			}
+		}
+	}
+	content, err := yaml.Marshal(promRule)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to unmarshal content")
+	}
+	return string(content), nil
 }
 
 // makeRulesConfigMaps takes a Prometheus configuration and rule files and
@@ -264,7 +305,7 @@ func bucketSize(bucket map[string]string) int {
 func makeRulesConfigMap(p *monitoringv1.Prometheus, ruleFiles map[string]string) v1.ConfigMap {
 	boolTrue := true
 
-	labels := map[string]string{"prometheus-name": p.Name}
+	labels := map[string]string{labelPrometheusName: p.Name}
 	for k, v := range managedByOperatorLabels {
 		labels[k] = v
 	}
