@@ -361,11 +361,6 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		}, ports...)
 	}
 
-	var securityContext *v1.PodSecurityContext = nil
-	if a.Spec.SecurityContext != nil {
-		securityContext = a.Spec.SecurityContext
-	}
-
 	// Adjust Alertmanager command line args to specified AM version
 	//
 	// Alertmanager versions < v0.15.0 are only supported on a best effort basis
@@ -540,7 +535,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				}, a.Spec.Containers...),
 				Volumes:            volumes,
 				ServiceAccountName: a.Spec.ServiceAccountName,
-				SecurityContext:    securityContext,
+				SecurityContext:    a.Spec.SecurityContext,
 				Tolerations:        a.Spec.Tolerations,
 				Affinity:           a.Spec.Affinity,
 			},
