@@ -402,3 +402,107 @@ func TestAdditionalContainers(t *testing.T) {
 		}
 	}
 }
+
+func TestRetention(t *testing.T) {
+	tests := []struct {
+		specRetention     string
+		expectedRetention string
+	}{
+		{"", "24h"},
+		{"1d", "1d"},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+			Spec: monitoringv1.ThanosRulerSpec{
+				Retention:      test.specRetention,
+				QueryEndpoints: emptyQueryEndpoints,
+			},
+		}, nil, defaultTestConfig, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		trArgs := sset.Spec.Template.Spec.Containers[0].Args
+		expectedRetentionArg := fmt.Sprintf("--tsdb.retention=%s", test.expectedRetention)
+		found := false
+		for _, flag := range trArgs {
+			if flag == expectedRetentionArg {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			t.Fatalf("expected ThanosRuler args to contain %v, but got %v", expectedRetentionArg, trArgs)
+		}
+	}
+}
+
+func TestPodTemplateConfig(t *testing.T) {
+
+	nodeSelector := map[string]string{
+		"foo": "bar",
+	}
+	affinity := v1.Affinity{
+		NodeAffinity: &v1.NodeAffinity{},
+		PodAffinity: &v1.PodAffinity{
+			PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
+				v1.WeightedPodAffinityTerm{
+					PodAffinityTerm: v1.PodAffinityTerm{
+						Namespaces: []string{"foo"},
+					},
+					Weight: 100,
+				},
+			},
+		},
+		PodAntiAffinity: &v1.PodAntiAffinity{},
+	}
+
+	tolerations := []v1.Toleration{
+		v1.Toleration{
+			Key: "key",
+		},
+	}
+	userid := int64(1234)
+	securityContext := v1.PodSecurityContext{
+		RunAsUser: &userid,
+	}
+	priorityClassName := "foo"
+	serviceAccountName := "thanos-ruler-sa"
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints:     emptyQueryEndpoints,
+			NodeSelector:       nodeSelector,
+			Affinity:           &affinity,
+			Tolerations:        tolerations,
+			SecurityContext:    &securityContext,
+			PriorityClassName:  priorityClassName,
+			ServiceAccountName: serviceAccountName,
+		},
+	}, nil, defaultTestConfig, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if !reflect.DeepEqual(sset.Spec.Template.Spec.NodeSelector, nodeSelector) {
+		t.Fatalf("expected node selector to match, want %v, got %v", nodeSelector, sset.Spec.Template.Spec.NodeSelector)
+	}
+	if !reflect.DeepEqual(*sset.Spec.Template.Spec.Affinity, affinity) {
+		t.Fatalf("expected affinity to match, want %v, got %v", affinity, *sset.Spec.Template.Spec.Affinity)
+	}
+	if !reflect.DeepEqual(sset.Spec.Template.Spec.Tolerations, tolerations) {
+		t.Fatalf("expected tolerations to match, want %v, got %v", tolerations, sset.Spec.Template.Spec.Tolerations)
+	}
+	if !reflect.DeepEqual(*sset.Spec.Template.Spec.SecurityContext, securityContext) {
+		t.Fatalf("expected security context  to match, want %v, got %v", securityContext, *sset.Spec.Template.Spec.SecurityContext)
+	}
+	if sset.Spec.Template.Spec.PriorityClassName != priorityClassName {
+		t.Fatalf("expected priority class name to match, want %s, got %s", priorityClassName, sset.Spec.Template.Spec.PriorityClassName)
+	}
+	if sset.Spec.Template.Spec.ServiceAccountName != serviceAccountName {
+		t.Fatalf("expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
+	}
+}
