@@ -2839,6 +2839,10 @@ spec:
                 is '24h', and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)`
                 (milliseconds seconds minutes hours days weeks years).
               type: string
+            routePrefix:
+              description: The route prefix ThanosRuler registers HTTP handlers for.
+                This allows thanos UI to be served on a sub-path.
+              type: string
             ruleNamespaceSelector:
               description: Namespaces to be selected for Rules discovery. If unspecified,
                 only the same namespace as the ThanosRuler object is in is used.

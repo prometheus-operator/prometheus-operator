@@ -155,6 +155,8 @@ type ThanosRulerSpec struct {
 	// AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts.
 	// If `labels` field is not provided, `thanos_ruler_replica` will be dropped in alerts by default.
 	AlertDropLabels []string `json:"alertDropLabels,omitempty"`
+	// The route prefix ThanosRuler registers HTTP handlers for. This allows thanos UI to be served on a sub-path.
+	RoutePrefix string `json:"routePrefix,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not
