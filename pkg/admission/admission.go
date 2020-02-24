@@ -17,15 +17,17 @@ package admission
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
-	"io/ioutil"
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
-	"net/http"
 )
 
 const (
@@ -181,6 +183,13 @@ func (a *Admission) validatePrometheusRules(ar v1beta1.AdmissionReview) *v1beta1
 		level.Warn(a.logger).Log("err", err)
 		(*a.validationErrorsCounter).Inc()
 		return toAdmissionResponseFailure("Unexpected resource kind", []error{err})
+	}
+
+	promRule := &monitoringv1.PrometheusRule{}
+	if err := json.Unmarshal(ar.Request.Object.Raw, promRule); err != nil {
+		level.Info(a.logger).Log("msg", "Cannot unmarshal rules from spec", "err", err)
+		(*a.validationErrorsCounter).Inc()
+		return toAdmissionResponseFailure("Cannot unmarshal rules from spec", []error{err})
 	}
 
 	rules := &PrometheusRules{}

@@ -1,4 +1,5 @@
 ## Next release
+* [BUGFIX] Fix prometheus rule validator admitting rules with invalid label types (#2727,#2962)
 
 ## 0.36.0 / 2020-02-10
 
