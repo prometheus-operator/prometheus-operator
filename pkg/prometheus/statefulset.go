@@ -443,11 +443,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		}
 	}
 
-	var securityContext *v1.PodSecurityContext = nil
-	if p.Spec.SecurityContext != nil {
-		securityContext = p.Spec.SecurityContext
-	}
-
 	if p.Spec.EnableAdminAPI {
 		promArgs = append(promArgs, "-web.enable-admin-api")
 	}
@@ -935,7 +930,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			Spec: v1.PodSpec{
 				Containers:                    containers,
 				InitContainers:                p.Spec.InitContainers,
-				SecurityContext:               securityContext,
+				SecurityContext:               p.Spec.SecurityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
 				PriorityClassName:             p.Spec.PriorityClassName,

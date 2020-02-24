@@ -685,7 +685,13 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling thanos images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | false |
 | paused | When a ThanosRuler deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
 | replicas | Number of thanos ruler instances to deploy. | *int32 | false |
-| resources | Resources defines the resource requirements for the Thanos sidecar. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
+| nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
+| resources | Resources defines the resource requirements for single Pods. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | false |
+| affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
+| tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
+| securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext. | *v1.PodSecurityContext | false |
+| priorityClassName | Priority class assigned to the Pods | string | false |
+| serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Thanos Ruler Pods. | string | false |
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
 | volumes | Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will be appended to other volumes that are generated as a result of StorageSpec objects. | []v1.Volume | false |
 | objectStorageConfig | ObjectStorageConfig configures object storage in Thanos. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
