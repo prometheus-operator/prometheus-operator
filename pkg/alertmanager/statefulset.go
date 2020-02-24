@@ -54,14 +54,8 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
 
-	if am.Spec.BaseImage == "" {
-		am.Spec.BaseImage = config.AlertmanagerDefaultBaseImage
-	}
 	if am.Spec.PortName == "" {
 		am.Spec.PortName = defaultPortName
-	}
-	if am.Spec.Version == "" {
-		am.Spec.Version = operator.DefaultAlertmanagerVersion
 	}
 	if am.Spec.Replicas == nil {
 		am.Spec.Replicas = &minReplicas
@@ -218,22 +212,16 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	// details see https://github.com/coreos/prometheus-operator/issues/1659
 	a = a.DeepCopy()
 
-	// Version is used by default.
-	// If the tag is specified, we use the tag to identify the container image.
-	// If the sha is specified, we use the sha to identify the container image,
-	// as it has even stronger immutable guarantees to identify the image.
-	image := fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Version)
-	if a.Spec.Tag != "" {
-		image = fmt.Sprintf("%s:%s", a.Spec.BaseImage, a.Spec.Tag)
-	}
-	if a.Spec.SHA != "" {
-		image = fmt.Sprintf("%s@sha256:%s", a.Spec.BaseImage, a.Spec.SHA)
-	}
-	if a.Spec.Image != nil && *a.Spec.Image != "" {
-		image = *a.Spec.Image
+	amBaseImage := operator.StringValOrDefault(a.Spec.BaseImage, operator.DefaultAlertmanagerBaseImage)
+	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
+	amTag := operator.StringValOrDefault(a.Spec.Tag, "")
+	amSHA := operator.StringValOrDefault(a.Spec.SHA, "")
+	amImagePath := operator.BuildImagePath(amBaseImage, amVersion, amTag, amSHA)
+	if a.Spec.Image != nil && strings.TrimSpace(*a.Spec.Image) != "" {
+		amImagePath = *a.Spec.Image
 	}
 
-	version, err := semver.ParseTolerant(a.Spec.Version)
+	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse alertmanager version")
 	}
@@ -492,7 +480,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		{
 			Args:           amArgs,
 			Name:           "alertmanager",
-			Image:          image,
+			Image:          amImagePath,
 			Ports:          ports,
 			VolumeMounts:   amVolumeMounts,
 			LivenessProbe:  livenessProbe,

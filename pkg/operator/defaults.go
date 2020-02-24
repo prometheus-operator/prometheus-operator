@@ -77,5 +77,5 @@ var (
 	}
 	DefaultPrometheusVersion   = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
 	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"
-	DefaultPrometheusImage     = DefaultAlertmanagerBaseImage + ":" + DefaultPrometheusVersion
+	DefaultPrometheusImage     = DefaultPrometheusBaseImage + ":" + DefaultPrometheusVersion
 )

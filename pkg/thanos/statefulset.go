@@ -53,12 +53,6 @@ var (
 
 func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string) (*appsv1.StatefulSet, error) {
 
-	if tr.Spec.Image == "" {
-		tr.Spec.Image = config.ThanosDefaultBaseImage
-	}
-	if !strings.Contains(tr.Spec.Image, ":") {
-		tr.Spec.Image = tr.Spec.Image + ":" + operator.DefaultThanosVersion
-	}
 	if tr.Spec.Resources.Requests == nil {
 		tr.Spec.Resources.Requests = v1.ResourceList{}
 	}
@@ -156,6 +150,12 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	if tr.Spec.QueryConfig == nil && len(tr.Spec.QueryEndpoints) < 1 {
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
+	}
+
+	trBaseImage := operator.StringValOrDefault(config.ThanosDefaultBaseImage, operator.DefaultThanosBaseImage)
+	trImagePath := operator.BuildImagePath(trBaseImage, operator.DefaultThanosVersion, "", "")
+	if strings.TrimSpace(tr.Spec.Image) != "" {
+		trImagePath = tr.Spec.Image
 	}
 
 	if tr.Spec.EvaluationInterval == "" {
@@ -386,7 +386,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "thanos-ruler",
-			Image:                    tr.Spec.Image,
+			Image:                    trImagePath,
 			Args:                     trCLIArgs,
 			Env:                      trEnvVars,
 			VolumeMounts:             trVolumeMounts,
