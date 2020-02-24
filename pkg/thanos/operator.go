@@ -78,22 +78,22 @@ type Operator struct {
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
-	Host                   string
-	TLSInsecure            bool
-	TLSConfig              rest.TLSClientConfig
-	ConfigReloaderImage    string
-	ConfigReloaderCPU      string
-	ConfigReloaderMemory   string
-	ThanosDefaultBaseImage string
-	Namespaces             prometheusoperator.Namespaces
-	Labels                 prometheusoperator.Labels
-	CrdKinds               monitoringv1.CrdKinds
-	EnableValidation       bool
-	LocalHost              string
-	LogLevel               string
-	LogFormat              string
-	ManageCRDs             bool
-	ThanosRulerSelector    string
+	Host                 string
+	TLSInsecure          bool
+	TLSConfig            rest.TLSClientConfig
+	ConfigReloaderImage  string
+	ConfigReloaderCPU    string
+	ConfigReloaderMemory string
+	ThanosDefaultImage   string
+	Namespaces           prometheusoperator.Namespaces
+	Labels               prometheusoperator.Labels
+	CrdKinds             monitoringv1.CrdKinds
+	EnableValidation     bool
+	LocalHost            string
+	LogLevel             string
+	LogFormat            string
+	ManageCRDs           bool
+	ThanosRulerSelector  string
 }
 
 // New creates a new controller.
@@ -130,22 +130,22 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 		queue:     workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "thanos"),
 		metrics:   operator.NewMetrics("thanos", r),
 		config: Config{
-			Host:                   conf.Host,
-			TLSInsecure:            conf.TLSInsecure,
-			TLSConfig:              conf.TLSConfig,
-			ConfigReloaderImage:    conf.ConfigReloaderImage,
-			ConfigReloaderCPU:      conf.ConfigReloaderCPU,
-			ConfigReloaderMemory:   conf.ConfigReloaderMemory,
-			ThanosDefaultBaseImage: conf.ThanosDefaultBaseImage,
-			Namespaces:             conf.Namespaces,
-			Labels:                 conf.Labels,
-			CrdKinds:               conf.CrdKinds,
-			EnableValidation:       conf.EnableValidation,
-			LocalHost:              conf.LocalHost,
-			LogLevel:               conf.LogLevel,
-			LogFormat:              conf.LogFormat,
-			ManageCRDs:             conf.ManageCRDs,
-			ThanosRulerSelector:    conf.ThanosRulerSelector,
+			Host:                 conf.Host,
+			TLSInsecure:          conf.TLSInsecure,
+			TLSConfig:            conf.TLSConfig,
+			ConfigReloaderImage:  conf.ConfigReloaderImage,
+			ConfigReloaderCPU:    conf.ConfigReloaderCPU,
+			ConfigReloaderMemory: conf.ConfigReloaderMemory,
+			ThanosDefaultImage:   conf.ThanosDefaultImage,
+			Namespaces:           conf.Namespaces,
+			Labels:               conf.Labels,
+			CrdKinds:             conf.CrdKinds,
+			EnableValidation:     conf.EnableValidation,
+			LocalHost:            conf.LocalHost,
+			LogLevel:             conf.LogLevel,
+			LogFormat:            conf.LogFormat,
+			ManageCRDs:           conf.ManageCRDs,
+			ThanosRulerSelector:  conf.ThanosRulerSelector,
 		},
 	}
 

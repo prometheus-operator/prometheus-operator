@@ -182,6 +182,16 @@ func init() {
 	if len(cfg.Namespaces.ThanosRulerAllowList) == 0 {
 		cfg.Namespaces.ThanosRulerAllowList = cfg.Namespaces.AllowList
 	}
+
+	if cfg.AlertmanagerDefaultBaseImage != operator.DefaultAlertmanagerBaseImage {
+		cfg.AlertmanagerDefaultImage = operator.ApplyImageVersion(cfg.AlertmanagerDefaultBaseImage, operator.DefaultAlertmanagerVersion)
+	}
+	if cfg.PrometheusDefaultBaseImage != operator.DefaultPrometheusBaseImage {
+		cfg.PrometheusDefaultImage = operator.ApplyImageVersion(cfg.PrometheusDefaultBaseImage, operator.DefaultPrometheusVersion)
+	}
+	if cfg.ThanosDefaultBaseImage != operator.DefaultThanosBaseImage {
+		cfg.ThanosDefaultImage = operator.ApplyImageVersion(cfg.ThanosDefaultBaseImage, operator.DefaultThanosVersion)
+	}
 }
 
 func Main() int {

@@ -32,10 +32,10 @@ import (
 
 var (
 	defaultTestConfig = Config{
-		ConfigReloaderImage:    "jimmidyson/configmap-reload:latest",
-		ConfigReloaderCPU:      "100m",
-		ConfigReloaderMemory:   "25Mi",
-		ThanosDefaultBaseImage: "quay.io/thanos/thanos",
+		ConfigReloaderImage:  "jimmidyson/configmap-reload:latest",
+		ConfigReloaderCPU:    "100m",
+		ConfigReloaderMemory: "25Mi",
+		ThanosDefaultImage:   "quay.io/thanos/thanos",
 	}
 	emptyQueryEndpoints = []string{""}
 )

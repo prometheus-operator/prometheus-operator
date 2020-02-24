@@ -77,26 +77,26 @@ func makeStatefulSet(
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
 
-	if p.Spec.BaseImage == "" {
-		p.Spec.BaseImage = config.PrometheusDefaultBaseImage
+	imageConfig := &operator.ImageConfig{
+		DefaultBaseImage: config.PrometheusDefaultBaseImage,
+		DefaultImage:     config.PrometheusDefaultImage,
+		DefaultVersion:   operator.DefaultPrometheusVersion,
+		BaseImage:        p.Spec.BaseImage,
+		Image:            p.Spec.Image,
+		Version:          p.Spec.Version,
+		Tag:              p.Spec.Tag,
+		SHA:              p.Spec.SHA,
 	}
-	if p.Spec.Version == "" {
-		p.Spec.Version = operator.DefaultPrometheusVersion
-	}
-	if p.Spec.Thanos != nil && p.Spec.Thanos.Version == nil {
-		v := operator.DefaultThanosVersion
-		p.Spec.Thanos.Version = &v
+	promImage := operator.ContainerImageURL(imageConfig)
+	p.Spec.Image = &promImage
+
+	promVersion, err := operator.ParseVersion(p.Spec.Version, promImage, operator.DefaultPrometheusVersion)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse prometheus version")
 	}
 
 	if p.Spec.PortName == "" {
 		p.Spec.PortName = defaultPortName
-	}
-
-	versionStr := strings.TrimLeft(p.Spec.Version, "v")
-
-	version, err := semver.Parse(versionStr)
-	if err != nil {
-		return nil, errors.Wrap(err, "parse version")
 	}
 
 	if p.Spec.Replicas == nil {
@@ -115,7 +115,7 @@ func makeStatefulSet(
 	}
 	_, memoryRequestFound := p.Spec.Resources.Requests[v1.ResourceMemory]
 	memoryLimit, memoryLimitFound := p.Spec.Resources.Limits[v1.ResourceMemory]
-	if !memoryRequestFound && version.Major == 1 {
+	if !memoryRequestFound && promVersion.Major == 1 {
 		defaultMemoryRequest := resource.MustParse("2Gi")
 		compareResult := memoryLimit.Cmp(defaultMemoryRequest)
 		// If limit is given and smaller or equal to 2Gi, then set memory
@@ -297,11 +297,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
 
-	versionStr := strings.TrimLeft(p.Spec.Version, "v")
-
-	version, err := semver.Parse(versionStr)
+	version, err := operator.ParseVersion(p.Spec.Version, *p.Spec.Image, operator.DefaultPrometheusVersion)
 	if err != nil {
-		return nil, errors.Wrap(err, "parse version")
+		return nil, errors.Wrap(err, "failed to parse prometheus version")
 	}
 
 	promArgs := []string{
@@ -713,24 +711,31 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 	disableCompaction := p.Spec.DisableCompaction
 	if p.Spec.Thanos != nil {
-		// Version is used by default.
-		// If the tag is specified, we use the tag to identify the container image.
-		// If the sha is specified, we use the sha to identify the container image,
-		// as it has even stronger immutable guarantees to identify the image.
-		thanosBaseImage := c.ThanosDefaultBaseImage
-		if p.Spec.Thanos.BaseImage != nil {
-			thanosBaseImage = *p.Spec.Thanos.BaseImage
+		emptyString := ""
+		if p.Spec.Thanos.BaseImage == nil {
+			p.Spec.Thanos.BaseImage = &emptyString
 		}
-		thanosImage := fmt.Sprintf("%s:%s", thanosBaseImage, *p.Spec.Thanos.Version)
-		if p.Spec.Thanos.Tag != nil {
-			thanosImage = fmt.Sprintf("%s:%s", thanosBaseImage, *p.Spec.Thanos.Tag)
+		if p.Spec.Thanos.Version == nil {
+			p.Spec.Thanos.Version = &emptyString
 		}
-		if p.Spec.Thanos.SHA != nil {
-			thanosImage = fmt.Sprintf("%s@sha256:%s", thanosBaseImage, *p.Spec.Thanos.SHA)
+		if p.Spec.Thanos.Tag == nil {
+			p.Spec.Thanos.Tag = &emptyString
 		}
-		if p.Spec.Thanos.Image != nil && *p.Spec.Thanos.Image != "" {
-			thanosImage = *p.Spec.Thanos.Image
+		if p.Spec.Thanos.SHA == nil {
+			p.Spec.Thanos.SHA = &emptyString
 		}
+		imageConfig := &operator.ImageConfig{
+			DefaultBaseImage: c.ThanosDefaultBaseImage,
+			DefaultImage:     c.ThanosDefaultImage,
+			DefaultVersion:   operator.DefaultThanosVersion,
+			BaseImage:        *p.Spec.Thanos.BaseImage,
+			Image:            p.Spec.Thanos.Image,
+			Version:          *p.Spec.Thanos.Version,
+			Tag:              *p.Spec.Thanos.Tag,
+			SHA:              *p.Spec.Thanos.SHA,
+		}
+		thanosImage := operator.ContainerImageURL(imageConfig)
+
 		bindAddress := "[$(POD_IP)]"
 		if p.Spec.Thanos.ListenLocal {
 			bindAddress = "127.0.0.1"
@@ -812,21 +817,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
 	}
 
-	// Version is used by default.
-	// If the tag is specified, we use the tag to identify the container image.
-	// If the sha is specified, we use the sha to identify the container image,
-	// as it has even stronger immutable guarantees to identify the image.
-	prometheusImage := fmt.Sprintf("%s:%s", p.Spec.BaseImage, p.Spec.Version)
-	if p.Spec.Tag != "" {
-		prometheusImage = fmt.Sprintf("%s:%s", p.Spec.BaseImage, p.Spec.Tag)
-	}
-	if p.Spec.SHA != "" {
-		prometheusImage = fmt.Sprintf("%s@sha256:%s", p.Spec.BaseImage, p.Spec.SHA)
-	}
-	if p.Spec.Image != nil && *p.Spec.Image != "" {
-		prometheusImage = *p.Spec.Image
-	}
-
 	prometheusConfigReloaderResources := v1.ResourceRequirements{
 		Limits: v1.ResourceList{}, Requests: v1.ResourceList{}}
 	if c.ConfigReloaderCPU != "0" {
@@ -841,7 +831,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
-			Image:                    prometheusImage,
+			Image:                    *p.Spec.Image,
 			Ports:                    ports,
 			Args:                     promArgs,
 			VolumeMounts:             promVolumeMounts,

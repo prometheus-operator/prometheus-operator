@@ -78,6 +78,7 @@ type Config struct {
 	ConfigReloaderCPU            string
 	ConfigReloaderMemory         string
 	AlertmanagerDefaultBaseImage string
+	AlertmanagerDefaultImage     string
 	Namespaces                   prometheusoperator.Namespaces
 	Labels                       prometheusoperator.Labels
 	CrdKinds                     monitoringv1.CrdKinds
@@ -122,6 +123,7 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 			ConfigReloaderCPU:            c.ConfigReloaderCPU,
 			ConfigReloaderMemory:         c.ConfigReloaderMemory,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
+			AlertmanagerDefaultImage:     c.AlertmanagerDefaultImage,
 			Namespaces:                   c.Namespaces,
 			CrdKinds:                     c.CrdKinds,
 			Labels:                       c.Labels,
