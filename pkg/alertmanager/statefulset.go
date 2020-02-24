@@ -29,14 +29,12 @@ import (
 	"github.com/blang/semver"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 	"github.com/pkg/errors"
 )
 
 const (
-	governingServiceName = "alertmanager-operated"
-	// DefaultVersion specifies which version of Alertmanager the Prometheus
-	// Operator uses by default.
-	DefaultVersion         = "v0.20.0"
+	governingServiceName   = "alertmanager-operated"
 	defaultRetention       = "120h"
 	secretsDir             = "/etc/alertmanager/secrets/"
 	configmapsDir          = "/etc/alertmanager/configmaps/"
@@ -63,7 +61,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 		am.Spec.PortName = defaultPortName
 	}
 	if am.Spec.Version == "" {
-		am.Spec.Version = DefaultVersion
+		am.Spec.Version = operator.DefaultAlertmanagerVersion
 	}
 	if am.Spec.Replicas == nil {
 		am.Spec.Replicas = &minReplicas

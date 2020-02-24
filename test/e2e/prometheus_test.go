@@ -38,6 +38,7 @@ import (
 
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	testFramework "github.com/coreos/prometheus-operator/test/framework"
 
@@ -121,8 +122,8 @@ func testPromVersionMigration(t *testing.T) {
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
-	startVersion := prometheus.CompatibilityMatrix[0]
-	compatibilityMatrix := prometheus.CompatibilityMatrix[1:]
+	startVersion := operator.PrometheusCompatibilityMatrix[0]
+	compatibilityMatrix := operator.PrometheusCompatibilityMatrix[1:]
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.Version = startVersion
@@ -1279,7 +1280,7 @@ func testThanos(t *testing.T) {
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
-	version := prometheus.DefaultThanosVersion
+	version := operator.DefaultThanosVersion
 
 	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
 	prom.Spec.Replicas = proto.Int32(2)

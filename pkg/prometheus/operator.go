@@ -140,8 +140,11 @@ type Config struct {
 	ConfigReloaderCPU             string
 	ConfigReloaderMemory          string
 	PrometheusConfigReloaderImage string
+	AlertmanagerDefaultImage      string
 	AlertmanagerDefaultBaseImage  string
+	PrometheusDefaultImage        string
 	PrometheusDefaultBaseImage    string
+	ThanosDefaultImage            string
 	ThanosDefaultBaseImage        string
 	Namespaces                    Namespaces
 	Labels                        Labels

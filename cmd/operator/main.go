@@ -31,6 +31,7 @@ import (
 	alertmanagercontroller "github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/api"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
 	thanoscontroller "github.com/coreos/prometheus-operator/pkg/thanos"
 	"github.com/coreos/prometheus-operator/pkg/version"
@@ -137,9 +138,12 @@ func init() {
 	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", "jimmidyson/configmap-reload:v0.3.0", "Reload Image")
 	flagset.StringVar(&cfg.ConfigReloaderCPU, "config-reloader-cpu", "100m", "Config Reloader CPU. Value \"0\" disables it and causes no limit to be configured.")
 	flagset.StringVar(&cfg.ConfigReloaderMemory, "config-reloader-memory", "25Mi", "Config Reloader Memory. Value \"0\" disables it and causes no limit to be configured.")
-	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", "quay.io/prometheus/alertmanager", "Alertmanager default base image")
-	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", "quay.io/prometheus/prometheus", "Prometheus default base image")
-	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", "quay.io/thanos/thanos", "Thanos default base image")
+	flagset.StringVar(&cfg.AlertmanagerDefaultImage, "alertmanager-default-image", operator.DefaultAlertmanagerImage, "Alertmanager default container image")
+	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image.  Deprecated: use alertmanager-default-image instead")
+	flagset.StringVar(&cfg.PrometheusDefaultImage, "prometheus-default-image", operator.DefaultPrometheusImage, "Prometheus default container image")
+	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image. Deprecated: use prometheus-default-image instead")
+	flagset.StringVar(&cfg.ThanosDefaultImage, "thanos-default-image", operator.DefaultThanosImage, "Thanos default container image")
+	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image")
 	flagset.Var(ns, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.")
 	flagset.Var(deniedNs, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
 	flagset.Var(prometheusNs, "prometheus-instance-namespaces", "Namespaces where Prometheus custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.")

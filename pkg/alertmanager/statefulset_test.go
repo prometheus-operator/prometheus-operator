@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -266,7 +267,7 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
 	replicas := int32(1)
-	a.Spec.Version = DefaultVersion
+	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
 	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)

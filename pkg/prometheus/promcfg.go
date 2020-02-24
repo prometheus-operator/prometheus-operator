@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 )
 
 const (
@@ -161,7 +162,7 @@ func (cg *configGenerator) generateConfig(
 ) ([]byte, error) {
 	versionStr := p.Spec.Version
 	if versionStr == "" {
-		versionStr = DefaultPrometheusVersion
+		versionStr = operator.DefaultPrometheusVersion
 	}
 
 	version, err := semver.Parse(strings.TrimLeft(versionStr, "v"))
