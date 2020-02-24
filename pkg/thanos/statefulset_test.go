@@ -17,6 +17,7 @@ package thanos
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -310,7 +311,7 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 				"test":                 "test",
 			},
 			AlertDropLabels:         []string{"test", "aaa"},
-			ExpectedLabels:          []string{`thanos_ruler_replica="$(POD_NAME)"`, `test="test"`},
+			ExpectedLabels:          []string{`test="test"`, `thanos_ruler_replica="$(POD_NAME)"`},
 			ExpectedAlertDropLabels: []string{"test", "aaa"},
 		},
 	}
@@ -341,6 +342,9 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 				actualDropLabels = append(actualDropLabels, strings.TrimPrefix(arg, alertDropLabelPrefix))
 			}
 		}
+		sort.Slice(actualLabels, func(i, j int) bool {
+			return actualLabels[i] < actualLabels[j]
+		})
 		if !reflect.DeepEqual(actualLabels, tc.ExpectedLabels) {
 			t.Fatal("label sets mismatch")
 		}
