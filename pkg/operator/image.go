@@ -77,16 +77,16 @@ func ContainerImageURL(spec *ImageConfig) string {
 // Otherwise will parse the defaultVersion.
 func ParseVersion(version, imageURL, defaultVersion string) (semver.Version, error) {
 	if version != "" {
-		return semver.Parse(strings.TrimLeft(version, "v"))
+		return semver.ParseTolerant(version)
 	}
 	imageVersion := GetImageVersion(imageURL)
 	if imageVersion != "" {
-		v, err := semver.Parse(strings.TrimLeft(imageVersion, "v"))
+		v, err := semver.ParseTolerant(imageVersion)
 		if err == nil {
 			return v, nil
 		}
 	}
-	return semver.Parse(strings.TrimLeft(defaultVersion, "v"))
+	return semver.ParseTolerant(defaultVersion)
 }
 
 var (
