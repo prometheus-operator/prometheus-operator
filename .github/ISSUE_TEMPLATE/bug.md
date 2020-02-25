@@ -12,7 +12,7 @@ Feel free to ask questions in #prometheus-operator on Kubernetes Slack!
 
 **What happened?**
 
-**Did you expect to see some different?**
+**Did you expect to see something different?**
 
 **How to reproduce it (as minimally and precisely as possible)**:
 
