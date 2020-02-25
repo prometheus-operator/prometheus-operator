@@ -665,6 +665,14 @@ func (c *Operator) syncNodeEndpoints() error {
 					Name: "https-metrics",
 					Port: 10250,
 				},
+				{
+					Name: "http-metrics",
+					Port: 10255,
+				},
+				{
+					Name: "cadvisor",
+					Port: 4194,
+				},
 			},
 		},
 	}
