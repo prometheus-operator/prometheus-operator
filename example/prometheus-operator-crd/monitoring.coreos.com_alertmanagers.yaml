@@ -722,7 +722,7 @@ spec:
                               description: 'Selects a field of the pod: supports metadata.name,
                                 metadata.namespace, metadata.labels, metadata.annotations,
                                 spec.nodeName, spec.serviceAccountName, status.hostIP,
-                                status.podIP.'
+                                status.podIP, status.podIPs.'
                               properties:
                                 apiVersion:
                                   description: Version of the schema the FieldPath
@@ -1443,9 +1443,8 @@ spec:
                               in image metadata if unspecified. May also be set in
                               PodSecurityContext. If set in both SecurityContext and
                               PodSecurityContext, the value specified in SecurityContext
-                              takes precedence. This field is alpha-level and it is
-                              only honored by servers that enable the WindowsRunAsUserName
-                              feature flag.
+                              takes precedence. This field is beta-level and may be
+                              disabled with the WindowsRunAsUserName feature flag.
                             type: string
                         type: object
                     type: object
@@ -1664,7 +1663,7 @@ spec:
                             to SubPath but environment variable references $(VAR_NAME)
                             are expanded using the container's environment. Defaults
                             to "" (volume's root). SubPathExpr and SubPath are mutually
-                            exclusive. This field is beta in 1.15.
+                            exclusive.
                           type: string
                       required:
                       - mountPath
@@ -1790,7 +1789,7 @@ spec:
                               description: 'Selects a field of the pod: supports metadata.name,
                                 metadata.namespace, metadata.labels, metadata.annotations,
                                 spec.nodeName, spec.serviceAccountName, status.hostIP,
-                                status.podIP.'
+                                status.podIP, status.podIPs.'
                               properties:
                                 apiVersion:
                                   description: Version of the schema the FieldPath
@@ -2511,9 +2510,8 @@ spec:
                               in image metadata if unspecified. May also be set in
                               PodSecurityContext. If set in both SecurityContext and
                               PodSecurityContext, the value specified in SecurityContext
-                              takes precedence. This field is alpha-level and it is
-                              only honored by servers that enable the WindowsRunAsUserName
-                              feature flag.
+                              takes precedence. This field is beta-level and may be
+                              disabled with the WindowsRunAsUserName feature flag.
                             type: string
                         type: object
                     type: object
@@ -2732,7 +2730,7 @@ spec:
                             to SubPath but environment variable references $(VAR_NAME)
                             are expanded using the container's environment. Defaults
                             to "" (volume's root). SubPathExpr and SubPath are mutually
-                            exclusive. This field is beta in 1.15.
+                            exclusive.
                           type: string
                       required:
                       - mountPath
@@ -2936,8 +2934,8 @@ spec:
                         metadata if unspecified. May also be set in PodSecurityContext.
                         If set in both SecurityContext and PodSecurityContext, the
                         value specified in SecurityContext takes precedence. This
-                        field is alpha-level and it is only honored by servers that
-                        enable the WindowsRunAsUserName feature flag.
+                        field is beta-level and may be disabled with the WindowsRunAsUserName
+                        feature flag.
                       type: string
                   type: object
               type: object
@@ -3253,7 +3251,7 @@ spec:
                       volume should be mounted. Behaves similarly to SubPath but environment
                       variable references $(VAR_NAME) are expanded using the container's
                       environment. Defaults to "" (volume's root). SubPathExpr and
-                      SubPath are mutually exclusive. This field is beta in 1.15.
+                      SubPath are mutually exclusive.
                     type: string
                 required:
                 - mountPath
