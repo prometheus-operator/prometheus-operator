@@ -98,7 +98,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.AlertmanagerSpec{
-			PodMetadata: &metav1.ObjectMeta{
+			PodMetadata: &monitoringv1.PodMeta{
 				Annotations: annotations,
 				Labels:      labels,
 			},
