@@ -298,8 +298,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			}
 		}
 	}
-	podLabels["app"] = "thanos-ruler"
-	podLabels["thanos"] = tr.Name
+	podLabels["app"] = thanosRulerLabel
+	podLabels[thanosRulerLabel] = tr.Name
 	finalLabels := config.Labels.Merge(podLabels)
 
 	storageVolName := volumeName(tr.Name)

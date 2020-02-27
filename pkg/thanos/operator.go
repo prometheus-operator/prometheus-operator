@@ -52,7 +52,8 @@ import (
 )
 
 const (
-	resyncPeriod = 5 * time.Minute
+	resyncPeriod     = 5 * time.Minute
+	thanosRulerLabel = "thanos-ruler"
 )
 
 // Operator manages life cycle of Thanos deployments and
@@ -719,8 +720,8 @@ func (o *Operator) createCRDs() error {
 func ListOptions(name string) metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app":         "thanosruler",
-			"thanosruler": name,
+			"app":            thanosRulerLabel,
+			thanosRulerLabel: name,
 		})).String(),
 	}
 }
