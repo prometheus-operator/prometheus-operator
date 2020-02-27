@@ -21,6 +21,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [BasicAuth](#basicauth)
 * [Endpoint](#endpoint)
 * [NamespaceSelector](#namespaceselector)
+* [PodMeta](#podmeta)
 * [PodMetricsEndpoint](#podmetricsendpoint)
 * [PodMonitor](#podmonitor)
 * [PodMonitorList](#podmonitorlist)
@@ -123,7 +124,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
+| podMetadata | PodMetadata configures Labels and Annotations which are propagated to the alertmanager pods. | *[PodMeta](#podmeta) | false |
 | image | Image if specified has precedence over baseImage, tag and sha combinations. Specifying the version is still necessary to ensure the Prometheus Operator knows what version of Alertmanager is being configured. | *string | false |
 | version | Version the cluster should be on. | string | false |
 | tag | Tag of Alertmanager container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. | string | false |
@@ -226,6 +227,17 @@ NamespaceSelector is a selector for selecting either all namespaces or a list of
 | ----- | ----------- | ------ | -------- |
 | any | Boolean describing whether all namespaces are selected in contrast to a list restricting them. | bool | false |
 | matchNames | List of namespace names. | []string | false |
+
+[Back to TOC](#table-of-contents)
+
+## PodMeta
+
+PodMeta is a subset of k8s.io/apimachinery/pkg/apis/meta/v1/ObjectMeta which only includes fields applicable to the generated stateful set pod template of the custom resource types.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| labels | Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels | map[string]string | false |
+| annotations | Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations | map[string]string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -348,7 +360,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
+| podMetadata | PodMetadata configures Labels and Annotations which are propagated to the prometheus pods. | *[PodMeta](#podmeta) | false |
 | serviceMonitorSelector | ServiceMonitors to be selected for target discovery. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | serviceMonitorNamespaceSelector | Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | podMonitorSelector | *Experimental* PodMonitors to be selected for target discovery. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
@@ -680,7 +692,7 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
+| podMetadata | PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods. | *[PodMeta](#podmeta) | false |
 | image | Thanos container image URL. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling thanos images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | false |
 | paused | When a ThanosRuler deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
