@@ -45,6 +45,25 @@ const (
 	PrometheusRuleKindKey = "prometheusrule"
 )
 
+// PodMeta is a subset of k8s.io/apimachinery/pkg/apis/meta/v1/ObjectMeta which only
+// includes fields applicable to the generated stateful set pod template of the
+// custom resource types.
+type PodMeta struct {
+	// Map of string keys and values that can be used to organize and categorize
+	// (scope and select) objects. May match selectors of replication controllers
+	// and services.
+	// More info: http://kubernetes.io/docs/user-guide/labels
+	// +optional
+	Labels map[string]string `json:"labels,omitempty" protobuf:"bytes,11,rep,name=labels"`
+
+	// Annotations is an unstructured key value map stored with a resource that may be
+	// set by external tools to store and retrieve arbitrary metadata. They are not
+	// queryable and should be preserved when modifying objects.
+	// More info: http://kubernetes.io/docs/user-guide/annotations
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty" protobuf:"bytes,12,rep,name=annotations"`
+}
+
 // Prometheus defines a Prometheus deployment.
 // +genclient
 // +k8s:openapi-gen=true
@@ -79,10 +98,8 @@ type PrometheusList struct {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
-	// Standard object’s metadata. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
-	// Metadata Labels and Annotations gets propagated to the prometheus pods.
-	PodMetadata *metav1.ObjectMeta `json:"podMetadata,omitempty"`
+	// PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.
+	PodMetadata *PodMeta `json:"podMetadata,omitempty"`
 	// ServiceMonitors to be selected for target discovery.
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
 	// Namespaces to be selected for ServiceMonitor discovery. If nil, only
@@ -863,10 +880,8 @@ type Alertmanager struct {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type AlertmanagerSpec struct {
-	// Standard object’s metadata. More info:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
-	// Metadata Labels and Annotations gets propagated to the prometheus pods.
-	PodMetadata *metav1.ObjectMeta `json:"podMetadata,omitempty"`
+	// PodMetadata configures Labels and Annotations which are propagated to the alertmanager pods.
+	PodMetadata *PodMeta `json:"podMetadata,omitempty"`
 	// Image if specified has precedence over baseImage, tag and sha
 	// combinations. Specifying the version is still necessary to ensure the
 	// Prometheus Operator knows what version of Alertmanager is being
