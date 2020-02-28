@@ -95,6 +95,7 @@ var (
 		"v2.11.0",
 		"v2.14.0",
 		"v2.15.2",
+		"v2.16.0",
 	}
 	DefaultPrometheusVersion = CompatibilityMatrix[len(CompatibilityMatrix)-1]
 )
