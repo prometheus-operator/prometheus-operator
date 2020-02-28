@@ -610,6 +610,7 @@ func (o *Operator) sync(key string) error {
 		if err != nil {
 			return errors.Wrap(err, "making thanos statefulset config failed")
 		}
+		operator.SanitizeSTS(sset)
 		if _, err := ssetClient.Create(sset); err != nil {
 			return errors.Wrap(err, "creating thanos statefulset failed")
 		}
@@ -621,6 +622,7 @@ func (o *Operator) sync(key string) error {
 		return errors.Wrap(err, "making the statefulset, to update, failed")
 	}
 
+	operator.SanitizeSTS(sset)
 	_, err = ssetClient.Update(sset)
 	sErr, ok := err.(*apierrors.StatusError)
 
