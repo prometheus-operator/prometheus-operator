@@ -16,6 +16,7 @@ package operator
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -144,4 +145,14 @@ func (i *instrumentedListerWatcher) Watch(options metav1.ListOptions) (watch.Int
 		i.watchFailed.Inc()
 	}
 	return ret, err
+}
+
+// SanitizeSTS removes values for APIVersion and Kind from the VolumeClaimTemplates.
+// This prevents update failures due to these fields changing when applied.
+// See https://github.com/kubernetes/kubernetes/issues/87583
+func SanitizeSTS(sts *appsv1.StatefulSet) {
+	for i := range sts.Spec.VolumeClaimTemplates {
+		sts.Spec.VolumeClaimTemplates[i].APIVersion = ""
+		sts.Spec.VolumeClaimTemplates[i].Kind = ""
+	}
 }
