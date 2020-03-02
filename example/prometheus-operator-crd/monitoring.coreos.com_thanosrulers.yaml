@@ -1690,6 +1690,11 @@ spec:
             evaluationInterval:
               description: Interval between consecutive evaluations.
               type: string
+            externalPrefix:
+              description: The external URL the Thanos Ruler instances will be available
+                under. This is necessary to generate correct URLs. This is necessary
+                if Thanos Ruler is not served from root of a DNS name.
+              type: string
             image:
               description: Thanos container image URL.
               type: string

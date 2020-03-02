@@ -724,6 +724,7 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | tracingConfig | TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | labels | Labels configure the external label pairs to ThanosRuler. If not provided, default replica label `thanos_ruler_replica` will be added as a label and be dropped in alerts. | map[string]string | false |
 | alertDropLabels | AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts. If `labels` field is not provided, `thanos_ruler_replica` will be dropped in alerts by default. | []string | false |
+| externalPrefix | The external URL the Thanos Ruler instances will be available under. This is necessary to generate correct URLs. This is necessary if Thanos Ruler is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix ThanosRuler registers HTTP handlers for. This allows thanos UI to be served on a sub-path. | string | false |
 
 [Back to TOC](#table-of-contents)
