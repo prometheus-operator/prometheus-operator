@@ -238,6 +238,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
+	if tr.Spec.ExternalPrefix != "" {
+		trCLIArgs = append(trCLIArgs, "--web.external-prefix="+tr.Spec.ExternalPrefix)
+	}
+
 	if tr.Spec.RoutePrefix != "" {
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--web.route-prefix=%s", tr.Spec.RoutePrefix))
 	}
