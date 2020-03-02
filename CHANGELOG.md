@@ -1,5 +1,20 @@
 ## Next release
+
+## 0.37.0 / 2020-03-02
+
+* [FEATURE] Add routePrefix to ThanosRuler spec (#3023)
+* [FEATURE] Add externalPrefix to ThanosRuler spec (#3058)
+* [FEATURE] Add pod template fields to ThanosRuler custom resource (#3034)
+* [ENHANCEMENT] Make ports on kubelet service and endpoints match (#3039)
+* [ENHANCEMENT] Update kubernetes API dependencies to v0.17.3/1.17.3 (#3042)
+* [ENHANCEMENT] Simplify multi-arch building (#3035)
+* [ENHANCEMENT] Default to Prometheus v2.16.0 (#3050, #3051)
+* [BUGFIX] Fix stateful set being pruned by kubectl (#3029, #3030)
 * [BUGFIX] Fix prometheus rule validator admitting rules with invalid label types (#2727,#2962)
+* [BUGFIX] Fix flaky test in Thanos ruler (#3038)
+* [BUGFIX] Fix ThanosRuler status reporting (#3045)
+* [BUGFIX] Preserve pod labels and annotations in custom resources (#3041, #3043)
+* [BUGFIX] Prevent stateful set update loop for alertmanager and thonos types (#3048, #3049)
 
 ## 0.36.0 / 2020-02-10
 
