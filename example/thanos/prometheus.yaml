@@ -15,4 +15,4 @@ spec:
       role: prometheus-rulefiles
       prometheus: k8s
   thanos:
-    version: v0.10.1
+    version: v0.11.0

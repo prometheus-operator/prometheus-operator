@@ -159,7 +159,7 @@ github.com/spf13/pflag
 # github.com/stretchr/testify v1.4.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/thanos-io/thanos v0.10.1
+# github.com/thanos-io/thanos v0.11.0
 github.com/thanos-io/thanos/pkg/reloader
 github.com/thanos-io/thanos/pkg/runutil
 # golang.org/x/crypto v0.0.0-20191112222119-e1110fd1c708

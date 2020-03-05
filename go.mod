@@ -22,7 +22,7 @@ require (
 	github.com/prometheus/client_golang v1.2.1
 	github.com/prometheus/prometheus v2.3.2+incompatible
 	github.com/stretchr/testify v1.4.0
-	github.com/thanos-io/thanos v0.10.1
+	github.com/thanos-io/thanos v0.11.0
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.2.8
