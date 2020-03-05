@@ -53,7 +53,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	// not manage the generated object
 	expectedAnnotations := map[string]string{
 		"prometheus-operator-input-hash": "",
-		"testannotation": "testannotationvalue",
+		"testannotation":                 "testannotationvalue",
 	}
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{

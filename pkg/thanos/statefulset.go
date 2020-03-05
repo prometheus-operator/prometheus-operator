@@ -40,7 +40,6 @@ const (
 	defaultEvaluationInterval = "15s"
 	defaultReplicaLabelName   = "thanos_ruler_replica"
 	sSetInputHashName         = "prometheus-operator-input-hash"
-
 )
 
 var (

@@ -741,9 +741,9 @@ func (o *Operator) createCRDs() error {
 func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
 	hash, err := hashstructure.Hash(struct {
 		TR monitoringv1.ThanosRuler
-		C Config
-		S interface{}
-		R []string `hash:"set"`
+		C  Config
+		S  interface{}
+		R  []string `hash:"set"`
 	}{tr, c, ss, ruleConfigMapNames},
 		nil,
 	)
