@@ -39,6 +39,8 @@ const (
 	defaultRetention          = "24h"
 	defaultEvaluationInterval = "15s"
 	defaultReplicaLabelName   = "thanos_ruler_replica"
+	sSetInputHashName         = "prometheus-operator-input-hash"
+
 )
 
 var (
@@ -50,7 +52,7 @@ var (
 	}
 )
 
-func makeStatefulSet(tr *monitoringv1.ThanosRuler, old *appsv1.StatefulSet, config Config, ruleConfigMapNames []string) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(tr *monitoringv1.ThanosRuler, old *appsv1.StatefulSet, config Config, ruleConfigMapNames []string, inputHash string) (*appsv1.StatefulSet, error) {
 
 	if tr.Spec.Image == "" {
 		tr.Spec.Image = config.ThanosDefaultBaseImage
@@ -104,6 +106,14 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, old *appsv1.StatefulSet, conf
 
 	if old != nil {
 		statefulset.Annotations = old.Annotations
+	}
+
+	if statefulset.ObjectMeta.Annotations == nil {
+		statefulset.ObjectMeta.Annotations = map[string]string{
+			sSetInputHashName: inputHash,
+		}
+	} else {
+		statefulset.ObjectMeta.Annotations[sSetInputHashName] = inputHash
 	}
 
 	storageSpec := tr.Spec.Storage
