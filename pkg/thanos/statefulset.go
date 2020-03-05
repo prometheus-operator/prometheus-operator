@@ -201,10 +201,9 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	for _, endpoint := range tr.Spec.QueryEndpoints {
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--query=%s", endpoint))
 	}
-	for _, ruleConfigMapName := range ruleConfigMapNames {
-		rulePath := rulesDir + "/" + ruleConfigMapName + "/*.yaml"
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--rule-file=%s", rulePath))
-	}
+
+	rulePath := rulesDir + "/*/*.yaml"
+	trCLIArgs = append(trCLIArgs, fmt.Sprintf("--rule-file=%s", rulePath))
 
 	if tr.Spec.AlertManagersConfig != nil {
 		trCLIArgs = append(trCLIArgs, "--alertmanagers.config=$(ALERTMANAGERS_CONFIG)")
