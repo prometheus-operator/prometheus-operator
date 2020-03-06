@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	DefaultThanosVersion      = "v0.10.1"
+	DefaultThanosVersion      = "v0.11.0"
 	rulesDir                  = "/etc/thanos/rules"
 	storageDir                = "/thanos/data"
 	governingServiceName      = "thanos-ruler-operated"

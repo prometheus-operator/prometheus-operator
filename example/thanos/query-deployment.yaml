@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: thanos-query
-        image: quay.io/thanos/thanos:v0.10.1
+        image: quay.io/thanos/thanos:v0.11.0
         args:
         - query
         - --log.level=debug
