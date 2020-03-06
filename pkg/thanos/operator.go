@@ -26,6 +26,7 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/listwatch"
 	"github.com/coreos/prometheus-operator/pkg/operator"
+	"github.com/mitchellh/hashstructure"
 
 	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
@@ -606,7 +607,7 @@ func (o *Operator) sync(key string) error {
 	}
 
 	if !exists {
-		sset, err := makeStatefulSet(tr, nil, o.config, ruleConfigMapNames)
+		sset, err := makeStatefulSet(tr, nil, o.config, ruleConfigMapNames, "")
 		if err != nil {
 			return errors.Wrap(err, "making thanos statefulset config failed")
 		}
@@ -617,12 +618,30 @@ func (o *Operator) sync(key string) error {
 		return nil
 	}
 
-	sset, err := makeStatefulSet(tr, obj.(*appsv1.StatefulSet), o.config, ruleConfigMapNames)
+	spec := appsv1.StatefulSetSpec{}
+	if obj != nil {
+		ss := obj.(*appsv1.StatefulSet)
+		spec = ss.Spec
+	}
+
+	newSSetInputHash, err := createSSetInputHash(*tr, o.config, ruleConfigMapNames, spec)
+	if err != nil {
+		return err
+	}
+
+	sset, err := makeStatefulSet(tr, obj.(*appsv1.StatefulSet), o.config, ruleConfigMapNames, newSSetInputHash)
 	if err != nil {
 		return errors.Wrap(err, "making the statefulset, to update, failed")
 	}
 
 	operator.SanitizeSTS(sset)
+
+	oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
+	if newSSetInputHash == oldSSetInputHash {
+		level.Debug(o.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+		return nil
+	}
+
 	_, err = ssetClient.Update(sset)
 	sErr, ok := err.(*apierrors.StatusError)
 
@@ -717,6 +736,26 @@ func (o *Operator) createCRDs() error {
 	}
 
 	return nil
+}
+
+func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
+	hash, err := hashstructure.Hash(struct {
+		TR monitoringv1.ThanosRuler
+		C  Config
+		S  interface{}
+		R  []string `hash:"set"`
+	}{tr, c, ss, ruleConfigMapNames},
+		nil,
+	)
+	if err != nil {
+		return "", errors.Wrap(
+			err,
+			"failed to calculate combined hash of ThanosRuler StatefulSet, ThanosRuler CRD, config and"+
+				" rule ConfigMap names",
+		)
+	}
+
+	return fmt.Sprintf("%d", hash), nil
 }
 
 func ListOptions(name string) metav1.ListOptions {
