@@ -1448,6 +1448,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.QueryConfig != nil {
+		in, out := &in.QueryConfig, &out.QueryConfig
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.AlertManagersConfig != nil {
 		in, out := &in.AlertManagersConfig, &out.AlertManagersConfig
 		*out = new(corev1.SecretKeySelector)

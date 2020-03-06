@@ -2824,6 +2824,26 @@ spec:
             priorityClassName:
               description: Priority class assigned to the Pods
               type: string
+            queryConfig:
+              description: Define configuration for connecting to thanos query instances.
+                If this is defined, the QueryEndpoints field will be ignored. Maps
+                to the `query.config` CLI argument. Only available with thanos v0.11.0
+                and higher.
+              properties:
+                key:
+                  description: The key of the secret to select from.  Must be a valid
+                    secret key.
+                  type: string
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+                optional:
+                  description: Specify whether the Secret or its key must be defined
+                  type: boolean
+              required:
+              - key
+              type: object
             queryEndpoints:
               description: QueryEndpoints defines Thanos querier endpoints from which
                 to query metrics. Maps to the --query flag of thanos ruler.
