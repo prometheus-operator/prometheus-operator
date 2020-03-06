@@ -105,10 +105,11 @@ type ThanosRulerSpec struct {
 	// Maps to the `query.config` CLI argument.
 	// Only available with thanos v0.11.0 and higher.
 	QueryConfig *v1.SecretKeySelector `json:"queryConfig,omitempty"`
-	// Define URL to send alerts to alertmanager.  For Thanos v0.10.0 and higher,
-	// AlertManagersConfig should be used instead.
+	// Define URLs to send alerts to Alertmanager.  For Thanos v0.10.0 and higher,
+	// AlertManagersConfig should be used instead.  Note: this field will be ignored
+	// if AlertManagersConfig is specified.
 	// Maps to the `alertmanagers.url` arg.
-	AlertManagersURL string `json:"alertmanagersUrl,omitempty"`
+	AlertManagersURL []string `json:"alertmanagersUrl,omitempty"`
 	// Define configuration for connecting to alertmanager.  Only available with thanos v0.10.0
 	// and higher.  Maps to the `alertmanagers.config` arg.
 	AlertManagersConfig *v1.SecretKeySelector `json:"alertmanagersConfig,omitempty"`
