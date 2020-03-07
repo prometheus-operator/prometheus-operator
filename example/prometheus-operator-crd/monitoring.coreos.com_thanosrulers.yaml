@@ -635,10 +635,13 @@ spec:
               - key
               type: object
             alertmanagersUrl:
-              description: Define URL to send alerts to alertmanager.  For Thanos
-                v0.10.0 and higher, AlertManagersConfig should be used instead. Maps
-                to the `alertmanagers.url` arg.
-              type: string
+              description: 'Define URLs to send alerts to Alertmanager.  For Thanos
+                v0.10.0 and higher, AlertManagersConfig should be used instead.  Note:
+                this field will be ignored if AlertManagersConfig is specified. Maps
+                to the `alertmanagers.url` arg.'
+              items:
+                type: string
+              type: array
             containers:
               description: 'Containers allows injecting additional containers or modifying
                 operator generated containers. This can be used to allow adding an
