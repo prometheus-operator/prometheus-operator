@@ -159,8 +159,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	// details see https://github.com/coreos/prometheus-operator/issues/1659
 	tr = tr.DeepCopy()
 
-	if len(tr.Spec.QueryEndpoints) < 1 {
-		return nil, errors.New(tr.GetName() + ": thanos ruler requires at least one query endpoint")
+	if tr.Spec.QueryConfig == nil && len(tr.Spec.QueryEndpoints) < 1 {
+		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
 
 	if tr.Spec.EvaluationInterval == "" {
@@ -207,8 +207,19 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	if tr.Spec.LogFormat != "" {
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--log.format=%s", tr.Spec.LogFormat))
 	}
-	for _, endpoint := range tr.Spec.QueryEndpoints {
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--query=%s", endpoint))
+
+	if tr.Spec.QueryConfig != nil {
+		trCLIArgs = append(trCLIArgs, "--query.config=$(QUERY_CONFIG)")
+		trEnvVars = append(trEnvVars, v1.EnvVar{
+			Name: "QUERY_CONFIG",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: tr.Spec.QueryConfig,
+			},
+		})
+	} else if len(tr.Spec.QueryEndpoints) > 0 {
+		for _, endpoint := range tr.Spec.QueryEndpoints {
+			trCLIArgs = append(trCLIArgs, fmt.Sprintf("--query=%s", endpoint))
+		}
 	}
 
 	rulePath := rulesDir + "/*/*.yaml"

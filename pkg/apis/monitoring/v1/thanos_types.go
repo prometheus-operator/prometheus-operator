@@ -100,6 +100,11 @@ type ThanosRulerSpec struct {
 	// QueryEndpoints defines Thanos querier endpoints from which to query metrics.
 	// Maps to the --query flag of thanos ruler.
 	QueryEndpoints []string `json:"queryEndpoints"`
+	// Define configuration for connecting to thanos query instances.
+	// If this is defined, the QueryEndpoints field will be ignored.
+	// Maps to the `query.config` CLI argument.
+	// Only available with thanos v0.11.0 and higher.
+	QueryConfig *v1.SecretKeySelector `json:"queryConfig,omitempty"`
 	// Define URL to send alerts to alertmanager.  For Thanos v0.10.0 and higher,
 	// AlertManagersConfig should be used instead.
 	// Maps to the `alertmanagers.url` arg.
