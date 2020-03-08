@@ -164,6 +164,9 @@ type ThanosRulerSpec struct {
 	ExternalPrefix string `json:"externalPrefix,omitempty"`
 	// The route prefix ThanosRuler registers HTTP handlers for. This allows thanos UI to be served on a sub-path.
 	RoutePrefix string `json:"routePrefix,omitempty"`
+	// AdditionalArgs is a list of CLI arguments which should be added to the automatically
+	// configured arguments when running the Thanos Ruler instance.
+	AdditionalArgs []string `json:"additionalArgs,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not
