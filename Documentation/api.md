@@ -727,6 +727,7 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | alertDropLabels | AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts. If `labels` field is not provided, `thanos_ruler_replica` will be dropped in alerts by default. | []string | false |
 | externalPrefix | The external URL the Thanos Ruler instances will be available under. This is necessary to generate correct URLs. This is necessary if Thanos Ruler is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix ThanosRuler registers HTTP handlers for. This allows thanos UI to be served on a sub-path. | string | false |
+| additionalArgs | AdditionalArgs is a list of CLI arguments which should be added to the automatically configured arguments when running the Thanos Ruler instance. | []string | false |
 
 [Back to TOC](#table-of-contents)
 

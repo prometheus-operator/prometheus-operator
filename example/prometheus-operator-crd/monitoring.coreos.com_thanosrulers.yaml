@@ -36,6 +36,13 @@ spec:
           description: 'Specification of the desired behavior of the ThanosRuler cluster.
             More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
           properties:
+            additionalArgs:
+              description: AdditionalArgs is a list of CLI arguments which should
+                be added to the automatically configured arguments when running the
+                Thanos Ruler instance.
+              items:
+                type: string
+              type: array
             affinity:
               description: If specified, the pod's scheduling constraints.
               properties:
