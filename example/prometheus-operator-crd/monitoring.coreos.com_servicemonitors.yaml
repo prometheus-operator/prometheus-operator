@@ -238,8 +238,8 @@ spec:
                     anyOf:
                     - type: integer
                     - type: string
-                    description: Name or number of the target port of the endpoint.
-                      Mutually exclusive with port.
+                    description: Name or number of the pod port this endpoint refers
+                      to. Mutually exclusive with port.
                     x-kubernetes-int-or-string: true
                   tlsConfig:
                     description: TLS configuration to use when scraping the endpoint
