@@ -4486,6 +4486,128 @@ spec:
                 baseImage:
                   description: Thanos base image if other than default.
                   type: string
+                grpcServerTlsConfig:
+                  description: 'GRPCServerTLSConfig configures the gRPC server from
+                    which Thanos Querier reads recorded rule data. Note: Currently
+                    only the CAFile, CertFile, and KeyFile fields are supported. Maps
+                    to the ''--grpc-server-tls-*'' CLI args.'
+                  properties:
+                    ca:
+                      description: Stuct containing the CA cert to use for the targets.
+                      properties:
+                        configMap:
+                          description: ConfigMap containing data to use for the targets.
+                          properties:
+                            key:
+                              description: The key to select.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the ConfigMap or its key
+                                must be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        secret:
+                          description: Secret containing data to use for the targets.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                      type: object
+                    caFile:
+                      description: Path to the CA cert in the Prometheus container
+                        to use for the targets.
+                      type: string
+                    cert:
+                      description: Struct containing the client cert file for the
+                        targets.
+                      properties:
+                        configMap:
+                          description: ConfigMap containing data to use for the targets.
+                          properties:
+                            key:
+                              description: The key to select.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the ConfigMap or its key
+                                must be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        secret:
+                          description: Secret containing data to use for the targets.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                      type: object
+                    certFile:
+                      description: Path to the client cert file in the Prometheus
+                        container for the targets.
+                      type: string
+                    insecureSkipVerify:
+                      description: Disable target certificate validation.
+                      type: boolean
+                    keyFile:
+                      description: Path to the client key file in the Prometheus container
+                        for the targets.
+                      type: string
+                    keySecret:
+                      description: Secret containing the client key file for the targets.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    serverName:
+                      description: Used to verify the hostname for the targets.
+                      type: string
+                  type: object
                 image:
                   description: Image if specified has precedence over baseImage, tag
                     and sha combinations. Specifying the version is still necessary
