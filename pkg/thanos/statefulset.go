@@ -259,6 +259,19 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
+	if tr.Spec.GRPCServerTLSConfig != nil {
+		tls := tr.Spec.GRPCServerTLSConfig
+		if tls.CertFile != "" {
+			trCLIArgs = append(trCLIArgs, "--grpc-server-tls-cert="+tls.CertFile)
+		}
+		if tls.KeyFile != "" {
+			trCLIArgs = append(trCLIArgs, "--grpc-server-tls-key="+tls.KeyFile)
+		}
+		if tls.CAFile != "" {
+			trCLIArgs = append(trCLIArgs, "--grpc-server-tls-client-ca="+tls.CAFile)
+		}
+	}
+
 	if tr.Spec.ExternalPrefix != "" {
 		trCLIArgs = append(trCLIArgs, "--web.external-prefix="+tr.Spec.ExternalPrefix)
 	}
