@@ -1,5 +1,7 @@
 ## Next release
 
+* [CHANGE] Changed ThanosRuler custom resource field alertmanagersURL type from string to []string` (#3067)
+
 ## 0.37.0 / 2020-03-02
 
 * [FEATURE] Add routePrefix to ThanosRuler spec (#3023)

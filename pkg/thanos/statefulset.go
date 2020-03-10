@@ -233,8 +233,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				SecretKeyRef: tr.Spec.AlertManagersConfig,
 			},
 		})
-	} else if tr.Spec.AlertManagersURL != "" {
-		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alertmanagers.url=%s", tr.Spec.AlertManagersURL))
+	} else if len(tr.Spec.AlertManagersURL) > 0 {
+		for _, url := range tr.Spec.AlertManagersURL {
+			trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alertmanagers.url=%s", url))
+		}
 	}
 
 	if tr.Spec.ObjectStorageConfig != nil {
