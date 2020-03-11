@@ -413,6 +413,11 @@ type ThanosSpec struct {
 	ListenLocal bool `json:"listenLocal,omitempty"`
 	// TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.
 	TracingConfig *v1.SecretKeySelector `json:"tracingConfig,omitempty"`
+	// GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads
+	// recorded rule data.
+	// Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
+	// Maps to the '--grpc-server-tls-*' CLI args.
+	GRPCServerTLSConfig *TLSConfig `json:"grpcServerTlsConfig,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.

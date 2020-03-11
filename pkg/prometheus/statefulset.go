@@ -775,17 +775,31 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			bindAddress = "127.0.0.1"
 		}
 
+		thanosArgs := []string{"sidecar",
+			fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
+			fmt.Sprintf("--tsdb.path=%s", storageDir),
+			fmt.Sprintf("--grpc-address=%s:10901", bindAddress),
+			fmt.Sprintf("--http-address=%s:10902", bindAddress),
+		}
+
+		if p.Spec.Thanos.GRPCServerTLSConfig != nil {
+			tls := p.Spec.Thanos.GRPCServerTLSConfig
+			if tls.CertFile != "" {
+				thanosArgs = append(thanosArgs, "--grpc-server-tls-cert="+tls.CertFile)
+			}
+			if tls.KeyFile != "" {
+				thanosArgs = append(thanosArgs, "--grpc-server-tls-key="+tls.KeyFile)
+			}
+			if tls.CAFile != "" {
+				thanosArgs = append(thanosArgs, "--grpc-server-tls-client-ca="+tls.CAFile)
+			}
+		}
+
 		container := v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			Args: []string{
-				"sidecar",
-				fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
-				fmt.Sprintf("--tsdb.path=%s", storageDir),
-				fmt.Sprintf("--grpc-address=%s:10901", bindAddress),
-				fmt.Sprintf("--http-address=%s:10902", bindAddress),
-			},
+			Args:                     thanosArgs,
 			Env: []v1.EnvVar{
 				{
 					Name: "POD_IP",
