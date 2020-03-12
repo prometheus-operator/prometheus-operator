@@ -247,8 +247,8 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| port | Name of the port this endpoint refers to. Mutually exclusive with targetPort. | string | false |
-| targetPort | Name or number of the target port of the endpoint. Mutually exclusive with port. | *intstr.IntOrString | false |
+| port | Name of the pod port this endpoint refers to. Mutually exclusive with targetPort. | string | false |
+| targetPort | Deprecated: Use 'port' instead. | *intstr.IntOrString | false |
 | path | HTTP path to scrape for metrics. | string | false |
 | scheme | HTTP scheme to use for scraping. | string | false |
 | params | Optional HTTP URL parameters | map[string][]string | false |

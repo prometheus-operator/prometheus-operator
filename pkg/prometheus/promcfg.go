@@ -476,6 +476,8 @@ func (cg *configGenerator) generatePodMonitorConfig(
 			{Key: "regex", Value: ep.Port},
 		})
 	} else if ep.TargetPort != nil {
+		level.Warn(cg.logger).Log("msg", "PodMonitor 'targetPort' is deprecated, use 'port' instead.",
+			"podMonitor", m.Name)
 		if ep.TargetPort.StrVal != "" {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
