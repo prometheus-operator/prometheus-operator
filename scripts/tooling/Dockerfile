@@ -1,10 +1,10 @@
 FROM golang:1.13 as builder
 
-ENV JSONNET_VERSION v0.14.0
-# This corresponds to v2.15.2, but needs to be written as commit hash due to golang 1.13 issues
-ENV PROMTOOL_VERSION d9613e5c466c6e9de548c4dae1b9aabf9aaf7c57
-ENV GOLANGCILINT_VERSION v1.19.1
-ENV JB_VERSION v0.2.0
+ENV JSONNET_VERSION v0.15.0
+# This corresponds to v2.16.0, but needs to be written as commit hash due to golang 1.13 issues
+ENV PROMTOOL_VERSION b90be6f32a33c03163d700e1452b54454ddce0ec
+ENV GOLANGCILINT_VERSION v1.23.6
+ENV JB_VERSION v0.3.1
 
 RUN apt-get update -y && apt-get install -y g++ make git && \
     rm -rf /var/lib/apt/lists/*
