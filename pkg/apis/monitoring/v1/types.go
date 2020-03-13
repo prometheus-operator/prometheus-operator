@@ -657,9 +657,9 @@ type PodMonitorSpec struct {
 // PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Prometheus metrics.
 // +k8s:openapi-gen=true
 type PodMetricsEndpoint struct {
-	// Name of the port this endpoint refers to. Mutually exclusive with targetPort.
+	// Name of the pod port this endpoint refers to. Mutually exclusive with targetPort.
 	Port string `json:"port,omitempty"`
-	// Name or number of the target port of the endpoint. Mutually exclusive with port.
+	// Deprecated: Use 'port' instead.
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
 	// HTTP path to scrape for metrics.
 	Path string `json:"path,omitempty"`
