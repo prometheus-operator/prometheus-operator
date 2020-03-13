@@ -607,7 +607,7 @@ func (o *Operator) sync(key string) error {
 	}
 
 	if !exists {
-		sset, err := makeStatefulSet(tr, nil, o.config, ruleConfigMapNames, "")
+		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "")
 		if err != nil {
 			return errors.Wrap(err, "making thanos statefulset config failed")
 		}
@@ -629,7 +629,7 @@ func (o *Operator) sync(key string) error {
 		return err
 	}
 
-	sset, err := makeStatefulSet(tr, obj.(*appsv1.StatefulSet), o.config, ruleConfigMapNames, newSSetInputHash)
+	sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, newSSetInputHash)
 	if err != nil {
 		return errors.Wrap(err, "making the statefulset, to update, failed")
 	}
