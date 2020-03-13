@@ -563,6 +563,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		},
 	}
 
+	promVolumeMounts = append(promVolumeMounts, p.Spec.VolumeMounts...)
 	for _, name := range ruleConfigMapNames {
 		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
 			Name:      name,

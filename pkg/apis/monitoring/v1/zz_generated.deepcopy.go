@@ -801,6 +801,13 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.VolumeMounts != nil {
+		in, out := &in.VolumeMounts, &out.VolumeMounts
+		*out = make([]corev1.VolumeMount, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.RuleSelector != nil {
 		in, out := &in.RuleSelector, &out.RuleSelector
 		*out = new(metav1.LabelSelector)
