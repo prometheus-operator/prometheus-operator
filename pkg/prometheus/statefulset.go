@@ -29,12 +29,12 @@ import (
 	"github.com/blang/semver"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 	"github.com/pkg/errors"
 )
 
 const (
 	governingServiceName            = "prometheus-operated"
-	DefaultThanosVersion            = "v0.11.0"
 	defaultRetention                = "24h"
 	defaultReplicaExternalLabelName = "prometheus_replica"
 	storageDir                      = "/prometheus"
@@ -59,45 +59,6 @@ var (
 		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
 	probeTimeoutSeconds int32 = 3
-
-	CompatibilityMatrix = []string{
-		"v1.4.0",
-		"v1.4.1",
-		"v1.5.0",
-		"v1.5.1",
-		"v1.5.2",
-		"v1.5.3",
-		"v1.6.0",
-		"v1.6.1",
-		"v1.6.2",
-		"v1.6.3",
-		"v1.7.0",
-		"v1.7.1",
-		"v1.7.2",
-		"v1.8.0",
-		"v2.0.0",
-		"v2.2.1",
-		"v2.3.1",
-		"v2.3.2",
-		"v2.4.0",
-		"v2.4.1",
-		"v2.4.2",
-		"v2.4.3",
-		"v2.5.0",
-		"v2.6.0",
-		"v2.6.1",
-		"v2.7.0",
-		"v2.7.1",
-		"v2.7.2",
-		"v2.8.1",
-		"v2.9.2",
-		"v2.10.0",
-		"v2.11.0",
-		"v2.14.0",
-		"v2.15.2",
-		"v2.16.0",
-	}
-	DefaultPrometheusVersion = CompatibilityMatrix[len(CompatibilityMatrix)-1]
 )
 
 func makeStatefulSet(
@@ -120,10 +81,10 @@ func makeStatefulSet(
 		p.Spec.BaseImage = config.PrometheusDefaultBaseImage
 	}
 	if p.Spec.Version == "" {
-		p.Spec.Version = DefaultPrometheusVersion
+		p.Spec.Version = operator.DefaultPrometheusVersion
 	}
 	if p.Spec.Thanos != nil && p.Spec.Thanos.Version == nil {
-		v := DefaultThanosVersion
+		v := operator.DefaultThanosVersion
 		p.Spec.Thanos.Version = &v
 	}
 
