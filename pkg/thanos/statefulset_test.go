@@ -64,7 +64,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
 		},
-	}, nil, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil, "")
 
 	require.NoError(t, err)
 
@@ -95,7 +95,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 				Labels:      labels,
 			},
 		},
-	}, nil, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil, "")
 	require.NoError(t, err)
 	if _, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok {
 		t.Fatal("Pod labes are not properly propagated")
@@ -159,7 +159,7 @@ func TestStatefulSetVolumes(t *testing.T) {
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
 		},
-	}, nil, defaultTestConfig, []string{"rules-configmap-one"}, "")
+	}, defaultTestConfig, []string{"rules-configmap-one"}, "")
 	require.NoError(t, err)
 	if !reflect.DeepEqual(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes) {
 		fmt.Println(pretty.Compare(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes))
@@ -183,7 +183,7 @@ func TestTracing(t *testing.T) {
 				Key: testKey,
 			},
 		},
-	}, nil, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil, "")
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -231,7 +231,7 @@ func TestObjectStorage(t *testing.T) {
 				Key: testKey,
 			},
 		},
-	}, nil, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil, "")
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -326,7 +326,7 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 				Labels:          tc.Labels,
 				AlertDropLabels: tc.AlertDropLabels,
 			},
-		}, nil, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil, "")
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -360,7 +360,7 @@ func TestAdditionalContainers(t *testing.T) {
 	// The base to compare everything against
 	baseSet, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		Spec: monitoringv1.ThanosRulerSpec{QueryEndpoints: emptyQueryEndpoints},
-	}, nil, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil, "")
 	require.NoError(t, err)
 
 	// Add an extra container
@@ -373,7 +373,7 @@ func TestAdditionalContainers(t *testing.T) {
 				},
 			},
 		},
-	}, nil, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil, "")
 	require.NoError(t, err)
 
 	if len(baseSet.Spec.Template.Spec.Containers)+1 != len(addSset.Spec.Template.Spec.Containers) {
@@ -393,7 +393,7 @@ func TestAdditionalContainers(t *testing.T) {
 				},
 			},
 		},
-	}, nil, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil, "")
 	require.NoError(t, err)
 
 	if len(baseSet.Spec.Template.Spec.Containers) != len(modSset.Spec.Template.Spec.Containers) {
@@ -423,7 +423,7 @@ func TestRetention(t *testing.T) {
 				Retention:      test.specRetention,
 				QueryEndpoints: emptyQueryEndpoints,
 			},
-		}, nil, defaultTestConfig, nil, "")
+		}, defaultTestConfig, nil, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -487,7 +487,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			PriorityClassName:  priorityClassName,
 			ServiceAccountName: serviceAccountName,
 		},
-	}, nil, defaultTestConfig, nil, "")
+	}, defaultTestConfig, nil, "")
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}

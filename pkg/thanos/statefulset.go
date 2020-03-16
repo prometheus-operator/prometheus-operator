@@ -51,7 +51,7 @@ var (
 	}
 )
 
-func makeStatefulSet(tr *monitoringv1.ThanosRuler, old *appsv1.StatefulSet, config Config, ruleConfigMapNames []string, inputHash string) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string) (*appsv1.StatefulSet, error) {
 
 	if tr.Spec.Image == "" {
 		tr.Spec.Image = config.ThanosDefaultBaseImage
@@ -101,10 +101,6 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, old *appsv1.StatefulSet, conf
 
 	if tr.Spec.ImagePullSecrets != nil && len(tr.Spec.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = tr.Spec.ImagePullSecrets
-	}
-
-	if old != nil {
-		statefulset.Annotations = old.Annotations
 	}
 
 	if statefulset.ObjectMeta.Annotations == nil {
