@@ -22,11 +22,12 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/jsonnet-bundler/jsonnet-bundler/pkg"
 	"github.com/jsonnet-bundler/jsonnet-bundler/pkg/jsonnetfile"
-	"github.com/jsonnet-bundler/jsonnet-bundler/spec"
+	v1 "github.com/jsonnet-bundler/jsonnet-bundler/spec/v1"
+	"github.com/jsonnet-bundler/jsonnet-bundler/spec/v1/deps"
 )
 
 func installCommand(dir, jsonnetHome string, uris []string) int {
@@ -53,36 +54,38 @@ func installCommand(dir, jsonnetHome string, uris []string) int {
 		"creating vendor folder")
 
 	for _, u := range uris {
-		d := parseDependency(dir, u)
+		d := deps.Parse(dir, u)
 		if d == nil {
 			kingpin.Fatalf("Unable to parse package URI `%s`", u)
 		}
 
-		if !depEqual(jsonnetFile.Dependencies[d.Name], *d) {
+		if !depEqual(jsonnetFile.Dependencies[d.Name()], *d) {
 			// the dep passed on the cli is different from the jsonnetFile
-			jsonnetFile.Dependencies[d.Name] = *d
+			jsonnetFile.Dependencies[d.Name()] = *d
 
 			// we want to install the passed version (ignore the lock)
-			delete(lockFile.Dependencies, d.Name)
+			delete(lockFile.Dependencies, d.Name())
 		}
 	}
 
 	locked, err := pkg.Ensure(jsonnetFile, jsonnetHome, lockFile.Dependencies)
 	kingpin.FatalIfError(err, "failed to install packages")
 
+	pkg.CleanLegacyName(jsonnetFile.Dependencies)
+
 	kingpin.FatalIfError(
 		writeChangedJsonnetFile(jbfilebytes, &jsonnetFile, filepath.Join(dir, jsonnetfile.File)),
 		"updating jsonnetfile.json")
 
 	kingpin.FatalIfError(
-		writeChangedJsonnetFile(jblockfilebytes, &spec.JsonnetFile{Dependencies: locked}, filepath.Join(dir, jsonnetfile.LockFile)),
+		writeChangedJsonnetFile(jblockfilebytes, &v1.JsonnetFile{Dependencies: locked}, filepath.Join(dir, jsonnetfile.LockFile)),
 		"updating jsonnetfile.lock.json")
 
 	return 0
 }
 
-func depEqual(d1, d2 spec.Dependency) bool {
-	name := d1.Name == d2.Name
+func depEqual(d1, d2 deps.Dependency) bool {
+	name := d1.Name() == d2.Name()
 	version := d1.Version == d2.Version
 	source := reflect.DeepEqual(d1.Source, d2.Source)
 
@@ -99,7 +102,7 @@ func writeJSONFile(name string, d interface{}) error {
 	return ioutil.WriteFile(name, b, 0644)
 }
 
-func writeChangedJsonnetFile(originalBytes []byte, modified *spec.JsonnetFile, path string) error {
+func writeChangedJsonnetFile(originalBytes []byte, modified *v1.JsonnetFile, path string) error {
 	origJsonnetFile, err := jsonnetfile.Unmarshal(originalBytes)
 	if err != nil {
 		return err
