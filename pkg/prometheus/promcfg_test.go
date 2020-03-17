@@ -27,12 +27,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 
 	"github.com/kylelemons/godebug/pretty"
 )
 
 func TestConfigGeneration(t *testing.T) {
-	for _, v := range CompatibilityMatrix {
+	for _, v := range operator.PrometheusCompatibilityMatrix {
 		cfg, err := generateTestConfig(v)
 		if err != nil {
 			t.Fatal(err)

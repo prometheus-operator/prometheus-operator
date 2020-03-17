@@ -17,7 +17,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 )
 
 func printCompatMatrixDocs() {
@@ -41,7 +41,7 @@ Due to the use of CustomResourceDefinitions Kubernetes >= v1.7.0 is required.
 The versions of Prometheus compatible to be run with the Prometheus Operator are:`)
 	fmt.Println("")
 
-	for _, v := range prometheus.CompatibilityMatrix {
+	for _, v := range operator.PrometheusCompatibilityMatrix {
 		fmt.Printf("* %s\n", v)
 	}
 

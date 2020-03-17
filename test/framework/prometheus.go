@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 	"github.com/coreos/prometheus-operator/pkg/prometheus"
 	"github.com/pkg/errors"
 )
@@ -43,7 +44,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			Replicas: &replicas,
-			Version:  prometheus.DefaultPrometheusVersion,
+			Version:  operator.DefaultPrometheusVersion,
 			ServiceMonitorSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": group,
