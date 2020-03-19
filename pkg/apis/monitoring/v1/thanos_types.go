@@ -99,7 +99,7 @@ type ThanosRulerSpec struct {
 	ListenLocal bool `json:"listenLocal,omitempty"`
 	// QueryEndpoints defines Thanos querier endpoints from which to query metrics.
 	// Maps to the --query flag of thanos ruler.
-	QueryEndpoints []string `json:"queryEndpoints"`
+	QueryEndpoints []string `json:"queryEndpoints,omitempty"`
 	// Define configuration for connecting to thanos query instances.
 	// If this is defined, the QueryEndpoints field will be ignored.
 	// Maps to the `query.config` CLI argument.
