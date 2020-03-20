@@ -4674,8 +4674,6 @@ spec:
                 - name
                 type: object
               type: array
-          required:
-          - queryEndpoints
           type: object
         status:
           description: 'Most recent observed status of the ThanosRuler cluster. Read-only.
