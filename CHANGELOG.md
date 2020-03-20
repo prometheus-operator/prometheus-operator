@@ -1,6 +1,17 @@
 ## Next release
 
+## 0.38.0 / 2020-03-20
+
 * [CHANGE] Changed ThanosRuler custom resource field alertmanagersURL type from string to []string` (#3067)
+* [CHANGE] Deprecate PodMonitor targetPort field (#3071, #3078)
+* [FEATURE] Add queryConfig field to ThanosRuler spec (#3068)
+* [FEATURE] GRPC TLS config for Thanos Ruler and Sidecar (#3059)
+* [FEATURE] MergePatch Alertmanager containers (#3080)
+* [FEATURE] Add VolumeMounts to Prometheus custom resources (#2871)
+* [ENHANCEMENT] Update Thanos to v0.11.0 (#3066)
+* [ENHANCEMENT] Clarify that Endpoint.targetPort is pod port (#3064)
+* [BUGFIX] ThanosRuler restarts instead of reloading with new PrometheusRules (#3056)
+* [BUGFIX] Omit QueryEndpoints if empty (#3091)
 
 ## 0.37.0 / 2020-03-02
 
