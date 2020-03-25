@@ -96,7 +96,7 @@ func (n namespaces) asSlice() []string {
 
 func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		logger.Log("msg", "Staring insecure server on :8080")
+		logger.Log("msg", "Staring insecure server on "+listener.Addr().String())
 		if err := srv.Serve(listener); err != http.ErrServerClosed {
 			return err
 		}
@@ -124,6 +124,7 @@ func init() {
 	cfg.CrdKinds = monitoringv1.DefaultCrdKinds
 	flagset := flag.CommandLine
 	klog.InitFlags(flagset)
+	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
 	flagset.StringVar(&cfg.Host, "apiserver", "", "API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.")
 	flagset.StringVar(&cfg.TLSConfig.CertFile, "cert-file", "", " - NOT RECOMMENDED FOR PRODUCTION - Path to public TLS certificate file.")
 	flagset.StringVar(&cfg.TLSConfig.KeyFile, "key-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.")
@@ -242,7 +243,7 @@ func Main() int {
 
 	web.Register(mux)
 	admit.Register(mux)
-	l, err := net.Listen("tcp", ":8080")
+	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "listening port 8080 failed", err)
 		return 1
