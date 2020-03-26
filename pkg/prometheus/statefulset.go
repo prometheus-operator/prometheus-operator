@@ -92,9 +92,7 @@ func makeStatefulSet(
 		p.Spec.PortName = defaultPortName
 	}
 
-	versionStr := strings.TrimLeft(p.Spec.Version, "v")
-
-	version, err := semver.Parse(versionStr)
+	version, err := semver.ParseTolerant(p.Spec.Version)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse version")
 	}
@@ -297,9 +295,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
 
-	versionStr := strings.TrimLeft(p.Spec.Version, "v")
-
-	version, err := semver.Parse(versionStr)
+	version, err := semver.ParseTolerant(p.Spec.Version)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse version")
 	}

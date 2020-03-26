@@ -234,9 +234,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		image = *a.Spec.Image
 	}
 
-	versionStr := strings.TrimLeft(a.Spec.Version, "v")
-
-	version, err := semver.Parse(versionStr)
+	version, err := semver.ParseTolerant(a.Spec.Version)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse alertmanager version")
 	}
