@@ -134,6 +134,7 @@ func (labels *Labels) Set(value string) error {
 type Config struct {
 	Host                          string
 	KubeletObject                 string
+	ListenAddress                 string
 	TLSInsecure                   bool
 	TLSConfig                     rest.TLSClientConfig
 	ConfigReloaderImage           string
