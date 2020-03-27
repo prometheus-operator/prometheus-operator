@@ -165,7 +165,7 @@ func (cg *configGenerator) generateConfig(
 		versionStr = operator.DefaultPrometheusVersion
 	}
 
-	version, err := semver.Parse(strings.TrimLeft(versionStr, "v"))
+	version, err := semver.ParseTolerant(versionStr)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse version")
 	}
