@@ -176,7 +176,7 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 	for _, ns := range namespaces {
 		var marshalErr error
 		err := cache.ListAllByNamespace(c.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
-			promRule := obj.(*monitoringv1.PrometheusRule)
+			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
 			content, err := generateContent(promRule.Spec, p.Spec.EnforcedNamespaceLabel, promRule.Namespace)
 			if err != nil {
 				marshalErr = err
