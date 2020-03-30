@@ -36,6 +36,10 @@ func (Generator) Help() *markers.DefinitionHelp {
 				Summary: "indicates that we should produce a single-version CRD. ",
 				Details: "Single \"trivial-version\" CRDs are compatible with older (pre 1.13) Kubernetes API servers.  The storage version's schema will be used as the CRD's schema. \n Only works with the v1beta1 CRD version.",
 			},
+			"PreserveUnknownFields": markers.DetailedHelp{
+				Summary: "indicates whether or not we should turn off pruning. ",
+				Details: "Left unspecified, it'll default to true when only a v1beta1 CRD is generated (to preserve compatibility with older versions of this tool), or false otherwise. \n It's required to be false for v1 CRDs.",
+			},
 			"MaxDescLen": markers.DetailedHelp{
 				Summary: "specifies the maximum description length for fields in CRD's OpenAPI schema. ",
 				Details: "0 indicates drop the description for all fields completely. n indicates limit the description to at most n characters and truncate the description to closest sentence boundary if it exceeds n characters.",
