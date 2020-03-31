@@ -13,14 +13,6 @@ func main() {
 	yamltojson := flag.Bool("yamltojson", false, "Convert yaml to json instead of the default json to yaml.")
 	flag.Parse()
 
-	fi, err := os.Stdin.Stat()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if fi.Mode()&os.ModeNamedPipe == 0 {
-		log.Fatal("no data to read from stdin")
-	}
-
 	inBytes, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		log.Fatal(err)

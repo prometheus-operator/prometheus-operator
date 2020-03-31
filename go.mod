@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/brancz/gojsontoyaml v0.0.0-20190425155809-e8bd32d46b3d
+	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
 	github.com/campoy/embedmd v1.0.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-bindata/go-bindata v3.1.2+incompatible
@@ -13,7 +13,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/hashicorp/go-version v1.1.0
-	github.com/jsonnet-bundler/jsonnet-bundler v0.2.0
+	github.com/jsonnet-bundler/jsonnet-bundler v0.3.1
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452
 	github.com/oklog/run v1.0.0

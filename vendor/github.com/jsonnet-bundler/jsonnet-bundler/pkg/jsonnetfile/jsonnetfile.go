@@ -21,7 +21,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/jsonnet-bundler/jsonnet-bundler/spec"
+	v0 "github.com/jsonnet-bundler/jsonnet-bundler/spec/v0"
+	v1 "github.com/jsonnet-bundler/jsonnet-bundler/spec/v1"
 )
 
 const (
@@ -29,13 +30,15 @@ const (
 	LockFile = "jsonnetfile.lock.json"
 )
 
-var ErrNoFile = errors.New("no jsonnetfile")
+var (
+	ErrUpdateJB = errors.New("jsonnetfile version unknown, update jb")
+)
 
 // Load reads a jsonnetfile.(lock).json from disk
-func Load(filepath string) (spec.JsonnetFile, error) {
+func Load(filepath string) (v1.JsonnetFile, error) {
 	bytes, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		return spec.New(), err
+		return v1.New(), err
 	}
 
 	return Unmarshal(bytes)
@@ -43,19 +46,37 @@ func Load(filepath string) (spec.JsonnetFile, error) {
 
 // Unmarshal creates a spec.JsonnetFile from bytes. Empty bytes
 // will create an empty spec.
-func Unmarshal(bytes []byte) (spec.JsonnetFile, error) {
-	m := spec.New()
+func Unmarshal(bytes []byte) (v1.JsonnetFile, error) {
+	m := v1.New()
+
 	if len(bytes) == 0 {
 		return m, nil
 	}
-	if err := json.Unmarshal(bytes, &m); err != nil {
-		return m, errors.Wrap(err, "failed to unmarshal file")
-	}
-	if m.Dependencies == nil {
-		m.Dependencies = make(map[string]spec.Dependency)
+
+	versions := struct {
+		Version uint `json:"version"`
+	}{}
+
+	err := json.Unmarshal(bytes, &versions)
+	if err != nil {
+		return m, err
 	}
 
-	return m, nil
+	switch versions.Version {
+	case v0.Version:
+		var mv0 v0.JsonnetFile
+		if err := json.Unmarshal(bytes, &mv0); err != nil {
+			return m, errors.Wrap(err, "failed to unmarshal jsonnetfile")
+		}
+		return v1.FromV0(mv0)
+	case v1.Version:
+		if err := json.Unmarshal(bytes, &m); err != nil {
+			return m, errors.Wrap(err, "failed to unmarshal v1 file")
+		}
+		return m, nil
+	default:
+		return m, ErrUpdateJB
+	}
 }
 
 // Exists returns whether the file at the given path exists

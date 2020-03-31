@@ -33,14 +33,14 @@ import (
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 
-	"github.com/jsonnet-bundler/jsonnet-bundler/spec"
+	"github.com/jsonnet-bundler/jsonnet-bundler/spec/v1/deps"
 )
 
 type GitPackage struct {
-	Source *spec.GitSource
+	Source *deps.Git
 }
 
-func NewGitPackage(source *spec.GitSource) Interface {
+func NewGitPackage(source *deps.Git) Interface {
 	return &GitPackage{
 		Source: source,
 	}
@@ -169,7 +169,7 @@ func remoteResolveRef(ctx context.Context, remote string, ref string) (string, e
 func (p *GitPackage) Install(ctx context.Context, name, dir, version string) (string, error) {
 	destPath := path.Join(dir, name)
 
-	tmpDir, err := ioutil.TempDir(filepath.Join(dir, ".tmp"), fmt.Sprintf("jsonnetpkg-%s-%s", name, version))
+	tmpDir, err := ioutil.TempDir(filepath.Join(dir, ".tmp"), fmt.Sprintf("jsonnetpkg-%s-%s", strings.Replace(name, "/", "-", -1), version))
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create tmp dir")
 	}
@@ -177,11 +177,11 @@ func (p *GitPackage) Install(ctx context.Context, name, dir, version string) (st
 
 	// Optimization for GitHub sources: download a tarball archive of the requested
 	// version instead of cloning the entire repository.
-	isGitHubRemote, err := regexp.MatchString(`^(https|ssh)://github\.com/.+$`, p.Source.Remote)
+	isGitHubRemote, err := regexp.MatchString(`^(https|ssh)://github\.com/.+$`, p.Source.Remote())
 	if isGitHubRemote {
 		// Let git ls-remote decide if "version" is a ref or a commit SHA in the unlikely
 		// but possible event that a ref is comprised of 40 or more hex characters
-		commitSha, err := remoteResolveRef(ctx, p.Source.Remote, version)
+		commitSha, err := remoteResolveRef(ctx, p.Source.Remote(), version)
 
 		// If the ref resolution failed and "version" looks like a SHA,
 		// assume it is one and proceed.
@@ -190,7 +190,7 @@ func (p *GitPackage) Install(ctx context.Context, name, dir, version string) (st
 			commitSha = version
 		}
 
-		archiveUrl := fmt.Sprintf("%s/archive/%s.tar.gz", p.Source.Remote, commitSha)
+		archiveUrl := fmt.Sprintf("%s/archive/%s.tar.gz", p.Source.Remote(), commitSha)
 		archiveFilepath := fmt.Sprintf("%s.tar.gz", tmpDir)
 
 		defer os.Remove(archiveFilepath)
@@ -205,7 +205,12 @@ func (p *GitPackage) Install(ctx context.Context, name, dir, version string) (st
 
 				// Move the extracted directory to its final destination
 				if err == nil {
-					err = os.Rename(path.Join(tmpDir, p.Source.Subdir), destPath)
+					if err := os.MkdirAll(filepath.Dir(destPath), os.ModePerm); err != nil {
+						panic(err)
+					}
+					if err := os.Rename(path.Join(tmpDir, p.Source.Subdir), destPath); err != nil {
+						panic(err)
+					}
 				}
 			}
 		}
@@ -230,7 +235,7 @@ func (p *GitPackage) Install(ctx context.Context, name, dir, version string) (st
 		return "", err
 	}
 
-	cmd = exec.CommandContext(ctx, "git", "remote", "add", "origin", p.Source.Remote)
+	cmd = exec.CommandContext(ctx, "git", "remote", "add", "origin", p.Source.Remote())
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

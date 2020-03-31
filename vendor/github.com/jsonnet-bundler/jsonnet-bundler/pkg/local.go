@@ -19,15 +19,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jsonnet-bundler/jsonnet-bundler/spec"
 	"github.com/pkg/errors"
+
+	"github.com/jsonnet-bundler/jsonnet-bundler/spec/v1/deps"
 )
 
 type LocalPackage struct {
-	Source *spec.LocalSource
+	Source *deps.Local
 }
 
-func NewLocalPackage(source *spec.LocalSource) Interface {
+func NewLocalPackage(source *deps.Local) Interface {
 	return &LocalPackage{
 		Source: source,
 	}
