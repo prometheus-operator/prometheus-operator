@@ -5,6 +5,7 @@ ENV JSONNET_VERSION v0.15.0
 ENV PROMTOOL_VERSION b90be6f32a33c03163d700e1452b54454ddce0ec
 ENV GOLANGCILINT_VERSION v1.23.6
 ENV JB_VERSION v0.3.1
+ENV GO_BINDATA_VERSION v3.1.3
 
 RUN apt-get update -y && apt-get install -y g++ make git && \
     rm -rf /var/lib/apt/lists/*
@@ -20,7 +21,7 @@ RUN GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@${
 RUN GO111MODULE=on go get github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@${JB_VERSION}
 RUN go get github.com/brancz/gojsontoyaml
 RUN go get github.com/campoy/embedmd
-RUN go get -u github.com/jteeuwen/go-bindata/...
+RUN GO111MODULE=on go get github.com/go-bindata/go-bindata/v3/go-bindata@${GO_BINDATA_VERSION}
 
 # Add po-lint
 WORKDIR /go/src/github.com/coreos/prometheus-operator

@@ -9,7 +9,7 @@ require (
 	github.com/coreos/bbolt v1.3.1-coreos.6 // indirect
 	github.com/coreos/etcd v3.3.15+incompatible // indirect
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-bindata/go-bindata v3.1.2+incompatible
+	github.com/go-bindata/go-bindata/v3 v3.1.3
 	github.com/go-kit/kit v0.9.0
 	github.com/go-openapi/swag v0.19.5
 	github.com/gogo/protobuf v1.3.1
