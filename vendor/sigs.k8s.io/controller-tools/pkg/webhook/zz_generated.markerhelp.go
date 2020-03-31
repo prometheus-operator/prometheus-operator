@@ -40,6 +40,10 @@ func (Config) Help() *markers.DefinitionHelp {
 				Summary: "specifies what should happen if the API server cannot reach the webhook. ",
 				Details: "It may be either \"ignore\" (to skip the webhook and continue on) or \"fail\" (to reject the object in question).",
 			},
+			"MatchPolicy": markers.DetailedHelp{
+				Summary: "defines how the \"rules\" list is used to match incoming requests. Allowed values are \"Exact\" (match only if it exactly matches the specified rule) or \"Equivalent\" (match a request if it modifies a resource listed in rules, even via another API group or version).",
+				Details: "",
+			},
 			"Groups": markers.DetailedHelp{
 				Summary: "specifies the API groups that this webhook receives requests for.",
 				Details: "",
@@ -57,11 +61,11 @@ func (Config) Help() *markers.DefinitionHelp {
 				Details: "",
 			},
 			"Name": markers.DetailedHelp{
-				Summary: "indicates the name of this webhook configuration.",
+				Summary: "indicates the name of this webhook configuration. Should be a domain with at least three segments separated by dots",
 				Details: "",
 			},
 			"Path": markers.DetailedHelp{
-				Summary: "specifies that path that the API server should connect to this webhook on.",
+				Summary: "specifies that path that the API server should connect to this webhook on. Must be prefixed with a '/validate-' or '/mutate-' depending on the type, and followed by $GROUP-$VERSION-$KIND where all values are lower-cased and the periods in the group are substituted for hyphens. For example, a validating webhook path for type batch.tutorial.kubebuilder.io/v1,Kind=CronJob would be /validate-batch-tutorial-kubebuilder-io-v1-cronjob",
 				Details: "",
 			},
 		},
