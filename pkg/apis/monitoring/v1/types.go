@@ -107,10 +107,14 @@ type PrometheusSpec struct {
 	Version string `json:"version,omitempty"`
 	// Tag of Prometheus container image to be deployed. Defaults to the value of `version`.
 	// Version is ignored if Tag is set.
+	// Deprecated: use 'image' instead.  The image tag can be specified
+	// as part of the image URL.
 	Tag string `json:"tag,omitempty"`
 	// SHA of Prometheus container image to be deployed. Defaults to the value of `version`.
 	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
 	// Version and Tag are ignored if SHA is set.
+	// Deprecated: use 'image' instead.  The image digest can be specified
+	// as part of the image URL.
 	SHA string `json:"sha,omitempty"`
 	// When a Prometheus deployment is paused, no actions except for deletion
 	// will be performed on the underlying objects.
@@ -121,6 +125,7 @@ type PrometheusSpec struct {
 	// configured.
 	Image *string `json:"image,omitempty"`
 	// Base image to use for a Prometheus deployment.
+	// Deprecated: use 'image' instead
 	BaseImage string `json:"baseImage,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
@@ -475,12 +480,17 @@ type ThanosSpec struct {
 	Version *string `json:"version,omitempty"`
 	// Tag of Thanos sidecar container image to be deployed. Defaults to the value of `version`.
 	// Version is ignored if Tag is set.
+	// Deprecated: use 'image' instead.  The image tag can be specified
+	// as part of the image URL.
 	Tag *string `json:"tag,omitempty"`
 	// SHA of Thanos container image to be deployed. Defaults to the value of `version`.
 	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
 	// Version and Tag are ignored if SHA is set.
+	// Deprecated: use 'image' instead.  The image digest can be specified
+	// as part of the image URL.
 	SHA *string `json:"sha,omitempty"`
 	// Thanos base image if other than default.
+	// Deprecated: use 'image' instead
 	BaseImage *string `json:"baseImage,omitempty"`
 	// Resources defines the resource requirements for the Thanos sidecar.
 	// If not provided, no requests/limits will be set
@@ -1075,12 +1085,17 @@ type AlertmanagerSpec struct {
 	Version string `json:"version,omitempty"`
 	// Tag of Alertmanager container image to be deployed. Defaults to the value of `version`.
 	// Version is ignored if Tag is set.
+	// Deprecated: use 'image' instead.  The image tag can be specified
+	// as part of the image URL.
 	Tag string `json:"tag,omitempty"`
 	// SHA of Alertmanager container image to be deployed. Defaults to the value of `version`.
 	// Similar to a tag, but the SHA explicitly deploys an immutable container image.
 	// Version and Tag are ignored if SHA is set.
+	// Deprecated: use 'image' instead.  The image digest can be specified
+	// as part of the image URL.
 	SHA string `json:"sha,omitempty"`
 	// Base image that is used to deploy pods, without tag.
+	// Deprecated: use 'image' instead
 	BaseImage string `json:"baseImage,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
