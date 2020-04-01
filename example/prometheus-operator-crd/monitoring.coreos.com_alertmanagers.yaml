@@ -647,7 +647,8 @@ spec:
                     type: object
                 type: object
               baseImage:
-                description: Base image that is used to deploy pods, without tag.
+                description: 'Base image that is used to deploy pods, without tag.
+                  Deprecated: use ''image'' instead'
                 type: string
               clusterAdvertiseAddress:
                 description: 'ClusterAdvertiseAddress is the explicit address to advertise
@@ -3016,10 +3017,11 @@ spec:
                   to use to run the Prometheus Pods.
                 type: string
               sha:
-                description: SHA of Alertmanager container image to be deployed. Defaults
-                  to the value of `version`. Similar to a tag, but the SHA explicitly
-                  deploys an immutable container image. Version and Tag are ignored
-                  if SHA is set.
+                description: 'SHA of Alertmanager container image to be deployed.
+                  Defaults to the value of `version`. Similar to a tag, but the SHA
+                  explicitly deploys an immutable container image. Version and Tag
+                  are ignored if SHA is set. Deprecated: use ''image'' instead.  The
+                  image digest can be specified as part of the image URL.'
                 type: string
               storage:
                 description: Storage is the definition of how storage will be used
@@ -3281,8 +3283,10 @@ spec:
                     type: object
                 type: object
               tag:
-                description: Tag of Alertmanager container image to be deployed. Defaults
-                  to the value of `version`. Version is ignored if Tag is set.
+                description: 'Tag of Alertmanager container image to be deployed.
+                  Defaults to the value of `version`. Version is ignored if Tag is
+                  set. Deprecated: use ''image'' instead.  The image tag can be specified
+                  as part of the image URL.'
                 type: string
               tolerations:
                 description: If specified, the pod's tolerations.
