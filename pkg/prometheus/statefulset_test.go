@@ -87,7 +87,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.PrometheusSpec{
-			PodMetadata: &monitoringv1.PodMeta{
+			PodMetadata: &monitoringv1.EmbeddedObjectMetadata{
 				Annotations: annotations,
 				Labels:      labels,
 			},
@@ -112,8 +112,8 @@ func TestStatefulSetPVC(t *testing.T) {
 
 	storageClass := "storageclass"
 
-	pvc := v1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
+	pvc := monitoringv1.EmbeddedPersistentVolumeClaim{
+		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
 			Annotations: annotations,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
