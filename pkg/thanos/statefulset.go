@@ -22,6 +22,7 @@ import (
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
+	"github.com/coreos/prometheus-operator/pkg/operator"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -123,8 +124,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, old *appsv1.StatefulSet, conf
 			},
 		})
 	} else {
-		pvcTemplate := storageSpec.VolumeClaimTemplate
-		pvcTemplate.CreationTimestamp = metav1.Time{}
+		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
 			pvcTemplate.Name = volumeName(tr.Name)
 		}
@@ -135,7 +135,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, old *appsv1.StatefulSet, conf
 		}
 		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
 		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
-		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, pvcTemplate)
+		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 	}
 
 	for _, volume := range tr.Spec.Volumes {
