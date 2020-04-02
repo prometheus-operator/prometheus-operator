@@ -740,6 +740,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			fmt.Sprintf("--http-address=%s:10902", bindAddress),
 		}
 
+		if p.Spec.Thanos.LogLevel != "" {
+			thanosArgs = append(thanosArgs, "--log.level="+p.Spec.Thanos.LogLevel)
+		}
+		if p.Spec.Thanos.LogFormat != "" {
+			thanosArgs = append(thanosArgs, "--log.format="+p.Spec.Thanos.LogFormat)
+		}
+
 		if p.Spec.Thanos.GRPCServerTLSConfig != nil {
 			tls := p.Spec.Thanos.GRPCServerTLSConfig
 			if tls.CertFile != "" {
