@@ -260,7 +260,7 @@ $(FIRST_GOPATH)/bin/$(1):
 endef
 
 $(GO_BINDATA_BINARY):
-	@go install -mod=vendor github.com/go-bindata/go-bindata/go-bindata
+	@go install -mod=vendor github.com/go-bindata/go-bindata/v3/go-bindata
 
 $(foreach binary,$(K8S_GEN_BINARIES),$(eval $(call _K8S_GEN_VAR_TARGET_,$(binary))))
 
