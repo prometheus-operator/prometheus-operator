@@ -90,7 +90,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			PodMetadata: &monitoringv1.PodMeta{
+			PodMetadata: &monitoringv1.EmbeddedObjectMetadata{
 				Annotations: annotations,
 				Labels:      labels,
 			},
