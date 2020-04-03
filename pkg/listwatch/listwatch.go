@@ -40,7 +40,7 @@ import (
 //
 // The allowed namespaces and denied namespaces are mutually exclusive.
 // See NewFilteredUnprivilegedNamespaceListWatchFromClient for a description on how they are applied.
-func NewUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, allowedNamespaces, deniedNamespaces []string, fieldSelector fields.Selector) cache.ListerWatcher {
+func NewUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, allowedNamespaces, deniedNamespaces map[string]struct{}, fieldSelector fields.Selector) cache.ListerWatcher {
 	optionsModifier := func(options *metav1.ListOptions) {
 		options.FieldSelector = fieldSelector.String()
 	}
@@ -61,7 +61,7 @@ func NewUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, a
 // If allowed namespaces contain multiple items, the given denied namespaces have no effect.
 // If the allowed namespaces includes exactly one entry with the value v1.NamespaceAll (empty string),
 // the given denied namespaces are applied.
-func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, allowedNamespaces, deniedNamespaces []string, optionsModifier func(options *metav1.ListOptions)) cache.ListerWatcher {
+func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, allowedNamespaces, deniedNamespaces map[string]struct{}, optionsModifier func(options *metav1.ListOptions)) cache.ListerWatcher {
 	// If the only namespace given is `v1.NamespaceAll`, then this
 	// cache.ListWatch must be privileged. In this case, return a regular
 	// cache.ListWatch decorated with a denylist watcher
@@ -76,7 +76,7 @@ func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.G
 	listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
 		optionsModifier(&options)
 		list := &v1.NamespaceList{}
-		for _, name := range allowedNamespaces {
+		for name := range allowedNamespaces {
 			result := &v1.Namespace{}
 			err := c.Get().
 				Resource("namespaces").
@@ -108,18 +108,20 @@ func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.G
 // If allowed namespaces contain multiple items, the given denied namespaces have no effect.
 // If the allowed namespaces includes exactly one entry with the value v1.NamespaceAll (empty string),
 // the given denied namespaces are applied.
-func MultiNamespaceListerWatcher(l log.Logger, allowedNamespaces, deniedNamespaces []string, f func(string) cache.ListerWatcher) cache.ListerWatcher {
+func MultiNamespaceListerWatcher(l log.Logger, allowedNamespaces, deniedNamespaces map[string]struct{}, f func(string) cache.ListerWatcher) cache.ListerWatcher {
 	// If there is only one namespace then there is no need to create a
 	// multi lister watcher proxy.
 	if IsAllNamespaces(allowedNamespaces) {
-		return newDenylistListerWatcher(l, deniedNamespaces, f(allowedNamespaces[0]))
+		return newDenylistListerWatcher(l, deniedNamespaces, f(v1.NamespaceAll))
 	}
 	if len(allowedNamespaces) == 1 {
-		return f(allowedNamespaces[0])
+		for n := range allowedNamespaces {
+			return f(n)
+		}
 	}
 
 	var lws []cache.ListerWatcher
-	for _, n := range allowedNamespaces {
+	for n := range allowedNamespaces {
 		lws = append(lws, f(n))
 	}
 	return multiListerWatcher(lws)
@@ -258,8 +260,9 @@ func (mw *multiWatch) Stop() {
 	return
 }
 
-// IsAllNamespaces checks if the given slice of namespaces
+// IsAllNamespaces checks if the given map of namespaces
 // contains only v1.NamespaceAll.
-func IsAllNamespaces(namespaces []string) bool {
-	return len(namespaces) == 1 && namespaces[0] == v1.NamespaceAll
+func IsAllNamespaces(namespaces map[string]struct{}) bool {
+	_, ok := namespaces[v1.NamespaceAll]
+	return ok && len(namespaces) == 1
 }

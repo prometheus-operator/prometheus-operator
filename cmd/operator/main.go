@@ -74,9 +74,8 @@ func (n namespaces) Set(value string) error {
 	if n == nil {
 		return errors.New("expected n of type namespaces to be initialized")
 	}
-	ns := strings.Split(value, ",")
-	for i := range ns {
-		n[ns[i]] = struct{}{}
+	for _, ns := range strings.Split(value, ",") {
+		n[ns] = struct{}{}
 	}
 	return nil
 }
@@ -162,28 +161,6 @@ func init() {
 func Main() int {
 	flagset.Parse(os.Args[1:])
 
-	cfg.Namespaces.AllowList = ns.asSlice()
-	if len(cfg.Namespaces.AllowList) == 0 {
-		cfg.Namespaces.AllowList = append(cfg.Namespaces.AllowList, v1.NamespaceAll)
-	}
-
-	cfg.Namespaces.DenyList = deniedNs.asSlice()
-	cfg.Namespaces.PrometheusAllowList = prometheusNs.asSlice()
-	cfg.Namespaces.AlertmanagerAllowList = alertmanagerNs.asSlice()
-	cfg.Namespaces.ThanosRulerAllowList = thanosRulerNs.asSlice()
-
-	if len(cfg.Namespaces.PrometheusAllowList) == 0 {
-		cfg.Namespaces.PrometheusAllowList = cfg.Namespaces.AllowList
-	}
-
-	if len(cfg.Namespaces.AlertmanagerAllowList) == 0 {
-		cfg.Namespaces.AlertmanagerAllowList = cfg.Namespaces.AllowList
-	}
-
-	if len(cfg.Namespaces.ThanosRulerAllowList) == 0 {
-		cfg.Namespaces.ThanosRulerAllowList = cfg.Namespaces.AllowList
-	}
-
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	if cfg.LogFormat == logFormatJson {
 		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
@@ -213,6 +190,28 @@ func Main() int {
 	if len(ns) > 0 && len(deniedNs) > 0 {
 		fmt.Fprint(os.Stderr, "--namespaces and --deny-namespaces are mutually exclusive. Please provide only one of them.\n")
 		return 1
+	}
+
+	cfg.Namespaces.AllowList = ns
+	if len(cfg.Namespaces.AllowList) == 0 {
+		cfg.Namespaces.AllowList[v1.NamespaceAll] = struct{}{}
+	}
+
+	cfg.Namespaces.DenyList = deniedNs
+	cfg.Namespaces.PrometheusAllowList = prometheusNs
+	cfg.Namespaces.AlertmanagerAllowList = alertmanagerNs
+	cfg.Namespaces.ThanosRulerAllowList = thanosRulerNs
+
+	if len(cfg.Namespaces.PrometheusAllowList) == 0 {
+		cfg.Namespaces.PrometheusAllowList = cfg.Namespaces.AllowList
+	}
+
+	if len(cfg.Namespaces.AlertmanagerAllowList) == 0 {
+		cfg.Namespaces.AlertmanagerAllowList = cfg.Namespaces.AllowList
+	}
+
+	if len(cfg.Namespaces.ThanosRulerAllowList) == 0 {
+		cfg.Namespaces.ThanosRulerAllowList = cfg.Namespaces.AllowList
 	}
 
 	r := prometheus.NewRegistry()

@@ -158,9 +158,9 @@ type Config struct {
 
 type Namespaces struct {
 	// allow list/deny list for common custom resources
-	AllowList, DenyList []string
+	AllowList, DenyList map[string]struct{}
 	// allow list for prometheus/alertmanager custom resources
-	PrometheusAllowList, AlertmanagerAllowList, ThanosRulerAllowList []string
+	PrometheusAllowList, AlertmanagerAllowList, ThanosRulerAllowList map[string]struct{}
 }
 
 // BasicAuthCredentials represents a username password pair to be used with
