@@ -429,6 +429,10 @@ type ThanosSpec struct {
 	// Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
 	// Maps to the '--grpc-server-tls-*' CLI args.
 	GRPCServerTLSConfig *TLSConfig `json:"grpcServerTlsConfig,omitempty"`
+	// LogLevel for Thanos sidecar to be configured with.
+	LogLevel string `json:"logLevel,omitempty"`
+	// LogFormat for Thanos sidecar to be configured with.
+	LogFormat string `json:"logFormat,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.
