@@ -105,7 +105,6 @@ func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() er
 }
 
 var (
-	cfg                prometheuscontroller.Config
 	availableLogLevels = []string{
 		logLevelAll,
 		logLevelDebug,
@@ -118,11 +117,13 @@ var (
 		logFormatLogfmt,
 		logFormatJson,
 	}
+	cfg = prometheuscontroller.Config{
+		CrdKinds: monitoringv1.DefaultCrdKinds,
+	}
+	flagset = flag.CommandLine
 )
 
 func init() {
-	cfg.CrdKinds = monitoringv1.DefaultCrdKinds
-	flagset := flag.CommandLine
 	klog.InitFlags(flagset)
 	flagset.StringVar(&cfg.Host, "apiserver", "", "API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.")
 	flagset.StringVar(&cfg.TLSConfig.CertFile, "cert-file", "", " - NOT RECOMMENDED FOR PRODUCTION - Path to public TLS certificate file.")
@@ -156,6 +157,9 @@ func init() {
 	flagset.StringVar(&cfg.PromSelector, "prometheus-instance-selector", "", "Label selector to filter Prometheus CRDs to manage")
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager CRDs to manage")
 	flagset.StringVar(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "", "Label selector to filter ThanosRuler CRDs to manage")
+}
+
+func Main() int {
 	flagset.Parse(os.Args[1:])
 
 	cfg.Namespaces.AllowList = ns.asSlice()
@@ -179,9 +183,7 @@ func init() {
 	if len(cfg.Namespaces.ThanosRulerAllowList) == 0 {
 		cfg.Namespaces.ThanosRulerAllowList = cfg.Namespaces.AllowList
 	}
-}
 
-func Main() int {
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	if cfg.LogFormat == logFormatJson {
 		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
