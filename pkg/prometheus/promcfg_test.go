@@ -57,11 +57,14 @@ func TestGlobalSettings(t *testing.T) {
 		EvaluationInterval string
 		ScrapeInterval     string
 		ExternalLabels     map[string]string
+		QueryLogFile       string
+		Version            string
 		Expected           string
 	}
 
 	testcases := []testCase{
 		{
+			Version: "v2.15.2",
 			Expected: `global:
   evaluation_interval: 30s
   scrape_interval: 30s
@@ -78,6 +81,7 @@ alerting:
 `,
 		},
 		{
+			Version:            "v2.15.2",
 			EvaluationInterval: "60s",
 			Expected: `global:
   evaluation_interval: 60s
@@ -95,6 +99,7 @@ alerting:
 `,
 		},
 		{
+			Version:        "v2.15.2",
 			ScrapeInterval: "60s",
 			Expected: `global:
   evaluation_interval: 30s
@@ -112,6 +117,7 @@ alerting:
 `,
 		},
 		{
+			Version: "v2.15.2",
 			ExternalLabels: map[string]string{
 				"key1": "value1",
 				"key2": "value2",
@@ -133,6 +139,25 @@ alerting:
   alertmanagers: []
 `,
 		},
+		{
+			Version:      "v2.16.0",
+			QueryLogFile: "test.log",
+			Expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+  query_log_file: test.log
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`,
+		},
 	}
 
 	for _, tc := range testcases {
@@ -144,6 +169,8 @@ alerting:
 					EvaluationInterval: tc.EvaluationInterval,
 					ScrapeInterval:     tc.ScrapeInterval,
 					ExternalLabels:     tc.ExternalLabels,
+					QueryLogFile:       tc.QueryLogFile,
+					Version:            tc.Version,
 				},
 			},
 			map[string]*monitoringv1.ServiceMonitor{},
