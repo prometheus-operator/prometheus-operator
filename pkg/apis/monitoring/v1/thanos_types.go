@@ -170,6 +170,10 @@ type ThanosRulerSpec struct {
 	// Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
 	// Maps to the '--grpc-server-tls-*' CLI args.
 	GRPCServerTLSConfig *TLSConfig `json:"grpcServerTlsConfig,omitempty"`
+	// The external Query URL the Thanos Ruler will set in the 'Source' field
+	// of all alerts.
+	// Maps to the '--alert.query-url' CLI arg.
+	AlertQueryURL string `json:"alertQueryUrl,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only. Not

@@ -322,7 +322,7 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 		sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec: monitoringv1.ThanosRulerSpec{
-				QueryEndpoints:  []string{""},
+				QueryEndpoints:  emptyQueryEndpoints,
 				Labels:          tc.Labels,
 				AlertDropLabels: tc.AlertDropLabels,
 			},
@@ -510,4 +510,28 @@ func TestPodTemplateConfig(t *testing.T) {
 	if sset.Spec.Template.Spec.ServiceAccountName != serviceAccountName {
 		t.Fatalf("expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
 	}
+}
+
+func TestExternalQueryURL(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			AlertQueryURL:  "https://example.com/",
+			QueryEndpoints: emptyQueryEndpoints,
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].Name != "thanos-ruler" {
+		t.Fatalf("expected 1st containers to be thanos-ruler, got %s", sset.Spec.Template.Spec.Containers[0].Name)
+	}
+
+	const expectedArg = "--alert.query-url=https://example.com/"
+	for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+		if arg == expectedArg {
+			return
+		}
+	}
+	t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArg)
 }
