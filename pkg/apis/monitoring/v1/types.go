@@ -193,7 +193,7 @@ type PrometheusSpec struct {
 	// VolumeMounts specified will be appended to other VolumeMounts in the prometheus container,
 	// that are generated as a result of StorageSpec objects.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
-	// A selector to select which PrometheusRules to mount for loading alerting
+	// A selector to select which PrometheusRules to mount for loading alerting/recording
 	// rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus
 	// Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom
 	// resources selected by RuleSelector. Make sure it does not match any config
