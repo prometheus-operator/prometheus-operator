@@ -40,19 +40,13 @@ type denylistListerWatcher struct {
 // newDenylistListerWatcher creates a cache.ListerWatcher
 // wrapping the given next cache.ListerWatcher
 // filtering lists and watch events by the given namespaces.
-func newDenylistListerWatcher(l log.Logger, namespaces []string, next cache.ListerWatcher) cache.ListerWatcher {
+func newDenylistListerWatcher(l log.Logger, namespaces map[string]struct{}, next cache.ListerWatcher) cache.ListerWatcher {
 	if len(namespaces) == 0 {
 		return next
 	}
 
-	denylist := make(map[string]struct{})
-
-	for _, ns := range namespaces {
-		denylist[ns] = struct{}{}
-	}
-
 	return &denylistListerWatcher{
-		denylist: denylist,
+		denylist: namespaces,
 		next:     next,
 		logger:   l,
 	}
