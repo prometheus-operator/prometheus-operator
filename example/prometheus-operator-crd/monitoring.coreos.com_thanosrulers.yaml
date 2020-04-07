@@ -615,6 +615,11 @@ spec:
               items:
                 type: string
               type: array
+            alertQueryUrl:
+              description: The external Query URL the Thanos Ruler will set in the
+                'Source' field of all alerts. Maps to the '--alert.query-url' CLI
+                arg.
+              type: string
             alertmanagersConfig:
               description: Define configuration for connecting to alertmanager.  Only
                 available with thanos v0.10.0 and higher.  Maps to the `alertmanagers.config`
