@@ -15,6 +15,9 @@ services:
 before_install:
   - pip install --user awscli
   - export PATH=$PATH:$HOME/.local/bin
+  # k8s >= 1.18 requires conntrack, ebtables and socat.
+  - sudo apt update -y
+  - sudo apt install -y conntrack ebtables socat
 jobs:
   include:
   - name: "Sanity checks and tests"
