@@ -16,9 +16,12 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -57,6 +60,10 @@ const (
 const (
 	logFormatLogfmt = "logfmt"
 	logFormatJson   = "json"
+)
+
+const (
+	operatorTLSDir = "/etc/tls/private"
 )
 
 var (
@@ -103,6 +110,26 @@ func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() er
 	}
 }
 
+func checkTLSFilesExist(config operator.TLSServerConfig) bool {
+	if info, err := os.Stat(config.CertFile); os.IsNotExist(err) || info.IsDir() {
+		return false
+	}
+	if info, err := os.Stat(config.KeyFile); os.IsNotExist(err) || info.IsDir() {
+		return false
+	}
+	return true
+}
+
+func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger, certFile, keyFile string) func() error {
+	return func() error {
+		logger.Log("msg", "Staring secure server on "+listener.Addr().String())
+		if err := srv.ServeTLS(listener, certFile, keyFile); err != http.ErrServerClosed {
+			return err
+		}
+		return nil
+	}
+}
+
 var (
 	availableLogLevels = []string{
 		logLevelAll,
@@ -125,6 +152,9 @@ var (
 func init() {
 	klog.InitFlags(flagset)
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
+	flagset.StringVar(&cfg.ServerTLSConfig.CertFile, "web.cert-file", operatorTLSDir+"/tls.crt", "Cert file to be used for operator web server endpoints.")
+	flagset.StringVar(&cfg.ServerTLSConfig.KeyFile, "web.key-file", operatorTLSDir+"/tls.key", "Key file to be used for operator web server endpoints.")
+	flagset.StringVar(&cfg.ServerTLSConfig.ClientCAFile, "web.client-ca-file", operatorTLSDir+"/tls-ca.crt", "Client CA certificate file to be used for operator web server endpoints.")
 	flagset.StringVar(&cfg.Host, "apiserver", "", "API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.")
 	flagset.StringVar(&cfg.TLSConfig.CertFile, "cert-file", "", " - NOT RECOMMENDED FOR PRODUCTION - Path to public TLS certificate file.")
 	flagset.StringVar(&cfg.TLSConfig.KeyFile, "key-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.")
@@ -247,8 +277,23 @@ func Main() int {
 	admit.Register(mux)
 	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
-		fmt.Fprint(os.Stderr, "listening port 8080 failed", err)
+		fmt.Fprint(os.Stderr, "listening failed", cfg.ListenAddress, err)
 		return 1
+	}
+
+	useTLS := checkTLSFilesExist(cfg.ServerTLSConfig)
+	tlsConfig := &tls.Config{}
+	if useTLS {
+		if info, err := os.Stat(cfg.ServerTLSConfig.ClientCAFile); err == nil && info.Mode().IsRegular() {
+			caCert, err := ioutil.ReadFile(cfg.ServerTLSConfig.ClientCAFile)
+			if err != nil {
+				fmt.Fprint(os.Stderr, "invalid client CA certificate", err)
+				return 1
+			}
+			caCertPool := x509.NewCertPool()
+			caCertPool.AppendCertsFromPEM(caCert)
+			tlsConfig.RootCAs = caCertPool
+		}
 	}
 
 	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
@@ -288,7 +333,13 @@ func Main() int {
 	wg.Go(func() error { return to.Run(ctx.Done()) })
 
 	srv := &http.Server{Handler: mux}
-	wg.Go(serve(srv, l, logger))
+
+	if useTLS {
+		srv.TLSConfig = tlsConfig
+		wg.Go(serveTLS(srv, l, logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile))
+	} else {
+		wg.Go(serve(srv, l, logger))
+	}
 
 	term := make(chan os.Signal)
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)

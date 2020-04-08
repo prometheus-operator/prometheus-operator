@@ -138,6 +138,7 @@ type Config struct {
 	ListenAddress                 string
 	TLSInsecure                   bool
 	TLSConfig                     rest.TLSClientConfig
+	ServerTLSConfig               operator.TLSServerConfig
 	ConfigReloaderImage           string
 	ConfigReloaderCPU             string
 	ConfigReloaderMemory          string
