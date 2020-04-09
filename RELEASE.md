@@ -1,3 +1,15 @@
+# Release schedule
+
+Following [Prometheus](https://github.com/prometheus/prometheus/blob/master/RELEASE.md) and [Thanos](https://github.com/thanos-io/thanos/blob/master/docs/release-process.md), this project aims for a predictible release schedule.
+
+Release cadence of first pre-releases being cut is 6 weeks.
+
+| Release | Date of first pre-release (year-month-day) | Release shepherd                            |
+|---------|--------------------------------------------|---------------------------------------------|
+| v0.39   | 2020-05-06                                 | Sergiusz Urbaniak (GitHub: @s-urbaniak)     |
+| v0.40   | 2020-06-17                                 | **searching for volunteer**                 |
+| v0.41   | 2020-07-29                                 | **searching for volunteer**                 |
+
 # How to cut a new release
 
 > This guide is strongly based on the [Prometheus release instructions](https://github.com/prometheus/prometheus/wiki/HOWTO-cut-a-new-release).
