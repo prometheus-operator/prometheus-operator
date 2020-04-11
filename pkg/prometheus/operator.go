@@ -133,6 +133,7 @@ func (labels *Labels) Set(value string) error {
 // Config defines configuration parameters for the Operator.
 type Config struct {
 	Host                          string
+	ClusterDomain                 string
 	KubeletObject                 string
 	ListenAddress                 string
 	TLSInsecure                   bool
