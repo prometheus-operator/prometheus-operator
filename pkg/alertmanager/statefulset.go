@@ -331,8 +331,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	if config.ClusterDomain != "" {
 		clusterPeerDomain = fmt.Sprintf("%s.%s.svc.%s.", governingServiceName, a.Namespace, config.ClusterDomain)
 	} else {
-		// The default DNS search path will resolve this to the cluster domain
-		clusterPeerDomain = fmt.Sprintf("%s.%s", governingServiceName, a.Namespace)
+		// The default DNS search path is .svc.<cluster domain>
+		clusterPeerDomain = governingServiceName
 	}
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
 		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s:9094", prefixedName(a.Name), i, clusterPeerDomain))

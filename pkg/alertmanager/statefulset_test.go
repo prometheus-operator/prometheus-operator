@@ -310,7 +310,7 @@ func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
 
 	found := false
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
-	expectedArg := "--cluster.peer=alertmanager-alertmanager-0.alertmanager-operated.monitoring:9094"
+	expectedArg := "--cluster.peer=alertmanager-alertmanager-0.alertmanager-operated:9094"
 	for _, arg := range amArgs {
 		if arg == expectedArg {
 			found = true
