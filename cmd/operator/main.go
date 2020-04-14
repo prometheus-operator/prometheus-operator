@@ -17,11 +17,9 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -29,6 +27,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/coreos/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/coreos/prometheus-operator/pkg/alertmanager"
@@ -39,6 +38,7 @@ import (
 	thanoscontroller "github.com/coreos/prometheus-operator/pkg/thanos"
 	"github.com/coreos/prometheus-operator/pkg/version"
 
+	rbacproxytls "github.com/brancz/kube-rbac-proxy/pkg/tls"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
@@ -63,7 +63,7 @@ const (
 )
 
 const (
-	operatorTLSDir = "/etc/tls/private"
+	defaultOperatorTLSDir = "/etc/tls/private"
 )
 
 var (
@@ -110,6 +110,16 @@ func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() er
 	}
 }
 
+func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
+	return func() error {
+		logger.Log("msg", "Staring secure server on "+listener.Addr().String())
+		if err := srv.ServeTLS(listener, "", ""); err != http.ErrServerClosed {
+			return err
+		}
+		return nil
+	}
+}
+
 func checkTLSFilesExist(config operator.TLSServerConfig) bool {
 	if info, err := os.Stat(config.CertFile); os.IsNotExist(err) || info.IsDir() {
 		return false
@@ -118,16 +128,6 @@ func checkTLSFilesExist(config operator.TLSServerConfig) bool {
 		return false
 	}
 	return true
-}
-
-func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger, certFile, keyFile string) func() error {
-	return func() error {
-		logger.Log("msg", "Staring secure server on "+listener.Addr().String())
-		if err := srv.ServeTLS(listener, certFile, keyFile); err != http.ErrServerClosed {
-			return err
-		}
-		return nil
-	}
 }
 
 var (
@@ -146,15 +146,24 @@ var (
 	cfg = prometheuscontroller.Config{
 		CrdKinds: monitoringv1.DefaultCrdKinds,
 	}
+	rawTLSCipherSuites string
+
 	flagset = flag.CommandLine
 )
 
 func init() {
 	klog.InitFlags(flagset)
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
-	flagset.StringVar(&cfg.ServerTLSConfig.CertFile, "web.cert-file", operatorTLSDir+"/tls.crt", "Cert file to be used for operator web server endpoints.")
-	flagset.StringVar(&cfg.ServerTLSConfig.KeyFile, "web.key-file", operatorTLSDir+"/tls.key", "Key file to be used for operator web server endpoints.")
-	flagset.StringVar(&cfg.ServerTLSConfig.ClientCAFile, "web.client-ca-file", operatorTLSDir+"/tls-ca.crt", "Client CA certificate file to be used for operator web server endpoints.")
+	flagset.StringVar(&cfg.ServerTLSConfig.CertFile, "web.cert-file", defaultOperatorTLSDir+"/tls.crt", "Cert file to be used for operator web server endpoints.")
+	flagset.StringVar(&cfg.ServerTLSConfig.KeyFile, "web.key-file", defaultOperatorTLSDir+"/tls.key", "Private key matching the cert file to be used for operator web server endpoints.")
+	flagset.StringVar(&cfg.ServerTLSConfig.ClientCAFile, "web.client-ca-file", defaultOperatorTLSDir+"/tls-ca.crt", "Client CA certificate file to be used for operator web server endpoints.")
+	flagset.DurationVar(&cfg.ServerTLSConfig.ReloadInterval, "web.tls-reload-interval", time.Minute, "The interval at which to watch for TLS certificate changes, by default set to 1 minute. (default 1m0s).")
+	flag.StringVar(&cfg.ServerTLSConfig.MinVersion, "tls-min-version", "VersionTLS13",
+		"Minimum TLS version supported. Value must match version names from https://golang.org/pkg/crypto/tls/#pkg-constants.")
+	flag.StringVar(&rawTLSCipherSuites, "tls-cipher-suites", "", "Comma-separated list of cipher suites for the server."+
+		" Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants)."+
+		"If omitted, the default Go cipher suites will be used."+
+		"Note that TLS 1.3 ciphersuites are not configurable.")
 	flagset.StringVar(&cfg.Host, "apiserver", "", "API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.")
 	flagset.StringVar(&cfg.TLSConfig.CertFile, "cert-file", "", " - NOT RECOMMENDED FOR PRODUCTION - Path to public TLS certificate file.")
 	flagset.StringVar(&cfg.TLSConfig.KeyFile, "key-file", "", "- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.")
@@ -281,19 +290,20 @@ func Main() int {
 		return 1
 	}
 
-	useTLS := checkTLSFilesExist(cfg.ServerTLSConfig)
-	tlsConfig := &tls.Config{}
-	if useTLS {
-		if info, err := os.Stat(cfg.ServerTLSConfig.ClientCAFile); err == nil && info.Mode().IsRegular() {
-			caCert, err := ioutil.ReadFile(cfg.ServerTLSConfig.ClientCAFile)
-			if err != nil {
-				fmt.Fprint(os.Stderr, "invalid client CA certificate", err)
-				return 1
-			}
-			caCertPool := x509.NewCertPool()
-			caCertPool.AppendCertsFromPEM(caCert)
-			tlsConfig.RootCAs = caCertPool
+	var tlsConfig *tls.Config = nil
+	if checkTLSFilesExist(cfg.ServerTLSConfig) {
+		if rawTLSCipherSuites != "" {
+			cfg.ServerTLSConfig.CipherSuites = strings.Split(rawTLSCipherSuites, ",")
 		}
+		tlsConfig, err = operator.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
+			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
+		if tlsConfig == nil || err != nil {
+			fmt.Fprint(os.Stderr, "error loading TLS config", err)
+			return 1
+		}
+	} else {
+		level.Debug(logger).Log("msg", "TLS configuration not found, using insecure http connection",
+			"certFile", cfg.ServerTLSConfig.CertFile, "keyFile", cfg.ServerTLSConfig.KeyFile)
 	}
 
 	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{
@@ -332,13 +342,31 @@ func Main() int {
 	wg.Go(func() error { return ao.Run(ctx.Done()) })
 	wg.Go(func() error { return to.Run(ctx.Done()) })
 
-	srv := &http.Server{Handler: mux}
+	if tlsConfig != nil {
+		r, err := rbacproxytls.NewCertReloader(
+			cfg.ServerTLSConfig.CertFile,
+			cfg.ServerTLSConfig.KeyFile,
+			cfg.ServerTLSConfig.ReloadInterval,
+		)
+		if err != nil {
+			fmt.Fprint(os.Stderr, "failed to initialize certificate reloader", err)
+			return 1
+		}
 
-	if useTLS {
-		srv.TLSConfig = tlsConfig
-		wg.Go(serveTLS(srv, l, logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile))
-	} else {
+		tlsConfig.GetCertificate = r.GetCertificate
+
+		wg.Go(func() error {
+			return r.Watch(ctx)
+		})
+	}
+	srv := &http.Server{
+		Handler:   mux,
+		TLSConfig: tlsConfig,
+	}
+	if srv.TLSConfig == nil {
 		wg.Go(serve(srv, l, logger))
+	} else {
+		wg.Go(serveTLS(srv, l, logger))
 	}
 
 	term := make(chan os.Signal)

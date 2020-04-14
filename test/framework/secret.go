@@ -25,7 +25,7 @@ func CreateSecretWithCert(kubeClient kubernetes.Interface, certBytes, keyBytes [
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
 		Type:       corev1.SecretType("Opaque"),
-		Data:       map[string][]byte{"cert": certBytes, "key": keyBytes}}
+		Data:       map[string][]byte{"tls.crt": certBytes, "tls.key": keyBytes}}
 
 	_, err := kubeClient.CoreV1().Secrets(ns).Create(secret)
 	if err != nil {

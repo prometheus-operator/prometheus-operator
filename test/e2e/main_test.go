@@ -95,6 +95,7 @@ func TestAllNS(t *testing.T) {
 	}
 
 	t.Run("TestCRDs", testCRDs)
+	t.Run("TestServerTLS", testServerTLS(t, ns))
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
@@ -122,8 +123,8 @@ func TestAllNS(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to retrieve restart count of Prometheus Operator pod: %v", err)
 	}
-	if len(restarts) != 2 {
-		t.Fatalf("expected to have 2 containers but got %d", len(restarts))
+	if len(restarts) != 1 {
+		t.Fatalf("expected to have 1 container but got %d", len(restarts))
 	}
 	for _, restart := range restarts {
 		if restart != 0 {
@@ -271,5 +272,25 @@ func TestAlertmanagerInstanceNs(t *testing.T) {
 
 	for name, f := range testFuncs {
 		t.Run(name, f)
+	}
+}
+
+const (
+	prometheusOperatorServiceName = "prometheus-operator"
+)
+
+func testServerTLS(t *testing.T, namespace string) func(t *testing.T) {
+
+	return func(t *testing.T) {
+		if err := operatorFramework.WaitForServiceReady(framework.KubeClient, namespace, prometheusOperatorServiceName); err != nil {
+			t.Fatal("waiting for prometheus operator service: ", err)
+		}
+
+		operatorService := framework.KubeClient.CoreV1().Services(namespace)
+		request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/healthz", make(map[string]string))
+		_, err := request.DoRaw()
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 }
