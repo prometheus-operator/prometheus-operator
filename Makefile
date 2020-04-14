@@ -1,7 +1,7 @@
 SHELL=/bin/bash -o pipefail
 
-OS?=linux
-ARCH?=amd64
+OS?=$(shell go env GOOS)
+ARCH?=$(shell go env GOARCH)
 
 GO_PKG=github.com/coreos/prometheus-operator
 REPO?=quay.io/coreos/prometheus-operator
