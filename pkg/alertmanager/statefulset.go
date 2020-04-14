@@ -327,8 +327,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	podLabels["app"] = "alertmanager"
 	podLabels["alertmanager"] = a.Name
 
+	var clusterPeerDomain string
+	if config.ClusterDomain != "" {
+		clusterPeerDomain = fmt.Sprintf("%s.%s.svc.%s.", governingServiceName, a.Namespace, config.ClusterDomain)
+	} else {
+		// The default DNS search path is .svc.<cluster domain>
+		clusterPeerDomain = governingServiceName
+	}
 	for i := int32(0); i < *a.Spec.Replicas; i++ {
-		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s.%s.svc:9094", prefixedName(a.Name), i, governingServiceName, a.Namespace))
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer=%s-%d.%s:9094", prefixedName(a.Name), i, clusterPeerDomain))
 	}
 
 	for _, peer := range a.Spec.AdditionalPeers {

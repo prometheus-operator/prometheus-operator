@@ -74,6 +74,7 @@ type Operator struct {
 type Config struct {
 	Host                         string
 	LocalHost                    string
+	ClusterDomain                string
 	ConfigReloaderImage          string
 	ConfigReloaderCPU            string
 	ConfigReloaderMemory         string
@@ -118,6 +119,7 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 		config: Config{
 			Host:                         c.Host,
 			LocalHost:                    c.LocalHost,
+			ClusterDomain:                c.ClusterDomain,
 			ConfigReloaderImage:          c.ConfigReloaderImage,
 			ConfigReloaderCPU:            c.ConfigReloaderCPU,
 			ConfigReloaderMemory:         c.ConfigReloaderMemory,

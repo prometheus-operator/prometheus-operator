@@ -290,6 +290,73 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 	}
 }
 
+func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
+	replicas := int32(1)
+	a := monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "alertmanager",
+			Namespace: "monitoring",
+		},
+		Spec: monitoringv1.AlertmanagerSpec{
+			Version:  "v0.15.3",
+			Replicas: &replicas,
+		},
+	}
+
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := false
+	amArgs := statefulSet.Template.Spec.Containers[0].Args
+	expectedArg := "--cluster.peer=alertmanager-alertmanager-0.alertmanager-operated:9094"
+	for _, arg := range amArgs {
+		if arg == expectedArg {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatalf("Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
+	}
+}
+
+func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
+	replicas := int32(1)
+	a := monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "alertmanager",
+			Namespace: "monitoring",
+		},
+		Spec: monitoringv1.AlertmanagerSpec{
+			Version:  "v0.15.3",
+			Replicas: &replicas,
+		},
+	}
+
+	configWithClusterDomain := defaultTestConfig
+	configWithClusterDomain.ClusterDomain = "custom.cluster"
+
+	statefulSet, err := makeStatefulSetSpec(&a, configWithClusterDomain)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := false
+	amArgs := statefulSet.Template.Spec.Containers[0].Args
+	expectedArg := "--cluster.peer=alertmanager-alertmanager-0.alertmanager-operated.monitoring.svc.custom.cluster.:9094"
+	for _, arg := range amArgs {
+		if arg == expectedArg {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatalf("Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
+	}
+}
+
 func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
 	a.Spec.Version = "v0.15.3"
