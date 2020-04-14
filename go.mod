@@ -6,8 +6,6 @@ require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
 	github.com/campoy/embedmd v1.0.0
-	github.com/coreos/bbolt v1.3.1-coreos.6 // indirect
-	github.com/coreos/etcd v3.3.15+incompatible // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-bindata/go-bindata/v3 v3.1.3
 	github.com/go-kit/kit v0.9.0
@@ -34,7 +32,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/code-generator v0.17.3
 	k8s.io/klog v1.0.0
-	sigs.k8s.io/controller-tools v0.2.8
+	sigs.k8s.io/controller-tools v0.2.4
 )
 
 replace (

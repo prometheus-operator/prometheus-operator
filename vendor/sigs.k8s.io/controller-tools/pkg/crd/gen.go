@@ -104,7 +104,7 @@ func (g Generator) Generate(ctx *genall.GenerationContext) error {
 		crdVersions = []string{"v1beta1"}
 	}
 
-	for groupKind := range kubeKinds {
+	for _, groupKind := range kubeKinds {
 		parser.NeedCRDFor(groupKind, g.MaxDescLen)
 		crdRaw := parser.CustomResourceDefinitions[groupKind]
 		addAttribution(&crdRaw)
@@ -206,9 +206,9 @@ func FindMetav1(roots []*loader.Package) *loader.Package {
 // FindKubeKinds locates all types that contain TypeMeta and ObjectMeta
 // (and thus may be a Kubernetes object), and returns the corresponding
 // group-kinds.
-func FindKubeKinds(parser *Parser, metav1Pkg *loader.Package) map[schema.GroupKind]struct{} {
+func FindKubeKinds(parser *Parser, metav1Pkg *loader.Package) []schema.GroupKind {
 	// TODO(directxman12): technically, we should be finding metav1 per-package
-	kubeKinds := map[schema.GroupKind]struct{}{}
+	var kubeKinds []schema.GroupKind
 	for typeIdent, info := range parser.Types {
 		hasObjectMeta := false
 		hasTypeMeta := false
@@ -257,7 +257,7 @@ func FindKubeKinds(parser *Parser, metav1Pkg *loader.Package) map[schema.GroupKi
 			Group: parser.GroupVersions[pkg].Group,
 			Kind:  typeIdent.Name,
 		}
-		kubeKinds[groupKind] = struct{}{}
+		kubeKinds = append(kubeKinds, groupKind)
 	}
 
 	return kubeKinds

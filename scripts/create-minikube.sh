@@ -8,8 +8,8 @@ set -u
 # print each command before executing it
 set -x
 
-export MINIKUBE_VERSION=v1.2.0
-export KUBERNETES_VERSION=v1.14.5
+export MINIKUBE_VERSION=v1.9.2
+export KUBERNETES_VERSION=v1.18.1
 
 sudo mount --make-rshared /
 sudo mount --make-rshared /proc
@@ -34,20 +34,34 @@ minikube config set WantUpdateNotification false
 minikube config set WantReportErrorPrompt false
 minikube config set WantNoneDriverWarning false
 minikube config set vm-driver none
+minikube config view
+
+# Setup Docker according to https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
+cat > daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+sudo mkdir -p /etc/docker
+sudo mv daemon.json /etc/docker/daemon.json
+
+# Restart Docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+docker info
 
 minikube version
-sudo minikube start --kubernetes-version=$KUBERNETES_VERSION --extra-config=apiserver.authorization-mode=RBAC
+sudo minikube start --kubernetes-version=$KUBERNETES_VERSION
 sudo chown -R travis: /home/travis/.minikube/
 
 minikube update-context
 
 # waiting for node(s) to be ready
 JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
-
-# waiting for kube-addon-manager to be ready
-JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
-
-# waiting for kube-dns to be ready
-JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
 
 kubectl apply -f scripts/minikube-rbac.yaml
