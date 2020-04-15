@@ -356,7 +356,20 @@ func Main() int {
 		tlsConfig.GetCertificate = r.GetCertificate
 
 		wg.Go(func() error {
-			return r.Watch(ctx)
+			t := time.NewTicker(cfg.ServerTLSConfig.ReloadInterval)
+			for {
+				select {
+				case <-t.C:
+				case <-ctx.Done():
+					return nil
+				}
+				if err := r.Watch(ctx); err != nil {
+					level.Warn(logger).Log("msg", "error reloading server TLS certificate",
+						"err", err)
+				} else {
+					return nil
+				}
+			}
 		})
 	}
 	srv := &http.Server{
