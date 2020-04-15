@@ -1093,6 +1093,10 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, spec
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
 
+		if spec.Name != "" && version.GTE(semver.MustParse("2.15.0")) {
+			cfg = append(cfg, yaml.MapItem{Key: "name", Value: spec.Name})
+		}
+
 		if len(spec.RequiredMatchers) > 0 {
 			cfg = append(cfg, yaml.MapItem{Key: "required_matchers", Value: stringMapToMapSlice(spec.RequiredMatchers)})
 		}
@@ -1151,6 +1155,10 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, spe
 		cfg := yaml.MapSlice{
 			{Key: "url", Value: spec.URL},
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
+		}
+
+		if spec.Name != "" && version.GTE(semver.MustParse("2.15.0")) {
+			cfg = append(cfg, yaml.MapItem{Key: "name", Value: spec.Name})
 		}
 
 		if spec.WriteRelabelConfigs != nil {

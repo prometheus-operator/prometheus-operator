@@ -438,11 +438,15 @@ type ThanosSpec struct {
 // RemoteWriteSpec defines the remote_write configuration for prometheus.
 // +k8s:openapi-gen=true
 type RemoteWriteSpec struct {
-	//The URL of the endpoint to send samples to.
+	// The URL of the endpoint to send samples to.
 	URL string `json:"url"`
-	//Timeout for requests to the remote write endpoint.
+	// The name of the remote write queue, must be unique if specified. The
+	// name is used in metrics and logging in order to differentiate queues.
+	// Only valid in Prometheus versions 2.15.0 and newer.
+	Name string `json:"name,omitempty"`
+	// Timeout for requests to the remote write endpoint.
 	RemoteTimeout string `json:"remoteTimeout,omitempty"`
-	//The list of remote write relabel configurations.
+	// The list of remote write relabel configurations.
 	WriteRelabelConfigs []RelabelConfig `json:"writeRelabelConfigs,omitempty"`
 	//BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
@@ -452,7 +456,7 @@ type RemoteWriteSpec struct {
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// TLS Config to use for remote write.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-	//Optional ProxyURL
+	// Optional ProxyURL
 	ProxyURL string `json:"proxyUrl,omitempty"`
 	// QueueConfig allows tuning of the remote write queue parameters.
 	QueueConfig *QueueConfig `json:"queueConfig,omitempty"`
@@ -483,17 +487,21 @@ type QueueConfig struct {
 // RemoteReadSpec defines the remote_read configuration for prometheus.
 // +k8s:openapi-gen=true
 type RemoteReadSpec struct {
-	//The URL of the endpoint to send samples to.
+	// The URL of the endpoint to send samples to.
 	URL string `json:"url"`
-	//An optional list of equality matchers which have to be present
+	// The name of the remote read queue, must be unique if specified. The name
+	// is used in metrics and logging in order to differentiate read
+	// configurations.  Only valid in Prometheus versions 2.15.0 and newer.
+	Name string `json:"name,omitempty"`
+	// An optional list of equality matchers which have to be present
 	// in a selector to query the remote read endpoint.
 	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
-	//Timeout for requests to the remote read endpoint.
+	// Timeout for requests to the remote read endpoint.
 	RemoteTimeout string `json:"remoteTimeout,omitempty"`
-	//Whether reads should be made for queries for time ranges that
+	// Whether reads should be made for queries for time ranges that
 	// the local storage should have complete data for.
 	ReadRecent bool `json:"readRecent,omitempty"`
-	//BasicAuth for the URL.
+	// BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// bearer token for remote read.
 	BearerToken string `json:"bearerToken,omitempty"`
@@ -501,7 +509,7 @@ type RemoteReadSpec struct {
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// TLS Config to use for remote read.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-	//Optional ProxyURL
+	// Optional ProxyURL
 	ProxyURL string `json:"proxyUrl,omitempty"`
 }
 
