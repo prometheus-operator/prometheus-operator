@@ -1,5 +1,11 @@
 ## Next release
 
+## 0.38.1 / 2020-04-16
+
+* [BUGFIX] Fix definition of `web` service port for Alertmanager (#3125)
+* [BUGFIX] Support external alert query URL for THanos Ruler (#3129)
+* [BUGFIX] Do not modify the PrometheusRule cache object (#3105)
+
 ## 0.38.0 / 2020-03-20
 
 * [CHANGE] Changed ThanosRuler custom resource field alertmanagersURL type from string to []string` (#3067)

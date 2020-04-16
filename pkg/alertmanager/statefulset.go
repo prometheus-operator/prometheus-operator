@@ -190,7 +190,7 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 				{
 					Name:       p.Spec.PortName,
 					Port:       9093,
-					TargetPort: intstr.FromInt(9093),
+					TargetPort: intstr.FromString(p.Spec.PortName),
 					Protocol:   v1.ProtocolTCP,
 				},
 				{
