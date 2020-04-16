@@ -17,6 +17,8 @@
 package fake
 
 import (
+	"context"
+
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -37,7 +39,7 @@ var servicemonitorsResource = schema.GroupVersionResource{Group: "monitoring.cor
 var servicemonitorsKind = schema.GroupVersionKind{Group: "monitoring.coreos.com", Version: "v1", Kind: "ServiceMonitor"}
 
 // Get takes name of the serviceMonitor, and returns the corresponding serviceMonitor object, and an error if there is any.
-func (c *FakeServiceMonitors) Get(name string, options v1.GetOptions) (result *monitoringv1.ServiceMonitor, err error) {
+func (c *FakeServiceMonitors) Get(ctx context.Context, name string, options v1.GetOptions) (result *monitoringv1.ServiceMonitor, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(servicemonitorsResource, c.ns, name), &monitoringv1.ServiceMonitor{})
 
@@ -48,7 +50,7 @@ func (c *FakeServiceMonitors) Get(name string, options v1.GetOptions) (result *m
 }
 
 // List takes label and field selectors, and returns the list of ServiceMonitors that match those selectors.
-func (c *FakeServiceMonitors) List(opts v1.ListOptions) (result *monitoringv1.ServiceMonitorList, err error) {
+func (c *FakeServiceMonitors) List(ctx context.Context, opts v1.ListOptions) (result *monitoringv1.ServiceMonitorList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(servicemonitorsResource, servicemonitorsKind, c.ns, opts), &monitoringv1.ServiceMonitorList{})
 
@@ -70,14 +72,14 @@ func (c *FakeServiceMonitors) List(opts v1.ListOptions) (result *monitoringv1.Se
 }
 
 // Watch returns a watch.Interface that watches the requested serviceMonitors.
-func (c *FakeServiceMonitors) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeServiceMonitors) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(servicemonitorsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a serviceMonitor and creates it.  Returns the server's representation of the serviceMonitor, and an error, if there is any.
-func (c *FakeServiceMonitors) Create(serviceMonitor *monitoringv1.ServiceMonitor) (result *monitoringv1.ServiceMonitor, err error) {
+func (c *FakeServiceMonitors) Create(ctx context.Context, serviceMonitor *monitoringv1.ServiceMonitor, opts v1.CreateOptions) (result *monitoringv1.ServiceMonitor, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(servicemonitorsResource, c.ns, serviceMonitor), &monitoringv1.ServiceMonitor{})
 
@@ -88,7 +90,7 @@ func (c *FakeServiceMonitors) Create(serviceMonitor *monitoringv1.ServiceMonitor
 }
 
 // Update takes the representation of a serviceMonitor and updates it. Returns the server's representation of the serviceMonitor, and an error, if there is any.
-func (c *FakeServiceMonitors) Update(serviceMonitor *monitoringv1.ServiceMonitor) (result *monitoringv1.ServiceMonitor, err error) {
+func (c *FakeServiceMonitors) Update(ctx context.Context, serviceMonitor *monitoringv1.ServiceMonitor, opts v1.UpdateOptions) (result *monitoringv1.ServiceMonitor, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(servicemonitorsResource, c.ns, serviceMonitor), &monitoringv1.ServiceMonitor{})
 
@@ -99,7 +101,7 @@ func (c *FakeServiceMonitors) Update(serviceMonitor *monitoringv1.ServiceMonitor
 }
 
 // Delete takes name of the serviceMonitor and deletes it. Returns an error if one occurs.
-func (c *FakeServiceMonitors) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeServiceMonitors) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(servicemonitorsResource, c.ns, name), &monitoringv1.ServiceMonitor{})
 
@@ -107,15 +109,15 @@ func (c *FakeServiceMonitors) Delete(name string, options *v1.DeleteOptions) err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeServiceMonitors) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(servicemonitorsResource, c.ns, listOptions)
+func (c *FakeServiceMonitors) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(servicemonitorsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &monitoringv1.ServiceMonitorList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched serviceMonitor.
-func (c *FakeServiceMonitors) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *monitoringv1.ServiceMonitor, err error) {
+func (c *FakeServiceMonitors) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1.ServiceMonitor, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(servicemonitorsResource, c.ns, name, pt, data, subresources...), &monitoringv1.ServiceMonitor{})
 

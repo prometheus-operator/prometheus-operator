@@ -15,6 +15,7 @@
 package alertmanager
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -139,11 +140,11 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 						options.LabelSelector = o.config.AlertManagerSelector
-						return o.mclient.MonitoringV1().Alertmanagers(namespace).List(options)
+						return o.mclient.MonitoringV1().Alertmanagers(namespace).List(context.TODO(), options)
 					},
 					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 						options.LabelSelector = o.config.AlertManagerSelector
-						return o.mclient.MonitoringV1().Alertmanagers(namespace).Watch(options)
+						return o.mclient.MonitoringV1().Alertmanagers(namespace).Watch(context.TODO(), options)
 					},
 				}
 			}),
@@ -479,7 +480,7 @@ func (c *Operator) sync(key string) error {
 			return errors.Wrap(err, "making the statefulset, to create, failed")
 		}
 		operator.SanitizeSTS(sset)
-		if _, err := ssetClient.Create(sset); err != nil {
+		if _, err := ssetClient.Create(context.TODO(), sset, metav1.CreateOptions{}); err != nil {
 			return errors.Wrap(err, "creating statefulset failed")
 		}
 		return nil
@@ -491,14 +492,14 @@ func (c *Operator) sync(key string) error {
 	}
 
 	operator.SanitizeSTS(sset)
-	_, err = ssetClient.Update(sset)
+	_, err = ssetClient.Update(context.TODO(), sset, metav1.UpdateOptions{})
 	sErr, ok := err.(*apierrors.StatusError)
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
 		c.metrics.StsDeleteCreateCounter().Inc()
 		level.Info(c.logger).Log("msg", "resolving illegal update of Alertmanager StatefulSet", "details", sErr.ErrStatus.Details)
 		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(sset.GetName(), &metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+		if err := ssetClient.Delete(context.TODO(), sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
 		}
 		return nil
@@ -537,11 +538,11 @@ func ListOptions(name string) metav1.ListOptions {
 func AlertmanagerStatus(kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
 	res := &monitoringv1.AlertmanagerStatus{Paused: a.Spec.Paused}
 
-	pods, err := kclient.CoreV1().Pods(a.Namespace).List(ListOptions(a.Name))
+	pods, err := kclient.CoreV1().Pods(a.Namespace).List(context.TODO(), ListOptions(a.Name))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.AppsV1().StatefulSets(a.Namespace).Get(statefulSetNameFromAlertmanagerName(a.Name), metav1.GetOptions{})
+	sset, err := kclient.AppsV1().StatefulSets(a.Namespace).Get(context.TODO(), statefulSetNameFromAlertmanagerName(a.Name), metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 	}
@@ -604,7 +605,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 	// Update the replica count to 0 and wait for all pods to be deleted.
 	ssetClient := c.kclient.AppsV1().StatefulSets(sset.Namespace)
 
-	if _, err := ssetClient.Update(sset); err != nil {
+	if _, err := ssetClient.Update(context.TODO(), sset, metav1.UpdateOptions{}); err != nil {
 		return errors.Wrap(err, "updating statefulset for scale-down failed")
 	}
 
@@ -613,7 +614,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 	// TODO(fabxc): temporary solution until StatefulSet status provides
 	// necessary info to know whether scale-down completed.
 	for {
-		pods, err := podClient.List(ListOptions(alertmanagerNameFromStatefulSetName(sset.Name)))
+		pods, err := podClient.List(context.TODO(), ListOptions(alertmanagerNameFromStatefulSetName(sset.Name)))
 		if err != nil {
 			return errors.Wrap(err, "retrieving pods of statefulset failed")
 		}
@@ -624,7 +625,7 @@ func (c *Operator) destroyAlertmanager(key string) error {
 	}
 
 	// StatefulSet scaled down, we can delete it.
-	if err := ssetClient.Delete(sset.Name, nil); err != nil {
+	if err := ssetClient.Delete(context.TODO(), sset.Name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, "deleting statefulset failed")
 	}
 
@@ -639,19 +640,19 @@ func (c *Operator) createCRDs() error {
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()
 
 	for _, crd := range crds {
-		oldCRD, err := crdClient.Get(crd.Name, metav1.GetOptions{})
+		oldCRD, err := crdClient.Get(context.TODO(), crd.Name, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return errors.Wrapf(err, "getting CRD: %s", crd.Spec.Names.Kind)
 		}
 		if apierrors.IsNotFound(err) {
-			if _, err := crdClient.Create(crd); err != nil {
+			if _, err := crdClient.Create(context.TODO(), crd, metav1.CreateOptions{}); err != nil {
 				return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
 			}
 			level.Info(c.logger).Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
 		}
 		if err == nil {
 			crd.ResourceVersion = oldCRD.ResourceVersion
-			if _, err := crdClient.Update(crd); err != nil {
+			if _, err := crdClient.Update(context.TODO(), crd, metav1.UpdateOptions{}); err != nil {
 				return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
 			}
 			level.Info(c.logger).Log("msg", "CRD updated", "crd", crd.Spec.Names.Kind)
@@ -667,7 +668,7 @@ func (c *Operator) createCRDs() error {
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AlertmanagerAllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return c.mclient.MonitoringV1().Alertmanagers(namespace).List(options)
+						return c.mclient.MonitoringV1().Alertmanagers(namespace).List(context.TODO(), options)
 					},
 				}
 			}).List,

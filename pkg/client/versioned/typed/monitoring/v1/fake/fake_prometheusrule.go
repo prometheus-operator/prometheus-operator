@@ -17,6 +17,8 @@
 package fake
 
 import (
+	"context"
+
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -37,7 +39,7 @@ var prometheusrulesResource = schema.GroupVersionResource{Group: "monitoring.cor
 var prometheusrulesKind = schema.GroupVersionKind{Group: "monitoring.coreos.com", Version: "v1", Kind: "PrometheusRule"}
 
 // Get takes name of the prometheusRule, and returns the corresponding prometheusRule object, and an error if there is any.
-func (c *FakePrometheusRules) Get(name string, options v1.GetOptions) (result *monitoringv1.PrometheusRule, err error) {
+func (c *FakePrometheusRules) Get(ctx context.Context, name string, options v1.GetOptions) (result *monitoringv1.PrometheusRule, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(prometheusrulesResource, c.ns, name), &monitoringv1.PrometheusRule{})
 
@@ -48,7 +50,7 @@ func (c *FakePrometheusRules) Get(name string, options v1.GetOptions) (result *m
 }
 
 // List takes label and field selectors, and returns the list of PrometheusRules that match those selectors.
-func (c *FakePrometheusRules) List(opts v1.ListOptions) (result *monitoringv1.PrometheusRuleList, err error) {
+func (c *FakePrometheusRules) List(ctx context.Context, opts v1.ListOptions) (result *monitoringv1.PrometheusRuleList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(prometheusrulesResource, prometheusrulesKind, c.ns, opts), &monitoringv1.PrometheusRuleList{})
 
@@ -70,14 +72,14 @@ func (c *FakePrometheusRules) List(opts v1.ListOptions) (result *monitoringv1.Pr
 }
 
 // Watch returns a watch.Interface that watches the requested prometheusRules.
-func (c *FakePrometheusRules) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakePrometheusRules) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(prometheusrulesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a prometheusRule and creates it.  Returns the server's representation of the prometheusRule, and an error, if there is any.
-func (c *FakePrometheusRules) Create(prometheusRule *monitoringv1.PrometheusRule) (result *monitoringv1.PrometheusRule, err error) {
+func (c *FakePrometheusRules) Create(ctx context.Context, prometheusRule *monitoringv1.PrometheusRule, opts v1.CreateOptions) (result *monitoringv1.PrometheusRule, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(prometheusrulesResource, c.ns, prometheusRule), &monitoringv1.PrometheusRule{})
 
@@ -88,7 +90,7 @@ func (c *FakePrometheusRules) Create(prometheusRule *monitoringv1.PrometheusRule
 }
 
 // Update takes the representation of a prometheusRule and updates it. Returns the server's representation of the prometheusRule, and an error, if there is any.
-func (c *FakePrometheusRules) Update(prometheusRule *monitoringv1.PrometheusRule) (result *monitoringv1.PrometheusRule, err error) {
+func (c *FakePrometheusRules) Update(ctx context.Context, prometheusRule *monitoringv1.PrometheusRule, opts v1.UpdateOptions) (result *monitoringv1.PrometheusRule, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(prometheusrulesResource, c.ns, prometheusRule), &monitoringv1.PrometheusRule{})
 
@@ -99,7 +101,7 @@ func (c *FakePrometheusRules) Update(prometheusRule *monitoringv1.PrometheusRule
 }
 
 // Delete takes name of the prometheusRule and deletes it. Returns an error if one occurs.
-func (c *FakePrometheusRules) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakePrometheusRules) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(prometheusrulesResource, c.ns, name), &monitoringv1.PrometheusRule{})
 
@@ -107,15 +109,15 @@ func (c *FakePrometheusRules) Delete(name string, options *v1.DeleteOptions) err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakePrometheusRules) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(prometheusrulesResource, c.ns, listOptions)
+func (c *FakePrometheusRules) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(prometheusrulesResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &monitoringv1.PrometheusRuleList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched prometheusRule.
-func (c *FakePrometheusRules) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *monitoringv1.PrometheusRule, err error) {
+func (c *FakePrometheusRules) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1.PrometheusRule, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(prometheusrulesResource, c.ns, name, pt, data, subresources...), &monitoringv1.PrometheusRule{})
 

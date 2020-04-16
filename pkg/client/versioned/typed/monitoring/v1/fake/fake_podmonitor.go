@@ -17,6 +17,8 @@
 package fake
 
 import (
+	"context"
+
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -37,7 +39,7 @@ var podmonitorsResource = schema.GroupVersionResource{Group: "monitoring.coreos.
 var podmonitorsKind = schema.GroupVersionKind{Group: "monitoring.coreos.com", Version: "v1", Kind: "PodMonitor"}
 
 // Get takes name of the podMonitor, and returns the corresponding podMonitor object, and an error if there is any.
-func (c *FakePodMonitors) Get(name string, options v1.GetOptions) (result *monitoringv1.PodMonitor, err error) {
+func (c *FakePodMonitors) Get(ctx context.Context, name string, options v1.GetOptions) (result *monitoringv1.PodMonitor, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(podmonitorsResource, c.ns, name), &monitoringv1.PodMonitor{})
 
@@ -48,7 +50,7 @@ func (c *FakePodMonitors) Get(name string, options v1.GetOptions) (result *monit
 }
 
 // List takes label and field selectors, and returns the list of PodMonitors that match those selectors.
-func (c *FakePodMonitors) List(opts v1.ListOptions) (result *monitoringv1.PodMonitorList, err error) {
+func (c *FakePodMonitors) List(ctx context.Context, opts v1.ListOptions) (result *monitoringv1.PodMonitorList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(podmonitorsResource, podmonitorsKind, c.ns, opts), &monitoringv1.PodMonitorList{})
 
@@ -70,14 +72,14 @@ func (c *FakePodMonitors) List(opts v1.ListOptions) (result *monitoringv1.PodMon
 }
 
 // Watch returns a watch.Interface that watches the requested podMonitors.
-func (c *FakePodMonitors) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakePodMonitors) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(podmonitorsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a podMonitor and creates it.  Returns the server's representation of the podMonitor, and an error, if there is any.
-func (c *FakePodMonitors) Create(podMonitor *monitoringv1.PodMonitor) (result *monitoringv1.PodMonitor, err error) {
+func (c *FakePodMonitors) Create(ctx context.Context, podMonitor *monitoringv1.PodMonitor, opts v1.CreateOptions) (result *monitoringv1.PodMonitor, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(podmonitorsResource, c.ns, podMonitor), &monitoringv1.PodMonitor{})
 
@@ -88,7 +90,7 @@ func (c *FakePodMonitors) Create(podMonitor *monitoringv1.PodMonitor) (result *m
 }
 
 // Update takes the representation of a podMonitor and updates it. Returns the server's representation of the podMonitor, and an error, if there is any.
-func (c *FakePodMonitors) Update(podMonitor *monitoringv1.PodMonitor) (result *monitoringv1.PodMonitor, err error) {
+func (c *FakePodMonitors) Update(ctx context.Context, podMonitor *monitoringv1.PodMonitor, opts v1.UpdateOptions) (result *monitoringv1.PodMonitor, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(podmonitorsResource, c.ns, podMonitor), &monitoringv1.PodMonitor{})
 
@@ -99,7 +101,7 @@ func (c *FakePodMonitors) Update(podMonitor *monitoringv1.PodMonitor) (result *m
 }
 
 // Delete takes name of the podMonitor and deletes it. Returns an error if one occurs.
-func (c *FakePodMonitors) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakePodMonitors) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(podmonitorsResource, c.ns, name), &monitoringv1.PodMonitor{})
 
@@ -107,15 +109,15 @@ func (c *FakePodMonitors) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakePodMonitors) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(podmonitorsResource, c.ns, listOptions)
+func (c *FakePodMonitors) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(podmonitorsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &monitoringv1.PodMonitorList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched podMonitor.
-func (c *FakePodMonitors) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *monitoringv1.PodMonitor, err error) {
+func (c *FakePodMonitors) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1.PodMonitor, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(podmonitorsResource, c.ns, name, pt, data, subresources...), &monitoringv1.PodMonitor{})
 

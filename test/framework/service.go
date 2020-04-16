@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"time"
@@ -42,7 +43,7 @@ func MakeService(pathToYaml string) (*v1.Service, error) {
 func CreateServiceAndWaitUntilReady(kubeClient kubernetes.Interface, namespace string, service *v1.Service) (finalizerFn, error) {
 	finalizerFn := func() error { return DeleteServiceAndWaitUntilGone(kubeClient, namespace, service.Name) }
 
-	if _, err := kubeClient.CoreV1().Services(namespace).Create(service); err != nil {
+	if _, err := kubeClient.CoreV1().Services(namespace).Create(context.TODO(), service, metav1.CreateOptions{}); err != nil {
 		return finalizerFn, errors.Wrap(err, fmt.Sprintf("creating service %v failed", service.Name))
 	}
 
@@ -67,7 +68,7 @@ func WaitForServiceReady(kubeClient kubernetes.Interface, namespace string, serv
 }
 
 func DeleteServiceAndWaitUntilGone(kubeClient kubernetes.Interface, namespace string, serviceName string) error {
-	if err := kubeClient.CoreV1().Services(namespace).Delete(serviceName, nil); err != nil {
+	if err := kubeClient.CoreV1().Services(namespace).Delete(context.TODO(), serviceName, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting service %v failed", serviceName))
 	}
 
@@ -86,7 +87,7 @@ func DeleteServiceAndWaitUntilGone(kubeClient kubernetes.Interface, namespace st
 }
 
 func getEndpoints(kubeClient kubernetes.Interface, namespace, serviceName string) (*v1.Endpoints, error) {
-	endpoints, err := kubeClient.CoreV1().Endpoints(namespace).Get(serviceName, metav1.GetOptions{})
+	endpoints, err := kubeClient.CoreV1().Endpoints(namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("requesting endpoints for servce %v failed", serviceName))
 	}

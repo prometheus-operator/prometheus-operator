@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -28,7 +29,7 @@ const (
 
 // GetCRD gets a custom resource definition from the apiserver
 func (f *Framework) GetCRD(name string) (*v1beta1.CustomResourceDefinition, error) {
-	crd, err := f.APIServerClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(name, metav1.GetOptions{})
+	crd, err := f.APIServerClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("unable to get CRD with name %v", name))
 	}
@@ -37,7 +38,7 @@ func (f *Framework) GetCRD(name string) (*v1beta1.CustomResourceDefinition, erro
 
 // ListCRDs gets a list of custom resource definitions from the apiserver
 func (f *Framework) ListCRDs() (*v1beta1.CustomResourceDefinitionList, error) {
-	crds, err := f.APIServerClient.ApiextensionsV1beta1().CustomResourceDefinitions().List(metav1.ListOptions{})
+	crds, err := f.APIServerClient.ApiextensionsV1beta1().CustomResourceDefinitions().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("unable to list CRDs"))
 	}

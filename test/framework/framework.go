@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -280,35 +281,35 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 	}
 
 	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(opts)
+		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(context.TODO(), opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "Prometheus CRD not ready: %v\n")
 	}
 
 	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List(opts)
+		return f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List(context.TODO(), opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "ServiceMonitor CRD not ready: %v\n")
 	}
 
 	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (object runtime.Object, e error) {
-		return f.MonClientV1.PodMonitors(v1.NamespaceAll).List(opts)
+		return f.MonClientV1.PodMonitors(v1.NamespaceAll).List(context.TODO(), opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "PodMonitor CRD not ready: %v\n")
 	}
 
 	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(opts)
+		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(context.TODO(), opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "PrometheusRule CRD not ready: %v\n")
 	}
 
 	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(opts)
+		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(context.TODO(), opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "Alertmanager CRD not ready: %v\n")

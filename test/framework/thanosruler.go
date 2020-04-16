@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -40,7 +41,7 @@ func (f *Framework) MakeBasicThanosRuler(name string, replicas int32) *monitorin
 }
 
 func (f *Framework) CreateThanosRulerAndWaitUntilReady(ns string, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRuler, error) {
-	result, err := f.MonClientV1.ThanosRulers(ns).Create(tr)
+	result, err := f.MonClientV1.ThanosRulers(ns).Create(context.TODO(), tr, metav1.CreateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("creating %v ThanosRuler instances failed (%v): %v", tr.Spec.Replicas, tr.Name, err)
 	}
@@ -53,7 +54,7 @@ func (f *Framework) CreateThanosRulerAndWaitUntilReady(ns string, tr *monitoring
 }
 
 func (f *Framework) UpdateThanosRulerAndWaitUntilReady(ns string, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRuler, error) {
-	result, err := f.MonClientV1.ThanosRulers(ns).Update(tr)
+	result, err := f.MonClientV1.ThanosRulers(ns).Update(context.TODO(), tr, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -84,12 +85,12 @@ func (f *Framework) WaitForThanosRulerReady(tr *monitoringv1.ThanosRuler, timeou
 }
 
 func (f *Framework) DeleteThanosRulerAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClientV1.ThanosRulers(ns).Get(name, metav1.GetOptions{})
+	_, err := f.MonClientV1.ThanosRulers(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting ThanosRuler custom resource %v failed", name))
 	}
 
-	if err := f.MonClientV1.ThanosRulers(ns).Delete(name, nil); err != nil {
+	if err := f.MonClientV1.ThanosRulers(ns).Delete(context.TODO(), name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting ThanosRuler custom resource %v failed", name))
 	}
 

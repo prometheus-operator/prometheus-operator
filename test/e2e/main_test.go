@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"context"
 	"flag"
 	"log"
 	"os"
@@ -112,7 +113,7 @@ func TestAllNS(t *testing.T) {
 		"app.kubernetes.io/name": "prometheus-operator",
 	})).String()}
 
-	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(opts)
+	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.TODO(), opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -288,7 +289,7 @@ func testServerTLS(t *testing.T, namespace string) func(t *testing.T) {
 
 		operatorService := framework.KubeClient.CoreV1().Services(namespace)
 		request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/healthz", make(map[string]string))
-		_, err := request.DoRaw()
+		_, err := request.DoRaw(context.TODO())
 		if err != nil {
 			t.Fatal(err)
 		}
