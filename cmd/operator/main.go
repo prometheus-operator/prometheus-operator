@@ -120,16 +120,6 @@ func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func()
 	}
 }
 
-func checkTLSFilesExist(config operator.TLSServerConfig) bool {
-	if info, err := os.Stat(config.CertFile); os.IsNotExist(err) || info.IsDir() {
-		return false
-	}
-	if info, err := os.Stat(config.KeyFile); os.IsNotExist(err) || info.IsDir() {
-		return false
-	}
-	return true
-}
-
 var (
 	availableLogLevels = []string{
 		logLevelAll,
@@ -147,6 +137,7 @@ var (
 		CrdKinds: monitoringv1.DefaultCrdKinds,
 	}
 	rawTLSCipherSuites string
+	serverTLS          bool
 
 	flagset = flag.CommandLine
 )
@@ -154,6 +145,8 @@ var (
 func init() {
 	klog.InitFlags(flagset)
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
+	flagset.BoolVar(&serverTLS, "web.enable-tls", false, "Activate prometheus operator web server TLS.  "+
+		" This is useful for example when using the rule validation webhook.")
 	flagset.StringVar(&cfg.ServerTLSConfig.CertFile, "web.cert-file", defaultOperatorTLSDir+"/tls.crt", "Cert file to be used for operator web server endpoints.")
 	flagset.StringVar(&cfg.ServerTLSConfig.KeyFile, "web.key-file", defaultOperatorTLSDir+"/tls.key", "Private key matching the cert file to be used for operator web server endpoints.")
 	flagset.StringVar(&cfg.ServerTLSConfig.ClientCAFile, "web.client-ca-file", defaultOperatorTLSDir+"/tls-ca.crt", "Client CA certificate file to be used for operator web server endpoints.")
@@ -291,19 +284,16 @@ func Main() int {
 	}
 
 	var tlsConfig *tls.Config = nil
-	if checkTLSFilesExist(cfg.ServerTLSConfig) {
+	if serverTLS {
 		if rawTLSCipherSuites != "" {
 			cfg.ServerTLSConfig.CipherSuites = strings.Split(rawTLSCipherSuites, ",")
 		}
 		tlsConfig, err = operator.NewTLSConfig(logger, cfg.ServerTLSConfig.CertFile, cfg.ServerTLSConfig.KeyFile,
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
-			fmt.Fprint(os.Stderr, "error loading TLS config", err)
+			fmt.Fprint(os.Stderr, "invalid TLS config", err)
 			return 1
 		}
-	} else {
-		level.Debug(logger).Log("msg", "TLS configuration not found, using insecure http connection",
-			"certFile", cfg.ServerTLSConfig.CertFile, "keyFile", cfg.ServerTLSConfig.KeyFile)
 	}
 
 	validationTriggeredCounter := prometheus.NewCounter(prometheus.CounterOpts{

@@ -53,13 +53,7 @@ func NewTLSConfig(logger log.Logger, certFile, keyFile, clientCAFile, minVersion
 
 	level.Info(logger).Log("msg", "enabling server side TLS")
 
-	tlsCert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return nil, fmt.Errorf("server credentials: %w", err)
-	}
-
 	tlsCfg := &tls.Config{}
-	tlsCfg.Certificates = []tls.Certificate{tlsCert}
 
 	version, err := flag.TLSVersion(minVersion)
 	if err != nil {

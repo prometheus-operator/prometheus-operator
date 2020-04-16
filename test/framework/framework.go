@@ -258,11 +258,12 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 	deploy.Spec.Template.Spec.Containers[0].VolumeMounts = append(deploy.Spec.Template.Spec.Containers[0].VolumeMounts,
 		v1.VolumeMount{Name: "cert", MountPath: operatorTLSDir, ReadOnly: true})
 
-	// The addition of rule admission webhooks requires TLS, so switch
-	// to a more common https port
+	// The addition of rule admission webhooks requires TLS, so enable it and
+	// switch to a more common https port
 	if createRuleAdmissionHooks {
 		deploy.Spec.Template.Spec.Containers[0].Args = append(
 			deploy.Spec.Template.Spec.Containers[0].Args,
+			"--web.enable-tls=true",
 			fmt.Sprintf("--web.listen-address=%v", ":8443"),
 		)
 	}
