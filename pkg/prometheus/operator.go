@@ -145,7 +145,6 @@ type Config struct {
 	ThanosDefaultBaseImage        string
 	Namespaces                    Namespaces
 	Labels                        Labels
-	EnableValidation              bool
 	LocalHost                     string
 	LogLevel                      string
 	LogFormat                     string
