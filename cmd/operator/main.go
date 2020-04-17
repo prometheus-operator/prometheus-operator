@@ -32,7 +32,6 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/coreos/prometheus-operator/pkg/alertmanager"
 	"github.com/coreos/prometheus-operator/pkg/api"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/coreos/prometheus-operator/pkg/operator"
 	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
 	thanoscontroller "github.com/coreos/prometheus-operator/pkg/thanos"
@@ -133,9 +132,8 @@ var (
 		logFormatLogfmt,
 		logFormatJson,
 	}
-	cfg = prometheuscontroller.Config{
-		CrdKinds: monitoringv1.DefaultCrdKinds,
-	}
+	cfg = prometheuscontroller.Config{}
+
 	rawTLSCipherSuites string
 	serverTLS          bool
 
@@ -180,7 +178,6 @@ func init() {
 	flagset.Var(alertmanagerNs, "alertmanager-instance-namespaces", "Namespaces where Alertmanager custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Alertmanager custom resources.")
 	flagset.Var(thanosRulerNs, "thanos-ruler-instance-namespaces", "Namespaces where ThanosRuler custom resources and corresponding StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for ThanosRuler custom resources.")
 	flagset.Var(&cfg.Labels, "labels", "Labels to be add to all resources created by the operator")
-	flagset.Var(&cfg.CrdKinds, "crd-kinds", " - EXPERIMENTAL (could be removed in future releases) - customize CRD kind names")
 	flagset.BoolVar(&cfg.EnableValidation, "with-validation", true, "Include the validation spec in the CRD")
 	flagset.StringVar(&cfg.LocalHost, "localhost", "localhost", "EXPERIMENTAL (could be removed in future releases) - Host used to communicate between local services on a pod. Fixes issues where localhost resolves incorrectly.")
 	flagset.StringVar(&cfg.ClusterDomain, "cluster-domain", "", "The domain of the cluster. This is used to generate service FQDNs. If this is not specified, DNS search domain expansion is used instead.")

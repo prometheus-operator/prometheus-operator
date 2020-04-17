@@ -145,7 +145,6 @@ type Config struct {
 	ThanosDefaultBaseImage        string
 	Namespaces                    Namespaces
 	Labels                        Labels
-	CrdKinds                      monitoringv1.CrdKinds
 	EnableValidation              bool
 	LocalHost                     string
 	LogLevel                      string

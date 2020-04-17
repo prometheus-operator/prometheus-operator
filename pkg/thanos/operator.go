@@ -86,7 +86,6 @@ type Config struct {
 	ThanosDefaultBaseImage string
 	Namespaces             prometheusoperator.Namespaces
 	Labels                 prometheusoperator.Labels
-	CrdKinds               monitoringv1.CrdKinds
 	EnableValidation       bool
 	LocalHost              string
 	LogLevel               string
@@ -131,7 +130,6 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 			ThanosDefaultBaseImage: conf.ThanosDefaultBaseImage,
 			Namespaces:             conf.Namespaces,
 			Labels:                 conf.Labels,
-			CrdKinds:               conf.CrdKinds,
 			EnableValidation:       conf.EnableValidation,
 			LocalHost:              conf.LocalHost,
 			LogLevel:               conf.LogLevel,

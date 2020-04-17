@@ -78,7 +78,6 @@ type Config struct {
 	AlertmanagerDefaultBaseImage string
 	Namespaces                   prometheusoperator.Namespaces
 	Labels                       prometheusoperator.Labels
-	CrdKinds                     monitoringv1.CrdKinds
 	EnableValidation             bool
 	AlertManagerSelector         string
 }
@@ -115,7 +114,6 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 			ConfigReloaderMemory:         c.ConfigReloaderMemory,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
 			Namespaces:                   c.Namespaces,
-			CrdKinds:                     c.CrdKinds,
 			Labels:                       c.Labels,
 			EnableValidation:             c.EnableValidation,
 			AlertManagerSelector:         c.AlertManagerSelector,
