@@ -150,7 +150,6 @@ type Config struct {
 	LocalHost                     string
 	LogLevel                      string
 	LogFormat                     string
-	ManageCRDs                    bool
 	PromSelector                  string
 	AlertManagerSelector          string
 	ThanosRulerSelector           string

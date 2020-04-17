@@ -91,7 +91,6 @@ type Config struct {
 	LocalHost              string
 	LogLevel               string
 	LogFormat              string
-	ManageCRDs             bool
 	ThanosRulerSelector    string
 }
 
@@ -137,7 +136,6 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 			LocalHost:              conf.LocalHost,
 			LogLevel:               conf.LogLevel,
 			LogFormat:              conf.LogFormat,
-			ManageCRDs:             conf.ManageCRDs,
 			ThanosRulerSelector:    conf.ThanosRulerSelector,
 		},
 	}

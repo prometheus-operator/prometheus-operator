@@ -80,7 +80,6 @@ type Config struct {
 	Labels                       prometheusoperator.Labels
 	CrdKinds                     monitoringv1.CrdKinds
 	EnableValidation             bool
-	ManageCRDs                   bool
 	AlertManagerSelector         string
 }
 
@@ -119,7 +118,6 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 			CrdKinds:                     c.CrdKinds,
 			Labels:                       c.Labels,
 			EnableValidation:             c.EnableValidation,
-			ManageCRDs:                   c.ManageCRDs,
 			AlertManagerSelector:         c.AlertManagerSelector,
 		},
 	}
