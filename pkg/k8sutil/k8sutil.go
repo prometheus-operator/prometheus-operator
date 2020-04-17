@@ -22,19 +22,13 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"time"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	yaml "github.com/ghodss/yaml"
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/discovery"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
@@ -45,30 +39,6 @@ import (
 const KubeConfigEnv = "KUBECONFIG"
 
 var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
-
-// CustomResourceDefinitionTypeMeta set the default kind/apiversion of CRD
-var CustomResourceDefinitionTypeMeta metav1.TypeMeta = metav1.TypeMeta{
-	Kind:       "CustomResourceDefinition",
-	APIVersion: "apiextensions.k8s.io/v1beta1",
-}
-
-// WaitForCRDReady waits for a custom resource definition to be available for use.
-func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
-	err := wait.Poll(3*time.Second, 10*time.Minute, func() (bool, error) {
-		_, err := listFunc(metav1.ListOptions{})
-		if err != nil {
-			if se, ok := err.(*apierrors.StatusError); ok {
-				if se.Status().Code == http.StatusNotFound {
-					return false, nil
-				}
-			}
-			return false, errors.Wrap(err, "failed to list CRD")
-		}
-		return true, nil
-	})
-
-	return errors.Wrap(err, fmt.Sprintf("timed out waiting for Custom Resource"))
-}
 
 // PodRunningAndReady returns whether a pod is running and each container has
 // passed it's ready state.
@@ -193,23 +163,6 @@ func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	}
 
 	return ver.Segments()[1], nil
-}
-
-// NewCustomResourceDefinition creates a CustomResourceDefinition by unmarshalling
-// the associated yaml asset
-func NewCustomResourceDefinition(crdKind monitoringv1.CrdKind, group string, labels map[string]string, validation bool) *extensionsobj.CustomResourceDefinition {
-	crdName := strings.ToLower(crdKind.Plural)
-	assetPath := "example/prometheus-operator-crd/" + group + "_" + crdName + ".yaml"
-	data := monitoringv1.MustAsset(assetPath)
-	crd := &extensionsobj.CustomResourceDefinition{}
-	err := yaml.Unmarshal(data, crd)
-	if err != nil {
-		panic("unable to unmarshal crd asset for " + assetPath + ": " + err.Error())
-	}
-	crd.ObjectMeta.Name = crd.Spec.Names.Plural + "." + group
-	crd.ObjectMeta.Labels = labels
-	crd.Spec.Group = group
-	return crd
 }
 
 // SanitizeVolumeName ensures that the given volume name is a valid DNS-1123 label
