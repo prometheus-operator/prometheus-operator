@@ -43,6 +43,7 @@ import (
 const (
 	admissionHookSecretName                 = "prometheus-operator-admission"
 	prometheusOperatorServiceDeploymentName = "prometheus-operator"
+	operatorTLSDir                          = "/etc/tls/private"
 )
 
 type Framework struct {
@@ -159,9 +160,10 @@ func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
 // inside the specified namespace using the specified operator image. In addition
 // one can specify the namespaces to watch, which defaults to all namespaces.
 // Returns the CA, which can bs used to access the operator over TLS
-func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowlist, namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces []string, createRuleAdmissionHooks bool) ([]finalizerFn, error) {
-	tru := true
-	fals := false
+func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowlist,
+	namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces []string,
+	createRuleAdmissionHooks bool) ([]finalizerFn, error) {
+
 	var finalizers []finalizerFn
 
 	_, err := CreateServiceAccount(
@@ -253,21 +255,18 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 			Name:         "cert",
 			VolumeSource: v1.VolumeSource{Secret: &v1.SecretVolumeSource{SecretName: admissionHookSecretName}}})
 
-	// Use ghostunnel to provide TLS
-	deploy.Spec.Template.Spec.Containers = append(deploy.Spec.Template.Spec.Containers,
-		v1.Container{
-			Name: "ghostunnel",
-			Args: []string{
-				"server",
-				"--listen=:8443",
-				"--target=127.0.0.1:8080",
-				"--key=cert/key",
-				"--cert=cert/cert",
-				"--disable-authentication"},
-			Image:           "squareup/ghostunnel:v1.4.1",
-			Ports:           []v1.ContainerPort{{Name: "https", ContainerPort: 8443}},
-			VolumeMounts:    []v1.VolumeMount{{Name: "cert", MountPath: "/cert", ReadOnly: true}},
-			SecurityContext: &v1.SecurityContext{AllowPrivilegeEscalation: &fals, ReadOnlyRootFilesystem: &tru}})
+	deploy.Spec.Template.Spec.Containers[0].VolumeMounts = append(deploy.Spec.Template.Spec.Containers[0].VolumeMounts,
+		v1.VolumeMount{Name: "cert", MountPath: operatorTLSDir, ReadOnly: true})
+
+	// The addition of rule admission webhooks requires TLS, so enable it and
+	// switch to a more common https port
+	if createRuleAdmissionHooks {
+		deploy.Spec.Template.Spec.Containers[0].Args = append(
+			deploy.Spec.Template.Spec.Containers[0].Args,
+			"--web.enable-tls=true",
+			fmt.Sprintf("--web.listen-address=%v", ":8443"),
+		)
+	}
 
 	err = CreateDeployment(f.KubeClient, ns, deploy)
 	if err != nil {
@@ -322,7 +321,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 
 	service.Namespace = ns
 	service.Spec.ClusterIP = ""
-	service.Spec.Ports = append(service.Spec.Ports, v1.ServicePort{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)})
+	service.Spec.Ports = []v1.ServicePort{{Name: "https", Port: 443, TargetPort: intstr.FromInt(8443)}}
 
 	if _, err := CreateServiceAndWaitUntilReady(f.KubeClient, ns, service); err != nil {
 		return finalizers, errors.Wrap(err, "failed to create prometheus operator service")

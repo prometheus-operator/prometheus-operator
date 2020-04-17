@@ -9,6 +9,8 @@ github.com/beorn7/perks/quantile
 github.com/blang/semver
 # github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
 github.com/brancz/gojsontoyaml
+# github.com/brancz/kube-rbac-proxy v0.5.0
+github.com/brancz/kube-rbac-proxy/pkg/tls
 # github.com/campoy/embedmd v1.0.0
 github.com/campoy/embedmd
 github.com/campoy/embedmd/embedmd
@@ -401,6 +403,8 @@ k8s.io/code-generator/cmd/lister-gen/args
 k8s.io/code-generator/cmd/lister-gen/generators
 k8s.io/code-generator/pkg/namer
 k8s.io/code-generator/pkg/util
+# k8s.io/component-base v0.17.3
+k8s.io/component-base/cli/flag
 # k8s.io/gengo v0.0.0-20190822140433-26a664648505
 k8s.io/gengo/args
 k8s.io/gengo/generator
