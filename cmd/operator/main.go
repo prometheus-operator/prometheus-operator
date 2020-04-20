@@ -102,7 +102,7 @@ func (n namespaces) asSlice() []string {
 
 func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		logger.Log("msg", "Staring insecure server on "+listener.Addr().String())
+		logger.Log("msg", "Starting insecure server on "+listener.Addr().String())
 		if err := srv.Serve(listener); err != http.ErrServerClosed {
 			return err
 		}
@@ -112,7 +112,7 @@ func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() er
 
 func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		logger.Log("msg", "Staring secure server on "+listener.Addr().String())
+		logger.Log("msg", "Starting secure server on "+listener.Addr().String())
 		if err := srv.ServeTLS(listener, "", ""); err != http.ErrServerClosed {
 			return err
 		}
