@@ -95,7 +95,6 @@ func TestAllNS(t *testing.T) {
 		ctx.AddFinalizerFn(f)
 	}
 
-	t.Run("TestCRDs", testCRDs)
 	t.Run("TestServerTLS", testServerTLS(t, ns))
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
@@ -134,27 +133,6 @@ func TestAllNS(t *testing.T) {
 				restart,
 			)
 		}
-	}
-}
-
-func testCRDs(t *testing.T) {
-	const (
-		prometheusCRDName = "prometheuses.monitoring.coreos.com"
-	)
-	crds, err := framework.ListCRDs()
-	if err != nil {
-		t.Fatalf("unable to list CRDs: %v", err)
-	}
-	if len(crds.Items) < 5 {
-		t.Fatalf("incorrect number of CRDs, want at least: %v, got %v", 5, len(crds.Items))
-	}
-	crd, err := framework.GetCRD(prometheusCRDName)
-	if err != nil {
-		t.Fatalf("unable to get prometheus custom resource definition: %v", err)
-	}
-	// This field might be nil in older versions of kube (<1.15)
-	if crd.Spec.PreserveUnknownFields != nil && *crd.Spec.PreserveUnknownFields {
-		t.Fatalf("incorrect setting for preserveUnknownFields, want: %v, got: %v", false, *crd.Spec.PreserveUnknownFields)
 	}
 }
 
