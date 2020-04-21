@@ -64,28 +64,6 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       local clusterRole = k.rbac.v1.clusterRole;
       local policyRule = clusterRole.rulesType;
 
-      local crdCreateRule = policyRule.new() +
-                            policyRule.withApiGroups(['apiextensions.k8s.io']) +
-                            policyRule.withResources([
-                              'customresourcedefinitions',
-                            ]) +
-                            policyRule.withVerbs(['create']);
-
-      local crdMonitoringRule = policyRule.new() +
-                                policyRule.withApiGroups(['apiextensions.k8s.io']) +
-                                policyRule.withResources([
-                                  'customresourcedefinitions',
-                                ]) +
-                                policyRule.withResourceNames([
-                                  'alertmanagers.monitoring.coreos.com',
-                                  'podmonitors.monitoring.coreos.com',
-                                  'prometheuses.monitoring.coreos.com',
-                                  'prometheusrules.monitoring.coreos.com',
-                                  'servicemonitors.monitoring.coreos.com',
-                                  'thanosrulers.monitoring.coreos.com',
-                                ]) +
-                                policyRule.withVerbs(['get', 'update']);
-
       local monitoringRule = policyRule.new() +
                              policyRule.withApiGroups(['monitoring.coreos.com']) +
                              policyRule.withResources([
@@ -146,7 +124,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
                             ]) +
                             policyRule.withVerbs(['get', 'list', 'watch']);
 
-      local rules = [crdCreateRule, crdMonitoringRule, monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
+      local rules = [monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
 
       clusterRole.new() +
       clusterRole.mixin.metadata.withLabels(po.commonLabels) +
