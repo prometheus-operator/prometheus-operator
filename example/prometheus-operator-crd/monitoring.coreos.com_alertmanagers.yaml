@@ -2969,6 +2969,11 @@ spec:
               description: Storage is the definition of how storage will be used by
                 the Alertmanager instances.
               properties:
+                disableMountSubPath:
+                  description: 'Deprecated: subPath usage will be disabled by default
+                    in a future release, this option will become unnecessary. DisableMountSubPath
+                    allows to remove any subPath usage in volume mounts.'
+                  type: boolean
                 emptyDir:
                   description: 'EmptyDirVolumeSource to be used by the Prometheus
                     StatefulSets. If specified, used in place of any volumeClaimTemplate.

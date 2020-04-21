@@ -570,6 +570,10 @@ func subPathForStorage(s *monitoringv1.StorageSpec) string {
 		return ""
 	}
 
+	if s.DisableMountSubPath {
+		return ""
+	}
+
 	return "alertmanager-db"
 }
 
