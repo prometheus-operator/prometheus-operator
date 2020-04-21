@@ -176,8 +176,15 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		return nil, errors.Wrap(err, "failed to create prometheus operator service account")
 	}
 
-	if err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+	clusterRole, err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml")
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, errors.Wrap(err, "failed to create prometheus cluster role")
+	}
+
+	// Add CRD rbac rules
+	clusterRole.Rules = append(clusterRole.Rules, CRDCreateRule, CRDMonitoringRule)
+	if err := UpdateClusterRole(f.KubeClient, clusterRole); err != nil {
+		return nil, errors.Wrap(err, "failed to update prometheus cluster role")
 	}
 
 	if _, err := CreateClusterRoleBinding(f.KubeClient, ns, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
@@ -353,7 +360,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 }
 
 func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kubernetes.Interface) {
-	if err := CreateClusterRole(kubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+	if _, err := CreateClusterRole(kubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		t.Fatalf("failed to create prometheus cluster role: %v", err)
 	}
 	if finalizerFn, err := CreateServiceAccount(kubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
@@ -370,7 +377,7 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 }
 
 func (ctx *TestCtx) SetupPrometheusRBACGlobal(t *testing.T, ns string, kubeClient kubernetes.Interface) {
-	if err := CreateClusterRole(kubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+	if _, err := CreateClusterRole(kubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		t.Fatalf("failed to create prometheus cluster role: %v", err)
 	}
 	if finalizerFn, err := CreateServiceAccount(kubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
