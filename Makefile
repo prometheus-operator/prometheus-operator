@@ -13,7 +13,6 @@ VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 FIRST_GOPATH:=$(firstword $(subst :, ,$(shell go env GOPATH)))
 CONTROLLER_GEN_BINARY := $(FIRST_GOPATH)/bin/controller-gen
 CRD_OPTIONS ?= "crd:preserveUnknownFields=false"
-GO_BINDATA_BINARY := $(FIRST_GOPATH)/bin/go-bindata
 GOJSONTOYAML_BINARY:=$(FIRST_GOPATH)/bin/gojsontoyaml
 JB_BINARY:=$(FIRST_GOPATH)/bin/jb
 PO_DOCGEN_BINARY:=$(FIRST_GOPATH)/bin/po-docgen
@@ -31,8 +30,6 @@ CRD_JSONNET_FILES += jsonnet/prometheus-operator/prometheus-crd.libsonnet
 CRD_JSONNET_FILES += jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
 CRD_JSONNET_FILES += jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
 CRD_JSONNET_FILES += jsonnet/prometheus-operator/thanosruler-crd.libsonnet
-
-BINDATA_TARGET := pkg/apis/monitoring/v1/bindata.go
 
 K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
@@ -67,7 +64,7 @@ clean:
 ############
 
 .PHONY: build
-build: $(BINDATA_TARGET) operator prometheus-config-reloader k8s-gen po-lint
+build: operator prometheus-config-reloader k8s-gen po-lint
 
 .PHONY: operator
 operator:
@@ -111,13 +108,6 @@ $(INFORMER_TARGET): $(K8S_GEN_DEPS) $(LISTER_TARGET) $(CLIENT_TARGET)
 	--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1" \
 	--output-package  "$(GO_PKG)/pkg/client/informers"
 
-$(BINDATA_TARGET): $(GO_BINDATA_BINARY) $(CRD_YAML_FILES)
-	$(GO_BINDATA_BINARY) \
-	-mode 420 -modtime 1 \
-	-o  $(BINDATA_TARGET) \
-	-pkg v1 \
-	example/prometheus-operator-crd
-
 .PHONY: k8s-gen
 k8s-gen: \
 	$(DEEPCOPY_TARGET) \
@@ -151,7 +141,7 @@ vendor:
 	go mod vendor
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGET) $(BINDATA_TARGET) $(CRD_JSONNET_FILES) bundle.yaml $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGET) $(CRD_JSONNET_FILES) bundle.yaml $(shell find Documentation -type f)
 
 .PHONY: generate-in-docker
 generate-in-docker:
@@ -263,9 +253,6 @@ $(FIRST_GOPATH)/bin/$(1):
 	@go install -mod=vendor k8s.io/code-generator/cmd/$(1)
 
 endef
-
-$(GO_BINDATA_BINARY):
-	@go install -mod=vendor github.com/go-bindata/go-bindata/v3/go-bindata
 
 $(foreach binary,$(K8S_GEN_BINARIES),$(eval $(call _K8S_GEN_VAR_TARGET_,$(binary))))
 

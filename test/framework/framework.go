@@ -35,8 +35,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	certutil "k8s.io/client-go/util/cert"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 )
@@ -176,8 +176,15 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		return nil, errors.Wrap(err, "failed to create prometheus operator service account")
 	}
 
-	if err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+	clusterRole, err := CreateClusterRole(f.KubeClient, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml")
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, errors.Wrap(err, "failed to create prometheus cluster role")
+	}
+
+	// Add CRD rbac rules
+	clusterRole.Rules = append(clusterRole.Rules, CRDCreateRule, CRDMonitoringRule)
+	if err := UpdateClusterRole(f.KubeClient, clusterRole); err != nil {
+		return nil, errors.Wrap(err, "failed to update prometheus cluster role")
 	}
 
 	if _, err := CreateClusterRoleBinding(f.KubeClient, ns, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
@@ -191,6 +198,48 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 
 	if err := CreateSecretWithCert(f.KubeClient, certBytes, keyBytes, ns, admissionHookSecretName); err != nil {
 		return nil, errors.Wrap(err, "failed to create admission webhook secret")
+	}
+
+	err = f.CreateCRDAndWaitUntilReady(monitoringv1.AlertmanagerName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(context.TODO(), opts)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "initialize Alertmanager CRD")
+	}
+
+	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PodMonitorName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.PodMonitors(v1.NamespaceAll).List(context.TODO(), opts)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "initialize PodMonitor CRD")
+	}
+
+	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PrometheusName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(context.TODO(), opts)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "initialize Prometheus CRD")
+	}
+
+	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PrometheusRuleName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(context.TODO(), opts)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "initialize PrometheusRule CRD")
+	}
+
+	err = f.CreateCRDAndWaitUntilReady(monitoringv1.ServiceMonitorName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List(context.TODO(), opts)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "initialize ServiceMonitor CRD")
+	}
+
+	err = f.CreateCRDAndWaitUntilReady(monitoringv1.ThanosRulerName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1.ThanosRulers(v1.NamespaceAll).List(context.TODO(), opts)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "initialize ThanosRuler CRD")
 	}
 
 	deploy, err := MakeDeployment("../../example/rbac/prometheus-operator/prometheus-operator-deployment.yaml")
@@ -280,41 +329,6 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		return nil, errors.Wrap(err, "failed to wait for prometheus operator to become ready")
 	}
 
-	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(context.TODO(), opts)
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "Prometheus CRD not ready: %v\n")
-	}
-
-	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List(context.TODO(), opts)
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "ServiceMonitor CRD not ready: %v\n")
-	}
-
-	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (object runtime.Object, e error) {
-		return f.MonClientV1.PodMonitors(v1.NamespaceAll).List(context.TODO(), opts)
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "PodMonitor CRD not ready: %v\n")
-	}
-
-	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(context.TODO(), opts)
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "PrometheusRule CRD not ready: %v\n")
-	}
-
-	err = k8sutil.WaitForCRDReady(func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(context.TODO(), opts)
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "Alertmanager CRD not ready: %v\n")
-	}
-
 	service, err := MakeService("../../example/rbac/prometheus-operator/prometheus-operator-service.yaml")
 	if err != nil {
 		return finalizers, errors.Wrap(err, "cannot parse service file")
@@ -346,7 +360,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 }
 
 func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kubernetes.Interface) {
-	if err := CreateClusterRole(kubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+	if _, err := CreateClusterRole(kubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		t.Fatalf("failed to create prometheus cluster role: %v", err)
 	}
 	if finalizerFn, err := CreateServiceAccount(kubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {
@@ -363,7 +377,7 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 }
 
 func (ctx *TestCtx) SetupPrometheusRBACGlobal(t *testing.T, ns string, kubeClient kubernetes.Interface) {
-	if err := CreateClusterRole(kubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+	if _, err := CreateClusterRole(kubeClient, "../../example/rbac/prometheus/prometheus-cluster-role.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 		t.Fatalf("failed to create prometheus cluster role: %v", err)
 	}
 	if finalizerFn, err := CreateServiceAccount(kubeClient, ns, "../../example/rbac/prometheus/prometheus-service-account.yaml"); err != nil {

@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
@@ -37,8 +36,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	extensionsobj "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,10 +58,9 @@ const (
 // Operator manages life cycle of Prometheus deployments and
 // monitoring configurations.
 type Operator struct {
-	kclient   kubernetes.Interface
-	mclient   monitoringclient.Interface
-	crdclient apiextensionsclient.Interface
-	logger    log.Logger
+	kclient kubernetes.Interface
+	mclient monitoringclient.Interface
+	logger  log.Logger
 
 	promInf cache.SharedIndexInformer
 	smonInf cache.SharedIndexInformer
@@ -149,12 +145,9 @@ type Config struct {
 	ThanosDefaultBaseImage        string
 	Namespaces                    Namespaces
 	Labels                        Labels
-	CrdKinds                      monitoringv1.CrdKinds
-	EnableValidation              bool
 	LocalHost                     string
 	LogLevel                      string
 	LogFormat                     string
-	ManageCRDs                    bool
 	PromSelector                  string
 	AlertManagerSelector          string
 	ThanosRulerSelector           string
@@ -194,11 +187,6 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 		return nil, errors.Wrap(err, "instantiating kubernetes client failed")
 	}
 
-	crdclient, err := apiextensionsclient.NewForConfig(cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "instantiating apiextensions client failed")
-	}
-
 	mclient, err := monitoringclient.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
@@ -229,7 +217,6 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 	c := &Operator{
 		kclient:                client,
 		mclient:                mclient,
-		crdclient:              crdclient,
 		logger:                 logger,
 		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "prometheus"),
 		host:                   cfg.Host,
@@ -460,13 +447,6 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 			return
 		}
 		level.Info(c.logger).Log("msg", "connection established", "cluster-version", v)
-
-		if c.config.ManageCRDs {
-			if err := c.createCRDs(); err != nil {
-				errChan <- errors.Wrap(err, "creating CRDs failed")
-				return
-			}
-		}
 		errChan <- nil
 	}()
 
@@ -1897,90 +1877,4 @@ func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, e
 		return nil, errors.Wrap(err, "failed to list namespaces")
 	}
 	return ns, nil
-}
-
-func (c *Operator) createCRDs() error {
-	crds := []*extensionsobj.CustomResourceDefinition{
-		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.Prometheus, monitoring.GroupName, c.config.Labels.LabelsMap, c.config.EnableValidation),
-		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.ServiceMonitor, monitoring.GroupName, c.config.Labels.LabelsMap, c.config.EnableValidation),
-		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.PodMonitor, monitoring.GroupName, c.config.Labels.LabelsMap, c.config.EnableValidation),
-		k8sutil.NewCustomResourceDefinition(c.config.CrdKinds.PrometheusRule, monitoring.GroupName, c.config.Labels.LabelsMap, c.config.EnableValidation),
-	}
-
-	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()
-
-	for _, crd := range crds {
-		oldCRD, err := crdClient.Get(context.TODO(), crd.Name, metav1.GetOptions{})
-		if err != nil && !apierrors.IsNotFound(err) {
-			return errors.Wrapf(err, "getting CRD: %s", crd.Spec.Names.Kind)
-		}
-		if apierrors.IsNotFound(err) {
-			if _, err := crdClient.Create(context.TODO(), crd, metav1.CreateOptions{}); err != nil {
-				return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
-			}
-			level.Info(c.logger).Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
-		}
-		if err == nil {
-			crd.ResourceVersion = oldCRD.ResourceVersion
-			if _, err := crdClient.Update(context.TODO(), crd, metav1.UpdateOptions{}); err != nil {
-				return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
-			}
-			level.Info(c.logger).Log("msg", "CRD updated", "crd", crd.Spec.Names.Kind)
-		}
-	}
-
-	crdListFuncs := []struct {
-		name     string
-		listFunc func(opts metav1.ListOptions) (runtime.Object, error)
-	}{
-		{
-			monitoringv1.PrometheusesKind,
-			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.PrometheusAllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{
-					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return c.mclient.MonitoringV1().Prometheuses(namespace).List(context.TODO(), options)
-					},
-				}
-			}).List,
-		},
-		{
-			monitoringv1.ServiceMonitorsKind,
-			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{
-					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return c.mclient.MonitoringV1().ServiceMonitors(namespace).List(context.TODO(), options)
-					},
-				}
-			}).List,
-		},
-		{
-			monitoringv1.PodMonitorsKind,
-			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{
-					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return c.mclient.MonitoringV1().PodMonitors(namespace).List(context.TODO(), options)
-					},
-				}
-			}).List,
-		},
-		{
-			monitoringv1.PrometheusRuleKind,
-			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{
-					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return c.mclient.MonitoringV1().PrometheusRules(namespace).List(context.TODO(), options)
-					},
-				}
-			}).List,
-		},
-	}
-
-	for _, crdListFunc := range crdListFuncs {
-		err := k8sutil.WaitForCRDReady(crdListFunc.listFunc)
-		if err != nil {
-			return errors.Wrapf(err, "waiting for %v crd failed", crdListFunc.name)
-		}
-	}
-
-	return nil
 }

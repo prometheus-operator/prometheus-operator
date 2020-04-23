@@ -8,7 +8,6 @@ require (
 	github.com/brancz/kube-rbac-proxy v0.5.0
 	github.com/campoy/embedmd v1.0.0
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-bindata/go-bindata/v3 v3.1.3
 	github.com/go-kit/kit v0.9.0
 	github.com/go-openapi/swag v0.19.5
 	github.com/gogo/protobuf v1.3.1
@@ -25,6 +24,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/thanos-io/thanos v0.11.0
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+	golang.org/x/tools v0.0.0-20191125144606-a911d9008d1f // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.18.2

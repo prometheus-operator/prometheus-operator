@@ -25,26 +25,6 @@ metadata:
   name: prometheus-operator
 rules:
 - apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - create
-- apiGroups:
-  - apiextensions.k8s.io
-  resourceNames:
-  - alertmanagers.monitoring.coreos.com
-  - podmonitors.monitoring.coreos.com
-  - prometheuses.monitoring.coreos.com
-  - prometheusrules.monitoring.coreos.com
-  - servicemonitors.monitoring.coreos.com
-  - thanosrulers.monitoring.coreos.com
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - get
-  - update
-- apiGroups:
   - monitoring.coreos.com
   resources:
   - alertmanagers
