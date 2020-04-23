@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -148,13 +149,13 @@ func testAMStorageUpdate(t *testing.T) {
 		},
 	}
 
-	am, err = framework.MonClientV1.Alertmanagers(ns).Update(am)
+	am, err = framework.MonClientV1.Alertmanagers(ns).Update(context.TODO(), am, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(alertmanager.ListOptions(name))
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.TODO(), alertmanager.ListOptions(name))
 		if err != nil {
 			return false, err
 		}
@@ -199,7 +200,7 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 
 	proxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := proxyGet("", alertmanagerService.Name, "web", "/", make(map[string]string))
-	_, err := request.DoRaw()
+	_, err := request.DoRaw(context.TODO())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -393,7 +394,7 @@ receivers:
 		t.Fatal(err)
 	}
 
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(cfg); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.TODO(), cfg, metav1.UpdateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -403,7 +404,7 @@ receivers:
 	}
 	cfg.Data["alertmanager.yaml"] = []byte(secondConfig)
 
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(cfg); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.TODO(), cfg, metav1.UpdateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -524,11 +525,11 @@ inhibit_rules:
 		},
 	}
 
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(amcfg); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), amcfg, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
-	alertmanager, err = framework.MonClientV1.Alertmanagers(ns).Create(alertmanager)
+	alertmanager, err = framework.MonClientV1.Alertmanagers(ns).Create(context.TODO(), alertmanager, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -593,7 +594,7 @@ inhibit_rules:
 			"app": "alertmanager-webhook",
 		})).String(),
 	}
-	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(opts)
+	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.TODO(), opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -616,7 +617,7 @@ inhibit_rules:
 	// We need to force a rolling update, e.g. by changing one of the command
 	// line flags via the Retention.
 	alertmanager.Spec.Retention = "1h"
-	if _, err := framework.MonClientV1.Alertmanagers(ns).Update(alertmanager); err != nil {
+	if _, err := framework.MonClientV1.Alertmanagers(ns).Update(context.TODO(), alertmanager, metav1.UpdateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 	// Wait for the change above to take effect.

@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -117,12 +118,12 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoring
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("making alertmanager config secret %v failed", amConfigSecretName))
 	}
-	_, err = f.KubeClient.CoreV1().Secrets(ns).Create(s)
+	_, err = f.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), s, metav1.CreateOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager config secret %v failed", s.Name))
 	}
 
-	a, err = f.MonClientV1.Alertmanagers(ns).Create(a)
+	a, err = f.MonClientV1.Alertmanagers(ns).Create(context.TODO(), a, metav1.CreateOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
@@ -163,7 +164,7 @@ func (f *Framework) WaitForAlertmanagerClusterReady(ns, name string, replicas in
 }
 
 func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
-	a, err := f.MonClientV1.Alertmanagers(ns).Update(a)
+	a, err := f.MonClientV1.Alertmanagers(ns).Update(context.TODO(), a, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -183,12 +184,12 @@ func (f *Framework) UpdateAlertmanagerAndWaitUntilReady(ns string, a *monitoring
 }
 
 func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClientV1.Alertmanagers(ns).Get(name, metav1.GetOptions{})
+	_, err := f.MonClientV1.Alertmanagers(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting Alertmanager tpr %v failed", name))
 	}
 
-	if err := f.MonClientV1.Alertmanagers(ns).Delete(name, nil); err != nil {
+	if err := f.MonClientV1.Alertmanagers(ns).Delete(context.TODO(), name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting Alertmanager tpr %v failed", name))
 	}
 
@@ -202,7 +203,7 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ns, name string) error {
 		return errors.Wrap(err, fmt.Sprintf("waiting for Alertmanager tpr (%s) to vanish timed out", name))
 	}
 
-	return f.KubeClient.CoreV1().Secrets(ns).Delete(fmt.Sprintf("alertmanager-%s", name), nil)
+	return f.KubeClient.CoreV1().Secrets(ns).Delete(context.TODO(), fmt.Sprintf("alertmanager-%s", name), metav1.DeleteOptions{})
 }
 
 func amImage(version string) string {
@@ -247,7 +248,7 @@ func (f *Framework) WaitForAlertmanagerInitializedCluster(ns, name string, amoun
 func (f *Framework) GetAlertmanagerStatus(ns, n string) (amAPIStatusResp, error) {
 	var amStatus amAPIStatusResp
 	request := ProxyGetPod(f.KubeClient, ns, n, "/api/v1/status")
-	resp, err := request.DoRaw()
+	resp, err := request.DoRaw(context.TODO())
 	if err != nil {
 		return amStatus, err
 	}
@@ -267,7 +268,7 @@ func (f *Framework) CreateSilence(ns, n string) (string, error) {
 		"/api/v1/silences",
 		`{"id":"","createdBy":"Max Mustermann","comment":"1234","startsAt":"2030-04-09T09:16:15.114Z","endsAt":"2031-04-09T11:16:15.114Z","matchers":[{"name":"test","value":"123","isRegex":false}]}`,
 	)
-	resp, err := request.DoRaw()
+	resp, err := request.DoRaw(context.TODO())
 	if err != nil {
 		return "", err
 	}
@@ -321,7 +322,7 @@ func (f *Framework) SendAlertToAlertmanager(ns, n string, start time.Time) error
 
 	var postAlertResp amAPIPostAlertResp
 	request := ProxyPostPod(f.KubeClient, ns, n, "api/v1/alerts", string(b))
-	resp, err := request.DoRaw()
+	resp, err := request.DoRaw(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -341,7 +342,7 @@ func (f *Framework) GetSilences(ns, n string) ([]amAPISil, error) {
 	var getSilencesResponse amAPIGetSilResp
 
 	request := ProxyGetPod(f.KubeClient, ns, n, "/api/v1/silences")
-	resp, err := request.DoRaw()
+	resp, err := request.DoRaw(context.TODO())
 	if err != nil {
 		return getSilencesResponse.Data, err
 	}

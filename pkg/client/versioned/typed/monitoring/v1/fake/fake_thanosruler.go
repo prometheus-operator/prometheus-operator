@@ -17,6 +17,8 @@
 package fake
 
 import (
+	"context"
+
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -37,7 +39,7 @@ var thanosrulersResource = schema.GroupVersionResource{Group: "monitoring.coreos
 var thanosrulersKind = schema.GroupVersionKind{Group: "monitoring.coreos.com", Version: "v1", Kind: "ThanosRuler"}
 
 // Get takes name of the thanosRuler, and returns the corresponding thanosRuler object, and an error if there is any.
-func (c *FakeThanosRulers) Get(name string, options v1.GetOptions) (result *monitoringv1.ThanosRuler, err error) {
+func (c *FakeThanosRulers) Get(ctx context.Context, name string, options v1.GetOptions) (result *monitoringv1.ThanosRuler, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(thanosrulersResource, c.ns, name), &monitoringv1.ThanosRuler{})
 
@@ -48,7 +50,7 @@ func (c *FakeThanosRulers) Get(name string, options v1.GetOptions) (result *moni
 }
 
 // List takes label and field selectors, and returns the list of ThanosRulers that match those selectors.
-func (c *FakeThanosRulers) List(opts v1.ListOptions) (result *monitoringv1.ThanosRulerList, err error) {
+func (c *FakeThanosRulers) List(ctx context.Context, opts v1.ListOptions) (result *monitoringv1.ThanosRulerList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(thanosrulersResource, thanosrulersKind, c.ns, opts), &monitoringv1.ThanosRulerList{})
 
@@ -70,14 +72,14 @@ func (c *FakeThanosRulers) List(opts v1.ListOptions) (result *monitoringv1.Thano
 }
 
 // Watch returns a watch.Interface that watches the requested thanosRulers.
-func (c *FakeThanosRulers) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeThanosRulers) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(thanosrulersResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a thanosRuler and creates it.  Returns the server's representation of the thanosRuler, and an error, if there is any.
-func (c *FakeThanosRulers) Create(thanosRuler *monitoringv1.ThanosRuler) (result *monitoringv1.ThanosRuler, err error) {
+func (c *FakeThanosRulers) Create(ctx context.Context, thanosRuler *monitoringv1.ThanosRuler, opts v1.CreateOptions) (result *monitoringv1.ThanosRuler, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(thanosrulersResource, c.ns, thanosRuler), &monitoringv1.ThanosRuler{})
 
@@ -88,7 +90,7 @@ func (c *FakeThanosRulers) Create(thanosRuler *monitoringv1.ThanosRuler) (result
 }
 
 // Update takes the representation of a thanosRuler and updates it. Returns the server's representation of the thanosRuler, and an error, if there is any.
-func (c *FakeThanosRulers) Update(thanosRuler *monitoringv1.ThanosRuler) (result *monitoringv1.ThanosRuler, err error) {
+func (c *FakeThanosRulers) Update(ctx context.Context, thanosRuler *monitoringv1.ThanosRuler, opts v1.UpdateOptions) (result *monitoringv1.ThanosRuler, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(thanosrulersResource, c.ns, thanosRuler), &monitoringv1.ThanosRuler{})
 
@@ -100,7 +102,7 @@ func (c *FakeThanosRulers) Update(thanosRuler *monitoringv1.ThanosRuler) (result
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeThanosRulers) UpdateStatus(thanosRuler *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRuler, error) {
+func (c *FakeThanosRulers) UpdateStatus(ctx context.Context, thanosRuler *monitoringv1.ThanosRuler, opts v1.UpdateOptions) (*monitoringv1.ThanosRuler, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(thanosrulersResource, "status", c.ns, thanosRuler), &monitoringv1.ThanosRuler{})
 
@@ -111,7 +113,7 @@ func (c *FakeThanosRulers) UpdateStatus(thanosRuler *monitoringv1.ThanosRuler) (
 }
 
 // Delete takes name of the thanosRuler and deletes it. Returns an error if one occurs.
-func (c *FakeThanosRulers) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeThanosRulers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(thanosrulersResource, c.ns, name), &monitoringv1.ThanosRuler{})
 
@@ -119,15 +121,15 @@ func (c *FakeThanosRulers) Delete(name string, options *v1.DeleteOptions) error 
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeThanosRulers) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(thanosrulersResource, c.ns, listOptions)
+func (c *FakeThanosRulers) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(thanosrulersResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &monitoringv1.ThanosRulerList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched thanosRuler.
-func (c *FakeThanosRulers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *monitoringv1.ThanosRuler, err error) {
+func (c *FakeThanosRulers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1.ThanosRuler, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(thanosrulersResource, c.ns, name, pt, data, subresources...), &monitoringv1.ThanosRuler{})
 

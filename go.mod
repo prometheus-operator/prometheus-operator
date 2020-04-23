@@ -27,17 +27,17 @@ require (
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/api v0.17.3
-	k8s.io/apiextensions-apiserver v0.17.3
-	k8s.io/apimachinery v0.17.3
+	k8s.io/api v0.18.2
+	k8s.io/apiextensions-apiserver v0.18.2
+	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/code-generator v0.17.3
-	k8s.io/component-base v0.17.3
+	k8s.io/code-generator v0.18.2
+	k8s.io/component-base v0.18.2
 	k8s.io/klog v1.0.0
 	sigs.k8s.io/controller-tools v0.2.4
 )
 
 replace (
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.0.0-20190818123050-43acd0e2e93f
-	k8s.io/client-go => k8s.io/client-go v0.0.0-20190918160344-1fbdaa4c8d90
+	k8s.io/client-go => k8s.io/client-go v0.18.2
 )

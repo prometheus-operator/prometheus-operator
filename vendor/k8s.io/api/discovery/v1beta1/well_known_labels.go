@@ -1,5 +1,5 @@
 /*
-Copyright 2016 The Kubernetes Authors.
+Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,20 +16,13 @@ limitations under the License.
 
 package v1beta1
 
-import (
-	authenticationapi "k8s.io/api/authentication/v1beta1"
+const (
+	// LabelServiceName is used to indicate the name of a Kubernetes service.
+	LabelServiceName = "kubernetes.io/service-name"
+	// LabelManagedBy is used to indicate the controller or entity that manages
+	// an EndpointSlice. This label aims to enable different EndpointSlice
+	// objects to be managed by different controllers or entities within the
+	// same cluster. It is highly recommended to configure this label for all
+	// EndpointSlices.
+	LabelManagedBy = "endpointslice.kubernetes.io/managed-by"
 )
-
-type TokenReviewExpansion interface {
-	Create(tokenReview *authenticationapi.TokenReview) (result *authenticationapi.TokenReview, err error)
-}
-
-func (c *tokenReviews) Create(tokenReview *authenticationapi.TokenReview) (result *authenticationapi.TokenReview, err error) {
-	result = &authenticationapi.TokenReview{}
-	err = c.client.Post().
-		Resource("tokenreviews").
-		Body(tokenReview).
-		Do().
-		Into(result)
-	return
-}

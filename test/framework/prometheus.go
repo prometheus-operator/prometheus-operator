@@ -16,6 +16,7 @@ package framework
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -148,7 +149,7 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 }
 
 func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
-	result, err := f.MonClientV1.Prometheuses(ns).Create(p)
+	result, err := f.MonClientV1.Prometheuses(ns).Create(context.TODO(), p, metav1.CreateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -161,7 +162,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1
 }
 
 func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
-	result, err := f.MonClientV1.Prometheuses(ns).Update(p)
+	result, err := f.MonClientV1.Prometheuses(ns).Update(context.TODO(), p, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -192,12 +193,12 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClientV1.Prometheuses(ns).Get(name, metav1.GetOptions{})
+	_, err := f.MonClientV1.Prometheuses(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting Prometheus custom resource %v failed", name))
 	}
 
-	if err := f.MonClientV1.Prometheuses(ns).Delete(name, nil); err != nil {
+	if err := f.MonClientV1.Prometheuses(ns).Delete(context.TODO(), name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting Prometheus custom resource %v failed", name))
 	}
 
@@ -260,7 +261,7 @@ func (f *Framework) WaitForDiscoveryWorking(ns, svcName, prometheusName string) 
 	var loopErr error
 
 	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
-		pods, loopErr := f.KubeClient.CoreV1().Pods(ns).List(prometheus.ListOptions(prometheusName))
+		pods, loopErr := f.KubeClient.CoreV1().Pods(ns).List(context.TODO(), prometheus.ListOptions(prometheusName))
 		if loopErr != nil {
 			return false, loopErr
 		}
@@ -339,7 +340,7 @@ func assertExpectedTargets(targets []*Target, expectedTargets []string) error {
 func (f *Framework) PrometheusSVCGetRequest(ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := ProxyGet("", svcName, "web", endpoint, query)
-	return request.DoRaw()
+	return request.DoRaw(context.TODO())
 }
 
 func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {

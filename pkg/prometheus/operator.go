@@ -17,6 +17,7 @@ package prometheus
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -259,11 +260,11 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 						options.LabelSelector = c.config.PromSelector
-						return mclient.MonitoringV1().Prometheuses(namespace).List(options)
+						return mclient.MonitoringV1().Prometheuses(namespace).List(context.TODO(), options)
 					},
 					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 						options.LabelSelector = c.config.PromSelector
-						return mclient.MonitoringV1().Prometheuses(namespace).Watch(options)
+						return mclient.MonitoringV1().Prometheuses(namespace).Watch(context.TODO(), options)
 					},
 				}
 			}),
@@ -277,9 +278,11 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return mclient.MonitoringV1().ServiceMonitors(namespace).List(options)
+						return mclient.MonitoringV1().ServiceMonitors(namespace).List(context.TODO(), options)
 					},
-					WatchFunc: mclient.MonitoringV1().ServiceMonitors(namespace).Watch,
+					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+						return mclient.MonitoringV1().ServiceMonitors(namespace).Watch(context.TODO(), options)
+					},
 				}
 			}),
 		),
@@ -291,9 +294,11 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return mclient.MonitoringV1().PodMonitors(namespace).List(options)
+						return mclient.MonitoringV1().PodMonitors(namespace).List(context.TODO(), options)
 					},
-					WatchFunc: mclient.MonitoringV1().PodMonitors(namespace).Watch,
+					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+						return mclient.MonitoringV1().PodMonitors(namespace).Watch(context.TODO(), options)
+					},
 				}
 			}),
 		),
@@ -305,9 +310,11 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return mclient.MonitoringV1().PrometheusRules(namespace).List(options)
+						return mclient.MonitoringV1().PrometheusRules(namespace).List(context.TODO(), options)
 					},
-					WatchFunc: mclient.MonitoringV1().PrometheusRules(namespace).Watch,
+					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+						return mclient.MonitoringV1().PrometheusRules(namespace).Watch(context.TODO(), options)
+					},
 				}
 			}),
 		),
@@ -320,11 +327,11 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 						options.LabelSelector = labelPrometheusName
-						return c.kclient.CoreV1().ConfigMaps(namespace).List(options)
+						return c.kclient.CoreV1().ConfigMaps(namespace).List(context.TODO(), options)
 					},
 					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 						options.LabelSelector = labelPrometheusName
-						return c.kclient.CoreV1().ConfigMaps(namespace).Watch(options)
+						return c.kclient.CoreV1().ConfigMaps(namespace).Watch(context.TODO(), options)
 					},
 				}
 			}),
@@ -639,7 +646,7 @@ func (c *Operator) syncNodeEndpoints() error {
 		},
 	}
 
-	nodes, err := c.kclient.CoreV1().Nodes().List(metav1.ListOptions{})
+	nodes, err := c.kclient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "listing nodes failed")
 	}
@@ -1115,9 +1122,9 @@ func (c *Operator) sync(key string) error {
 		return errors.Wrap(err, "generating empty config secret failed")
 	}
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	_, err = sClient.Get(s.Name, metav1.GetOptions{})
+	_, err = sClient.Get(context.TODO(), s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(s); err != nil && !apierrors.IsAlreadyExists(err) {
+		if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
 			return errors.Wrap(err, "creating empty config file failed")
 		}
 	}
@@ -1161,7 +1168,7 @@ func (c *Operator) sync(key string) error {
 	if !exists {
 		level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
 		level.Debug(c.logger).Log("msg", "creating Prometheus statefulset")
-		if _, err := ssetClient.Create(sset); err != nil {
+		if _, err := ssetClient.Create(context.TODO(), sset, metav1.CreateOptions{}); err != nil {
 			return errors.Wrap(err, "creating statefulset failed")
 		}
 		return nil
@@ -1175,14 +1182,14 @@ func (c *Operator) sync(key string) error {
 
 	level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
 
-	_, err = ssetClient.Update(sset)
+	_, err = ssetClient.Update(context.TODO(), sset, metav1.UpdateOptions{})
 	sErr, ok := err.(*apierrors.StatusError)
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
 		c.metrics.StsDeleteCreateCounter().Inc()
 		level.Info(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet", "details", sErr.ErrStatus.Details)
 		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(sset.GetName(), &metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+		if err := ssetClient.Delete(context.TODO(), sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
 		}
 		return nil
@@ -1255,11 +1262,11 @@ func ListOptions(name string) metav1.ListOptions {
 func PrometheusStatus(kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
 	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
-	pods, err := kclient.CoreV1().Pods(p.Namespace).List(ListOptions(p.Name))
+	pods, err := kclient.CoreV1().Pods(p.Namespace).List(context.TODO(), ListOptions(p.Name))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
+	sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(context.TODO(), statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 	}
@@ -1336,7 +1343,7 @@ func getCredFromSecret(c corev1client.SecretInterface, sel v1.SecretKeySelector,
 	var ok bool
 
 	if s, ok = cache[cacheKey]; !ok {
-		if s, err = c.Get(sel.Name, metav1.GetOptions{}); err != nil {
+		if s, err = c.Get(context.TODO(), sel.Name, metav1.GetOptions{}); err != nil {
 			return "", fmt.Errorf("unable to fetch %s secret %q: %s", cred, sel.Name, err)
 		}
 		cache[cacheKey] = s
@@ -1349,7 +1356,7 @@ func getCredFromConfigMap(c corev1client.ConfigMapInterface, sel v1.ConfigMapKey
 	var ok bool
 
 	if s, ok = cache[cacheKey]; !ok {
-		if s, err = c.Get(sel.Name, metav1.GetOptions{}); err != nil {
+		if s, err = c.Get(context.TODO(), sel.Name, metav1.GetOptions{}); err != nil {
 			return "", fmt.Errorf("unable to fetch %s configmap %q: %s", cred, sel.Name, err)
 		}
 		cache[cacheKey] = s
@@ -1608,7 +1615,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	SecretsInPromNS, err := sClient.List(metav1.ListOptions{})
+	SecretsInPromNS, err := sClient.List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -1664,10 +1671,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	}
 	s.Data[configFilename] = buf.Bytes()
 
-	curSecret, err := sClient.Get(s.Name, metav1.GetOptions{})
+	curSecret, err := sClient.Get(context.TODO(), s.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		level.Debug(c.logger).Log("msg", "creating configuration")
-		_, err = sClient.Create(s)
+		_, err = sClient.Create(context.TODO(), s, metav1.CreateOptions{})
 		return err
 	}
 
@@ -1686,7 +1693,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	}
 
 	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
-	_, err = sClient.Update(s)
+	_, err = sClient.Update(context.TODO(), s, metav1.UpdateOptions{})
 	return err
 }
 
@@ -1726,7 +1733,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) erro
 		tlsAssetsSecret.Data[key] = []byte(asset)
 	}
 
-	_, err = sClient.Get(tlsAssetsSecret.Name, metav1.GetOptions{})
+	_, err = sClient.Get(context.TODO(), tlsAssetsSecret.Name, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(
@@ -1736,11 +1743,11 @@ func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) erro
 				p.Namespace,
 			)
 		}
-		_, err = sClient.Create(tlsAssetsSecret)
+		_, err = sClient.Create(context.TODO(), tlsAssetsSecret, metav1.CreateOptions{})
 		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 
 	} else {
-		_, err = sClient.Update(tlsAssetsSecret)
+		_, err = sClient.Update(context.TODO(), tlsAssetsSecret, metav1.UpdateOptions{})
 		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 	}
 
@@ -1903,19 +1910,19 @@ func (c *Operator) createCRDs() error {
 	crdClient := c.crdclient.ApiextensionsV1beta1().CustomResourceDefinitions()
 
 	for _, crd := range crds {
-		oldCRD, err := crdClient.Get(crd.Name, metav1.GetOptions{})
+		oldCRD, err := crdClient.Get(context.TODO(), crd.Name, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return errors.Wrapf(err, "getting CRD: %s", crd.Spec.Names.Kind)
 		}
 		if apierrors.IsNotFound(err) {
-			if _, err := crdClient.Create(crd); err != nil {
+			if _, err := crdClient.Create(context.TODO(), crd, metav1.CreateOptions{}); err != nil {
 				return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
 			}
 			level.Info(c.logger).Log("msg", "CRD created", "crd", crd.Spec.Names.Kind)
 		}
 		if err == nil {
 			crd.ResourceVersion = oldCRD.ResourceVersion
-			if _, err := crdClient.Update(crd); err != nil {
+			if _, err := crdClient.Update(context.TODO(), crd, metav1.UpdateOptions{}); err != nil {
 				return errors.Wrapf(err, "creating CRD: %s", crd.Spec.Names.Kind)
 			}
 			level.Info(c.logger).Log("msg", "CRD updated", "crd", crd.Spec.Names.Kind)
@@ -1931,7 +1938,7 @@ func (c *Operator) createCRDs() error {
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.PrometheusAllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return c.mclient.MonitoringV1().Prometheuses(namespace).List(options)
+						return c.mclient.MonitoringV1().Prometheuses(namespace).List(context.TODO(), options)
 					},
 				}
 			}).List,
@@ -1941,7 +1948,7 @@ func (c *Operator) createCRDs() error {
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return c.mclient.MonitoringV1().ServiceMonitors(namespace).List(options)
+						return c.mclient.MonitoringV1().ServiceMonitors(namespace).List(context.TODO(), options)
 					},
 				}
 			}).List,
@@ -1951,7 +1958,7 @@ func (c *Operator) createCRDs() error {
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return c.mclient.MonitoringV1().PodMonitors(namespace).List(options)
+						return c.mclient.MonitoringV1().PodMonitors(namespace).List(context.TODO(), options)
 					},
 				}
 			}).List,
@@ -1961,7 +1968,7 @@ func (c *Operator) createCRDs() error {
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return c.mclient.MonitoringV1().PrometheusRules(namespace).List(options)
+						return c.mclient.MonitoringV1().PrometheusRules(namespace).List(context.TODO(), options)
 					},
 				}
 			}).List,

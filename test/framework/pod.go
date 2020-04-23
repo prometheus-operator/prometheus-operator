@@ -15,6 +15,7 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,14 +25,14 @@ import (
 
 // PrintPodLogs prints the logs of a specified Pod
 func (f *Framework) PrintPodLogs(ns, p string) error {
-	pod, err := f.KubeClient.CoreV1().Pods(ns).Get(p, metav1.GetOptions{})
+	pod, err := f.KubeClient.CoreV1().Pods(ns).Get(context.TODO(), p, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "failed to print logs of pod '%v': failed to get pod", p)
 	}
 
 	for _, c := range pod.Spec.Containers {
 		req := f.KubeClient.CoreV1().Pods(ns).GetLogs(p, &v1.PodLogOptions{Container: c.Name})
-		resp, err := req.DoRaw()
+		resp, err := req.DoRaw(context.TODO())
 		if err != nil {
 			return errors.Wrapf(err, "failed to retrieve logs of pod '%v'", p)
 		}
@@ -46,7 +47,7 @@ func (f *Framework) PrintPodLogs(ns, p string) error {
 // GetPodRestartCount returns a map of container names and their restart counts for
 // a given pod.
 func (f *Framework) GetPodRestartCount(ns, podName string) (map[string]int32, error) {
-	pod, err := f.KubeClient.CoreV1().Pods(ns).Get(podName, metav1.GetOptions{})
+	pod, err := f.KubeClient.CoreV1().Pods(ns).Get(context.TODO(), podName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve pod to get restart count")
 	}

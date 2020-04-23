@@ -15,7 +15,9 @@
 package framework
 
 import (
+	"context"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 )
@@ -28,7 +30,7 @@ func CreateServiceAccount(kubeClient kubernetes.Interface, namespace string, rel
 		return finalizerFn, err
 	}
 	serviceAccount.Namespace = namespace
-	_, err = kubeClient.CoreV1().ServiceAccounts(namespace).Create(serviceAccount)
+	_, err = kubeClient.CoreV1().ServiceAccounts(namespace).Create(context.TODO(), serviceAccount, metav1.CreateOptions{})
 	if err != nil {
 		return finalizerFn, err
 	}
@@ -56,5 +58,5 @@ func DeleteServiceAccount(kubeClient kubernetes.Interface, namespace string, rel
 		return err
 	}
 
-	return kubeClient.CoreV1().ServiceAccounts(namespace).Delete(serviceAccount.Name, nil)
+	return kubeClient.CoreV1().ServiceAccounts(namespace).Delete(context.TODO(), serviceAccount.Name, metav1.DeleteOptions{})
 }
