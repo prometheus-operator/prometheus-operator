@@ -102,7 +102,7 @@ func (n namespaces) asSlice() []string {
 
 func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		logger.Log("msg", "Staring insecure server on "+listener.Addr().String())
+		logger.Log("msg", "Starting insecure server on "+listener.Addr().String())
 		if err := srv.Serve(listener); err != http.ErrServerClosed {
 			return err
 		}
@@ -112,7 +112,7 @@ func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() er
 
 func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		logger.Log("msg", "Staring secure server on "+listener.Addr().String())
+		logger.Log("msg", "Starting secure server on "+listener.Addr().String())
 		if err := srv.ServeTLS(listener, "", ""); err != http.ErrServerClosed {
 			return err
 		}
@@ -151,9 +151,9 @@ func init() {
 	flagset.StringVar(&cfg.ServerTLSConfig.KeyFile, "web.key-file", defaultOperatorTLSDir+"/tls.key", "Private key matching the cert file to be used for operator web server endpoints.")
 	flagset.StringVar(&cfg.ServerTLSConfig.ClientCAFile, "web.client-ca-file", defaultOperatorTLSDir+"/tls-ca.crt", "Client CA certificate file to be used for operator web server endpoints.")
 	flagset.DurationVar(&cfg.ServerTLSConfig.ReloadInterval, "web.tls-reload-interval", time.Minute, "The interval at which to watch for TLS certificate changes, by default set to 1 minute. (default 1m0s).")
-	flag.StringVar(&cfg.ServerTLSConfig.MinVersion, "tls-min-version", "VersionTLS13",
+	flagset.StringVar(&cfg.ServerTLSConfig.MinVersion, "web.tls-min-version", "VersionTLS13",
 		"Minimum TLS version supported. Value must match version names from https://golang.org/pkg/crypto/tls/#pkg-constants.")
-	flag.StringVar(&rawTLSCipherSuites, "tls-cipher-suites", "", "Comma-separated list of cipher suites for the server."+
+	flagset.StringVar(&rawTLSCipherSuites, "web.tls-cipher-suites", "", "Comma-separated list of cipher suites for the server."+
 		" Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants)."+
 		"If omitted, the default Go cipher suites will be used."+
 		"Note that TLS 1.3 ciphersuites are not configurable.")
