@@ -208,6 +208,80 @@ func testPromResourceUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+func testPromStorageLabelsAnnotations(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+
+	p.Spec.Storage = &monitoringv1.StorageSpec{
+		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
+			EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
+				Labels: map[string]string{
+					"test-label": "foo",
+				},
+				Annotations: map[string]string{
+					"test-annotation": "bar",
+				},
+			},
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: resource.MustParse("200Mi"),
+					},
+				},
+			},
+		},
+	}
+
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if val := p.Spec.Storage.VolumeClaimTemplate.Labels["test-label"]; val != "foo" {
+		t.Errorf("incorrect volume claim label, want: %v, got: %v", "foo", val)
+	}
+	if val := p.Spec.Storage.VolumeClaimTemplate.Annotations["test-annotation"]; val != "bar" {
+		t.Errorf("incorrect volume claim annoation, want: %v, got: %v", "bar", val)
+	}
+
+	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		sts, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(metav1.ListOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		if len(sts.Items) < 1 {
+			return false, nil
+		}
+
+		for _, vct := range sts.Items[0].Spec.VolumeClaimTemplates {
+			if vct.Name == "prometheus-"+name+"-db" {
+				if val := vct.Labels["test-label"]; val != "foo" {
+					return false, errors.Errorf("incorrect volume claim label on sts, want: %v, got: %v", "foo", val)
+				}
+				if val := vct.Annotations["test-annotation"]; val != "bar" {
+					return false, errors.Errorf("incorrect volume claim annotation on sts, want: %v, got: %v", "bar", val)
+				}
+				return true, nil
+			}
+		}
+
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
 func testPromStorageUpdate(t *testing.T) {
 	t.Parallel()
