@@ -272,6 +272,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		}
 	}
 
+	if a.Spec.ClusterAdvertiseAddress != "" {
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.advertise-address=%s", a.Spec.ClusterAdvertiseAddress))
+	}
+
 	localReloadURL := &url.URL{
 		Scheme: "http",
 		Host:   config.LocalHost + ":9093",

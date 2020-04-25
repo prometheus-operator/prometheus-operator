@@ -630,6 +630,11 @@ spec:
             baseImage:
               description: Base image that is used to deploy pods, without tag.
               type: string
+            clusterAdvertiseAddress:
+              description: 'ClusterAdvertiseAddress is the explicit address to advertise
+                in cluster. Needs to be provided for non RFC1918 [1] (public) addresses.
+                [1] RFC1918: https://tools.ietf.org/html/rfc1918'
+              type: string
             configMaps:
               description: ConfigMaps is a list of ConfigMaps in the same namespace
                 as the Alertmanager object, which shall be mounted into the Alertmanager
