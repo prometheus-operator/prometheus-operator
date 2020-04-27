@@ -935,6 +935,21 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 			return
 		}
 
+		// Check for Prometheus instances selecting PodMonitors in the NS.
+		pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
+				"err", err,
+			)
+			return
+		}
+
+		if pmNSSelector.Matches(labels.Set(ns.Labels)) {
+			c.enqueue(p)
+			return
+		}
+
 		// Check for Prometheus instances selecting PrometheusRules in
 		// the NS.
 		ruleNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
@@ -1087,29 +1102,8 @@ func (c *Operator) sync(key string) error {
 		return err
 	}
 
-	// If no service monitor selectors are configured, the user wants to
-	// manage configuration themselves.
-	if p.Spec.ServiceMonitorSelector != nil {
-		// We just always regenerate the configuration to be safe.
-		if err := c.createOrUpdateConfigurationSecret(p, ruleConfigMapNames); err != nil {
-			return errors.Wrap(err, "creating config failed")
-		}
-	}
-
-	// Create empty Secret if it doesn't exist. See comment above.
-	s, err := makeEmptyConfigurationSecret(p, c.config)
-	if err != nil {
-		return errors.Wrap(err, "generating empty config secret failed")
-	}
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	_, err = sClient.Get(context.TODO(), s.Name, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
-		if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-			return errors.Wrap(err, "creating empty config file failed")
-		}
-	}
-	if !apierrors.IsNotFound(err) && err != nil {
-		return err
+	if err := c.createOrUpdateConfigurationSecret(p, ruleConfigMapNames); err != nil {
+		return errors.Wrap(err, "creating config failed")
 	}
 
 	if err := c.createOrUpdateTLSAssetSecret(p); err != nil {
@@ -1204,6 +1198,10 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 		if p.Spec.SHA != "" {
 			level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, key, "spec.thanos.sha", "spec.thanos.image"))
 		}
+	}
+
+	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil {
+		level.Warn(logger).Log("msg", "neither serviceMonitorSelector nor podMonitorSelector specified. Custom configuration is deprecated, use additionalScrapeConfigs instead")
 	}
 }
 
@@ -1584,6 +1582,30 @@ func (c *Operator) loadTLSAssets(mons map[string]*monitoringv1.ServiceMonitor) (
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus, ruleConfigMapNames []string) error {
+	// If no service or pod monitor selectors are configured, the user wants to
+	// manage configuration themselves. Do create an empty Secret if it doesn't
+	// exist.
+	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil {
+		level.Debug(c.logger).Log("msg", "neither ServiceMonitor not PodMonitor selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
+
+		s, err := makeEmptyConfigurationSecret(p, c.config)
+		if err != nil {
+			return errors.Wrap(err, "generating empty config secret failed")
+		}
+		sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+		_, err = sClient.Get(context.TODO(), s.Name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
+				return errors.Wrap(err, "creating empty config file failed")
+			}
+		}
+		if !apierrors.IsNotFound(err) && err != nil {
+			return err
+		}
+
+		return nil
+	}
+
 	smons, err := c.selectServiceMonitors(p)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
