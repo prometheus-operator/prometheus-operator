@@ -11,4 +11,4 @@ function concat() {
 }
 
 # shellcheck disable=SC2046
-concat $(find example/rbac/prometheus-operator -name '*.yaml' | sort | grep -v service-monitor) > bundle.yaml
+concat $(find example/rbac/prometheus-operator example/prometheus-operator-crd -name '*.yaml' | sort | grep -v service-monitor) > bundle.yaml

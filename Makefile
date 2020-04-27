@@ -163,7 +163,7 @@ $(CRD_JSONNET_FILES): $(GOJSONTOYAML_BINARY) $(CRD_YAML_FILES)
 	cat example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
 	cat example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml    | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/thanosruler-crd.libsonnet
 
-bundle.yaml: $(shell find example/rbac/prometheus-operator/*.yaml -type f)
+bundle.yaml: $(CRD_YAML_FILES) $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh
 
 scripts/generate/vendor: $(JB_BINARY) $(shell find jsonnet/prometheus-operator -type f)
