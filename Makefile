@@ -145,7 +145,7 @@ generate: $(DEEPCOPY_TARGET) $(CRD_JSONNET_FILES) bundle.yaml $(shell find Docum
 
 .PHONY: generate-in-docker
 generate-in-docker:
-	$(CONTAINER_CMD) $(MAKE) $(MFLAGS) --always-make generate
+	$(CONTAINER_CMD) make --always-make generate
 
 $(CRD_YAML_FILES): $(CONTROLLER_GEN_BINARY) $(TYPES_V1_TARGET)
 	$(CONTROLLER_GEN_BINARY) $(CRD_OPTIONS) paths=./pkg/apis/monitoring/v1 output:crd:dir=./example/prometheus-operator-crd
