@@ -12,7 +12,6 @@ VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
 FIRST_GOPATH:=$(firstword $(subst :, ,$(shell go env GOPATH)))
 CONTROLLER_GEN_BINARY := $(FIRST_GOPATH)/bin/controller-gen
-CRD_OPTIONS ?= "crd:preserveUnknownFields=false"
 GOJSONTOYAML_BINARY:=$(FIRST_GOPATH)/bin/gojsontoyaml
 JB_BINARY:=$(FIRST_GOPATH)/bin/jb
 PO_DOCGEN_BINARY:=$(FIRST_GOPATH)/bin/po-docgen
@@ -20,16 +19,6 @@ EMBEDMD_BINARY:=$(FIRST_GOPATH)/bin/embedmd
 
 TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_types.go
-
-CRD_TYPES := alertmanagers podmonitors prometheuses prometheusrules servicemonitors thanosrulers
-CRD_YAML_FILES := $(foreach name,$(CRD_TYPES),example/prometheus-operator-crd/monitoring.coreos.com_$(name).yaml)
-
-CRD_JSONNET_FILES := jsonnet/prometheus-operator/alertmanager-crd.libsonnet
-CRD_JSONNET_FILES += jsonnet/prometheus-operator/podmonitor-crd.libsonnet
-CRD_JSONNET_FILES += jsonnet/prometheus-operator/prometheus-crd.libsonnet
-CRD_JSONNET_FILES += jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
-CRD_JSONNET_FILES += jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
-CRD_JSONNET_FILES += jsonnet/prometheus-operator/thanosruler-crd.libsonnet
 
 K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
@@ -141,29 +130,18 @@ vendor:
 	go mod vendor
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGET) $(CRD_JSONNET_FILES) bundle.yaml $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGET) generate-crds $(BUNDLES) $(shell find Documentation -type f)
 
 .PHONY: generate-in-docker
 generate-in-docker:
 	$(CONTAINER_CMD) make --always-make generate
 
-$(CRD_YAML_FILES): $(CONTROLLER_GEN_BINARY) $(TYPES_V1_TARGET)
-	$(CONTROLLER_GEN_BINARY) $(CRD_OPTIONS) paths=./pkg/apis/monitoring/v1 output:crd:dir=./example/prometheus-operator-crd
-	cat ./example/prometheus-operator-crd/monitoring.coreos.com_prometheus.yaml | \
-	sed s/plural\:\ prometheus/plural\:\ prometheuses/ | \
-	sed s/prometheus.monitoring.coreos.com/prometheuses.monitoring.coreos.com/ \
-	> ./example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
-	rm ./example/prometheus-operator-crd/monitoring.coreos.com_prometheus.yaml
+.PHONY: generate-crds
+generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET)
+	GOOS=$(OS) GOARCH=$(ARCH) go run -v ./scripts/generate-crds.go --controller-gen=$(CONTROLLER_GEN_BINARY) --gojsontoyaml=$(GOJSONTOYAML_BINARY)
 
-$(CRD_JSONNET_FILES): $(GOJSONTOYAML_BINARY) $(CRD_YAML_FILES)
-	cat example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml   | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/alertmanager-crd.libsonnet
-	cat example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml    | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheus-crd.libsonnet
-	cat example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/servicemonitor-crd.libsonnet
-	cat example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml     | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/podmonitor-crd.libsonnet
-	cat example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/prometheusrule-crd.libsonnet
-	cat example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml    | gojsontoyaml -yamltojson > jsonnet/prometheus-operator/thanosruler-crd.libsonnet
-
-bundle.yaml: $(CRD_YAML_FILES) $(shell find example/rbac/prometheus-operator/*.yaml -type f)
+BUNDLES = bundle.yaml bundle-v1beta1-crd.yaml
+$(BUNDLES): generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh
 
 scripts/generate/vendor: $(JB_BINARY) $(shell find jsonnet/prometheus-operator -type f)
@@ -190,7 +168,7 @@ Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET)
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
 
-$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) bundle.yaml
+$(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) $(BUNDLES)
 	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
 
 
