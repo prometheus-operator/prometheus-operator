@@ -184,3 +184,37 @@ func TestRacyMultiWatch(t *testing.T) {
 	mw.Stop()
 	mw.Stop()
 }
+
+func TestIdenticalNamespaces(t *testing.T) {
+	for _, tc := range []struct {
+		a, b map[string]struct{}
+		ret  bool
+	}{
+		{
+			a: map[string]struct{}{
+				"foo": struct{}{},
+			},
+			b: map[string]struct{}{
+				"foo": struct{}{},
+			},
+			ret: true,
+		},
+		{
+			a: map[string]struct{}{
+				"foo": struct{}{},
+			},
+			b: map[string]struct{}{
+				"bar": struct{}{},
+			},
+			ret: false,
+		},
+	} {
+		tc := tc
+		t.Run("", func(t *testing.T) {
+			ret := IdenticalNamespaces(tc.a, tc.b)
+			if ret != tc.ret {
+				t.Fatalf("expecting IdenticalNamespaces() to return %v, got %v", tc.ret, ret)
+			}
+		})
+	}
+}
