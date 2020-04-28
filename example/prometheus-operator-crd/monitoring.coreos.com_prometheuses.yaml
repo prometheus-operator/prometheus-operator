@@ -3305,7 +3305,9 @@ spec:
                   type: object
               type: object
             podMonitorSelector:
-              description: '*Experimental* PodMonitors to be selected for target discovery.'
+              description: '*Experimental* PodMonitors to be selected for target discovery.
+                *Deprecated:* if neither this nor serviceMonitorSelector are specified,
+                configuration is unmanaged.'
               properties:
                 matchExpressions:
                   description: matchExpressions is a list of label selector requirements.
@@ -4219,7 +4221,9 @@ spec:
                   type: object
               type: object
             serviceMonitorSelector:
-              description: ServiceMonitors to be selected for target discovery.
+              description: ServiceMonitors to be selected for target discovery. *Deprecated:*
+                if neither this nor podMonitorSelector are specified, configuration
+                is unmanaged.
               properties:
                 matchExpressions:
                   description: matchExpressions is a list of label selector requirements.

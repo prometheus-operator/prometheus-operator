@@ -26,4 +26,4 @@ Note that because the Prometheus Operator does not generate the Prometheus confi
 * `evaluationInterval`
 * `externalLabels`
 
-In order to enable to specify a custom configuration, the `serviceMonitorSelector` field has to be left empty. When the `serviceMonitorSelector` field is empty, the Prometheus Operator will not attempt to manage the `Secret`, that contains the Prometheus configuration. The `Secret`, that contains the Prometheus configuration is called `prometheus-<name-of-prometheus-object>`, in the same namespace as the Prometheus object. Within this `Secret`, the key that contains the Prometheus configuration is called `prometheus.yaml`.
+In order to enable to specify a custom configuration, specify neither `serviceMonitorSelector` nor `podMonitorSelector`. When these fields are empty, the Prometheus Operator will not attempt to manage the `Secret`, that contains the Prometheus configuration. The `Secret`, that contains the Prometheus configuration is called `prometheus-<name-of-prometheus-object>`, in the same namespace as the Prometheus object. Within this `Secret`, the key that contains the Prometheus configuration is called `prometheus.yaml.gz`.
