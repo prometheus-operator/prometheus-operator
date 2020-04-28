@@ -10,5 +10,10 @@ function concat() {
     awk 'FNR==1{print "---"}1' "$@" | awk '{if (NR!=1) {print}}'
 }
 
-# shellcheck disable=SC2046
-concat $(find example/rbac/prometheus-operator example/prometheus-operator-crd -name '*.yaml' | sort | grep -v service-monitor) > bundle.yaml
+function generate_bundle() {
+    # shellcheck disable=SC2046
+    concat $(find "$@" -maxdepth 1 -name '*.yaml' | sort | grep -v service-monitor)
+}
+
+generate_bundle example/rbac/prometheus-operator example/prometheus-operator-crd > bundle.yaml
+generate_bundle example/rbac/prometheus-operator example/prometheus-operator-crd/v1beta1 > bundle-v1beta1-crd.yaml
