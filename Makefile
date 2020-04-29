@@ -1,7 +1,12 @@
 SHELL=/bin/bash -o pipefail
 
-OS?=$(shell go env GOOS)
-ARCH?=$(shell go env GOARCH)
+GOOS?=$(shell go env GOOS)
+GOARCH?=$(shell go env GOARCH)
+ifeq ($(GOARCH),arm)
+	ARCH=armv7
+else
+	ARCH=$(GOARCH)
+endif
 
 GO_PKG=github.com/coreos/prometheus-operator
 REPO?=quay.io/coreos/prometheus-operator
@@ -28,7 +33,7 @@ K8S_GEN_DEPS:=.header
 K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(FIRST_GOPATH)/bin/$(bin))
 
-GO_BUILD_RECIPE=GOOS=$(OS) GOARCH=$(ARCH) CGO_ENABLED=0 go build -mod=vendor -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
+GO_BUILD_RECIPE=GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -mod=vendor -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/ | grep -v /contrib/)
 
 CONTAINER_CMD:=docker run --rm \
@@ -112,15 +117,16 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(OS) -t $(REPO):$(TAG) .
+	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(REPO):$(TAG) .
 	touch $@
 
 .hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile prometheus-config-reloader
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build -t $(REPO_PROMETHEUS_CONFIG_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(REPO_PROMETHEUS_CONFIG_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
+
 
 ##############
 # Generating #
