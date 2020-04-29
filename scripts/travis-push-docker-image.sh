@@ -29,6 +29,11 @@ for arch in ${CPU_ARCHS}; do
 	make --always-make image GOARCH="$arch" TAG="${TAG}-$arch"
 done
 
+if [ "$TRAVIS" == "true" ]; then
+	# Workaround for docker bug https://github.com/docker/for-linux/issues/396
+	sudo chmod o+x /etc/docker
+fi
+
 echo "${QUAY_PASSWORD}" | docker login -u "${QUAY_USERNAME}" --password-stdin quay.io
 export DOCKER_CLI_EXPERIMENTAL=enabled
 for r in ${REPO} ${REPO_PROMETHEUS_CONFIG_RELOADER}; do
