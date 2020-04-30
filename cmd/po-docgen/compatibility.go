@@ -36,6 +36,8 @@ The Prometheus Operator uses client-go to communicate with Kubernetes clusters. 
 
 Due to the use of CustomResourceDefinitions Kubernetes >= v1.7.0 is required.
 
+Due to the use of apiextensions.k8s.io/v1 CustomResourceDefinitions, prometheus-operator v0.39.0 onward requires Kubernetes >= v1.16.0.
+
 ## Prometheus
 
 The versions of Prometheus compatible to be run with the Prometheus Operator are:`)

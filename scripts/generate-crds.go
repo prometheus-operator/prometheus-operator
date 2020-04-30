@@ -55,17 +55,10 @@ var (
 	}
 
 	crdGenerators = []crdGenerator{
-		// CRD v1
 		{
 			ControllerGenOpts: "crd:crdVersions=v1",
 			YAMLDir:           "./example/prometheus-operator-crd",
 			JsonnetDir:        "./jsonnet/prometheus-operator",
-		},
-		// CRD v1beta1
-		{
-			ControllerGenOpts: "crd:crdVersions=v1beta1,preserveUnknownFields=false",
-			YAMLDir:           "./example/prometheus-operator-crd/v1beta1",
-			JsonnetDir:        "./jsonnet/prometheus-operator/crd-v1beta1",
 		},
 	}
 )

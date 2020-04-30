@@ -82,8 +82,6 @@ To quickly try out _just_ the Prometheus Operator inside a cluster, **choose a r
 kubectl apply -f bundle.yaml
 ```
 
-> Note: if you want to use Prometheus Operator with v1beta1 Custom Resource Definitions apply `bundle-v1beta1-crd.yaml` instead.
-
 > Note: make sure to adapt the namespace in the ClusterRoleBinding if deploying in a namespace other than the default namespace.
 
 To run the Operator outside of a cluster:

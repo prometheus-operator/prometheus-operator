@@ -16,4 +16,3 @@ function generate_bundle() {
 }
 
 generate_bundle example/rbac/prometheus-operator example/prometheus-operator-crd > bundle.yaml
-generate_bundle example/rbac/prometheus-operator example/prometheus-operator-crd/v1beta1 > bundle-v1beta1-crd.yaml
