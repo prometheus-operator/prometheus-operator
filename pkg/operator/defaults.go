@@ -67,6 +67,7 @@ var (
 		"v2.14.0",
 		"v2.15.2",
 		"v2.16.0",
+		"v2.17.2",
 	}
 	DefaultPrometheusVersion   = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
 	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"
