@@ -18,6 +18,7 @@ rules:
   - thanosrulers/finalizers
   - servicemonitors
   - podmonitors
+  - blackboxmonitors
   - prometheusrules
   verbs:
   - '*'

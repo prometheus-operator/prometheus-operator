@@ -30,6 +30,10 @@ func (c *FakeMonitoringV1) Alertmanagers(namespace string) v1.AlertmanagerInterf
 	return &FakeAlertmanagers{c, namespace}
 }
 
+func (c *FakeMonitoringV1) BlackboxMonitors(namespace string) v1.BlackboxMonitorInterface {
+	return &FakeBlackboxMonitors{c, namespace}
+}
+
 func (c *FakeMonitoringV1) PodMonitors(namespace string) v1.PodMonitorInterface {
 	return &FakePodMonitors{c, namespace}
 }

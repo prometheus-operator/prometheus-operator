@@ -18,6 +18,8 @@ package v1
 
 type AlertmanagerExpansion interface{}
 
+type BlackboxMonitorExpansion interface{}
+
 type PodMonitorExpansion interface{}
 
 type PrometheusExpansion interface{}

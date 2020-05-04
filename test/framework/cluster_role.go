@@ -36,6 +36,7 @@ var (
 		ResourceNames: []string{
 			"alertmanagers.monitoring.coreos.com",
 			"podmonitors.monitoring.coreos.com",
+			"blackboxmonitors.monitoring.coreos.com",
 			"prometheuses.monitoring.coreos.com",
 			"prometheusrules.monitoring.coreos.com",
 			"servicemonitors.monitoring.coreos.com",

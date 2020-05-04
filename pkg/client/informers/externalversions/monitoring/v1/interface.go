@@ -24,6 +24,8 @@ import (
 type Interface interface {
 	// Alertmanagers returns a AlertmanagerInformer.
 	Alertmanagers() AlertmanagerInformer
+	// BlackboxMonitors returns a BlackboxMonitorInformer.
+	BlackboxMonitors() BlackboxMonitorInformer
 	// PodMonitors returns a PodMonitorInformer.
 	PodMonitors() PodMonitorInformer
 	// Prometheuses returns a PrometheusInformer.
@@ -50,6 +52,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Alertmanagers returns a AlertmanagerInformer.
 func (v *version) Alertmanagers() AlertmanagerInformer {
 	return &alertmanagerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// BlackboxMonitors returns a BlackboxMonitorInformer.
+func (v *version) BlackboxMonitors() BlackboxMonitorInformer {
+	return &blackboxMonitorInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // PodMonitors returns a PodMonitorInformer.

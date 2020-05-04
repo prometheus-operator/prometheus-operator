@@ -113,6 +113,19 @@ func main() {
 			if err != nil {
 				log.Fatalf("podMonitor is invalid: %v", err)
 			}
+		case v1.BlackboxMonitorsKind:
+			j, err := yaml.YAMLToJSON(content)
+			if err != nil {
+				log.Fatalf("unable to convert YALM to JSON: %v", err)
+			}
+
+			decoder := json.NewDecoder(bytes.NewBuffer(j))
+			decoder.DisallowUnknownFields()
+
+			var blackboxMonitor v1.BlackboxMonitor
+			if err := decoder.Decode(&blackboxMonitor); err != nil {
+				log.Fatalf("blackboxMonitor is invalid: %v", err)
+			}
 		case v1.ThanosRulerKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
@@ -128,7 +141,7 @@ func main() {
 				log.Fatalf("thanosRuler is invalid: %v", err)
 			}
 		default:
-			log.Fatal("MetaType is unknown to linter. Not in Alertmanager, Prometheus, PrometheusRule, ServiceMonitor, PodMonitor, ThanosRuler")
+			log.Fatal("MetaType is unknown to linter. Not in Alertmanager, Prometheus, PrometheusRule, ServiceMonitor, PodMonitor, BlackboxMonitor, ThanosRuler")
 		}
 	}
 }
