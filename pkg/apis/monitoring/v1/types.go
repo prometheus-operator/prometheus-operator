@@ -146,6 +146,14 @@ type PrometheusSpec struct {
 	ScrapeInterval string `json:"scrapeInterval,omitempty"`
 	// Interval between consecutive evaluations.
 	EvaluationInterval string `json:"evaluationInterval,omitempty"`
+	// Number of times Liveness Probe can fail before killing pod
+	LivenessFailureThreshold *int32 `json:"livenessFailureThreshold,omitempty"`
+	// Time in seconds before which Liveness Probes will start
+	LivenessProbeInitialDelaySeconds *int32 `json:"livenessProbeInitialDelaySeconds,omitempty"`
+	// Liveness Probe PeriodSeconds
+	LivenessPeriodSeconds *int32 `json:"livenessPeriodSeconds,omitempty"`
+	// Timeout in seconds for liveness probe
+	LivenessProbeTimeoutSeconds *int32 `json:"livenessProbeTimeoutSeconds,omitempty"`
 	// /--rules.*/ command-line arguments.
 	Rules Rules `json:"rules,omitempty"`
 	// The labels to add to any time series or alerts when communicating with

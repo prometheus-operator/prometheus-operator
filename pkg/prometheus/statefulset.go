@@ -51,11 +51,16 @@ const (
 )
 
 var (
-	minReplicas                 int32 = 1
-	defaultMaxConcurrency       int32 = 20
-	managedByOperatorLabel            = "managed-by"
-	managedByOperatorLabelValue       = "prometheus-operator"
-	managedByOperatorLabels           = map[string]string{
+	minReplicas                             int32 = 1
+	defaultMaxConcurrency                   int32 = 20
+	defaultLivenessFailureThreshold         int32 = 6
+	defaultLivenessProbeInitialDelaySeconds int32 = 0
+	defaultLivenessPeriodSeconds            int32 = 5
+	defaultLivenessProbeTimeoutSeconds      int32 = 3
+
+	managedByOperatorLabel      = "managed-by"
+	managedByOperatorLabelValue = "prometheus-operator"
+	managedByOperatorLabels     = map[string]string{
 		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
 	probeTimeoutSeconds int32 = 3
@@ -583,7 +588,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 	var livenessProbeHandler v1.Handler
 	var readinessProbeHandler v1.Handler
-	var livenessFailureThreshold int32
+
 	if (version.Major == 1 && version.Minor >= 8) || version.Major == 2 {
 		{
 			healthyPath := path.Clean(webRoutePrefix + "/-/healthy")
@@ -623,8 +628,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			}
 		}
 
-		livenessFailureThreshold = 6
-
 	} else {
 		livenessProbeHandler = v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
@@ -635,14 +638,28 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		readinessProbeHandler = livenessProbeHandler
 		// For larger servers, restoring a checkpoint on startup may take quite a bit of time.
 		// Wait up to 5 minutes (60 fails * 5s per fail)
-		livenessFailureThreshold = 60
+		defaultLivenessFailureThreshold = 60
+	}
+
+	if p.Spec.LivenessFailureThreshold == nil {
+		p.Spec.LivenessFailureThreshold = &defaultLivenessFailureThreshold
+	}
+	if p.Spec.LivenessProbeInitialDelaySeconds == nil || *p.Spec.LivenessProbeInitialDelaySeconds < defaultLivenessProbeInitialDelaySeconds {
+		p.Spec.LivenessProbeInitialDelaySeconds = &defaultLivenessProbeInitialDelaySeconds
+	}
+	if p.Spec.LivenessPeriodSeconds == nil {
+		p.Spec.LivenessPeriodSeconds = &defaultLivenessPeriodSeconds
+	}
+	if p.Spec.LivenessProbeTimeoutSeconds == nil {
+		p.Spec.LivenessProbeTimeoutSeconds = &defaultLivenessProbeTimeoutSeconds
 	}
 
 	livenessProbe := &v1.Probe{
-		Handler:          livenessProbeHandler,
-		PeriodSeconds:    5,
-		TimeoutSeconds:   probeTimeoutSeconds,
-		FailureThreshold: livenessFailureThreshold,
+		Handler:             livenessProbeHandler,
+		FailureThreshold:    *p.Spec.LivenessFailureThreshold,
+		InitialDelaySeconds: *p.Spec.LivenessProbeInitialDelaySeconds,
+		PeriodSeconds:       *p.Spec.LivenessPeriodSeconds,
+		TimeoutSeconds:      *p.Spec.LivenessProbeTimeoutSeconds,
 	}
 	readinessProbe := &v1.Probe{
 		Handler:          readinessProbeHandler,

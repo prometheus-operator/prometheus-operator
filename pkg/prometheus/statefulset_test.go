@@ -430,9 +430,10 @@ func TestListenLocal(t *testing.T) {
 				},
 			},
 		},
-		TimeoutSeconds:   3,
-		PeriodSeconds:    5,
-		FailureThreshold: 6,
+		InitialDelaySeconds: 0,
+		TimeoutSeconds:      3,
+		PeriodSeconds:       5,
+		FailureThreshold:    6,
 	}
 	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
 		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %v\n\nGot: %v", expectedLivenessProbe, actualLivenessProbe)
