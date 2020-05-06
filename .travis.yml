@@ -1,15 +1,12 @@
-sudo: required
+---
 dist: xenial
 language: go
 go:
-- "1.13.x"
+- "1.14.x"
 go_import_path: github.com/coreos/prometheus-operator
-env:
-  - GO111MODULE=on
 services:
 - docker
 before_install:
-  - pip install --user awscli
   - export PATH=$PATH:$HOME/.local/bin
   # k8s >= 1.18 requires conntrack, ebtables and socat.
   - sudo apt update -y
@@ -19,7 +16,7 @@ jobs:
   - name: "Sanity checks and tests"
     stage: test
     # Check generated contents are up to date and code & docs files are formatted.
-    script: make --always-make format generate-in-docker && git diff --exit-code
+    script: make --always-make format generate && git diff --exit-code
   - name: "Build Prometheus Operator rule config map to rule file CRDs CLI tool"
     script: cd cmd/po-rule-migration && go install
   - name: "Ensure vendor folder matches vendor.json"
