@@ -8,6 +8,10 @@ labels: kind/support
 
 Feel free to ask questions in #prometheus-operator on Kubernetes Slack!
 
+Note: This repository is about prometheus-operator itself, if you have questions about:
+- helm installation, go to https://github.com/helm/charts repository
+- kube-prometheus setup, go to https://github.com/coreos/kube-prometheus
+
 -->
 
 **What did you do?**
@@ -19,7 +23,7 @@ Feel free to ask questions in #prometheus-operator on Kubernetes Slack!
 * Prometheus Operator version:
 
     `Insert image tag or Git SHA here`
-    <!-- Try kubectl -n monitoring describe deployment prometheus-operator -->
+    <!-- Try: kubectl -n monitoring describe deployment prometheus-operator -->
 
 * Kubernetes version information:
 
@@ -28,7 +32,7 @@ Feel free to ask questions in #prometheus-operator on Kubernetes Slack!
 
 * Kubernetes cluster kind:
 
-    insert how you created your cluster: kops, bootkube, tectonic-installer, etc.
+    insert how you created your cluster: kops, bootkube, etc.
 
 * Manifests:
 
