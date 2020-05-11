@@ -185,7 +185,7 @@ func newNSLabelEnforcementExcludeList(excludeConfig []monitoringv1.PrometheusRul
 	return ruleExcludeList
 }
 
-func (w nsLabelEnforcementExcludeList) Contains(name, namespace string) bool {
+func (w nsLabelEnforcementExcludeList) Contains(namespace, name string) bool {
 	if w == nil {
 		return false
 	}
