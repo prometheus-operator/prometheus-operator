@@ -19,25 +19,27 @@ import (
 	"testing"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestEnforcedNamespaceLabelRule(t *testing.T) {
 	type testCase struct {
+		Name                           string
 		PromRuleSpec                   monitoringv1.PrometheusRuleSpec
 		PromSpecEnforcedNamespaceLabel string
 		PromRuleNamespace              string
 
-		Expected string
+		Expected monitoringv1.PrometheusRuleSpec
 	}
 
 	testcases := []testCase{
 		{
+			Name: "recordingrule-enforced",
 			PromRuleSpec: monitoringv1.PrometheusRuleSpec{
 				Groups: []monitoringv1.RuleGroup{
 					{
-						Name: "recordingrule-enforced",
 						Rules: []monitoringv1.Rule{
 							{
 								Record: "rule",
@@ -50,24 +52,29 @@ func TestEnforcedNamespaceLabelRule(t *testing.T) {
 			PromSpecEnforcedNamespaceLabel: "namespace",
 			PromRuleNamespace:              "bar",
 
-			Expected: `groups:
-- name: recordingrule-enforced
-  rules:
-  - expr: rate(requests_total{job="myjob",namespace="bar"}[5m])
-    labels:
-      namespace: bar
-    record: rule
-`,
+			Expected: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Rules: []monitoringv1.Rule{
+							{
+								Record: "rule",
+								Expr:   intstr.FromString("rate(requests_total{job=\"myjob\",namespace=\"bar\"}[5m])"),
+								Labels: map[string]string{"namespace": "bar"},
+							},
+						},
+					},
+				},
+			},
 		},
 		{
+			Name: "alertname-enforced",
 			PromRuleSpec: monitoringv1.PrometheusRuleSpec{
 				Groups: []monitoringv1.RuleGroup{
 					{
-						Name: "alertname-enforced",
 						Rules: []monitoringv1.Rule{
 							{
 								Alert: "alert",
-								Expr:  intstr.FromString("node_cpu_seconds_total{job=\"node-exporter\", mode=\"idle\"}"),
+								Expr:  intstr.FromString("node_cpu_seconds_total{job=\"node-exporter\",mode=\"idle\"}"),
 							},
 						},
 					},
@@ -76,24 +83,29 @@ func TestEnforcedNamespaceLabelRule(t *testing.T) {
 			PromSpecEnforcedNamespaceLabel: "namespace",
 			PromRuleNamespace:              "bar",
 
-			Expected: `groups:
-- name: alertname-enforced
-  rules:
-  - alert: alert
-    expr: node_cpu_seconds_total{job="node-exporter",mode="idle",namespace="bar"}
-    labels:
-      namespace: bar
-`,
+			Expected: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Rules: []monitoringv1.Rule{
+							{
+								Alert:  "alert",
+								Expr:   intstr.FromString("node_cpu_seconds_total{job=\"node-exporter\",mode=\"idle\",namespace=\"bar\"}"),
+								Labels: map[string]string{"namespace": "bar"},
+							},
+						},
+					},
+				},
+			},
 		},
 		{
+			Name: "alertname-enforced-removed-ns",
 			PromRuleSpec: monitoringv1.PrometheusRuleSpec{
 				Groups: []monitoringv1.RuleGroup{
 					{
-						Name: "alertname-enforced-removed-ns",
 						Rules: []monitoringv1.Rule{
 							{
 								Alert: "alert",
-								Expr:  intstr.FromString("node_cpu_seconds_total{namespace=\"foo-bar\", mode=\"idle\"}"),
+								Expr:  intstr.FromString("node_cpu_seconds_total{namespace=\"foo-bar\",mode=\"idle\"}"),
 							},
 						},
 					},
@@ -102,20 +114,25 @@ func TestEnforcedNamespaceLabelRule(t *testing.T) {
 			PromSpecEnforcedNamespaceLabel: "namespace",
 			PromRuleNamespace:              "bar",
 
-			Expected: `groups:
-- name: alertname-enforced-removed-ns
-  rules:
-  - alert: alert
-    expr: node_cpu_seconds_total{mode="idle",namespace="bar"}
-    labels:
-      namespace: bar
-`,
+			Expected: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Rules: []monitoringv1.Rule{
+							{
+								Alert:  "alert",
+								Expr:   intstr.FromString("node_cpu_seconds_total{mode=\"idle\",namespace=\"bar\"}"),
+								Labels: map[string]string{"namespace": "bar"},
+							},
+						},
+					},
+				},
+			},
 		},
 		{
+			Name: "alertname-enforced-no-labels",
 			PromRuleSpec: monitoringv1.PrometheusRuleSpec{
 				Groups: []monitoringv1.RuleGroup{
 					{
-						Name: "alertname-enforced-no-labels",
 						Rules: []monitoringv1.Rule{
 							{
 								Alert: "alert",
@@ -131,21 +148,28 @@ func TestEnforcedNamespaceLabelRule(t *testing.T) {
 			PromSpecEnforcedNamespaceLabel: "namespace",
 			PromRuleNamespace:              "default",
 
-			Expected: `groups:
-- name: alertname-enforced-no-labels
-  rules:
-  - alert: alert
-    expr: http_requests_total{namespace="default"}
-    labels:
-      foo: bar
-      namespace: default
-`,
+			Expected: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Labels: map[string]string{
+									"foo":       "bar",
+									"namespace": "default",
+								},
+								Expr: intstr.FromString("http_requests_total{namespace=\"default\"}"),
+							},
+						},
+					},
+				},
+			},
 		},
 		{
+			Name: "alertname-not-enforced",
 			PromRuleSpec: monitoringv1.PrometheusRuleSpec{
 				Groups: []monitoringv1.RuleGroup{
 					{
-						Name: "alertname-not-enforced",
 						Rules: []monitoringv1.Rule{
 							{
 								Alert: "alert",
@@ -158,24 +182,35 @@ func TestEnforcedNamespaceLabelRule(t *testing.T) {
 			PromSpecEnforcedNamespaceLabel: "",
 			PromRuleNamespace:              "default",
 
-			Expected: `groups:
-- name: alertname-not-enforced
-  rules:
-  - alert: alert
-    expr: vector(1)
-`,
+			Expected: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Rules: []monitoringv1.Rule{
+							{
+								Alert: "alert",
+								Expr:  intstr.FromString("vector(1)"),
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 
 	for _, tc := range testcases {
-		content, err := generateContent(tc.PromRuleSpec, tc.PromSpecEnforcedNamespaceLabel, tc.PromRuleNamespace)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if tc.Expected != content {
-			t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", content, tc.Expected)
-
-		}
+		t.Run(tc.Name,
+			func(t *testing.T) {
+				if tc.PromSpecEnforcedNamespaceLabel != "" {
+					err := injectNamespaceLabel(&tc.PromRuleSpec, tc.PromSpecEnforcedNamespaceLabel, tc.PromRuleNamespace)
+					if err != nil {
+						t.Error(err)
+					}
+				}
+				if diff := cmp.Diff(tc.Expected, tc.PromRuleSpec); diff != "" {
+					t.Errorf("Unexpected result (-want +got):\n%s", diff)
+				}
+			},
+		)
 	}
 }
 
