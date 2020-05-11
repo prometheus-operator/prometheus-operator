@@ -1586,89 +1586,128 @@ func (c *Operator) loadBearerTokensFromSecrets(mons map[string]*monitoringv1.Ser
 	return tokens, nil
 }
 
-func (c *Operator) loadTLSAssets(mons map[string]*monitoringv1.ServiceMonitor) (map[string]TLSAsset, error) {
+func (c *Operator) loadTLSAssetsFromTLSConfigList(ns string, tlsConfigs []*monitoringv1.TLSConfig) (map[string]TLSAsset, error) {
+
 	assets := map[string]TLSAsset{}
-	nsSecretCache := make(map[string]*v1.Secret)
-	nsConfigMapCache := make(map[string]*v1.ConfigMap)
+
+	for _, tls := range tlsConfigs {
+
+		if tls == nil {
+			continue
+		}
+
+		prefix := ns + "/"
+		secretSelectors := map[string]*v1.SecretKeySelector{}
+		configMapSelectors := map[string]*v1.ConfigMapKeySelector{}
+		if tls.CA != (monitoringv1.SecretOrConfigMap{}) {
+			switch {
+			case tls.CA.Secret != nil:
+				secretSelectors[prefix+tls.CA.Secret.Name+"/"+tls.CA.Secret.Key] = tls.CA.Secret
+			case tls.CA.ConfigMap != nil:
+				configMapSelectors[prefix+tls.CA.ConfigMap.Name+"/"+tls.CA.ConfigMap.Key] = tls.CA.ConfigMap
+			}
+		}
+		if tls.Cert != (monitoringv1.SecretOrConfigMap{}) {
+			switch {
+			case tls.Cert.Secret != nil:
+				secretSelectors[prefix+tls.Cert.Secret.Name+"/"+tls.Cert.Secret.Key] = tls.Cert.Secret
+			case tls.Cert.ConfigMap != nil:
+				configMapSelectors[prefix+tls.Cert.ConfigMap.Name+"/"+tls.Cert.ConfigMap.Key] = tls.Cert.ConfigMap
+			}
+		}
+		if tls.KeySecret != nil {
+			secretSelectors[prefix+tls.KeySecret.Name+"/"+tls.KeySecret.Key] = tls.KeySecret
+		}
+
+		for key, selector := range secretSelectors {
+			sClient := c.kclient.CoreV1().Secrets(ns)
+			asset, err := getCredFromSecret(
+				sClient,
+				*selector,
+				"tls config",
+				key,
+				make(map[string]*v1.Secret),
+			)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"failed to extract endpoint tls asset for servicemonitor %v from secret %v and key %v in namespace %v",
+					ns, selector.Name, selector.Key, ns,
+				)
+			}
+
+			assets[fmt.Sprintf(
+				"%v_%v_%v",
+				ns,
+				selector.Name,
+				selector.Key,
+			)] = TLSAsset(asset)
+		}
+
+		for key, selector := range configMapSelectors {
+			sClient := c.kclient.CoreV1().ConfigMaps(ns)
+			asset, err := getCredFromConfigMap(
+				sClient,
+				*selector,
+				"tls config",
+				key,
+				make(map[string]*v1.ConfigMap),
+			)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"failed to extract endpoint tls asset for servicemonitor %v from configmap %v and key %v in namespace %v",
+					ns, selector.Name, selector.Key, ns,
+				)
+			}
+
+			assets[fmt.Sprintf(
+				"%v_%v_%v",
+				ns,
+				selector.Name,
+				selector.Key,
+			)] = TLSAsset(asset)
+		}
+	}
+	return assets, nil
+}
+
+func (c *Operator) loadTLSAssets(p *monitoringv1.Prometheus) (map[string]TLSAsset, error) {
+
+	smAssets := map[string]TLSAsset{}
+	promAssets := map[string]TLSAsset{}
+	assets := map[string]TLSAsset{}
+
+	smEndpoingTLSConfig := []*monitoringv1.TLSConfig{}
+	promRwTLSConfig := []*monitoringv1.TLSConfig{}
+
+	mons, err := c.selectServiceMonitors(p)
+	if err != nil {
+		return nil, errors.Wrap(err, "selecting ServiceMonitors failed")
+	}
 
 	for _, mon := range mons {
 		for _, ep := range mon.Spec.Endpoints {
-			if ep.TLSConfig == nil {
-				continue
-			}
-
-			prefix := mon.Namespace + "/"
-			secretSelectors := map[string]*v1.SecretKeySelector{}
-			configMapSelectors := map[string]*v1.ConfigMapKeySelector{}
-			if ep.TLSConfig.CA != (monitoringv1.SecretOrConfigMap{}) {
-				switch {
-				case ep.TLSConfig.CA.Secret != nil:
-					secretSelectors[prefix+ep.TLSConfig.CA.Secret.Name+"/"+ep.TLSConfig.CA.Secret.Key] = ep.TLSConfig.CA.Secret
-				case ep.TLSConfig.CA.ConfigMap != nil:
-					configMapSelectors[prefix+ep.TLSConfig.CA.ConfigMap.Name+"/"+ep.TLSConfig.CA.ConfigMap.Key] = ep.TLSConfig.CA.ConfigMap
-				}
-			}
-			if ep.TLSConfig.Cert != (monitoringv1.SecretOrConfigMap{}) {
-				switch {
-				case ep.TLSConfig.Cert.Secret != nil:
-					secretSelectors[prefix+ep.TLSConfig.Cert.Secret.Name+"/"+ep.TLSConfig.Cert.Secret.Key] = ep.TLSConfig.Cert.Secret
-				case ep.TLSConfig.Cert.ConfigMap != nil:
-					configMapSelectors[prefix+ep.TLSConfig.Cert.ConfigMap.Name+"/"+ep.TLSConfig.Cert.ConfigMap.Key] = ep.TLSConfig.Cert.ConfigMap
-				}
-			}
-			if ep.TLSConfig.KeySecret != nil {
-				secretSelectors[prefix+ep.TLSConfig.KeySecret.Name+"/"+ep.TLSConfig.KeySecret.Key] = ep.TLSConfig.KeySecret
-			}
-
-			for key, selector := range secretSelectors {
-				sClient := c.kclient.CoreV1().Secrets(mon.Namespace)
-				asset, err := getCredFromSecret(
-					sClient,
-					*selector,
-					"tls config",
-					key,
-					nsSecretCache,
-				)
-				if err != nil {
-					return nil, fmt.Errorf(
-						"failed to extract endpoint tls asset for servicemonitor %v from secret %v and key %v in namespace %v",
-						mon.Name, selector.Name, selector.Key, mon.Namespace,
-					)
-				}
-
-				assets[fmt.Sprintf(
-					"%v_%v_%v",
-					mon.Namespace,
-					selector.Name,
-					selector.Key,
-				)] = TLSAsset(asset)
-			}
-
-			for key, selector := range configMapSelectors {
-				sClient := c.kclient.CoreV1().ConfigMaps(mon.Namespace)
-				asset, err := getCredFromConfigMap(
-					sClient,
-					*selector,
-					"tls config",
-					key,
-					nsConfigMapCache,
-				)
-				if err != nil {
-					return nil, fmt.Errorf(
-						"failed to extract endpoint tls asset for servicemonitor %v from configmap %v and key %v in namespace %v",
-						mon.Name, selector.Name, selector.Key, mon.Namespace,
-					)
-				}
-
-				assets[fmt.Sprintf(
-					"%v_%v_%v",
-					mon.Namespace,
-					selector.Name,
-					selector.Key,
-				)] = TLSAsset(asset)
-			}
-
+			smEndpoingTLSConfig = append(smEndpoingTLSConfig, ep.TLSConfig)
 		}
+		smAssets, err = c.loadTLSAssetsFromTLSConfigList(mon.Namespace, smEndpoingTLSConfig)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _, rw := range p.Spec.RemoteWrite {
+		promRwTLSConfig = append(promRwTLSConfig, rw.TLSConfig)
+	}
+	promAssets, err = c.loadTLSAssetsFromTLSConfigList(p.ObjectMeta.Namespace, promRwTLSConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range smAssets {
+		assets[k] = v
+	}
+
+	for k, v := range promAssets {
+		assets[k] = v
 	}
 
 	return assets, nil
@@ -1803,12 +1842,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) erro
 	boolTrue := true
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 
-	smons, err := c.selectServiceMonitors(p)
-	if err != nil {
-		return errors.Wrap(err, "selecting ServiceMonitors failed")
-	}
-
-	tlsAssets, err := c.loadTLSAssets(smons)
+	tlsAssets, err := c.loadTLSAssets(p)
 	if err != nil {
 		return err
 	}

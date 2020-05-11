@@ -36,6 +36,32 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	SECRET    = 0
+	CONFIGMAP = 1
+)
+
+type Key struct {
+	Filename   string
+	SecretName string
+}
+
+type Cert struct {
+	Filename     string
+	ResourceName string
+	ResourceType int
+}
+
+type PromRemoteWriteTestConfig struct {
+	Name               string
+	ClientKey          Key
+	ClientCert         Cert
+	CA                 Cert
+	ExpectedInLogs     string
+	InsecureSkipVerify bool
+	ShouldSuccess      bool
+}
+
 func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *monitoringv1.Prometheus {
 	return &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
@@ -64,6 +90,69 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 			},
 		},
 	}
+}
+
+func (f *Framework) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus,
+	url string, prwtc PromRemoteWriteTestConfig) {
+
+	p.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{{
+		URL: url,
+	}}
+
+	if (prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "") || prwtc.CA.ResourceName != "" {
+
+		p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
+			ServerName: "caandserver.com",
+		}
+
+		if prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "" {
+			p.Spec.RemoteWrite[0].TLSConfig.KeySecret = &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: prwtc.ClientKey.SecretName,
+				},
+				Key: "key.pem",
+			}
+			p.Spec.RemoteWrite[0].TLSConfig.Cert = monitoringv1.SecretOrConfigMap{}
+
+			if prwtc.ClientCert.ResourceType == SECRET {
+				p.Spec.RemoteWrite[0].TLSConfig.Cert.Secret = &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: prwtc.ClientCert.ResourceName,
+					},
+					Key: "cert.pem",
+				}
+			} else { //certType == CONFIGMAP
+				p.Spec.RemoteWrite[0].TLSConfig.Cert.ConfigMap = &v1.ConfigMapKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: prwtc.ClientCert.ResourceName,
+					},
+					Key: "cert.pem",
+				}
+			}
+		}
+
+		if prwtc.CA.ResourceName != "" {
+			p.Spec.RemoteWrite[0].TLSConfig.CA = monitoringv1.SecretOrConfigMap{}
+			if prwtc.CA.ResourceType == SECRET {
+				p.Spec.RemoteWrite[0].TLSConfig.CA.Secret = &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: prwtc.CA.ResourceName,
+					},
+					Key: "ca.pem",
+				}
+			} else { //caType == CONFIGMAP
+				p.Spec.RemoteWrite[0].TLSConfig.CA.ConfigMap = &v1.ConfigMapKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: prwtc.CA.ResourceName,
+					},
+					Key: "ca.pem",
+				}
+			}
+		} else if prwtc.InsecureSkipVerify {
+			p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = true
+		}
+	}
+
 }
 
 func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name string) {

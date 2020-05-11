@@ -159,6 +159,7 @@ func testAllNSAlertmanager(t *testing.T) {
 func testAllNSPrometheus(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
+		"PromRemoteWriteWithTLS":                 testPromRemoteWriteWithTLS,
 		"PromCreateDeleteCluster":                testPromCreateDeleteCluster,
 		"PromScaleUpDownCluster":                 testPromScaleUpDownCluster,
 		"PromNoServiceMonitorSelector":           testPromNoServiceMonitorSelector,
