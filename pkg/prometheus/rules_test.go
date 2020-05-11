@@ -214,6 +214,73 @@ func TestEnforcedNamespaceLabelRule(t *testing.T) {
 	}
 }
 
+func TestPrometheusRuleNamespaceLabelExclude(t *testing.T) {
+	type testCase struct {
+		Name     string
+		PromSpec monitoringv1.PrometheusSpec
+		Expected nsLabelEnforcementExcludeList
+	}
+
+	testcases := []testCase{
+		{
+			Name: "valid excludes",
+			PromSpec: monitoringv1.PrometheusSpec{
+				PrometheusRulesExcludedFromEnforce: []monitoringv1.PrometheusRuleExcludeConfig{
+					{RuleName: "RuleSet1", RuleNamespace: "system"},
+					{RuleName: "RuleSet2", RuleNamespace: "system"},
+					{RuleName: "commonAlerts", RuleNamespace: "monitoring"},
+				},
+			},
+			Expected: nsLabelEnforcementExcludeList{
+				"system":     map[string]struct{}{"RuleSet1": {}, "RuleSet2": {}},
+				"monitoring": map[string]struct{}{"commonAlerts": {}},
+			},
+		},
+		{
+			Name: "invalid excludes",
+			PromSpec: monitoringv1.PrometheusSpec{
+				PrometheusRulesExcludedFromEnforce: []monitoringv1.PrometheusRuleExcludeConfig{
+					{RuleName: "", RuleNamespace: "system"},
+					{RuleName: "RuleSet2", RuleNamespace: ""},
+				},
+			},
+			Expected: nsLabelEnforcementExcludeList{},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.Name, func(t *testing.T) {
+			got := newNSLabelEnforcementExcludeList(tc.PromSpec.PrometheusRulesExcludedFromEnforce)
+			if diff := cmp.Diff(tc.Expected, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestPrometheusExcludeListContains(t *testing.T) {
+	l := nsLabelEnforcementExcludeList{
+		"system":     map[string]struct{}{"RuleSet1": {}, "RuleSet2": {}},
+		"monitoring": map[string]struct{}{"commonAlerts": {}},
+	}
+
+	testcases := []struct {
+		ruleNamespace string
+		ruleName      string
+		expected      bool
+	}{
+		{"system", "RuleSet1", true},
+		{"system", "RuleSet4", false},
+		{"monitoring", "RuleSet1", false},
+		{"monitoring", "commonAlerts", true},
+	}
+	for _, tc := range testcases {
+		if got := l.Contains(tc.ruleNamespace, tc.ruleName); got != tc.expected {
+			t.Errorf("%s/%s want %t - got %t", tc.ruleNamespace, tc.ruleName, tc.expected, got)
+		}
+	}
+}
+
 func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("ShouldReturnAtLeastOneConfigMap", shouldReturnAtLeastOneConfigMap)
 	t.Run("ShouldErrorOnTooLargeRuleFile", shouldErrorOnTooLargeRuleFile)
