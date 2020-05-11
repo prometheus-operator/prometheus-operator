@@ -3275,6 +3275,23 @@ spec:
                 description: ListenLocal makes the Prometheus server listen on loopback,
                   so that it does not bind against the Pod IP.
                 type: boolean
+              livenessFailureThreshold:
+                description: Number of times Liveness Probe can fail before killing
+                  pod
+                format: int32
+                type: integer
+              livenessPeriodSeconds:
+                description: Liveness Probe PeriodSeconds
+                format: int32
+                type: integer
+              livenessProbeInitialDelaySeconds:
+                description: Time in seconds before which Liveness Probes will start
+                format: int32
+                type: integer
+              livenessProbeTimeoutSeconds:
+                description: Timeout in seconds for liveness probe
+                format: int32
+                type: integer
               logFormat:
                 description: Log format for Prometheus to be configured with.
                 type: string

@@ -759,6 +759,26 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.LivenessFailureThreshold != nil {
+		in, out := &in.LivenessFailureThreshold, &out.LivenessFailureThreshold
+		*out = new(int32)
+		**out = **in
+	}
+	if in.LivenessProbeInitialDelaySeconds != nil {
+		in, out := &in.LivenessProbeInitialDelaySeconds, &out.LivenessProbeInitialDelaySeconds
+		*out = new(int32)
+		**out = **in
+	}
+	if in.LivenessPeriodSeconds != nil {
+		in, out := &in.LivenessPeriodSeconds, &out.LivenessPeriodSeconds
+		*out = new(int32)
+		**out = **in
+	}
+	if in.LivenessProbeTimeoutSeconds != nil {
+		in, out := &in.LivenessProbeTimeoutSeconds, &out.LivenessProbeTimeoutSeconds
+		*out = new(int32)
+		**out = **in
+	}
 	out.Rules = in.Rules
 	if in.ExternalLabels != nil {
 		in, out := &in.ExternalLabels, &out.ExternalLabels
