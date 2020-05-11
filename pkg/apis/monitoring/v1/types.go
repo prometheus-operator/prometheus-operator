@@ -307,8 +307,9 @@ type PrometheusSpec struct {
 	// being created.
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
 	// PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
-	// of adding namespace labels. Works only if enforcedNamespaceLabel set to true
-	PrometheusRulesExcludedFromEnforce []PromRuleExcludeConfig `json:"prometheusRulesExcludedFromEnforce,omitempty"`
+	// of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
+	// Make sure both ruleNamespace and ruleName are set for each pair
+	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfig `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 	// QueryLogFile specifies the file to which PromQL queries are logged.
 	// Note that this location must be writable, and can be persisted using an attached volume.
 	// Alternatively, the location can be set to a stdout location such as `/dev/stdout` to log
@@ -318,9 +319,9 @@ type PrometheusSpec struct {
 	QueryLogFile string `json:"queryLogFile,omitempty"`
 }
 
-// PromRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces
-// to be ignored while enforcing namespace label for alerts and metrics
-type PromRuleExcludeConfig struct {
+// PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces
+// to be ignored while enforcing namespace label for alerts and metrics.
+type PrometheusRuleExcludeConfig struct {
 	// RuleNamespace - namespace of excluded rule
 	RuleNamespace string `json:"ruleNamespace,omitempty"`
 	// RuleNamespace - name of excluded rule

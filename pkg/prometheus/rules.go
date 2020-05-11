@@ -168,7 +168,7 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 
 type nsLabelEnforcementExcludeList map[string]map[string]struct{}
 
-func newNSLabelEnforcementExcludeList(excludeConfig []monitoringv1.PromRuleExcludeConfig) nsLabelEnforcementExcludeList {
+func newNSLabelEnforcementExcludeList(excludeConfig []monitoringv1.PrometheusRuleExcludeConfig) nsLabelEnforcementExcludeList {
 
 	ruleExcludeList := make(map[string]map[string]struct{})
 
@@ -215,7 +215,7 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 		err := cache.ListAllByNamespace(c.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
 
-			if nsLabelExcludeList.Contains(ns, promRule.Name) {
+			if p.Spec.EnforcedNamespaceLabel != "" && !nsLabelExcludeList.Contains(ns, promRule.Name) {
 				err := injectNamespaceLabel(&promRule.Spec, p.Spec.EnforcedNamespaceLabel, ns)
 				if err != nil {
 					marshalErr = err
