@@ -6,8 +6,8 @@ Release cadence of first pre-releases being cut is 6 weeks.
 
 | Release | Date of first pre-release (year-month-day) | Release shepherd                            |
 |---------|--------------------------------------------|---------------------------------------------|
-| v0.39   | 2020-05-06                                 | Sergiusz Urbaniak (GitHub: @s-urbaniak)     |
-| v0.40   | 2020-06-17                                 | **searching for volunteer**                 |
+| v0.39   | 2020-05-06                                 | Pawel Krupa (GitHub: @paulfantom)           |
+| v0.40   | 2020-06-17                                 | Lili Cosic (GitHub: @lilic)                 |
 | v0.41   | 2020-07-29                                 | **searching for volunteer**                 |
 
 # How to cut a new release

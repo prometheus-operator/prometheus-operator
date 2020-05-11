@@ -1,8 +1,38 @@
 ## Next release
 
+## 0.39.0 / 2020-05-06
+
+* [CHANGE] Introduce release schedule (#3135)
+* [CHANGE] Remove options configuring CRD management (manage-crds, crd-kinds, with-validation) (#3155)
+* [CHANGE] Add CRD definitions to bundle.yaml (#3171)
+* [CHANGE] Switch to apiextensions.k8s.io/v1 CRD and require kubernetes v1.16 or newer (#3175, #3187)
+* [FEATURE] Add support prometheus query log file (#3116)
+* [FEATURE] Add support for watching specified rules directory by config-relader (#3128)
+* [FEATURE] Add TLS support for operator web server (#3134, #3157)
+* [FEATURE] Allow to set address for operator http endpoint (#3098)
+* [FEATURE] Allow setting the alertmanagers cluster.advertiseAddress (#3160)
+* [FEATURE] Build operator images for ARM and ARM64 platforms (#3177)
+* [ENHANCEMENT] Allow setting log level and format for thanos sidecar (#3112)
+* [ENHANCEMENT] Support naming of remote write queues (#3144)
+* [ENHANCEMENT] Allow disabling mount subPath for volumes (#3143)
+* [ENHANCEMENT] Update k8s libraries to v1.18 (#3154)
+* [ENHANCEMENT] Create separate namespace informers when needed (#3182)
+* [BUGFIX] Tolerate version strings which aren't following semver (#3101)
+* [BUGFIX] Retain metadata for embedded PVC objects (#3115)
+* [BUGFIX] Fix definition of thanos-ruler-operated service (#3126)
+* [BUGFIX] Allow setting the cluster domain (#3138)
+* [BUGFIX] Allow matching only PodMonitors (#3173)
+* [BUGFIX] Fix typo in statefulset informer (#3179)
+
+## 0.38.1 / 2020-04-16
+
+* [BUGFIX] Fix definition of web service port for Alertmanager (#3125)
+* [BUGFIX] Support external alert query URL for THanos Ruler (#3129)
+* [BUGFIX] Do not modify the PrometheusRule cache object (#3105)
+
 ## 0.38.0 / 2020-03-20
 
-* [CHANGE] Changed ThanosRuler custom resource field alertmanagersURL type from string to []string` (#3067)
+* [CHANGE] Changed ThanosRuler custom resource field alertmanagersURL type from string to []string (#3067)
 * [CHANGE] Deprecate PodMonitor targetPort field (#3071, #3078)
 * [FEATURE] Add queryConfig field to ThanosRuler spec (#3068)
 * [FEATURE] GRPC TLS config for Thanos Ruler and Sidecar (#3059)
