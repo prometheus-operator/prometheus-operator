@@ -214,7 +214,7 @@ metadata:
   name: monitoring
   annotations:
     ingress.kubernetes.io/whitelist-source-range: 10.0.0.0/16 # change this range to admin IPs
-    ingress.kubernetes.io/rewrite-target: "/"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
   - http:
@@ -222,11 +222,11 @@ spec:
       - backend:
           serviceName: prometheus-main
           servicePort: 9090
-        path: /prometheus
+        path: /prometheus(/|$)(.*)
       - backend:
           serviceName: alertmanager-main
           servicePort: 9093
-        path: /alertmanager
+        path: /alertmanager(/|$)(.*)
 ```
 
 Finally, the Prometheus and `Alertmanager` objects must be created, specifying the `externalUrl` at which they will be found.
