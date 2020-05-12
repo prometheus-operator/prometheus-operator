@@ -166,6 +166,37 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 	return namespaces, nil
 }
 
+type nsLabelEnforcementExcludeList map[string]map[string]struct{}
+
+func newNSLabelEnforcementExcludeList(excludeConfig []monitoringv1.PrometheusRuleExcludeConfig) nsLabelEnforcementExcludeList {
+
+	ruleExcludeList := make(map[string]map[string]struct{})
+
+	for _, r := range excludeConfig {
+		if r.RuleNamespace == "" || r.RuleName == "" {
+			continue
+		}
+		if _, ok := ruleExcludeList[r.RuleNamespace]; !ok {
+			ruleExcludeList[r.RuleNamespace] = make(map[string]struct{})
+		}
+		ruleExcludeList[r.RuleNamespace][r.RuleName] = struct{}{}
+	}
+
+	return ruleExcludeList
+}
+
+func (w nsLabelEnforcementExcludeList) Contains(namespace, name string) bool {
+	if w == nil {
+		return false
+	}
+	nsRules, ok := w[namespace]
+	if !ok {
+		return false
+	}
+	_, ok = nsRules[name]
+	return ok
+}
+
 func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string) (map[string]string, error) {
 	rules := map[string]string{}
 
@@ -174,11 +205,25 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 		return rules, errors.Wrap(err, "convert rule label selector to selector")
 	}
 
+	var nsLabelExcludeList nsLabelEnforcementExcludeList
+	if t.Spec.EnforcedNamespaceLabel != "" && len(t.Spec.PrometheusRulesExcludedFromEnforce) != 0 {
+		nsLabelExcludeList = newNSLabelEnforcementExcludeList(t.Spec.PrometheusRulesExcludedFromEnforce)
+	}
+
 	for _, ns := range namespaces {
 		var marshalErr error
 		err := cache.ListAllByNamespace(o.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
-			content, err := generateContent(promRule.Spec, t.Spec.EnforcedNamespaceLabel, promRule.Namespace)
+
+			if t.Spec.EnforcedNamespaceLabel != "" && !nsLabelExcludeList.Contains(ns, promRule.Name) {
+				err := injectNamespaceLabel(&promRule.Spec, t.Spec.EnforcedNamespaceLabel, ns)
+				if err != nil {
+					marshalErr = err
+					return
+				}
+			}
+
+			content, err := generateContent(promRule.Spec)
 			if err != nil {
 				marshalErr = err
 				return
@@ -208,34 +253,36 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 	return rules, nil
 }
 
-func generateContent(promRule monitoringv1.PrometheusRuleSpec, enforcedNsLabel, ns string) (string, error) {
-
-	if enforcedNsLabel != "" {
-		for gi, group := range promRule.Groups {
-			for ri, r := range group.Rules {
-				if len(promRule.Groups[gi].Rules[ri].Labels) == 0 {
-					promRule.Groups[gi].Rules[ri].Labels = map[string]string{}
-				}
-				promRule.Groups[gi].Rules[ri].Labels[enforcedNsLabel] = ns
-
-				expr := r.Expr.String()
-				parsedExpr, err := parser.ParseExpr(expr)
-				if err != nil {
-					return "", errors.Wrap(err, "failed to parse promql expression")
-				}
-				err = injectproxy.SetRecursive(parsedExpr, []*labels.Matcher{{
-					Name:  enforcedNsLabel,
-					Type:  labels.MatchEqual,
-					Value: ns,
-				}})
-				if err != nil {
-					return "", errors.Wrap(err, "failed to inject labels to expression")
-				}
-
-				promRule.Groups[gi].Rules[ri].Expr = intstr.FromString(parsedExpr.String())
+func injectNamespaceLabel(promRule *monitoringv1.PrometheusRuleSpec, enforcedNsLabel, ns string) error {
+	for gi, group := range promRule.Groups {
+		for ri, r := range group.Rules {
+			if len(promRule.Groups[gi].Rules[ri].Labels) == 0 {
+				promRule.Groups[gi].Rules[ri].Labels = map[string]string{}
 			}
+			promRule.Groups[gi].Rules[ri].Labels[enforcedNsLabel] = ns
+
+			expr := r.Expr.String()
+			parsedExpr, err := promql.ParseExpr(expr)
+			if err != nil {
+				return errors.Wrap(err, "failed to parse promql expression")
+			}
+			err = injectproxy.SetRecursive(parsedExpr, []*labels.Matcher{{
+				Name:  enforcedNsLabel,
+				Type:  labels.MatchEqual,
+				Value: ns,
+			}})
+			if err != nil {
+				return errors.Wrap(err, "failed to inject labels to expression")
+			}
+
+			promRule.Groups[gi].Rules[ri].Expr = intstr.FromString(parsedExpr.String())
 		}
 	}
+	return nil
+}
+
+func generateContent(promRule monitoringv1.PrometheusRuleSpec) (string, error) {
+
 	content, err := yaml.Marshal(promRule)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to unmarshal content")

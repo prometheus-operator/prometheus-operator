@@ -43,10 +43,10 @@ func TestRulesGenerateContent(t *testing.T) {
 
 	givenSpec := monitoringv1.PrometheusRuleSpec{
 		Groups: []monitoringv1.RuleGroup{
-			monitoringv1.RuleGroup{
+			{
 				Name: "rule1",
 				Rules: []monitoringv1.Rule{
-					monitoringv1.Rule{
+					{
 						Alert: "test_alert1",
 						Expr: intstr.IntOrString{
 							Type:   intstr.String,
@@ -55,11 +55,11 @@ func TestRulesGenerateContent(t *testing.T) {
 					},
 				},
 			},
-			monitoringv1.RuleGroup{
+			{
 				Name:                    "rule2",
 				PartialResponseStrategy: "warn",
 				Rules: []monitoringv1.Rule{
-					monitoringv1.Rule{
+					{
 						Alert: "test_alert2",
 						Expr: intstr.IntOrString{
 							Type:   intstr.String,
@@ -71,7 +71,10 @@ func TestRulesGenerateContent(t *testing.T) {
 		},
 	}
 
-	gotRuleConfig, err := generateContent(givenSpec, "namespace", "foo")
+	err := injectNamespaceLabel(&givenSpec, "namespace", "foo")
+	require.NoError(t, err)
+
+	gotRuleConfig, err := generateContent(givenSpec)
 	require.NoError(t, err)
 
 	fmt.Println(gotRuleConfig)
