@@ -27,15 +27,11 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/ghodss/yaml"
 	"github.com/go-kit/kit/log/level"
-	"github.com/openshift/prom-label-proxy/injectproxy"
 	"github.com/pkg/errors"
-	"github.com/prometheus/prometheus/pkg/labels"
-	"github.com/prometheus/prometheus/promql/parser"
 )
 
 const labelThanosRulerName = "thanos-ruler-name"
@@ -218,34 +214,6 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 	)
 
 	return rules, nil
-}
-
-func injectNamespaceLabel(promRule *monitoringv1.PrometheusRuleSpec, enforcedNsLabel, ns string) error {
-	for gi, group := range promRule.Groups {
-		for ri, r := range group.Rules {
-			if len(promRule.Groups[gi].Rules[ri].Labels) == 0 {
-				promRule.Groups[gi].Rules[ri].Labels = map[string]string{}
-			}
-			promRule.Groups[gi].Rules[ri].Labels[enforcedNsLabel] = ns
-
-			expr := r.Expr.String()
-			parsedExpr, err := promql.ParseExpr(expr)
-			if err != nil {
-				return errors.Wrap(err, "failed to parse promql expression")
-			}
-			err = injectproxy.SetRecursive(parsedExpr, []*labels.Matcher{{
-				Name:  enforcedNsLabel,
-				Type:  labels.MatchEqual,
-				Value: ns,
-			}})
-			if err != nil {
-				return errors.Wrap(err, "failed to inject labels to expression")
-			}
-
-			promRule.Groups[gi].Rules[ri].Expr = intstr.FromString(parsedExpr.String())
-		}
-	}
-	return nil
 }
 
 func generateContent(promRule monitoringv1.PrometheusRuleSpec) (string, error) {
