@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	namespacelabeler "github.com/coreos/prometheus-operator/pkg/namespace-labeler"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -166,37 +167,6 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 	return namespaces, nil
 }
 
-type nsLabelEnforcementExcludeList map[string]map[string]struct{}
-
-func newNSLabelEnforcementExcludeList(excludeConfig []monitoringv1.PrometheusRuleExcludeConfig) nsLabelEnforcementExcludeList {
-
-	ruleExcludeList := make(map[string]map[string]struct{})
-
-	for _, r := range excludeConfig {
-		if r.RuleNamespace == "" || r.RuleName == "" {
-			continue
-		}
-		if _, ok := ruleExcludeList[r.RuleNamespace]; !ok {
-			ruleExcludeList[r.RuleNamespace] = make(map[string]struct{})
-		}
-		ruleExcludeList[r.RuleNamespace][r.RuleName] = struct{}{}
-	}
-
-	return ruleExcludeList
-}
-
-func (w nsLabelEnforcementExcludeList) Contains(namespace, name string) bool {
-	if w == nil {
-		return false
-	}
-	nsRules, ok := w[namespace]
-	if !ok {
-		return false
-	}
-	_, ok = nsRules[name]
-	return ok
-}
-
 func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string) (map[string]string, error) {
 	rules := map[string]string{}
 
@@ -205,22 +175,19 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 		return rules, errors.Wrap(err, "convert rule label selector to selector")
 	}
 
-	var nsLabelExcludeList nsLabelEnforcementExcludeList
-	if t.Spec.EnforcedNamespaceLabel != "" && len(t.Spec.PrometheusRulesExcludedFromEnforce) != 0 {
-		nsLabelExcludeList = newNSLabelEnforcementExcludeList(t.Spec.PrometheusRulesExcludedFromEnforce)
-	}
+	nsLabeler := namespacelabeler.New(
+		t.Spec.EnforcedNamespaceLabel,
+		t.Spec.PrometheusRulesExcludedFromEnforce,
+	)
 
 	for _, ns := range namespaces {
 		var marshalErr error
 		err := cache.ListAllByNamespace(o.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
 
-			if t.Spec.EnforcedNamespaceLabel != "" && !nsLabelExcludeList.Contains(ns, promRule.Name) {
-				err := injectNamespaceLabel(&promRule.Spec, t.Spec.EnforcedNamespaceLabel, ns)
-				if err != nil {
-					marshalErr = err
-					return
-				}
+			if err := nsLabeler.EnforceNamespaceLabel(promRule); err != nil {
+				marshalErr = err
+				return
 			}
 
 			content, err := generateContent(promRule.Spec)

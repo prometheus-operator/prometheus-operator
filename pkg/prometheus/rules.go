@@ -23,18 +23,15 @@ import (
 	"strings"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	namespacelabeler "github.com/coreos/prometheus-operator/pkg/namespace-labeler"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/ghodss/yaml"
 	"github.com/go-kit/kit/log/level"
-	"github.com/openshift/prom-label-proxy/injectproxy"
 	"github.com/pkg/errors"
-	"github.com/prometheus/prometheus/pkg/labels"
-	"github.com/prometheus/prometheus/promql/parser"
 )
 
 const labelPrometheusName = "prometheus-name"
@@ -166,37 +163,6 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 	return namespaces, nil
 }
 
-type nsLabelEnforcementExcludeList map[string]map[string]struct{}
-
-func newNSLabelEnforcementExcludeList(excludeConfig []monitoringv1.PrometheusRuleExcludeConfig) nsLabelEnforcementExcludeList {
-
-	ruleExcludeList := make(map[string]map[string]struct{})
-
-	for _, r := range excludeConfig {
-		if r.RuleNamespace == "" || r.RuleName == "" {
-			continue
-		}
-		if _, ok := ruleExcludeList[r.RuleNamespace]; !ok {
-			ruleExcludeList[r.RuleNamespace] = make(map[string]struct{})
-		}
-		ruleExcludeList[r.RuleNamespace][r.RuleName] = struct{}{}
-	}
-
-	return ruleExcludeList
-}
-
-func (w nsLabelEnforcementExcludeList) Contains(namespace, name string) bool {
-	if w == nil {
-		return false
-	}
-	nsRules, ok := w[namespace]
-	if !ok {
-		return false
-	}
-	_, ok = nsRules[name]
-	return ok
-}
-
 func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) (map[string]string, error) {
 	rules := map[string]string{}
 
@@ -205,22 +171,19 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 		return rules, errors.Wrap(err, "convert rule label selector to selector")
 	}
 
-	var nsLabelExcludeList nsLabelEnforcementExcludeList
-	if p.Spec.EnforcedNamespaceLabel != "" && len(p.Spec.PrometheusRulesExcludedFromEnforce) != 0 {
-		nsLabelExcludeList = newNSLabelEnforcementExcludeList(p.Spec.PrometheusRulesExcludedFromEnforce)
-	}
+	nsLabeler := namespacelabeler.New(
+		p.Spec.EnforcedNamespaceLabel,
+		p.Spec.PrometheusRulesExcludedFromEnforce,
+	)
 
 	for _, ns := range namespaces {
 		var marshalErr error
 		err := cache.ListAllByNamespace(c.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
 
-			if p.Spec.EnforcedNamespaceLabel != "" && !nsLabelExcludeList.Contains(ns, promRule.Name) {
-				err := injectNamespaceLabel(&promRule.Spec, p.Spec.EnforcedNamespaceLabel, ns)
-				if err != nil {
-					marshalErr = err
-					return
-				}
+			if err := nsLabeler.EnforceNamespaceLabel(promRule); err != nil {
+				marshalErr = err
+				return
 			}
 
 			content, err := generateContent(promRule.Spec)
@@ -251,35 +214,6 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 	)
 
 	return rules, nil
-}
-
-func injectNamespaceLabel(promRule *monitoringv1.PrometheusRuleSpec, enforcedNsLabel, ns string) error {
-	for gi, group := range promRule.Groups {
-		group.PartialResponseStrategy = ""
-		for ri, r := range group.Rules {
-			if len(promRule.Groups[gi].Rules[ri].Labels) == 0 {
-				promRule.Groups[gi].Rules[ri].Labels = map[string]string{}
-			}
-			promRule.Groups[gi].Rules[ri].Labels[enforcedNsLabel] = ns
-
-			expr := r.Expr.String()
-			parsedExpr, err := promql.ParseExpr(expr)
-			if err != nil {
-				return errors.Wrap(err, "failed to parse promql expression")
-			}
-			err = injectproxy.SetRecursive(parsedExpr, []*labels.Matcher{{
-				Name:  enforcedNsLabel,
-				Type:  labels.MatchEqual,
-				Value: ns,
-			}})
-			if err != nil {
-				return errors.Wrap(err, "failed to inject labels to expression")
-			}
-
-			promRule.Groups[gi].Rules[ri].Expr = intstr.FromString(parsedExpr.String())
-		}
-	}
-	return nil
 }
 
 func generateContent(promRule monitoringv1.PrometheusRuleSpec) (string, error) {
