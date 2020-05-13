@@ -133,10 +133,7 @@ func testAMStorageUpdate(t *testing.T) {
 	}
 
 	am.Spec.Storage = &monitoringv1.StorageSpec{
-		VolumeClaimTemplate: v1.PersistentVolumeClaim{
-			ObjectMeta: metav1.ObjectMeta{
-				CreationTimestamp: metav1.Now(),
-			},
+		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
 			Spec: v1.PersistentVolumeClaimSpec{
 				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 				Resources: v1.ResourceRequirements{

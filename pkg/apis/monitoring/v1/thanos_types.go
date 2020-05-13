@@ -58,7 +58,7 @@ type ThanosRulerList struct {
 // +k8s:openapi-gen=true
 type ThanosRulerSpec struct {
 	// PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods.
-	PodMetadata *PodMeta `json:"podMetadata,omitempty"`
+	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
 	// Thanos container image URL.
 	Image string `json:"image,omitempty"`
 	// An optional list of references to secrets in the same namespace
