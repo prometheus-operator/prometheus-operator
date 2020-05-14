@@ -477,7 +477,6 @@ QueueConfig allows the tuning of remote_write queue_config parameters. This obje
 | maxShards | MaxShards is the maximum number of shards, i.e. amount of concurrency. | int | false |
 | maxSamplesPerSend | MaxSamplesPerSend is the maximum number of samples per send. | int | false |
 | batchSendDeadline | BatchSendDeadline is the maximum time a sample will wait in buffer. | string | false |
-| maxRetries | MaxRetries is the maximum number of times to retry a batch on recoverable errors. | int | false |
 | minBackoff | MinBackoff is the initial retry delay. Gets doubled for every retry. | string | false |
 | maxBackoff | MaxBackoff is the maximum retry delay. | string | false |
 

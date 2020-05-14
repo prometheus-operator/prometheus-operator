@@ -8639,10 +8639,6 @@ spec:
                         maxBackoff:
                           description: MaxBackoff is the maximum retry delay.
                           type: string
-                        maxRetries:
-                          description: MaxRetries is the maximum number of times to
-                            retry a batch on recoverable errors.
-                          type: integer
                         maxSamplesPerSend:
                           description: MaxSamplesPerSend is the maximum number of
                             samples per send.
