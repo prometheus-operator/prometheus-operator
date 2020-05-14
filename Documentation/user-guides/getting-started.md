@@ -116,6 +116,7 @@ rules:
 - apiGroups: [""]
   resources:
   - nodes
+  - nodes/metrics
   - services
   - endpoints
   - pods
