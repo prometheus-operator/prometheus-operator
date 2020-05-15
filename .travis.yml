@@ -6,10 +6,6 @@ go:
 go_import_path: github.com/coreos/prometheus-operator
 env:
   - GO111MODULE=on
-cache:
-  directories:
-  - $GOCACHE
-  - $GOPATH/pkg/mod
 services:
 - docker
 before_install:
