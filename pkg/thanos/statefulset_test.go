@@ -35,6 +35,7 @@ var (
 		ConfigReloaderMemory:   "25Mi",
 		ThanosDefaultBaseImage: "quay.io/thanos/thanos",
 	}
+	emptyQueryEndpoints = []string{""}
 )
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
@@ -72,8 +73,8 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
-			QueryEndpoints: []string{""},
-			PodMetadata: &metav1.ObjectMeta{
+			QueryEndpoints: emptyQueryEndpoints,
+			PodMetadata: &monitoringv1.EmbeddedObjectMetadata{
 				Annotations: annotations,
 				Labels:      labels,
 			},
