@@ -52,7 +52,7 @@ CONTAINER_CMD:=docker run --rm \
 		-w "/go/src/$(GO_PKG)" \
 		-e GO111MODULE=on \
 		-e USER=deadbeef \
-		quay.io/coreos/po-tooling
+		quay.io/coreos/po-tooling:release-0.37
 
 .PHONY: all
 all: format generate build test
