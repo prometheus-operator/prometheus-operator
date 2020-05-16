@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"github.com/prometheus/prometheus/promql/parser"
 	"reflect"
 	"sort"
 	"strconv"
@@ -33,7 +34,6 @@ import (
 	"github.com/openshift/prom-label-proxy/injectproxy"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/labels"
-	"github.com/prometheus/prometheus/promql"
 )
 
 const labelPrometheusName = "prometheus-name"
@@ -218,7 +218,7 @@ func generateContent(promRule monitoringv1.PrometheusRuleSpec, enforcedNsLabel, 
 				promRule.Groups[gi].Rules[ri].Labels[enforcedNsLabel] = ns
 
 				expr := r.Expr.String()
-				parsedExpr, err := promql.ParseExpr(expr)
+				parsedExpr, err := parser.ParseExpr(expr)
 				if err != nil {
 					return "", errors.Wrap(err, "failed to parse promql expression")
 				}
