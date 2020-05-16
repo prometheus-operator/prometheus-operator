@@ -82,15 +82,25 @@ func TestAdmitBadRule(t *testing.T) {
 	if resp.Response.Allowed {
 		t.Errorf("Expected admission to not be allowed but it was")
 	}
-
-	if resp.Response.Result.Details.Causes[0].Message !=
-		`group "test.rules", rule 0, "Test": could not parse expression: parse error at char 10: could not parse remaining input ")"...` {
-		t.Error("Expected error about inability to parse query")
+	{
+		exp := 2
+		act := len(resp.Response.Result.Details.Causes)
+		if act != exp {
+			t.Errorf("Expected %d errors but got %d\n", exp, act)
+		}
 	}
+	{
+		exp := `unexpected right parenthesis ')'`
+		act := resp.Response.Result.Details.Causes[0].Message
+		if !strings.Contains(act, exp) {
+			t.Error("Expected error about inability to parse query")
+		}
 
-	if resp.Response.Result.Details.Causes[1].Message !=
-		`group "test.rules", rule 0, "Test": msg=template: __alert_Test:1: unrecognized character in action: U+201C '“'` {
-		t.Error("Expected error about invalid template")
+		exp = `unrecognized character in action: U+201C`
+		act = resp.Response.Result.Details.Causes[1].Message
+		if !strings.Contains(act, exp) {
+			t.Error("Expected error about invalid character")
+		}
 	}
 }
 
@@ -203,7 +213,7 @@ var goodRulesWithAnnotations = `
                   "message": "Test rule",
                   "humanizePercentage": "Should work {{ $value | humanizePercentage }}"
                 },
-                "expr": "vector(1)",
+                "expr": "absent_over_time(up[5m])",
                 "for": "5m",
                 "labels": {
                   "severity": "critical"
