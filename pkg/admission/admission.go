@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/go-kit/kit/log"
@@ -31,12 +32,10 @@ import (
 )
 
 const (
-	addFirstAnnotationPatch string = `[
-         { "op": "add", "path": "/metadata/annotations", "value": {"prometheus-operator-validated": "true"}}
-     ]`
-	addAdditionalAnnotationPatch string = `[
-         { "op": "add", "path": "/metadata/annotations/prometheus-operator-validated", "value": "true" }
-     ]`
+	addFirstAnnotationPatch      = `{ "op": "add", "path": "/metadata/annotations", "value": {"prometheus-operator-validated": "true"}}`
+	addAdditionalAnnotationPatch = `{ "op": "add", "path": "/metadata/annotations/prometheus-operator-validated", "value": "true" }`
+	errUnmarshalAdmission        = "Cannot unmarshal admission request"
+	errUnmarshalRules            = "Cannot unmarshal rules from spec"
 )
 
 var (
@@ -159,18 +158,26 @@ func (a *Admission) mutatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionRe
 
 	rule := &PrometheusRules{}
 	if err := json.Unmarshal(ar.Request.Object.Raw, rule); err != nil {
-		level.Info(a.logger).Log("msg", "Cannot unmarshal rules from spec", "err", err)
-		return toAdmissionResponseFailure("Cannot unmarshal rules from spec", []error{err})
+		level.Info(a.logger).Log("msg", errUnmarshalAdmission, "err", err)
+		return toAdmissionResponseFailure(errUnmarshalAdmission, []error{err})
+	}
+
+	patches, err := generatePatchesForNonStringLabelsAnnotations(rule.Spec.Raw)
+	if err != nil {
+		level.Info(a.logger).Log("msg", errUnmarshalRules, "err", err)
+		return toAdmissionResponseFailure(errUnmarshalRules, []error{err})
 	}
 
 	reviewResponse := &v1.AdmissionResponse{Allowed: true}
+
 	if len(rule.Annotations) == 0 {
-		reviewResponse.Patch = []byte(addFirstAnnotationPatch)
+		patches = append(patches, addFirstAnnotationPatch)
 	} else {
-		reviewResponse.Patch = []byte(addAdditionalAnnotationPatch)
+		patches = append(patches, addAdditionalAnnotationPatch)
 	}
 	pt := v1.PatchTypeJSONPatch
 	reviewResponse.PatchType = &pt
+	reviewResponse.Patch = []byte(fmt.Sprintf("[%s]", strings.Join(patches, ",")))
 	return reviewResponse
 }
 
@@ -187,23 +194,24 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 
 	promRule := &monitoringv1.PrometheusRule{}
 	if err := json.Unmarshal(ar.Request.Object.Raw, promRule); err != nil {
-		level.Info(a.logger).Log("msg", "Cannot unmarshal rules from spec", "err", err)
+		level.Info(a.logger).Log("msg", errUnmarshalRules, "err", err)
 		(*a.validationErrorsCounter).Inc()
-		return toAdmissionResponseFailure("Cannot unmarshal rules from spec", []error{err})
+		return toAdmissionResponseFailure(errUnmarshalRules, []error{err})
 	}
 
 	rules := &PrometheusRules{}
 	if err := json.Unmarshal(ar.Request.Object.Raw, rules); err != nil {
-		level.Info(a.logger).Log("msg", "Cannot unmarshal rules from spec", "err", err)
+		level.Info(a.logger).Log("msg", errUnmarshalAdmission, "err", err)
 		(*a.validationErrorsCounter).Inc()
-		return toAdmissionResponseFailure("Cannot unmarshal rules from spec", []error{err})
+		return toAdmissionResponseFailure(errUnmarshalAdmission, []error{err})
 	}
 
 	_, errors := rulefmt.Parse(rules.Spec.Raw)
 	if len(errors) != 0 {
-		level.Debug(a.logger).Log("msg", "Invalid rule", "content", rules.Spec.Raw)
+		const m = "Invalid rule"
+		level.Debug(a.logger).Log("msg", m, "content", rules.Spec.Raw)
 		for _, err := range errors {
-			level.Info(a.logger).Log("msg", "Invalid rule", "err", err)
+			level.Info(a.logger).Log("msg", m, "err", err)
 		}
 
 		(*a.validationErrorsCounter).Inc()

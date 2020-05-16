@@ -28,3 +28,16 @@ type PrometheusRules struct {
 	// Specification of desired alerting rule definitions for Prometheus.
 	Spec runtime.RawExtension `json:"spec"`
 }
+
+type RuleGroups struct {
+	Groups []RuleGroup `json:"groups"`
+}
+
+type RuleGroup struct {
+	Rules []Rule `json:"rules"`
+}
+
+type Rule struct {
+	Labels      map[string]interface{} `json:"labels,omitempty"`
+	Annotations map[string]interface{} `json:"annotations,omitempty"`
+}
