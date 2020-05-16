@@ -5,7 +5,7 @@
  - [FEATURE] Added `DBReadOnly` to allow opening a database in read only mode.
     - `DBReadOnly.Blocks()` exposes a slice of `BlockReader`s.
     - `BlockReader` interface - removed MinTime/MaxTime methods and now exposes the full block meta via `Meta()`.
- - [FEATURE] `chunckenc.Chunk.Iterator` method now takes a `chunckenc.Iterator` interface as an argument for reuse.
+ - [FEATURE] `chunkenc.Chunk.Iterator` method now takes a `chunkenc.Iterator` interface as an argument for reuse.
 
 ## 0.9.1
 
@@ -67,7 +67,7 @@
 
 ## 0.5.0
 
- - [FEATURE] Time-ovelapping blocks are now allowed. [#370](https://github.com/prometheus/tsdb/pull/370)
+ - [FEATURE] Time-overlapping blocks are now allowed. [#370](https://github.com/prometheus/tsdb/pull/370)
    - Disabled by default and can be enabled via `AllowOverlappingBlock` option.
    - Added `MergeChunks` function in `chunkenc/xor.go` to merge 2 time-overlapping chunks.
    - Added `MergeOverlappingChunks` function in `chunks/chunks.go` to merge multiple time-overlapping Chunk Metas.
@@ -78,7 +78,7 @@
  - [ENHANCEMENT] When closing the db any running compaction will be cancelled so it doesn't block.
    - `NewLeveledCompactor` takes a context.
  - [CHANGE] `prometheus_tsdb_storage_blocks_bytes_total` is now `prometheus_tsdb_storage_blocks_bytes`.
- - [BUGFIX] Improved Postings Merge performance. Fixes a regression from the the previous release.
+ - [BUGFIX] Improved Postings Merge performance. Fixes a regression from the previous release.
  - [BUGFIX] LiveReader can get into an infinite loop on corrupt WALs.
 
 ## 0.4.0
@@ -91,7 +91,7 @@
    - `OpenBlock` signature changed to take a logger.
  - [REMOVED] `PrefixMatcher` is considered unused so was removed.
  - [CLEANUP] `Options.WALFlushInterval` is removed as it wasn't used anywhere.
- - [FEATURE] Add new `LiveReader` to WAL pacakge. Added to allow live tailing of a WAL segment, used by Prometheus Remote Write after refactor. The main difference between the new reader and the existing `Reader` is that for `LiveReader` a call to `Next()` that returns false does not mean that there will never be more data to read.
+ - [FEATURE] Add new `LiveReader` to WAL package. Added to allow live tailing of a WAL segment, used by Prometheus Remote Write after refactor. The main difference between the new reader and the existing `Reader` is that for `LiveReader` a call to `Next()` that returns false does not mean that there will never be more data to read.
 
 ## 0.3.1
 
@@ -100,7 +100,7 @@
 ## 0.3.0
 
  - [CHANGE] `LastCheckpoint()` used to return just the segment name and now it returns the full relative path.
- - [CHANGE] `NewSegmentsRangeReader()` can now read over miltiple wal ranges by using the new `SegmentRange{}` struct.
+ - [CHANGE] `NewSegmentsRangeReader()` can now read over multiple wal ranges by using the new `SegmentRange{}` struct.
  - [CHANGE] `CorruptionErr{}` now also exposes the Segment `Dir` which is added when displaying any errors.
  - [CHANGE] `Head.Init()` is changed to `Head.Init(minValidTime int64)`
  - [CHANGE] `SymbolTable()` renamed to `SymbolTableSize()` to make the name consistent with the  `Block{ symbolTableSize uint64 }` field.
