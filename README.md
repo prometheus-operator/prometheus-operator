@@ -72,6 +72,11 @@ at the [design doc](Documentation/design.md).
 
 To automate validation of your CRD configuration files see about [linting](Documentation/user-guides/linting.md).
 
+An [admission webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/)
+is also provided to validate `PrometheusRule` resources and prevent invalid
+configuration from being added to Prometheus. See also [this
+user-guide](Documentation/user-guides/webhook.md) on how to set it up.
+
 ## Quickstart
 
 Note that this quickstart does not provision an entire monitoring stack; if that is what you are looking for see the [kube-prometheus](https://github.com/coreos/kube-prometheus) project. If you want the whole stack, but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
