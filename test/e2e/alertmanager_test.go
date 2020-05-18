@@ -240,7 +240,7 @@ func testAMClusterInitialization(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitializedCluster(ns, name, amClusterSize); err != nil {
+		if err := framework.WaitForAlertmanagerInitialized(ns, name, amClusterSize); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -268,7 +268,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitializedCluster(ns, name, amClusterSize); err != nil {
+		if err := framework.WaitForAlertmanagerInitialized(ns, name, amClusterSize); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -283,7 +283,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitializedCluster(ns, name, amClusterSize); err != nil {
+		if err := framework.WaitForAlertmanagerInitialized(ns, name, amClusterSize); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -306,7 +306,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerInitializedCluster(ns, name, amClusterSize); err != nil {
+		if err := framework.WaitForAlertmanagerInitialized(ns, name, amClusterSize); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -531,7 +531,7 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerClusterReady(ns, alertmanager.Name, int(*alertmanager.Spec.Replicas)); err != nil {
+	if err := framework.WaitForAlertmanagerReady(ns, alertmanager.Name, int(*alertmanager.Spec.Replicas)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -620,7 +620,7 @@ inhibit_rules:
 	// Wait for the change above to take effect.
 	time.Sleep(time.Minute)
 
-	if err := framework.WaitForAlertmanagerClusterReady(ns, alertmanager.Name, int(*alertmanager.Spec.Replicas)); err != nil {
+	if err := framework.WaitForAlertmanagerReady(ns, alertmanager.Name, int(*alertmanager.Spec.Replicas)); err != nil {
 		t.Fatal(err)
 	}
 
