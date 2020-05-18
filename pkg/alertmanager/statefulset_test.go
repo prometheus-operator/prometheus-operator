@@ -558,3 +558,55 @@ func TestTerminationPolicy(t *testing.T) {
 		}
 	}
 }
+
+func TestClusterListenAddressForSingleReplica(t *testing.T) {
+	a := monitoringv1.Alertmanager{}
+	replicas := int32(1)
+	a.Spec.Version = operator.DefaultAlertmanagerVersion
+	a.Spec.Replicas = &replicas
+
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	amArgs := statefulSet.Template.Spec.Containers[0].Args
+
+	containsEmptyClusterListenAddress := false
+
+	for _, arg := range amArgs {
+		if arg == "--cluster.listen-address=" {
+			containsEmptyClusterListenAddress = true
+		}
+	}
+
+	if !containsEmptyClusterListenAddress {
+		t.Fatal("expected stateful set to contain arg '--cluster.listen-address='")
+	}
+}
+
+func TestClusterListenAddressForMultiReplica(t *testing.T) {
+	a := monitoringv1.Alertmanager{}
+	replicas := int32(3)
+	a.Spec.Version = operator.DefaultAlertmanagerVersion
+	a.Spec.Replicas = &replicas
+
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	amArgs := statefulSet.Template.Spec.Containers[0].Args
+
+	containsClusterListenAddress := false
+
+	for _, arg := range amArgs {
+		if arg == "--cluster.listen-address=[$(POD_IP)]:9094" {
+			containsClusterListenAddress = true
+		}
+	}
+
+	if !containsClusterListenAddress {
+		t.Fatal("expected stateful set to contain arg '--cluster.listen-address=[$(POD_IP)]:9094'")
+	}
+}
