@@ -38,7 +38,7 @@ require (
 
 replace (
 	// Temporary until https://github.com/openshift/prom-label-proxy/pull/28 gets merged
-	github.com/openshift/prom-label-proxy => github.com/vsliouniaev/prom-label-proxy v0.0.0-20200516094907-0073ab9b6767
+	github.com/openshift/prom-label-proxy => github.com/vsliouniaev/prom-label-proxy v0.0.0-20200518104441-4fd7fe13454f
 	// Prometheus 2.18.1
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.0.0-20200507164740-ecee9c8abfd1
 	k8s.io/client-go => k8s.io/client-go v0.18.2
