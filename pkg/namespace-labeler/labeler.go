@@ -21,7 +21,7 @@ import (
 	"github.com/openshift/prom-label-proxy/injectproxy"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/labels"
-	"github.com/prometheus/prometheus/promql"
+	"github.com/prometheus/prometheus/promql/parser"
 )
 
 // Labeler enables to enforce adding namespace labels to PrometheusRules and to metrics used in them
@@ -86,7 +86,7 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 			rule.Spec.Groups[gi].Rules[ri].Labels[l.enforcedNsLabel] = rule.Namespace
 
 			expr := r.Expr.String()
-			parsedExpr, err := promql.ParseExpr(expr)
+			parsedExpr, err := parser.ParseExpr(expr)
 			if err != nil {
 				return errors.Wrap(err, "failed to parse promql expression")
 			}

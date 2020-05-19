@@ -11,9 +11,9 @@ require (
 	github.com/go-kit/kit v0.10.0
 	github.com/go-openapi/swag v0.19.9
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.4.0
 	github.com/google/go-cmp v0.4.0
-	github.com/hashicorp/go-version v1.1.0
+	github.com/hashicorp/go-version v1.2.0
 	github.com/jsonnet-bundler/jsonnet-bundler v0.3.1
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452
