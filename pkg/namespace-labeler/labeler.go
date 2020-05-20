@@ -26,16 +26,21 @@ import (
 
 // Labeler enables to enforce adding namespace labels to PrometheusRules and to metrics used in them
 type Labeler struct {
-	enforcedNsLabel string
-	excludeList     map[string]map[string]struct{}
+	enforcedNsLabel       string
+	prometheusRuleLabeler bool
+	excludeList           map[string]map[string]struct{}
 }
 
 // New - creates new Labeler
 // enforcedNsLabel - label name to be enforced for namespace
 // excludeConfig - list of namespace + PrometheusRule names to be excluded while enforcing adding namespace label
-func New(enforcedNsLabel string, excludeConfig []monitoringv1.PrometheusRuleExcludeConfig) *Labeler {
+func New(enforcedNsLabel string, excludeConfig []monitoringv1.PrometheusRuleExcludeConfig, prometheusRuleLabeler bool) *Labeler {
 
-	if enforcedNsLabel == "" || len(excludeConfig) == 0 {
+	if enforcedNsLabel == "" {
+		return &Labeler{} // no-op labeler
+	}
+
+	if len(excludeConfig) == 0 {
 		return &Labeler{enforcedNsLabel: enforcedNsLabel}
 	}
 
@@ -52,8 +57,9 @@ func New(enforcedNsLabel string, excludeConfig []monitoringv1.PrometheusRuleExcl
 	}
 
 	return &Labeler{
-		excludeList:     ruleExcludeList,
-		enforcedNsLabel: enforcedNsLabel,
+		excludeList:           ruleExcludeList,
+		enforcedNsLabel:       enforcedNsLabel,
+		prometheusRuleLabeler: prometheusRuleLabeler,
 	}
 }
 
@@ -78,7 +84,9 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 	}
 
 	for gi, group := range rule.Spec.Groups {
-		group.PartialResponseStrategy = ""
+		if l.prometheusRuleLabeler {
+			group.PartialResponseStrategy = ""
+		}
 		for ri, r := range group.Rules {
 			if len(rule.Spec.Groups[gi].Rules[ri].Labels) == 0 {
 				rule.Spec.Groups[gi].Rules[ri].Labels = map[string]string{}

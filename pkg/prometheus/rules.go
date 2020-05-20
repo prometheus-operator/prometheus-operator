@@ -174,6 +174,7 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 	nsLabeler := namespacelabeler.New(
 		p.Spec.EnforcedNamespaceLabel,
 		p.Spec.PrometheusRulesExcludedFromEnforce,
+		true,
 	)
 
 	for _, ns := range namespaces {
