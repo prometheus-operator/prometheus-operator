@@ -24,6 +24,14 @@ type AlertmanagerListerExpansion interface{}
 // AlertmanagerNamespaceLister.
 type AlertmanagerNamespaceListerExpansion interface{}
 
+// AlertmanagerConfigListerExpansion allows custom methods to be added to
+// AlertmanagerConfigLister.
+type AlertmanagerConfigListerExpansion interface{}
+
+// AlertmanagerConfigNamespaceListerExpansion allows custom methods to be added to
+// AlertmanagerConfigNamespaceLister.
+type AlertmanagerConfigNamespaceListerExpansion interface{}
+
 // PodMonitorListerExpansion allows custom methods to be added to
 // PodMonitorLister.
 type PodMonitorListerExpansion interface{}

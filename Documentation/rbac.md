@@ -29,6 +29,7 @@ rules:
   resources:
   - alertmanagers
   - alertmanagers/finalizers
+  - alertmanagerconfigs
   - prometheuses
   - prometheuses/finalizers
   - thanosrulers

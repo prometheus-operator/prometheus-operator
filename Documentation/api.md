@@ -62,6 +62,16 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ThanosRulerList](#thanosrulerlist)
 * [ThanosRulerSpec](#thanosrulerspec)
 * [ThanosRulerStatus](#thanosrulerstatus)
+* [AlertmanagerConfig](#alertmanagerconfig)
+* [AlertmanagerConfigList](#alertmanagerconfiglist)
+* [AlertmanagerConfigSpec](#alertmanagerconfigspec)
+* [HTTPConfig](#httpconfig)
+* [InhibitRule](#inhibitrule)
+* [Matcher](#matcher)
+* [PagerDutyConfig](#pagerdutyconfig)
+* [PagerDutyConfigDetail](#pagerdutyconfigdetail)
+* [Receiver](#receiver)
+* [Route](#route)
 
 ## APIServerConfig
 
@@ -876,5 +886,134 @@ ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-on
 | updatedReplicas | Total number of non-terminated pods targeted by this ThanosRuler deployment that have the desired version spec. | int32 | true |
 | availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this ThanosRuler deployment. | int32 | true |
 | unavailableReplicas | Total number of unavailable pods targeted by this ThanosRuler deployment. | int32 | true |
+
+[Back to TOC](#table-of-contents)
+
+## AlertmanagerConfig
+
+AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated across multiple namespaces configuring one Alertmanager.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
+| spec |  | [AlertmanagerConfigSpec](#alertmanagerconfigspec) | true |
+
+[Back to TOC](#table-of-contents)
+
+## AlertmanagerConfigList
+
+AlertmanagerConfigList is a list of AlertmanagerConfig.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata | Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#listmeta-v1-meta) | false |
+| items | List of AlertmanagerConfig | []*[AlertmanagerConfig](#alertmanagerconfig) | true |
+
+[Back to TOC](#table-of-contents)
+
+## AlertmanagerConfigSpec
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| route |  | *[Route](#route) | false |
+| receivers |  | [][Receiver](#receiver) | false |
+| inhibitRules |  | [][InhibitRule](#inhibitrule) | false |
+
+[Back to TOC](#table-of-contents)
+
+## HTTPConfig
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| basicAuth |  | *[BasicAuth](#basicauth) | false |
+| bearerTokenSecret |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#secretkeyselector-v1-core) | false |
+| tlsConfig |  | *[TLSConfig](#tlsconfig) | false |
+| proxyURL |  | *string | false |
+
+[Back to TOC](#table-of-contents)
+
+## InhibitRule
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| matcher |  | [][Matcher](#matcher) | false |
+| matcher |  | [][Matcher](#matcher) | false |
+| equal |  | []string | false |
+
+[Back to TOC](#table-of-contents)
+
+## Matcher
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name |  | string | true |
+| value |  | string | true |
+| regex |  | *bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## PagerDutyConfig
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved |  | *bool | false |
+| routingKey |  | *string | false |
+| serviceKey |  | *string | false |
+| url |  | *string | false |
+| client |  | *string | false |
+| clientURL |  | *string | false |
+| description |  | *string | false |
+| severity |  | *string | false |
+| details |  | [][PagerDutyConfigDetail](#pagerdutyconfigdetail) | false |
+| httpConfig |  | *[HTTPConfig](#httpconfig) | false |
+
+[Back to TOC](#table-of-contents)
+
+## PagerDutyConfigDetail
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| key |  | string | true |
+| value |  | string | true |
+
+[Back to TOC](#table-of-contents)
+
+## Receiver
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name |  | string | true |
+| pagerDutyConfigs |  | [][PagerDutyConfig](#pagerdutyconfig) | false |
+
+[Back to TOC](#table-of-contents)
+
+## Route
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| receiver |  | string | false |
+| groupBy |  | []string | false |
+| groupWait |  | string | false |
+| groupInterval |  | string | false |
+| repeatInterval |  | string | false |
+| matchers |  | [][Matcher](#matcher) | false |
+| continue |  | *bool | false |
+| routes |  | [][Route](#route) | false |
 
 [Back to TOC](#table-of-contents)

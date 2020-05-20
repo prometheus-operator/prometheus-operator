@@ -18,6 +18,8 @@ package v1
 
 type AlertmanagerExpansion interface{}
 
+type AlertmanagerConfigExpansion interface{}
+
 type PodMonitorExpansion interface{}
 
 type ProbeExpansion interface{}

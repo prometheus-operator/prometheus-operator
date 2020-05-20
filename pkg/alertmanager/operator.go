@@ -27,10 +27,12 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/listwatch"
 	"github.com/coreos/prometheus-operator/pkg/operator"
 	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
+	"gopkg.in/yaml.v2"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
+	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -38,6 +40,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -57,8 +60,11 @@ type Operator struct {
 	mclient monitoringclient.Interface
 	logger  log.Logger
 
-	alrtInf cache.SharedIndexInformer
-	ssetInf cache.SharedIndexInformer
+	alrtInf      cache.SharedIndexInformer
+	alrtCfgInf   cache.SharedIndexInformer
+	nsAlrtInf    cache.SharedIndexInformer
+	nsAlrtCfgInf cache.SharedIndexInformer
+	ssetInf      cache.SharedIndexInformer
 
 	queue workqueue.RateLimitingInterface
 
@@ -134,6 +140,23 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 		),
 		&monitoringv1.Alertmanager{}, resyncPeriod, cache.Indexers{},
 	)
+	o.alrtCfgInf = cache.NewSharedIndexInformer(
+		o.metrics.NewInstrumentedListerWatcher(
+			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
+				return &cache.ListWatch{
+					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+						options.LabelSelector = o.config.AlertManagerSelector
+						return o.mclient.MonitoringV1().AlertmanagerConfigs(namespace).List(context.TODO(), options)
+					},
+					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+						options.LabelSelector = o.config.AlertManagerSelector
+						return o.mclient.MonitoringV1().AlertmanagerConfigs(namespace).Watch(context.TODO(), options)
+					},
+				}
+			}),
+		),
+		&monitoringv1.AlertmanagerConfig{}, resyncPeriod, cache.Indexers{},
+	)
 	o.metrics.MustRegister(NewAlertmanagerCollector(o.alrtInf.GetStore()))
 	o.ssetInf = cache.NewSharedIndexInformer(
 		o.metrics.NewInstrumentedListerWatcher(
@@ -143,6 +166,34 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 		),
 		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{},
 	)
+
+	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
+		// nsResyncPeriod is used to control how often the namespace informer
+		// should resync. If the unprivileged ListerWatcher is used, then the
+		// informer must resync more often because it cannot watch for
+		// namespace changes.
+		nsResyncPeriod := 15 * time.Second
+		// If the only namespace is v1.NamespaceAll, then the client must be
+		// privileged and a regular cache.ListWatch will be used. In this case
+		// watching works and we do not need to resync so frequently.
+		if listwatch.IsAllNamespaces(allowList) {
+			nsResyncPeriod = resyncPeriod
+		}
+		nsInf := cache.NewSharedIndexInformer(
+			o.metrics.NewInstrumentedListerWatcher(
+				listwatch.NewUnprivilegedNamespaceListWatchFromClient(o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+			),
+			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
+		)
+
+		return nsInf
+	}
+	o.nsAlrtCfgInf = newNamespaceInformer(o, o.config.Namespaces.AllowList)
+	if listwatch.IdenticalNamespaces(o.config.Namespaces.AllowList, o.config.Namespaces.AlertmanagerAllowList) {
+		o.nsAlrtInf = o.nsAlrtCfgInf
+	} else {
+		o.nsAlrtInf = newNamespaceInformer(o, o.config.Namespaces.AlertmanagerAllowList)
+	}
 
 	return o, nil
 }
@@ -155,6 +206,9 @@ func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 		informer cache.SharedIndexInformer
 	}{
 		{"Alertmanager", c.alrtInf},
+		{"AlertmanagerNamespace", c.nsAlrtInf},
+		{"AlertmanagerConfig", c.alrtCfgInf},
+		{"AlertmanagerConfigNamespace", c.nsAlrtCfgInf},
 		{"StatefulSet", c.ssetInf},
 	}
 	for _, inf := range informers {
@@ -179,11 +233,105 @@ func (c *Operator) addHandlers() {
 		DeleteFunc: c.handleAlertmanagerDelete,
 		UpdateFunc: c.handleAlertmanagerUpdate,
 	})
+	c.alrtCfgInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.handleAlertmanagerConfigAdd,
+		DeleteFunc: c.handleAlertmanagerConfigDelete,
+		UpdateFunc: c.handleAlertmanagerConfigUpdate,
+	})
 	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleStatefulSetAdd,
 		DeleteFunc: c.handleStatefulSetDelete,
 		UpdateFunc: c.handleStatefulSetUpdate,
 	})
+}
+
+func (c *Operator) handleAlertmanagerConfigAdd(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "AlertmanagerConfig added")
+		c.metrics.TriggerByCounter(monitoringv1.AlertmanagerConfigKind, "add").Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleAlertmanagerConfigUpdate(old, cur interface{}) {
+	if old.(*monitoringv1.ServiceMonitor).ResourceVersion == cur.(*monitoringv1.ServiceMonitor).ResourceVersion {
+		return
+	}
+
+	o, ok := c.getObject(cur)
+	if ok {
+		level.Debug(c.logger).Log("msg", "AlertmanagerConfig updated")
+		c.metrics.TriggerByCounter(monitoringv1.AlertmanagerConfigKind, "update").Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
+	o, ok := c.getObject(obj)
+	if ok {
+		level.Debug(c.logger).Log("msg", "AlertmanagerConfig delete")
+		c.metrics.TriggerByCounter(monitoringv1.AlertmanagerConfigKind, "delete").Inc()
+
+		c.enqueueForMonitorNamespace(o.GetNamespace())
+	}
+}
+
+func (c *Operator) enqueueForMonitorNamespace(nsName string) {
+	c.enqueueForNamespace(c.nsAlrtCfgInf.GetStore(), nsName)
+}
+
+// enqueueForNamespace enqueues all Alertmanager object keys that belong to the
+// given namespace or select objects in the given namespace.
+func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
+	nsObject, exists, err := store.GetByKey(nsName)
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "get namespace to enqueue Alertmanager instances failed",
+			"err", err,
+		)
+		return
+	}
+	if !exists {
+		level.Error(c.logger).Log(
+			"msg", fmt.Sprintf("get namespace to enqueue Alertmanager instances failed: namespace %q does not exist", nsName),
+		)
+		return
+	}
+	ns := nsObject.(*v1.Namespace)
+
+	err = cache.ListAll(c.alrtInf.GetStore(), labels.Everything(), func(obj interface{}) {
+		// Check for Prometheus instances in the namespace.
+		am := obj.(*monitoringv1.Alertmanager)
+		if am.Namespace == nsName {
+			c.enqueue(am)
+			return
+		}
+
+		// Check for Alertmanager instances selecting AlertmanagerConfigs in
+		// the namespace.
+		acNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("failed to convert AlertmanagerConfigNamespaceSelector of %q to selector", am.Name),
+				"err", err,
+			)
+			return
+		}
+
+		if acNSSelector.Matches(labels.Set(ns.Labels)) {
+			c.enqueue(am)
+			return
+		}
+	})
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "listing all Prometheus instances from cache failed",
+			"err", err,
+		)
+	}
 }
 
 // Run the controller.
@@ -214,7 +362,12 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.worker()
 
 	go c.alrtInf.Run(stopc)
+	go c.alrtCfgInf.Run(stopc)
 	go c.ssetInf.Run(stopc)
+	go c.nsAlrtCfgInf.Run(stopc)
+	if c.nsAlrtInf != c.nsAlrtCfgInf {
+		go c.nsAlrtInf.Run(stopc)
+	}
 	if err := c.waitForCacheSync(stopc); err != nil {
 		return err
 	}
@@ -426,6 +579,10 @@ func (c *Operator) sync(key string) error {
 
 	level.Info(c.logger).Log("msg", "sync alertmanager", "key", key)
 
+	if err := c.provisionAlertmanagerConfiguration(context.TODO(), am); err != nil {
+		return errors.Wrap(err, "provision alertmanager configuration")
+	}
+
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
 	if err = k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(am, c.config)); err != nil {
@@ -472,6 +629,64 @@ func (c *Operator) sync(key string) error {
 
 	if err != nil {
 		return errors.Wrap(err, "updating StatefulSet failed")
+	}
+
+	return nil
+}
+
+func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager) error {
+	secretName := defaultConfigSecretName(am.Name)
+	if am.Spec.ConfigSecret != "" {
+		secretName = am.Spec.ConfigSecret
+	}
+
+	secret, err := c.kclient.CoreV1().Secrets(am.Namespace).Get(ctx, secretName, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return errors.Wrap(err, "get base configuration secret")
+	}
+
+	var baseConfigYaml yaml.MapSlice
+	baseConfig, _ := secret.Data["alertmanager.yaml"]
+	_, err = config.Load(string(baseConfig))
+	if err != nil {
+		level.Warn(c.logger).Log("msg", "base configuration loaded from Secret could not be parsed", "secret", secretName)
+		baseConfig = []byte{}
+	}
+
+	err = yaml.Unmarshal(baseConfig, &baseConfigYaml)
+	if err != nil {
+		return errors.Wrap(err, "unmarshalling base config")
+	}
+
+	foundRoute := false
+	foundReceivers := false
+	foundInhibitRules := false
+	for _, i := range baseConfigYaml {
+		if k, ok := i.Key.(string); ok {
+			if k == "route" {
+				foundRoute = true
+			}
+			if k == "receivers" {
+				foundReceivers = true
+			}
+			if k == "route" {
+				foundInhibitRules = true
+			}
+		}
+	}
+
+	if !foundRoute {
+		return errors.New("default route must be configured")
+	}
+
+	// build routes, receivers and inhibit rules from AlertmanagerConfigs here
+
+	if foundReceivers {
+		// just append receivrs from AlertmanagerConfig CRs, otherwise must first create receivers field
+	}
+
+	if foundInhibitRules {
+		// just append inhibition rules from AlertmanagerConfig CRs, otherwise must first create inhibit rules field
 	}
 
 	return nil

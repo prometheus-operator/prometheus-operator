@@ -43,6 +43,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
 
     // Prefixing with 0 to ensure these manifests are listed and therefore created first.
     '0alertmanagerCustomResourceDefinition': import 'alertmanager-crd.libsonnet',
+    '0alertmanagerConfigCustomResourceDefinition': import 'alertmanagerconfig-crd.libsonnet',
     '0prometheusCustomResourceDefinition': import 'prometheus-crd.libsonnet',
     '0servicemonitorCustomResourceDefinition': import 'servicemonitor-crd.libsonnet',
     '0podmonitorCustomResourceDefinition': import 'podmonitor-crd.libsonnet',
@@ -70,6 +71,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
                              policyRule.withResources([
                                'alertmanagers',
                                'alertmanagers/finalizers',
+                               'alertmanagerconfigs',
                                'prometheuses',
                                'prometheuses/finalizers',
                                'thanosrulers',
