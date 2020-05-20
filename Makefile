@@ -17,6 +17,7 @@ VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
 TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_types.go
+TYPES_V1_TARGET += pkg/apis/monitoring/v1/alertmanager_config_types.go
 
 TOOLS_BIN_DIR ?= $(shell pwd)/tmp/bin
 export PATH := $(TOOLS_BIN_DIR):$(PATH)

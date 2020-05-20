@@ -73,9 +73,6 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 	if _, ok := am.Spec.Resources.Requests[v1.ResourceMemory]; !ok {
 		am.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
 	}
-	if am.Spec.ConfigSecret == "" {
-		am.Spec.ConfigSecret = configSecretName(am.Name)
-	}
 
 	spec, err := makeStatefulSetSpec(am, config)
 	if err != nil {
@@ -570,7 +567,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	}, nil
 }
 
-func configSecretName(name string) string {
+func defaultConfigSecretName(name string) string {
 	return prefixedName(name)
 }
 

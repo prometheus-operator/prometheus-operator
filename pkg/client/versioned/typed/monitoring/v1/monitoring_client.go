@@ -25,6 +25,7 @@ import (
 type MonitoringV1Interface interface {
 	RESTClient() rest.Interface
 	AlertmanagersGetter
+	AlertmanagerConfigsGetter
 	PodMonitorsGetter
 	ProbesGetter
 	PrometheusesGetter
@@ -40,6 +41,10 @@ type MonitoringV1Client struct {
 
 func (c *MonitoringV1Client) Alertmanagers(namespace string) AlertmanagerInterface {
 	return newAlertmanagers(c, namespace)
+}
+
+func (c *MonitoringV1Client) AlertmanagerConfigs(namespace string) AlertmanagerConfigInterface {
+	return newAlertmanagerConfigs(c, namespace)
 }
 
 func (c *MonitoringV1Client) PodMonitors(namespace string) PodMonitorInterface {

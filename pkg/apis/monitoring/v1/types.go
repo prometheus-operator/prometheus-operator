@@ -1245,6 +1245,11 @@ type AlertmanagerSpec struct {
 	// ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.
 	// Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.
 	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"`
+	// AlertmanagerConfigs to be selected for to merge and configure Alertmanager with.
+	AlertmanagerConfigSelector *metav1.LabelSelector `json:"alertmanagerConfigSelector,omitempty"`
+	// Namespaces to be selected for AlertmanagerConfig discovery. If nil, only
+	// check own namespace.
+	AlertmanagerConfigNamespaceSelector *metav1.LabelSelector `json:"alertmanagerConfigNamespaceSelector,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.
