@@ -30,6 +30,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [Prometheus](#prometheus)
 * [PrometheusList](#prometheuslist)
 * [PrometheusRule](#prometheusrule)
+* [PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig)
 * [PrometheusRuleList](#prometheusrulelist)
 * [PrometheusRuleSpec](#prometheusrulespec)
 * [PrometheusSpec](#prometheusspec)
@@ -348,6 +349,17 @@ PrometheusRule defines alerting rules for a Prometheus instance
 
 [Back to TOC](#table-of-contents)
 
+## PrometheusRuleExcludeConfig
+
+PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces to be ignored while enforcing namespace label for alerts and metrics.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| ruleNamespace | RuleNamespace - namespace of excluded rule | string | true |
+| ruleName | RuleNamespace - name of excluded rule | string | true |
+
+[Back to TOC](#table-of-contents)
+
 ## PrometheusRuleList
 
 PrometheusRuleList is a list of PrometheusRules.
@@ -435,6 +447,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | overrideHonorTimestamps | OverrideHonorTimestamps allows to globally enforce honoring timestamps in all scrape configs. | bool | false |
 | ignoreNamespaceSelectors | IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from the podmonitor and servicemonitor configs, and they will only discover endpoints within their current namespace.  Defaults to false. | bool | false |
 | enforcedNamespaceLabel | EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert and metric that is user created. The label value will always be the namespace of the object that is being created. | string | false |
+| prometheusRulesExcludedFromEnforce | PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing of adding namespace labels. Works only if enforcedNamespaceLabel set to true. Make sure both ruleNamespace and ruleName are set for each pair | [][PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig) | false |
 | queryLogFile | QueryLogFile specifies the file to which PromQL queries are logged. Note that this location must be writable, and can be persisted using an attached volume. Alternatively, the location can be set to a stdout location such as `/dev/stdout` to log querie information to the default Prometheus log stream. This is only available in versions of Prometheus >= 2.16.0. For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/) | string | false |
 
 [Back to TOC](#table-of-contents)
@@ -738,6 +751,7 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | ruleSelector | A label selector to select which PrometheusRules to mount for alerting and recording. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | ruleNamespaceSelector | Namespaces to be selected for Rules discovery. If unspecified, only the same namespace as the ThanosRuler object is in is used. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | enforcedNamespaceLabel | EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert and metric that is user created. The label value will always be the namespace of the object that is being created. | string | false |
+| prometheusRulesExcludedFromEnforce | PrometheusRulesExcludedFromEnforce - list of Prometheus rules to be excluded from enforcing of adding namespace labels. Works only if enforcedNamespaceLabel set to true. Make sure both ruleNamespace and ruleName are set for each pair | [][PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig) | false |
 | logLevel | Log level for ThanosRuler to be configured with. | string | false |
 | logFormat | Log format for ThanosRuler to be configured with. | string | false |
 | portName | Port name used for the pods and governing service. This defaults to web | string | false |

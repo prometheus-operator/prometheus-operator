@@ -3430,6 +3430,27 @@ spec:
                   instance name. Defaults to the value of `prometheus`. External label
                   will _not_ be added when value is set to empty string (`""`).
                 type: string
+              prometheusRulesExcludedFromEnforce:
+                description: PrometheusRulesExcludedFromEnforce - list of prometheus
+                  rules to be excluded from enforcing of adding namespace labels.
+                  Works only if enforcedNamespaceLabel set to true. Make sure both
+                  ruleNamespace and ruleName are set for each pair
+                items:
+                  description: PrometheusRuleExcludeConfig enables users to configure
+                    excluded PrometheusRule names and their namespaces to be ignored
+                    while enforcing namespace label for alerts and metrics.
+                  properties:
+                    ruleName:
+                      description: RuleNamespace - name of excluded rule
+                      type: string
+                    ruleNamespace:
+                      description: RuleNamespace - namespace of excluded rule
+                      type: string
+                  required:
+                  - ruleName
+                  - ruleNamespace
+                  type: object
+                type: array
               query:
                 description: QuerySpec defines the query command line flags when starting
                   Prometheus.
