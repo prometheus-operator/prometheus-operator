@@ -189,7 +189,7 @@ func TestEnforceNamespaceLabel(t *testing.T) {
 		t.Run(tc.Name,
 			func(t *testing.T) {
 
-				nsLabeler := New(tc.PromSpecEnforcedNamespaceLabel, tc.PromSpecExcludedRules)
+				nsLabeler := New(tc.PromSpecEnforcedNamespaceLabel, tc.PromSpecExcludedRules, true)
 
 				if err := nsLabeler.EnforceNamespaceLabel(&tc.PromRule); err != nil {
 					t.Error(err)
