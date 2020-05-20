@@ -355,8 +355,8 @@ PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule n
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| ruleNamespace | RuleNamespace - namespace of excluded rule | string | false |
-| ruleName | RuleNamespace - name of excluded rule | string | false |
+| ruleNamespace | RuleNamespace - namespace of excluded rule | string | true |
+| ruleName | RuleNamespace - name of excluded rule | string | true |
 
 [Back to TOC](#table-of-contents)
 

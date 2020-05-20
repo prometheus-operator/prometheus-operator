@@ -3016,6 +3016,9 @@ spec:
                     ruleNamespace:
                       description: RuleNamespace - namespace of excluded rule
                       type: string
+                  required:
+                  - ruleName
+                  - ruleNamespace
                   type: object
                 type: array
               queryConfig:

@@ -323,9 +323,9 @@ type PrometheusSpec struct {
 // to be ignored while enforcing namespace label for alerts and metrics.
 type PrometheusRuleExcludeConfig struct {
 	// RuleNamespace - namespace of excluded rule
-	RuleNamespace string `json:"ruleNamespace,omitempty"`
+	RuleNamespace string `json:"ruleNamespace"`
 	// RuleNamespace - name of excluded rule
-	RuleName string `json:"ruleName,omitempty"`
+	RuleName string `json:"ruleName"`
 }
 
 // ArbitraryFSAccessThroughSMsConfig enables users to configure, whether
