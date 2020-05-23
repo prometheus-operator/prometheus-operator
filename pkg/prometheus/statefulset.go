@@ -51,6 +51,7 @@ const (
 )
 
 var (
+	minShards                   int32 = 1
 	minReplicas                 int32 = 1
 	defaultMaxConcurrency       int32 = 20
 	managedByOperatorLabel            = "managed-by"
@@ -58,14 +59,42 @@ var (
 	managedByOperatorLabels           = map[string]string{
 		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
-	probeTimeoutSeconds int32 = 3
+	shardLabelName                = "operator.prometheus.io/shard"
+	prometheusNameLabelName       = "operator.prometheus.io/name"
+	probeTimeoutSeconds     int32 = 3
 )
 
+func expectedStatefulSetShardNames(
+	p *monitoringv1.Prometheus,
+) []string {
+	res := []string{}
+	shards := minShards
+	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
+		shards = *p.Spec.Shards
+	}
+
+	for i := int32(0); i < shards; i++ {
+		res = append(res, prometheusNameByShard(p.Name, i))
+	}
+
+	return res
+}
+
+func prometheusNameByShard(name string, shard int32) string {
+	base := prefixedName(name)
+	if shard == 0 {
+		return base
+	}
+	return fmt.Sprintf("%s-shard-%d", base, shard)
+}
+
 func makeStatefulSet(
+	name string,
 	p monitoringv1.Prometheus,
 	config *operator.Config,
 	ruleConfigMapNames []string,
 	inputHash string,
+	shard int32,
 ) (*appsv1.StatefulSet, error) {
 	// p is passed in by value, not by reference. But p contains references like
 	// to annotation map, that do not get copied on function invocation. Ensure to
@@ -112,7 +141,7 @@ func makeStatefulSet(
 		}
 	}
 
-	spec, err := makeStatefulSetSpec(p, config, ruleConfigMapNames, parsedVersion)
+	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, parsedVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -126,10 +155,17 @@ func makeStatefulSet(
 			annotations[key] = value
 		}
 	}
+	labels := make(map[string]string)
+	for key, value := range p.ObjectMeta.Labels {
+		labels[key] = value
+	}
+	labels[shardLabelName] = fmt.Sprintf("%d", shard)
+	labels[prometheusNameLabelName] = p.Name
+
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        prefixedName(p.Name),
-			Labels:      config.Labels.Merge(p.ObjectMeta.Labels),
+			Name:        name,
+			Labels:      config.Labels.Merge(labels),
 			Annotations: annotations,
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -275,7 +311,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 	return svc
 }
 
-func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConfigMapNames []string,
+func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard int32, ruleConfigMapNames []string,
 	version semver.Version) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
@@ -619,8 +655,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	podSelectorLabels := map[string]string{
-		"app":        "prometheus",
-		"prometheus": p.Name,
+		"app":                   "prometheus",
+		"prometheus":            p.Name,
+		shardLabelName:          fmt.Sprintf("%d", shard),
+		prometheusNameLabelName: p.Name,
 	}
 	if p.Spec.PodMetadata != nil {
 		if p.Spec.PodMetadata.Labels != nil {
@@ -814,6 +852,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 			p.Spec.LogLevel,
 			configReloaderArgs,
 			configReloaderVolumeMounts,
+			shard,
 		),
 	}, additionalContainers...)
 

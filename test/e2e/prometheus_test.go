@@ -1938,6 +1938,151 @@ func testPromSharedResourcesReconciliation(t *testing.T) {
 	}
 }
 
+func testShardingProvisioning(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	prometheusName := "test"
+	group := "servicediscovery-test"
+	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+
+	s := framework.MakeBasicServiceMonitor(group)
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+	shards := int32(2)
+	p.Spec.Shards = &shards
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, svc); err != nil {
+		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	pods := []struct {
+		pod                        string
+		expectedShardConfigSnippet string
+	}{
+		{
+			pod: "prometheus-test-0",
+			expectedShardConfigSnippet: `
+  - source_labels:
+    - __tmp_hash
+    regex: 0
+    action: keep`,
+		}, {
+			pod: "prometheus-test-shard-1-0",
+			expectedShardConfigSnippet: `
+  - source_labels:
+    - __tmp_hash
+    regex: 1
+    action: keep`,
+		},
+	}
+
+	for _, p := range pods {
+		stdout, _, err := framework.ExecWithOptions(testFramework.ExecOptions{
+			Command: []string{
+				"/bin/sh", "-c", "cat /etc/prometheus/config_out/prometheus.env.yaml",
+			},
+			Namespace:     ns,
+			PodName:       p.pod,
+			ContainerName: "prometheus",
+			CaptureStdout: true,
+			CaptureStderr: true,
+			Stdin:         nil,
+		})
+		if err != nil {
+			t.Fatalf("Failed to read config from pod %q: %v", p.pod, err)
+		}
+		if !strings.Contains(stdout, p.expectedShardConfigSnippet) {
+			t.Fatalf("Expected shard config to be present for %v but not found in config:\n\n%s\n\nexpected to find:\n\n%s", p.pod, stdout, p.expectedShardConfigSnippet)
+		}
+	}
+}
+
+func testResharding(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	prometheusName := "test"
+	group := "servicediscovery-test"
+	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+
+	s := framework.MakeBasicServiceMonitor(group)
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, svc); err != nil {
+		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	shards := int32(2)
+	p.Spec.Shards = &shards
+	p, err = framework.UpdatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.TODO(), fmt.Sprintf("prometheus-%s", p.Name), metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.TODO(), fmt.Sprintf("prometheus-%s-shard-1", p.Name), metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	shards = int32(1)
+	p.Spec.Shards = &shards
+	p, err = framework.UpdatePrometheusAndWaitUntilReady(ns, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.TODO(), fmt.Sprintf("prometheus-%s", p.Name), metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = wait.Poll(time.Second, 1*time.Minute, func() (bool, error) {
+		_, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.TODO(), fmt.Sprintf("prometheus-%s-shard-1", p.Name), metav1.GetOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return false, err
+		}
+		if err == nil {
+			// StatefulSet still exists.
+			return false, nil
+		}
+		// StatefulSet not found.
+		return true, nil
+	})
+}
+
 func testPromAlertmanagerDiscovery(t *testing.T) {
 	t.Parallel()
 

@@ -247,6 +247,10 @@ func (cg *configGenerator) generateConfig(
 	sort.Strings(probeIdentifiers)
 
 	apiserverConfig := p.Spec.APIServerConfig
+	shards := int32(1)
+	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
+		shards = *p.Spec.Shards
+	}
 
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range sMonIdentifiers {
@@ -264,7 +268,10 @@ func (cg *configGenerator) generateConfig(
 					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
 					p.Spec.EnforcedSampleLimit,
-					p.Spec.EnforcedTargetLimit))
+					p.Spec.EnforcedTargetLimit,
+					shards,
+				),
+			)
 		}
 	}
 	for _, identifier := range pMonIdentifiers {
@@ -281,7 +288,10 @@ func (cg *configGenerator) generateConfig(
 					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
 					p.Spec.EnforcedSampleLimit,
-					p.Spec.EnforcedTargetLimit))
+					p.Spec.EnforcedTargetLimit,
+					shards,
+				),
+			)
 		}
 	}
 
@@ -419,8 +429,9 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
-	enforcedTargetLimit *uint64) yaml.MapSlice {
-
+	enforcedTargetLimit *uint64,
+	shards int32,
+) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
 		{
@@ -629,6 +640,8 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
 	// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
 	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
+
+	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
@@ -862,8 +875,9 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64,
-	enforcedTargetLimit *uint64) yaml.MapSlice {
-
+	enforcedTargetLimit *uint64,
+	shards int32,
+) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
 		{
@@ -1100,6 +1114,8 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
 	// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
 	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
+
+	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
@@ -1135,6 +1151,19 @@ func getLimit(user uint64, enforced *uint64) uint64 {
 		return *enforced
 	}
 	return user
+}
+
+func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return append(relabelings, yaml.MapSlice{
+		{Key: "source_labels", Value: []string{"__address__"}},
+		{Key: "target_label", Value: "__tmp_hash"},
+		{Key: "modulus", Value: shards},
+		{Key: "action", Value: "hashmod"},
+	}, yaml.MapSlice{
+		{Key: "source_labels", Value: []string{"__tmp_hash"}},
+		{Key: "regex", Value: "$(SHARD)"},
+		{Key: "action", Value: "keep"},
+	})
 }
 
 // appendPre17RelabelConfig appends relabel config to pre-1.7 prometheus versions

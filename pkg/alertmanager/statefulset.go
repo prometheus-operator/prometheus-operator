@@ -540,6 +540,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			a.Spec.LogLevel,
 			configReloaderArgs,
 			configReloaderVolumeMounts,
+			-1,
 		),
 	}
 
