@@ -739,13 +739,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			fmt.Sprintf("--http-address=%s:10902", bindAddress),
 		}
 
-		if p.Spec.Thanos.LogLevel != "" {
-			thanosArgs = append(thanosArgs, "--log.level="+p.Spec.Thanos.LogLevel)
-		}
-		if p.Spec.Thanos.LogFormat != "" {
-			thanosArgs = append(thanosArgs, "--log.format="+p.Spec.Thanos.LogFormat)
-		}
-
 		if p.Spec.Thanos.GRPCServerTLSConfig != nil {
 			tls := p.Spec.Thanos.GRPCServerTLSConfig
 			if tls.CertFile != "" {
@@ -817,11 +810,15 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			})
 		}
 
-		if p.Spec.LogLevel != "" {
-			container.Args = append(container.Args, fmt.Sprintf("--log.level=%s", p.Spec.LogLevel))
+		if p.Spec.Thanos.LogLevel != "" {
+			container.Args = append(container.Args, "--log.level="+p.Spec.Thanos.LogLevel)
+		} else if p.Spec.LogLevel != "" {
+			container.Args = append(container.Args, "--log.level="+p.Spec.LogLevel)
 		}
-		if p.Spec.LogFormat != "" {
-			container.Args = append(container.Args, fmt.Sprintf("--log.format=%s", p.Spec.LogFormat))
+		if p.Spec.Thanos.LogFormat != "" {
+			container.Args = append(container.Args, "--log.format="+p.Spec.Thanos.LogFormat)
+		} else if p.Spec.LogFormat != "" {
+			container.Args = append(container.Args, "--log.format="+p.Spec.LogFormat)
 		}
 		additionalContainers = append(additionalContainers, container)
 	}
