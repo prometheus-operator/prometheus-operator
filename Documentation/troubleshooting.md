@@ -81,3 +81,49 @@ sed -e "s/- --address=127.0.0.1/- --address=0.0.0.0/" -i /etc/kubernetes/manifes
 sed -e "s/- --address=127.0.0.1/- --address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-scheduler.yaml
 ```
 
+### Using textual port number instead of port name
+
+The ServiceMonitor expects to use the port name as defined on the Service. So, using the Service example from the
+diagram above, we have this Service definition:
+
+```
+kind: Service
+metadata:
+  labels:
+    k8s-app: my-app
+  name: my-app
+...
+  spec:
+    ports:
+      - name: metrics
+        port: 8080
+    selector:
+      k8s-app: my-app
+```
+
+We would then define the service monitor using `metrics` as the port not `"8080"`. E.g.
+
+**CORRECT**
+```
+kind: ServiceMonitor
+metadata:
+  name: my-app
+spec:
+...
+  endpoints:
+    - port: metrics
+```
+
+**INCORRECT**
+```
+kind: ServiceMonitor
+metadata:
+  name: my-app
+spec:
+...
+  endpoints:
+    - port: "8080"
+```
+
+The incorrect example will give an error along these lines `spec.endpoints.port in body must be of type string:
+"integer"`
