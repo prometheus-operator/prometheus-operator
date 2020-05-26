@@ -1,12 +1,10 @@
 module github.com/coreos/prometheus-operator
 
-go 1.13
+go 1.14
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
 	github.com/brancz/kube-rbac-proxy v0.5.0
-	github.com/campoy/embedmd v1.0.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-kit/kit v0.10.0
 	github.com/go-openapi/swag v0.19.9
@@ -14,7 +12,6 @@ require (
 	github.com/golang/protobuf v1.4.0
 	github.com/google/go-cmp v0.4.0
 	github.com/hashicorp/go-version v1.2.0
-	github.com/jsonnet-bundler/jsonnet-bundler v0.3.1
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452
 	github.com/oklog/run v1.1.0
@@ -31,10 +28,8 @@ require (
 	k8s.io/apiextensions-apiserver v0.18.2
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/code-generator v0.18.2
 	k8s.io/component-base v0.18.2
 	k8s.io/klog v1.0.0
-	sigs.k8s.io/controller-tools v0.2.4
 )
 
 replace (
