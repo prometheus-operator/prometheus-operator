@@ -409,6 +409,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | logLevel | Log level for Prometheus to be configured with. | string | false |
 | logFormat | Log format for Prometheus to be configured with. | string | false |
 | scrapeInterval | Interval between consecutive scrapes. | string | false |
+| scrapeTimeout | Number of seconds to wait for target to respond before erroring. | string | false |
 | evaluationInterval | Interval between consecutive evaluations. | string | false |
 | rules | /--rules.*/ command-line arguments. | [Rules](#rules) | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |

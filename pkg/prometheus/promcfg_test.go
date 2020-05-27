@@ -56,6 +56,7 @@ func TestGlobalSettings(t *testing.T) {
 	type testCase struct {
 		EvaluationInterval string
 		ScrapeInterval     string
+		ScrapeTimeout      string
 		ExternalLabels     map[string]string
 		QueryLogFile       string
 		Version            string
@@ -117,6 +118,25 @@ alerting:
 `,
 		},
 		{
+			Version:       "v2.15.2",
+			ScrapeTimeout: "30s",
+			Expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+  scrape_timeout: 30s
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`,
+		},
+		{
 			Version: "v2.15.2",
 			ExternalLabels: map[string]string{
 				"key1": "value1",
@@ -168,6 +188,7 @@ alerting:
 				Spec: monitoringv1.PrometheusSpec{
 					EvaluationInterval: tc.EvaluationInterval,
 					ScrapeInterval:     tc.ScrapeInterval,
+					ScrapeTimeout:      tc.ScrapeTimeout,
 					ExternalLabels:     tc.ExternalLabels,
 					QueryLogFile:       tc.QueryLogFile,
 					Version:            tc.Version,

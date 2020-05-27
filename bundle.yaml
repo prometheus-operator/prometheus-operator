@@ -9024,6 +9024,10 @@ spec:
               scrapeInterval:
                 description: Interval between consecutive scrapes.
                 type: string
+              scrapeTimeout:
+                description: Number of seconds to wait for target to respond before
+                  erroring.
+                type: string
               secrets:
                 description: Secrets is a list of Secrets in the same namespace as
                   the Prometheus object, which shall be mounted into the Prometheus
