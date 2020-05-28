@@ -696,6 +696,7 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | grpcServerTlsConfig | GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads recorded rule data. Note: Currently only the CAFile, CertFile, and KeyFile fields are supported. Maps to the '--grpc-server-tls-*' CLI args. | *[TLSConfig](#tlsconfig) | false |
 | logLevel | LogLevel for Thanos sidecar to be configured with. | string | false |
 | logFormat | LogFormat for Thanos sidecar to be configured with. | string | false |
+| minTime | MinTime for Thanos sidecar to be configured with. | string | false |
 
 [Back to TOC](#table-of-contents)
 
