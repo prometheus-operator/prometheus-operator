@@ -4785,6 +4785,12 @@ spec:
                   logLevel:
                     description: LogLevel for Thanos sidecar to be configured with.
                     type: string
+                  minTime:
+                    description: MinTime for Thanos sidecar to be configured with.
+                      Option can be a constant time in RFC3339 format or time duration
+                      relative to current time, such as -1d or 2h45m. Valid duration
+                      units are ms, s, m, h, d, w, y.
+                    type: string
                   objectStorageConfig:
                     description: ObjectStorageConfig configures object storage in
                       Thanos.
@@ -4824,12 +4830,6 @@ spec:
                           to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                         type: object
                     type: object
-                  retention:
-                    description: MinTime for Thanos sidecar to be configured with.
-                      Option can be a constant time in RFC3339 format or time duration
-                      relative to current time, such as -1d or 2h45m. Valid duration
-                      units are ms, s, m, h, d, w, y.
-                    type: string
                   sha:
                     description: SHA of Thanos container image to be deployed. Defaults
                       to the value of `version`. Similar to a tag, but the SHA explicitly
