@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/brancz/kube-rbac-proxy v0.5.0
+	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-kit/kit v0.10.0
 	github.com/go-openapi/swag v0.19.9
