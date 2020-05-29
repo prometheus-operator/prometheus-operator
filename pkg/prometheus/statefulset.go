@@ -820,6 +820,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		} else if p.Spec.LogFormat != "" {
 			container.Args = append(container.Args, "--log.format="+p.Spec.LogFormat)
 		}
+
+		if p.Spec.Thanos.MinTime != "" {
+			container.Args = append(container.Args, "--min-time="+p.Spec.Thanos.MinTime)
+		}
 		additionalContainers = append(additionalContainers, container)
 	}
 	if disableCompaction {
