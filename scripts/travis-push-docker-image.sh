@@ -8,18 +8,23 @@ set -u
 
 function defer {
 	docker logout quay.io
+	docker logout docker.io
 }
 trap defer EXIT
 
 CPU_ARCHS="amd64 arm64 arm"
 
-# Push to Quay '-dev' repo if it's not a git tag or master branch build.
-export REPO="quay.io/coreos/prometheus-operator"
-export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader"
+# Push to '-dev' REPO if it's not a git tag or master branch build.
+export QUAY_REPO="quay.io/coreos/prometheus-operator"
+export QUAY_REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader"
+export DOCKERHUB_REPO="docker.io/coreos/prometheus-operator"
+export DOCKERHUB_REPO_PROMETHEUS_CONFIG_RELOADER="docker.io/coreos/prometheus-config-reloader"
 
 if [[ "${TRAVIS_TAG}" == "" ]] && [[ "${TRAVIS_BRANCH}" != master ]]; then
-	export REPO="quay.io/coreos/prometheus-operator-dev"
-	export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader-dev"
+	export QUAY_REPO="quay.io/coreos/prometheus-operator-dev"
+	export QUAY_REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader-dev"
+	export DOCKERHUB_REPO="docker.io/coreos/prometheus-operator-dev"
+	export DOCKERHUB_REPO_PROMETHEUS_CONFIG_RELOADER="docker.io/coreos/prometheus-config-reloader-dev"
 fi
 
 # For both git tags and git branches 'TRAVIS_BRANCH' contains the name.
@@ -35,8 +40,9 @@ if [ "$TRAVIS" == "true" ]; then
 fi
 
 echo "${QUAY_PASSWORD}" | docker login -u "${QUAY_USERNAME}" --password-stdin quay.io
+echo "${DOCKERHUB_PASSWORD}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin docker.io
 export DOCKER_CLI_EXPERIMENTAL=enabled
-for r in ${REPO} ${REPO_PROMETHEUS_CONFIG_RELOADER}; do
+for r in ${QUAY_REPO} ${QUAY_REPO_PROMETHEUS_CONFIG_RELOADER} ${DOCKERHUB_REPO} ${DOCKERHUB_REPO_PROMETHEUS_CONFIG_RELOADER}; do
 	# Images need to be on remote registry before creating manifests
 	for arch in $CPU_ARCHS; do
 		docker push "${r}:${TAG}-$arch"
