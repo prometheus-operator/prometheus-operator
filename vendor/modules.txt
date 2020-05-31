@@ -173,7 +173,7 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
-# github.com/prometheus/prometheus v2.3.2+incompatible => github.com/prometheus/prometheus v0.0.0-20200507164740-ecee9c8abfd1
+# github.com/prometheus/prometheus v1.8.2-0.20200507164740-ecee9c8abfd1
 github.com/prometheus/prometheus/pkg/exemplar
 github.com/prometheus/prometheus/pkg/labels
 github.com/prometheus/prometheus/pkg/rulefmt

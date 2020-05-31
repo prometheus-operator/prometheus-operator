@@ -20,7 +20,7 @@ require (
 	github.com/openshift/prom-label-proxy v0.1.1-0.20191016113035-b8153a7f39f1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.5.1
-	github.com/prometheus/prometheus v2.3.2+incompatible
+	github.com/prometheus/prometheus v1.8.2-0.20200507164740-ecee9c8abfd1
 	github.com/stretchr/testify v1.5.1
 	github.com/thanos-io/thanos v0.11.0
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
@@ -38,7 +38,6 @@ require (
 replace (
 	// Temporary until https://github.com/openshift/prom-label-proxy/pull/28 gets merged
 	github.com/openshift/prom-label-proxy => github.com/vsliouniaev/prom-label-proxy v0.0.0-20200518104441-4fd7fe13454f
-	// Prometheus 2.18.1
-	github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.0.0-20200507164740-ecee9c8abfd1
+
 	k8s.io/client-go => k8s.io/client-go v0.0.0-20190918160344-1fbdaa4c8d90
 )
