@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"fmt"
-	"github.com/prometheus/prometheus/promql/parser"
 	"reflect"
 	"sort"
 	"strconv"
@@ -34,6 +33,7 @@ import (
 	"github.com/openshift/prom-label-proxy/injectproxy"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/labels"
+	"github.com/prometheus/prometheus/promql/parser"
 )
 
 const labelPrometheusName = "prometheus-name"
