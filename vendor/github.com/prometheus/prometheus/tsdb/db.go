@@ -34,24 +34,41 @@ import (
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/prometheus/pkg/labels"
+	"github.com/prometheus/prometheus/storage"
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
 	tsdb_errors "github.com/prometheus/prometheus/tsdb/errors"
 	"github.com/prometheus/prometheus/tsdb/fileutil"
+
+	// Load the package into main to make sure minium Go version is met.
 	_ "github.com/prometheus/prometheus/tsdb/goversion"
-	"github.com/prometheus/prometheus/tsdb/labels"
 	"github.com/prometheus/prometheus/tsdb/wal"
 	"golang.org/x/sync/errgroup"
 )
 
+const (
+	// Default duration of a block in milliseconds.
+	DefaultBlockDuration = int64(2 * time.Hour / time.Millisecond)
+)
+
+var (
+	// ErrNotReady is returned if the underlying storage is not ready yet.
+	ErrNotReady = errors.New("TSDB not ready")
+)
+
 // DefaultOptions used for the DB. They are sane for setups using
 // millisecond precision timestamps.
-var DefaultOptions = &Options{
-	WALSegmentSize:         wal.DefaultSegmentSize,
-	RetentionDuration:      15 * 24 * 60 * 60 * 1000, // 15 days in milliseconds
-	BlockRanges:            ExponentialBlockRanges(int64(2*time.Hour)/1e6, 3, 5),
-	NoLockfile:             false,
-	AllowOverlappingBlocks: false,
-	WALCompression:         false,
+func DefaultOptions() *Options {
+	return &Options{
+		WALSegmentSize:         wal.DefaultSegmentSize,
+		RetentionDuration:      int64(15 * 24 * time.Hour / time.Millisecond),
+		MinBlockDuration:       DefaultBlockDuration,
+		MaxBlockDuration:       DefaultBlockDuration,
+		NoLockfile:             false,
+		AllowOverlappingBlocks: false,
+		WALCompression:         false,
+		StripeSize:             DefaultStripeSize,
+	}
 }
 
 // Options of the DB storage.
@@ -63,7 +80,9 @@ type Options struct {
 	WALSegmentSize int
 
 	// Duration of persisted data to keep.
-	RetentionDuration uint64
+	// Unit agnostic as long as unit is consistent with MinBlockDuration and MaxBlockDuration.
+	// Typically it is in milliseconds.
+	RetentionDuration int64
 
 	// Maximum number of bytes in blocks to be retained.
 	// 0 or less means disabled.
@@ -71,9 +90,6 @@ type Options struct {
 	// the size of the WAL folder which is not added when calculating
 	// the current size of the database.
 	MaxBytes int64
-
-	// The sizes of the Blocks.
-	BlockRanges []int64
 
 	// NoLockfile disables creation and consideration of a lock file.
 	NoLockfile bool
@@ -84,31 +100,20 @@ type Options struct {
 
 	// WALCompression will turn on Snappy compression for records on the WAL.
 	WALCompression bool
-}
 
-// Appender allows appending a batch of data. It must be completed with a
-// call to Commit or Rollback and must not be reused afterwards.
-//
-// Operations on the Appender interface are not goroutine-safe.
-type Appender interface {
-	// Add adds a sample pair for the given series. A reference number is
-	// returned which can be used to add further samples in the same or later
-	// transactions.
-	// Returned reference numbers are ephemeral and may be rejected in calls
-	// to AddFast() at any point. Adding the sample via Add() returns a new
-	// reference number.
-	// If the reference is 0 it must not be used for caching.
-	Add(l labels.Labels, t int64, v float64) (uint64, error)
+	// StripeSize is the size in entries of the series hash map. Reducing the size will save memory but impact performance.
+	StripeSize int
 
-	// AddFast adds a sample pair for the referenced series. It is generally
-	// faster than adding a sample by providing its full label set.
-	AddFast(ref uint64, t int64, v float64) error
+	// The timestamp range of head blocks after which they get persisted.
+	// It's the minimum duration of any persisted block.
+	// Unit agnostic as long as unit is consistent with RetentionDuration and MaxBlockDuration.
+	// Typically it is in milliseconds.
+	MinBlockDuration int64
 
-	// Commit submits the collected samples and purges the batch.
-	Commit() error
-
-	// Rollback rolls back all modifications made in the appender so far.
-	Rollback() error
+	// The maximum timestamp range of compacted blocks.
+	// Unit agnostic as long as unit is consistent with MinBlockDuration and RetentionDuration.
+	// Typically it is in milliseconds.
+	MaxBlockDuration int64
 }
 
 // DB handles reads and writes of time series falling into
@@ -150,15 +155,15 @@ type dbMetrics struct {
 	symbolTableSize      prometheus.GaugeFunc
 	reloads              prometheus.Counter
 	reloadsFailed        prometheus.Counter
-	compactionsTriggered prometheus.Counter
 	compactionsFailed    prometheus.Counter
-	timeRetentionCount   prometheus.Counter
+	compactionsTriggered prometheus.Counter
 	compactionsSkipped   prometheus.Counter
+	sizeRetentionCount   prometheus.Counter
+	timeRetentionCount   prometheus.Counter
 	startTime            prometheus.GaugeFunc
 	tombCleanTimer       prometheus.Histogram
 	blocksBytes          prometheus.Gauge
 	maxBytes             prometheus.Gauge
-	sizeRetentionCount   prometheus.Counter
 }
 
 func newDBMetrics(db *DB, r prometheus.Registerer) *dbMetrics {
@@ -216,7 +221,7 @@ func newDBMetrics(db *DB, r prometheus.Registerer) *dbMetrics {
 		db.mtx.RLock()
 		defer db.mtx.RUnlock()
 		if len(db.blocks) == 0 {
-			return float64(db.head.minTime)
+			return float64(db.head.MinTime())
 		}
 		return float64(db.blocks[0].meta.MinTime)
 	})
@@ -243,14 +248,15 @@ func newDBMetrics(db *DB, r prometheus.Registerer) *dbMetrics {
 			m.symbolTableSize,
 			m.reloads,
 			m.reloadsFailed,
-			m.timeRetentionCount,
-			m.compactionsTriggered,
 			m.compactionsFailed,
+			m.compactionsTriggered,
+			m.compactionsSkipped,
+			m.sizeRetentionCount,
+			m.timeRetentionCount,
 			m.startTime,
 			m.tombCleanTimer,
 			m.blocksBytes,
 			m.maxBytes,
-			m.sizeRetentionCount,
 		)
 	}
 	return m
@@ -260,7 +266,7 @@ func newDBMetrics(db *DB, r prometheus.Registerer) *dbMetrics {
 var ErrClosed = errors.New("db already closed")
 
 // DBReadOnly provides APIs for read only operations on a database.
-// Current implementation doesn't support concurency so
+// Current implementation doesn't support concurrency so
 // all API calls should happen in the same go routine.
 type DBReadOnly struct {
 	logger  log.Logger
@@ -272,7 +278,7 @@ type DBReadOnly struct {
 // OpenDBReadOnly opens DB in the given directory for read only operations.
 func OpenDBReadOnly(dir string, l log.Logger) (*DBReadOnly, error) {
 	if _, err := os.Stat(dir); err != nil {
-		return nil, errors.Wrap(err, "openning the db dir")
+		return nil, errors.Wrap(err, "opening the db dir")
 	}
 
 	if l == nil {
@@ -286,20 +292,75 @@ func OpenDBReadOnly(dir string, l log.Logger) (*DBReadOnly, error) {
 	}, nil
 }
 
+// FlushWAL creates a new block containing all data that's currently in the memory buffer/WAL.
+// Samples that are in existing blocks will not be written to the new block.
+// Note that if the read only database is running concurrently with a
+// writable database then writing the WAL to the database directory can race.
+func (db *DBReadOnly) FlushWAL(dir string) (returnErr error) {
+	blockReaders, err := db.Blocks()
+	if err != nil {
+		return errors.Wrap(err, "read blocks")
+	}
+	maxBlockTime := int64(math.MinInt64)
+	if len(blockReaders) > 0 {
+		maxBlockTime = blockReaders[len(blockReaders)-1].Meta().MaxTime
+	}
+	w, err := wal.Open(db.logger, filepath.Join(db.dir, "wal"))
+	if err != nil {
+		return err
+	}
+	head, err := NewHead(nil, db.logger, w, 1, DefaultStripeSize)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		var merr tsdb_errors.MultiError
+		merr.Add(returnErr)
+		merr.Add(errors.Wrap(head.Close(), "closing Head"))
+		returnErr = merr.Err()
+	}()
+	// Set the min valid time for the ingested wal samples
+	// to be no lower than the maxt of the last block.
+	if err := head.Init(maxBlockTime); err != nil {
+		return errors.Wrap(err, "read WAL")
+	}
+	mint := head.MinTime()
+	maxt := head.MaxTime()
+	rh := &RangeHead{
+		head: head,
+		mint: mint,
+		maxt: maxt,
+	}
+	compactor, err := NewLeveledCompactor(
+		context.Background(),
+		nil,
+		db.logger,
+		ExponentialBlockRanges(DefaultOptions().MinBlockDuration, 3, 5),
+		chunkenc.NewPool(),
+	)
+	if err != nil {
+		return errors.Wrap(err, "create leveled compactor")
+	}
+	// Add +1 millisecond to block maxt because block intervals are half-open: [b.MinTime, b.MaxTime).
+	// Because of this block intervals are always +1 than the total samples it includes.
+	_, err = compactor.Write(dir, rh, mint, maxt+1, nil)
+	return errors.Wrap(err, "writing WAL")
+}
+
 // Querier loads the wal and returns a new querier over the data partition for the given time range.
 // Current implementation doesn't support multiple Queriers.
-func (db *DBReadOnly) Querier(mint, maxt int64) (Querier, error) {
+func (db *DBReadOnly) Querier(ctx context.Context, mint, maxt int64) (storage.Querier, error) {
 	select {
 	case <-db.closed:
 		return nil, ErrClosed
 	default:
 	}
-	blocksReaders, err := db.Blocks()
+	blockReaders, err := db.Blocks()
 	if err != nil {
 		return nil, err
 	}
-	blocks := make([]*Block, len(blocksReaders))
-	for i, b := range blocksReaders {
+	blocks := make([]*Block, len(blockReaders))
+	for i, b := range blockReaders {
 		b, ok := b.(*Block)
 		if !ok {
 			return nil, errors.New("unable to convert a read only block to a normal block")
@@ -307,7 +368,7 @@ func (db *DBReadOnly) Querier(mint, maxt int64) (Querier, error) {
 		blocks[i] = b
 	}
 
-	head, err := NewHead(nil, db.logger, nil, 1)
+	head, err := NewHead(nil, db.logger, nil, 1, DefaultStripeSize)
 	if err != nil {
 		return nil, err
 	}
@@ -316,13 +377,13 @@ func (db *DBReadOnly) Querier(mint, maxt int64) (Querier, error) {
 		maxBlockTime = blocks[len(blocks)-1].Meta().MaxTime
 	}
 
-	// Also add the WAL if the current blocks don't cover the requestes time range.
+	// Also add the WAL if the current blocks don't cover the requests time range.
 	if maxBlockTime <= maxt {
-		w, err := wal.Open(db.logger, nil, filepath.Join(db.dir, "wal"))
+		w, err := wal.Open(db.logger, filepath.Join(db.dir, "wal"))
 		if err != nil {
 			return nil, err
 		}
-		head, err = NewHead(nil, db.logger, w, 1)
+		head, err = NewHead(nil, db.logger, w, 1, DefaultStripeSize)
 		if err != nil {
 			return nil, err
 		}
@@ -349,7 +410,7 @@ func (db *DBReadOnly) Querier(mint, maxt int64) (Querier, error) {
 		head:   head,
 	}
 
-	return dbWritable.Querier(mint, maxt)
+	return dbWritable.Querier(ctx, mint, maxt)
 }
 
 // Blocks returns a slice of block readers for persisted blocks.
@@ -373,14 +434,14 @@ func (db *DBReadOnly) Blocks() ([]BlockReader, error) {
 	if len(corrupted) > 0 {
 		for _, b := range loadable {
 			if err := b.Close(); err != nil {
-				level.Warn(db.logger).Log("msg", "closing a block", err)
+				level.Warn(db.logger).Log("msg", "Closing a block", err)
 			}
 		}
 		return nil, errors.Errorf("unexpected corrupted block:%v", corrupted)
 	}
 
 	if len(loadable) == 0 {
-		return nil, errors.New("no blocks found")
+		return nil, nil
 	}
 
 	sort.Slice(loadable, func(i, j int) bool {
@@ -392,7 +453,7 @@ func (db *DBReadOnly) Blocks() ([]BlockReader, error) {
 		blockMetas = append(blockMetas, b.Meta())
 	}
 	if overlaps := OverlappingBlocks(blockMetas); len(overlaps) > 0 {
-		level.Warn(db.logger).Log("msg", "overlapping blocks found during opening", "detail", overlaps.String())
+		level.Warn(db.logger).Log("msg", "Overlapping blocks found during opening", "detail", overlaps.String())
 	}
 
 	// Close all previously open readers and add the new ones to the cache.
@@ -428,17 +489,51 @@ func (db *DBReadOnly) Close() error {
 	return merr.Err()
 }
 
-// Open returns a new DB in the given directory.
+// Open returns a new DB in the given directory. If options are empty, DefaultOptions will be used.
 func Open(dir string, l log.Logger, r prometheus.Registerer, opts *Options) (db *DB, err error) {
+	var rngs []int64
+	opts, rngs = validateOpts(opts, nil)
+	return open(dir, l, r, opts, rngs)
+}
+
+func validateOpts(opts *Options, rngs []int64) (*Options, []int64) {
+	if opts == nil {
+		opts = DefaultOptions()
+	}
+	if opts.StripeSize <= 0 {
+		opts.StripeSize = DefaultStripeSize
+	}
+
+	if opts.MinBlockDuration <= 0 {
+		opts.MinBlockDuration = DefaultBlockDuration
+	}
+	if opts.MinBlockDuration > opts.MaxBlockDuration {
+		opts.MaxBlockDuration = opts.MinBlockDuration
+	}
+
+	if len(rngs) == 0 {
+		// Start with smallest block duration and create exponential buckets until the exceed the
+		// configured maximum block duration.
+		rngs = ExponentialBlockRanges(opts.MinBlockDuration, 10, 3)
+	}
+	return opts, rngs
+}
+
+func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs []int64) (db *DB, err error) {
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return nil, err
 	}
 	if l == nil {
 		l = log.NewNopLogger()
 	}
-	if opts == nil {
-		opts = DefaultOptions
+
+	for i, v := range rngs {
+		if v > opts.MaxBlockDuration {
+			rngs = rngs[:i]
+			break
+		}
 	}
+
 	// Fixup bad format written by Prometheus 2.1.
 	if err := repairBadIndexVersion(l, dir); err != nil {
 		return nil, err
@@ -479,7 +574,7 @@ func Open(dir string, l log.Logger, r prometheus.Registerer, opts *Options) (db 
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	db.compactor, err = NewLeveledCompactor(ctx, r, l, opts.BlockRanges, db.chunkPool)
+	db.compactor, err = NewLeveledCompactor(ctx, r, l, rngs, db.chunkPool)
 	if err != nil {
 		cancel()
 		return nil, errors.Wrap(err, "create leveled compactor")
@@ -500,7 +595,7 @@ func Open(dir string, l log.Logger, r prometheus.Registerer, opts *Options) (db 
 		}
 	}
 
-	db.head, err = NewHead(r, l, wlog, opts.BlockRanges[0])
+	db.head, err = NewHead(r, l, wlog, rngs[0], opts.StripeSize)
 	if err != nil {
 		return nil, err
 	}
@@ -518,7 +613,7 @@ func Open(dir string, l log.Logger, r prometheus.Registerer, opts *Options) (db 
 
 	if initErr := db.head.Init(minValidTime); initErr != nil {
 		db.head.metrics.walCorruptionsTotal.Inc()
-		level.Warn(db.logger).Log("msg", "encountered WAL read error, attempting repair", "err", err)
+		level.Warn(db.logger).Log("msg", "Encountered WAL read error, attempting repair", "err", initErr)
 		if err := wlog.Repair(initErr); err != nil {
 			return nil, errors.Wrap(err, "repair corrupted WAL")
 		}
@@ -527,6 +622,17 @@ func Open(dir string, l log.Logger, r prometheus.Registerer, opts *Options) (db 
 	go db.run()
 
 	return db, nil
+}
+
+// StartTime implements the Storage interface.
+func (db *DB) StartTime() (int64, error) {
+	db.mtx.RLock()
+	defer db.mtx.RUnlock()
+
+	if len(db.blocks) > 0 {
+		return db.blocks[0].Meta().MinTime, nil
+	}
+	return db.head.MinTime(), nil
 }
 
 // Dir returns the directory of the database.
@@ -557,7 +663,7 @@ func (db *DB) run() {
 
 			db.autoCompactMtx.Lock()
 			if db.autoCompact {
-				if err := db.compact(); err != nil {
+				if err := db.Compact(); err != nil {
 					level.Error(db.logger).Log("msg", "compaction failed", "err", err)
 					backoff = exponential(backoff, 1*time.Second, 1*time.Minute)
 				} else {
@@ -574,14 +680,14 @@ func (db *DB) run() {
 }
 
 // Appender opens a new appender against the database.
-func (db *DB) Appender() Appender {
+func (db *DB) Appender() storage.Appender {
 	return dbAppender{db: db, Appender: db.head.Appender()}
 }
 
 // dbAppender wraps the DB's head appender and triggers compactions on commit
 // if necessary.
 type dbAppender struct {
-	Appender
+	storage.Appender
 	db *DB
 }
 
@@ -606,7 +712,7 @@ func (a dbAppender) Commit() error {
 // this is sufficient to reliably delete old data.
 // Old blocks are only deleted on reload based on the new block's parent information.
 // See DB.reload documentation for further information.
-func (db *DB) compact() (err error) {
+func (db *DB) Compact() (err error) {
 	db.cmtx.Lock()
 	defer db.cmtx.Unlock()
 	defer func() {
@@ -629,41 +735,61 @@ func (db *DB) compact() (err error) {
 		maxt := rangeForTimestamp(mint, db.head.chunkRange)
 
 		// Wrap head into a range that bounds all reads to it.
-		head := &rangeHead{
-			head: db.head,
-			mint: mint,
-			// We remove 1 millisecond from maxt because block
-			// intervals are half-open: [b.MinTime, b.MaxTime). But
-			// chunk intervals are closed: [c.MinTime, c.MaxTime];
-			// so in order to make sure that overlaps are evaluated
-			// consistently, we explicitly remove the last value
-			// from the block interval here.
-			maxt: maxt - 1,
+		// We remove 1 millisecond from maxt because block
+		// intervals are half-open: [b.MinTime, b.MaxTime). But
+		// chunk intervals are closed: [c.MinTime, c.MaxTime];
+		// so in order to make sure that overlaps are evaluated
+		// consistently, we explicitly remove the last value
+		// from the block interval here.
+		head := NewRangeHead(db.head, mint, maxt-1)
+		if err := db.compactHead(head, mint, maxt); err != nil {
+			return err
 		}
-		uid, err := db.compactor.Write(db.dir, head, mint, maxt, nil)
-		if err != nil {
-			return errors.Wrap(err, "persist head block")
-		}
-
-		runtime.GC()
-
-		if err := db.reload(); err != nil {
-			if err := os.RemoveAll(filepath.Join(db.dir, uid.String())); err != nil {
-				return errors.Wrapf(err, "delete persisted head block after failed db reload:%s", uid)
-			}
-			return errors.Wrap(err, "reload blocks")
-		}
-		if (uid == ulid.ULID{}) {
-			// Compaction resulted in an empty block.
-			// Head truncating during db.reload() depends on the persisted blocks and
-			// in this case no new block will be persisted so manually truncate the head.
-			if err = db.head.Truncate(maxt); err != nil {
-				return errors.Wrap(err, "head truncate failed (in compact)")
-			}
-		}
-		runtime.GC()
 	}
 
+	return db.compactBlocks()
+}
+
+// CompactHead compacts the given the RangeHead.
+func (db *DB) CompactHead(head *RangeHead, mint, maxt int64) (err error) {
+	db.cmtx.Lock()
+	defer db.cmtx.Unlock()
+
+	return db.compactHead(head, mint, maxt)
+}
+
+// compactHead compacts the given the RangeHead.
+// The compaction mutex should be held before calling this method.
+func (db *DB) compactHead(head *RangeHead, mint, maxt int64) (err error) {
+	uid, err := db.compactor.Write(db.dir, head, mint, maxt, nil)
+	if err != nil {
+		return errors.Wrap(err, "persist head block")
+	}
+
+	runtime.GC()
+
+	if err := db.reload(); err != nil {
+		if err := os.RemoveAll(filepath.Join(db.dir, uid.String())); err != nil {
+			return errors.Wrapf(err, "delete persisted head block after failed db reload:%s", uid)
+		}
+		return errors.Wrap(err, "reload blocks")
+	}
+	if (uid == ulid.ULID{}) {
+		// Compaction resulted in an empty block.
+		// Head truncating during db.reload() depends on the persisted blocks and
+		// in this case no new block will be persisted so manually truncate the head.
+		if err = db.head.Truncate(maxt); err != nil {
+			return errors.Wrap(err, "head truncate failed (in compact)")
+		}
+	}
+	runtime.GC()
+
+	return nil
+}
+
+// compactBlocks compacts all the eligible on-disk blocks.
+// The compaction mutex should be held before calling this method.
+func (db *DB) compactBlocks() (err error) {
 	// Check for compactions of multiple blocks.
 	for {
 		plan, err := db.compactor.Plan(db.dir)
@@ -783,7 +909,7 @@ func (db *DB) reload() (err error) {
 		blockMetas = append(blockMetas, b.Meta())
 	}
 	if overlaps := OverlappingBlocks(blockMetas); len(overlaps) > 0 {
-		level.Warn(db.logger).Log("msg", "overlapping blocks found during reload", "detail", overlaps.String())
+		level.Warn(db.logger).Log("msg", "Overlapping blocks found during reload", "detail", overlaps.String())
 	}
 
 	for _, b := range oldBlocks {
@@ -817,7 +943,7 @@ func openBlocks(l log.Logger, dir string, loaded []*Block, chunkPool chunkenc.Po
 	for _, bDir := range bDirs {
 		meta, _, err := readMetaFile(bDir)
 		if err != nil {
-			level.Error(l).Log("msg", "not a block dir", "dir", bDir)
+			level.Error(l).Log("msg", "failed to read meta.json for a block", "dir", bDir, "err", err)
 			continue
 		}
 
@@ -862,47 +988,51 @@ func (db *DB) deletableBlocks(blocks []*Block) map[ulid.ULID]*Block {
 	return deletable
 }
 
-func (db *DB) beyondTimeRetention(blocks []*Block) (deleteable map[ulid.ULID]*Block) {
+func (db *DB) beyondTimeRetention(blocks []*Block) (deletable map[ulid.ULID]*Block) {
 	// Time retention is disabled or no blocks to work with.
 	if len(db.blocks) == 0 || db.opts.RetentionDuration == 0 {
 		return
 	}
 
-	deleteable = make(map[ulid.ULID]*Block)
+	deletable = make(map[ulid.ULID]*Block)
 	for i, block := range blocks {
 		// The difference between the first block and this block is larger than
-		// the retention period so any blocks after that are added as deleteable.
-		if i > 0 && blocks[0].Meta().MaxTime-block.Meta().MaxTime > int64(db.opts.RetentionDuration) {
+		// the retention period so any blocks after that are added as deletable.
+		if i > 0 && blocks[0].Meta().MaxTime-block.Meta().MaxTime > db.opts.RetentionDuration {
 			for _, b := range blocks[i:] {
-				deleteable[b.meta.ULID] = b
+				deletable[b.meta.ULID] = b
 			}
 			db.metrics.timeRetentionCount.Inc()
 			break
 		}
 	}
-	return deleteable
+	return deletable
 }
 
-func (db *DB) beyondSizeRetention(blocks []*Block) (deleteable map[ulid.ULID]*Block) {
+func (db *DB) beyondSizeRetention(blocks []*Block) (deletable map[ulid.ULID]*Block) {
 	// Size retention is disabled or no blocks to work with.
 	if len(db.blocks) == 0 || db.opts.MaxBytes <= 0 {
 		return
 	}
 
-	deleteable = make(map[ulid.ULID]*Block)
-	blocksSize := int64(0)
+	deletable = make(map[ulid.ULID]*Block)
+
+	walSize, _ := db.Head().wal.Size()
+	// Initializing size counter with WAL size,
+	// as that is part of the retention strategy.
+	blocksSize := walSize
 	for i, block := range blocks {
 		blocksSize += block.Size()
-		if blocksSize > db.opts.MaxBytes {
+		if blocksSize > int64(db.opts.MaxBytes) {
 			// Add this and all following blocks for deletion.
 			for _, b := range blocks[i:] {
-				deleteable[b.meta.ULID] = b
+				deletable[b.meta.ULID] = b
 			}
 			db.metrics.sizeRetentionCount.Inc()
 			break
 		}
 	}
-	return deleteable
+	return deletable
 }
 
 // deleteBlocks closes and deletes blocks from the disk.
@@ -912,7 +1042,7 @@ func (db *DB) deleteBlocks(blocks map[ulid.ULID]*Block) error {
 	for ulid, block := range blocks {
 		if block != nil {
 			if err := block.Close(); err != nil {
-				level.Warn(db.logger).Log("msg", "closing block failed", "err", err)
+				level.Warn(db.logger).Log("msg", "Closing block failed", "err", err)
 			}
 		}
 		if err := os.RemoveAll(filepath.Join(db.dir, ulid.String())); err != nil {
@@ -1091,7 +1221,7 @@ func (db *DB) DisableCompactions() {
 	defer db.autoCompactMtx.Unlock()
 
 	db.autoCompact = false
-	level.Info(db.logger).Log("msg", "compactions disabled")
+	level.Info(db.logger).Log("msg", "Compactions disabled")
 }
 
 // EnableCompactions enables auto compactions.
@@ -1100,7 +1230,7 @@ func (db *DB) EnableCompactions() {
 	defer db.autoCompactMtx.Unlock()
 
 	db.autoCompact = true
-	level.Info(db.logger).Log("msg", "compactions enabled")
+	level.Info(db.logger).Log("msg", "Compactions enabled")
 }
 
 // Snapshot writes the current data to the directory. If withHead is set to true it
@@ -1120,7 +1250,7 @@ func (db *DB) Snapshot(dir string, withHead bool) error {
 	defer db.mtx.RUnlock()
 
 	for _, b := range db.blocks {
-		level.Info(db.logger).Log("msg", "snapshotting block", "block", b)
+		level.Info(db.logger).Log("msg", "Snapshotting block", "block", b)
 
 		if err := b.Snapshot(dir); err != nil {
 			return errors.Wrapf(err, "error snapshotting block: %s", b.Dir())
@@ -1132,7 +1262,7 @@ func (db *DB) Snapshot(dir string, withHead bool) error {
 
 	mint := db.head.MinTime()
 	maxt := db.head.MaxTime()
-	head := &rangeHead{
+	head := &RangeHead{
 		head: db.head,
 		mint: mint,
 		maxt: maxt,
@@ -1147,7 +1277,7 @@ func (db *DB) Snapshot(dir string, withHead bool) error {
 
 // Querier returns a new querier over the data partition for the given time range.
 // A goroutine must not handle more than one open Querier.
-func (db *DB) Querier(mint, maxt int64) (Querier, error) {
+func (db *DB) Querier(_ context.Context, mint, maxt int64) (storage.Querier, error) {
 	var blocks []BlockReader
 	var blockMetas []BlockMeta
 
@@ -1161,14 +1291,14 @@ func (db *DB) Querier(mint, maxt int64) (Querier, error) {
 		}
 	}
 	if maxt >= db.head.MinTime() {
-		blocks = append(blocks, &rangeHead{
+		blocks = append(blocks, &RangeHead{
 			head: db.head,
 			mint: mint,
 			maxt: maxt,
 		})
 	}
 
-	blockQueriers := make([]Querier, 0, len(blocks))
+	blockQueriers := make([]storage.Querier, 0, len(blocks))
 	for _, b := range blocks {
 		q, err := NewBlockQuerier(b, mint, maxt)
 		if err == nil {
@@ -1200,7 +1330,7 @@ func rangeForTimestamp(t int64, width int64) (maxt int64) {
 }
 
 // Delete implements deletion of metrics. It only has atomicity guarantees on a per-block basis.
-func (db *DB) Delete(mint, maxt int64, ms ...labels.Matcher) error {
+func (db *DB) Delete(mint, maxt int64, ms ...*labels.Matcher) error {
 	db.cmtx.Lock()
 	defer db.cmtx.Unlock()
 
@@ -1298,14 +1428,14 @@ func sequenceFiles(dir string) ([]string, error) {
 }
 
 func nextSequenceFile(dir string) (string, int, error) {
-	names, err := fileutil.ReadDir(dir)
+	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return "", 0, err
 	}
 
 	i := uint64(0)
-	for _, n := range names {
-		j, err := strconv.ParseUint(n, 10, 64)
+	for _, f := range files {
+		j, err := strconv.ParseUint(f.Name(), 10, 64)
 		if err != nil {
 			continue
 		}
