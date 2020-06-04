@@ -5,18 +5,21 @@
 
 **Project status: *beta*** Not all planned features are completed. The API, spec, status and other user facing objects may change, but in a backward compatible way.
 
-The Prometheus Operator for Kubernetes provides easy monitoring definitions for Kubernetes
-services and deployment and management of Prometheus instances.
+## Overview
 
-Once installed, the Prometheus Operator provides the following features:
+The Prometheus Operator provides [Kubernetes](https://kubernetes.io/) native deployment and management of 
+[Prometheus](https://prometheus.io/) and related monitoring components.  The purpose of this project is to 
+simplify and automate the configuration of a Prometheus based monitoring stack for Kubernetes clusters.
 
-* **Create/Destroy**: Easily launch a Prometheus instance for your Kubernetes namespace,
-  a specific application or team easily using the Operator.
+The Prometheus operator includes, but is not limited to, the following features:
 
-* **Simple Configuration**: Configure the fundamentals of Prometheus like versions, persistence,
+* **Kubernetes Custom Resources**: Use Kubernetes custom resources to deploy and manage Prometheus, Alertmanager, 
+  and related components.
+
+* **Simplified Deployment Configuration**: Configure the fundamentals of Prometheus like versions, persistence, 
   retention policies, and replicas from a native Kubernetes resource.
 
-* **Target Services via Labels**: Automatically generate monitoring target configurations based
+* **Prometheus Target Configuration**: Automatically generate monitoring target configurations based
   on familiar Kubernetes label queries; no need to learn a Prometheus specific configuration language.
 
 For an introduction to the Prometheus Operator, see the initial [blog
@@ -24,22 +27,21 @@ post](https://coreos.com/blog/the-prometheus-operator.html).
 
 ## Prometheus Operator vs. kube-prometheus vs. community helm chart
 
-The Prometheus Operator makes the Prometheus configuration Kubernetes native
-and manages and operates Prometheus and Alertmanager clusters. It is a piece of
-the puzzle regarding full end-to-end monitoring.
+The Prometheus Operator uses Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) to simplifiy the deployment and configuration of Prometheus, Alertmanager, and related monitoring components.
 
-[kube-prometheus](https://github.com/coreos/kube-prometheus) combines the Prometheus Operator
-with a collection of manifests to help getting started with monitoring
-Kubernetes itself and applications running on top of it.
+[kube-prometheus](https://github.com/coreos/kube-prometheus) provides example configurations for a complete cluster monitoring
+stack based on Prometheus and the Prometheus Operator.  This includes deployment of multiple Prometheus and Alertmanager instances,
+metrics exporters such as the node_exporter for gathering node metrics, scrape target configuration linking Prometheus to various
+metrics endpoints, and example alerting rules for notification of potential issues in the cluster.
 
 The [stable/prometheus-operator](https://github.com/helm/charts/tree/master/stable/prometheus-operator)
-helm chart provides a similar feature set to kube-prometheus. This chart is maintained by the community.
+helm chart provides a similar feature set to kube-prometheus. This chart is maintained by the Helm community.
 For more information, please see the [chart's readme](https://github.com/helm/charts/tree/master/stable/prometheus-operator#prometheus-operator)
 
 ## Prerequisites
 
-Version `>=0.18.0` of the Prometheus Operator requires a Kubernetes
-cluster of version `>=1.8.0`. If you are just starting out with the
+Version `>=0.39.0` of the Prometheus Operator requires a Kubernetes
+cluster of version `>=1.16.0`. If you are just starting out with the
 Prometheus Operator, it is highly recommended to use the latest version.
 
 If you have an older version of Kubernetes and the Prometheus Operator running,
@@ -47,39 +49,46 @@ we recommend upgrading Kubernetes first and then the Prometheus Operator.
 
 ## CustomResourceDefinitions
 
+A core feature of the Prometheus Operator is to monitor the Kubernetes API server for changes
+to specific objects and ensure that the current Prometheus deployments match these objects.
 The Operator acts on the following [custom resource definitions (CRDs)](https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/):
 
 * **`Prometheus`**, which defines a desired Prometheus deployment.
-  The Operator ensures at all times that a deployment matching the resource definition is running.
-
-* **`ServiceMonitor`**, which declaratively specifies how groups
-  of services should be monitored. The Operator automatically generates Prometheus scrape configuration
-  based on the definition.
-
-* **`PodMonitor`**, which declaratively specifies how groups
-  of pods should be monitored. The Operator automatically generates Prometheus scrape configuration
-  based on the definition.
-
-* **`PrometheusRule`**, which defines a desired Prometheus rule file, which can
-  be loaded by a Prometheus instance containing Prometheus alerting and
-  recording rules.
 
 * **`Alertmanager`**, which defines a desired Alertmanager deployment.
-  The Operator ensures at all times that a deployment matching the resource definition is running.
+
+* **`ThanosRuler`**, which defines a desired Thanos Ruler deployment.
+
+* **`ServiceMonitor`**, which declaratively specifies how groups of Kubernetes services should be monitored. 
+  The Operator automatically generates Prometheus scrape configuration based on the current state of the objects in the API server.
+
+* **`PodMonitor`**, which declaratively specifies how group of pods should be monitored.
+  The Operator automatically generates Prometheus scrape configuration based on the current state of the objects in the API server.
+
+* **`PrometheusRule`**, which defines a desired set of Prometheus alerting and/or recording rules.
+  The Operator generates a rule file, which can be used by Prometheus instances.
+
+The Prometheus operator automatically detects changes in the Kubernetes API server to any of the above objects, and ensures that
+matching deployments and configurations are kept in sync.
 
 To learn more about the CRDs introduced by the Prometheus Operator have a look
 at the [design doc](Documentation/design.md).
 
 To automate validation of your CRD configuration files see about [linting](Documentation/user-guides/linting.md).
 
-An [admission webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/)
-is also provided to validate `PrometheusRule` resources and prevent invalid
-configuration from being added to Prometheus. See also [this
-user-guide](Documentation/user-guides/webhook.md) on how to set it up.
+## Dynamic Admission Control
+
+To prevent invalid Prometheus alerting and recording rules from causing failures in a deployed Prometheus instance,
+an [admission webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/)
+is provided to validate `PrometheusRule` resources upon initial creation or update.
+
+For more information on this feature, see the [user guide](Documentation/user-guides/webhook.md).
 
 ## Quickstart
 
-Note that this quickstart does not provision an entire monitoring stack; if that is what you are looking for see the [kube-prometheus](https://github.com/coreos/kube-prometheus) project. If you want the whole stack, but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
+**Note:** this quickstart does not provision an entire monitoring stack; if that is what you are looking for,
+see the [kube-prometheus](https://github.com/coreos/kube-prometheus) project.  If you want the whole stack,
+but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
 
 To quickly try out _just_ the Prometheus Operator inside a cluster, **choose a release** and run the following command:
 
