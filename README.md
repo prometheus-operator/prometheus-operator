@@ -181,7 +181,7 @@ auto-generated. E.g. `bundle.yaml` originates from the _Jsonnet_ files in
 `/jsonnet/prometheus-operator`. Before proposing a pull request:
 
 1. Commit your changes.
-2. Run `make generate-in-docker`.
+2. Run `make generate`.
 3. Commit the generated changes.
 
 
