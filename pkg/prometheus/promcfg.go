@@ -188,6 +188,12 @@ func (cg *configGenerator) generateConfig(
 		{Key: "external_labels", Value: buildExternalLabels(p)},
 	}
 
+	if p.Spec.ScrapeTimeout != "" {
+		globalItems = append(globalItems, yaml.MapItem{
+			Key: "scrape_timeout", Value: p.Spec.ScrapeTimeout,
+		})
+	}
+
 	if version.GTE(semver.MustParse("2.16.0")) && p.Spec.QueryLogFile != "" {
 		globalItems = append(globalItems, yaml.MapItem{
 			Key: "query_log_file", Value: p.Spec.QueryLogFile,

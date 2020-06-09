@@ -23,6 +23,7 @@ Note that because the Prometheus Operator does not generate the Prometheus confi
 * `serviceMonitorSelector`: Auto-generating Prometheus configuration from `ServiceMonitor` objects. This means, that creating `ServiceMonitor` objects is not how a Prometheus instance is configured, but rather the raw configuration has to be written.
 * `alerting`: Alertmanager discovery as available in the Prometheus object is translated to the Prometheus configuration, meaning this configuration has to be done manually.
 * `scrapeInterval`
+* `scrapeTimeout`
 * `evaluationInterval`
 * `externalLabels`
 
