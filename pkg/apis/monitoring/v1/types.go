@@ -675,7 +675,7 @@ type Endpoint struct {
 	// Optional HTTP URL parameters
 	Params map[string][]string `json:"params,omitempty"`
 	// Interval at which metrics should be scraped
-	Interval string `json:"interval,omitempty"`
+	Interval int32 `json:"interval,omitempty"`
 	// Timeout after which the scrape is ended
 	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint
