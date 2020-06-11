@@ -2704,3 +2704,40 @@ func TestHonorTimestamps(t *testing.T) {
 		}
 	}
 }
+
+func TestGetSampleLimit(t *testing.T) {
+	tcs := []struct {
+		Enforced uint64
+		Expected uint64
+		User     uint64
+	}{
+		{
+			Enforced: 100,
+			User:     1000,
+			Expected: 100,
+		},
+		{
+			Enforced: 99,
+			User:     88,
+			Expected: 88,
+		},
+		{
+			Enforced: 0,
+			User:     888,
+			Expected: 888,
+		},
+		{
+			Enforced: 1,
+			User:     0,
+			Expected: 1,
+		},
+	}
+
+	for _, tc := range tcs {
+		actual := getSampleLimit(tc.User, &tc.Enforced)
+		if actual != tc.Expected {
+			t.Fatalf("Got %d, Expected: %d, Enforced: %d, User: %d", actual, tc.Expected, tc.Enforced, tc.User)
+		}
+	}
+
+}

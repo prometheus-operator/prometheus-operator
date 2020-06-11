@@ -247,7 +247,8 @@ func (cg *configGenerator) generateConfig(
 					p.Spec.OverrideHonorLabels,
 					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
-					p.Spec.EnforcedNamespaceLabel))
+					p.Spec.EnforcedNamespaceLabel,
+					p.Spec.EnforcedSampleLimit))
 		}
 	}
 	for _, identifier := range pMonIdentifiers {
@@ -261,7 +262,8 @@ func (cg *configGenerator) generateConfig(
 					p.Spec.OverrideHonorLabels,
 					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
-					p.Spec.EnforcedNamespaceLabel))
+					p.Spec.EnforcedNamespaceLabel,
+					p.Spec.EnforcedSampleLimit))
 		}
 	}
 
@@ -381,7 +383,8 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	ignoreHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
-	enforcedNamespaceLabel string) yaml.MapSlice {
+	enforcedNamespaceLabel string,
+	enforcedSampleLimit *uint64) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
@@ -572,8 +575,8 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	if m.Spec.SampleLimit > 0 {
-		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: m.Spec.SampleLimit})
+	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getSampleLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
 	}
 
 	if ep.MetricRelabelConfigs != nil {
@@ -603,7 +606,8 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	overrideHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
-	enforcedNamespaceLabel string) yaml.MapSlice {
+	enforcedNamespaceLabel string,
+	enforcedSampleLimit *uint64) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
@@ -839,8 +843,8 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	if m.Spec.SampleLimit > 0 {
-		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: m.Spec.SampleLimit})
+	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getSampleLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
 	}
 
 	if ep.MetricRelabelConfigs != nil {
@@ -857,6 +861,16 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	}
 
 	return cfg
+}
+
+func getSampleLimit(user uint64, enforced *uint64) uint64 {
+	if enforced != nil {
+		if user < *enforced && user != 0 || *enforced == 0 {
+			return user
+		}
+		return *enforced
+	}
+	return user
 }
 
 // appendPre17RelabelConfig appends relabel config to pre-1.7 prometheus versions
