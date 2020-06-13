@@ -5789,6 +5789,11 @@ spec:
                 required:
                 - alertmanagers
                 type: object
+              allowOverlappingBlocks:
+                description: AllowOverlappingBlocks enables vertical compaction and
+                  vertical query merge in Prometheus. This is still experimental in
+                  Prometheus so it may change in any upcoming release.
+                type: boolean
               apiserverConfig:
                 description: APIServerConfig allows specifying a host and auth methods
                   to access apiserver. If left empty, Prometheus is assumed to run

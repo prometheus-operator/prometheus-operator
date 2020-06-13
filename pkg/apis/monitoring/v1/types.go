@@ -326,6 +326,9 @@ type PrometheusSpec struct {
 	// the desired limit.
 	// Note that if SampleLimit is lower that value will be taken instead.
 	EnforcedSampleLimit *uint64 `json:"enforcedSampleLimit,omitempty"`
+	// AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus.
+	// This is still experimental in Prometheus so it may change in any upcoming release.
+	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"`
 }
 
 // PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces
