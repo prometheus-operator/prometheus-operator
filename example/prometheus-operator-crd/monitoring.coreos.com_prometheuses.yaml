@@ -2179,6 +2179,15 @@ spec:
                   of origin for each alert and metric that is user created. The label
                   value will always be the namespace of the object that is being created.
                 type: string
+              enforcedSampleLimit:
+                description: EnforcedSampleLimit defines global limit on number of
+                  scraped samples that will be accepted. This overrides any SampleLimit
+                  set per ServiceMonitor or/and PodMonitor. It is meant to be used
+                  by admins to enforce the SampleLimit to keep overall number of samples/series
+                  under the desired limit. Note that if SampleLimit is lower that
+                  value will be taken instead.
+                format: int64
+                type: integer
               evaluationInterval:
                 description: Interval between consecutive evaluations.
                 type: string

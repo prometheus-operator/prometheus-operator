@@ -319,6 +319,13 @@ type PrometheusSpec struct {
 	// This is only available in versions of Prometheus >= 2.16.0.
 	// For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/)
 	QueryLogFile string `json:"queryLogFile,omitempty"`
+	// EnforcedSampleLimit defines global limit on number of scraped samples
+	// that will be accepted. This overrides any SampleLimit set per
+	// ServiceMonitor or/and PodMonitor. It is meant to be used by admins to
+	// enforce the SampleLimit to keep overall number of samples/series under
+	// the desired limit.
+	// Note that if SampleLimit is lower that value will be taken instead.
+	EnforcedSampleLimit *uint64 `json:"enforcedSampleLimit,omitempty"`
 }
 
 // PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces
