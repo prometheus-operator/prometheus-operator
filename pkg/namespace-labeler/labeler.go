@@ -18,8 +18,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/openshift/prom-label-proxy/injectproxy"
 	"github.com/pkg/errors"
+	"github.com/prometheus-community/prom-label-proxy/injectproxy"
 	"github.com/prometheus/prometheus/pkg/labels"
 	"github.com/prometheus/prometheus/promql/parser"
 )

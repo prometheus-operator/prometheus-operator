@@ -16,8 +16,8 @@ require (
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452
 	github.com/oklog/run v1.1.0
-	github.com/openshift/prom-label-proxy v0.1.1-0.20191016113035-b8153a7f39f1
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus-community/prom-label-proxy v0.1.1-0.20200616110844-0fbfa11fa8f3
 	github.com/prometheus/client_golang v1.5.1
 	github.com/prometheus/prometheus v2.3.2+incompatible
 	github.com/stretchr/testify v1.5.1
@@ -34,8 +34,6 @@ require (
 )
 
 replace (
-	// Temporary until https://github.com/openshift/prom-label-proxy/pull/28 gets merged
-	github.com/openshift/prom-label-proxy => github.com/vsliouniaev/prom-label-proxy v0.0.0-20200518104441-4fd7fe13454f
 	// Prometheus 2.18.1
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v0.0.0-20200507164740-ecee9c8abfd1
 	k8s.io/client-go => k8s.io/client-go v0.18.2
