@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	DefaultAlertmanagerVersion    = "v0.20.0"
+	DefaultAlertmanagerVersion    = "v0.21.0"
 	DefaultAlertmanagerBaseImage  = "quay.io/prometheus/alertmanager"
 	DefaultAlertmanagerImage      = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
-	DefaultThanosVersion          = "v0.11.0"
+	DefaultThanosVersion          = "v0.12.2"
 	DefaultThanosBaseImage        = "quay.io/thanos/thanos"
 	DefaultThanosImage            = DefaultThanosBaseImage + ":" + DefaultThanosVersion
 	DefaultConfigMapReloaderImage = "jimmidyson/configmap-reload:v0.3.0"
