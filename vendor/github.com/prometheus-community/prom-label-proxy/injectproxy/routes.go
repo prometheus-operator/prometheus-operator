@@ -3,12 +3,12 @@ package injectproxy
 import (
 	"context"
 	"fmt"
-	"github.com/prometheus/prometheus/promql/parser"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 
 	"github.com/prometheus/prometheus/pkg/labels"
+	"github.com/prometheus/prometheus/promql/parser"
 )
 
 type routes struct {
