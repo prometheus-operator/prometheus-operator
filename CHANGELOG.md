@@ -1,5 +1,18 @@
 ## Next release
 
+## 0.40.0 / 2020-06-17
+
+* [CHANGE] Update dependencies to prometheus 2.18 (#3231)
+* [CHANGE] Add support for new prometheus versions (v2.18 & v2.19) (#3284)
+* [CHANGE] bump Alertmanager default version to v0.21.0 (#3286) 
+* [FEATURE] Automatically disable high availability mode for 1 replica alertmanager (#3233)
+* [FEATURE] thanos-sidecar: Add minTime arg (#3253)
+* [FEATURE] Add scrapeTimeout as global configurable parameter (#3250) 
+* [FEATURE] Add EnforcedSampleLimit which enforces a global sample limit (#3276) 
+* [FEATURE] add ability to exclude rules from namespace label enforcement (#3207) 
+* [BUGFIX] thanos sidecar: log flags double definition (#3242)
+* [BUGFIX] Mutate rule labels, annotations to strings (#3230)
+
 ## 0.39.0 / 2020-05-06
 
 * [CHANGE] Introduce release schedule (#3135)
