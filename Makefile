@@ -158,9 +158,11 @@ $(RBAC_MANIFESTS): scripts/generate/vendor scripts/generate/prometheus-operator-
 	scripts/generate/build-rbac-prometheus-operator.sh
 
 jsonnet/prometheus-operator/prometheus-operator.libsonnet: VERSION
-	sed -i                                                            \
+	# note: use temporary file to preserve compatibility with darwin
+	sed -i.bak \
 		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(VERSION)',/" \
 		jsonnet/prometheus-operator/prometheus-operator.libsonnet;
+	rm jsonnet/prometheus-operator/prometheus-operator.libsonnet.bak
 
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
