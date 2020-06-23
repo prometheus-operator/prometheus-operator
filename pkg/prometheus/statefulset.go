@@ -431,6 +431,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		}
 	}
 
+	if version.GTE(semver.MustParse("2.8.0")) && p.Spec.AllowOverlappingBlocks {
+		promArgs = append(promArgs, "-storage.tsdb.allow-overlapping-blocks")
+	}
+
 	var ports []v1.ContainerPort
 	if p.Spec.ListenLocal {
 		promArgs = append(promArgs, "-web.listen-address=127.0.0.1:9090")
