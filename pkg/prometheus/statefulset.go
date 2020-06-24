@@ -657,6 +657,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
+	podSelectorLabels := map[string]string{
+		"app":"prometheus",
+		"prometheus": p.Name,
+	}
 	if p.Spec.PodMetadata != nil {
 		if p.Spec.PodMetadata.Labels != nil {
 			for k, v := range p.Spec.PodMetadata.Labels {
@@ -670,9 +674,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		}
 	}
 
-	podLabels["app"] = "prometheus"
-	podLabels["prometheus"] = p.Name
+	for k, v := range podSelectorLabels {
+		podLabels[k] = v
+	}
 
+	finalSelectorLabels := c.Labels.Merge(podLabels)
 	finalLabels := c.Labels.Merge(podLabels)
 
 	var additionalContainers []v1.Container
@@ -904,7 +910,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		},
 		Selector: &metav1.LabelSelector{
-			MatchLabels: finalLabels,
+			MatchLabels: finalSelectorLabels,
 		},
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
