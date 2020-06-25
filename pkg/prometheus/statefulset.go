@@ -678,7 +678,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		podLabels[k] = v
 	}
 
-	finalSelectorLabels := c.Labels.Merge(podLabels)
+	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
 
 	var additionalContainers []v1.Container
