@@ -101,6 +101,25 @@ func TestPodLabelsAnnotations(t *testing.T) {
 		t.Fatal("Pod annotaitons are not properly propagated")
 	}
 }
+func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testvalue",
+	}
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.PrometheusSpec{
+			PodMetadata: &monitoringv1.EmbeddedObjectMetadata{
+				Labels: labels,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+
+	require.NoError(t, err)
+
+	if sset.Spec.Selector.MatchLabels["testlabel"] == "testvalue" {
+		t.Fatal("Pod Selector are not properly propagated")
+	}
+}
 
 func TestStatefulSetPVC(t *testing.T) {
 	labels := map[string]string{
