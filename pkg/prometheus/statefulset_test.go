@@ -109,7 +109,7 @@ func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.PrometheusSpec{
 			PodMetadata: &monitoringv1.EmbeddedObjectMetadata{
-				Labels:      labels,
+				Labels: labels,
 			},
 		},
 	}, defaultTestConfig, nil, "")

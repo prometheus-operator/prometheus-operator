@@ -658,7 +658,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	podSelectorLabels := map[string]string{
-		"app":"prometheus",
+		"app":        "prometheus",
 		"prometheus": p.Name,
 	}
 	if p.Spec.PodMetadata != nil {
