@@ -330,7 +330,7 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 	c.secrInf = cache.NewSharedIndexInformer(
 		c.metrics.NewInstrumentedListerWatcher(
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.PrometheusAllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return cache.NewListWatchFromClient(c.kclient.CoreV1().RESTClient(), "secrets", namespace, fields.Everything())
+				return cache.NewListWatchFromClient(c.kclient.CoreV1().RESTClient(), "secrets", namespace, fields.OneTermNotEqualSelector("type", "helm.sh/release.v1"))
 			}),
 		),
 		&v1.Secret{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
