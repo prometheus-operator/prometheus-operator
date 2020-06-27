@@ -369,7 +369,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	}
 }
 
-func TestBlackboxMonitorStaticTargetsConfigGeneration(t *testing.T) {
+func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
 		&monitoringv1.Prometheus{
@@ -378,7 +378,7 @@ func TestBlackboxMonitorStaticTargetsConfigGeneration(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				BlackboxMonitorSelector: &metav1.LabelSelector{
+				ProbeSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -387,25 +387,25 @@ func TestBlackboxMonitorStaticTargetsConfigGeneration(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]*monitoringv1.BlackboxMonitor{
-			"blackboxmonitor1": &monitoringv1.BlackboxMonitor{
+		map[string]*monitoringv1.Probe{
+			"probe1": &monitoringv1.Probe{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testblackboxmonitor1",
+					Name:      "testprobe1",
 					Namespace: "default",
 					Labels: map[string]string{
 						"group": "group1",
 					},
 				},
-				Spec: monitoringv1.BlackboxMonitorSpec{
+				Spec: monitoringv1.ProbeSpec{
 					JobName: "blackbox",
-					BlackboxExporter: monitoringv1.BlackboxExporterSpec{
+					ProberSpec: monitoringv1.ProberSpec{
 						Scheme: "http",
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
 					Module: "http_2xx",
-					Targets: monitoringv1.BlackboxTargets{
-						StaticConfig: &monitoringv1.BlackboxTargetStaticConfig{
+					Targets: monitoringv1.ProbeTargets{
+						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
 							Targets: []string{
 								"prometheus.io",
 								"promcon.io",
@@ -438,7 +438,7 @@ func TestBlackboxMonitorStaticTargetsConfigGeneration(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testblackboxmonitor1
+- job_name: default/testprobe1
   honor_timestamps: true
   metrics_path: /probe
   scheme: http
@@ -464,7 +464,7 @@ alerting:
 	}
 }
 
-func TestBlackboxMonitorIngressSDConfigGeneration(t *testing.T) {
+func TestProbeIngressSDConfigGeneration(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
 		&monitoringv1.Prometheus{
@@ -473,7 +473,7 @@ func TestBlackboxMonitorIngressSDConfigGeneration(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				BlackboxMonitorSelector: &metav1.LabelSelector{
+				ProbeSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -482,25 +482,25 @@ func TestBlackboxMonitorIngressSDConfigGeneration(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]*monitoringv1.BlackboxMonitor{
-			"blackboxmonitor1": &monitoringv1.BlackboxMonitor{
+		map[string]*monitoringv1.Probe{
+			"probe1": &monitoringv1.Probe{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testblackboxmonitor1",
+					Name:      "testprobe1",
 					Namespace: "default",
 					Labels: map[string]string{
 						"group": "group1",
 					},
 				},
-				Spec: monitoringv1.BlackboxMonitorSpec{
+				Spec: monitoringv1.ProbeSpec{
 					JobName: "blackbox",
-					BlackboxExporter: monitoringv1.BlackboxExporterSpec{
+					ProberSpec: monitoringv1.ProberSpec{
 						Scheme: "http",
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 					},
 					Module: "http_2xx",
-					Targets: monitoringv1.BlackboxTargets{
-						Ingress: &monitoringv1.BlackboxTargetIngress{
+					Targets: monitoringv1.ProbeTargets{
+						Ingress: &monitoringv1.ProbeTargetIngress{
 							Selector: metav1.LabelSelector{
 								MatchLabels: map[string]string{
 									"prometheus.io/probe": "true",
@@ -541,7 +541,7 @@ func TestBlackboxMonitorIngressSDConfigGeneration(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testblackboxmonitor1
+- job_name: default/testprobe1
   honor_timestamps: true
   metrics_path: /probe
   scheme: http

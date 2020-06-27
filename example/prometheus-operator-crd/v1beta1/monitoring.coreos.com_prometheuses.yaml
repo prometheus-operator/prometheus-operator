@@ -1073,8 +1073,8 @@ spec:
             baseImage:
               description: Base image to use for a Prometheus deployment.
               type: string
-            blackboxMonitorNamespaceSelector:
-              description: '*Experimental* Namespaces to be selected for BlackboxMonitor
+            probeNamespaceSelector:
+              description: '*Experimental* Namespaces to be selected for Probe
                 discovery. If nil, only check own namespace.'
               properties:
                 matchExpressions:
@@ -1117,9 +1117,8 @@ spec:
                     are ANDed.
                   type: object
               type: object
-            blackboxMonitorSelector:
-              description: '*Experimental* BlackboxMonitors to be selected for target
-                discovery.'
+            probeSelector:
+              description: '*Experimental* Probes to be selected for target discovery.'
               properties:
                 matchExpressions:
                   description: matchExpressions is a list of label selector requirements.

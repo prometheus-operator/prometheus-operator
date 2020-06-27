@@ -35,7 +35,7 @@ rules:
   - thanosrulers/finalizers
   - servicemonitors
   - podmonitors
-  - blackboxmonitors
+  - probes
   - prometheusrules
   verbs:
   - '*'

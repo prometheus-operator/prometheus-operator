@@ -65,7 +65,7 @@ The Operator acts on the following [custom resource definitions (CRDs)](https://
 * **`PodMonitor`**, which declaratively specifies how group of pods should be monitored.
   The Operator automatically generates Prometheus scrape configuration based on the current state of the objects in the API server.
 
-* **`BlackboxMonitor`**, which declaratively specifies how groups
+* **`Probe`**, which declaratively specifies how groups
   of ingresses or static targets should be monitored. The Operator automatically generates Prometheus scrape configuration
   based on the definition.
 

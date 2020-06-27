@@ -48,7 +48,7 @@ var (
 	crdNames = []crdName{
 		{"alertmanager", "alertmanagers"},
 		{"podmonitor", "podmonitors"},
-		{"blackboxmonitor", "blackboxmonitors"},
+		{"probe", "probes"},
 		{"prometheus", "prometheuses"},
 		{"prometheusrule", "prometheusrules"},
 		{"servicemonitor", "servicemonitors"},

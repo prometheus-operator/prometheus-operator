@@ -24,14 +24,6 @@ type AlertmanagerListerExpansion interface{}
 // AlertmanagerNamespaceLister.
 type AlertmanagerNamespaceListerExpansion interface{}
 
-// BlackboxMonitorListerExpansion allows custom methods to be added to
-// BlackboxMonitorLister.
-type BlackboxMonitorListerExpansion interface{}
-
-// BlackboxMonitorNamespaceListerExpansion allows custom methods to be added to
-// BlackboxMonitorNamespaceLister.
-type BlackboxMonitorNamespaceListerExpansion interface{}
-
 // PodMonitorListerExpansion allows custom methods to be added to
 // PodMonitorLister.
 type PodMonitorListerExpansion interface{}
@@ -39,6 +31,14 @@ type PodMonitorListerExpansion interface{}
 // PodMonitorNamespaceListerExpansion allows custom methods to be added to
 // PodMonitorNamespaceLister.
 type PodMonitorNamespaceListerExpansion interface{}
+
+// ProbeListerExpansion allows custom methods to be added to
+// ProbeLister.
+type ProbeListerExpansion interface{}
+
+// ProbeNamespaceListerExpansion allows custom methods to be added to
+// ProbeNamespaceLister.
+type ProbeNamespaceListerExpansion interface{}
 
 // PrometheusListerExpansion allows custom methods to be added to
 // PrometheusLister.

@@ -65,7 +65,7 @@ type Operator struct {
 	promInf   cache.SharedIndexInformer
 	smonInf   cache.SharedIndexInformer
 	pmonInf   cache.SharedIndexInformer
-	bmonInf   cache.SharedIndexInformer
+	probeInf  cache.SharedIndexInformer
 	ruleInf   cache.SharedIndexInformer
 	cmapInf   cache.SharedIndexInformer
 	secrInf   cache.SharedIndexInformer
@@ -294,20 +294,20 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 		&monitoringv1.PodMonitor{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
-	c.bmonInf = cache.NewSharedIndexInformer(
+	c.probeInf = cache.NewSharedIndexInformer(
 		c.metrics.NewInstrumentedListerWatcher(
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.AllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (object runtime.Object, err error) {
-						return mclient.MonitoringV1().BlackboxMonitors(namespace).List(context.TODO(), options)
+						return mclient.MonitoringV1().Probes(namespace).List(context.TODO(), options)
 					},
 					WatchFunc: func(options metav1.ListOptions) (w watch.Interface, err error) {
-						return mclient.MonitoringV1().BlackboxMonitors(namespace).Watch(context.TODO(), options)
+						return mclient.MonitoringV1().Probes(namespace).Watch(context.TODO(), options)
 					},
 				}
 			}),
 		),
-		&monitoringv1.BlackboxMonitor{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		&monitoringv1.Probe{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 
 	c.ruleInf = cache.NewSharedIndexInformer(
@@ -403,7 +403,7 @@ func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 		{"Prometheus", c.promInf},
 		{"ServiceMonitor", c.smonInf},
 		{"PodMonitor", c.pmonInf},
-		{"BlackboxMonitor", c.bmonInf},
+		{"Probe", c.probeInf},
 		{"PrometheusRule", c.ruleInf},
 		{"ConfigMap", c.cmapInf},
 		{"Secret", c.secrInf},
@@ -443,7 +443,7 @@ func (c *Operator) addHandlers() {
 		DeleteFunc: c.handlePmonDelete,
 		UpdateFunc: c.handlePmonUpdate,
 	})
-	c.bmonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	c.probeInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleBmonAdd,
 		UpdateFunc: c.handleBmonUpdate,
 		DeleteFunc: c.handleBmonDelete,
@@ -500,7 +500,7 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 	go c.promInf.Run(stopc)
 	go c.smonInf.Run(stopc)
 	go c.pmonInf.Run(stopc)
-	go c.bmonInf.Run(stopc)
+	go c.probeInf.Run(stopc)
 	go c.ruleInf.Run(stopc)
 	go c.cmapInf.Run(stopc)
 	go c.secrInf.Run(stopc)
@@ -795,21 +795,21 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 // TODO: Don't enque just for the namespace
 func (c *Operator) handleBmonAdd(obj interface{}) {
 	if o, ok := c.getObject(obj); ok {
-		level.Debug(c.logger).Log("msg", "BlackboxMonitor added")
-		c.metrics.TriggerByCounter(monitoringv1.BlackboxMonitorsKind, "add").Inc()
+		level.Debug(c.logger).Log("msg", "Probe added")
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, "add").Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
 
 // TODO: Don't enque just for the namespace
 func (c *Operator) handleBmonUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.BlackboxMonitor).ResourceVersion == cur.(*monitoringv1.BlackboxMonitor).ResourceVersion {
+	if old.(*monitoringv1.Probe).ResourceVersion == cur.(*monitoringv1.Probe).ResourceVersion {
 		return
 	}
 
 	if o, ok := c.getObject(cur); ok {
-		level.Debug(c.logger).Log("msg", "BlackboxMonitor updated")
-		c.metrics.TriggerByCounter(monitoringv1.BlackboxMonitorsKind, "update")
+		level.Debug(c.logger).Log("msg", "Probe updated")
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, "update")
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -817,8 +817,8 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 // TODO: Don't enque just for the namespace
 func (c *Operator) handleBmonDelete(obj interface{}) {
 	if o, ok := c.getObject(obj); ok {
-		level.Debug(c.logger).Log("msg", "BlackboxMonitor delete")
-		c.metrics.TriggerByCounter(monitoringv1.BlackboxMonitorsKind, "delete").Inc()
+		level.Debug(c.logger).Log("msg", "Probe delete")
+		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, "delete").Inc()
 		c.enqueueForMonitorNamespace(o.GetNamespace())
 	}
 }
@@ -1028,11 +1028,11 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			return
 		}
 
-		// Check for Prometheus instances selecting BlackboxMonitors in the NS.
-		bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.BlackboxMonitorNamespaceSelector)
+		// Check for Prometheus instances selecting Probes in the NS.
+		bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
 		if err != nil {
 			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert BlackboxMonitorNamespaceSelector of %q to selector", p.Name),
+				"msg", fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
 			return
@@ -1709,9 +1709,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		return errors.Wrap(err, "selecting PodMonitors failed")
 	}
 
-	bmons, err := c.selectBlackboxMonitors(p)
+	bmons, err := c.selectProbes(p)
 	if err != nil {
-		return errors.Wrap(err, "selecting BlackboxMonitors failed")
+		return errors.Wrap(err, "selecting Probes failed")
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
@@ -1966,21 +1966,21 @@ func (c *Operator) selectPodMonitors(p *monitoringv1.Prometheus) (map[string]*mo
 	return res, nil
 }
 
-func (c *Operator) selectBlackboxMonitors(p *monitoringv1.Prometheus) (map[string]*monitoringv1.BlackboxMonitor, error) {
+func (c *Operator) selectProbes(p *monitoringv1.Prometheus) (map[string]*monitoringv1.Probe, error) {
 	namespaces := []string{}
 	// Selectors might overlap. Deduplicate them along the keyFunc.
-	res := make(map[string]*monitoringv1.BlackboxMonitor)
+	res := make(map[string]*monitoringv1.Probe)
 
-	bMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.BlackboxMonitorSelector)
+	bMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeSelector)
 	if err != nil {
 		return nil, err
 	}
 
-	// If 'BlackboxMonitorNamespaceSelector' is nil only check own namespace.
-	if p.Spec.BlackboxMonitorNamespaceSelector == nil {
+	// If 'ProbeNamespaceSelector' is nil only check own namespace.
+	if p.Spec.ProbeNamespaceSelector == nil {
 		namespaces = append(namespaces, p.Namespace)
 	} else {
-		bMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.BlackboxMonitorNamespaceSelector)
+		bMonNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
 		if err != nil {
 			return nil, err
 		}
@@ -1991,19 +1991,19 @@ func (c *Operator) selectBlackboxMonitors(p *monitoringv1.Prometheus) (map[strin
 		}
 	}
 
-	level.Debug(c.logger).Log("msg", "filtering namespaces to select BlackboxMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
+	level.Debug(c.logger).Log("msg", "filtering namespaces to select Probes from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
-	bMonitors := []string{}
+	probes := make([]string, 0)
 	for _, ns := range namespaces {
-		cache.ListAllByNamespace(c.bmonInf.GetIndexer(), ns, bMonSelector, func(obj interface{}) {
+		cache.ListAllByNamespace(c.probeInf.GetIndexer(), ns, bMonSelector, func(obj interface{}) {
 			if k, ok := c.keyFunc(obj); ok {
-				res[k] = obj.(*monitoringv1.BlackboxMonitor)
-				bMonitors = append(bMonitors, k)
+				res[k] = obj.(*monitoringv1.Probe)
+				probes = append(probes, k)
 			}
 		})
 	}
 
-	level.Debug(c.logger).Log("msg", "selected BlackboxMonitors", "blackboxmonitors", strings.Join(bMonitors, ","), "namespace", p.Namespace, "prometheus", p.Name)
+	level.Debug(c.logger).Log("msg", "selected Probes", "probes", strings.Join(probes, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	return res, nil
 }

@@ -30,59 +30,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// BlackboxMonitorInformer provides access to a shared informer and lister for
-// BlackboxMonitors.
-type BlackboxMonitorInformer interface {
+// ProbeInformer provides access to a shared informer and lister for
+// Probes.
+type ProbeInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.BlackboxMonitorLister
+	Lister() v1.ProbeLister
 }
 
-type blackboxMonitorInformer struct {
+type probeInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewBlackboxMonitorInformer constructs a new informer for BlackboxMonitor type.
+// NewProbeInformer constructs a new informer for Probe type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewBlackboxMonitorInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredBlackboxMonitorInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewProbeInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredProbeInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredBlackboxMonitorInformer constructs a new informer for BlackboxMonitor type.
+// NewFilteredProbeInformer constructs a new informer for Probe type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredBlackboxMonitorInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredProbeInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MonitoringV1().BlackboxMonitors(namespace).List(context.TODO(), options)
+				return client.MonitoringV1().Probes(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MonitoringV1().BlackboxMonitors(namespace).Watch(context.TODO(), options)
+				return client.MonitoringV1().Probes(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&monitoringv1.BlackboxMonitor{},
+		&monitoringv1.Probe{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *blackboxMonitorInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredBlackboxMonitorInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *probeInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredProbeInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *blackboxMonitorInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&monitoringv1.BlackboxMonitor{}, f.defaultInformer)
+func (f *probeInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&monitoringv1.Probe{}, f.defaultInformer)
 }
 
-func (f *blackboxMonitorInformer) Lister() v1.BlackboxMonitorLister {
-	return v1.NewBlackboxMonitorLister(f.Informer().GetIndexer())
+func (f *probeInformer) Lister() v1.ProbeLister {
+	return v1.NewProbeLister(f.Informer().GetIndexer())
 }

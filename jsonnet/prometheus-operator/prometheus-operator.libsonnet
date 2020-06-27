@@ -46,7 +46,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
     '0prometheusCustomResourceDefinition': import 'prometheus-crd.libsonnet',
     '0servicemonitorCustomResourceDefinition': import 'servicemonitor-crd.libsonnet',
     '0podmonitorCustomResourceDefinition': import 'podmonitor-crd.libsonnet',
-    '0blackboxmonitorCustomResourceDefinition': import 'blackboxmonitor-crd.libsonnet',
+    '0probeCustomResourceDefinition': import 'probe-crd.libsonnet',
     '0prometheusruleCustomResourceDefinition': import 'prometheusrule-crd.libsonnet',
     '0thanosrulerCustomResourceDefinition': import 'thanosruler-crd.libsonnet',
 
@@ -76,7 +76,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
                                'thanosrulers/finalizers',
                                'servicemonitors',
                                'podmonitors',
-                               'blackboxmonitors',
+                               'probes',
                                'prometheusrules',
                              ]) +
                              policyRule.withVerbs(['*']);

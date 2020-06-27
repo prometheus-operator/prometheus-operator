@@ -19,13 +19,6 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerStatus](#alertmanagerstatus)
 * [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig)
 * [BasicAuth](#basicauth)
-* [BlackboxExporterSpec](#blackboxexporterspec)
-* [BlackboxMonitor](#blackboxmonitor)
-* [BlackboxMonitorList](#blackboxmonitorlist)
-* [BlackboxMonitorSpec](#blackboxmonitorspec)
-* [BlackboxTargetIngress](#blackboxtargetingress)
-* [BlackboxTargetStaticConfig](#blackboxtargetstaticconfig)
-* [BlackboxTargets](#blackboxtargets)
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
@@ -34,6 +27,13 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [PodMonitor](#podmonitor)
 * [PodMonitorList](#podmonitorlist)
 * [PodMonitorSpec](#podmonitorspec)
+* [Probe](#probe)
+* [ProbeList](#probelist)
+* [ProbeSpec](#probespec)
+* [ProbeTargetIngress](#probetargetingress)
+* [ProbeTargetStaticConfig](#probetargetstaticconfig)
+* [ProbeTargets](#probetargets)
+* [ProberSpec](#proberspec)
 * [Prometheus](#prometheus)
 * [PrometheusList](#prometheuslist)
 * [PrometheusRule](#prometheusrule)
@@ -204,89 +204,6 @@ BasicAuth allow an endpoint to authenticate over basic authentication More info:
 
 [Back to TOC](#table-of-contents)
 
-## BlackboxExporterSpec
-
-BlackboxExporterSpec contains specification parameters for the BlackboxExporter used for probing.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| url | Mandatory URL of the blackbox exporter. | string | true |
-| scheme | HTTP scheme to use for scraping. Defaults to `http`. | string | false |
-| path | Path to collect metrics from. Defaults to `/probe`. | string | false |
-
-[Back to TOC](#table-of-contents)
-
-## BlackboxMonitor
-
-BlackboxMonitor defines monitoring for a set of static targets or ingresses.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#objectmeta-v1-meta) | false |
-| spec | Specification of desired Ingress selection for target discovery by Prometheus. | [BlackboxMonitorSpec](#blackboxmonitorspec) | true |
-
-[Back to TOC](#table-of-contents)
-
-## BlackboxMonitorList
-
-BlackboxMonitorList is a list of BlackboxMonitors.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| metadata | Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#listmeta-v1-meta) | false |
-| items | List of BlackboxMonitors | []*[BlackboxMonitor](#blackboxmonitor) | true |
-
-[Back to TOC](#table-of-contents)
-
-## BlackboxMonitorSpec
-
-BlackboxMonitorSpec contains specification parameters for a BlackboxMonitor.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| jobName | The job name assigned to scraped metrics by default. | string | false |
-| blackboxExporter | Specification for the blackbox exporter to use for probing targets. The blackboxExporter.URL parameter is required. Targets cannot be probed if left empty. | [BlackboxExporterSpec](#blackboxexporterspec) | false |
-| module | The module to use for probing specifying how to probe the target. Example module configuring in the blackbox exporter: https://github.com/prometheus/blackbox_exporter/blob/master/example.yml | string | false |
-| targets | Targets defines a set of static and/or dynamically discovered targets to be probed using the Prometheus blackbox exporter. | [BlackboxTargets](#blackboxtargets) | false |
-| interval | Interval at which targets are probed using the configured blackbox exporter. If not specified Prometheus' global scrape interval is used. | string | false |
-| scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. | string | false |
-
-[Back to TOC](#table-of-contents)
-
-## BlackboxTargetIngress
-
-BlackboxTargetIngress defines the set of Ingress objects considered for probing.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| selector | Select Ingress objects by labels. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
-| namespaceSelector | Select Ingress objects by namespace. | [NamespaceSelector](#namespaceselector) | false |
-| relabelingConfigs | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
-
-[Back to TOC](#table-of-contents)
-
-## BlackboxTargetStaticConfig
-
-BlackboxTargetStaticConfig defines the set of static targets considered for probing.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| static | Targets is a list of URLs to probe using the configured blackbox exporter. | []string | false |
-| labels | Labels assigned to all metrics scraped from the targets. | map[string]string | false |
-
-[Back to TOC](#table-of-contents)
-
-## BlackboxTargets
-
-BlackboxTargets defines a set of static and dynamically discovered targets for the blackbox exporter.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| staticConfig | StaticConfig defines static targets which are considers for probing. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config. | *[BlackboxTargetStaticConfig](#blackboxtargetstaticconfig) | false |
-| ingress | Ingress defines the set of dynamically discovered ingress objects which hosts are considered for probing. | *[BlackboxTargetIngress](#blackboxtargetingress) | false |
-
-[Back to TOC](#table-of-contents)
-
 ## EmbeddedObjectMetadata
 
 EmbeddedObjectMetadata contains a subset of the fields included in k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta Only fields which are relevant to embedded resources are included.
@@ -405,6 +322,89 @@ PodMonitorSpec contains specification parameters for a PodMonitor.
 
 [Back to TOC](#table-of-contents)
 
+## Probe
+
+Probe defines monitoring for a set of static targets or ingresses.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#objectmeta-v1-meta) | false |
+| spec | Specification of desired Ingress selection for target discovery by Prometheus. | [ProbeSpec](#probespec) | true |
+
+[Back to TOC](#table-of-contents)
+
+## ProbeList
+
+ProbeList is a list of Probes.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| metadata | Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#listmeta-v1-meta) | false |
+| items | List of Probes | []*[Probe](#probe) | true |
+
+[Back to TOC](#table-of-contents)
+
+## ProbeSpec
+
+ProbeSpec contains specification parameters for a Probe.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| jobName | The job name assigned to scraped metrics by default. | string | false |
+| prober | Specification for the prober to use for probing targets. The prober.URL parameter is required. Targets cannot be probed if left empty. | [ProberSpec](#proberspec) | false |
+| module | The module to use for probing specifying how to probe the target. Example module configuring in the blackbox exporter: https://github.com/prometheus/blackbox_exporter/blob/master/example.yml | string | false |
+| targets | Targets defines a set of static and/or dynamically discovered targets to be probed using the prober. | [ProbeTargets](#probetargets) | false |
+| interval | Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used. | string | false |
+| scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. | string | false |
+
+[Back to TOC](#table-of-contents)
+
+## ProbeTargetIngress
+
+ProbeTargetIngress defines the set of Ingress objects considered for probing.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| selector | Select Ingress objects by labels. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
+| namespaceSelector | Select Ingress objects by namespace. | [NamespaceSelector](#namespaceselector) | false |
+| relabelingConfigs | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+
+[Back to TOC](#table-of-contents)
+
+## ProbeTargetStaticConfig
+
+ProbeTargetStaticConfig defines the set of static targets considered for probing.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| static | Targets is a list of URLs to probe using the configured prober. | []string | false |
+| labels | Labels assigned to all metrics scraped from the targets. | map[string]string | false |
+
+[Back to TOC](#table-of-contents)
+
+## ProbeTargets
+
+ProbeTargets defines a set of static and dynamically discovered targets for the prober.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| staticConfig | StaticConfig defines static targets which are considers for probing. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config. | *[ProbeTargetStaticConfig](#probetargetstaticconfig) | false |
+| ingress | Ingress defines the set of dynamically discovered ingress objects which hosts are considered for probing. | *[ProbeTargetIngress](#probetargetingress) | false |
+
+[Back to TOC](#table-of-contents)
+
+## ProberSpec
+
+ProberSpec contains specification parameters for the Prober used for probing.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| url | Mandatory URL of the prober. | string | true |
+| scheme | HTTP scheme to use for scraping. Defaults to `http`. | string | false |
+| path | Path to collect metrics from. Defaults to `/probe`. | string | false |
+
+[Back to TOC](#table-of-contents)
+
 ## Prometheus
 
 Prometheus defines a Prometheus deployment.
@@ -482,8 +482,8 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | serviceMonitorNamespaceSelector | Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | podMonitorSelector | *Experimental* PodMonitors to be selected for target discovery. *Deprecated:* if neither this nor serviceMonitorSelector are specified, configuration is unmanaged. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | podMonitorNamespaceSelector | Namespaces to be selected for PodMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
-| blackboxMonitorSelector | *Experimental* BlackboxMonitors to be selected for target discovery. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
-| blackboxMonitorNamespaceSelector | *Experimental* Namespaces to be selected for BlackboxMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
+| probeSelector | *Experimental* Probes to be selected for target discovery. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
+| probeNamespaceSelector | *Experimental* Namespaces to be selected for Probe discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | version | Version of Prometheus to be deployed. | string | false |
 | tag | Tag of Prometheus container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. | string | false |
 | sha | SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. | string | false |

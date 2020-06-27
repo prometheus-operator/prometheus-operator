@@ -154,7 +154,7 @@ func (cg *configGenerator) generateConfig(
 	p *v1.Prometheus,
 	sMons map[string]*v1.ServiceMonitor,
 	pMons map[string]*v1.PodMonitor,
-	bMons map[string]*v1.BlackboxMonitor,
+	probes map[string]*v1.Probe,
 	basicAuthSecrets map[string]BasicAuthCredentials,
 	bearerTokens map[string]BearerToken,
 	additionalScrapeConfigs []byte,
@@ -233,15 +233,15 @@ func (cg *configGenerator) generateConfig(
 	// Sorting ensures, that we always generate the config in the same order.
 	sort.Strings(pMonIdentifiers)
 
-	bMonIdentifiers := make([]string, len(bMons))
+	probeIdentifiers := make([]string, len(probes))
 	i = 0
-	for k := range bMons {
-		bMonIdentifiers[i] = k
+	for k := range probes {
+		probeIdentifiers[i] = k
 		i++
 	}
 
 	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(bMonIdentifiers)
+	sort.Strings(probeIdentifiers)
 
 	apiserverConfig := p.Spec.APIServerConfig
 
@@ -279,11 +279,11 @@ func (cg *configGenerator) generateConfig(
 		}
 	}
 
-	for _, identifier := range bMonIdentifiers {
+	for _, identifier := range probeIdentifiers {
 		scrapeConfigs = append(scrapeConfigs,
-			cg.generateBlackboxMonitorConfig(
+			cg.generateProbeConfig(
 				version,
-				bMons[identifier],
+				probes[identifier],
 				apiserverConfig,
 				basicAuthSecrets,
 				p.Spec.OverrideHonorLabels,
@@ -622,9 +622,9 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	return cfg
 }
 
-func (cg *configGenerator) generateBlackboxMonitorConfig(
+func (cg *configGenerator) generateProbeConfig(
 	version semver.Version,
-	m *v1.BlackboxMonitor,
+	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]BasicAuthCredentials,
 	ignoreHonorLabels bool,
@@ -643,8 +643,8 @@ func (cg *configGenerator) generateBlackboxMonitorConfig(
 	cfg = honorTimestamps(cfg, &hTs, overrideHonorTimestamps)
 
 	path := "/probe"
-	if m.Spec.BlackboxExporter.Path != "" {
-		path = m.Spec.BlackboxExporter.Path
+	if m.Spec.ProberSpec.Path != "" {
+		path = m.Spec.ProberSpec.Path
 	}
 	cfg = append(cfg, yaml.MapItem{Key: "metrics_path", Value: path})
 
@@ -654,8 +654,8 @@ func (cg *configGenerator) generateBlackboxMonitorConfig(
 	if m.Spec.ScrapeTimeout != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: m.Spec.ScrapeTimeout})
 	}
-	if m.Spec.BlackboxExporter.Scheme != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.BlackboxExporter.Scheme})
+	if m.Spec.ProberSpec.Scheme != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
@@ -743,7 +743,7 @@ func (cg *configGenerator) generateBlackboxMonitorConfig(
 			cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, basicAuthSecrets, kubernetesSDRoleIngress))
 		}
 
-		// Relabelings for blackbox exporter.
+		// Relabelings for prober.
 		relabelings = append(relabelings, []yaml.MapSlice{
 			{
 				{Key: "source_labels", Value: "[__address__]"},
@@ -755,7 +755,7 @@ func (cg *configGenerator) generateBlackboxMonitorConfig(
 			},
 			{
 				{Key: "target_label", Value: "__address__"},
-				{Key: "replacement", Value: m.Spec.BlackboxExporter.URL},
+				{Key: "replacement", Value: m.Spec.ProberSpec.URL},
 			},
 		}...)
 

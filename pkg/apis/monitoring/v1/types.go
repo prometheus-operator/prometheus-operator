@@ -44,9 +44,9 @@ const (
 	PrometheusRuleName    = "prometheusrules"
 	PrometheusRuleKindKey = "prometheusrule"
 
-	BlackboxMonitorsKind   = "BlackboxMonitor"
-	BlackboxMonitorName    = "blackboxmonitors"
-	BlackboxMonitorKindKey = "blackboxmonitor"
+	ProbesKind   = "Probe"
+	ProbeName    = "probes"
+	ProbeKindKey = "probe"
 )
 
 // Prometheus defines a Prometheus deployment.
@@ -99,10 +99,10 @@ type PrometheusSpec struct {
 	// Namespaces to be selected for PodMonitor discovery. If nil, only
 	// check own namespace.
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
-	// *Experimental* BlackboxMonitors to be selected for target discovery.
-	BlackboxMonitorSelector *metav1.LabelSelector `json:"blackboxMonitorSelector,omitempty"`
-	// *Experimental* Namespaces to be selected for BlackboxMonitor discovery. If nil, only check own namespace.
-	BlackboxMonitorNamespaceSelector *metav1.LabelSelector `json:"blackboxMonitorNamespaceSelector,omitempty"`
+	// *Experimental* Probes to be selected for target discovery.
+	ProbeSelector *metav1.LabelSelector `json:"probeSelector,omitempty"`
+	// *Experimental* Namespaces to be selected for Probe discovery. If nil, only check own namespace.
+	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
 	// Version of Prometheus to be deployed.
 	Version string `json:"version,omitempty"`
 	// Tag of Prometheus container image to be deployed. Defaults to the value of `version`.
@@ -777,59 +777,59 @@ type PodMetricsEndpoint struct {
 	ProxyURL *string `json:"proxyUrl,omitempty"`
 }
 
-// BlackboxMonitor defines monitoring for a set of static targets or ingresses.
+// Probe defines monitoring for a set of static targets or ingresses.
 // +genclient
 // +k8s:openapi-gen=true
-type BlackboxMonitor struct {
+type Probe struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Specification of desired Ingress selection for target discovery by Prometheus.
-	Spec BlackboxMonitorSpec `json:"spec"`
+	Spec ProbeSpec `json:"spec"`
 }
 
-// BlackboxMonitorSpec contains specification parameters for a BlackboxMonitor.
+// ProbeSpec contains specification parameters for a Probe.
 // +k8s:openapi-gen=true
-type BlackboxMonitorSpec struct {
+type ProbeSpec struct {
 	// The job name assigned to scraped metrics by default.
 	JobName string `json:"jobName,omitempty"`
-	// Specification for the blackbox exporter to use for probing targets.
-	// The blackboxExporter.URL parameter is required. Targets cannot be probed if left empty.
-	BlackboxExporter BlackboxExporterSpec `json:"blackboxExporter,omitempty"`
+	// Specification for the prober to use for probing targets.
+	// The prober.URL parameter is required. Targets cannot be probed if left empty.
+	ProberSpec ProberSpec `json:"prober,omitempty"`
 	// The module to use for probing specifying how to probe the target.
 	// Example module configuring in the blackbox exporter:
 	// https://github.com/prometheus/blackbox_exporter/blob/master/example.yml
 	Module string `json:"module,omitempty"`
-	// Targets defines a set of static and/or dynamically discovered targets to be probed using the Prometheus blackbox exporter.
-	Targets BlackboxTargets `json:"targets,omitempty"`
-	// Interval at which targets are probed using the configured blackbox exporter.
+	// Targets defines a set of static and/or dynamically discovered targets to be probed using the prober.
+	Targets ProbeTargets `json:"targets,omitempty"`
+	// Interval at which targets are probed using the configured prober.
 	// If not specified Prometheus' global scrape interval is used.
 	Interval string `json:"interval,omitempty"`
 	// Timeout for scraping metrics from the Prometheus exporter.
 	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
 }
 
-// BlackboxTargets defines a set of static and dynamically discovered targets for the blackbox exporter.
+// ProbeTargets defines a set of static and dynamically discovered targets for the prober.
 // +k8s:openapi-gen=true
-type BlackboxTargets struct {
+type ProbeTargets struct {
 	// StaticConfig defines static targets which are considers for probing.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.
-	StaticConfig *BlackboxTargetStaticConfig `json:"staticConfig,omitempty"`
+	StaticConfig *ProbeTargetStaticConfig `json:"staticConfig,omitempty"`
 	// Ingress defines the set of dynamically discovered ingress objects which hosts are considered for probing.
-	Ingress *BlackboxTargetIngress `json:"ingress,omitempty"`
+	Ingress *ProbeTargetIngress `json:"ingress,omitempty"`
 }
 
-// BlackboxTargetStaticConfig defines the set of static targets considered for probing.
+// ProbeTargetStaticConfig defines the set of static targets considered for probing.
 // +k8s:openapi-gen=true
-type BlackboxTargetStaticConfig struct {
-	// Targets is a list of URLs to probe using the configured blackbox exporter.
+type ProbeTargetStaticConfig struct {
+	// Targets is a list of URLs to probe using the configured prober.
 	Targets []string `json:"static,omitempty"`
 	// Labels assigned to all metrics scraped from the targets.
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
-// BlackboxTargetIngress defines the set of Ingress objects considered for probing.
+// ProbeTargetIngress defines the set of Ingress objects considered for probing.
 // +k8s:openapi-gen=true
-type BlackboxTargetIngress struct {
+type ProbeTargetIngress struct {
 	// Select Ingress objects by labels.
 	Selector metav1.LabelSelector `json:"selector,omitempty"`
 	// Select Ingress objects by namespace.
@@ -839,10 +839,10 @@ type BlackboxTargetIngress struct {
 	RelabelConfigs []*RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
-// BlackboxExporterSpec contains specification parameters for the BlackboxExporter used for probing.
+// ProberSpec contains specification parameters for the Prober used for probing.
 // +k8s:openapi-gen=true
-type BlackboxExporterSpec struct {
-	// Mandatory URL of the blackbox exporter.
+type ProberSpec struct {
+	// Mandatory URL of the prober.
 	URL string `json:"url"`
 	// HTTP scheme to use for scraping.
 	// Defaults to `http`.
@@ -976,15 +976,15 @@ type PodMonitorList struct {
 	Items []*PodMonitor `json:"items"`
 }
 
-// BlackboxMonitorList is a list of BlackboxMonitors.
+// ProbeList is a list of Probes.
 // +k8s:openapi-gen=true
-type BlackboxMonitorList struct {
+type ProbeList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
-	// List of BlackboxMonitors
-	Items []*BlackboxMonitor `json:"items"`
+	// List of Probes
+	Items []*Probe `json:"items"`
 }
 
 // PrometheusRuleList is a list of PrometheusRules.
@@ -1281,12 +1281,12 @@ func (l *PodMonitorList) DeepCopyObject() runtime.Object {
 }
 
 // DeepCopyObject implements the runtime.Object interface.
-func (l *BlackboxMonitor) DeepCopyObject() runtime.Object {
+func (l *Probe) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 
 // DeepCopyObject implements the runtime.Object interface.
-func (l *BlackboxMonitorList) DeepCopyObject() runtime.Object {
+func (l *ProbeList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
 }
 

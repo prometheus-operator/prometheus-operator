@@ -25,8 +25,8 @@ import (
 type MonitoringV1Interface interface {
 	RESTClient() rest.Interface
 	AlertmanagersGetter
-	BlackboxMonitorsGetter
 	PodMonitorsGetter
+	ProbesGetter
 	PrometheusesGetter
 	PrometheusRulesGetter
 	ServiceMonitorsGetter
@@ -42,12 +42,12 @@ func (c *MonitoringV1Client) Alertmanagers(namespace string) AlertmanagerInterfa
 	return newAlertmanagers(c, namespace)
 }
 
-func (c *MonitoringV1Client) BlackboxMonitors(namespace string) BlackboxMonitorInterface {
-	return newBlackboxMonitors(c, namespace)
-}
-
 func (c *MonitoringV1Client) PodMonitors(namespace string) PodMonitorInterface {
 	return newPodMonitors(c, namespace)
+}
+
+func (c *MonitoringV1Client) Probes(namespace string) ProbeInterface {
+	return newProbes(c, namespace)
 }
 
 func (c *MonitoringV1Client) Prometheuses(namespace string) PrometheusInterface {

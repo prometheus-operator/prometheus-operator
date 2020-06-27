@@ -214,11 +214,11 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		return nil, errors.Wrap(err, "initialize PodMonitor CRD")
 	}
 
-	err = f.CreateCRDAndWaitUntilReady(monitoringv1.BlackboxMonitorName, func(opts metav1.ListOptions) (object runtime.Object, err error) {
-		return f.MonClientV1.BlackboxMonitors(v1.NamespaceAll).List(context.TODO(), opts)
+	err = f.CreateCRDAndWaitUntilReady(monitoringv1.ProbeName, func(opts metav1.ListOptions) (object runtime.Object, err error) {
+		return f.MonClientV1.Probes(v1.NamespaceAll).List(context.TODO(), opts)
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "initialize BlackboxMonitor CRD")
+		return nil, errors.Wrap(err, "initialize Probe CRD")
 	}
 
 	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PrometheusName, func(opts metav1.ListOptions) (runtime.Object, error) {
