@@ -373,7 +373,7 @@ func (cg *configGenerator) generateConfig(
 	return yaml.Marshal(cfg)
 }
 
-// honorLabels determinates the value of honor_labels.
+// honorLabels determines the value of honor_labels.
 // if overrideHonorLabels is true and user tries to set the
 // value to true, we want to set honor_labels to false.
 func honorLabels(userHonorLabels, overrideHonorLabels bool) bool {
@@ -662,6 +662,8 @@ func (cg *configGenerator) generateProbeConfig(
 		{Key: "module", Value: []string{m.Spec.Module}},
 	}})
 
+	var relabelings []yaml.MapSlice
+
 	// Generate static_config section.
 	if m.Spec.Targets.StaticConfig != nil {
 		staticConfig := yaml.MapSlice{
@@ -678,17 +680,30 @@ func (cg *configGenerator) generateProbeConfig(
 			Key:   "static_configs",
 			Value: []yaml.MapSlice{staticConfig},
 		})
-	}
 
-	if m.Spec.Targets.StaticConfig != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: enforceNamespaceLabel(nil, m.Namespace, enforcedNamespaceLabel)})
+		// Relabelings for prober.
+		relabelings = append(relabelings, []yaml.MapSlice{
+			{
+				{Key: "source_labels", Value: []string{"__address__"}},
+				{Key: "target_label", Value: "__param_target"},
+			},
+			{
+				{Key: "source_labels", Value: []string{"__param_target"}},
+				{Key: "target_label", Value: "instance"},
+			},
+			{
+				{Key: "target_label", Value: "__address__"},
+				{Key: "replacement", Value: m.Spec.ProberSpec.URL},
+			},
+		}...)
+
+		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)})
 	}
 
 	// Generate kubernetes_sd_config section for ingress resources.
 	if m.Spec.Targets.StaticConfig == nil {
 		var (
-			relabelings []yaml.MapSlice
-			labelKeys   []string
+			labelKeys []string
 		)
 
 		// Filter targets by ingresses selected by the monitor.
@@ -750,11 +765,11 @@ func (cg *configGenerator) generateProbeConfig(
 		// Relabelings for prober.
 		relabelings = append(relabelings, []yaml.MapSlice{
 			{
-				{Key: "source_labels", Value: "[__address__]"},
+				{Key: "source_labels", Value: []string{"__address__"}},
 				{Key: "target_label", Value: "__param_target"},
 			},
 			{
-				{Key: "source_labels", Value: "[__param_target]"},
+				{Key: "source_labels", Value: []string{"__param_target"}},
 				{Key: "target_label", Value: "instance"},
 			},
 			{
@@ -766,7 +781,7 @@ func (cg *configGenerator) generateProbeConfig(
 		// Relabelings for ingress SD.
 		relabelings = append(relabelings, []yaml.MapSlice{
 			{
-				{Key: "source_labels", Value: "[__meta_kubernetes_ingress_scheme, __address__, __meta_kubernetes_ingress_path]"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_scheme", "__address__", "__meta_kubernetes_ingress_path"}},
 				{Key: "separator", Value: ";"},
 				{Key: "regex", Value: "(.+);(.+);(.+)"},
 				{Key: "target_label", Value: "__param_target"},

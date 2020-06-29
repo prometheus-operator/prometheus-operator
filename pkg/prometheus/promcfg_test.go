@@ -451,7 +451,15 @@ scrape_configs:
     - promcon.io
     labels:
       static: label
-  relabel_configs: []
+  relabel_configs:
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -549,6 +557,14 @@ scrape_configs:
     labels:
       static: label
   relabel_configs:
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
   - target_label: namespace
     replacement: default
 alerting:
@@ -655,13 +671,18 @@ scrape_configs:
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
     regex: "true"
-  - source_labels: '[__address__]'
+  - source_labels:
+    - __address__
     target_label: __param_target
-  - source_labels: '[__param_target]'
+  - source_labels:
+    - __param_target
     target_label: instance
   - target_label: __address__
     replacement: blackbox.exporter.io
-  - source_labels: '[__meta_kubernetes_ingress_scheme, __address__, __meta_kubernetes_ingress_path]'
+  - source_labels:
+    - __meta_kubernetes_ingress_scheme
+    - __address__
+    - __meta_kubernetes_ingress_path
     separator: ;
     regex: (.+);(.+);(.+)
     target_label: __param_target
@@ -781,13 +802,18 @@ scrape_configs:
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
     regex: "true"
-  - source_labels: '[__address__]'
+  - source_labels:
+    - __address__
     target_label: __param_target
-  - source_labels: '[__param_target]'
+  - source_labels:
+    - __param_target
     target_label: instance
   - target_label: __address__
     replacement: blackbox.exporter.io
-  - source_labels: '[__meta_kubernetes_ingress_scheme, __address__, __meta_kubernetes_ingress_path]'
+  - source_labels:
+    - __meta_kubernetes_ingress_scheme
+    - __address__
+    - __meta_kubernetes_ingress_path
     separator: ;
     regex: (.+);(.+);(.+)
     target_label: __param_target
