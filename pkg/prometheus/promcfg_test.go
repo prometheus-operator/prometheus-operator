@@ -196,6 +196,7 @@ alerting:
 			},
 			map[string]*monitoringv1.ServiceMonitor{},
 			nil,
+			nil,
 			map[string]BasicAuthCredentials{},
 			map[string]BearerToken{},
 			nil,
@@ -368,6 +369,226 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	}
 }
 
+func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		map[string]*monitoringv1.Probe{
+			"probe1": &monitoringv1.Probe{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testprobe1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ProbeSpec{
+					JobName: "blackbox",
+					ProberSpec: monitoringv1.ProberSpec{
+						Scheme: "http",
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+					},
+					Module: "http_2xx",
+					Targets: monitoringv1.ProbeTargets{
+						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+							Targets: []string{
+								"prometheus.io",
+								"promcon.io",
+							},
+							Labels: map[string]string{
+								"static": "label",
+							},
+						},
+					},
+				},
+			},
+		},
+		map[string]BasicAuthCredentials{},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testprobe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  params:
+    module:
+    - http_2xx
+  static_configs:
+  - targets:
+    - prometheus.io
+    - promcon.io
+    labels:
+      static: label
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	result := string(cfg)
+	if expected != result {
+		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	}
+}
+
+func TestProbeIngressSDConfigGeneration(t *testing.T) {
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		map[string]*monitoringv1.Probe{
+			"probe1": &monitoringv1.Probe{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testprobe1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ProbeSpec{
+					JobName: "blackbox",
+					ProberSpec: monitoringv1.ProberSpec{
+						Scheme: "http",
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+					},
+					Module: "http_2xx",
+					Targets: monitoringv1.ProbeTargets{
+						Ingress: &monitoringv1.ProbeTargetIngress{
+							Selector: metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"prometheus.io/probe": "true",
+								},
+							},
+							NamespaceSelector: monitoringv1.NamespaceSelector{
+								Any: true,
+							},
+							RelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									TargetLabel: "foo",
+									Replacement: "bar",
+									Action:      "replace",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		map[string]BasicAuthCredentials{},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testprobe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  params:
+    module:
+    - http_2xx
+  kubernetes_sd_configs:
+  - role: ingress
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_ingress_label_prometheus_io_probe
+    regex: "true"
+  - source_labels: '[__address__]'
+    target_label: __param_target
+  - source_labels: '[__param_target]'
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+  - source_labels: '[__meta_kubernetes_ingress_scheme, __address__, __meta_kubernetes_ingress_path]'
+    separator: ;
+    regex: (.+);(.+);(.+)
+    target_label: __param_target
+    replacement: ${1}://${2}${3}
+    action: replace
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_ingress_name
+    target_label: ingress
+  - target_label: foo
+    replacement: bar
+    action: replace
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	result := string(cfg)
+	if expected != result {
+		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	}
+}
+
 func TestK8SSDConfigGeneration(t *testing.T) {
 	sm := &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
@@ -472,6 +693,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		},
 		nil,
 		nil,
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,
@@ -550,6 +772,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		},
 		nil,
 		nil,
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,
@@ -624,6 +847,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
@@ -737,6 +961,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
@@ -879,6 +1104,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,
@@ -1011,6 +1237,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 			},
 		},
 		nil,
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,
@@ -1120,6 +1347,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		},
 		nil,
 		nil,
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,
@@ -1214,6 +1442,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
@@ -1341,6 +1570,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,
@@ -1451,6 +1681,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
@@ -1577,6 +1808,7 @@ func TestSettingHonorLabels(t *testing.T) {
 			},
 		},
 		nil,
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,
@@ -1701,6 +1933,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 			},
 		},
 		nil,
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,
@@ -1823,6 +2056,7 @@ func TestTargetLabels(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
@@ -1947,6 +2181,7 @@ func TestPodTargetLabels(t *testing.T) {
 			},
 		},
 		nil,
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,
@@ -2070,6 +2305,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,
@@ -2168,6 +2404,7 @@ func TestEmptyEndointPorts(t *testing.T) {
 				},
 			},
 		},
+		nil,
 		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
@@ -2299,6 +2536,7 @@ func generateTestConfig(version string) ([]byte, error) {
 		},
 		makeServiceMonitors(),
 		makePodMonitors(),
+		nil,
 		map[string]BasicAuthCredentials{},
 		map[string]BearerToken{},
 		nil,

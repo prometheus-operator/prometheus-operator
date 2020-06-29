@@ -32,6 +32,14 @@ type PodMonitorListerExpansion interface{}
 // PodMonitorNamespaceLister.
 type PodMonitorNamespaceListerExpansion interface{}
 
+// ProbeListerExpansion allows custom methods to be added to
+// ProbeLister.
+type ProbeListerExpansion interface{}
+
+// ProbeNamespaceListerExpansion allows custom methods to be added to
+// ProbeNamespaceLister.
+type ProbeNamespaceListerExpansion interface{}
+
 // PrometheusListerExpansion allows custom methods to be added to
 // PrometheusLister.
 type PrometheusListerExpansion interface{}

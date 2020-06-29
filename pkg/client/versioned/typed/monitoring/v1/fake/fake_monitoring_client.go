@@ -34,6 +34,10 @@ func (c *FakeMonitoringV1) PodMonitors(namespace string) v1.PodMonitorInterface 
 	return &FakePodMonitors{c, namespace}
 }
 
+func (c *FakeMonitoringV1) Probes(namespace string) v1.ProbeInterface {
+	return &FakeProbes{c, namespace}
+}
+
 func (c *FakeMonitoringV1) Prometheuses(namespace string) v1.PrometheusInterface {
 	return &FakePrometheuses{c, namespace}
 }
