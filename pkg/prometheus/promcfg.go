@@ -680,6 +680,10 @@ func (cg *configGenerator) generateProbeConfig(
 		})
 	}
 
+	if m.Spec.Targets.StaticConfig != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: enforceNamespaceLabel(nil, m.Namespace, enforcedNamespaceLabel)})
+	}
+
 	// Generate kubernetes_sd_config section for ingress resources.
 	if m.Spec.Targets.StaticConfig == nil {
 		var (
@@ -786,6 +790,7 @@ func (cg *configGenerator) generateProbeConfig(
 			}
 		}
 
+		relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	}
