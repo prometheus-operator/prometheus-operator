@@ -1293,8 +1293,8 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 		}
 	}
 
-	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil {
-		level.Warn(logger).Log("msg", "neither serviceMonitorSelector nor podMonitorSelector specified. Custom configuration is deprecated, use additionalScrapeConfigs instead")
+	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil && p.Spec.ProbeSelector == nil {
+		level.Warn(logger).Log("msg", "neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector specified. Custom configuration is deprecated, use additionalScrapeConfigs instead")
 	}
 }
 
@@ -1678,8 +1678,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
-	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil {
-		level.Debug(c.logger).Log("msg", "neither ServiceMonitor not PodMonitor selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
+	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
+		p.Spec.ProbeSelector == nil {
+		level.Debug(c.logger).Log("msg", "neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
 
 		s, err := makeEmptyConfigurationSecret(p, c.config)
 		if err != nil {
