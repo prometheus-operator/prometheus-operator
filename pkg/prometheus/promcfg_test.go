@@ -67,8 +67,8 @@ func TestGlobalSettings(t *testing.T) {
 		{
 			Version: "v2.15.2",
 			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
@@ -83,10 +83,10 @@ alerting:
 		},
 		{
 			Version:            "v2.15.2",
-			EvaluationInterval: "60s",
+			EvaluationInterval: "1m",
 			Expected: `global:
-  evaluation_interval: 60s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
@@ -121,8 +121,8 @@ alerting:
 			Version:       "v2.15.2",
 			ScrapeTimeout: "30s",
 			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
@@ -143,8 +143,8 @@ alerting:
 				"key2": "value2",
 			},
 			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     key1: value1
     key2: value2
@@ -163,8 +163,8 @@ alerting:
 			Version:      "v2.16.0",
 			QueryLogFile: "test.log",
 			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
