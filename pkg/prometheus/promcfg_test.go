@@ -67,8 +67,8 @@ func TestGlobalSettings(t *testing.T) {
 		{
 			Version: "v2.15.2",
 			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
@@ -83,10 +83,10 @@ alerting:
 		},
 		{
 			Version:            "v2.15.2",
-			EvaluationInterval: "60s",
+			EvaluationInterval: "1m",
 			Expected: `global:
-  evaluation_interval: 60s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
@@ -101,10 +101,10 @@ alerting:
 		},
 		{
 			Version:        "v2.15.2",
-			ScrapeInterval: "60s",
+			ScrapeInterval: "1m",
 			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 60s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
@@ -121,8 +121,8 @@ alerting:
 			Version:       "v2.15.2",
 			ScrapeTimeout: "30s",
 			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
@@ -143,8 +143,8 @@ alerting:
 				"key2": "value2",
 			},
 			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     key1: value1
     key2: value2
@@ -163,8 +163,8 @@ alerting:
 			Version:      "v2.16.0",
 			QueryLogFile: "test.log",
 			Expected: `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
@@ -431,8 +431,8 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -536,8 +536,8 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -650,8 +650,8 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -781,8 +781,8 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -963,8 +963,8 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 	// change this to check that just the `bearer_token_file` is set with
 	// something like json-path.
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -1042,8 +1042,8 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 	// change this to check that just the `api_version` is set with
 	// something like json-path.
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -1120,8 +1120,8 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -1229,8 +1229,8 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: ns-value/test
     prometheus_replica: $(POD_NAME)
@@ -1371,8 +1371,8 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: ns-value/test
     prometheus_replica: $(POD_NAME)
@@ -1504,8 +1504,8 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: ns-value/test
     prometheus_replica: $(POD_NAME)
@@ -1617,8 +1617,8 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -1710,8 +1710,8 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -1837,8 +1837,8 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -1949,8 +1949,8 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -2075,8 +2075,8 @@ func TestSettingHonorLabels(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -2200,8 +2200,8 @@ func TestHonorLabelsOverriding(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -2324,8 +2324,8 @@ func TestTargetLabels(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -2448,8 +2448,8 @@ func TestPodTargetLabels(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -2572,8 +2572,8 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
@@ -2675,8 +2675,8 @@ func TestEmptyEndointPorts(t *testing.T) {
 	// change this to check that just the `bearer_token_file` is set with
 	// something like json-path.
 	expected := `global:
-  evaluation_interval: 30s
-  scrape_interval: 30s
+  evaluation_interval: 1m
+  scrape_interval: 1m
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
