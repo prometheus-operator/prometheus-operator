@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"reflect"
 	"sort"
 	"strconv"
@@ -2282,6 +2283,86 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	if q.Data.Result[0].Value[1] != "1" {
 		t.Fatalf("expected query result to be '1' but got %v", q.Data.Result[0].Value[1])
 	}
+}
+
+func testPromStaticProbe(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	blackboxExporterName := "blackbox-exporter"
+	if err := framework.CreateBlackBoxExporterAndWaitUntilReady(ns, blackboxExporterName); err != nil {
+		t.Fatal("Creating blackbox exporter failed: ", err)
+	}
+
+	blackboxSvc := framework.MakeBlackBoxExporterService(ns, blackboxExporterName)
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, blackboxSvc); err != nil {
+		t.Fatal("creating blackbox exporter service failed ", err)
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	prometheusName := "test"
+	group := "probe-test"
+	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+
+	proberUrl := blackboxExporterName + ":9115"
+	targets := []string{svc.Name + ":9090"}
+
+	probe := framework.MakeBasicStaticProbe(group, proberUrl, targets)
+	if _, err := framework.MonClientV1.Probes(ns).Create(context.TODO(), probe, metav1.CreateOptions{}); err != nil {
+		t.Fatal("Creating Probe failed: ", err)
+	}
+
+	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+	p.Spec.ProbeSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": group,
+		},
+	}
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
+		t.Fatal(err)
+	}
+
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, svc); err != nil {
+		t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	expectedURL := url.URL{Host: proberUrl, Scheme: "http", Path: "/probe"}
+	q := expectedURL.Query()
+	q.Set("module", "http_2xx")
+	q.Set("target", targets[0])
+	expectedURL.RawQuery = q.Encode()
+
+	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+		activeTargets, err := framework.GetActiveTargets(ns, svc.Name)
+		if err != nil {
+			return false, err
+		}
+
+		if len(activeTargets) != 1 {
+			return false, nil
+		}
+
+		exp := expectedURL.String()
+		if activeTargets[0].ScrapeURL != exp {
+			return false, nil
+		}
+
+		if value, ok := activeTargets[0].Labels["instance"]; !ok || value != targets[0] {
+			return false, nil
+		}
+
+		return true, nil
+	}); err != nil {
+		t.Fatal("waiting for static probe targets timed out.")
+	}
+
 }
 
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func() (bool, error) {

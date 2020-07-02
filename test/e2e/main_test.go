@@ -186,6 +186,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromArbitraryFSAcc":                     testPromArbitraryFSAcc,
 		"PromTLSConfigViaSecret":                 testPromTLSConfigViaSecret,
 		"Thanos":                                 testThanos,
+		"PromStaticProbe":                        testPromStaticProbe,
 	}
 
 	for name, f := range testFuncs {
