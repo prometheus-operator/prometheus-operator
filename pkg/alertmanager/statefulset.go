@@ -320,6 +320,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
+	podSelectorLabels := map[string]string{
+		"app":          "alertmanager",
+		"alertmanager": a.Name,
+	}
 	if a.Spec.PodMetadata != nil {
 		if a.Spec.PodMetadata.Labels != nil {
 			for k, v := range a.Spec.PodMetadata.Labels {
@@ -332,8 +336,9 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			}
 		}
 	}
-	podLabels["app"] = "alertmanager"
-	podLabels["alertmanager"] = a.Name
+	for k, v := range podSelectorLabels {
+		podLabels[k] = v
+	}
 
 	var clusterPeerDomain string
 	if config.ClusterDomain != "" {
@@ -480,6 +485,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	}
 
 	terminationGracePeriod := int64(120)
+	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
 	finalLabels := config.Labels.Merge(podLabels)
 
 	defaultContainers := []v1.Container{
@@ -538,7 +544,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		},
 		Selector: &metav1.LabelSelector{
-			MatchLabels: finalLabels,
+			MatchLabels: finalSelectorLabels,
 		},
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
