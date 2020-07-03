@@ -672,14 +672,6 @@ scrape_configs:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
     regex: "true"
   - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
-  - source_labels:
     - __meta_kubernetes_ingress_scheme
     - __address__
     - __meta_kubernetes_ingress_path
@@ -694,6 +686,14 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_ingress_name
     target_label: ingress
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
   - target_label: foo
     replacement: bar
     action: replace
@@ -803,14 +803,6 @@ scrape_configs:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
     regex: "true"
   - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
-    - __param_target
-    target_label: instance
-  - target_label: __address__
-    replacement: blackbox.exporter.io
-  - source_labels:
     - __meta_kubernetes_ingress_scheme
     - __address__
     - __meta_kubernetes_ingress_path
@@ -825,6 +817,14 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_ingress_name
     target_label: ingress
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
   - target_label: foo
     replacement: bar
     action: replace
