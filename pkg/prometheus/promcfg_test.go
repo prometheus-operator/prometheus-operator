@@ -397,7 +397,6 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 					},
 				},
 				Spec: monitoringv1.ProbeSpec{
-					JobName: "blackbox",
 					ProberSpec: monitoringv1.ProberSpec{
 						Scheme: "http",
 						URL:    "blackbox.exporter.io",
@@ -502,7 +501,6 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 					},
 				},
 				Spec: monitoringv1.ProbeSpec{
-					JobName: "blackbox",
 					ProberSpec: monitoringv1.ProberSpec{
 						Scheme: "http",
 						URL:    "blackbox.exporter.io",
@@ -580,7 +578,7 @@ alerting:
 	}
 }
 
-func TestProbeIngressSDConfigGeneration(t *testing.T) {
+func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
 		&monitoringv1.Prometheus{
@@ -609,6 +607,109 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					JobName: "blackbox",
+					ProberSpec: monitoringv1.ProberSpec{
+						Scheme: "http",
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+					},
+					Module: "http_2xx",
+					Targets: monitoringv1.ProbeTargets{
+						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+							Targets: []string{
+								"prometheus.io",
+								"promcon.io",
+							},
+							Labels: map[string]string{
+								"static": "label",
+							},
+						},
+					},
+				},
+			},
+		},
+		map[string]BasicAuthCredentials{},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 1m
+  scrape_interval: 1m
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: blackbox
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  params:
+    module:
+    - http_2xx
+  static_configs:
+  - targets:
+    - prometheus.io
+    - promcon.io
+    labels:
+      static: label
+  relabel_configs:
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	result := string(cfg)
+	if expected != result {
+		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	}
+}
+
+func TestProbeIngressSDConfigGeneration(t *testing.T) {
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		map[string]*monitoringv1.Probe{
+			"probe1": &monitoringv1.Probe{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testprobe1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
 						Scheme: "http",
 						URL:    "blackbox.exporter.io",
@@ -739,7 +840,6 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 					},
 				},
 				Spec: monitoringv1.ProbeSpec{
-					JobName: "blackbox",
 					ProberSpec: monitoringv1.ProberSpec{
 						Scheme: "http",
 						URL:    "blackbox.exporter.io",
