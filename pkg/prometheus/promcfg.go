@@ -702,9 +702,7 @@ func (cg *configGenerator) generateProbeConfig(
 
 	// Generate kubernetes_sd_config section for ingress resources.
 	if m.Spec.Targets.StaticConfig == nil {
-		var (
-			labelKeys []string
-		)
+		labelKeys := make([]string, 0, len(m.Spec.Targets.Ingress.Selector.MatchLabels))
 
 		// Filter targets by ingresses selected by the monitor.
 		// Exact label matches.
@@ -762,22 +760,6 @@ func (cg *configGenerator) generateProbeConfig(
 			cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, basicAuthSecrets, kubernetesSDRoleIngress))
 		}
 
-		// Relabelings for prober.
-		relabelings = append(relabelings, []yaml.MapSlice{
-			{
-				{Key: "source_labels", Value: []string{"__address__"}},
-				{Key: "target_label", Value: "__param_target"},
-			},
-			{
-				{Key: "source_labels", Value: []string{"__param_target"}},
-				{Key: "target_label", Value: "instance"},
-			},
-			{
-				{Key: "target_label", Value: "__address__"},
-				{Key: "replacement", Value: m.Spec.ProberSpec.URL},
-			},
-		}...)
-
 		// Relabelings for ingress SD.
 		relabelings = append(relabelings, []yaml.MapSlice{
 			{
@@ -795,6 +777,22 @@ func (cg *configGenerator) generateProbeConfig(
 			{
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_name"}},
 				{Key: "target_label", Value: "ingress"},
+			},
+		}...)
+
+		// Relabelings for prober.
+		relabelings = append(relabelings, []yaml.MapSlice{
+			{
+				{Key: "source_labels", Value: []string{"__address__"}},
+				{Key: "target_label", Value: "__param_target"},
+			},
+			{
+				{Key: "source_labels", Value: []string{"__param_target"}},
+				{Key: "target_label", Value: "instance"},
+			},
+			{
+				{Key: "target_label", Value: "__address__"},
+				{Key: "replacement", Value: m.Spec.ProberSpec.URL},
 			},
 		}...)
 
