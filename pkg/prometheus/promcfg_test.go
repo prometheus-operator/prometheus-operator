@@ -1277,6 +1277,9 @@ scrape_configs:
     - __meta_kubernetes_pod_name
     target_label: pod
   - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
     replacement: ${1}
@@ -1552,6 +1555,9 @@ scrape_configs:
     - __meta_kubernetes_pod_name
     target_label: pod
   - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
     replacement: ${1}
@@ -1754,6 +1760,9 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_name
     target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -1994,6 +2003,9 @@ scrape_configs:
     - __meta_kubernetes_pod_name
     target_label: pod
   - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
     regex: (.+)
@@ -2118,6 +2130,9 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_name
     target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
   - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
@@ -2244,6 +2259,9 @@ scrape_configs:
     - __meta_kubernetes_pod_name
     target_label: pod
   - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
     regex: (.+)
@@ -2368,6 +2386,9 @@ scrape_configs:
     - __meta_kubernetes_pod_name
     target_label: pod
   - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
     - __meta_kubernetes_service_label_example
     target_label: example
     regex: (.+)
@@ -2491,6 +2512,9 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_name
     target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
   - source_labels:
     - __meta_kubernetes_pod_label_example
     target_label: example
@@ -2717,6 +2741,9 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_name
     target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
