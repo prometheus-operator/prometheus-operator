@@ -129,6 +129,26 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	}
 }
 
+func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
+	labels := map[string]string{
+		"testlabel": "testvalue",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			PodMetadata: &monitoringv1.EmbeddedObjectMetadata{
+				Labels: labels,
+			},
+		},
+	}, nil, defaultTestConfig)
+
+	require.NoError(t, err)
+
+	if sset.Spec.Selector.MatchLabels["testlabel"] == "testvalue" {
+		t.Fatal("Pod Selector are not properly propagated")
+	}
+}
+
 func TestStatefulSetPVC(t *testing.T) {
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",
