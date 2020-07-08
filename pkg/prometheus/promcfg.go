@@ -632,10 +632,14 @@ func (cg *configGenerator) generateProbeConfig(
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string) yaml.MapSlice {
 
+	jobName := fmt.Sprintf("%s/%s", m.Namespace, m.Name)
+	if m.Spec.JobName != "" {
+		jobName = m.Spec.JobName
+	}
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s", m.Namespace, m.Name),
+			Value: jobName,
 		},
 	}
 
