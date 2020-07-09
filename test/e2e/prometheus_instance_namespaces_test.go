@@ -145,7 +145,7 @@ func testPrometheusInstanceNamespaces_DenyList(t *testing.T) {
 			},
 		}
 
-		p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
+		p.Spec.ServiceMonitorSelector = metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"group": "monitored",
 			},
@@ -244,7 +244,7 @@ func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
 			},
 		}
 
-		p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
+		p.Spec.ServiceMonitorSelector = metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"group": "monitored",
 			},

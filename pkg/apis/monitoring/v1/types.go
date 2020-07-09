@@ -85,22 +85,18 @@ type PrometheusList struct {
 type PrometheusSpec struct {
 	// PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
-	// ServiceMonitors to be selected for target discovery. *Deprecated:* if
-	// neither this nor podMonitorSelector are specified, configuration is
-	// unmanaged.
-	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
+	// ServiceMonitors to be selected for target discovery.
+	ServiceMonitorSelector metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
 	// Namespaces to be selected for ServiceMonitor discovery. If nil, only
 	// check own namespace.
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 	// *Experimental* PodMonitors to be selected for target discovery.
-	// *Deprecated:* if neither this nor serviceMonitorSelector are specified,
-	// configuration is unmanaged.
-	PodMonitorSelector *metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
+	PodMonitorSelector metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
 	// Namespaces to be selected for PodMonitor discovery. If nil, only
 	// check own namespace.
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 	// *Experimental* Probes to be selected for target discovery.
-	ProbeSelector *metav1.LabelSelector `json:"probeSelector,omitempty"`
+	ProbeSelector metav1.LabelSelector `json:"probeSelector,omitempty"`
 	// *Experimental* Namespaces to be selected for Probe discovery. If nil, only check own namespace.
 	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
 	// Version of Prometheus to be deployed.

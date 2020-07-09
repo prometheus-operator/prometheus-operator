@@ -108,7 +108,7 @@ func testPromNoServiceMonitorSelector(t *testing.T) {
 
 	name := "test"
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ServiceMonitorSelector = nil
+	p.Spec.ServiceMonitorSelector = metav1.LabelSelector{}
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, p); err != nil {
 		t.Fatal(err)
 	}
@@ -352,7 +352,7 @@ func testPromReloadConfig(t *testing.T) {
 
 	name := "test"
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ServiceMonitorSelector = nil
+	p.Spec.ServiceMonitorSelector = metav1.LabelSelector{}
 
 	firstConfig := `
 global:
@@ -1553,7 +1553,7 @@ func testPromGetAuthSecret(t *testing.T) {
 				Spec: v1.ServiceSpec{
 					Type: v1.ServiceTypeLoadBalancer,
 					Ports: []v1.ServicePort{
-						v1.ServicePort{
+						{
 							Name: "web",
 							Port: 8080,
 						},
@@ -2086,10 +2086,10 @@ func mountTLSFiles(p *monitoringv1.Prometheus, secretName string) {
 			},
 		})
 	p.Spec.Containers = []v1.Container{
-		v1.Container{
+		{
 			Name: "prometheus",
 			VolumeMounts: []v1.VolumeMount{
-				v1.VolumeMount{
+				{
 					Name:      volumeName,
 					MountPath: "/etc/ca-certificates",
 				},
@@ -2146,7 +2146,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	simple.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/certs"}
 
 	simple.Spec.Template.Spec.Volumes = []v1.Volume{
-		v1.Volume{
+		{
 			Name: "tls-certs",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
@@ -2177,11 +2177,11 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 		Spec: v1.ServiceSpec{
 			Type: v1.ServiceTypeLoadBalancer,
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name: "web",
 					Port: 8080,
 				},
-				v1.ServicePort{
+				{
 					Name: "mtls",
 					Port: 8081,
 				},
@@ -2318,7 +2318,7 @@ func testPromStaticProbe(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
+	p.Spec.ProbeSelector = metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": group,
 		},

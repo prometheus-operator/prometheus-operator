@@ -378,7 +378,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ProbeSelector: &metav1.LabelSelector{
+				ProbeSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -388,7 +388,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
-			"probe1": &monitoringv1.Probe{
+			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
 					Namespace: "default",
@@ -482,7 +482,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 			},
 			Spec: monitoringv1.PrometheusSpec{
 				EnforcedNamespaceLabel: "namespace",
-				ProbeSelector: &metav1.LabelSelector{
+				ProbeSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -492,7 +492,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
-			"probe1": &monitoringv1.Probe{
+			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
 					Namespace: "default",
@@ -587,7 +587,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ProbeSelector: &metav1.LabelSelector{
+				ProbeSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -597,7 +597,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
-			"probe1": &monitoringv1.Probe{
+			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
 					Namespace: "default",
@@ -691,7 +691,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ProbeSelector: &metav1.LabelSelector{
+				ProbeSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -701,7 +701,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
-			"probe1": &monitoringv1.Probe{
+			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
 					Namespace: "default",
@@ -821,7 +821,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 			},
 			Spec: monitoringv1.PrometheusSpec{
 				EnforcedNamespaceLabel: "namespace",
-				ProbeSelector: &metav1.LabelSelector{
+				ProbeSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -831,7 +831,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
-			"probe1": &monitoringv1.Probe{
+			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
 					Namespace: "default",
@@ -1273,7 +1273,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 			Spec: monitoringv1.PrometheusSpec{},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"test": &monitoringv1.ServiceMonitor{
+			"test": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "default",
@@ -1557,7 +1557,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"test": &monitoringv1.ServiceMonitor{
+			"test": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "default",
@@ -1774,7 +1774,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 			},
 			Spec: monitoringv1.PrometheusSpec{
 				Version: "v2.9.0",
-				ServiceMonitorSelector: &metav1.LabelSelector{
+				ServiceMonitorSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -1782,7 +1782,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -1904,7 +1904,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 			},
 			Spec: monitoringv1.PrometheusSpec{
 				Version: "v2.9.0",
-				ServiceMonitorSelector: &metav1.LabelSelector{
+				ServiceMonitorSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -2016,7 +2016,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 			Spec: monitoringv1.PrometheusSpec{
 				Version:                 "v2.9.0",
 				OverrideHonorTimestamps: true,
-				ServiceMonitorSelector: &metav1.LabelSelector{
+				ServiceMonitorSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -2024,7 +2024,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -2145,7 +2145,7 @@ func TestSettingHonorLabels(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ServiceMonitorSelector: &metav1.LabelSelector{
+				ServiceMonitorSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -2153,7 +2153,7 @@ func TestSettingHonorLabels(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -2273,7 +2273,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 			},
 			Spec: monitoringv1.PrometheusSpec{
 				OverrideHonorLabels: true,
-				ServiceMonitorSelector: &metav1.LabelSelector{
+				ServiceMonitorSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -2281,7 +2281,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -2401,7 +2401,7 @@ func TestTargetLabels(t *testing.T) {
 			},
 			Spec: monitoringv1.PrometheusSpec{
 				OverrideHonorLabels: false,
-				ServiceMonitorSelector: &metav1.LabelSelector{
+				ServiceMonitorSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -2409,7 +2409,7 @@ func TestTargetLabels(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -2528,7 +2528,7 @@ func TestPodTargetLabels(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ServiceMonitorSelector: &metav1.LabelSelector{
+				ServiceMonitorSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -2536,7 +2536,7 @@ func TestPodTargetLabels(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -2655,7 +2655,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				ServiceMonitorSelector: &metav1.LabelSelector{
+				ServiceMonitorSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
@@ -2764,7 +2764,7 @@ func TestEmptyEndointPorts(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"test": &monitoringv1.ServiceMonitor{
+			"test": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "default",
@@ -2887,12 +2887,12 @@ func generateTestConfig(version string) ([]byte, error) {
 				},
 				Version:  version,
 				Replicas: &replicas,
-				ServiceMonitorSelector: &metav1.LabelSelector{
+				ServiceMonitorSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},
 				},
-				PodMonitorSelector: &metav1.LabelSelector{
+				PodMonitorSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
 					},

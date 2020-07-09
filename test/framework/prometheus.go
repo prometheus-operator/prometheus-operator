@@ -46,7 +46,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 		Spec: monitoringv1.PrometheusSpec{
 			Replicas: &replicas,
 			Version:  operator.DefaultPrometheusVersion,
-			ServiceMonitorSelector: &metav1.LabelSelector{
+			ServiceMonitorSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": group,
 				},
