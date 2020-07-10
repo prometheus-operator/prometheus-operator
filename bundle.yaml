@@ -647,7 +647,8 @@ spec:
                     type: object
                 type: object
               baseImage:
-                description: Base image that is used to deploy pods, without tag.
+                description: 'Base image that is used to deploy pods, without tag.
+                  Deprecated: use ''image'' instead'
                 type: string
               clusterAdvertiseAddress:
                 description: 'ClusterAdvertiseAddress is the explicit address to advertise
@@ -3016,10 +3017,11 @@ spec:
                   to use to run the Prometheus Pods.
                 type: string
               sha:
-                description: SHA of Alertmanager container image to be deployed. Defaults
-                  to the value of `version`. Similar to a tag, but the SHA explicitly
-                  deploys an immutable container image. Version and Tag are ignored
-                  if SHA is set.
+                description: 'SHA of Alertmanager container image to be deployed.
+                  Defaults to the value of `version`. Similar to a tag, but the SHA
+                  explicitly deploys an immutable container image. Version and Tag
+                  are ignored if SHA is set. Deprecated: use ''image'' instead.  The
+                  image digest can be specified as part of the image URL.'
                 type: string
               storage:
                 description: Storage is the definition of how storage will be used
@@ -3281,8 +3283,10 @@ spec:
                     type: object
                 type: object
               tag:
-                description: Tag of Alertmanager container image to be deployed. Defaults
-                  to the value of `version`. Version is ignored if Tag is set.
+                description: 'Tag of Alertmanager container image to be deployed.
+                  Defaults to the value of `version`. Version is ignored if Tag is
+                  set. Deprecated: use ''image'' instead.  The image tag can be specified
+                  as part of the image URL.'
                 type: string
               tolerations:
                 description: If specified, the pod's tolerations.
@@ -6206,7 +6210,8 @@ spec:
                     type: boolean
                 type: object
               baseImage:
-                description: Base image to use for a Prometheus deployment.
+                description: 'Base image to use for a Prometheus deployment. Deprecated:
+                  use ''image'' instead'
                 type: string
               configMaps:
                 description: ConfigMaps is a list of ConfigMaps in the same namespace
@@ -9572,10 +9577,11 @@ spec:
                     type: object
                 type: object
               sha:
-                description: SHA of Prometheus container image to be deployed. Defaults
+                description: 'SHA of Prometheus container image to be deployed. Defaults
                   to the value of `version`. Similar to a tag, but the SHA explicitly
                   deploys an immutable container image. Version and Tag are ignored
-                  if SHA is set.
+                  if SHA is set. Deprecated: use ''image'' instead.  The image digest
+                  can be specified as part of the image URL.'
                 type: string
               storage:
                 description: Storage spec to specify how storage shall be used.
@@ -9836,8 +9842,10 @@ spec:
                     type: object
                 type: object
               tag:
-                description: Tag of Prometheus container image to be deployed. Defaults
-                  to the value of `version`. Version is ignored if Tag is set.
+                description: 'Tag of Prometheus container image to be deployed. Defaults
+                  to the value of `version`. Version is ignored if Tag is set. Deprecated:
+                  use ''image'' instead.  The image tag can be specified as part of
+                  the image URL.'
                 type: string
               thanos:
                 description: "Thanos configuration allows configuring various aspects
@@ -9847,7 +9855,8 @@ spec:
                   without backward compatibility in any release."
                 properties:
                   baseImage:
-                    description: Thanos base image if other than default.
+                    description: 'Thanos base image if other than default. Deprecated:
+                      use ''image'' instead'
                     type: string
                   grpcServerTlsConfig:
                     description: 'GRPCServerTLSConfig configures the gRPC server from
@@ -10040,15 +10049,17 @@ spec:
                         type: object
                     type: object
                   sha:
-                    description: SHA of Thanos container image to be deployed. Defaults
+                    description: 'SHA of Thanos container image to be deployed. Defaults
                       to the value of `version`. Similar to a tag, but the SHA explicitly
                       deploys an immutable container image. Version and Tag are ignored
-                      if SHA is set.
+                      if SHA is set. Deprecated: use ''image'' instead.  The image
+                      digest can be specified as part of the image URL.'
                     type: string
                   tag:
-                    description: Tag of Thanos sidecar container image to be deployed.
+                    description: 'Tag of Thanos sidecar container image to be deployed.
                       Defaults to the value of `version`. Version is ignored if Tag
-                      is set.
+                      is set. Deprecated: use ''image'' instead.  The image tag can
+                      be specified as part of the image URL.'
                     type: string
                   tracingConfig:
                     description: TracingConfig configures tracing in Thanos. This
