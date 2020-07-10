@@ -348,8 +348,9 @@ func testAMReloadConfig(t *testing.T) {
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	alertmanager := framework.MakeBasicAlertmanager("reload-config", 1)
-	templateConfigMapName := fmt.Sprintf("alertmanager-templates-%s", alertmanager.Name)
-	alertmanager.Spec.ConfigMaps = []string{templateConfigMapName}
+	templateResourceName := fmt.Sprintf("alertmanager-templates-%s", alertmanager.Name)
+	alertmanager.Spec.ConfigMaps = []string{templateResourceName}
+	alertmanager.Spec.Secrets = []string{templateResourceName}
 
 	firstConfig := `
 global:
@@ -419,16 +420,29 @@ An Alert test
 	}
 
 	templateFileKey := "test-emails.tmpl"
+	templateSecretFileKey := "test-emails-secret.tmpl"
 	templateCfg := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: templateConfigMapName,
+			Name: templateResourceName,
 		},
 		Data: map[string]string{
 			templateFileKey: template,
 		},
 	}
+	templateSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: templateResourceName,
+		},
+		Data: map[string][]byte{
+			templateSecretFileKey: []byte(template),
+		},
+	}
 
 	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(context.TODO(), templateCfg, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), templateSecret, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -464,6 +478,16 @@ An Alert test
 
 	if err := framework.WaitForAlertmanagerConfigToBeReloaded(ns, alertmanager.Name, priorToReloadTime); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to wait for additional configMaps reload"))
+	}
+
+	priorToReloadTime = time.Now()
+	templateSecret.Data[templateSecretFileKey] = []byte(secondTemplate)
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.TODO(), templateSecret, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.WaitForAlertmanagerConfigToBeReloaded(ns, alertmanager.Name, priorToReloadTime); err != nil {
+		t.Fatal(errors.Wrap(err, "failed to wait for additional secrets reload"))
 	}
 }
 
