@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -265,6 +265,15 @@ func (f *Framework) GetAlertmanagerStatus(ns, n string) (amAPIStatusResp, error)
 	return amStatus, nil
 }
 
+func (f *Framework) GetAlertmanagerMetrics(ns, n string) ([]string, error) {
+	request := ProxyGetPod(f.KubeClient, ns, n, "/metrics")
+	resp, err := request.DoRaw(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(string(resp), "\n"), nil
+}
+
 func (f *Framework) CreateSilence(ns, n string) (string, error) {
 	var createSilenceResponse amAPICreateSilResp
 
@@ -385,6 +394,37 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expecte
 
 	if err != nil {
 		return fmt.Errorf("failed to wait for alertmanager config to contain %q: %v", expectedString, err)
+	}
+
+	return nil
+}
+
+func (f *Framework) WaitForAlertmanagerConfigToBeReloaded(ns, amName string, previousReloadTimestamp time.Time) error {
+	const configReloadMetricName = "alertmanager_config_last_reload_success_timestamp_seconds"
+	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
+		metrics, err := f.GetAlertmanagerMetrics(ns, "alertmanager-"+amName+"-0")
+		if err != nil {
+			return false, err
+		}
+
+		for _, metricLine := range metrics {
+			if !strings.HasPrefix(metricLine, configReloadMetricName) {
+				continue
+			}
+			components := strings.Split(metricLine, " ")
+			timestampSec, err := strconv.ParseFloat(components[1], 64)
+			if err != nil {
+				return false, err
+			}
+			timestamp := time.Unix(int64(timestampSec), 0)
+			return timestamp.After(previousReloadTimestamp), nil
+		}
+
+		return false, nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to wait for alertmanager config to have been reloaded after %v: %v", previousReloadTimestamp, err)
 	}
 
 	return nil
