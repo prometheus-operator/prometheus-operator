@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -32,6 +32,8 @@ import (
 	"github.com/coreos/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/pkg/errors"
+	"github.com/prometheus/prometheus/pkg/labels"
+	"github.com/prometheus/prometheus/pkg/textparse"
 )
 
 var ValidAlertmanagerConfig = `global:
@@ -265,6 +267,15 @@ func (f *Framework) GetAlertmanagerStatus(ns, n string) (amAPIStatusResp, error)
 	return amStatus, nil
 }
 
+func (f *Framework) GetAlertmanagerMetrics(ns, n string) (textparse.Parser, error) {
+	request := ProxyGetPod(f.KubeClient, ns, n, "/metrics")
+	resp, err := request.DoRaw(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	return textparse.NewPromParser(resp), nil
+}
+
 func (f *Framework) CreateSilence(ns, n string) (string, error) {
 	var createSilenceResponse amAPICreateSilResp
 
@@ -385,6 +396,46 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expecte
 
 	if err != nil {
 		return fmt.Errorf("failed to wait for alertmanager config to contain %q: %v", expectedString, err)
+	}
+
+	return nil
+}
+
+func (f *Framework) WaitForAlertmanagerConfigToBeReloaded(ns, amName string, previousReloadTimestamp time.Time) error {
+	const configReloadMetricName = "alertmanager_config_last_reload_success_timestamp_seconds"
+	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
+		parser, err := f.GetAlertmanagerMetrics(ns, "alertmanager-"+amName+"-0")
+		if err != nil {
+			return false, err
+		}
+
+		for {
+			entry, err := parser.Next()
+			if err != nil {
+				return false, err
+			}
+			if entry == textparse.EntryInvalid {
+				return false, fmt.Errorf("invalid prometheus metric entry")
+			}
+			if entry != textparse.EntrySeries {
+				continue
+			}
+
+			seriesLabels := labels.Labels{}
+			parser.Metric(&seriesLabels)
+
+			if seriesLabels.Get("__name__") != configReloadMetricName {
+				continue
+			}
+
+			_, _, timestampSec := parser.Series()
+			timestamp := time.Unix(int64(timestampSec), 0)
+			return timestamp.After(previousReloadTimestamp), nil
+		}
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to wait for alertmanager config to have been reloaded after %v: %v", previousReloadTimestamp, err)
 	}
 
 	return nil

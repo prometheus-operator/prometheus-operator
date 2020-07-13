@@ -428,6 +428,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		},
 	}
 
+	reloadWatchDirs := []string{alertmanagerConfDir}
+	configReloaderVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      "config-volume",
+			MountPath: alertmanagerConfDir,
+			ReadOnly:  true,
+		},
+	}
+
 	for _, s := range a.Spec.Secrets {
 		volumes = append(volumes, v1.Volume{
 			Name: k8sutil.SanitizeVolumeName("secret-" + s),
@@ -437,11 +446,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				},
 			},
 		})
-		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+		mountPath := secretsDir + s
+		mount := v1.VolumeMount{
 			Name:      k8sutil.SanitizeVolumeName("secret-" + s),
 			ReadOnly:  true,
-			MountPath: secretsDir + s,
-		})
+			MountPath: mountPath,
+		}
+		amVolumeMounts = append(amVolumeMounts, mount)
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, mount)
+		reloadWatchDirs = append(reloadWatchDirs, mountPath)
 	}
 
 	for _, c := range a.Spec.ConfigMaps {
@@ -455,11 +468,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				},
 			},
 		})
-		amVolumeMounts = append(amVolumeMounts, v1.VolumeMount{
+		mountPath := configmapsDir + c
+		mount := v1.VolumeMount{
 			Name:      k8sutil.SanitizeVolumeName("configmap-" + c),
 			ReadOnly:  true,
-			MountPath: configmapsDir + c,
-		})
+			MountPath: mountPath,
+		}
+		amVolumeMounts = append(amVolumeMounts, mount)
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, mount)
+		reloadWatchDirs = append(reloadWatchDirs, mountPath)
 	}
 
 	amVolumeMounts = append(amVolumeMounts, a.Spec.VolumeMounts...)
@@ -476,6 +493,12 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
 	finalLabels := config.Labels.Merge(podLabels)
 
+	configReloaderArgs := []string{
+		fmt.Sprintf("-webhook-url=%s", localReloadURL),
+	}
+	for _, reloadWatchDir := range reloadWatchDirs {
+		configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("-volume-dir=%s", reloadWatchDir))
+	}
 	defaultContainers := []v1.Container{
 		{
 			Args:           amArgs,
@@ -499,19 +522,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			},
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		}, {
-			Name:  "config-reloader",
-			Image: config.ConfigReloaderImage,
-			Args: []string{
-				fmt.Sprintf("-webhook-url=%s", localReloadURL),
-				fmt.Sprintf("-volume-dir=%s", alertmanagerConfDir),
-			},
-			VolumeMounts: []v1.VolumeMount{
-				{
-					Name:      "config-volume",
-					ReadOnly:  true,
-					MountPath: alertmanagerConfDir,
-				},
-			},
+			Name:                     "config-reloader",
+			Image:                    config.ConfigReloaderImage,
+			Args:                     configReloaderArgs,
+			VolumeMounts:             configReloaderVolumeMounts,
 			Resources:                resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
