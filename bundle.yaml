@@ -16963,7 +16963,7 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --logtostderr=true
-        - --config-reloader-image=jimmidyson/configmap-reload:v0.3.0
+        - --config-reloader-image=jimmidyson/configmap-reload:v0.4.0
         - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.40.0
         image: quay.io/coreos/prometheus-operator:v0.40.0
         name: prometheus-operator

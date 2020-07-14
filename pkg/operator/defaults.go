@@ -25,7 +25,7 @@ const (
 	DefaultThanosVersion          = "v0.12.2"
 	DefaultThanosBaseImage        = "quay.io/thanos/thanos"
 	DefaultThanosImage            = DefaultThanosBaseImage + ":" + DefaultThanosVersion
-	DefaultConfigMapReloaderImage = "jimmidyson/configmap-reload:v0.3.0"
+	DefaultConfigMapReloaderImage = "jimmidyson/configmap-reload:v0.4.0"
 )
 
 var (
