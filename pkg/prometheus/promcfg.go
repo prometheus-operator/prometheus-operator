@@ -363,7 +363,7 @@ func (cg *configGenerator) generateConfig(
 	})
 
 	if len(p.Spec.RemoteWrite) > 0 && version.Major >= 2 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(version, p.Spec.RemoteWrite, basicAuthSecrets))
+		cfg = append(cfg, cg.generateRemoteWriteConfig(version, p, basicAuthSecrets))
 	}
 
 	if len(p.Spec.RemoteRead) > 0 && version.Major >= 2 {
@@ -1386,11 +1386,11 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, spec
 	}
 }
 
-func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, specs []v1.RemoteWriteSpec, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
+func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
-	for i, spec := range specs {
+	for i, spec := range p.Spec.RemoteWrite {
 		//defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
@@ -1463,9 +1463,7 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, spe
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		// TODO: If we want to support secret refs for remote write tls
-		// config as well, make sure to path the right namespace here.
-		cfg = addTLStoYaml(cfg, "", spec.TLSConfig)
+		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
