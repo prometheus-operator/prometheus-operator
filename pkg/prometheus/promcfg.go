@@ -267,6 +267,7 @@ func (cg *configGenerator) generateConfig(
 					pMons[identifier], ep, i,
 					apiserverConfig,
 					basicAuthSecrets,
+					bearerTokens,
 					p.Spec.OverrideHonorLabels,
 					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
@@ -403,6 +404,7 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	ep v1.PodMetricsEndpoint,
 	i int, apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]BasicAuthCredentials,
+	bearerTokens map[string]BearerToken,
 	ignoreHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
@@ -457,6 +459,12 @@ func (cg *configGenerator) generatePodMonitorConfig(
 
 	if ep.BearerTokenFile != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
+	}
+
+	if ep.BearerTokenSecret.Name != "" {
+		if s, ok := bearerTokens[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
+		}
 	}
 
 	var (
