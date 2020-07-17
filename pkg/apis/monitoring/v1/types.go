@@ -778,6 +778,8 @@ type PodMetricsEndpoint struct {
 	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+	// File to read bearer token for scraping targets.
+	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	HonorLabels bool `json:"honorLabels,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
