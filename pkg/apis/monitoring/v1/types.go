@@ -776,6 +776,8 @@ type PodMetricsEndpoint struct {
 	Interval string `json:"interval,omitempty"`
 	// Timeout after which the scrape is ended
 	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
+	// TLS configuration to use when scraping the endpoint.
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	HonorLabels bool `json:"honorLabels,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.

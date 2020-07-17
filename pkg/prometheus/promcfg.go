@@ -453,6 +453,8 @@ func (cg *configGenerator) generatePodMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
 
+	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
+
 	var (
 		relabelings []yaml.MapSlice
 		labelKeys   []string
