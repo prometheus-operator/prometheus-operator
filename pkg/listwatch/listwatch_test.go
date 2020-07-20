@@ -26,11 +26,7 @@ import (
 
 var _ watch.Interface = &multiWatch{}
 
-func setupMultiWatch(n int, t *testing.T, rvs ...string) ([]*watch.FakeWatcher, *multiWatch) {
-	// Default resource versions to the correct length if none were passed.
-	if len(rvs) == 0 {
-		rvs = make([]string, n)
-	}
+func setupMultiWatch(n int, t *testing.T, rvs string) ([]*watch.FakeWatcher, *multiWatch) {
 	ws := make([]*watch.FakeWatcher, n)
 	lws := make([]cache.ListerWatcher, n)
 	for i := range ws {
@@ -50,26 +46,17 @@ func setupMultiWatch(n int, t *testing.T, rvs ...string) ([]*watch.FakeWatcher, 
 func TestNewMultiWatch(t *testing.T) {
 	func() {
 		defer func() {
-			if r := recover(); r == nil {
-				t.Error("expected newMultiWatch to panic when number of resource versions is less than ListerWatchers")
-			}
-		}()
-		// Create a multiWatch from 2 ListerWatchers but only pass 1 resource version.
-		_, _ = setupMultiWatch(2, t, "1")
-	}()
-	func() {
-		defer func() {
 			if r := recover(); r != nil {
 				t.Errorf("newMultiWatch should not panic when number of resource versions matches ListerWatchers; got: %v", r)
 			}
 		}()
-		// Create a multiWatch from 2 ListerWatchers and pass 2 resource versions.
-		_, _ = setupMultiWatch(2, t, "1", "2")
+		// Create a multiWatch from 1 ListerWatchers and pass 1 resource versions.
+		_, _ = setupMultiWatch(1, t, "1")
 	}()
 }
 
 func TestMultiWatchResultChan(t *testing.T) {
-	ws, m := setupMultiWatch(10, t)
+	ws, m := setupMultiWatch(10, t, "10")
 	defer m.Stop()
 	var events []watch.Event
 	var wg sync.WaitGroup
@@ -97,7 +84,7 @@ func TestMultiWatchResultChan(t *testing.T) {
 }
 
 func TestMultiWatchStop(t *testing.T) {
-	ws, m := setupMultiWatch(10, t)
+	ws, m := setupMultiWatch(10, t, "10")
 	m.Stop()
 	var stopped int
 	for _, w := range ws {
@@ -149,7 +136,7 @@ func TestRacyMultiWatch(t *testing.T) {
 
 	mw, err := newMultiWatch(
 		[]cache.ListerWatcher{lw},
-		[]string{"foo"},
+		"foo",
 		metav1.ListOptions{},
 	)
 	if err != nil {
