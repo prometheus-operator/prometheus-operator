@@ -169,14 +169,14 @@ func (mlw multiListerWatcher) List(options metav1.ListOptions) (runtime.Object, 
 // It returns a watch.Interface that combines the output from the
 // watch.Interface of every cache.ListerWatcher into a single result chan.
 func (mlw multiListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
-	resourceVersions := make([]string, len(mlw))
+	var resourceVersions string
 	// Allow resource versions to be "".
 	if options.ResourceVersion != "" {
 		rvs := strings.Split(options.ResourceVersion, "/")
-		if len(rvs) != 1 {
-			return nil, fmt.Errorf("expected resource version to have 1 parts to match the number of ListerWatchers, got %d", len(rvs))
+		if len(rvs) > 1 {
+			return nil, fmt.Errorf("expected resource version to have 1 part, got %d", len(rvs))
 		}
-		resourceVersions = rvs
+		resourceVersions = options.ResourceVersion
 	}
 	return newMultiWatch(mlw, resourceVersions, options)
 }
@@ -190,9 +190,8 @@ type multiWatch struct {
 }
 
 // newMultiWatch returns a new multiWatch or an error if one of the underlying
-// Watch funcs errored. The length of []cache.ListerWatcher and []string must
-// match.
-func newMultiWatch(lws []cache.ListerWatcher, resourceVersions []string, options metav1.ListOptions) (*multiWatch, error) {
+// Watch funcs errored.
+func newMultiWatch(lws []cache.ListerWatcher, resourceVersions string, options metav1.ListOptions) (*multiWatch, error) {
 	var (
 		result   = make(chan watch.Event)
 		stopped  = make(chan struct{})
@@ -204,7 +203,7 @@ func newMultiWatch(lws []cache.ListerWatcher, resourceVersions []string, options
 
 	for _, lw := range lws {
 		o := options.DeepCopy()
-		o.ResourceVersion = resourceVersions[0]
+		o.ResourceVersion = resourceVersions
 		w, err := lw.Watch(*o)
 		if err != nil {
 			return nil, err
