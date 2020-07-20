@@ -60,13 +60,13 @@ metadata:
 spec:
   ingress:
   - from:
+    - podSelector:
+      matchLabels:
+        alertmanager: main
+        app: alertmanager
     ports:
     - port: 9093
       protocol: TCP
-  podSelector:
-    matchLabels:
-      alertmanager: main
-      app: alertmanager
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
