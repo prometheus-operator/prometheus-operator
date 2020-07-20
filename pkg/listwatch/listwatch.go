@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
@@ -137,7 +138,7 @@ type multiListerWatcher []cache.ListerWatcher
 // a single result.
 func (mlw multiListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
 	l := metav1.List{}
-	var resourceVersions []string
+	resourceVersions := sets.NewString()
 	for _, lw := range mlw {
 		list, err := lw.List(options)
 		if err != nil {
@@ -154,11 +155,13 @@ func (mlw multiListerWatcher) List(options metav1.ListOptions) (runtime.Object, 
 		for _, item := range items {
 			l.Items = append(l.Items, runtime.RawExtension{Object: item.DeepCopyObject()})
 		}
-		resourceVersions = append(resourceVersions, metaObj.GetResourceVersion())
+		if !resourceVersions.Has(metaObj.GetResourceVersion()) {
+			resourceVersions.Insert(metaObj.GetResourceVersion())
+		}
 	}
 	// Combine the resource versions so that the composite Watch method can
 	// distribute appropriate versions to each underlying Watch func.
-	l.ListMeta.ResourceVersion = strings.Join(resourceVersions, "/")
+	l.ListMeta.ResourceVersion = strings.Join(resourceVersions.List(), "/")
 	return &l, nil
 }
 
@@ -166,14 +169,14 @@ func (mlw multiListerWatcher) List(options metav1.ListOptions) (runtime.Object, 
 // It returns a watch.Interface that combines the output from the
 // watch.Interface of every cache.ListerWatcher into a single result chan.
 func (mlw multiListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
-	resourceVersions := make([]string, len(mlw))
+	var resourceVersions string
 	// Allow resource versions to be "".
 	if options.ResourceVersion != "" {
 		rvs := strings.Split(options.ResourceVersion, "/")
-		if len(rvs) != len(mlw) {
-			return nil, fmt.Errorf("expected resource version to have %d parts to match the number of ListerWatchers", len(mlw))
+		if len(rvs) > 1 {
+			return nil, fmt.Errorf("expected resource version to have 1 part, got %d", len(rvs))
 		}
-		resourceVersions = rvs
+		resourceVersions = options.ResourceVersion
 	}
 	return newMultiWatch(mlw, resourceVersions, options)
 }
@@ -187,9 +190,8 @@ type multiWatch struct {
 }
 
 // newMultiWatch returns a new multiWatch or an error if one of the underlying
-// Watch funcs errored. The length of []cache.ListerWatcher and []string must
-// match.
-func newMultiWatch(lws []cache.ListerWatcher, resourceVersions []string, options metav1.ListOptions) (*multiWatch, error) {
+// Watch funcs errored.
+func newMultiWatch(lws []cache.ListerWatcher, resourceVersions string, options metav1.ListOptions) (*multiWatch, error) {
 	var (
 		result   = make(chan watch.Event)
 		stopped  = make(chan struct{})
@@ -199,9 +201,9 @@ func newMultiWatch(lws []cache.ListerWatcher, resourceVersions []string, options
 
 	wg.Add(len(lws))
 
-	for i, lw := range lws {
+	for _, lw := range lws {
 		o := options.DeepCopy()
-		o.ResourceVersion = resourceVersions[i]
+		o.ResourceVersion = resourceVersions
 		w, err := lw.Watch(*o)
 		if err != nil {
 			return nil, err
