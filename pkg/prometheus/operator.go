@@ -1756,17 +1756,38 @@ func (c *Operator) selectPodMonitors(p *monitoringv1.Prometheus) (map[string]*mo
 
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select PodMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
-	podMonitors := []string{}
 	for _, ns := range namespaces {
 		c.pmonInfs.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
 				res[k] = obj.(*monitoringv1.PodMonitor)
-				podMonitors = append(podMonitors, k)
 			}
 		})
 	}
 
+	// If denied by Prometheus spec, filter out all pod monitors that access
+	// the file system.
+	if p.Spec.ArbitraryFSAccessThroughSMs.Deny {
+		for namespaceAndName, sm := range res {
+			for _, ep := range sm.Spec.PodMetricsEndpoints {
+				if err := testForArbitraryFSAccess(ep.BearerTokenFile, ep.TLSConfig); err != nil {
+					delete(res, namespaceAndName)
+					level.Warn(c.logger).Log(
+						"msg", "skipping podmonitor",
+						"error", err.Error(),
+						"podmonitor", namespaceAndName,
+						"namespace", p.Namespace,
+						"prometheus", p.Name,
+					)
+				}
+			}
+		}
+	}
+
+	podMonitors := []string{}
+	for k := range res {
+		podMonitors = append(podMonitors, k)
+	}
 	level.Debug(c.logger).Log("msg", "selected PodMonitors", "podmonitors", strings.Join(podMonitors, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	return res, nil
@@ -1814,21 +1835,20 @@ func (c *Operator) selectProbes(p *monitoringv1.Prometheus) (map[string]*monitor
 	return res, nil
 }
 
-func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
-	if e.BearerTokenFile != "" {
+func testForArbitraryFSAccess(bearerTokenFile string, tlsConfig *monitoringv1.TLSConfig) error {
+	if bearerTokenFile != "" {
 		return errors.New("it accesses file system via bearer token file which Prometheus specification prohibits")
 	}
 
-	tlsConf := e.TLSConfig
-	if tlsConf == nil {
+	if tlsConfig == nil {
 		return nil
 	}
 
-	if err := e.TLSConfig.Validate(); err != nil {
+	if err := tlsConfig.Validate(); err != nil {
 		return err
 	}
 
-	if tlsConf.CAFile != "" || tlsConf.CertFile != "" || tlsConf.KeyFile != "" {
+	if tlsConfig.CAFile != "" || tlsConfig.CertFile != "" || tlsConfig.KeyFile != "" {
 		return errors.New("it accesses file system via tls config which Prometheus specification prohibits")
 	}
 
