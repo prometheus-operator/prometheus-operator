@@ -579,7 +579,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		image := "my-reg/prometheus"
 		sset, err := makeStatefulSet(monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
-				Image:   &image,
+				Image: &image,
 			},
 		}, defaultTestConfig, nil, "")
 		if err != nil {
@@ -596,8 +596,8 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		image := "my-reg/prometheus"
 		sset, err := makeStatefulSet(monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
-				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
-				Image:   &image,
+				SHA:   "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+				Image: &image,
 			},
 		}, defaultTestConfig, nil, "")
 		if err != nil {
@@ -614,8 +614,8 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		image := "my-reg/prometheus"
 		sset, err := makeStatefulSet(monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
-				Tag:     "my-unrelated-tag",
-				Image:   &image,
+				Tag:   "my-unrelated-tag",
+				Image: &image,
 			},
 		}, defaultTestConfig, nil, "")
 		if err != nil {
@@ -632,9 +632,9 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		image := "my-reg/prometheus"
 		sset, err := makeStatefulSet(monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
-				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
-				Tag:     "my-unrealted-tag",
-				Image:   &image,
+				SHA:   "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+				Tag:   "my-unrealted-tag",
+				Image: &image,
 			},
 		}, defaultTestConfig, nil, "")
 		if err != nil {
