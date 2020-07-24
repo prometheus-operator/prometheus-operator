@@ -135,6 +135,8 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 		&monitoringv1.Alertmanager{}, resyncPeriod, cache.Indexers{},
 	)
 	o.metrics.MustRegister(NewAlertmanagerCollector(o.alrtInf.GetStore()))
+	o.metrics.MustRegister(operator.NewStoreCollector("alertmanager", o.alrtInf.GetStore()))
+
 	o.ssetInf = cache.NewSharedIndexInformer(
 		o.metrics.NewInstrumentedListerWatcher(
 			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
