@@ -191,6 +191,30 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 	}
 }
 
+func (f *Framework) MakeBasicPodMonitor(name string) *monitoringv1.PodMonitor {
+	return &monitoringv1.PodMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"group": name,
+			},
+		},
+		Spec: monitoringv1.PodMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": name,
+				},
+			},
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
+				},
+			},
+		},
+	}
+}
+
 func (f *Framework) MakePrometheusService(name, group string, serviceType v1.ServiceType) *v1.Service {
 	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
