@@ -153,6 +153,7 @@ type Config struct {
 	PromSelector                  string
 	AlertManagerSelector          string
 	ThanosRulerSelector           string
+	SecretListWatchSelector       string
 }
 
 type Namespaces struct {
@@ -200,6 +201,11 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 
 	if _, err := labels.Parse(conf.AlertManagerSelector); err != nil {
 		return nil, errors.Wrap(err, "can not parse alertmanager selector value")
+	}
+
+	secretListWatchSelector, err := fields.ParseSelector(conf.SecretListWatchSelector)
+	if err != nil {
+		return nil, errors.Wrap(err, "can not parse secrets selector value")
 	}
 
 	kubeletObjectName := ""
@@ -347,7 +353,7 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 	c.secrInf = cache.NewSharedIndexInformer(
 		c.metrics.NewInstrumentedListerWatcher(
 			listwatch.MultiNamespaceListerWatcher(c.logger, c.config.Namespaces.PrometheusAllowList, c.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return cache.NewListWatchFromClient(c.kclient.CoreV1().RESTClient(), "secrets", namespace, fields.Everything())
+				return cache.NewListWatchFromClient(c.kclient.CoreV1().RESTClient(), "secrets", namespace, secretListWatchSelector)
 			}),
 		),
 		&v1.Secret{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
