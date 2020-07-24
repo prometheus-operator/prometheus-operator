@@ -2481,7 +2481,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port:            "web",
-				BearerTokenFile: "abc",
+				BearerTokenFile: "/etc/ca-certificates/bearer-token",
 			},
 			expectTargets: true,
 		},
@@ -2492,7 +2492,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port:            "web",
-				BearerTokenFile: "abc",
+				BearerTokenFile: "/etc/ca-certificates/bearer-token",
 			},
 			expectTargets: false,
 		},
