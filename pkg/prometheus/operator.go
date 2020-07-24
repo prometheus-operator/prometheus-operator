@@ -267,6 +267,7 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 		&monitoringv1.Prometheus{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
 	c.metrics.MustRegister(NewPrometheusCollector(c.promInf.GetStore()))
+	c.metrics.MustRegister(operator.NewStoreCollector("prometheus", c.promInf.GetStore()))
 
 	c.smonInf = cache.NewSharedIndexInformer(
 		c.metrics.NewInstrumentedListerWatcher(
@@ -283,6 +284,7 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 		),
 		&monitoringv1.ServiceMonitor{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
+	c.metrics.MustRegister(operator.NewStoreCollector("servicemonitor", c.smonInf.GetStore()))
 
 	c.pmonInf = cache.NewSharedIndexInformer(
 		c.metrics.NewInstrumentedListerWatcher(
@@ -299,6 +301,7 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 		),
 		&monitoringv1.PodMonitor{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
+	c.metrics.MustRegister(operator.NewStoreCollector("podmonitor", c.pmonInf.GetStore()))
 
 	c.probeInf = cache.NewSharedIndexInformer(
 		c.metrics.NewInstrumentedListerWatcher(
@@ -315,6 +318,7 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 		),
 		&monitoringv1.Probe{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
+	c.metrics.MustRegister(operator.NewStoreCollector("probe", c.probeInf.GetStore()))
 
 	c.ruleInf = cache.NewSharedIndexInformer(
 		c.metrics.NewInstrumentedListerWatcher(
@@ -331,6 +335,7 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 		),
 		&monitoringv1.PrometheusRule{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
+	c.metrics.MustRegister(operator.NewStoreCollector("prometheurule", c.ruleInf.GetStore()))
 
 	c.cmapInf = cache.NewSharedIndexInformer(
 		c.metrics.NewInstrumentedListerWatcher(

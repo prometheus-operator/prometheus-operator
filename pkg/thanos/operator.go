@@ -174,6 +174,8 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 	)
 
 	o.metrics.MustRegister(NewThanosRulerCollector(o.thanosRulerInf.GetStore()))
+	o.metrics.MustRegister(operator.NewStoreCollector("thanosruler", o.thanosRulerInf.GetStore()))
+
 	o.ruleInf = cache.NewSharedIndexInformer(
 		o.metrics.NewInstrumentedListerWatcher(
 			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
@@ -189,6 +191,7 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 		),
 		&monitoringv1.PrometheusRule{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
+	o.metrics.MustRegister(operator.NewStoreCollector("prometheusrule", o.thanosRulerInf.GetStore()))
 
 	o.ssetInf = cache.NewSharedIndexInformer(
 		listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.ThanosRulerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {

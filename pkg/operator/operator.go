@@ -147,6 +147,40 @@ func (i *instrumentedListerWatcher) Watch(options metav1.ListOptions) (watch.Int
 	return ret, err
 }
 
+type storeCollector struct {
+	desc  *prometheus.Desc
+	store cache.Store
+}
+
+// NewStoreCollector returns a metrics collector that returns the current number of resources in the store.
+func NewStoreCollector(resource string, s cache.Store) prometheus.Collector {
+	return &storeCollector{
+		desc: prometheus.NewDesc(
+			"prometheus_operator_resources",
+			"Number of resources managed by the operator's controller",
+			nil,
+			map[string]string{
+				"resource": resource,
+			},
+		),
+		store: s,
+	}
+}
+
+// Describe implements the prometheus.Collector interface.
+func (c *storeCollector) Describe(ch chan<- *prometheus.Desc) {
+	ch <- c.desc
+}
+
+// Collect implements the prometheus.Collector interface.
+func (c *storeCollector) Collect(ch chan<- prometheus.Metric) {
+	ch <- prometheus.MustNewConstMetric(
+		c.desc,
+		prometheus.GaugeValue,
+		float64(len(c.store.List())),
+	)
+}
+
 // SanitizeSTS removes values for APIVersion and Kind from the VolumeClaimTemplates.
 // This prevents update failures due to these fields changing when applied.
 // See https://github.com/kubernetes/kubernetes/issues/87583
