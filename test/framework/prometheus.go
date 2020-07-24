@@ -443,7 +443,22 @@ func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
 		return nil, err
 	}
 
-	return rt.Data.ActiveTargets, nil
+	return getHealthyTargets(rt.Data.ActiveTargets)
+}
+
+func getHealthyTargets(targets []*Target) ([]*Target, error) {
+	healthyTargets := make([]*Target, 0, len(targets))
+
+	for _, target := range targets {
+		switch target.Health {
+		case healthGood:
+			healthyTargets = append(healthyTargets, target)
+		case healthBad:
+			return nil, errors.New(target.LastError)
+		}
+	}
+
+	return healthyTargets, nil
 }
 
 func (f *Framework) CheckPrometheusFiringAlert(ns, svcName, alertName string) (bool, error) {
@@ -494,9 +509,18 @@ func (f *Framework) WaitForPrometheusFiringAlert(ns, svcName, alertName string) 
 	return nil
 }
 
+type targetHealth string
+
+const (
+	healthGood targetHealth = "up"
+	healthBad  targetHealth = "down"
+)
+
 type Target struct {
 	ScrapeURL string            `json:"scrapeUrl"`
 	Labels    map[string]string `json:"labels"`
+	LastError string            `json:"lastError"`
+	Health    targetHealth      `json:"health"`
 }
 
 type targetDiscovery struct {
