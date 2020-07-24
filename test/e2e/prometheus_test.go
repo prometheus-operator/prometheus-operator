@@ -2218,13 +2218,15 @@ func testPromGetAuthSecret(t *testing.T) {
 					},
 					Key: "bearertoken",
 				}
-				sm.Spec.Endpoints[0].Path = "/bearer-token"
+				sm.Spec.Endpoints[0].Path = "/bearer-metrics"
 				return sm
 			},
 		},
 	}
 
 	for _, test := range tests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := framework.NewTestCtx(t)
