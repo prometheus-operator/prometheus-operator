@@ -77,6 +77,11 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 					"group": group,
 				},
 			},
+			PodMonitorSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"group": group,
+				},
+			},
 			ServiceAccountName: "prometheus",
 			RuleSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{

@@ -1074,6 +1074,7 @@ func testPromReloadConfig(t *testing.T) {
 	name := "test"
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.ServiceMonitorSelector = nil
+	p.Spec.PodMonitorSelector = nil
 
 	firstConfig := `
 global:
@@ -2990,6 +2991,257 @@ func testPromStaticProbe(t *testing.T) {
 		return true, nil
 	}); err != nil {
 		t.Fatal("waiting for static probe targets timed out.")
+	}
+
+}
+
+func testPromSecurePodMonitor(t *testing.T) {
+	t.Parallel()
+
+	name := "test"
+
+	tests := []struct {
+		name     string
+		endpoint monitoringv1.PodMetricsEndpoint
+	}{
+		//
+		// Basic auth:
+		//
+		{
+			name: "basic-auth-secret",
+			endpoint: monitoringv1.PodMetricsEndpoint{
+				Port: "web",
+				BasicAuth: &monitoringv1.BasicAuth{
+					Username: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "user",
+					},
+					Password: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "password",
+					},
+				},
+			},
+		},
+		//
+		// Bearer tokens:
+		//
+		{
+			name: "bearer-file",
+			endpoint: monitoringv1.PodMetricsEndpoint{
+				Port:            "web",
+				BearerTokenFile: "/etc/ca-certificates/bearer-token",
+				Path:            "/bearer-metrics",
+			},
+		},
+		{
+			name: "bearer-secret",
+			endpoint: monitoringv1.PodMetricsEndpoint{
+				Port: "web",
+				BearerTokenSecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: name,
+					},
+					Key: "bearer-token",
+				},
+				Path: "/bearer-metrics",
+			},
+		},
+		//
+		// TLS assets:
+		//
+		{
+			name: "tls-file",
+			endpoint: monitoringv1.PodMetricsEndpoint{
+				Port:   "mtls",
+				Scheme: "https",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CAFile:             "/etc/ca-certificates/cert.pem",
+					CertFile:           "/etc/ca-certificates/cert.pem",
+					KeyFile:            "/etc/ca-certificates/key.pem",
+				},
+				Path: "/",
+			},
+		},
+		{
+			name: "tls-secret",
+			endpoint: monitoringv1.PodMetricsEndpoint{
+				Port:   "mtls",
+				Scheme: "https",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
+					},
+				},
+				Path: "/",
+			},
+		},
+		{
+			name: "tls-configmap",
+			endpoint: monitoringv1.PodMetricsEndpoint{
+				Port:   "mtls",
+				Scheme: "https",
+				TLSConfig: &monitoringv1.TLSConfig{
+					InsecureSkipVerify: true,
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
+					},
+				},
+				Path: "/",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := framework.NewTestCtx(t)
+			defer ctx.Cleanup(t)
+			ns := ctx.CreateNamespace(t, framework.KubeClient)
+			ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+			// Create secret either used by bearer token secret key ref, tls
+			// asset key ref or tls configmap key ref.
+			cert, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
+			if err != nil {
+				t.Fatalf("failed to load cert.pem: %v", err)
+			}
+
+			key, err := ioutil.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
+			if err != nil {
+				t.Fatalf("failed to load key.pem: %v", err)
+			}
+
+			secret := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+				},
+				Data: map[string][]byte{
+					"user":         []byte("user"),
+					"password":     []byte("pass"),
+					"bearer-token": []byte("abc"),
+					"cert.pem":     cert,
+					"key.pem":      key,
+				},
+			}
+
+			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), secret, metav1.CreateOptions{}); err != nil {
+				t.Fatal(err)
+			}
+
+			tlsCertsConfigMap := &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+				},
+				Data: map[string]string{
+					"cert.pem": string(cert),
+				},
+			}
+
+			if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(context.TODO(), tlsCertsConfigMap, metav1.CreateOptions{}); err != nil {
+				t.Fatal(err)
+			}
+
+			prom := framework.MakeBasicPrometheus(ns, name, name, 1)
+			prom.Namespace = ns
+
+			if strings.HasSuffix(test.name, "-file") {
+				mountTLSFiles(prom, name)
+			}
+
+			if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, prom); err != nil {
+				t.Fatal(err)
+			}
+
+			simple, err := testFramework.MakeDeployment("../../test/framework/ressources/basic-auth-app-deployment.yaml")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			simple.Spec.Template.Spec.Volumes = []v1.Volume{
+				{
+					Name: name,
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: name,
+						},
+					},
+				},
+			}
+
+			simple.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
+				{
+					Name:      name,
+					MountPath: "/etc/ca-certificates",
+				},
+			}
+
+			if test.endpoint.Port == "mtls" {
+				simple.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/ca-certificates"}
+			}
+
+			if err := testFramework.CreateDeployment(framework.KubeClient, ns, simple); err != nil {
+				t.Fatal("failed to create simple basic auth app: ", err)
+			}
+
+			pm := framework.MakeBasicPodMonitor(name)
+			pm.Spec.PodMetricsEndpoints[0] = test.endpoint
+
+			if _, err := framework.MonClientV1.PodMonitors(ns).Create(context.TODO(), pm, metav1.CreateOptions{}); err != nil {
+				t.Fatal("failed to create PodMonitor: ", err)
+			}
+
+			if err := framework.WaitForTargets(ns, "prometheus-operated", 1); err != nil {
+				t.Fatal(err)
+			}
+		})
 	}
 
 }
