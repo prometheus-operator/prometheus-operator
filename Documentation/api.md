@@ -279,8 +279,12 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | params | Optional HTTP URL parameters | map[string][]string | false |
 | interval | Interval at which metrics should be scraped | string | false |
 | scrapeTimeout | Timeout after which the scrape is ended | string | false |
+| tlsConfig | TLS configuration to use when scraping the endpoint. | *[TLSConfig](#tlsconfig) | false |
+| bearerTokenFile | File to read bearer token for scraping targets. | string | false |
+| bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the pod monitor and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | honorTimestamps | HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data. | *bool | false |
+| basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 | relabelings | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |

@@ -468,10 +468,21 @@ func (in *PodMetricsEndpoint) DeepCopyInto(out *PodMetricsEndpoint) {
 			(*out)[key] = outVal
 		}
 	}
+	if in.TLSConfig != nil {
+		in, out := &in.TLSConfig, &out.TLSConfig
+		*out = new(TLSConfig)
+		(*in).DeepCopyInto(*out)
+	}
+	in.BearerTokenSecret.DeepCopyInto(&out.BearerTokenSecret)
 	if in.HonorTimestamps != nil {
 		in, out := &in.HonorTimestamps, &out.HonorTimestamps
 		*out = new(bool)
 		**out = **in
+	}
+	if in.BasicAuth != nil {
+		in, out := &in.BasicAuth, &out.BasicAuth
+		*out = new(BasicAuth)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.MetricRelabelConfigs != nil {
 		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
