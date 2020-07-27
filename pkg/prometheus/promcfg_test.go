@@ -640,8 +640,8 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 	}
 
 	expected := `global:
-  evaluation_interval: 1m
-  scrape_interval: 1m
+  evaluation_interval: 30s
+  scrape_interval: 30s
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
