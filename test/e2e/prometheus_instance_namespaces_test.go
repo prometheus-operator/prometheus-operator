@@ -177,7 +177,7 @@ func testPrometheusInstanceNamespaces_DenyList(t *testing.T) {
 		t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
 
-	if err := framework.WaitForTargets(instanceNs, "prometheus-instance", 0); err != nil {
+	if err := framework.WaitForActiveTargets(instanceNs, "prometheus-instance", 0); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -292,7 +292,7 @@ func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
 			t.Fatal("Creating ServiceMonitor failed: ", err)
 		}
 
-		if err := framework.WaitForTargets(instanceNs, "prometheus-instance", 1); err != nil {
+		if err := framework.WaitForActiveTargets(instanceNs, "prometheus-instance", 1); err != nil {
 			t.Fatal(err)
 		}
 	}

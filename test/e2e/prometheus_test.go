@@ -293,7 +293,7 @@ func createK8sAppMonitoring(t *testing.T, name, ns string, prwtc testFramework.P
 
 	// Check for proper scraping.
 
-	if err := framework.WaitForTargets(ns, promSVC.Name, 1); err != nil {
+	if err := framework.WaitForHealthyTargets(ns, promSVC.Name, 1); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -1118,7 +1118,7 @@ scrape_configs:
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	if err := framework.WaitForTargets(ns, svc.Name, 1); err != nil {
+	if err := framework.WaitForActiveTargets(ns, svc.Name, 1); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1150,7 +1150,7 @@ scrape_configs:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForTargets(ns, svc.Name, 2); err != nil {
+	if err := framework.WaitForActiveTargets(ns, svc.Name, 2); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -1208,7 +1208,7 @@ func testPromAdditionalScrapeConfig(t *testing.T) {
 	}
 
 	// Wait for ServiceMonitor target, as well as additional-config target
-	if err := framework.WaitForTargets(ns, svc.Name, 2); err != nil {
+	if err := framework.WaitForActiveTargets(ns, svc.Name, 2); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -1267,7 +1267,7 @@ func testPromAdditionalAlertManagerConfig(t *testing.T) {
 	}
 
 	// Wait for ServiceMonitor target
-	if err := framework.WaitForTargets(ns, svc.Name, 1); err != nil {
+	if err := framework.WaitForActiveTargets(ns, svc.Name, 1); err != nil {
 		t.Fatal(err)
 	}
 
@@ -2298,7 +2298,7 @@ func testPromGetAuthSecret(t *testing.T) {
 				t.Fatal("Creating ServiceMonitor failed: ", err)
 			}
 
-			if err := framework.WaitForTargets(ns, "prometheus-operated", 1); err != nil {
+			if err := framework.WaitForHealthyTargets(ns, "prometheus-operated", 1); err != nil {
 				t.Fatal(err)
 			}
 		})
@@ -2778,7 +2778,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			}
 
 			if test.expectTargets {
-				if err := framework.WaitForTargets(ns, svc.Name, 1); err != nil {
+				if err := framework.WaitForActiveTargets(ns, svc.Name, 1); err != nil {
 					t.Fatal(err)
 				}
 
@@ -2787,7 +2787,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 
 			// Make sure Prometheus has enough time to reload.
 			time.Sleep(2 * time.Minute)
-			if err := framework.WaitForTargets(ns, svc.Name, 0); err != nil {
+			if err := framework.WaitForActiveTargets(ns, svc.Name, 0); err != nil {
 				t.Fatal(err)
 			}
 		})
@@ -2969,7 +2969,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	// Check for proper scraping.
 	//
 
-	if err := framework.WaitForTargets(ns, promSVC.Name, 1); err != nil {
+	if err := framework.WaitForHealthyTargets(ns, promSVC.Name, 1); err != nil {
 		t.Fatal(err)
 	}
 
