@@ -282,11 +282,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	terminationGracePeriod := int64(600)
 
 	baseImage := operator.StringValOrDefault(p.Spec.BaseImage, operator.DefaultPrometheusBaseImage)
-	prometheusImagePath := operator.BuildImagePath(baseImage, p.Spec.Version, p.Spec.Tag, p.Spec.SHA)
-	// An image path specified in the custom resource overrides all other image path settings.
 	if p.Spec.Image != nil && strings.TrimSpace(*p.Spec.Image) != "" {
-		prometheusImagePath = *p.Spec.Image
+		baseImage = *p.Spec.Image
 	}
+	prometheusImagePath := operator.BuildImagePath(baseImage, p.Spec.Version, p.Spec.Tag, p.Spec.SHA)
 
 	promArgs := []string{
 		"-web.console.templates=/etc/prometheus/consoles",
