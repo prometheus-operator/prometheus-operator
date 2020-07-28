@@ -324,7 +324,8 @@ func promImage(version string) string {
 	return fmt.Sprintf("quay.io/prometheus/prometheus:%s", version)
 }
 
-func (f *Framework) WaitForTargets(ns, svcName string, amount int) error {
+// WaitForActiveTargets waits for a number of targets to be configured.
+func (f *Framework) WaitForActiveTargets(ns, svcName string, amount int) error {
 	var targets []*Target
 
 	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
@@ -340,7 +341,31 @@ func (f *Framework) WaitForTargets(ns, svcName string, amount int) error {
 
 		return false, nil
 	}); err != nil {
-		return fmt.Errorf("waiting for targets timed out. %v of %v targets found. %v", len(targets), amount, err)
+		return fmt.Errorf("waiting for active targets timed out. %v of %v active targets found. %v", len(targets), amount, err)
+	}
+
+	return nil
+}
+
+// WaitForHealthyTargets waits for a number of targets to be configured and
+// healthy.
+func (f *Framework) WaitForHealthyTargets(ns, svcName string, amount int) error {
+	var targets []*Target
+
+	if err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+		var err error
+		targets, err = f.GetHealthyTargets(ns, svcName)
+		if err != nil {
+			return false, err
+		}
+
+		if len(targets) == amount {
+			return true, nil
+		}
+
+		return false, nil
+	}); err != nil {
+		return fmt.Errorf("waiting for healthy targets timed out. %v of %v healthy targets found. %v", len(targets), amount, err)
 	}
 
 	return nil
@@ -446,6 +471,25 @@ func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
 	return rt.Data.ActiveTargets, nil
 }
 
+func (f *Framework) GetHealthyTargets(ns, svcName string) ([]*Target, error) {
+	targets, err := f.GetActiveTargets(ns, svcName)
+	if err != nil {
+		return nil, err
+	}
+
+	healthyTargets := make([]*Target, 0, len(targets))
+	for _, target := range targets {
+		switch target.Health {
+		case healthGood:
+			healthyTargets = append(healthyTargets, target)
+		case healthBad:
+			return nil, errors.New(target.LastError)
+		}
+	}
+
+	return healthyTargets, nil
+}
+
 func (f *Framework) CheckPrometheusFiringAlert(ns, svcName, alertName string) (bool, error) {
 	response, err := f.PrometheusSVCGetRequest(
 		ns,
@@ -494,9 +538,18 @@ func (f *Framework) WaitForPrometheusFiringAlert(ns, svcName, alertName string) 
 	return nil
 }
 
+type targetHealth string
+
+const (
+	healthGood targetHealth = "up"
+	healthBad  targetHealth = "down"
+)
+
 type Target struct {
 	ScrapeURL string            `json:"scrapeUrl"`
 	Labels    map[string]string `json:"labels"`
+	LastError string            `json:"lastError"`
+	Health    targetHealth      `json:"health"`
 }
 
 type targetDiscovery struct {

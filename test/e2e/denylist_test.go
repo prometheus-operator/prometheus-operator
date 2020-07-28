@@ -160,7 +160,7 @@ func testDenyServiceMonitor(t *testing.T) {
 			t.Fatal("Creating ServiceMonitor failed: ", err)
 		}
 
-		if err := framework.WaitForTargets(allowed, svc.Name, 1); err != nil {
+		if err := framework.WaitForActiveTargets(allowed, svc.Name, 1); err != nil {
 			t.Fatal(err)
 		}
 	}
