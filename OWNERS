@@ -1,7 +1,5 @@
 reviewers:
 - brancz
-- bwplotka
-- krasi-georgiev
 - LiliC
 - metalmatze
 - paulfantom
@@ -9,10 +7,9 @@ reviewers:
 - s-urbaniak
 - simonpasquier
 - squat
+- vsliouniaev
 approvers:
 - brancz
-- bwplotka
-- krasi-georgiev
 - LiliC
 - metalmatze
 - paulfantom
@@ -20,3 +17,4 @@ approvers:
 - s-urbaniak
 - simonpasquier
 - squat
+- vsliouniaev
