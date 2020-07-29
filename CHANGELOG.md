@@ -1,5 +1,24 @@
 ## Next release
 
+## 0.41.0 / 2020-07-29
+
+* [CHANGE] Configmap-reload: Update to v0.4.0 (#3334)
+* [CHANGE] Update prometheus compatibility matrix to v2.19.2 (#3316)
+* [FEATURE] Add Synthetic Probes support. This includes support for job names. (#2832, #3318, #3312, #3306)
+* [FEATURE] Support Prometheus vertical compaction (#3281)
+* [ENHANCEMENT] pkg: Instrument resources being tracked by the operator (#3360)
+* [ENHANCEMENT] Add SecretListWatchSelector to reduce memory and CPU footprint (#3355)
+* [ENHANCEMENT] Added support for configuring CA, cert, and key via secret or configmap. (#3249)
+* [ENHANCEMENT] Consolidate image url logic, deprecating `baseImage`, `sha`, and `tag` in favor of `image` field in CRDs. (#3103, #3358)
+* [ENHANCEMENT] Decouple alertmanager pod labels from selector labels (#3317)
+* [ENHANCEMENT] pkg/prometheus: Ensure relabeling of container label in ServiceMonitors (#3315)
+* [ENHANCEMENT] misc: Remove v1beta1 crd remainings (#3311)
+* [ENHANCEMENT] Normalize default durations (#3308)
+* [ENHANCEMENT] pkg/prometheus: Allow enforcing namespace label in Probe configs (#3304)
+* [BUGFIX] Revert "Normalize default durations" (#3364)
+* [BUGFIX] Reload alertmanager on configmap/secret change (#3319)
+* [BUGFIX] listwatch: Do not duplicate resource versions (#3373)
+
 ## 0.40.0 / 2020-06-17
 
 * [CHANGE] Update dependencies to prometheus 2.18 (#3231)
