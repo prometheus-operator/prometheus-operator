@@ -28,7 +28,8 @@ JB_BINARY=$(TOOLS_BIN_DIR)/jb
 GOJSONTOYAML_BINARY=$(TOOLS_BIN_DIR)/gojsontoyaml
 JSONNET_BINARY=$(TOOLS_BIN_DIR)/jsonnet
 JSONNETFMT_BINARY=$(TOOLS_BIN_DIR)/jsonnetfmt
-TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(EMBEDMD_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY)
+SHELLCHECK_BINARY=$(TOOLS_BIN_DIR)/shellcheck
+TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(EMBEDMD_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY)
 
 K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
@@ -240,8 +241,8 @@ check-license:
 	./scripts/check_license.sh
 
 .PHONY: shellcheck
-shellcheck:
-	docker run -v "$(PWD):/mnt" koalaman/shellcheck:stable $(shell find . -type f -name "*.sh" -not -path "*vendor*")
+shellcheck: $(SHELLCHECK_BINARY)
+	$(SHELLCHECK_BINARY) $(shell find . -type f -name "*.sh" -not -path "*vendor*")
 
 ###########
 # Testing #
@@ -276,6 +277,8 @@ $(TOOLING): $(TOOLS_BIN_DIR)
 	@echo Installing tools from scripts/tools.go
 	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(TOOLS_BIN_DIR) xargs -tI % go install -mod=readonly -modfile=scripts/go.mod %
 	@GOBIN=$(TOOLS_BIN_DIR) go install $(GO_PKG)/cmd/po-docgen
+	@echo Downloading shellcheck
+	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).x86_64.tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
 
 # generate k8s generator variable and target,
 # i.e. if $(1)=informer-gen:
