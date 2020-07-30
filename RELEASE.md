@@ -36,7 +36,7 @@ For a new major or minor release, create the corresponding release branch based 
 Bump the version in the `VERSION` file in the root of the repository. Once that's done, a number of files have to be re-generated, this is automated with the following make target:
 
 ```bash
-$ make generate
+$ make clean generate
 ```
 
 Now that all version information has been updated, an entry for the new version can be added to the `CHANGELOG.md` file.
