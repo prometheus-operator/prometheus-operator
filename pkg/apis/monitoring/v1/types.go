@@ -694,7 +694,7 @@ type ServiceMonitorSpec struct {
 type Endpoint struct {
 	// Name of the service port this endpoint refers to. Mutually exclusive with targetPort.
 	Port string `json:"port,omitempty"`
-	// Name or number of the pod port this endpoint refers to. Mutually exclusive with port.
+	// Name or number of the target port of the Pod behind the Service, the port must be specified with container port property. Mutually exclusive with port.
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
 	// HTTP path to scrape for metrics.
 	Path string `json:"path,omitempty"`

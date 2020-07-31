@@ -235,7 +235,7 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | port | Name of the service port this endpoint refers to. Mutually exclusive with targetPort. | string | false |
-| targetPort | Name or number of the pod port this endpoint refers to. Mutually exclusive with port. | *intstr.IntOrString | false |
+| targetPort | Name or number of the target port of the Pod behind the Service, the port must be specified with container port property. Mutually exclusive with port. | *intstr.IntOrString | false |
 | path | HTTP path to scrape for metrics. | string | false |
 | scheme | HTTP scheme to use for scraping. | string | false |
 | params | Optional HTTP URL parameters | map[string][]string | false |
