@@ -672,6 +672,33 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	}
 }
 
+func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testing.T) {
+	a := monitoringv1.Alertmanager{}
+	replicas := int32(1)
+	a.Spec.Version = operator.DefaultAlertmanagerVersion
+	a.Spec.Replicas = &replicas
+	a.Spec.ForceEnableClusterMode = true
+
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	amArgs := statefulSet.Template.Spec.Containers[0].Args
+
+	containsEmptyClusterListenAddress := false
+
+	for _, arg := range amArgs {
+		if arg == "--cluster.listen-address=" {
+			containsEmptyClusterListenAddress = true
+		}
+	}
+
+	if containsEmptyClusterListenAddress {
+		t.Fatal("expected stateful set to not contain arg '--cluster.listen-address='")
+	}
+}
+
 func TestClusterListenAddressForMultiReplica(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
 	replicas := int32(3)

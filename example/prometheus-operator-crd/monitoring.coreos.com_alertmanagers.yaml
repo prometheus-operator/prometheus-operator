@@ -655,6 +655,11 @@ spec:
                   in cluster. Needs to be provided for non RFC1918 [1] (public) addresses.
                   [1] RFC1918: https://tools.ietf.org/html/rfc1918'
                 type: string
+              forceEnableClusterMode:
+                description: ForceEnableClusterMode ensures Alertmanager does not deactivate
+                  the cluster mode when running with a single replica. Use case is e.g. spanning
+                  an Alertmanager cluster across Kubernetes clusters with a single replica in each.
+                type: boolean
               configMaps:
                 description: ConfigMaps is a list of ConfigMaps in the same namespace
                   as the Alertmanager object, which shall be mounted into the Alertmanager
