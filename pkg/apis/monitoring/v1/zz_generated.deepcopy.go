@@ -882,31 +882,19 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(EmbeddedObjectMetadata)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ServiceMonitorSelector != nil {
-		in, out := &in.ServiceMonitorSelector, &out.ServiceMonitorSelector
-		*out = new(metav1.LabelSelector)
-		(*in).DeepCopyInto(*out)
-	}
+	in.ServiceMonitorSelector.DeepCopyInto(&out.ServiceMonitorSelector)
 	if in.ServiceMonitorNamespaceSelector != nil {
 		in, out := &in.ServiceMonitorNamespaceSelector, &out.ServiceMonitorNamespaceSelector
 		*out = new(metav1.LabelSelector)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.PodMonitorSelector != nil {
-		in, out := &in.PodMonitorSelector, &out.PodMonitorSelector
-		*out = new(metav1.LabelSelector)
-		(*in).DeepCopyInto(*out)
-	}
+	in.PodMonitorSelector.DeepCopyInto(&out.PodMonitorSelector)
 	if in.PodMonitorNamespaceSelector != nil {
 		in, out := &in.PodMonitorNamespaceSelector, &out.PodMonitorNamespaceSelector
 		*out = new(metav1.LabelSelector)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ProbeSelector != nil {
-		in, out := &in.ProbeSelector, &out.ProbeSelector
-		*out = new(metav1.LabelSelector)
-		(*in).DeepCopyInto(*out)
-	}
+	in.ProbeSelector.DeepCopyInto(&out.ProbeSelector)
 	if in.ProbeNamespaceSelector != nil {
 		in, out := &in.ProbeNamespaceSelector, &out.ProbeNamespaceSelector
 		*out = new(metav1.LabelSelector)

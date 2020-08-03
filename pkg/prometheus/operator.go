@@ -1304,9 +1304,6 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 		}
 	}
 
-	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil && p.Spec.ProbeSelector == nil {
-		level.Warn(logger).Log("msg", "neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector specified. Custom configuration is deprecated, use additionalScrapeConfigs instead")
-	}
 }
 
 func createSSetInputHash(p monitoringv1.Prometheus, c Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
@@ -1725,29 +1722,20 @@ func (c *Operator) loadTLSAssets(p *monitoringv1.Prometheus) (map[string]TLSAsse
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus, ruleConfigMapNames []string) error {
-	// If no service or pod monitor selectors are configured, the user wants to
-	// manage configuration themselves. Do create an empty Secret if it doesn't
-	// exist.
-	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
-		p.Spec.ProbeSelector == nil {
-		level.Debug(c.logger).Log("msg", "neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
 
-		s, err := makeEmptyConfigurationSecret(p, c.config)
-		if err != nil {
-			return errors.Wrap(err, "generating empty config secret failed")
+	s, err := makeEmptyConfigurationSecret(p, c.config)
+	if err != nil {
+		return errors.Wrap(err, "generating empty config secret failed")
+	}
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	_, err = sClient.Get(context.TODO(), s.Name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
+			return errors.Wrap(err, "creating empty config file failed")
 		}
-		sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-		_, err = sClient.Get(context.TODO(), s.Name, metav1.GetOptions{})
-		if apierrors.IsNotFound(err) {
-			if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-				return errors.Wrap(err, "creating empty config file failed")
-			}
-		}
-		if !apierrors.IsNotFound(err) && err != nil {
-			return err
-		}
-
-		return nil
+	}
+	if !apierrors.IsNotFound(err) && err != nil {
+		return err
 	}
 
 	smons, err := c.selectServiceMonitors(p)
@@ -1765,7 +1753,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		return errors.Wrap(err, "selecting Probes failed")
 	}
 
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	SecretsInPromNS, err := sClient.List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -1811,7 +1798,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		return errors.Wrap(err, "generating config failed")
 	}
 
-	s := makeConfigSecret(p, c.config)
+	s = makeConfigSecret(p, c.config)
 	s.ObjectMeta.Annotations = map[string]string{
 		"generated": "true",
 	}
@@ -1910,7 +1897,7 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	res := make(map[string]*monitoringv1.ServiceMonitor)
 
-	servMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
+	servMonSelector, err := metav1.LabelSelectorAsSelector(&p.Spec.ServiceMonitorSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -1974,7 +1961,7 @@ func (c *Operator) selectPodMonitors(p *monitoringv1.Prometheus) (map[string]*mo
 	// Selectors might overlap. Deduplicate them along the keyFunc.
 	res := make(map[string]*monitoringv1.PodMonitor)
 
-	podMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorSelector)
+	podMonSelector, err := metav1.LabelSelectorAsSelector(&p.Spec.PodMonitorSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -2017,7 +2004,7 @@ func (c *Operator) selectProbes(p *monitoringv1.Prometheus) (map[string]*monitor
 	// Selectors might overlap. Deduplicate them along the keyFunc.
 	res := make(map[string]*monitoringv1.Probe)
 
-	bMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeSelector)
+	bMonSelector, err := metav1.LabelSelectorAsSelector(&p.Spec.ProbeSelector)
 	if err != nil {
 		return nil, err
 	}
