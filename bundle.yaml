@@ -1719,6 +1719,12 @@ spec:
                   under. This is necessary to generate correct URLs. This is necessary
                   if Alertmanager is not served from root of a DNS name.
                 type: string
+              forceEnableClusterMode:
+                description: ForceEnableClusterMode ensures Alertmanager does not
+                  deactivate the cluster mode when running with a single replica.
+                  Use case is e.g. spanning an Alertmanager cluster across Kubernetes
+                  clusters with a single replica in each.
+                type: boolean
               image:
                 description: Image if specified has precedence over baseImage, tag
                   and sha combinations. Specifying the version is still necessary
