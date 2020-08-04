@@ -130,12 +130,12 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoring
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	return a, f.WaitForAlertmanagerReady(ns, a.Name, int(*a.Spec.Replicas))
+	return a, f.WaitForAlertmanagerReady(ns, a.Name, int(*a.Spec.Replicas), a.Spec.ForceEnableClusterMode)
 }
 
 // WaitForAlertmanagerReady waits for each individual pod as well as the
 // cluster as a whole to be ready.
-func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) error {
+func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int, forceEnableClusterMode bool) error {
 	if err := WaitForPodsReady(
 		f.KubeClient,
 		ns,
@@ -152,7 +152,7 @@ func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) erro
 
 	for i := 0; i < replicas; i++ {
 		name := fmt.Sprintf("alertmanager-%v-%v", name, strconv.Itoa(i))
-		if err := f.WaitForAlertmanagerInitialized(ns, name, replicas); err != nil {
+		if err := f.WaitForAlertmanagerInitialized(ns, name, replicas, forceEnableClusterMode); err != nil {
 			return errors.Wrap(err,
 				fmt.Sprintf(
 					"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
@@ -212,7 +212,7 @@ func amImage(version string) string {
 	return fmt.Sprintf("quay.io/prometheus/alertmanager:%s", version)
 }
 
-func (f *Framework) WaitForAlertmanagerInitialized(ns, name string, amountPeers int) error {
+func (f *Framework) WaitForAlertmanagerInitialized(ns, name string, amountPeers int, forceEnableClusterMode bool) error {
 	var pollError error
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		amStatus, err := f.GetAlertmanagerStatus(ns, name)
@@ -220,7 +220,7 @@ func (f *Framework) WaitForAlertmanagerInitialized(ns, name string, amountPeers 
 			return false, err
 		}
 
-		isAlertmanagerInClusterMode := amountPeers > 1
+		isAlertmanagerInClusterMode := amountPeers > 1 || forceEnableClusterMode
 		if !isAlertmanagerInClusterMode && amStatus.Status == "success" {
 			return true, nil
 		}

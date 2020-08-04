@@ -1187,6 +1187,9 @@ type AlertmanagerSpec struct {
 	// Port name used for the pods and governing service.
 	// This defaults to web
 	PortName string `json:"portName,omitempty"`
+	// ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.
+	// Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.
+	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.

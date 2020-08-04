@@ -166,6 +166,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | additionalPeers | AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster. | []string | false |
 | clusterAdvertiseAddress | ClusterAdvertiseAddress is the explicit address to advertise in cluster. Needs to be provided for non RFC1918 [1] (public) addresses. [1] RFC1918: https://tools.ietf.org/html/rfc1918 | string | false |
 | portName | Port name used for the pods and governing service. This defaults to web | string | false |
+| forceEnableClusterMode | ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica. Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each. | bool | false |
 
 [Back to TOC](#table-of-contents)
 
