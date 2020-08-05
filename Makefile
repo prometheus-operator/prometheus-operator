@@ -39,8 +39,8 @@ K8S_GEN_DEPS:=.header
 K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(TOOLS_BIN_DIR)/$(bin))
 
-GO_BUILD_RECIPE=GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -mod=vendor -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
-pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/ | grep -v /contrib/)
+GO_BUILD_RECIPE=GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
+pkgs = $(shell go list ./... | grep -v /test/ | grep -v /contrib/)
 
 .PHONY: all
 all: format generate build test
@@ -129,10 +129,6 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image
 # Generating #
 ##############
 
-.PHONY: vendor
-vendor: tidy
-	go mod vendor
-
 .PHONY: tidy
 tidy:
 	go mod tidy -v
@@ -217,7 +213,7 @@ Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.g
 	$(PO_DOCGEN_BINARY) compatibility > $@
 
 $(TO_BE_EXTENDED_DOCS): $(EMBEDMD_BINARY) $(shell find example) bundle.yaml
-	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md" | grep -v vendor`
+	$(EMBEDMD_BINARY) -w `find Documentation -name "*.md"`
 
 
 ##############
@@ -242,7 +238,7 @@ check-license:
 
 .PHONY: shellcheck
 shellcheck: $(SHELLCHECK_BINARY)
-	$(SHELLCHECK_BINARY) $(shell find . -type f -name "*.sh" -not -path "*vendor*")
+	$(SHELLCHECK_BINARY) $(shell find . -type f -name "*.sh")
 
 ###########
 # Testing #
