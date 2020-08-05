@@ -5,6 +5,8 @@
 
 **Project status: *beta*** Not all planned features are completed. The API, spec, status and other user facing objects may change, but in a backward compatible way.
 
+Note: Project was previously known as coreos/prometheus-operator.
+
 ## Overview
 
 The Prometheus Operator provides [Kubernetes](https://kubernetes.io/) native deployment and management of 

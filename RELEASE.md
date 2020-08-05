@@ -70,6 +70,6 @@ Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to
 
 Our CI pipeline will automatically push a new docker image to quay.io.
 
-Go to  https://github.com/coreos/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
+Go to  https://github.com/prometheus-operator/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
 
 Take a breath. You're done releasing.

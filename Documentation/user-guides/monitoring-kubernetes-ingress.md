@@ -1,7 +1,7 @@
 <br>
 <div class="alert alert-info" role="alert">
     <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.<br><br>
-This documentation is for an alpha feature. For questions and feedback on the Prometheus OCS Alpha program, email <a href="mailto:tectonic-alpha-feedback@coreos.com">tectonic-alpha-feedback@coreos.com</a>.
+This documentation is for an alpha feature.
 </div>
 
 # Monitoring Kubernetes Ingress with Ambassador
@@ -94,10 +94,10 @@ You now have an application running in Kubernetes and exposed to the internet.
 ## Deploy Prometheus 
 Now that we have an application running and exposed by Ambassador, we need to configure Prometheus to scrape the metrics from Ambassador. The Prometheus Operator gives us a way to deploy and manage Prometheus deployments using Kubernetes-style resources
 
-The Prometheus Operator creates Kubernetes Custom Resource Definitions (CRDs) so we can manage our Prometheus deployment using Kubernetes-style declarative YAML manifests. To deploy the Prometheus Operator, you can clone the [repository](https://github.com/coreos/prometheus-operator) and follow the instructions in the README. You can also just create it with `kubectl`:
+The Prometheus Operator creates Kubernetes Custom Resource Definitions (CRDs) so we can manage our Prometheus deployment using Kubernetes-style declarative YAML manifests. To deploy the Prometheus Operator, you can clone the [repository](https://github.com/prometheus-operator/prometheus-operator) and follow the instructions in the README. You can also just create it with `kubectl`:
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/coreos/prometheus-operator/master/bundle.yaml
+kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml
 ```
 
 Once the Prometheus operator is running, we need to create a Prometheus instance. The Prometheus Operator manages Prometheus deployments with the `Prometheus` CRD. To create a Prometheus instance and Kubernetes service, copy the following YAML to a file called `prometheus.yaml` and deploy it with `kubectl`:
