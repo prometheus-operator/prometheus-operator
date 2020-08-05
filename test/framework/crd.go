@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/prometheus-operator/pkg/apis/monitoring"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"

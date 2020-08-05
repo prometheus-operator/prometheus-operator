@@ -21,9 +21,9 @@ import (
 	"net/http"
 	"strings"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	v1 "k8s.io/api/admission/v1"

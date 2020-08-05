@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"strings"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	namespacelabeler "github.com/coreos/prometheus-operator/pkg/namespace-labeler"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

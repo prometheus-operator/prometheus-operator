@@ -1,9 +1,11 @@
 # Prometheus Operator
-[![Build Status](https://travis-ci.org/coreos/prometheus-operator.svg?branch=master)](https://travis-ci.org/coreos/prometheus-operator)
-[![Go Report Card](https://goreportcard.com/badge/coreos/prometheus-operator "Go Report Card")](https://goreportcard.com/report/coreos/prometheus-operator)
+[![Build Status](https://travis-ci.com/prometheus-operator/prometheus-operator.svg?branch=master)](https://travis-ci.com/prometheus-operator/prometheus-operator)
+[![Go Report Card](https://goreportcard.com/badge/prometheus-operator/prometheus-operator "Go Report Card")](https://goreportcard.com/report/prometheus-operator/prometheus-operator)
 [![Slack](https://img.shields.io/badge/join%20slack-%23prometheus--operator-brightgreen.svg)](http://slack.k8s.io/)
 
 **Project status: *beta*** Not all planned features are completed. The API, spec, status and other user facing objects may change, but in a backward compatible way.
+
+Note: Project was previously known as coreos/prometheus-operator.
 
 ## Overview
 
@@ -29,7 +31,7 @@ post](https://coreos.com/blog/the-prometheus-operator.html).
 
 The Prometheus Operator uses Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) to simplifiy the deployment and configuration of Prometheus, Alertmanager, and related monitoring components.
 
-[kube-prometheus](https://github.com/coreos/kube-prometheus) provides example configurations for a complete cluster monitoring
+[kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) provides example configurations for a complete cluster monitoring
 stack based on Prometheus and the Prometheus Operator.  This includes deployment of multiple Prometheus and Alertmanager instances,
 metrics exporters such as the node_exporter for gathering node metrics, scrape target configuration linking Prometheus to various
 metrics endpoints, and example alerting rules for notification of potential issues in the cluster.
@@ -91,7 +93,7 @@ For more information on this feature, see the [user guide](Documentation/user-gu
 ## Quickstart
 
 **Note:** this quickstart does not provision an entire monitoring stack; if that is what you are looking for,
-see the [kube-prometheus](https://github.com/coreos/kube-prometheus) project.  If you want the whole stack,
+see the [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project.  If you want the whole stack,
 but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
 
 To quickly try out _just_ the Prometheus Operator inside a cluster, **choose a release** and run the following command:
@@ -153,9 +155,9 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 ### Testing
 
 > Ensure that you're running tests in the following path:
-> `$GOPATH/src/github.com/coreos/prometheus-operator` as tests expect paths to
+> `$GOPATH/src/github.com/prometheus-operator/prometheus-operator` as tests expect paths to
 > match. If you're working from a fork, just add the forked repo as a remote and
-> pull against your local coreos checkout before running tests.
+> pull against your local prometheus-operator checkout before running tests.
 
 #### Running *unit tests*:
 
@@ -174,7 +176,7 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 1. `kind create cluster --image=kindest/node:<latest>`. e.g `v1.16.2` version. 
 2. `export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"`
 3. `make image` - build Prometheus Operator  docker image locally.
-4. `for n in "operator" "config-reloader"; do kind load docker-image "quay.io/coreos/prometheus-$n:$(git rev-parse --short HEAD)"; done` - publish 
+4. `for n in "operator" "config-reloader"; do kind load docker-image "quay.io/prometheus-operator/prometheus-$n:$(git rev-parse --short HEAD)"; done` - publish 
 built locally images to be accessible inside kind. 
 5. `make test-e2e`
 
@@ -195,4 +197,4 @@ If you find a security vulnerability related to the Prometheus Operator, please
 do not report it by opening a GitHub issue, but instead please send an e-mail to
 the maintainers of the project found in the [OWNERS](OWNERS) file.
 
-[operator-vs-kube]: https://github.com/coreos/prometheus-operator/issues/2510#issuecomment-476692399
+[operator-vs-kube]: https://github.com/prometheus-operator/prometheus-operator/issues/2510#issuecomment-476692399

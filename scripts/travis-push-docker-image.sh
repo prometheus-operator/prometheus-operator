@@ -14,12 +14,15 @@ trap defer EXIT
 CPU_ARCHS="amd64 arm64 arm"
 
 # Push to Quay '-dev' repo if it's not a git tag or master branch build.
-export REPO="quay.io/coreos/prometheus-operator"
-export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader"
+# TODO(paulfantom): coreos repository should be deprecated after v0.43.0 release and OLD_ variables should be removed
+export OLD_REPO="quay.io/coreos/prometheus-operator"
+export OLD_REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader"
+export REPO="quay.io/prometheus-operator/prometheus-operator"
+export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/prometheus-operator/prometheus-config-reloader"
 
 if [[ "${TRAVIS_TAG}" == "" ]] && [[ "${TRAVIS_BRANCH}" != master ]]; then
-	export REPO="quay.io/coreos/prometheus-operator-dev"
-	export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader-dev"
+	export REPO="quay.io/prometheus-operator/prometheus-operator-dev"
+	export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/prometheus-operator/prometheus-config-reloader-dev"
 fi
 
 # For both git tags and git branches 'TRAVIS_BRANCH' contains the name.
@@ -36,7 +39,7 @@ fi
 
 echo "${QUAY_PASSWORD}" | docker login -u "${QUAY_USERNAME}" --password-stdin quay.io
 export DOCKER_CLI_EXPERIMENTAL=enabled
-for r in ${REPO} ${REPO_PROMETHEUS_CONFIG_RELOADER}; do
+for r in ${OLD_REPO} ${OLD_REPO_PROMETHEUS_CONFIG_RELOADER} ${REPO} ${REPO_PROMETHEUS_CONFIG_RELOADER}; do
 	# Images need to be on remote registry before creating manifests
 	for arch in $CPU_ARCHS; do
 		docker push "${r}:${TAG}-$arch"

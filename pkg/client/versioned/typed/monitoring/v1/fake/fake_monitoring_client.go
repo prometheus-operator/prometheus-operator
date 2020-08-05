@@ -17,7 +17,7 @@
 package fake
 
 import (
-	v1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

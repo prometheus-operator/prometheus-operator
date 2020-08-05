@@ -35,8 +35,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	certutil "k8s.io/client-go/util/cert"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 )
@@ -269,7 +269,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		for i, arg := range deploy.Spec.Template.Spec.Containers[0].Args {
 			if strings.Contains(arg, "--prometheus-config-reloader=") {
 				deploy.Spec.Template.Spec.Containers[0].Args[i] = "--prometheus-config-reloader=" +
-					"quay.io/coreos/prometheus-config-reloader:" +
+					"quay.io/prometheus-operator/prometheus-config-reloader:" +
 					repoAndTag[1]
 			}
 		}

@@ -4,7 +4,7 @@ This document describes how to use the standalone linting tool to validate your 
 
 ## Getting linter
 
-To use the linter either get it with `go get -u github.com/coreos/prometheus-operator/cmd/po-lint` and executable is `$GOPATH/bin/po-lint`, or use the container image from `quay.io/coreos/po-tooling` and executable is `/go/bin/po-lint`.
+To use the linter either get it with `go get -u github.com/prometheus-operator/prometheus-operator/cmd/po-lint` and executable is `$GOPATH/bin/po-lint`, or use the container image from `quay.io/coreos/po-tooling` and executable is `/go/bin/po-lint`.
 
 ## Using linter
 

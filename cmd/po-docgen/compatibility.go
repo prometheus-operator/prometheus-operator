@@ -17,7 +17,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/coreos/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func printCompatMatrixDocs() {

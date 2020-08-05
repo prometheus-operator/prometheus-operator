@@ -21,9 +21,9 @@ import (
 	sync "sync"
 	time "time"
 
-	internalinterfaces "github.com/coreos/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
-	monitoring "github.com/coreos/prometheus-operator/pkg/client/informers/externalversions/monitoring"
-	versioned "github.com/coreos/prometheus-operator/pkg/client/versioned"
+	internalinterfaces "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/monitoring"
+	versioned "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -35,7 +35,7 @@ var (
 		ConfigReloaderImage:           "jimmidyson/configmap-reload:latest",
 		ConfigReloaderCPU:             "100m",
 		ConfigReloaderMemory:          "25Mi",
-		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
+		PrometheusConfigReloaderImage: "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:        "quay.io/thanos/thanos",
 	}
@@ -997,7 +997,7 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 		ConfigReloaderImage:           "jimmidyson/configmap-reload:latest",
 		ConfigReloaderCPU:             "0",
 		ConfigReloaderMemory:          "50Mi",
-		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
+		PrometheusConfigReloaderImage: "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:        "quay.io/thanos/thanos:v0.7.0",
 	}
@@ -1028,7 +1028,7 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 		ConfigReloaderImage:           "jimmidyson/configmap-reload:latest",
 		ConfigReloaderCPU:             "100m",
 		ConfigReloaderMemory:          "0",
-		PrometheusConfigReloaderImage: "quay.io/coreos/prometheus-config-reloader:latest",
+		PrometheusConfigReloaderImage: "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:        "quay.io/thanos/thanos:v0.7.0",
 	}
