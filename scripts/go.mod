@@ -1,4 +1,4 @@
-module github.com/coreos/prometheus-operator/tooling
+module github.com/prometheus-operator/prometheus-operator/tooling
 
 go 1.14
 

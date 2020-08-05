@@ -8,10 +8,10 @@ else
 	ARCH=$(GOARCH)
 endif
 
-GO_PKG=github.com/coreos/prometheus-operator
-REPO?=quay.io/coreos/prometheus-operator
-REPO_PROMETHEUS_CONFIG_RELOADER?=quay.io/coreos/prometheus-config-reloader
-REPO_PROMETHEUS_OPERATOR_LINT?=quay.io/coreos/prometheus-operator-lint
+GO_PKG=github.com/prometheus-operator/prometheus-operator
+REPO?=quay.io/prometheus-operator/prometheus-operator
+REPO_PROMETHEUS_CONFIG_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
+REPO_PROMETHEUS_OPERATOR_LINT?=quay.io/prometheus-operator/prometheus-operator-lint
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 

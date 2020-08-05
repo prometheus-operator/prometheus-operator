@@ -17,8 +17,8 @@
 package v1
 
 import (
-	v1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/client/versioned/scheme"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

@@ -17,8 +17,8 @@
 package monitoring
 
 import (
-	internalinterfaces "github.com/coreos/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "github.com/coreos/prometheus-operator/pkg/client/informers/externalversions/monitoring/v1"
+	internalinterfaces "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/monitoring/v1"
 )
 
 // Interface provides access to each of this group's versions.

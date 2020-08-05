@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	testFramework "github.com/coreos/prometheus-operator/test/framework"
+	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"

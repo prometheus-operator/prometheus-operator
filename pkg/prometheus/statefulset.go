@@ -27,10 +27,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/blang/semver"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/operator"
 	"github.com/pkg/errors"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 const (
@@ -70,7 +70,7 @@ func makeStatefulSet(
 	// p is passed in by value, not by reference. But p contains references like
 	// to annotation map, that do not get copied on function invocation. Ensure to
 	// prevent side effects before editing p by creating a deep copy. For more
-	// details see https://github.com/coreos/prometheus-operator/issues/1659.
+	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659.
 	p = *p.DeepCopy()
 
 	promVersion := operator.StringValOrDefault(p.Spec.Version, operator.DefaultPrometheusVersion)

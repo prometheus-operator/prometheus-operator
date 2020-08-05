@@ -27,10 +27,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/blang/semver"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/operator"
 	"github.com/pkg/errors"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 const (
@@ -209,7 +209,7 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 
 func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.StatefulSetSpec, error) {
 	// Before editing 'a' create deep copy, to prevent side effects. For more
-	// details see https://github.com/coreos/prometheus-operator/issues/1659
+	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659
 	a = a.DeepCopy()
 
 	amBaseImage := operator.StringValOrDefault(a.Spec.BaseImage, operator.DefaultAlertmanagerBaseImage)

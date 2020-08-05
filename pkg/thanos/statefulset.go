@@ -20,10 +20,10 @@ import (
 	"path"
 	"strings"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/operator"
 	"github.com/pkg/errors"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -145,7 +145,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 
 func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string) (*appsv1.StatefulSetSpec, error) {
 	// Before editing 'tr' create deep copy, to prevent side effects. For more
-	// details see https://github.com/coreos/prometheus-operator/issues/1659
+	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659
 	tr = tr.DeepCopy()
 
 	if tr.Spec.QueryConfig == nil && len(tr.Spec.QueryEndpoints) < 1 {

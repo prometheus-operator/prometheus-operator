@@ -3,7 +3,7 @@ dist: xenial
 language: go
 go:
 - "1.14.x"
-go_import_path: github.com/coreos/prometheus-operator
+go_import_path: github.com/prometheus-operator/prometheus-operator
 services:
 - docker
 before_install:

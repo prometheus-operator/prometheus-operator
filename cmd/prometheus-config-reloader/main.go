@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/coreos/prometheus-operator/pkg/version"
+	"github.com/prometheus-operator/prometheus-operator/pkg/version"
 
 	"github.com/go-kit/kit/log"
 	"github.com/oklog/run"
