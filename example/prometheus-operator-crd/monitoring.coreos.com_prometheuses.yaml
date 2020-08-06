@@ -759,6 +759,10 @@ spec:
                         scheme:
                           description: Scheme to use when firing alerts.
                           type: string
+                        timeout:
+                          description: Timeout is a per-target Alertmanager timeout
+                            when pushing alerts.
+                          type: string
                         tlsConfig:
                           description: TLS Config to use for alertmanager connection.
                           properties:

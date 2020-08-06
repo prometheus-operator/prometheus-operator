@@ -1255,6 +1255,10 @@ func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am
 		{Key: "scheme", Value: am.Scheme},
 	}
 
+	if am.Timeout != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "timeout", Value: am.Timeout})
+	}
+
 	// TODO: If we want to support secret refs for alertmanager config tls
 	// config as well, make sure to path the right namespace here.
 	cfg = addTLStoYaml(cfg, "", am.TLSConfig)
