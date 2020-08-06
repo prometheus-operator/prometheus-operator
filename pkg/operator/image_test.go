@@ -19,18 +19,18 @@ import (
 )
 
 type ImageSpec struct {
-	BaseImage string
-	Version   string
-	Tag       string
-	SHA       string
+	Image   string
+	Version string
+	Tag     string
+	SHA     string
 }
 
 func TestBuildImagePath(t *testing.T) {
 	defaultImageSpec := &ImageSpec{
-		BaseImage: "foo/bar",
-		Version:   "0.0.1",
+		Image:   "foo.com/bar",
+		Version: "0.0.1",
 	}
-	// imageWithoutVersion := "myrepo/myimage"
+	// imageWithoutVersion := "myrepo/myimage:123"
 	// imageWithVersion := "myhost:9090/myrepo/myimage:0.2"
 	// imageWithTag := "myhost:9090/myrepo/myimage:latest"
 	// imageWithSHA := "foo/bar@sha256:12345"
@@ -44,7 +44,7 @@ func TestBuildImagePath(t *testing.T) {
 		},
 		{
 			spec:     defaultImageSpec,
-			expected: defaultImageSpec.BaseImage + ":" + defaultImageSpec.Version,
+			expected: defaultImageSpec.Image + ":" + defaultImageSpec.Version,
 		},
 		{
 			spec:     &ImageSpec{"myrepo.com/foo", "1.0", "", ""},
@@ -61,7 +61,7 @@ func TestBuildImagePath(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		result := BuildImagePath(c.spec.BaseImage, c.spec.Version, c.spec.Tag, c.spec.SHA)
+		result, _ := BuildImagePath(c.spec.Image, c.spec.Version, c.spec.Tag, c.spec.SHA)
 		if c.expected != result {
 			t.Errorf("expected test case %d to be %q but got %q", i, c.expected, result)
 		}
