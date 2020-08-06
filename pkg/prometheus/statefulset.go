@@ -285,8 +285,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	if p.Spec.Image != nil && strings.TrimSpace(*p.Spec.Image) != "" {
 		baseImage = *p.Spec.Image
 	}
-	prometheusImagePath := operator.BuildImagePath(baseImage, p.Spec.Version, p.Spec.Tag, p.Spec.SHA)
-
+	prometheusImagePath, err := operator.BuildImagePath(baseImage, p.Spec.Version, p.Spec.Tag, p.Spec.SHA)
+	if err != nil {
+		return nil, err
+	}
 	promArgs := []string{
 		"-web.console.templates=/etc/prometheus/consoles",
 		"-web.console.libraries=/etc/prometheus/console_libraries",
@@ -711,7 +713,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		thVersion := operator.StringPtrValOrDefault(p.Spec.Thanos.Version, operator.DefaultThanosVersion)
 		thTag := operator.StringPtrValOrDefault(p.Spec.Thanos.Tag, "")
 		thSHA := operator.StringPtrValOrDefault(p.Spec.Thanos.SHA, "")
-		thanosImage := operator.BuildImagePath(thBaseImage, thVersion, thTag, thSHA)
+		thanosImage, err := operator.BuildImagePath(thBaseImage, thVersion, thTag, thSHA)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to build image path")
+		}
 		// If the image path is set in the custom resource, override other image settings.
 		if p.Spec.Thanos.Image != nil && strings.TrimSpace(*p.Spec.Thanos.Image) != "" {
 			thanosImage = *p.Spec.Thanos.Image
