@@ -31,8 +31,17 @@ jobs:
   - name: "Push Docker Image"
     stage: push-docker-image
     script: ./scripts/travis-push-docker-image.sh
+  # TODO(paulfantom): remove after v0.43.0 release
+  - name: "Push CoreOS Docker Image"
+    stage: push-docker-image-coreos
+    script: ./scripts/travis-push-docker-image.sh
+    env:
+      - REPO=quay.io/coreos/prometheus-operator
+      - REPO_PROMETHEUS_CONFIG_RELOADER=quay.io/coreos/prometheus-config-reloader
 
 stages:
   - test
   - name: push-docker-image
     if: type != pull_request
+  - name: push-docker-image-coreos
+    if: type != pull_request AND branch != master
