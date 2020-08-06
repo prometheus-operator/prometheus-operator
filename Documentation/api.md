@@ -113,6 +113,7 @@ AlertmanagerEndpoints defines a selection of a single Endpoints object containin
 | tlsConfig | TLS Config to use for alertmanager connection. | *[TLSConfig](#tlsconfig) | false |
 | bearerTokenFile | BearerTokenFile to read from filesystem to use when authenticating to Alertmanager. | string | false |
 | apiVersion | Version of the Alertmanager API that Prometheus uses to send alerts. It can be \"v1\" or \"v2\". | string | false |
+| timeout | Timeout is a per-target Alertmanager timeout when pushing alerts. | *string | false |
 
 [Back to TOC](#table-of-contents)
 
