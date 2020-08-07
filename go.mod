@@ -20,6 +20,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/prom-label-proxy v0.1.1-0.20200616110844-0fbfa11fa8f3
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.0.0-00010101000000-000000000000
 	github.com/prometheus/client_golang v1.6.0
 	github.com/prometheus/prometheus v1.8.2-0.20200609102542-5d7e3e970602
 	github.com/stretchr/testify v1.5.1
@@ -35,3 +36,5 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/utils v0.0.0-20200414100711-2df71ebbae66
 )
+
+replace github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => ./pkg/apis/monitoring
