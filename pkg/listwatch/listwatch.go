@@ -159,6 +159,11 @@ func (mlw multiListerWatcher) List(options metav1.ListOptions) (runtime.Object, 
 			resourceVersions.Insert(metaObj.GetResourceVersion())
 		}
 	}
+
+	if len(resourceVersions) > 1 {
+		return nil, fmt.Errorf("list: expected resource version to have 1 part, got %d", len(resourceVersions))
+	}
+
 	// Combine the resource versions so that the composite Watch method can
 	// distribute appropriate versions to each underlying Watch func.
 	l.ListMeta.ResourceVersion = strings.Join(resourceVersions.List(), "/")
@@ -174,7 +179,7 @@ func (mlw multiListerWatcher) Watch(options metav1.ListOptions) (watch.Interface
 	if options.ResourceVersion != "" {
 		rvs := strings.Split(options.ResourceVersion, "/")
 		if len(rvs) > 1 {
-			return nil, fmt.Errorf("expected resource version to have 1 part, got %d", len(rvs))
+			return nil, fmt.Errorf("watch: expected resource version to have 1 part, got %d", len(rvs))
 		}
 		resourceVersions = options.ResourceVersion
 	}
