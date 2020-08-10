@@ -533,7 +533,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		}
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus:latest@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
+		expected := "my-reg/prometheus:latest"
 		if resultImage != expected {
 			t.Fatalf("Explicit image should have precedence. Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
@@ -623,7 +623,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		}
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus:my-unrelated-tag"
+		expected := "docker.io/my-reg/prometheus:my-unrelated-tag"
 		if resultImage != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
