@@ -195,6 +195,6 @@ auto-generated. E.g. `bundle.yaml` originates from the _Jsonnet_ files in
 
 If you find a security vulnerability related to the Prometheus Operator, please
 do not report it by opening a GitHub issue, but instead please send an e-mail to
-the maintainers of the project found in the [OWNERS](OWNERS) file.
+the maintainers of the project found in the [MAINTAINERS.md](MAINTAINERS.md) file.
 
 [operator-vs-kube]: https://github.com/prometheus-operator/prometheus-operator/issues/2510#issuecomment-476692399
