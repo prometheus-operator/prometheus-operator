@@ -17,26 +17,38 @@ package operator
 import (
 	"fmt"
 	"strings"
+
+	dockerref "github.com/docker/distribution/reference"
 )
 
 // BuildImagePath builds a container image path based on
 // the given parameters.
-// baseImage and version are used by default.
-// If the tag is specified, we use the tag to identify the container image.
-// If the sha is specified, we use the sha to identify the container image,
-// as it has even stronger immutable guarantees to identify the image.
-func BuildImagePath(baseImage, version, tag, sha string) string {
-	image := baseImage
-	if version != "" {
-		image = fmt.Sprintf("%s:%s", baseImage, version)
+// If the image contains tag or digest then image will be returned.
+// Inspired by kubernetes code handling of image building.
+func BuildImagePath(image, version, tag, sha string) (string, error) {
+	named, err := dockerref.ParseNormalizedNamed(image)
+	if err != nil {
+		return "", fmt.Errorf("couldn't parse image reference %q: %v", image, err)
 	}
-	if tag != "" {
-		image = fmt.Sprintf("%s:%s", baseImage, tag)
+	_, isTagged := named.(dockerref.Tagged)
+	_, isDigested := named.(dockerref.Digested)
+	if isTagged || isDigested {
+		return image, nil
 	}
+
 	if sha != "" {
-		image = fmt.Sprintf("%s@sha256:%s", baseImage, sha)
+		return fmt.Sprintf("%s@sha256:%s", image, sha), nil
+	} else if tag != "" {
+		imageTag, err := dockerref.WithTag(named, tag)
+		if err != nil {
+			return "", err
+		}
+		return imageTag.String(), nil
+	} else if version != "" {
+		return image + ":" + version, nil
 	}
-	return image
+
+	return image, nil
 }
 
 // StringValOrDefault returns the default val if the
