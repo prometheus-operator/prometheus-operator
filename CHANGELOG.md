@@ -1,5 +1,9 @@
 ## Next release
 
+## 0.41.1 / 2020-08-12
+
+* [BUGFIX] Fix image url logic (#3402)
+
 ## 0.41.0 / 2020-07-29
 
 * [CHANGE] Configmap-reload: Update to v0.4.0 (#3334)
