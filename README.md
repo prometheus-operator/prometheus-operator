@@ -198,3 +198,7 @@ do not report it by opening a GitHub issue, but instead please send an e-mail to
 the maintainers of the project found in the [MAINTAINERS.md](MAINTAINERS.md) file.
 
 [operator-vs-kube]: https://github.com/prometheus-operator/prometheus-operator/issues/2510#issuecomment-476692399
+
+## Acknowledgements
+
+prometheus-operator organization logo was created and contributed by [Bianca Cheng Costanzo](https://github.com/bia).
