@@ -256,20 +256,22 @@ func createK8sAppMonitoring(t *testing.T, name, ns string, prwtc testFramework.P
 			Interval: "30s",
 			Scheme:   "https",
 			TLSConfig: &monitoringv1.TLSConfig{
-				InsecureSkipVerify: true,
-				Cert: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					InsecureSkipVerify: true,
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "scraping-tls",
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "scraping-tls",
 						},
-						Key: "cert.pem",
+						Key: "key.pem",
 					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "scraping-tls",
-					},
-					Key: "key.pem",
 				},
 			},
 		},
@@ -2554,28 +2556,30 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
-					InsecureSkipVerify: true,
-					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: true,
+						CA: monitoringv1.SecretOrConfigMap{
+							Secret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						Cert: monitoringv1.SecretOrConfigMap{
+							Secret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						KeySecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
-							Key: "cert.pem",
+							Key: "key.pem",
 						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "cert.pem",
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
-						},
-						Key: "key.pem",
 					},
 				},
 			},
@@ -2589,28 +2593,30 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
-					InsecureSkipVerify: true,
-					CA: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: true,
+						CA: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						Cert: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						KeySecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
-							Key: "cert.pem",
+							Key: "key.pem",
 						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "cert.pem",
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
-						},
-						Key: "key.pem",
 					},
 				},
 			},
@@ -2845,20 +2851,22 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 			Interval: "30s",
 			Scheme:   "https",
 			TLSConfig: &monitoringv1.TLSConfig{
-				InsecureSkipVerify: true,
-				Cert: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					InsecureSkipVerify: true,
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: tlsCertsSecret.Name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: tlsCertsSecret.Name,
 						},
-						Key: "cert.pem",
+						Key: "key.pem",
 					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: tlsCertsSecret.Name,
-					},
-					Key: "key.pem",
 				},
 			},
 		},
@@ -3031,14 +3039,6 @@ func testPromSecurePodMonitor(t *testing.T) {
 		// Bearer tokens:
 		//
 		{
-			name: "bearer-file",
-			endpoint: monitoringv1.PodMetricsEndpoint{
-				Port:            "web",
-				BearerTokenFile: "/etc/ca-certificates/bearer-token",
-				Path:            "/bearer-metrics",
-			},
-		},
-		{
 			name: "bearer-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port: "web",
@@ -3055,47 +3055,35 @@ func testPromSecurePodMonitor(t *testing.T) {
 		// TLS assets:
 		//
 		{
-			name: "tls-file",
-			endpoint: monitoringv1.PodMetricsEndpoint{
-				Port:   "mtls",
-				Scheme: "https",
-				TLSConfig: &monitoringv1.TLSConfig{
-					InsecureSkipVerify: true,
-					CAFile:             "/etc/ca-certificates/cert.pem",
-					CertFile:           "/etc/ca-certificates/cert.pem",
-					KeyFile:            "/etc/ca-certificates/key.pem",
-				},
-				Path: "/",
-			},
-		},
-		{
 			name: "tls-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   "mtls",
 				Scheme: "https",
-				TLSConfig: &monitoringv1.TLSConfig{
-					InsecureSkipVerify: true,
-					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
+				TLSConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: true,
+						CA: monitoringv1.SecretOrConfigMap{
+							Secret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						Cert: monitoringv1.SecretOrConfigMap{
+							Secret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						KeySecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
-							Key: "cert.pem",
+							Key: "key.pem",
 						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "cert.pem",
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
-						},
-						Key: "key.pem",
 					},
 				},
 				Path: "/",
@@ -3106,29 +3094,31 @@ func testPromSecurePodMonitor(t *testing.T) {
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   "mtls",
 				Scheme: "https",
-				TLSConfig: &monitoringv1.TLSConfig{
-					InsecureSkipVerify: true,
-					CA: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
+				TLSConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						InsecureSkipVerify: true,
+						CA: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						Cert: monitoringv1.SecretOrConfigMap{
+							ConfigMap: &v1.ConfigMapKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "cert.pem",
+							},
+						},
+						KeySecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
-							Key: "cert.pem",
+							Key: "key.pem",
 						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "cert.pem",
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
-						},
-						Key: "key.pem",
 					},
 				},
 				Path: "/",
@@ -3192,10 +3182,6 @@ func testPromSecurePodMonitor(t *testing.T) {
 			prom := framework.MakeBasicPrometheus(ns, name, name, 1)
 			prom.Namespace = ns
 
-			if strings.HasSuffix(test.name, "-file") {
-				mountTLSFiles(prom, name)
-			}
-
 			if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, prom); err != nil {
 				t.Fatal(err)
 			}
@@ -3238,7 +3224,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 				t.Fatal("failed to create PodMonitor: ", err)
 			}
 
-			if err := framework.WaitForTargets(ns, "prometheus-operated", 1); err != nil {
+			if err := framework.WaitForHealthyTargets(ns, "prometheus-operated", 1); err != nil {
 				t.Fatal(err)
 			}
 		})

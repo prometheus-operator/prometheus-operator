@@ -107,7 +107,9 @@ func (f *Framework) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus
 	if (prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "") || prwtc.CA.ResourceName != "" {
 
 		p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
-			ServerName: "caandserver.com",
+			SafeTLSConfig: monitoringv1.SafeTLSConfig{
+				ServerName: "caandserver.com",
+			},
 		}
 
 		if prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "" {

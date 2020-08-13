@@ -73,34 +73,40 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	return res
 }
 
-func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.MapSlice {
+func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls v1.SafeTLSConfig) yaml.MapSlice {
 	pathForSelector := func(sel v1.SecretOrConfigMap) string {
 		return path.Join(tlsAssetsDir, tlsAssetKeyFromSelector(namespace, sel).String())
 	}
+	tlsConfig := yaml.MapSlice{
+		{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
+	}
+	if tls.CA.Secret != nil || tls.CA.ConfigMap != nil {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathForSelector(tls.CA)})
+	}
+	if tls.Cert.Secret != nil || tls.Cert.ConfigMap != nil {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathForSelector(tls.Cert)})
+	}
+	if tls.KeySecret != nil {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathForSelector(v1.SecretOrConfigMap{Secret: tls.KeySecret})})
+	}
+	if tls.ServerName != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
+	}
+	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
+	return cfg
+}
+
+func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.MapSlice {
 	if tls != nil {
-		tlsConfig := yaml.MapSlice{
-			{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
-		}
+		tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
 		if tls.CAFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
-		}
-		if tls.CA.Secret != nil || tls.CA.ConfigMap != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathForSelector(tls.CA)})
 		}
 		if tls.CertFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
 		}
-		if tls.Cert.Secret != nil || tls.Cert.ConfigMap != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathForSelector(tls.Cert)})
-		}
 		if tls.KeyFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
-		}
-		if tls.KeySecret != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathForSelector(v1.SecretOrConfigMap{Secret: tls.KeySecret})})
-		}
-		if tls.ServerName != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
 		}
 		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 	}
@@ -455,10 +461,8 @@ func (cg *configGenerator) generatePodMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
 	}
 
-	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
-
-	if ep.BearerTokenFile != "" {
-		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile})
+	if ep.TLSConfig != nil {
+		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
 	}
 
 	if ep.BearerTokenSecret.Name != "" {
