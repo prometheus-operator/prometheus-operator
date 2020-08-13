@@ -248,7 +248,7 @@ spec:
                       description: TLS configuration to use when scraping the endpoint
                       properties:
                         ca:
-                          description: Stuct containing the CA cert to use for the
+                          description: Struct containing the CA cert to use for the
                             targets.
                           properties:
                             configMap:

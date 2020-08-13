@@ -51,6 +51,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [RuleGroup](#rulegroup)
 * [Rules](#rules)
 * [RulesAlert](#rulesalert)
+* [SafeTLSConfig](#safetlsconfig)
 * [SecretOrConfigMap](#secretorconfigmap)
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
@@ -279,8 +280,7 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | params | Optional HTTP URL parameters | map[string][]string | false |
 | interval | Interval at which metrics should be scraped | string | false |
 | scrapeTimeout | Timeout after which the scrape is ended | string | false |
-| tlsConfig | TLS configuration to use when scraping the endpoint. | *[TLSConfig](#tlsconfig) | false |
-| bearerTokenFile | File to read bearer token for scraping targets. | string | false |
+| tlsConfig | TLS configuration to use when scraping the endpoint. | *[PodMetricsEndpointTLSConfig](#podmetricsendpointtlsconfig) | false |
 | bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the pod monitor and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
 | honorTimestamps | HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data. | *bool | false |
@@ -701,6 +701,20 @@ RuleGroup is a list of sequentially evaluated recording and alerting rules. Note
 
 [Back to TOC](#table-of-contents)
 
+## SafeTLSConfig
+
+SafeTLSConfig specifies safe TLS configuration parameters.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| ca | Stuct containing the CA cert to use for the targets. | [SecretOrConfigMap](#secretorconfigmap) | false |
+| cert | Struct containing the client cert file for the targets. | [SecretOrConfigMap](#secretorconfigmap) | false |
+| keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| serverName | Used to verify the hostname for the targets. | string | false |
+| insecureSkipVerify | Disable target certificate validation. | bool | false |
+
+[Back to TOC](#table-of-contents)
+
 ## SecretOrConfigMap
 
 SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mutually exclusive.
@@ -764,18 +778,13 @@ StorageSpec defines the configured storage for a group Prometheus servers. If ne
 
 ## TLSConfig
 
-TLSConfig specifies TLS configuration parameters.
+TLSConfig extends the safe TLS configuration with file parameters.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | caFile | Path to the CA cert in the Prometheus container to use for the targets. | string | false |
-| ca | Stuct containing the CA cert to use for the targets. | [SecretOrConfigMap](#secretorconfigmap) | false |
 | certFile | Path to the client cert file in the Prometheus container for the targets. | string | false |
-| cert | Struct containing the client cert file for the targets. | [SecretOrConfigMap](#secretorconfigmap) | false |
 | keyFile | Path to the client key file in the Prometheus container for the targets. | string | false |
-| keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| serverName | Used to verify the hostname for the targets. | string | false |
-| insecureSkipVerify | Disable target certificate validation. | bool | false |
 
 [Back to TOC](#table-of-contents)
 

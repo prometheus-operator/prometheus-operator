@@ -103,9 +103,6 @@ spec:
                           - key
                           type: object
                       type: object
-                    bearerTokenFile:
-                      description: File to read bearer token for scraping targets.
-                      type: string
                     bearerTokenSecret:
                       description: Secret to mount to read bearer token for scraping
                         targets. The secret needs to be in the same namespace as the
@@ -263,7 +260,7 @@ spec:
                       description: TLS configuration to use when scraping the endpoint.
                       properties:
                         ca:
-                          description: Stuct containing the CA cert to use for the
+                          description: Struct containing the CA cert to use for the
                             targets.
                           properties:
                             configMap:
@@ -305,10 +302,6 @@ spec:
                               - key
                               type: object
                           type: object
-                        caFile:
-                          description: Path to the CA cert in the Prometheus container
-                            to use for the targets.
-                          type: string
                         cert:
                           description: Struct containing the client cert file for
                             the targets.
@@ -352,17 +345,9 @@ spec:
                               - key
                               type: object
                           type: object
-                        certFile:
-                          description: Path to the client cert file in the Prometheus
-                            container for the targets.
-                          type: string
                         insecureSkipVerify:
                           description: Disable target certificate validation.
                           type: boolean
-                        keyFile:
-                          description: Path to the client key file in the Prometheus
-                            container for the targets.
-                          type: string
                         keySecret:
                           description: Secret containing the client key file for the
                             targets.

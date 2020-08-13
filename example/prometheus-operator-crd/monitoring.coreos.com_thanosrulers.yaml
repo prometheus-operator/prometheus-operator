@@ -1740,7 +1740,7 @@ spec:
                   the ''--grpc-server-tls-*'' CLI args.'
                 properties:
                   ca:
-                    description: Stuct containing the CA cert to use for the targets.
+                    description: Struct containing the CA cert to use for the targets.
                     properties:
                       configMap:
                         description: ConfigMap containing data to use for the targets.
