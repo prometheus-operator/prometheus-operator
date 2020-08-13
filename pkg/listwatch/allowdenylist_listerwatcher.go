@@ -28,33 +28,54 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// denylistListerWatcher implements cache.ListerWatcher
+// allowDenylistListerWatcher implements cache.ListerWatcher
 // which wraps a cache.ListerWatcher,
 // filtering list results and watch events by denied namespaces.
-type denylistListerWatcher struct {
-	denylist map[string]struct{}
-	next     cache.ListerWatcher
-	logger   log.Logger
+type allowDenylistListerWatcher struct {
+	denylist  map[string]struct{}
+	allowlist map[string]struct{}
+	next      cache.ListerWatcher
+	logger    log.Logger
 }
 
-// newDenylistListerWatcher creates a cache.ListerWatcher
+// newAllowDenylistListerWatcher creates a cache.ListerWatcher
 // wrapping the given next cache.ListerWatcher
 // filtering lists and watch events by the given namespaces.
-func newDenylistListerWatcher(l log.Logger, namespaces map[string]struct{}, next cache.ListerWatcher) cache.ListerWatcher {
-	if len(namespaces) == 0 {
+//
+// allowlist has preference over denylist, being mutually exclusive.
+// The following cases are covered:
+//
+// len(allowlist) == 0 && len(denylist) == 0 : next lister watcher is returned immediately
+// len(allowlist) >  0 && len(denylist) >= 0 : allowlist handling is activated, denylist handling is deactived
+// len(allowlist) == 0 && len(denylist) >  0 : allowlist handling is deactived, denylist handling is activated
+func newAllowDenylistListerWatcher(l log.Logger, allowlist, denylist map[string]struct{}, next cache.ListerWatcher) cache.ListerWatcher {
+	if allowlist == nil {
+		allowlist = make(map[string]struct{})
+	}
+
+	if denylist == nil {
+		denylist = make(map[string]struct{})
+	}
+
+	if len(allowlist) > 0 {
+		denylist = make(map[string]struct{})
+	}
+
+	if len(denylist) == 0 && len(allowlist) == 0 {
 		return next
 	}
 
-	return &denylistListerWatcher{
-		denylist: namespaces,
-		next:     next,
-		logger:   l,
+	return &allowDenylistListerWatcher{
+		allowlist: allowlist,
+		denylist:  denylist,
+		next:      next,
+		logger:    l,
 	}
 }
 
 // List lists the wrapped next listerwatcher List result,
 // but filtering denied namespaces from the result.
-func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
+func (w *allowDenylistListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
 	var (
 		l     = metav1.List{}
 		error = level.Error(w.logger)
@@ -88,7 +109,12 @@ func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object
 
 		debugDetailed := log.With(debug, "selflink", acc.GetSelfLink())
 
-		if _, denied := w.denylist[getNamespace(acc)]; denied {
+		if _, allowed := w.allowlist[getNamespace(acc)]; !allowed && len(w.allowlist) > 0 {
+			debugDetailed.Log("msg", "not allowed")
+			continue
+		}
+
+		if _, denied := w.denylist[getNamespace(acc)]; denied && len(w.denylist) > 0 {
 			debugDetailed.Log("msg", "denied")
 			continue
 		}
@@ -103,23 +129,23 @@ func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object
 }
 
 // Watch
-func (w *denylistListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
+func (w *allowDenylistListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
 	nextWatch, err := w.next.Watch(options)
 	if err != nil {
 		return nil, err
 	}
 
-	return newDenylistWatch(w.logger, w.denylist, nextWatch), nil
+	return newAllowDenylistWatch(w.logger, w.allowlist, w.denylist, nextWatch), nil
 }
 
-// newDenylistWatch creates a new watch.Interface,
+// newAllowDenylistWatch creates a new watch.Interface,
 // wrapping the given next watcher,
 // and filtering watch events by the given namespaces.
 //
 // It starts a new goroutine until either
 // a) the result channel of the wrapped next watcher is closed, or
 // b) Stop() was invoked on the returned watcher.
-func newDenylistWatch(l log.Logger, denylist map[string]struct{}, next watch.Interface) watch.Interface {
+func newAllowDenylistWatch(l log.Logger, allowlist, denylist map[string]struct{}, next watch.Interface) watch.Interface {
 	var (
 		result  = make(chan watch.Event)
 		proxy   = watch.NewProxyWatcher(result)
@@ -145,21 +171,31 @@ func newDenylistWatch(l log.Logger, denylist map[string]struct{}, next watch.Int
 					return
 				}
 
-				acc, err := meta.Accessor(event.Object)
-				if err != nil {
-					// ignore this event, it doesn't implement the metav1.Object interface,
-					// hence we cannot determine its namespace.
-					warning.Log("msg", fmt.Sprintf("unexpected object type in event (%T): %v", event.Object, event.Object))
-					continue
-				}
+				debugDetailed := log.With(debug, "event", fmt.Sprintf("%v", event))
 
-				debugDetailed := log.With(debug, "selflink", acc.GetSelfLink())
-				if _, denied := denylist[getNamespace(acc)]; denied {
-					debugDetailed.Log("msg", "denied")
-					continue
-				}
+				if _, isStatus := event.Object.(*metav1.Status); !isStatus {
+					acc, err := meta.Accessor(event.Object)
+					if err != nil {
+						// ignore this event, it doesn't implement the metav1.Object interface,
+						// hence we cannot determine its namespace.
+						warning.Log("msg", fmt.Sprintf("unexpected object type in event (%T): %v", event.Object, event.Object))
+						continue
+					}
 
-				debugDetailed.Log("msg", "allowed")
+					debugDetailed := log.With(debug, "selflink", acc.GetSelfLink())
+
+					if _, allowed := allowlist[getNamespace(acc)]; !allowed && len(allowlist) > 0 {
+						debugDetailed.Log("msg", "not allowed")
+						continue
+					}
+
+					if _, denied := denylist[getNamespace(acc)]; denied && len(denylist) > 0 {
+						debugDetailed.Log("msg", "denied")
+						continue
+					}
+
+					debugDetailed.Log("msg", "allowed")
+				}
 
 				select {
 				case result <- event:

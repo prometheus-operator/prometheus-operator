@@ -28,6 +28,28 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 )
 
+type mockListerWatcher struct {
+	listResult runtime.Object
+	evCh       chan watch.Event
+	stopped    bool
+}
+
+func (m *mockListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
+	return m.listResult, nil
+}
+
+func (m *mockListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
+	return m, nil
+}
+
+func (m *mockListerWatcher) Stop() {
+	m.stopped = true
+}
+
+func (m *mockListerWatcher) ResultChan() <-chan watch.Event {
+	return m.evCh
+}
+
 func newUnstructured(namespace string) *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
@@ -58,9 +80,9 @@ func TestDenylistList(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	cases := []struct {
-		name           string
-		items          []runtime.RawExtension
-		denylist, want map[string]struct{}
+		name                      string
+		items                     []runtime.RawExtension
+		denylist, allowlist, want map[string]struct{}
 	}{
 		{
 			name: "deny one",
@@ -141,6 +163,54 @@ func TestDenylistList(t *testing.T) {
 			},
 			want: namespaces("monitoring", "default", "kube-system"),
 		},
+		{
+			name: "allowlist",
+			items: []runtime.RawExtension{
+				{
+					Object: newUnstructured("monitoring"),
+				},
+				{
+					Object: newUnstructured("default"),
+				},
+				{
+					Object: newUnstructured("kube-system"),
+				},
+			},
+			allowlist: namespaces("kube-system"),
+			want:      namespaces("kube-system"),
+		},
+		{
+			name: "ignore denylist given allowlist",
+			items: []runtime.RawExtension{
+				{
+					Object: newUnstructured("monitoring"),
+				},
+				{
+					Object: newUnstructured("default"),
+				},
+				{
+					Object: newUnstructured("kube-system"),
+				},
+			},
+			allowlist: namespaces("default", "monitoring"),
+			denylist:  namespaces("monitoring"),
+			want:      namespaces("default", "monitoring"),
+		},
+		{
+			name: "no allowlist no denylist",
+			items: []runtime.RawExtension{
+				{
+					Object: newUnstructured("monitoring"),
+				},
+				{
+					Object: newUnstructured("default"),
+				},
+				{
+					Object: newUnstructured("kube-system"),
+				},
+			},
+			want: namespaces("monitoring", "default", "kube-system"),
+		},
 	}
 
 	for _, tc := range cases {
@@ -151,7 +221,7 @@ func TestDenylistList(t *testing.T) {
 				listResult: &l,
 			}
 
-			lw := newDenylistListerWatcher(logger, tc.denylist, mock)
+			lw := newAllowDenylistListerWatcher(logger, tc.allowlist, tc.denylist, mock)
 			result, err := lw.List(metav1.ListOptions{})
 			if err != nil {
 				t.Error(err)
@@ -184,9 +254,9 @@ func TestDenylistWatch(t *testing.T) {
 	logger := log.NewNopLogger()
 
 	cases := []struct {
-		name           string
-		items          []runtime.Object
-		denylist, want map[string]struct{}
+		name                      string
+		items                     []runtime.Object
+		denylist, allowlist, want map[string]struct{}
 	}{
 		{
 			name: "deny one",
@@ -199,7 +269,7 @@ func TestDenylistWatch(t *testing.T) {
 			want:     namespaces("default", "kube-system"),
 		},
 		{
-			name: "namespaces deny one",
+			name: "deny one with namespaces",
 			items: []runtime.Object{
 				newNamespace("monitoring"),
 				newNamespace("default"),
@@ -219,7 +289,7 @@ func TestDenylistWatch(t *testing.T) {
 			want:     namespaces("default"),
 		},
 		{
-			name: "namespces deny many",
+			name: "deny many with namespaces",
 			items: []runtime.Object{
 				newNamespace("monitoring"),
 				newNamespace("default"),
@@ -238,7 +308,7 @@ func TestDenylistWatch(t *testing.T) {
 			want:     namespaces("default", "kube-system"),
 		},
 		{
-			name: "namespaces denylist contains empty string",
+			name: "denylist contains empty string with namespaces",
 			items: []runtime.Object{
 				newNamespace("default"),
 				newNamespace("kube-system"),
@@ -256,7 +326,7 @@ func TestDenylistWatch(t *testing.T) {
 			want:     namespaces("default", "kube-system"),
 		},
 		{
-			name: "namespaces empty denylist",
+			name: "empty denylist with namespaces",
 			items: []runtime.Object{
 				newNamespace("default"),
 				newNamespace("kube-system"),
@@ -265,7 +335,7 @@ func TestDenylistWatch(t *testing.T) {
 			want:     namespaces("default", "kube-system"),
 		},
 		{
-			name: "nil denylist",
+			name: "no denylist no allowlist",
 			items: []runtime.Object{
 				newUnstructured("default"),
 				newUnstructured("kube-system"),
@@ -273,12 +343,50 @@ func TestDenylistWatch(t *testing.T) {
 			want: namespaces("default", "kube-system"),
 		},
 		{
-			name: "namespaces nil denylist",
+			name: "no denylist no allowlist with namespaces",
 			items: []runtime.Object{
 				newNamespace("default"),
 				newNamespace("kube-system"),
 			},
 			want: namespaces("default", "kube-system"),
+		},
+		{
+			name: "allowlist",
+			items: []runtime.Object{
+				newUnstructured("default"),
+				newUnstructured("kube-system"),
+			},
+			allowlist: namespaces("default"),
+			want:      namespaces("default"),
+		},
+		{
+			name: "allowlist with namespaces",
+			items: []runtime.Object{
+				newNamespace("default"),
+				newNamespace("kube-system"),
+			},
+			allowlist: namespaces("default"),
+			want:      namespaces("default"),
+		},
+		{
+			name: "ignore denylist given allowlist",
+			items: []runtime.Object{
+				newUnstructured("default"),
+				newUnstructured("kube-system"),
+			},
+			allowlist: namespaces("default", "kube-system"),
+			denylist:  namespaces("default"),
+			want:      namespaces("default", "kube-system"),
+		},
+		{
+			name: "ignore denylist given allowlist with namespaces",
+			items: []runtime.Object{
+				newNamespace("default"),
+				newNamespace("kube-system"),
+			},
+			allowlist: namespaces("default", "kube-system"),
+			denylist:  namespaces("default"),
+			want:      namespaces("default", "kube-system"),
 		},
 	}
 
@@ -295,7 +403,7 @@ func TestDenylistWatch(t *testing.T) {
 			mock := &mockListerWatcher{
 				evCh: events,
 			}
-			lw := newDenylistListerWatcher(logger, tc.denylist, mock)
+			lw := newAllowDenylistListerWatcher(logger, tc.allowlist, tc.denylist, mock)
 			w, err := lw.Watch(metav1.ListOptions{})
 			if err != nil {
 				t.Error(err)
