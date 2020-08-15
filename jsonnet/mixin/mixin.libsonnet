@@ -1,2 +1,2 @@
 (import 'config.libsonnet') +
-(import 'alerts.libsonnet')
+(import 'alerts/alerts.libsonnet')
