@@ -897,7 +897,7 @@ func (e *SecretOrConfigMapValidationError) Error() string {
 
 // Validate semantically validates the given TLSConfig.
 func (c *SecretOrConfigMap) Validate() error {
-	if &c.Secret != nil && &c.ConfigMap != nil {
+	if c.Secret != nil && c.ConfigMap != nil {
 		return &SecretOrConfigMapValidationError{"SecretOrConfigMap can not specify both Secret and ConfigMap"}
 	}
 
