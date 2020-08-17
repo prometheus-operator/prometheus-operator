@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -50,5 +51,22 @@ func TestMarshallServiceMonitor(t *testing.T) {
 	rs := string(r)
 	if rs != expected {
 		t.Fatalf("Got %s expected: %s ", rs, expected)
+	}
+}
+
+func TestValidateSecretOrConfigMap(t *testing.T) {
+	for _, good := range []SecretOrConfigMap{
+		SecretOrConfigMap{},
+		SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+		SecretOrConfigMap{ConfigMap: &v1.ConfigMapKeySelector{}},
+	} {
+		if err := good.Validate(); err != nil {
+			t.Errorf("expected validation of %+v not to fail, err: %s", good, err)
+		}
+	}
+
+	bad := SecretOrConfigMap{Secret: &v1.SecretKeySelector{}, ConfigMap: &v1.ConfigMapKeySelector{}}
+	if err := bad.Validate(); err == nil {
+		t.Errorf("expected validation of %+v to fail, but not no error", bad)
 	}
 }

@@ -2629,7 +2629,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 					},
 				},
 			},
-			expectTargets: false,
+			expectTargets: true,
 		},
 		{
 			name: "allowed-tls-configmap",
@@ -2699,7 +2699,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 					},
 				},
 			},
-			expectTargets: false,
+			expectTargets: true,
 		},
 	}
 
