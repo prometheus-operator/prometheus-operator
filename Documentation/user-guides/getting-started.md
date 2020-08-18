@@ -252,7 +252,7 @@ spec:
 
 Further reading:
 
-* [Alerting][alerting-guide] describes using the Prometheus Operator go manage Alertmanager clusters.
+* [Alerting][alerting-guide] describes using the Prometheus Operator to manage Alertmanager clusters.
 
 
 [alerting-guide]: alerting.md
