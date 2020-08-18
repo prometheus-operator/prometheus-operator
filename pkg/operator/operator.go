@@ -16,16 +16,33 @@ package operator
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
+)
+
+var (
+	syncsDesc = prometheus.NewDesc(
+		"prometheus_operator_syncs",
+		"Number of objects per sync status (ok/failed)",
+		[]string{"status"},
+		nil,
+	)
+	resourcesDesc = prometheus.NewDesc(
+		"prometheus_operator_managed_resources",
+		"Number of resources managed by the operator's controller per state (selected/rejected)",
+		[]string{"resource", "state"},
+		nil,
+	)
 )
 
 // Metrics represents metrics associated to an operator.
@@ -45,6 +62,16 @@ type Metrics struct {
 	// corresponding actions (add, delete, update).
 	triggerByCounter *prometheus.CounterVec
 	ready            prometheus.Gauge
+
+	// mtx protects all fields below.
+	mtx       sync.RWMutex
+	syncs     map[string]bool
+	resources map[resourceKey]map[string]int
+}
+
+type resourceKey struct {
+	resource string
+	state    resourceState
 }
 
 // NewMetrics initializes operator metrics and registers them with the given registerer.
@@ -90,7 +117,11 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 			Name: "prometheus_operator_ready",
 			Help: "1 when the controller is ready to reconcile resources, 0 otherwise",
 		}),
+
+		syncs:     make(map[string]bool),
+		resources: make(map[resourceKey]map[string]int),
 	}
+
 	m.reg.MustRegister(
 		m.reconcileCounter,
 		m.reconcileErrorsCounter,
@@ -101,7 +132,9 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 		m.watchCounter,
 		m.watchFailedCounter,
 		m.ready,
+		&m,
 	)
+
 	return &m
 }
 
@@ -121,8 +154,68 @@ func (m *Metrics) StsDeleteCreateCounter() prometheus.Counter {
 }
 
 // TriggerByCounter returns a counter to track operator actions by operation (add/delete/update) and action.
-func (m *Metrics) TriggerByCounter(triggered_by, action string) prometheus.Counter {
-	return m.triggerByCounter.WithLabelValues(triggered_by, action)
+func (m *Metrics) TriggerByCounter(triggeredBy, action string) prometheus.Counter {
+	return m.triggerByCounter.WithLabelValues(triggeredBy, action)
+}
+
+const (
+	selected int = iota
+	rejected
+)
+
+type resourceState int
+
+func (r resourceState) String() string {
+	switch int(r) {
+	case selected:
+		return "selected"
+	case rejected:
+		return "rejected"
+	}
+	return ""
+}
+
+// SetSelectedResources sets the number of resources that the controller selected for the given object's key.
+func (m *Metrics) SetSelectedResources(objKey, resource string, v int) {
+	m.setResources(objKey, resourceKey{resource: resource, state: resourceState(selected)}, v)
+}
+
+// SetRejectedResources sets the number of resources that the controller rejected for the given object's key.
+func (m *Metrics) SetRejectedResources(objKey, resource string, v int) {
+	m.setResources(objKey, resourceKey{resource: resource, state: resourceState(rejected)}, v)
+}
+
+func (m *Metrics) setResources(objKey string, resKey resourceKey, v int) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
+	if _, found := m.resources[resKey]; !found {
+		m.resources[resourceKey{resource: resKey.resource, state: resourceState(selected)}] = make(map[string]int)
+		m.resources[resourceKey{resource: resKey.resource, state: resourceState(rejected)}] = make(map[string]int)
+	}
+
+	m.resources[resKey][objKey] = v
+}
+
+// SetSyncStatus tracks the status of the last sync operation for the given object.
+func (m *Metrics) SetSyncStatus(objKey string, success bool) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
+	m.syncs[objKey] = success
+}
+
+// ForgetObject removes the metrics tracked for the given object's key.
+// It should be called when the controller detects that the object has been deleted.
+func (m *Metrics) ForgetObject(objKey string) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
+	delete(m.syncs, objKey)
+
+	for k := range m.resources {
+		delete(m.resources[k], objKey)
+	}
 }
 
 // Ready returns a gauge to track whether the controller is ready or not.
@@ -133,6 +226,54 @@ func (m *Metrics) Ready() prometheus.Gauge {
 // MustRegister registers metrics with the Metrics registerer.
 func (m *Metrics) MustRegister(metrics ...prometheus.Collector) {
 	m.reg.MustRegister(metrics...)
+}
+
+// Describe implements the prometheus.Collector interface.
+func (m *Metrics) Describe(ch chan<- *prometheus.Desc) {
+	ch <- resourcesDesc
+	ch <- syncsDesc
+}
+
+// Collect implements the prometheus.Collector interface.
+func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
+	m.mtx.RLock()
+	defer m.mtx.RUnlock()
+
+	var ok, failed float64
+	for _, success := range m.syncs {
+		if success {
+			ok++
+		} else {
+			failed++
+		}
+	}
+
+	ch <- prometheus.MustNewConstMetric(
+		syncsDesc,
+		prometheus.GaugeValue,
+		ok,
+		"ok",
+	)
+	ch <- prometheus.MustNewConstMetric(
+		syncsDesc,
+		prometheus.GaugeValue,
+		failed,
+		"failed",
+	)
+
+	for rKey := range m.resources {
+		var total int
+		for _, v := range m.resources[rKey] {
+			total += v
+		}
+		ch <- prometheus.MustNewConstMetric(
+			resourcesDesc,
+			prometheus.GaugeValue,
+			float64(total),
+			rKey.resource,
+			rKey.state.String(),
+		)
+	}
 }
 
 type instrumentedListerWatcher struct {
@@ -172,40 +313,6 @@ func (i *instrumentedListerWatcher) Watch(options metav1.ListOptions) (watch.Int
 		i.watchFailed.Inc()
 	}
 	return ret, err
-}
-
-type storeCollector struct {
-	desc  *prometheus.Desc
-	store cache.Store
-}
-
-// NewStoreCollector returns a metrics collector that returns the current number of resources in the store.
-func NewStoreCollector(resource string, s cache.Store) prometheus.Collector {
-	return &storeCollector{
-		desc: prometheus.NewDesc(
-			"prometheus_operator_resources",
-			"Number of resources managed by the operator's controller",
-			nil,
-			map[string]string{
-				"resource": resource,
-			},
-		),
-		store: s,
-	}
-}
-
-// Describe implements the prometheus.Collector interface.
-func (c *storeCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- c.desc
-}
-
-// Collect implements the prometheus.Collector interface.
-func (c *storeCollector) Collect(ch chan<- prometheus.Metric) {
-	ch <- prometheus.MustNewConstMetric(
-		c.desc,
-		prometheus.GaugeValue,
-		float64(len(c.store.List())),
-	)
 }
 
 // SanitizeSTS removes values for APIVersion and Kind from the VolumeClaimTemplates.

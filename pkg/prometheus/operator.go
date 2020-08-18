@@ -1037,6 +1037,7 @@ func (c *Operator) processNextWorkItem(ctx context.Context) bool {
 
 	c.metrics.ReconcileCounter().Inc()
 	err := c.sync(ctx, key.(string))
+	c.metrics.SetSyncStatus(key.(string), err == nil)
 	if err == nil {
 		c.queue.Forget(key)
 		return true
@@ -1131,6 +1132,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	pobj, err := c.promInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
+		c.metrics.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
@@ -1602,6 +1604,7 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 		})
 	}
 
+	var rejected int
 	res := make(map[string]*monitoringv1.ServiceMonitor, len(serviceMonitors))
 	for namespaceAndName, sm := range serviceMonitors {
 		var err error
@@ -1633,6 +1636,7 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 		}
 
 		if err != nil {
+			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping servicemonitor",
 				"error", err.Error(),
@@ -1651,6 +1655,11 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 		smKeys = append(smKeys, k)
 	}
 	level.Debug(c.logger).Log("msg", "selected ServiceMonitors", "servicemonitors", strings.Join(smKeys, ","), "namespace", p.Namespace, "prometheus", p.Name)
+
+	if pKey, ok := c.keyFunc(p); ok {
+		c.metrics.SetSelectedResources(pKey, monitoringv1.ServiceMonitorsKind, len(res))
+		c.metrics.SetRejectedResources(pKey, monitoringv1.ServiceMonitorsKind, rejected)
+	}
 
 	return res, nil
 }
@@ -1691,6 +1700,7 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 		})
 	}
 
+	var rejected int
 	res := make(map[string]*monitoringv1.PodMonitor, len(podMonitors))
 	for namespaceAndName, pm := range podMonitors {
 		var err error
@@ -1714,6 +1724,7 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 		}
 
 		if err != nil {
+			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping podmonitor",
 				"error", err.Error(),
@@ -1732,6 +1743,11 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 		pmKeys = append(pmKeys, k)
 	}
 	level.Debug(c.logger).Log("msg", "selected PodMonitors", "podmonitors", strings.Join(pmKeys, ","), "namespace", p.Namespace, "prometheus", p.Name)
+
+	if pKey, ok := c.keyFunc(p); ok {
+		c.metrics.SetSelectedResources(pKey, monitoringv1.PodMonitorsKind, len(res))
+		c.metrics.SetRejectedResources(pKey, monitoringv1.PodMonitorsKind, rejected)
+	}
 
 	return res, nil
 }
@@ -1774,6 +1790,11 @@ func (c *Operator) selectProbes(p *monitoringv1.Prometheus) (map[string]*monitor
 	}
 
 	level.Debug(c.logger).Log("msg", "selected Probes", "probes", strings.Join(probes, ","), "namespace", p.Namespace, "prometheus", p.Name)
+
+	if pKey, ok := c.keyFunc(p); ok {
+		c.metrics.SetSelectedResources(pKey, monitoringv1.ProbesKind, len(res))
+		c.metrics.SetRejectedResources(pKey, monitoringv1.ProbesKind, 0)
+	}
 
 	return res, nil
 }
