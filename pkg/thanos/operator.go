@@ -554,6 +554,7 @@ func (o *Operator) processNextWorkItem() bool {
 	}
 	defer o.queue.Done(key)
 
+	o.metrics.ReconcileCounter().Inc()
 	err := o.sync(key.(string))
 	if err == nil {
 		o.queue.Forget(key)

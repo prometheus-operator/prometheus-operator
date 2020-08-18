@@ -282,6 +282,7 @@ func (c *Operator) processNextWorkItem() bool {
 	}
 	defer c.queue.Done(key)
 
+	c.metrics.ReconcileCounter().Inc()
 	err := c.sync(key.(string))
 	if err == nil {
 		c.queue.Forget(key)

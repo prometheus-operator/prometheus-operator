@@ -31,6 +31,7 @@ type Metrics struct {
 	listFailedCounter      prometheus.Counter
 	watchCounter           prometheus.Counter
 	watchFailedCounter     prometheus.Counter
+	reconcileCounter       prometheus.Counter
 	reconcileErrorsCounter prometheus.Counter
 	stsDeleteCreateCounter prometheus.Counter
 	// triggerByCounter is a set of counters keeping track of the amount
@@ -46,9 +47,13 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 	reg := prometheus.WrapRegistererWith(prometheus.Labels{"controller": name}, r)
 	m := Metrics{
 		reg: reg,
+		reconcileCounter: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "prometheus_operator_reconcile_operations_total",
+			Help: "Total number of reconcile operations",
+		}),
 		reconcileErrorsCounter: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_reconcile_errors_total",
-			Help: "Number of errors that occurred while reconciling the statefulset",
+			Help: "Number of errors that occurred during reconcile operations",
 		}),
 		triggerByCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "prometheus_operator_triggered_total",
@@ -77,6 +82,7 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 		}),
 	}
 	m.reg.MustRegister(
+		m.reconcileCounter,
 		m.reconcileErrorsCounter,
 		m.triggerByCounter,
 		m.stsDeleteCreateCounter,
@@ -86,6 +92,11 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 		m.watchFailedCounter,
 	)
 	return &m
+}
+
+// ReconcileCounter returns a counter to track attempted reconciliations.
+func (m *Metrics) ReconcileCounter() prometheus.Counter {
+	return m.reconcileCounter
 }
 
 // ReconcileErrorsCounter returns a counter to track reconciliation errors.
