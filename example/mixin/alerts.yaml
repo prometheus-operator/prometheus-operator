@@ -1,0 +1,33 @@
+groups:
+- name: prometheus-operator
+  rules:
+  - alert: PrometheusOperatorWatchErrors
+    annotations:
+      description: Errors while performing watch operations in controller {{$labels.controller}}
+        in {{$labels.namespace}} namespace.
+      summary: Errors while performing watch operations in controller.
+    expr: |
+      (sum by (controller,namespace) (rate(prometheus_operator_watch_operations_failed_total{job="prometheus-operator"}[1h])) / sum by (controller,namespace) (rate(prometheus_operator_watch_operations_total{job="prometheus-operator"}[1h]))) > 0.1
+    for: 15m
+    labels:
+      severity: warning
+  - alert: PrometheusOperatorReconcileErrors
+    annotations:
+      description: Errors while reconciling {{ $labels.controller }} in {{ $labels.namespace
+        }} Namespace.
+      summary: Errors while reconciling controller.
+    expr: |
+      rate(prometheus_operator_reconcile_errors_total{job="prometheus-operator"}[5m]) > 0.1
+    for: 10m
+    labels:
+      severity: warning
+  - alert: PrometheusOperatorNodeLookupErrors
+    annotations:
+      description: Errors while reconciling Prometheus in {{ $labels.namespace }}
+        Namespace.
+      summary: Errors while reconciling Prometheus.
+    expr: |
+      rate(prometheus_operator_node_address_lookup_errors_total{job="prometheus-operator"}[5m]) > 0.1
+    for: 10m
+    labels:
+      severity: warning

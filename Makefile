@@ -135,7 +135,7 @@ tidy:
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGET) generate-crds bundle.yaml $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGET) generate-crds bundle.yaml example/mixin/alerts.yaml $(shell find Documentation -type f)
 
 .PHONY: generate-crds
 generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET)
@@ -191,6 +191,10 @@ scripts/generate/vendor: $(JB_BINARY) $(shell find jsonnet/prometheus-operator -
 
 example/non-rbac/prometheus-operator.yaml: scripts/generate/vendor scripts/generate/prometheus-operator-non-rbac.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-non-rbac-prometheus-operator.sh
+
+example/mixin/alerts.yaml: $(JSONNET_BINARY) $(GOJSONTOYAML_BINARY)
+	-mkdir -p example/alerts
+	$(JSONNET_BINARY) jsonnet/mixin/alerts.jsonnet | $(GOJSONTOYAML_BINARY) > $@
 
 RBAC_MANIFESTS = example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml example/rbac/prometheus-operator/prometheus-operator-service-account.yaml example/rbac/prometheus-operator/prometheus-operator-deployment.yaml
 $(RBAC_MANIFESTS): scripts/generate/vendor scripts/generate/prometheus-operator-rbac.jsonnet $(shell find jsonnet -type f)
