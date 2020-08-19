@@ -21,13 +21,13 @@
           {
             alert: 'PrometheusOperatorReconcileErrors',
             expr: |||
-              rate(prometheus_operator_reconcile_errors_total{%(prometheusOperatorSelector)s}[5m]) > 0.1
+              (sum by (controller,namespace) (rate(prometheus_operator_reconcile_errors_total{%(prometheusOperatorSelector)s}[5m])) / (sum by (controller,namespace) (rate(prometheus_operator_reconcile_operations_total{%(prometheusOperatorSelector)s}[5m])) > 0.1
             ||| % $._config,
             labels: {
               severity: 'warning',
             },
             annotations: {
-              description: 'Errors while reconciling {{ $labels.controller }} in {{ $labels.namespace }} Namespace.',
+              description: '{{ $value | humanizePercentage }} of reconciling operations failed for {{ $labels.controller }} controller in {{ $labels.namespace }} namespace.',
               summary: 'Errors while reconciling controller.',
             },
             'for': '10m',
