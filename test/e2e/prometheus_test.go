@@ -2497,22 +2497,6 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			expectTargets: false,
 		},
 		{
-			name: "allowed-bearer-secret",
-			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
-				Deny: false,
-			},
-			endpoint: monitoringv1.Endpoint{
-				Port: "web",
-				BearerTokenSecret: v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: name,
-					},
-					Key: "bearer-token",
-				},
-			},
-			expectTargets: true,
-		},
-		{
 			name: "denied-bearer-secret",
 			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
 				Deny: true,
@@ -2562,41 +2546,6 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			expectTargets: false,
 		},
 		{
-			name: "allowed-tls-secret",
-			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
-				Deny: false,
-			},
-			endpoint: monitoringv1.Endpoint{
-				Port: "web",
-				TLSConfig: &monitoringv1.TLSConfig{
-					InsecureSkipVerify: true,
-					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "cert.pem",
-						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "cert.pem",
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
-						},
-						Key: "key.pem",
-					},
-				},
-			},
-			expectTargets: true,
-		},
-		{
 			name: "denied-tls-secret",
 			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
 				Deny: true,
@@ -2615,41 +2564,6 @@ func testPromArbitraryFSAcc(t *testing.T) {
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "cert.pem",
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
-						},
-						Key: "key.pem",
-					},
-				},
-			},
-			expectTargets: true,
-		},
-		{
-			name: "allowed-tls-configmap",
-			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
-				Deny: false,
-			},
-			endpoint: monitoringv1.Endpoint{
-				Port: "web",
-				TLSConfig: &monitoringv1.TLSConfig{
-					InsecureSkipVerify: true,
-					CA: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "cert.pem",
-						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						ConfigMap: &v1.ConfigMapKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
