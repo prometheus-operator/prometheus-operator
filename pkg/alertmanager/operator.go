@@ -403,19 +403,8 @@ func (c *Operator) sync(key string) error {
 		return err
 	}
 	if !exists {
-		// TODO(fabxc): we want to do server side deletion due to the
-		// variety of resources we create.
-		// Doing so just based on the deletion event is not reliable, so
-		// we have to garbage collect the controller-created resources
-		// in some other way.
-		//
-		// Let's rely on the index key matching that of the created
-		// configmap and replica
-		// set for now. This does not work if we delete Alertmanager
-		// resources as the
-		// controller is not running – that could be solved via garbage
-		// collection later.
-		return c.destroyAlertmanager(key)
+		// Dependent resources are cleaned up by K8s via OwnerReferences
+		return nil
 	}
 
 	am := obj.(*monitoringv1.Alertmanager)
@@ -553,49 +542,4 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	}
 
 	return false
-}
-
-// TODO(brancz): Remove this function once Kubernetes 1.7 compatibility is
-// dropped.
-// Starting with Kubernetes 1.8 OwnerReferences are properly handled for CRDs.
-func (c *Operator) destroyAlertmanager(key string) error {
-	ssetKey := alertmanagerKeyToStatefulSetKey(key)
-	obj, exists, err := c.ssetInf.GetStore().GetByKey(ssetKey)
-	if err != nil {
-		return errors.Wrap(err, "retrieving statefulset from cache failed")
-	}
-	if !exists {
-		return nil
-	}
-	sset := obj.(*appsv1.StatefulSet)
-	*sset.Spec.Replicas = 0
-
-	// Update the replica count to 0 and wait for all pods to be deleted.
-	ssetClient := c.kclient.AppsV1().StatefulSets(sset.Namespace)
-
-	if _, err := ssetClient.Update(context.TODO(), sset, metav1.UpdateOptions{}); err != nil {
-		return errors.Wrap(err, "updating statefulset for scale-down failed")
-	}
-
-	podClient := c.kclient.CoreV1().Pods(sset.Namespace)
-
-	// TODO(fabxc): temporary solution until StatefulSet status provides
-	// necessary info to know whether scale-down completed.
-	for {
-		pods, err := podClient.List(context.TODO(), ListOptions(alertmanagerNameFromStatefulSetName(sset.Name)))
-		if err != nil {
-			return errors.Wrap(err, "retrieving pods of statefulset failed")
-		}
-		if len(pods.Items) == 0 {
-			break
-		}
-		time.Sleep(50 * time.Millisecond)
-	}
-
-	// StatefulSet scaled down, we can delete it.
-	if err := ssetClient.Delete(context.TODO(), sset.Name, metav1.DeleteOptions{}); err != nil {
-		return errors.Wrap(err, "deleting statefulset failed")
-	}
-
-	return nil
 }
