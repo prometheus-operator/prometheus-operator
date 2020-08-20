@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright 2020 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
+package v1alpha1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
+	Version = "v1alpha1"
+
 	AlertmanagerConfigKind    = "AlertmanagerConfig"
 	AlertmanagerConfigName    = "alertmanagerconfigs"
 	AlertmanagerConfigKindKey = "alertmanagerconfig"
@@ -60,7 +64,7 @@ type Route struct {
 	GroupInterval  string    `json:"groupInterval,omitempty"`
 	RepeatInterval string    `json:"repeatInterval,omitempty"`
 	Matchers       []Matcher `json:"matchers,omitempty"`
-	Continue       *bool     `json:"continue,omitempty"`
+	Continue       bool      `json:"continue,omitempty"`
 	Routes         []Route   `json:"routes,omitempty"`
 }
 
@@ -71,22 +75,25 @@ type Receiver struct {
 
 type PagerDutyConfig struct {
 	SendResolved *bool                   `json:"sendResolved,omitempty"`
-	RoutingKey   *string                 `json:"routingKey,omitempty"`
-	ServiceKey   *string                 `json:"serviceKey,omitempty"`
+	RoutingKey   *v1.SecretKeySelector   `json:"routingKey,omitempty"`
+	ServiceKey   *v1.SecretKeySelector   `json:"serviceKey,omitempty"`
 	URL          *string                 `json:"url,omitempty"`
 	Client       *string                 `json:"client,omitempty"`
 	ClientURL    *string                 `json:"clientURL,omitempty"`
 	Description  *string                 `json:"description,omitempty"`
 	Severity     *string                 `json:"severity,omitempty"`
+	Class        *string                 `json:"class,omitempty"`
+	Group        *string                 `json:"group,omitempty"`
+	Component    *string                 `json:"component,omitempty"`
 	Details      []PagerDutyConfigDetail `json:"details,omitempty"`
 	HTTPConfig   *HTTPConfig             `json:"httpConfig,omitempty"`
 }
 
 type HTTPConfig struct {
-	BasicAuth         *BasicAuth            `json:"basicAuth,omitempty"`
-	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
-	TLSConfig         *TLSConfig            `json:"tlsConfig,omitempty"`
-	ProxyURL          *string               `json:"proxyURL,omitempty"`
+	BasicAuth         *monitoringv1.BasicAuth     `json:"basicAuth,omitempty"`
+	BearerTokenSecret *v1.SecretKeySelector       `json:"bearerTokenSecret,omitempty"`
+	TLSConfig         *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	ProxyURL          *string                     `json:"proxyURL,omitempty"`
 }
 
 type PagerDutyConfigDetail struct {
@@ -103,7 +110,7 @@ type InhibitRule struct {
 type Matcher struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
-	Regex *bool  `json:"regex,omitempty"`
+	Regex bool   `json:"regex,omitempty"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.

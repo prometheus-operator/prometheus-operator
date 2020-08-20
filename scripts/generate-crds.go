@@ -37,30 +37,81 @@ type crdGenerator struct {
 	ControllerGenOpts string
 	YAMLDir           string
 	JsonnetDir        string
+	CRDNames          []crdName
+	CRDAPIGroup       string
+	ControllerPath    string
+	CustomizeYAML     func(crdGenerator) error
 }
 
 var (
 	controllergen string
 	gojsontoyaml  string
 
-	crdAPIGroup    = "monitoring.coreos.com"
-	controllerPath = "./pkg/apis/monitoring/v1"
-
-	crdNames = []crdName{
-		{"alertmanager", "alertmanagers"},
-		{"podmonitor", "podmonitors"},
-		{"probe", "probes"},
-		{"prometheus", "prometheuses"},
-		{"prometheusrule", "prometheusrules"},
-		{"servicemonitor", "servicemonitors"},
-		{"thanosruler", "thanosrulers"},
-	}
-
 	crdGenerators = []crdGenerator{
 		{
 			ControllerGenOpts: "crd:crdVersions=v1",
 			YAMLDir:           "./example/prometheus-operator-crd",
 			JsonnetDir:        "./jsonnet/prometheus-operator",
+			CRDAPIGroup:       "monitoring.coreos.com",
+			ControllerPath:    "./pkg/apis/monitoring/v1",
+			CRDNames: []crdName{
+				{"alertmanager", "alertmanagers"},
+				{"podmonitor", "podmonitors"},
+				{"probe", "probes"},
+				{"prometheus", "prometheuses"},
+				{"prometheusrule", "prometheusrules"},
+				{"servicemonitor", "servicemonitors"},
+				{"thanosruler", "thanosrulers"},
+			},
+			CustomizeYAML: func(generator crdGenerator) error {
+				prometheusManifest := fmt.Sprintf("%s/%s_%s.yaml", generator.YAMLDir, generator.CRDAPIGroup, "prometheus")
+				data, err := ioutil.ReadFile(prometheusManifest)
+				if err != nil {
+					return errors.Wrapf(err, "reading %s", prometheusManifest)
+				}
+				data = bytes.ReplaceAll(data, []byte("plural: prometheus"), []byte("plural: prometheuses"))
+				data = bytes.ReplaceAll(data, []byte("prometheus.monitoring.coreos.com"), []byte("prometheuses.monitoring.coreos.com"))
+
+				prometheusesManifest := fmt.Sprintf("%s/%s_%s.yaml", generator.YAMLDir, generator.CRDAPIGroup, "prometheuses")
+				err = ioutil.WriteFile(prometheusesManifest, data, 0644)
+				if err != nil {
+					return errors.Wrapf(err, "generating %s", prometheusesManifest)
+				}
+
+				err = os.Remove(prometheusManifest)
+				if err != nil {
+					return errors.Wrapf(err, "removing %s", prometheusManifest)
+				}
+
+				return nil
+			},
+		},
+		{
+			ControllerGenOpts: "crd:crdVersions=v1",
+			YAMLDir:           "./example/prometheus-operator-crd",
+			JsonnetDir:        "./jsonnet/prometheus-operator",
+			CRDAPIGroup:       "monitoring.coreos.com",
+			ControllerPath:    "./pkg/apis/monitoring/v1alpha1",
+			CRDNames: []crdName{
+				{"alertmanagerconfig", "alertmanagerconfigs"},
+			},
+			CustomizeYAML: func(generator crdGenerator) error {
+				// Set missing spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.route.properties.routes.items.type
+				alertmanagerconfigManifest := fmt.Sprintf("%s/%s_%s.yaml", generator.YAMLDir, generator.CRDAPIGroup, "alertmanagerconfigs")
+				data, err := ioutil.ReadFile(alertmanagerconfigManifest)
+				if err != nil {
+					return errors.Wrapf(err, "reading %s", alertmanagerconfigManifest)
+				}
+				data = bytes.ReplaceAll(data,
+					[]byte("routes:\n                    items: {}"),
+					[]byte("routes:\n                    items:\n                      type: object"),
+				)
+				err = ioutil.WriteFile(alertmanagerconfigManifest, data, 0644)
+				if err != nil {
+					return errors.Wrapf(err, "generating %s", alertmanagerconfigManifest)
+				}
+				return nil
+			},
 		},
 	}
 )
@@ -75,39 +126,26 @@ func (generator crdGenerator) generateYAMLManifests() error {
 		"paths=.",
 		"output:crd:dir="+outputDir,
 	)
-	cmd.Dir, err = filepath.Abs(controllerPath)
+	cmd.Dir, err = filepath.Abs(generator.ControllerPath)
 	if err != nil {
-		return errors.Wrapf(err, "absolute controller path %s", controllerPath)
+		return errors.Wrapf(err, "absolute controller path %s", generator.ControllerPath)
 	}
 	err = cmd.Run()
 	if err != nil {
 		return errors.Wrapf(err, "running %s", cmd)
 	}
 
-	prometheusManifest := fmt.Sprintf("%s/%s_%s.yaml", generator.YAMLDir, crdAPIGroup, "prometheus")
-	data, err := ioutil.ReadFile(prometheusManifest)
+	err = generator.CustomizeYAML(generator)
 	if err != nil {
-		return errors.Wrapf(err, "reading %s", prometheusManifest)
-	}
-	data = bytes.ReplaceAll(data, []byte("plural: prometheus"), []byte("plural: prometheuses"))
-	data = bytes.ReplaceAll(data, []byte("prometheus.monitoring.coreos.com"), []byte("prometheuses.monitoring.coreos.com"))
-
-	prometheusesManifest := fmt.Sprintf("%s/%s_%s.yaml", generator.YAMLDir, crdAPIGroup, "prometheuses")
-	err = ioutil.WriteFile(prometheusesManifest, data, 0644)
-	if err != nil {
-		return errors.Wrapf(err, "generating %s", prometheusesManifest)
+		return errors.Wrap(err, "customizing YAML")
 	}
 
-	err = os.Remove(prometheusManifest)
-	if err != nil {
-		return errors.Wrapf(err, "removing %s", prometheusManifest)
-	}
 	return nil
 }
 
 func (generator crdGenerator) generateJsonnetManifests() error {
-	for _, crdName := range crdNames {
-		yamlFile := fmt.Sprintf("%s/%s_%s.yaml", generator.YAMLDir, crdAPIGroup, crdName.Plural)
+	for _, crdName := range generator.CRDNames {
+		yamlFile := fmt.Sprintf("%s/%s_%s.yaml", generator.YAMLDir, generator.CRDAPIGroup, crdName.Plural)
 		yamlData, err := ioutil.ReadFile(yamlFile)
 		if err != nil {
 			return errors.Wrapf(err, "reading %s", yamlFile)

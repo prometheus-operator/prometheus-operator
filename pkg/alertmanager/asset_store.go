@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO: This is duplicated in pkg/alertmanager.
+// TODO: This is duplicated from pkg/prometheus
 
-package prometheus
+package alertmanager
 
 import (
 	"context"
@@ -109,8 +109,12 @@ func assetKeyFunc(obj interface{}) (string, error) {
 	return "", errors.Errorf("unsupported type: %T", obj)
 }
 
-// addSafeTLSConfig processes the given SafeTLSConfig and adds the referenced CA, certificate and key to the store.
-func (a *assetStore) addSafeTLSConfig(ctx context.Context, ns string, tlsConfig monitoringv1.SafeTLSConfig) error {
+// addTLSConfig processes the given *SafeTLSConfig and adds the referenced CA, certifcate and key to the store.
+func (a *assetStore) addTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.SafeTLSConfig) error {
+	if tlsConfig == nil {
+		return nil
+	}
+
 	if tlsConfig.CA != (monitoringv1.SecretOrConfigMap{}) {
 		var (
 			ca  string

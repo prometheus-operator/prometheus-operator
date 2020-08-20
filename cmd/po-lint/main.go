@@ -23,6 +23,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -74,7 +75,7 @@ func main() {
 		case v1.PrometheusRuleKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
-				log.Fatalf("unable to convert YALM to JSON: %v", err)
+				log.Fatalf("unable to convert YAML to JSON: %v", err)
 			}
 
 			decoder := json.NewDecoder(bytes.NewBuffer(j))
@@ -88,7 +89,7 @@ func main() {
 		case v1.ServiceMonitorsKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
-				log.Fatalf("unable to convert YALM to JSON: %v", err)
+				log.Fatalf("unable to convert YAML to JSON: %v", err)
 			}
 
 			decoder := json.NewDecoder(bytes.NewBuffer(j))
@@ -102,7 +103,7 @@ func main() {
 		case v1.PodMonitorsKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
-				log.Fatalf("unable to convert YALM to JSON: %v", err)
+				log.Fatalf("unable to convert YAML to JSON: %v", err)
 			}
 
 			decoder := json.NewDecoder(bytes.NewBuffer(j))
@@ -116,7 +117,7 @@ func main() {
 		case v1.ProbesKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
-				log.Fatalf("unable to convert YALM to JSON: %v", err)
+				log.Fatalf("unable to convert YAML to JSON: %v", err)
 			}
 
 			decoder := json.NewDecoder(bytes.NewBuffer(j))
@@ -129,7 +130,7 @@ func main() {
 		case v1.ThanosRulerKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
-				log.Fatalf("unable to convert YALM to JSON: %v", err)
+				log.Fatalf("unable to convert YAML to JSON: %v", err)
 			}
 
 			decoder := json.NewDecoder(bytes.NewBuffer(j))
@@ -140,8 +141,22 @@ func main() {
 			if err != nil {
 				log.Fatalf("thanosRuler is invalid: %v", err)
 			}
+		case v1alpha1.AlertmanagerConfigKind:
+			j, err := yaml.YAMLToJSON(content)
+			if err != nil {
+				log.Fatalf("unable to convert YAML to JSON: %v", err)
+			}
+
+			decoder := json.NewDecoder(bytes.NewBuffer(j))
+			decoder.DisallowUnknownFields()
+
+			var alertmanagerConfig v1alpha1.AlertmanagerConfig
+			err = decoder.Decode(&alertmanagerConfig)
+			if err != nil {
+				log.Fatalf("alertmanagerConfig is invalid: %v", err)
+			}
 		default:
-			log.Fatal("MetaType is unknown to linter. Not in Alertmanager, Prometheus, PrometheusRule, ServiceMonitor, PodMonitor, Probe, ThanosRuler")
+			log.Fatal("MetaType is unknown to linter. Not in Alertmanager, Prometheus, PrometheusRule, ServiceMonitor, PodMonitor, Probe, ThanosRuler, AlertmanagerConfig")
 		}
 	}
 }

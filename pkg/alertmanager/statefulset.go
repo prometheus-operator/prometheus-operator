@@ -36,6 +36,7 @@ import (
 const (
 	governingServiceName   = "alertmanager-operated"
 	defaultRetention       = "120h"
+	tlsAssetsDir           = "/etc/alertmanager/certs"
 	secretsDir             = "/etc/alertmanager/secrets/"
 	configmapsDir          = "/etc/alertmanager/configmaps/"
 	alertmanagerConfDir    = "/etc/alertmanager/config"
@@ -403,7 +404,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			Name: "config-volume",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: a.Spec.ConfigSecret,
+					SecretName: generatedConfigSecretName(a.Name),
+				},
+			},
+		},
+		{
+			Name: "tls-assets",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: tlsAssetsSecretName(a.Name),
 				},
 			},
 		},
@@ -420,6 +429,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		{
 			Name:      "config-volume",
 			MountPath: alertmanagerConfDir,
+		},
+		{
+			Name:      "tls-assets",
+			ReadOnly:  true,
+			MountPath: tlsAssetsDir,
 		},
 		{
 			Name:      volName,
@@ -569,6 +583,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 
 func defaultConfigSecretName(name string) string {
 	return prefixedName(name)
+}
+
+func generatedConfigSecretName(name string) string {
+	return prefixedName(name) + "-generated"
 }
 
 func volumeName(name string) string {

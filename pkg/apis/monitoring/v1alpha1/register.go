@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright 2020 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
+package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,20 +47,8 @@ func init() {
 // Adds the list of known types to api.Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&Prometheus{},
-		&PrometheusList{},
-		&ServiceMonitor{},
-		&ServiceMonitorList{},
-		&PodMonitor{},
-		&PodMonitorList{},
-		&Probe{},
-		&ProbeList{},
-		&Alertmanager{},
-		&AlertmanagerList{},
-		&PrometheusRule{},
-		&PrometheusRuleList{},
-		&ThanosRuler{},
-		&ThanosRulerList{},
+		&AlertmanagerConfig{},
+		&AlertmanagerConfigList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil
