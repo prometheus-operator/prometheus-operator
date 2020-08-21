@@ -675,6 +675,8 @@ type ServiceMonitor struct {
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 // +k8s:openapi-gen=true
 type ServiceMonitorSpec struct {
+	// The job name assigned to scraped metrics by default.
+	JobName string `json:"jobName,omitempty"`
 	// The label to use to retrieve the job name from.
 	JobLabel string `json:"jobLabel,omitempty"`
 	// TargetLabels transfers labels on the Kubernetes Service onto the target.
@@ -745,6 +747,8 @@ type PodMonitor struct {
 // PodMonitorSpec contains specification parameters for a PodMonitor.
 // +k8s:openapi-gen=true
 type PodMonitorSpec struct {
+	// The job name assigned to scraped metrics by default.
+	JobName string `json:"jobName,omitempty"`
 	// The label to use to retrieve the job name from.
 	JobLabel string `json:"jobLabel,omitempty"`
 	// PodTargetLabels transfers labels on the Kubernetes Pod onto the target.

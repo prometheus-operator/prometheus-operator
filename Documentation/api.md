@@ -315,6 +315,7 @@ PodMonitorSpec contains specification parameters for a PodMonitor.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
+| jobName | The job name assigned to scraped metrics by default. | string | false |
 | jobLabel | The label to use to retrieve the job name from. | string | false |
 | podTargetLabels | PodTargetLabels transfers labels on the Kubernetes Pod onto the target. | []string | false |
 | podMetricsEndpoints | A list of endpoints allowed as part of this PodMonitor. | [][PodMetricsEndpoint](#podmetricsendpoint) | true |
@@ -736,6 +737,7 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
+| jobName | The job name assigned to scraped metrics by default. | string | false |
 | jobLabel | The label to use to retrieve the job name from. | string | false |
 | targetLabels | TargetLabels transfers labels on the Kubernetes Service onto the target. | []string | false |
 | podTargetLabels | PodTargetLabels transfers labels on the Kubernetes Pod onto the target. | []string | false |

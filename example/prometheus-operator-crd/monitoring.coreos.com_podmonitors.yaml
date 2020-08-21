@@ -40,6 +40,9 @@ spec:
               jobLabel:
                 description: The label to use to retrieve the job name from.
                 type: string
+              jobName:
+                description: The job name assigned to scraped metrics by default.
+                type: string
               namespaceSelector:
                 description: Selector to select which namespaces the Endpoints objects
                   are discovered from.

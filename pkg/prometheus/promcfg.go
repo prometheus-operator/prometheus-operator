@@ -413,11 +413,15 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	enforcedNamespaceLabel string,
 	enforcedSampleLimit *uint64) yaml.MapSlice {
 
+	jobName := fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)
+	if m.Spec.JobName != "" {
+		jobName = m.Spec.JobName
+	}
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+			Value: jobName,
 		},
 		{
 			Key:   "honor_labels",
@@ -561,23 +565,30 @@ func (cg *configGenerator) generatePodMonitorConfig(
 		})
 	}
 
-	// By default, generate a safe job name from the PodMonitor. We also keep
-	// this around if a jobLabel is set in case the targets don't actually have a
-	// value for it. A single pod may potentially have multiple metrics
-	// endpoints, therefore the endpoints labels is filled with the ports name or
-	// as a fallback the port number.
-
-	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "target_label", Value: "job"},
-		{Key: "replacement", Value: fmt.Sprintf("%s/%s", m.GetNamespace(), m.GetName())},
-	})
-	if m.Spec.JobLabel != "" {
+	if m.Spec.JobName != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(m.Spec.JobLabel)}},
 			{Key: "target_label", Value: "job"},
-			{Key: "regex", Value: "(.+)"},
-			{Key: "replacement", Value: "${1}"},
+			{Key: "replacement", Value: m.Spec.JobName},
 		})
+	} else {
+		// By default, generate a safe job name from the PodMonitor. We also keep
+		// this around if a jobLabel is set in case the targets don't actually have a
+		// value for it. A single pod may potentially have multiple metrics
+		// endpoints, therefore the endpoints labels is filled with the ports name or
+		// as a fallback the port number.
+
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "target_label", Value: "job"},
+			{Key: "replacement", Value: fmt.Sprintf("%s/%s", m.GetNamespace(), m.GetName())},
+		})
+		if m.Spec.JobLabel != "" {
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(m.Spec.JobLabel)}},
+				{Key: "target_label", Value: "job"},
+				{Key: "regex", Value: "(.+)"},
+				{Key: "replacement", Value: "${1}"},
+			})
+		}
 	}
 
 	if ep.Port != "" {
@@ -826,10 +837,15 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	enforcedSampleLimit *uint64) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
+
+	jobName := fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)
+	if m.Spec.JobName != "" {
+		jobName = m.Spec.JobName
+	}
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+			Value: jobName,
 		},
 		{
 			Key:   "honor_labels",
@@ -1021,24 +1037,32 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	// By default, generate a safe job name from the service name.  We also keep
-	// this around if a jobLabel is set in case the targets don't actually have a
-	// value for it. A single service may potentially have multiple metrics
-	// endpoints, therefore the endpoints labels is filled with the ports name or
-	// as a fallback the port number.
-
-	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
-		{Key: "target_label", Value: "job"},
-		{Key: "replacement", Value: "${1}"},
-	})
-	if m.Spec.JobLabel != "" {
+	if m.Spec.JobName != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(m.Spec.JobLabel)}},
 			{Key: "target_label", Value: "job"},
-			{Key: "regex", Value: "(.+)"},
+			{Key: "replacement", Value: m.Spec.JobName},
+		})
+	} else {
+		// By default, generate a safe job name from the service name.  We also keep
+		// this around if a jobLabel is set in case the targets don't actually have a
+		// value for it. A single service may potentially have multiple metrics
+		// endpoints, therefore the endpoints labels is filled with the ports name or
+		// as a fallback the port number.
+
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
+			{Key: "target_label", Value: "job"},
 			{Key: "replacement", Value: "${1}"},
 		})
+
+		if m.Spec.JobLabel != "" {
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(m.Spec.JobLabel)}},
+				{Key: "target_label", Value: "job"},
+				{Key: "regex", Value: "(.+)"},
+				{Key: "replacement", Value: "${1}"},
+			})
+		}
 	}
 
 	if ep.Port != "" {
