@@ -10,11 +10,12 @@ Release cadence of first pre-releases being cut is 6 weeks.
 | v0.40   | 2020-06-17                                 | Lili Cosic (GitHub: @lilic)                 |
 | v0.41   | 2020-07-29                                 | Sergiusz Urbaniak (GitHub: @s-urbaniak)     |
 | v0.42   | 2020-09-09                                 | Matthias Loibl (GitHub: @metalmatze)        |
-| v0.43   | 2020-10-21                                 | **searching for volunteer**                 |
+| v0.43   | 2020-10-21                                 | Simon Pasquier (GitHub: @simonpasquier)     |
+| v0.44   | 2020-12-02                                 | **searching for volunteer**                 |
 
 # How to cut a new release
 
-> This guide is strongly based on the [Prometheus release instructions](https://github.com/prometheus/prometheus/wiki/HOWTO-cut-a-new-release).
+> This guide is strongly based on the [Prometheus release instructions](https://github.com/prometheus/prometheus/blob/master/RELEASE.md).
 
 ## Branch management and versioning strategy
 
