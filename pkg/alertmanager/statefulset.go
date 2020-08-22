@@ -366,8 +366,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			MountPath: secretsDir + s,
 		})
 	}
-
-	terminationGracePeriod := int64(0)
+	
+	var terminationGracePeriod int64
+	if nil != a.Spec.TerminationGracePeriodSeconds {
+		terminationGracePeriod = *a.Spec.TerminationGracePeriodSeconds
+	} else {
+		terminationGracePeriod = int64(300)
+	}
 	finalLabels := config.Labels.Merge(podLabels)
 	return &appsv1.StatefulSetSpec{
 		ServiceName: governingServiceName,
