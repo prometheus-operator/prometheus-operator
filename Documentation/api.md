@@ -111,6 +111,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
+| terminationGracePeriodSeconds | If specified, the pod's terminationGracePeriodSeconds. | *int64 | false | 
 | podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
 | version | Version the cluster should be on. | string | false |
 | tag | Tag of Alertmanager container image to be deployed. Defaults to the value of `version`. | string | false |
@@ -254,6 +255,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
+| terminationGracePeriodSeconds | If specified, the pod's terminationGracePeriodSeconds. | *int64 | false | 
 | podMetadata | Standard object’s metadata. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#metadata Metadata Labels and Annotations gets propagated to the prometheus pods. | *[metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) | false |
 | serviceMonitorSelector | ServiceMonitors to be selected for target discovery. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
 | serviceMonitorNamespaceSelector | Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#labelselector-v1-meta) | false |
