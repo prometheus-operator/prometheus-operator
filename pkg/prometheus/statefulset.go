@@ -266,7 +266,12 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Servi
 func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapNames []string) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
-	terminationGracePeriod := int64(600)
+	var terminationGracePeriod int64
+	if nil != p.Spec.TerminationGracePeriodSeconds {
+		terminationGracePeriod = *p.Spec.TerminationGracePeriodSeconds
+	} else {
+		terminationGracePeriod = int64(300)
+	}
 
 	versionStr := strings.TrimLeft(p.Spec.Version, "v")
 
