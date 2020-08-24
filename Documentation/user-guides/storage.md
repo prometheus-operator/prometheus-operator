@@ -52,6 +52,44 @@ spec:
 
 When creating the Prometheus object, a PersistentVolumeClaim is used for each Pod in the StatefulSet, and the storage should automatically be provisioned, mounted and used.
 
+## Storage Provisioning on vSphere and VMware Cloud
+
+When provisioning to vSphere we need to create a `StorageClass` accordingly. This example uses the out-of tree CSI-Provider.
+
+### If you use TKG on vSphere the Storage-Class will be created automatically. If not create a Storage Class accordingly:
+
+Below is an example of a vSphere Storage-Class created on VMware-Cloud:
+
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: standard      # this is the storage class name we will create in K8s
+  namespace: default
+  labels:
+      app: myfirstapp  # label for the storage-class
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: csi.vsphere.vmware.com
+allowVolumeExpansion: true
+parameters:
+    storagePolicyName: "vSAN Default Storage Policy" # our vSAN Storage policy from vCenter
+    datastoreurl: "ds:///vmfs/volumes/vsan:e4fdeb26bf93402f-956989e5b4bf358e/" # the Datasture-URL of our WorkloadDatastore
+
+Next Step is to adjust the values.yaml files accordingly so prometheus will make use of the storage class and create the volumes automatically:
+
+- Edit this in the "values.yaml" charts file:
+
+storageSpec: 
+      volumeClaimTemplate:
+        spec:
+          storageClassName: default
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi
+ #       selector: {}
+
+
 ## Manual storage provisioning
 
 The Prometheus CRD specification allows you to support arbitrary storage through a PersistentVolumeClaim.
