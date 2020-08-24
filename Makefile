@@ -242,7 +242,7 @@ check-license:
 
 .PHONY: shellcheck
 shellcheck: $(SHELLCHECK_BINARY)
-	$(SHELLCHECK_BINARY) $(shell find . -type f -name "*.sh")
+	$(SHELLCHECK_BINARY) $(shell find . -type f -name "*.sh" -not -path "*/vendor/*")
 
 ###########
 # Testing #
