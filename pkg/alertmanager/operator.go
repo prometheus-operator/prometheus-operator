@@ -40,7 +40,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -284,17 +283,6 @@ func (c *Operator) enqueue(obj interface{}) {
 	}
 
 	c.queue.Add(key)
-}
-
-// enqueueForNamespace enqueues all Alertmanager object keys that belong to the
-// given namespace.
-func (c *Operator) enqueueForNamespace(ns string) {
-	cache.ListAll(c.alrtInf.GetStore(), labels.Everything(), func(obj interface{}) {
-		am := obj.(*monitoringv1.Alertmanager)
-		if am.Namespace == ns {
-			c.enqueue(am)
-		}
-	})
 }
 
 // worker runs a worker thread that just dequeues items, processes them

@@ -193,9 +193,24 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", lb))
 	}
 
+	ports := []v1.ContainerPort{
+		{
+			Name:          "grpc",
+			ContainerPort: 10901,
+			Protocol:      v1.ProtocolTCP,
+		},
+	}
 	if tr.Spec.ListenLocal {
 		trCLIArgs = append(trCLIArgs, "--http-address=localhost:10902")
+	} else {
+		ports = append(ports,
+			v1.ContainerPort{
+				Name:          tr.Spec.PortName,
+				ContainerPort: 10902,
+				Protocol:      v1.ProtocolTCP,
+			})
 	}
+
 	if tr.Spec.LogLevel != "" && tr.Spec.LogLevel != "info" {
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--log.level=%s", tr.Spec.LogLevel))
 	}
@@ -370,24 +385,13 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 	operatorContainers := append([]v1.Container{
 		{
-			Name:         "thanos-ruler",
-			Image:        tr.Spec.Image,
-			Args:         trCLIArgs,
-			Env:          trEnvVars,
-			VolumeMounts: trVolumeMounts,
-			Resources:    tr.Spec.Resources,
-			Ports: []v1.ContainerPort{
-				{
-					Name:          "grpc",
-					ContainerPort: 10901,
-					Protocol:      v1.ProtocolTCP,
-				},
-				{
-					Name:          "http",
-					ContainerPort: 10902,
-					Protocol:      v1.ProtocolTCP,
-				},
-			},
+			Name:                     "thanos-ruler",
+			Image:                    tr.Spec.Image,
+			Args:                     trCLIArgs,
+			Env:                      trEnvVars,
+			VolumeMounts:             trVolumeMounts,
+			Resources:                tr.Spec.Resources,
+			Ports:                    ports,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
 	}, additionalContainers...)
@@ -458,13 +462,13 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 				{
 					Name:       tr.Spec.PortName,
 					Port:       10902,
-					TargetPort: intstr.FromInt(10902),
+					TargetPort: intstr.FromString(tr.Spec.PortName),
 					Protocol:   v1.ProtocolTCP,
 				},
 				{
 					Name:       "grpc",
 					Port:       10901,
-					TargetPort: intstr.FromInt(10901),
+					TargetPort: intstr.FromString("grpc"),
 					Protocol:   v1.ProtocolTCP,
 				},
 			},

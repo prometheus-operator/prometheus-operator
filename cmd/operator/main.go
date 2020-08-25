@@ -74,9 +74,8 @@ func (n namespaces) Set(value string) error {
 	if n == nil {
 		return errors.New("expected n of type namespaces to be initialized")
 	}
-	ns := strings.Split(value, ",")
-	for i := range ns {
-		n[ns[i]] = struct{}{}
+	for _, ns := range strings.Split(value, ",") {
+		n[ns] = struct{}{}
 	}
 	return nil
 }
@@ -105,7 +104,6 @@ func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() er
 }
 
 var (
-	cfg                prometheuscontroller.Config
 	availableLogLevels = []string{
 		logLevelAll,
 		logLevelDebug,
@@ -118,11 +116,13 @@ var (
 		logFormatLogfmt,
 		logFormatJson,
 	}
+	cfg = prometheuscontroller.Config{
+		CrdKinds: monitoringv1.DefaultCrdKinds,
+	}
+	flagset = flag.CommandLine
 )
 
 func init() {
-	cfg.CrdKinds = monitoringv1.DefaultCrdKinds
-	flagset := flag.CommandLine
 	klog.InitFlags(flagset)
 	flagset.StringVar(&cfg.Host, "apiserver", "", "API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.")
 	flagset.StringVar(&cfg.TLSConfig.CertFile, "cert-file", "", " - NOT RECOMMENDED FOR PRODUCTION - Path to public TLS certificate file.")
@@ -156,32 +156,11 @@ func init() {
 	flagset.StringVar(&cfg.PromSelector, "prometheus-instance-selector", "", "Label selector to filter Prometheus CRDs to manage")
 	flagset.StringVar(&cfg.AlertManagerSelector, "alertmanager-instance-selector", "", "Label selector to filter AlertManager CRDs to manage")
 	flagset.StringVar(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "", "Label selector to filter ThanosRuler CRDs to manage")
-	flagset.Parse(os.Args[1:])
-
-	cfg.Namespaces.AllowList = ns.asSlice()
-	if len(cfg.Namespaces.AllowList) == 0 {
-		cfg.Namespaces.AllowList = append(cfg.Namespaces.AllowList, v1.NamespaceAll)
-	}
-
-	cfg.Namespaces.DenyList = deniedNs.asSlice()
-	cfg.Namespaces.PrometheusAllowList = prometheusNs.asSlice()
-	cfg.Namespaces.AlertmanagerAllowList = alertmanagerNs.asSlice()
-	cfg.Namespaces.ThanosRulerAllowList = thanosRulerNs.asSlice()
-
-	if len(cfg.Namespaces.PrometheusAllowList) == 0 {
-		cfg.Namespaces.PrometheusAllowList = cfg.Namespaces.AllowList
-	}
-
-	if len(cfg.Namespaces.AlertmanagerAllowList) == 0 {
-		cfg.Namespaces.AlertmanagerAllowList = cfg.Namespaces.AllowList
-	}
-
-	if len(cfg.Namespaces.ThanosRulerAllowList) == 0 {
-		cfg.Namespaces.ThanosRulerAllowList = cfg.Namespaces.AllowList
-	}
 }
 
 func Main() int {
+	flagset.Parse(os.Args[1:])
+
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	if cfg.LogFormat == logFormatJson {
 		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
@@ -211,6 +190,28 @@ func Main() int {
 	if len(ns) > 0 && len(deniedNs) > 0 {
 		fmt.Fprint(os.Stderr, "--namespaces and --deny-namespaces are mutually exclusive. Please provide only one of them.\n")
 		return 1
+	}
+
+	cfg.Namespaces.AllowList = ns
+	if len(cfg.Namespaces.AllowList) == 0 {
+		cfg.Namespaces.AllowList[v1.NamespaceAll] = struct{}{}
+	}
+
+	cfg.Namespaces.DenyList = deniedNs
+	cfg.Namespaces.PrometheusAllowList = prometheusNs
+	cfg.Namespaces.AlertmanagerAllowList = alertmanagerNs
+	cfg.Namespaces.ThanosRulerAllowList = thanosRulerNs
+
+	if len(cfg.Namespaces.PrometheusAllowList) == 0 {
+		cfg.Namespaces.PrometheusAllowList = cfg.Namespaces.AllowList
+	}
+
+	if len(cfg.Namespaces.AlertmanagerAllowList) == 0 {
+		cfg.Namespaces.AlertmanagerAllowList = cfg.Namespaces.AllowList
+	}
+
+	if len(cfg.Namespaces.ThanosRulerAllowList) == 0 {
+		cfg.Namespaces.ThanosRulerAllowList = cfg.Namespaces.AllowList
 	}
 
 	r := prometheus.NewRegistry()

@@ -127,12 +127,12 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ns string, a *monitoring
 		return nil, errors.Wrap(err, fmt.Sprintf("creating alertmanager %v failed", a.Name))
 	}
 
-	return a, f.WaitForAlertmanagerClusterReady(ns, a.Name, int(*a.Spec.Replicas))
+	return a, f.WaitForAlertmanagerReady(ns, a.Name, int(*a.Spec.Replicas))
 }
 
-// WaitForAlertmanagerClusterReady waits for each individual pod as well as the
+// WaitForAlertmanagerReady waits for each individual pod as well as the
 // cluster as a whole to be ready.
-func (f *Framework) WaitForAlertmanagerClusterReady(ns, name string, replicas int) error {
+func (f *Framework) WaitForAlertmanagerReady(ns, name string, replicas int) error {
 	if err := WaitForPodsReady(
 		f.KubeClient,
 		ns,
@@ -149,7 +149,7 @@ func (f *Framework) WaitForAlertmanagerClusterReady(ns, name string, replicas in
 
 	for i := 0; i < replicas; i++ {
 		name := fmt.Sprintf("alertmanager-%v-%v", name, strconv.Itoa(i))
-		if err := f.WaitForAlertmanagerInitializedCluster(ns, name, replicas); err != nil {
+		if err := f.WaitForAlertmanagerInitialized(ns, name, replicas); err != nil {
 			return errors.Wrap(err,
 				fmt.Sprintf(
 					"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready",
@@ -209,12 +209,17 @@ func amImage(version string) string {
 	return fmt.Sprintf("quay.io/prometheus/alertmanager:%s", version)
 }
 
-func (f *Framework) WaitForAlertmanagerInitializedCluster(ns, name string, amountPeers int) error {
+func (f *Framework) WaitForAlertmanagerInitialized(ns, name string, amountPeers int) error {
 	var pollError error
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
 		amStatus, err := f.GetAlertmanagerStatus(ns, name)
 		if err != nil {
 			return false, err
+		}
+
+		isAlertmanagerInClusterMode := amountPeers > 1
+		if !isAlertmanagerInClusterMode && amStatus.Status == "success" {
+			return true, nil
 		}
 
 		if amStatus.Data.ClusterStatus == nil {
@@ -408,7 +413,8 @@ type amAPISil struct {
 }
 
 type amAPIStatusResp struct {
-	Data amAPIStatusData `json:"data"`
+	Status string          `json:"status"`
+	Data   amAPIStatusData `json:"data"`
 }
 
 type amAPIStatusData struct {
