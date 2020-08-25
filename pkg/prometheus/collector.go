@@ -15,8 +15,7 @@
 package prometheus
 
 import (
-	"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-
+	v1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"
 )
@@ -33,11 +32,15 @@ var (
 )
 
 type prometheusCollector struct {
-	store cache.Store
+	stores []cache.Store
 }
 
 func NewPrometheusCollector(s cache.Store) *prometheusCollector {
-	return &prometheusCollector{store: s}
+	return &prometheusCollector{stores: []cache.Store{s}}
+}
+
+func NewPrometheusCollectorForStores(s ...cache.Store) *prometheusCollector {
+	return &prometheusCollector{stores: s}
 }
 
 // Describe implements the prometheus.Collector interface.
@@ -47,8 +50,10 @@ func (c *prometheusCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements the prometheus.Collector interface.
 func (c *prometheusCollector) Collect(ch chan<- prometheus.Metric) {
-	for _, p := range c.store.List() {
-		c.collectPrometheus(ch, p.(*v1.Prometheus))
+	for _, s := range c.stores {
+		for _, p := range s.List() {
+			c.collectPrometheus(ch, p.(*v1.Prometheus))
+		}
 	}
 }
 
