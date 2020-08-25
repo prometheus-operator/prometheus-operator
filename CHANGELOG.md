@@ -1,4 +1,11 @@
-## Next release
+## 0.38.2 / 2020-08-25
+
+* [BUGFIX] Retain metadata for embedded PVC objects (#3209)
+* [BUGFIX] Add support for `absent_over_time()` PromQL function (#3229)
+* [BUGFIX] Fix definition of thanos-ruler-operated service (#3300)
+* [BUGFIX] Fix typo in statefulset informer (#3300)
+* [BUGFIX] Create separate namespace informers when needed (#3300)
+* [BUGFIX] Automatically disable high availability mode for 1 replica alertmanager (#3300)
 
 ## 0.38.1 / 2020-04-16
 
