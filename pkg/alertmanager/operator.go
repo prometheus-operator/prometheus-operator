@@ -23,8 +23,8 @@ import (
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned"
+	"github.com/coreos/prometheus-operator/pkg/informers"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/listwatch"
 	"github.com/coreos/prometheus-operator/pkg/operator"
 	prometheusoperator "github.com/coreos/prometheus-operator/pkg/prometheus"
 
@@ -38,9 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -57,8 +55,8 @@ type Operator struct {
 	mclient monitoringclient.Interface
 	logger  log.Logger
 
-	alrtInf cache.SharedIndexInformer
-	ssetInf cache.SharedIndexInformer
+	alrtInfs *informers.InformersForResource
+	ssetInfs *informers.InformersForResource
 
 	queue workqueue.RateLimitingInterface
 
@@ -117,32 +115,32 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 		},
 	}
 
-	o.alrtInf = cache.NewSharedIndexInformer(
-		o.metrics.NewInstrumentedListerWatcher(
-			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{
-					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						options.LabelSelector = o.config.AlertManagerSelector
-						return o.mclient.MonitoringV1().Alertmanagers(namespace).List(context.TODO(), options)
-					},
-					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-						options.LabelSelector = o.config.AlertManagerSelector
-						return o.mclient.MonitoringV1().Alertmanagers(namespace).Watch(context.TODO(), options)
-					},
-				}
-			}),
+	o.alrtInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList,
+			mclient, resyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = o.config.AlertManagerSelector
+			},
 		),
-		&monitoringv1.Alertmanager{}, resyncPeriod, cache.Indexers{},
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertmanagerName),
 	)
-	o.metrics.MustRegister(NewAlertmanagerCollector(o.alrtInf.GetStore()))
-	o.ssetInf = cache.NewSharedIndexInformer(
-		o.metrics.NewInstrumentedListerWatcher(
-			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return cache.NewListWatchFromClient(o.kclient.AppsV1().RESTClient(), "statefulsets", namespace, fields.Everything())
-			}),
+
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating alertmanager informers")
+	}
+
+	o.ssetInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList,
+			o.kclient, resyncPeriod, nil,
 		),
-		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{},
+		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating statefulset informers")
+	}
 
 	return o, nil
 }
@@ -150,21 +148,24 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 // waitForCacheSync waits for the informers' caches to be synced.
 func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 	ok := true
-	informers := []struct {
-		name     string
-		informer cache.SharedIndexInformer
+
+	for _, infs := range []struct {
+		name                 string
+		informersForResource *informers.InformersForResource
 	}{
-		{"Alertmanager", c.alrtInf},
-		{"StatefulSet", c.ssetInf},
-	}
-	for _, inf := range informers {
-		if !cache.WaitForCacheSync(stopc, inf.informer.HasSynced) {
-			level.Error(c.logger).Log("msg", fmt.Sprintf("failed to sync %s cache", inf.name))
-			ok = false
-		} else {
-			level.Debug(c.logger).Log("msg", fmt.Sprintf("successfully synced %s cache", inf.name))
+		{"Alertmanager", c.alrtInfs},
+		{"StatefulSet", c.ssetInfs},
+	} {
+		for _, inf := range infs.informersForResource.GetInformers() {
+			if !cache.WaitForCacheSync(stopc, inf.Informer().HasSynced) {
+				level.Error(c.logger).Log("msg", fmt.Sprintf("failed to sync %s cache", infs.name))
+				ok = false
+			} else {
+				level.Debug(c.logger).Log("msg", fmt.Sprintf("successfully synced %s cache", infs.name))
+			}
 		}
 	}
+
 	if !ok {
 		return errors.New("failed to sync caches")
 	}
@@ -174,12 +175,12 @@ func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 
 // addHandlers adds the eventhandlers to the informers.
 func (c *Operator) addHandlers() {
-	c.alrtInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	c.alrtInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleAlertmanagerAdd,
 		DeleteFunc: c.handleAlertmanagerDelete,
 		UpdateFunc: c.handleAlertmanagerUpdate,
 	})
-	c.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	c.ssetInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleStatefulSetAdd,
 		DeleteFunc: c.handleStatefulSetDelete,
 		UpdateFunc: c.handleStatefulSetUpdate,
@@ -213,8 +214,8 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 
 	go c.worker()
 
-	go c.alrtInf.Run(stopc)
-	go c.ssetInf.Run(stopc)
+	go c.alrtInfs.Start(stopc)
+	go c.ssetInfs.Start(stopc)
 	if err := c.waitForCacheSync(stopc); err != nil {
 		return err
 	}
@@ -300,14 +301,16 @@ func (c *Operator) alertmanagerForStatefulSet(sset interface{}) *monitoringv1.Al
 	}
 
 	aKey := statefulSetKeyToAlertmanagerKey(key)
-	a, exists, err := c.alrtInf.GetStore().GetByKey(aKey)
+	a, err := c.alrtInfs.Get(aKey)
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+
 	if err != nil {
 		level.Error(c.logger).Log("msg", "Alertmanager lookup failed", "err", err)
 		return nil
 	}
-	if !exists {
-		return nil
-	}
+
 	return a.(*monitoringv1.Alertmanager)
 }
 
@@ -395,27 +398,17 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 }
 
 func (c *Operator) sync(key string) error {
-	obj, exists, err := c.alrtInf.GetIndexer().GetByKey(key)
+	aobj, err := c.alrtInfs.Get(key)
+
+	if apierrors.IsNotFound(err) {
+		// Dependent resources are cleaned up by K8s via OwnerReferences
+		return nil
+	}
 	if err != nil {
 		return err
 	}
-	if !exists {
-		// TODO(fabxc): we want to do server side deletion due to the
-		// variety of resources we create.
-		// Doing so just based on the deletion event is not reliable, so
-		// we have to garbage collect the controller-created resources
-		// in some other way.
-		//
-		// Let's rely on the index key matching that of the created
-		// configmap and replica
-		// set for now. This does not work if we delete Alertmanager
-		// resources as the
-		// controller is not running – that could be solved via garbage
-		// collection later.
-		return c.destroyAlertmanager(key)
-	}
 
-	am := obj.(*monitoringv1.Alertmanager)
+	am := aobj.(*monitoringv1.Alertmanager)
 	am = am.DeepCopy()
 	am.APIVersion = monitoringv1.SchemeGroupVersion.String()
 	am.Kind = monitoringv1.AlertmanagersKind
@@ -434,10 +427,13 @@ func (c *Operator) sync(key string) error {
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
 	// Ensure we have a StatefulSet running Alertmanager deployed.
-	obj, exists, err = c.ssetInf.GetIndexer().GetByKey(alertmanagerKeyToStatefulSetKey(key))
-	if err != nil {
+	obj, err := c.ssetInfs.Get(alertmanagerKeyToStatefulSetKey(key))
+
+	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "retrieving statefulset failed")
 	}
+
+	exists := !apierrors.IsNotFound(err)
 
 	if !exists {
 		sset, err := makeStatefulSet(am, nil, c.config)
@@ -550,49 +546,4 @@ func needsUpdate(pod *v1.Pod, tmpl v1.PodTemplateSpec) bool {
 	}
 
 	return false
-}
-
-// TODO(brancz): Remove this function once Kubernetes 1.7 compatibility is
-// dropped.
-// Starting with Kubernetes 1.8 OwnerReferences are properly handled for CRDs.
-func (c *Operator) destroyAlertmanager(key string) error {
-	ssetKey := alertmanagerKeyToStatefulSetKey(key)
-	obj, exists, err := c.ssetInf.GetStore().GetByKey(ssetKey)
-	if err != nil {
-		return errors.Wrap(err, "retrieving statefulset from cache failed")
-	}
-	if !exists {
-		return nil
-	}
-	sset := obj.(*appsv1.StatefulSet)
-	*sset.Spec.Replicas = 0
-
-	// Update the replica count to 0 and wait for all pods to be deleted.
-	ssetClient := c.kclient.AppsV1().StatefulSets(sset.Namespace)
-
-	if _, err := ssetClient.Update(context.TODO(), sset, metav1.UpdateOptions{}); err != nil {
-		return errors.Wrap(err, "updating statefulset for scale-down failed")
-	}
-
-	podClient := c.kclient.CoreV1().Pods(sset.Namespace)
-
-	// TODO(fabxc): temporary solution until StatefulSet status provides
-	// necessary info to know whether scale-down completed.
-	for {
-		pods, err := podClient.List(context.TODO(), ListOptions(alertmanagerNameFromStatefulSetName(sset.Name)))
-		if err != nil {
-			return errors.Wrap(err, "retrieving pods of statefulset failed")
-		}
-		if len(pods.Items) == 0 {
-			break
-		}
-		time.Sleep(50 * time.Millisecond)
-	}
-
-	// StatefulSet scaled down, we can delete it.
-	if err := ssetClient.Delete(context.TODO(), sset.Name, metav1.DeleteOptions{}); err != nil {
-		return errors.Wrap(err, "deleting statefulset failed")
-	}
-
-	return nil
 }
