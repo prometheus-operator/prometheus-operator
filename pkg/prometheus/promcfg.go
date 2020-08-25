@@ -26,6 +26,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -74,8 +75,13 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 }
 
 func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.MapSlice {
+	pathForSecretSelector := func(sel *corev1.SecretKeySelector) string {
+		return path.Join(tlsAssetsDir, tlsAssetKeyFromSecretSelector(namespace, sel).String())
+	}
+	pathForConfigMapSelector := func(sel *corev1.ConfigMapKeySelector) string {
+		return path.Join(tlsAssetsDir, tlsAssetKeyFromConfigMapSelector(namespace, sel).String())
+	}
 	if tls != nil {
-		pathPrefix := path.Join(tlsAssetsDir, namespace)
 		tlsConfig := yaml.MapSlice{
 			{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
 		}
@@ -83,25 +89,25 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.M
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
 		}
 		if tls.CA.Secret != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathPrefix + "_" + tls.CA.Secret.Name + "_" + tls.CA.Secret.Key})
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathForSecretSelector(tls.CA.Secret)})
 		}
 		if tls.CA.ConfigMap != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathPrefix + "_" + tls.CA.ConfigMap.Name + "_" + tls.CA.ConfigMap.Key})
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathForConfigMapSelector(tls.CA.ConfigMap)})
 		}
 		if tls.CertFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
 		}
 		if tls.Cert.Secret != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathPrefix + "_" + tls.Cert.Secret.Name + "_" + tls.Cert.Secret.Key})
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathForSecretSelector(tls.Cert.Secret)})
 		}
 		if tls.Cert.ConfigMap != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathPrefix + "_" + tls.Cert.ConfigMap.Name + "_" + tls.Cert.ConfigMap.Key})
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathForConfigMapSelector(tls.Cert.ConfigMap)})
 		}
 		if tls.KeyFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
 		}
 		if tls.KeySecret != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathPrefix + "_" + tls.KeySecret.Name + "_" + tls.KeySecret.Key})
+			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathForSecretSelector(tls.KeySecret)})
 		}
 		if tls.ServerName != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})

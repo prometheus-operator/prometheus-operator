@@ -1207,11 +1207,13 @@ func (c *Operator) sync(key string) error {
 		return err
 	}
 
-	if err := c.createOrUpdateConfigurationSecret(p, ruleConfigMapNames); err != nil {
+	assetCacher := newAssetCache(newSecretIndexer(c.kclient.CoreV1()), newConfigMapIndexer(c.kclient.CoreV1()))
+
+	if err := c.createOrUpdateConfigurationSecret(p, ruleConfigMapNames, assetCacher); err != nil {
 		return errors.Wrap(err, "creating config failed")
 	}
 
-	if err := c.createOrUpdateTLSAssetSecret(p); err != nil {
+	if err := c.createOrUpdateTLSAssetSecret(p, assetCacher); err != nil {
 		return errors.Wrap(err, "creating tls asset secret failed")
 	}
 
@@ -1414,91 +1416,72 @@ func (c *Operator) loadAdditionalScrapeConfigsSecret(additionalScrapeConfigs *v1
 	return nil, nil
 }
 
-func extractCredKey(secret *v1.Secret, sel v1.SecretKeySelector, cred string) (string, error) {
-	if s, ok := secret.Data[sel.Key]; ok {
-		return string(s), nil
-	}
-	return "", fmt.Errorf("secret %s key %q in secret %q not found", cred, sel.Key, sel.Name)
+type secretIndexer struct {
+	client corev1client.SecretsGetter
+	cache  map[string]*v1.Secret
 }
 
-func getCredFromSecret(c corev1client.SecretInterface, sel v1.SecretKeySelector, cred string, cacheKey string, cache map[string]*v1.Secret) (_ string, err error) {
-	var s *v1.Secret
-	var ok bool
-
-	if s, ok = cache[cacheKey]; !ok {
-		if s, err = c.Get(context.TODO(), sel.Name, metav1.GetOptions{}); err != nil {
-			return "", fmt.Errorf("unable to fetch %s secret %q: %s", cred, sel.Name, err)
-		}
-		cache[cacheKey] = s
+func newSecretIndexer(c corev1client.SecretsGetter) *secretIndexer {
+	return &secretIndexer{
+		client: c,
+		cache:  make(map[string]*v1.Secret),
 	}
-	return extractCredKey(s, sel, cred)
 }
 
-func getCredFromConfigMap(c corev1client.ConfigMapInterface, sel v1.ConfigMapKeySelector, cred string, cacheKey string, cache map[string]*v1.ConfigMap) (_ string, err error) {
-	var s *v1.ConfigMap
-	var ok bool
+func (i *secretIndexer) getKey(namespace string, sel v1.SecretKeySelector) (string, error) {
+	var (
+		err      error
+		cacheKey = fmt.Sprintf("%s/%s", namespace, sel.Name)
+	)
 
-	if s, ok = cache[cacheKey]; !ok {
-		if s, err = c.Get(context.TODO(), sel.Name, metav1.GetOptions{}); err != nil {
-			return "", fmt.Errorf("unable to fetch %s configmap %q: %s", cred, sel.Name, err)
+	s, found := i.cache[cacheKey]
+	if !found {
+		s, err = i.client.Secrets(namespace).Get(context.TODO(), sel.Name, metav1.GetOptions{})
+		if err != nil {
+			return "", errors.Wrapf(err, "unable to get secret %q", cacheKey)
 		}
-		cache[cacheKey] = s
+		i.cache[cacheKey] = s
 	}
 
-	if a, ok := s.Data[sel.Key]; ok {
-		return string(a), nil
+	if _, found := s.Data[sel.Key]; !found {
+		return "", fmt.Errorf("key %q in secret %q not found", sel.Key, cacheKey)
 	}
-	return "", fmt.Errorf("config %s key %q in configmap %q not found", cred, sel.Key, sel.Name)
+
+	return string(s.Data[sel.Key]), nil
 }
 
-func loadBasicAuthSecretFromAPI(basicAuth *monitoringv1.BasicAuth, c corev1client.CoreV1Interface, ns string, cache map[string]*v1.Secret) (BasicAuthCredentials, error) {
-	var username string
-	var password string
-	var err error
-
-	sClient := c.Secrets(ns)
-
-	if username, err = getCredFromSecret(sClient, basicAuth.Username, "username", ns+"/"+basicAuth.Username.Name, cache); err != nil {
-		return BasicAuthCredentials{}, err
-	}
-
-	if password, err = getCredFromSecret(sClient, basicAuth.Password, "password", ns+"/"+basicAuth.Password.Name, cache); err != nil {
-		return BasicAuthCredentials{}, err
-	}
-
-	return BasicAuthCredentials{username: username, password: password}, nil
+type configMapIndexer struct {
+	client corev1client.ConfigMapsGetter
+	cache  map[string]*v1.ConfigMap
 }
 
-func loadBasicAuthSecret(basicAuth *monitoringv1.BasicAuth, s *v1.SecretList) (BasicAuthCredentials, error) {
-	var username string
-	var password string
-	var err error
+func newConfigMapIndexer(c corev1client.ConfigMapsGetter) *configMapIndexer {
+	return &configMapIndexer{
+		client: c,
+		cache:  make(map[string]*v1.ConfigMap),
+	}
+}
 
-	for _, secret := range s.Items {
+func (i *configMapIndexer) getKey(namespace string, sel v1.ConfigMapKeySelector) (string, error) {
+	var (
+		err      error
+		cacheKey = fmt.Sprintf("%s/%s", namespace, sel.Name)
+	)
 
-		if secret.Name == basicAuth.Username.Name {
-			if username, err = extractCredKey(&secret, basicAuth.Username, "username"); err != nil {
-				return BasicAuthCredentials{}, err
-			}
+	cm, found := i.cache[cacheKey]
+	if !found {
+		cm, err = i.client.ConfigMaps(namespace).Get(context.TODO(), sel.Name, metav1.GetOptions{})
+		if err != nil {
+			return "", errors.Wrapf(err, "unable to get configmap %q", sel.Name)
 		}
-
-		if secret.Name == basicAuth.Password.Name {
-			if password, err = extractCredKey(&secret, basicAuth.Password, "password"); err != nil {
-				return BasicAuthCredentials{}, err
-			}
-
-		}
-		if username != "" && password != "" {
-			break
-		}
+		i.cache[cacheKey] = cm
 	}
 
-	if username == "" && password == "" {
-		return BasicAuthCredentials{}, fmt.Errorf("basic auth username and password secret not found")
+	if _, found := cm.Data[sel.Key]; !found {
+		return "", errors.Errorf("key %q in configmap %q not found", sel.Key, sel.Name)
 	}
 
-	return BasicAuthCredentials{username: username, password: password}, nil
-
+	return cm.Data[sel.Key], nil
 }
 
 func gzipConfig(buf *bytes.Buffer, conf []byte) error {
@@ -1510,222 +1493,7 @@ func gzipConfig(buf *bytes.Buffer, conf []byte) error {
 	return nil
 }
 
-func (c *Operator) loadBasicAuthSecrets(
-	mons map[string]*monitoringv1.ServiceMonitor,
-	remoteReads []monitoringv1.RemoteReadSpec,
-	remoteWrites []monitoringv1.RemoteWriteSpec,
-	apiserverConfig *monitoringv1.APIServerConfig,
-	SecretsInPromNS *v1.SecretList,
-) (map[string]BasicAuthCredentials, error) {
-
-	secrets := map[string]BasicAuthCredentials{}
-	nsSecretCache := make(map[string]*v1.Secret)
-	for _, mon := range mons {
-		for i, ep := range mon.Spec.Endpoints {
-			if ep.BasicAuth != nil {
-				credentials, err := loadBasicAuthSecretFromAPI(ep.BasicAuth, c.kclient.CoreV1(), mon.Namespace, nsSecretCache)
-				if err != nil {
-					return nil, fmt.Errorf("could not generate basicAuth for servicemonitor %s. %s", mon.Name, err)
-				}
-				secrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = credentials
-			}
-
-		}
-	}
-
-	for i, remote := range remoteReads {
-		if remote.BasicAuth != nil {
-			credentials, err := loadBasicAuthSecret(remote.BasicAuth, SecretsInPromNS)
-			if err != nil {
-				return nil, fmt.Errorf("could not generate basicAuth for remote_read config %d. %s", i, err)
-			}
-			secrets[fmt.Sprintf("remoteRead/%d", i)] = credentials
-		}
-	}
-
-	for i, remote := range remoteWrites {
-		if remote.BasicAuth != nil {
-			credentials, err := loadBasicAuthSecret(remote.BasicAuth, SecretsInPromNS)
-			if err != nil {
-				return nil, fmt.Errorf("could not generate basicAuth for remote_write config %d. %s", i, err)
-			}
-			secrets[fmt.Sprintf("remoteWrite/%d", i)] = credentials
-		}
-	}
-
-	// load apiserver basic auth secret
-	if apiserverConfig != nil && apiserverConfig.BasicAuth != nil {
-		credentials, err := loadBasicAuthSecret(apiserverConfig.BasicAuth, SecretsInPromNS)
-		if err != nil {
-			return nil, fmt.Errorf("could not generate basicAuth for apiserver config. %s", err)
-		}
-		secrets["apiserver"] = credentials
-	}
-
-	return secrets, nil
-
-}
-
-func (c *Operator) loadBearerTokensFromSecrets(mons map[string]*monitoringv1.ServiceMonitor) (map[string]BearerToken, error) {
-	tokens := map[string]BearerToken{}
-	nsSecretCache := make(map[string]*v1.Secret)
-
-	for _, mon := range mons {
-		for i, ep := range mon.Spec.Endpoints {
-			if ep.BearerTokenSecret.Name == "" {
-				continue
-			}
-
-			sClient := c.kclient.CoreV1().Secrets(mon.Namespace)
-			token, err := getCredFromSecret(
-				sClient,
-				ep.BearerTokenSecret,
-				"bearertoken",
-				mon.Namespace+"/"+ep.BearerTokenSecret.Name,
-				nsSecretCache,
-			)
-			if err != nil {
-				return nil, fmt.Errorf(
-					"failed to extract endpoint bearertoken for servicemonitor %v from secret %v in namespace %v",
-					mon.Name, ep.BearerTokenSecret.Name, mon.Namespace,
-				)
-			}
-
-			tokens[fmt.Sprintf("serviceMonitor/%s/%s/%d", mon.Namespace, mon.Name, i)] = BearerToken(token)
-		}
-	}
-
-	return tokens, nil
-}
-
-func (c *Operator) loadTLSAssetsFromTLSConfigList(ns string, tlsConfigs []*monitoringv1.TLSConfig) (map[string]TLSAsset, error) {
-
-	assets := map[string]TLSAsset{}
-
-	for _, tls := range tlsConfigs {
-
-		if tls == nil {
-			continue
-		}
-
-		prefix := ns + "/"
-		secretSelectors := map[string]*v1.SecretKeySelector{}
-		configMapSelectors := map[string]*v1.ConfigMapKeySelector{}
-		if tls.CA != (monitoringv1.SecretOrConfigMap{}) {
-			switch {
-			case tls.CA.Secret != nil:
-				secretSelectors[prefix+tls.CA.Secret.Name+"/"+tls.CA.Secret.Key] = tls.CA.Secret
-			case tls.CA.ConfigMap != nil:
-				configMapSelectors[prefix+tls.CA.ConfigMap.Name+"/"+tls.CA.ConfigMap.Key] = tls.CA.ConfigMap
-			}
-		}
-		if tls.Cert != (monitoringv1.SecretOrConfigMap{}) {
-			switch {
-			case tls.Cert.Secret != nil:
-				secretSelectors[prefix+tls.Cert.Secret.Name+"/"+tls.Cert.Secret.Key] = tls.Cert.Secret
-			case tls.Cert.ConfigMap != nil:
-				configMapSelectors[prefix+tls.Cert.ConfigMap.Name+"/"+tls.Cert.ConfigMap.Key] = tls.Cert.ConfigMap
-			}
-		}
-		if tls.KeySecret != nil {
-			secretSelectors[prefix+tls.KeySecret.Name+"/"+tls.KeySecret.Key] = tls.KeySecret
-		}
-
-		for key, selector := range secretSelectors {
-			sClient := c.kclient.CoreV1().Secrets(ns)
-			asset, err := getCredFromSecret(
-				sClient,
-				*selector,
-				"tls config",
-				key,
-				make(map[string]*v1.Secret),
-			)
-			if err != nil {
-				return nil, fmt.Errorf(
-					"failed to extract endpoint tls asset for servicemonitor %v from secret %v and key %v in namespace %v",
-					ns, selector.Name, selector.Key, ns,
-				)
-			}
-
-			assets[fmt.Sprintf(
-				"%v_%v_%v",
-				ns,
-				selector.Name,
-				selector.Key,
-			)] = TLSAsset(asset)
-		}
-
-		for key, selector := range configMapSelectors {
-			sClient := c.kclient.CoreV1().ConfigMaps(ns)
-			asset, err := getCredFromConfigMap(
-				sClient,
-				*selector,
-				"tls config",
-				key,
-				make(map[string]*v1.ConfigMap),
-			)
-			if err != nil {
-				return nil, fmt.Errorf(
-					"failed to extract endpoint tls asset for servicemonitor %v from configmap %v and key %v in namespace %v",
-					ns, selector.Name, selector.Key, ns,
-				)
-			}
-
-			assets[fmt.Sprintf(
-				"%v_%v_%v",
-				ns,
-				selector.Name,
-				selector.Key,
-			)] = TLSAsset(asset)
-		}
-	}
-	return assets, nil
-}
-
-func (c *Operator) loadTLSAssets(p *monitoringv1.Prometheus) (map[string]TLSAsset, error) {
-
-	smAssets := map[string]TLSAsset{}
-	promAssets := map[string]TLSAsset{}
-	assets := map[string]TLSAsset{}
-
-	smEndpoingTLSConfig := []*monitoringv1.TLSConfig{}
-	promRwTLSConfig := []*monitoringv1.TLSConfig{}
-
-	mons, err := c.selectServiceMonitors(p)
-	if err != nil {
-		return nil, errors.Wrap(err, "selecting ServiceMonitors failed")
-	}
-
-	for _, mon := range mons {
-		for _, ep := range mon.Spec.Endpoints {
-			smEndpoingTLSConfig = append(smEndpoingTLSConfig, ep.TLSConfig)
-		}
-		smAssets, err = c.loadTLSAssetsFromTLSConfigList(mon.Namespace, smEndpoingTLSConfig)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	for _, rw := range p.Spec.RemoteWrite {
-		promRwTLSConfig = append(promRwTLSConfig, rw.TLSConfig)
-	}
-	promAssets, err = c.loadTLSAssetsFromTLSConfigList(p.ObjectMeta.Namespace, promRwTLSConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range smAssets {
-		assets[k] = v
-	}
-
-	for k, v := range promAssets {
-		assets[k] = v
-	}
-
-	return assets, nil
-}
-
-func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus, ruleConfigMapNames []string) error {
+func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus, ruleConfigMapNames []string, cacher *assetCache) error {
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
@@ -1751,7 +1519,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		return nil
 	}
 
-	smons, err := c.selectServiceMonitors(p)
+	smons, err := c.selectServiceMonitors(p, cacher)
 	if err != nil {
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
@@ -1772,14 +1540,22 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		return err
 	}
 
-	basicAuthSecrets, err := c.loadBasicAuthSecrets(smons, p.Spec.RemoteRead, p.Spec.RemoteWrite, p.Spec.APIServerConfig, SecretsInPromNS)
-	if err != nil {
-		return err
+	for i, remote := range p.Spec.RemoteRead {
+		if err := cacher.processBasicAuth(p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote read %d", i)
+		}
 	}
 
-	bearerTokens, err := c.loadBearerTokensFromSecrets(smons)
-	if err != nil {
-		return err
+	for i, remote := range p.Spec.RemoteWrite {
+		if err := cacher.processBasicAuth(p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+	}
+
+	if p.Spec.APIServerConfig != nil {
+		if err := cacher.processBasicAuth(p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
+			return errors.Wrap(err, "apiserver config")
+		}
 	}
 
 	additionalScrapeConfigs, err := c.loadAdditionalScrapeConfigsSecret(p.Spec.AdditionalScrapeConfigs, SecretsInPromNS)
@@ -1801,8 +1577,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 		smons,
 		pmons,
 		bmons,
-		basicAuthSecrets,
-		bearerTokens,
+		cacher.basicAuthAssets,
+		cacher.bearerTokenAssets,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
@@ -1850,14 +1626,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(p *monitoringv1.Prometheus,
 	return err
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) error {
+func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus, cacher *assetCache) error {
 	boolTrue := true
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-
-	tlsAssets, err := c.loadTLSAssets(p)
-	if err != nil {
-		return err
-	}
 
 	tlsAssetsSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1877,11 +1648,17 @@ func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) erro
 		Data: map[string][]byte{},
 	}
 
-	for key, asset := range tlsAssets {
-		tlsAssetsSecret.Data[key] = []byte(asset)
+	for i, rw := range p.Spec.RemoteWrite {
+		if err := cacher.processTLSConfig(p.GetNamespace(), rw.TLSConfig); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
 	}
 
-	_, err = sClient.Get(context.TODO(), tlsAssetsSecret.Name, metav1.GetOptions{})
+	for key, asset := range cacher.tlsAssets {
+		tlsAssetsSecret.Data[key.String()] = []byte(asset)
+	}
+
+	_, err := sClient.Get(context.TODO(), tlsAssetsSecret.Name, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(
@@ -1906,10 +1683,10 @@ func (c *Operator) createOrUpdateTLSAssetSecret(p *monitoringv1.Prometheus) erro
 	return nil
 }
 
-func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string]*monitoringv1.ServiceMonitor, error) {
+func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus, cacher *assetCache) (map[string]*monitoringv1.ServiceMonitor, error) {
 	namespaces := []string{}
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
-	res := make(map[string]*monitoringv1.ServiceMonitor)
+	serviceMonitors := make(map[string]*monitoringv1.ServiceMonitor)
 
 	servMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorSelector)
 	if err != nil {
@@ -1937,37 +1714,198 @@ func (c *Operator) selectServiceMonitors(p *monitoringv1.Prometheus) (map[string
 		cache.ListAllByNamespace(c.smonInf.GetIndexer(), ns, servMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				res[k] = obj.(*monitoringv1.ServiceMonitor)
+				serviceMonitors[k] = obj.(*monitoringv1.ServiceMonitor)
 			}
 		})
 	}
 
-	// If denied by Prometheus spec, filter out all service monitors that access
-	// the file system.
-	if p.Spec.ArbitraryFSAccessThroughSMs.Deny {
-		for namespaceAndName, sm := range res {
-			for _, endpoint := range sm.Spec.Endpoints {
-				if err := testForArbitraryFSAccess(endpoint); err != nil {
-					delete(res, namespaceAndName)
-					level.Warn(c.logger).Log(
-						"msg", "skipping servicemonitor",
-						"error", err.Error(),
-						"servicemonitor", namespaceAndName,
-						"namespace", p.Namespace,
-						"prometheus", p.Name,
-					)
+	res := make(map[string]*monitoringv1.ServiceMonitor, len(serviceMonitors))
+	for namespaceAndName, sm := range serviceMonitors {
+		var err error
+
+		for i, endpoint := range sm.Spec.Endpoints {
+			// If denied by Prometheus spec, filter out all service monitors that access
+			// the file system.
+			if p.Spec.ArbitraryFSAccessThroughSMs.Deny {
+				if err = testForArbitraryFSAccess(endpoint); err != nil {
+					break
 				}
 			}
+
+			smKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
+
+			if err = cacher.processBearerToken(sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
+				break
+			}
+
+			if err = cacher.processBasicAuth(sm.GetNamespace(), endpoint.BasicAuth, smKey); err != nil {
+				break
+			}
+
+			if err = cacher.processTLSConfig(sm.GetNamespace(), endpoint.TLSConfig); err != nil {
+				break
+			}
+		}
+
+		if err != nil {
+			level.Warn(c.logger).Log(
+				"msg", "skipping servicemonitor",
+				"error", err.Error(),
+				"servicemonitor", namespaceAndName,
+				"namespace", p.Namespace,
+				"prometheus", p.Name,
+			)
+			continue
+		}
+
+		res[namespaceAndName] = sm
+	}
+
+	smKeys := []string{}
+	for k := range res {
+		smKeys = append(smKeys, k)
+	}
+	level.Debug(c.logger).Log("msg", "selected ServiceMonitors", "servicemonitors", strings.Join(smKeys, ","), "namespace", p.Namespace, "prometheus", p.Name)
+
+	return res, nil
+}
+
+type assetCache struct {
+	sIndexer  *secretIndexer
+	cmIndexer *configMapIndexer
+
+	tlsAssets         map[tlsAssetKey]TLSAsset
+	bearerTokenAssets map[string]BearerToken
+	basicAuthAssets   map[string]BasicAuthCredentials
+}
+
+type tlsAssetKey struct {
+	from string
+	ns   string
+	name string
+	key  string
+}
+
+func tlsAssetKeyFromSecretSelector(ns string, sel *v1.SecretKeySelector) tlsAssetKey {
+	return tlsAssetKey{
+		from: "configmap",
+		ns:   ns,
+		name: sel.Name,
+		key:  sel.Key,
+	}
+}
+
+func tlsAssetKeyFromConfigMapSelector(ns string, sel *v1.ConfigMapKeySelector) tlsAssetKey {
+	return tlsAssetKey{
+		from: "secret",
+		ns:   ns,
+		name: sel.Name,
+		key:  sel.Key,
+	}
+}
+
+func (k tlsAssetKey) String() string {
+	return fmt.Sprintf("%s_%s_%s_%s", k.from, k.ns, k.name, k.key)
+}
+
+func newAssetCache(sIndexer *secretIndexer, cmIndexer *configMapIndexer) *assetCache {
+	return &assetCache{
+		sIndexer:          sIndexer,
+		cmIndexer:         cmIndexer,
+		tlsAssets:         make(map[tlsAssetKey]TLSAsset),
+		bearerTokenAssets: make(map[string]BearerToken),
+		basicAuthAssets:   make(map[string]BasicAuthCredentials),
+	}
+}
+
+func (a *assetCache) processTLSConfig(ns string, tlsConfig *monitoringv1.TLSConfig) error {
+	if tlsConfig == nil {
+		return nil
+	}
+
+	if tlsConfig.CA != (monitoringv1.SecretOrConfigMap{}) {
+		switch {
+		case tlsConfig.CA.Secret != nil:
+			ca, err := a.sIndexer.getKey(ns, *tlsConfig.CA.Secret)
+			if err != nil {
+				return errors.Wrap(err, "failed to get CA")
+			}
+			a.tlsAssets[tlsAssetKeyFromSecretSelector(ns, tlsConfig.CA.Secret)] = TLSAsset(ca)
+
+		case tlsConfig.CA.ConfigMap != nil:
+			ca, err := a.cmIndexer.getKey(ns, *tlsConfig.CA.ConfigMap)
+			if err != nil {
+				return errors.Wrap(err, "failed to get CA")
+			}
+			a.tlsAssets[tlsAssetKeyFromConfigMapSelector(ns, tlsConfig.CA.ConfigMap)] = TLSAsset(ca)
 		}
 	}
 
-	serviceMonitors := []string{}
-	for k := range res {
-		serviceMonitors = append(serviceMonitors, k)
-	}
-	level.Debug(c.logger).Log("msg", "selected ServiceMonitors", "servicemonitors", strings.Join(serviceMonitors, ","), "namespace", p.Namespace, "prometheus", p.Name)
+	if tlsConfig.Cert != (monitoringv1.SecretOrConfigMap{}) {
+		switch {
+		case tlsConfig.Cert.Secret != nil:
+			cert, err := a.sIndexer.getKey(ns, *tlsConfig.Cert.Secret)
+			if err != nil {
+				return errors.Wrap(err, "failed to get cert")
+			}
+			a.tlsAssets[tlsAssetKeyFromSecretSelector(ns, tlsConfig.Cert.Secret)] = TLSAsset(cert)
 
-	return res, nil
+		case tlsConfig.Cert.ConfigMap != nil:
+			cert, err := a.cmIndexer.getKey(ns, *tlsConfig.Cert.ConfigMap)
+			if err != nil {
+				return errors.Wrap(err, "failed to get cert")
+			}
+			a.tlsAssets[tlsAssetKeyFromConfigMapSelector(ns, tlsConfig.Cert.ConfigMap)] = TLSAsset(cert)
+		}
+	}
+
+	if tlsConfig.KeySecret != nil {
+		key, err := a.sIndexer.getKey(ns, *tlsConfig.KeySecret)
+		if err != nil {
+			return errors.Wrap(err, "failed to get key")
+		}
+		a.tlsAssets[tlsAssetKeyFromSecretSelector(ns, tlsConfig.KeySecret)] = TLSAsset(key)
+	}
+
+	return nil
+}
+
+func (a *assetCache) processBasicAuth(ns string, ba *monitoringv1.BasicAuth, key string) error {
+	if ba == nil {
+		return nil
+	}
+
+	username, err := a.sIndexer.getKey(ns, ba.Username)
+	if err != nil {
+		return errors.Wrap(err, "failed to get basic auth username")
+	}
+
+	password, err := a.sIndexer.getKey(ns, ba.Password)
+	if err != nil {
+		return errors.Wrap(err, "failed to get basic auth password")
+	}
+
+	a.basicAuthAssets[key] = BasicAuthCredentials{
+		username: username,
+		password: password,
+	}
+
+	return nil
+}
+
+func (a *assetCache) processBearerToken(ns string, sel v1.SecretKeySelector, key string) error {
+	if sel.Name == "" {
+		return nil
+	}
+
+	bearerToken, err := a.sIndexer.getKey(ns, sel)
+	if err != nil {
+		return errors.Wrap(err, "failed to get bearer token")
+	}
+
+	a.bearerTokenAssets[key] = BearerToken(bearerToken)
+
+	return nil
 }
 
 func (c *Operator) selectPodMonitors(p *monitoringv1.Prometheus) (map[string]*monitoringv1.PodMonitor, error) {
