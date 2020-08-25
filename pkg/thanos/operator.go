@@ -23,6 +23,7 @@ import (
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned"
+	"github.com/coreos/prometheus-operator/pkg/informers"
 	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/coreos/prometheus-operator/pkg/listwatch"
 	"github.com/coreos/prometheus-operator/pkg/operator"
@@ -41,9 +42,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
@@ -62,12 +61,13 @@ type Operator struct {
 	mclient monitoringclient.Interface
 	logger  log.Logger
 
-	thanosRulerInf   cache.SharedIndexInformer
+	thanosRulerInfs *informers.InformersForResource
+	cmapInfs        *informers.InformersForResource
+	ruleInfs        *informers.InformersForResource
+	ssetInfs        *informers.InformersForResource
+
 	nsThanosRulerInf cache.SharedIndexInformer
 	nsRuleInf        cache.SharedIndexInformer
-	cmapInf          cache.SharedIndexInformer
-	ruleInf          cache.SharedIndexInformer
-	ssetInf          cache.SharedIndexInformer
 
 	queue workqueue.RateLimitingInterface
 
@@ -137,65 +137,59 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 		},
 	}
 
-	o.cmapInf = cache.NewSharedIndexInformer(
-		o.metrics.NewInstrumentedListerWatcher(
-			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.ThanosRulerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{
-					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						options.LabelSelector = labelThanosRulerName
-						return o.kclient.CoreV1().ConfigMaps(namespace).List(context.TODO(), options)
-					},
-					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-						options.LabelSelector = labelThanosRulerName
-						return o.kclient.CoreV1().ConfigMaps(namespace).Watch(context.TODO(), options)
-					},
-				}
-			}),
+	o.cmapInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			o.config.Namespaces.ThanosRulerAllowList, o.config.Namespaces.DenyList,
+			o.kclient, resyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = labelThanosRulerName
+			},
 		),
-		&v1.ConfigMap{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
 	)
 
-	o.thanosRulerInf = cache.NewSharedIndexInformer(
-		o.metrics.NewInstrumentedListerWatcher(
-			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.ThanosRulerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{
-					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						options.LabelSelector = o.config.ThanosRulerSelector
-						return o.mclient.MonitoringV1().ThanosRulers(namespace).List(context.TODO(), options)
-					},
-					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-						options.LabelSelector = o.config.ThanosRulerSelector
-						return o.mclient.MonitoringV1().ThanosRulers(namespace).Watch(context.TODO(), options)
-					},
-				}
-			}),
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating configmap informers")
+	}
+
+	o.thanosRulerInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			o.config.Namespaces.ThanosRulerAllowList, o.config.Namespaces.DenyList,
+			mclient, resyncPeriod,
+			func(options *metav1.ListOptions) {
+				options.LabelSelector = o.config.ThanosRulerSelector
+			},
 		),
-		&monitoringv1.ThanosRuler{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ThanosRulerName),
 	)
 
-	o.metrics.MustRegister(NewThanosRulerCollector(o.thanosRulerInf.GetStore()))
-	o.ruleInf = cache.NewSharedIndexInformer(
-		o.metrics.NewInstrumentedListerWatcher(
-			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-				return &cache.ListWatch{
-					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return mclient.MonitoringV1().PrometheusRules(namespace).List(context.TODO(), options)
-					},
-					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-						return mclient.MonitoringV1().PrometheusRules(namespace).Watch(context.TODO(), options)
-					},
-				}
-			}),
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating thanosruler informers")
+	}
+
+	o.ruleInfs, err = informers.NewInformersForResource(
+		informers.NewMonitoringInformerFactories(
+			o.config.Namespaces.AllowList, o.config.Namespaces.DenyList,
+			mclient, resyncPeriod, nil,
 		),
-		&monitoringv1.PrometheusRule{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusRuleName),
 	)
 
-	o.ssetInf = cache.NewSharedIndexInformer(
-		listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.ThanosRulerAllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
-			return cache.NewListWatchFromClient(o.kclient.AppsV1().RESTClient(), "statefulsets", namespace, fields.Everything())
-		}),
-		&appsv1.StatefulSet{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating prometheusrule informers")
+	}
+
+	o.ssetInfs, err = informers.NewInformersForResource(
+		informers.NewKubeInformerFactories(
+			o.config.Namespaces.ThanosRulerAllowList, o.config.Namespaces.DenyList,
+			o.kclient, resyncPeriod, nil,
+		),
+		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating statefulset informers")
+	}
 
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
 		// nsResyncPeriod is used to control how often the namespace informer
@@ -231,16 +225,32 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 // waitForCacheSync waits for the informers' caches to be synced.
 func (o *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 	ok := true
+
+	for _, infs := range []struct {
+		name                 string
+		informersForResource *informers.InformersForResource
+	}{
+		{"ThanosRuler", o.thanosRulerInfs},
+		{"ConfigMap", o.cmapInfs},
+		{"PrometheusRule", o.ruleInfs},
+		{"StatefulSet", o.ssetInfs},
+	} {
+		for _, inf := range infs.informersForResource.GetInformers() {
+			if !cache.WaitForCacheSync(stopc, inf.Informer().HasSynced) {
+				level.Error(o.logger).Log("msg", fmt.Sprintf("failed to sync %s cache", infs.name))
+				ok = false
+			} else {
+				level.Debug(o.logger).Log("msg", fmt.Sprintf("successfully synced %s cache", infs.name))
+			}
+		}
+	}
+
 	informers := []struct {
 		name     string
 		informer cache.SharedIndexInformer
 	}{
-		{"ThanosRuler", o.thanosRulerInf},
 		{"ThanosRulerNamespace", o.nsThanosRulerInf},
 		{"RuleNamespace", o.nsRuleInf},
-		{"ConfigMap", o.cmapInf},
-		{"PrometheusRule", o.ruleInf},
-		{"StatefulSet", o.ssetInf},
 	}
 	for _, inf := range informers {
 		if !cache.WaitForCacheSync(stopc, inf.informer.HasSynced) {
@@ -259,22 +269,22 @@ func (o *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 
 // addHandlers adds the eventhandlers to the informers.
 func (o *Operator) addHandlers() {
-	o.thanosRulerInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	o.thanosRulerInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    o.handleThanosRulerAdd,
 		DeleteFunc: o.handleThanosRulerDelete,
 		UpdateFunc: o.handleThanosRulerUpdate,
 	})
-	o.cmapInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	o.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    o.handleConfigMapAdd,
 		DeleteFunc: o.handleConfigMapDelete,
 		UpdateFunc: o.handleConfigMapUpdate,
 	})
-	o.ruleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	o.ruleInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    o.handleRuleAdd,
 		DeleteFunc: o.handleRuleDelete,
 		UpdateFunc: o.handleRuleUpdate,
 	})
-	o.ssetInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	o.ssetInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    o.handleStatefulSetAdd,
 		DeleteFunc: o.handleStatefulSetDelete,
 		UpdateFunc: o.handleStatefulSetUpdate,
@@ -308,14 +318,14 @@ func (o *Operator) Run(stopc <-chan struct{}) error {
 
 	go o.worker()
 
-	go o.thanosRulerInf.Run(stopc)
-	go o.cmapInf.Run(stopc)
-	go o.ruleInf.Run(stopc)
+	go o.thanosRulerInfs.Start(stopc)
+	go o.cmapInfs.Start(stopc)
+	go o.ruleInfs.Start(stopc)
 	go o.nsRuleInf.Run(stopc)
 	if o.nsRuleInf != o.nsThanosRulerInf {
 		go o.nsThanosRulerInf.Run(stopc)
 	}
-	go o.ssetInf.Run(stopc)
+	go o.ssetInfs.Start(stopc)
 	if err := o.waitForCacheSync(stopc); err != nil {
 		return err
 	}
@@ -450,14 +460,16 @@ func (o *Operator) thanosForStatefulSet(sset interface{}) *monitoringv1.ThanosRu
 	}
 
 	thanosKey := statefulSetKeyToThanosKey(key)
-	tr, exists, err := o.thanosRulerInf.GetStore().GetByKey(thanosKey)
+	tr, err := o.thanosRulerInfs.Get(thanosKey)
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+
 	if err != nil {
 		level.Error(o.logger).Log("msg", "ThanosRuler lookup failed", "err", err)
 		return nil
 	}
-	if !exists {
-		return nil
-	}
+
 	return tr.(*monitoringv1.ThanosRuler)
 }
 
@@ -565,16 +577,17 @@ func (o *Operator) processNextWorkItem() bool {
 }
 
 func (o *Operator) sync(key string) error {
-	obj, exists, err := o.thanosRulerInf.GetIndexer().GetByKey(key)
-	if err != nil {
-		return err
-	}
-	if !exists {
+	trobj, err := o.thanosRulerInfs.Get(key)
+
+	if apierrors.IsNotFound(err) {
 		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
+	if err != nil {
+		return err
+	}
 
-	tr := obj.(*monitoringv1.ThanosRuler)
+	tr := trobj.(*monitoringv1.ThanosRuler)
 	tr = tr.DeepCopy()
 	tr.APIVersion = monitoringv1.SchemeGroupVersion.String()
 	tr.Kind = monitoringv1.ThanosRulerKind
@@ -598,10 +611,13 @@ func (o *Operator) sync(key string) error {
 
 	// Ensure we have a StatefulSet running Thanos deployed.
 	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
-	obj, exists, err = o.ssetInf.GetIndexer().GetByKey(thanosKeyToStatefulSetKey(key))
-	if err != nil {
+	obj, err := o.ssetInfs.Get(thanosKeyToStatefulSetKey(key))
+
+	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "retrieving statefulset failed")
 	}
+
+	exists := !apierrors.IsNotFound(err)
 
 	if !exists {
 		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "")
@@ -783,7 +799,9 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	err = cache.ListAll(o.thanosRulerInf.GetStore(), labels.Everything(), func(obj interface{}) {
+	objs, err := o.thanosRulerInfs.List(labels.Everything())
+
+	for _, obj := range objs {
 		// Check for ThanosRuler instances in the namespace.
 		tr := obj.(*monitoringv1.ThanosRuler)
 		if tr.Namespace == nsName {
@@ -806,7 +824,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			o.enqueue(tr)
 			return
 		}
-	})
+	}
 	if err != nil {
 		level.Error(o.logger).Log(
 			"msg", "listing all ThanosRuler instances from cache failed",
