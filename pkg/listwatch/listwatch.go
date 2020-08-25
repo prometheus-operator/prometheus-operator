@@ -66,15 +66,22 @@ func NewUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, a
 func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, allowedNamespaces, deniedNamespaces map[string]struct{}, optionsModifier func(options *metav1.ListOptions)) cache.ListerWatcher {
 	// If the only namespace given is `v1.NamespaceAll`, then this
 	// cache.ListWatch must be privileged. In this case, return a regular
-	// cache.ListWatch decorated with a denylist watcher
+	// cache.ListWatch tweaked with denylist fieldselector
 	// filtering the given denied namespaces.
 	if IsAllNamespaces(allowedNamespaces) {
-		return newDenylistListerWatcher(
-			l,
-			deniedNamespaces,
-			cache.NewFilteredListWatchFromClient(c, "namespaces", metav1.NamespaceAll, optionsModifier),
-		)
+		tweak := func(options *metav1.ListOptions) {
+			if optionsModifier != nil {
+				optionsModifier(options)
+			}
+
+			fieldSelector := options.FieldSelector
+			denyListTweak(options, deniedNamespaces)
+			options.FieldSelector = strings.Join([]string{options.FieldSelector, fieldSelector}, ",")
+		}
+
+		return cache.NewFilteredListWatchFromClient(c, "namespaces", metav1.NamespaceAll, tweak)
 	}
+
 	listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
 		optionsModifier(&options)
 		list := &v1.NamespaceList{}
@@ -283,4 +290,18 @@ func IdenticalNamespaces(a, b map[string]struct{}) bool {
 	}
 
 	return true
+}
+
+func denyListTweak(options *metav1.ListOptions, namespaces map[string]struct{}) {
+	if len(namespaces) == 0 {
+		return
+	}
+
+	var denied []string
+
+	for ns, _ := range namespaces {
+		denied = append(denied, "metadata.name!="+ns)
+	}
+
+	options.FieldSelector = strings.Join(denied, ",")
 }
