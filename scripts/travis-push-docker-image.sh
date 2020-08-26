@@ -12,11 +12,11 @@ function defer {
 trap defer EXIT
 
 # Push to Quay '-dev' repo if it's not a git tag or master branch build.
-export REPO="quay.io/coreos/prometheus-operator"
-export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader"
+export REPO="quay.io/prometheus-operator/prometheus-operator"
+export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/prometheus-operator/prometheus-config-reloader"
 if [[ "${TRAVIS_TAG}" == "" ]] && [[ "${TRAVIS_BRANCH}" != master ]]; then
-	export REPO="quay.io/coreos/prometheus-operator-dev"
-	export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/coreos/prometheus-config-reloader-dev"
+	export REPO="quay.io/prometheus-operator/prometheus-operator-dev"
+	export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/prometheus-operator/prometheus-config-reloader-dev"
 fi
 
 # For both git tags and git branches 'TRAVIS_BRANCH' contains the name.
