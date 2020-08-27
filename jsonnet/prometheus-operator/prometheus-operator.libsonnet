@@ -21,9 +21,9 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
     },
 
     imageRepos+:: {
-      prometheusOperator: 'quay.io/coreos/prometheus-operator',
+      prometheusOperator: 'quay.io/prometheus-operator/prometheus-operator',
       configmapReloader: 'jimmidyson/configmap-reload',
-      prometheusConfigReloader: 'quay.io/coreos/prometheus-config-reloader',
+      prometheusConfigReloader: 'quay.io/prometheus-operator/prometheus-config-reloader',
     },
   },
 
