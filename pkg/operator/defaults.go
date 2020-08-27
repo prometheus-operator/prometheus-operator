@@ -29,7 +29,7 @@ const (
 )
 
 var (
-	DefaultPrometheusConfigReloaderImage = "quay.io/coreos/prometheus-config-reloader:v" + version.Version
+	DefaultPrometheusConfigReloaderImage = "quay.io/prometheus-operator/prometheus-config-reloader:v" + version.Version
 
 	PrometheusCompatibilityMatrix = []string{
 		"v1.4.0",
