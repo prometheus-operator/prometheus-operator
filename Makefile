@@ -249,11 +249,15 @@ shellcheck: $(SHELLCHECK_BINARY)
 ###########
 
 .PHONY: test
-test: test-unit test-e2e
+test: test-unit test-long test-e2e
 
 .PHONY: test-unit
 test-unit:
-	go test -race $(TEST_RUN_ARGS) -short $(pkgs) -count=1
+	go test -race $(TEST_RUN_ARGS) -short $(pkgs) -count=1 -v
+
+.PHONY: test-long
+test-long:
+	go test $(TEST_RUN_ARGS) $(pkgs) -count=1 -v
 
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs

@@ -21,6 +21,8 @@ jobs:
     script: cd cmd/po-rule-migration && go install
   - name: "Run unit tests"
     script: make test-unit
+  - name: "Run extended tests"
+    script: make test-long
   - name: "Run e2e tests (Alertmanager)"
     script: EXCLUDE_PROMETHEUS_TESTS=true EXCLUDE_THANOS_TESTS=true ./scripts/travis-e2e.sh
   - name: "Run e2e tests (Prometheus)"

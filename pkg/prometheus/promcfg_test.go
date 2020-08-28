@@ -33,21 +33,29 @@ import (
 
 func TestConfigGeneration(t *testing.T) {
 	for _, v := range operator.PrometheusCompatibilityMatrix {
-		cfg, err := generateTestConfig(v)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		for i := 0; i < 1000; i++ {
-			testcfg, err := generateTestConfig(v)
+		t.Run(v, func(t *testing.T) {
+			t.Parallel()
+			cfg, err := generateTestConfig(v)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if !bytes.Equal(cfg, testcfg) {
-				t.Fatalf("Config generation is not deterministic.\n\n\nFirst generation: \n\n%s\n\nDifferent generation: \n\n%s\n\n", string(cfg), string(testcfg))
+			reps := 1000
+			if testing.Short() {
+				reps = 100
 			}
-		}
+
+			for i := 0; i < reps; i++ {
+				testcfg, err := generateTestConfig(v)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if !bytes.Equal(cfg, testcfg) {
+					t.Fatalf("Config generation is not deterministic.\n\n\nFirst generation: \n\n%s\n\nDifferent generation: \n\n%s\n\n", string(cfg), string(testcfg))
+				}
+			}
+		})
 	}
 }
 
