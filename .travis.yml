@@ -4,13 +4,19 @@ language: go
 go:
 - "1.14.x"
 go_import_path: github.com/prometheus-operator/prometheus-operator
+cache:
+  directories:
+    - $GOPATH/pkg/mod
+
 services:
 - docker
+
 before_install:
   - export PATH=$PATH:$HOME/.local/bin
   # k8s >= 1.18 requires conntrack, ebtables and socat.
   - sudo apt update -y
   - sudo apt install -y conntrack ebtables socat
+
 jobs:
   include:
   - name: "Sanity checks and tests"
