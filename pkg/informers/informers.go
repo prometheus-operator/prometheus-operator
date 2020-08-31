@@ -30,6 +30,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+// InformLister is the interface that both exposes a shared index informer
+// and a generic lister.
+// Usually generated clients declare this interface as "GenericInformer".
 type InformLister interface {
 	Informer() cache.SharedIndexInformer
 	Lister() cache.GenericLister
@@ -41,10 +44,18 @@ type FactoriesForNamespaces interface {
 	Namespaces() sets.String
 }
 
+// ForResource contains a list informers for a concrete resource type,
+// one per namespace.
 type ForResource struct {
 	informers []InformLister
 }
 
+// NewInformersForResource returns a composite informer exposing the most basic set of operations
+// needed from informers and listers. It does not implement a formal interface,
+// but exposes a minimal set of methods from underlying slice of cache.SharedIndexInformers and cache.GenericListers.
+//
+// It takes a namespace aware informer factory, wrapped in a FactoriesForNamespaces interface
+// that is able to instantiate an informer for a given namespace.
 func NewInformersForResource(ifs FactoriesForNamespaces, resource schema.GroupVersionResource) (*ForResource, error) {
 	namespaces := ifs.Namespaces().List()
 	var informers []InformLister
@@ -62,28 +73,33 @@ func NewInformersForResource(ifs FactoriesForNamespaces, resource schema.GroupVe
 	}, nil
 }
 
+// Start starts all underlying informers, passing the given stop channel to each of them.
 func (w *ForResource) Start(stopCh <-chan struct{}) {
 	for _, i := range w.informers {
 		go i.Informer().Run(stopCh)
 	}
 }
 
+// GetInformers returns all wrapped informers.
 func (w *ForResource) GetInformers() []InformLister {
 	return w.informers
 }
 
+// AddEventHandler registers the given handler to all wrapped informers.
 func (w *ForResource) AddEventHandler(handler cache.ResourceEventHandler) {
 	for _, i := range w.informers {
 		i.Informer().AddEventHandler(handler)
 	}
 }
 
+// AddEventHandlerWithResyncPeriod registers the given handler to all wrapped informers.
 func (w *ForResource) AddEventHandlerWithResyncPeriod(handler cache.ResourceEventHandler, resyncPeriod time.Duration) {
 	for _, i := range w.informers {
 		i.Informer().AddEventHandlerWithResyncPeriod(handler, resyncPeriod)
 	}
 }
 
+// HasSynced returns true if all underlying informers have synced, else false.
 func (w *ForResource) HasSynced() bool {
 	for _, i := range w.informers {
 		if !i.Informer().HasSynced() {
@@ -94,6 +110,8 @@ func (w *ForResource) HasSynced() bool {
 	return true
 }
 
+// List lists based on the requested selector.
+// It invokes all wrapped informers, the result is concatenated.
 func (w *ForResource) List(selector labels.Selector) ([]runtime.Object, error) {
 	var ret []runtime.Object
 
@@ -108,6 +126,9 @@ func (w *ForResource) List(selector labels.Selector) ([]runtime.Object, error) {
 	return ret, nil
 }
 
+// ListAllByNamespace invokes all wrapped informers passing the same appendFn.
+// While wrapped informers are usually namespace aware, it is still important to iterate over all of them
+// as some informers might wrap k8s.io/apimachinery/pkg/apis/meta/v1.NamespaceAll.
 func (w *ForResource) ListAllByNamespace(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
 	for _, inf := range w.informers {
 		err := cache.ListAllByNamespace(inf.Informer().GetIndexer(), namespace, selector, appendFn)
@@ -119,6 +140,8 @@ func (w *ForResource) ListAllByNamespace(namespace string, selector labels.Selec
 	return nil
 }
 
+// Get invokes all wrapped informers and returns the first found runtime object.
+// It returns the first ocured error.
 func (w *ForResource) Get(name string) (runtime.Object, error) {
 	var err error
 
@@ -138,6 +161,13 @@ func (w *ForResource) Get(name string) (runtime.Object, error) {
 	return nil, err
 }
 
+// newInformerOptions constructs a list option tweak function and a list of namespaces
+// based on the given allowed and denied namespaces.
+//
+// If allowedNamespaces contains one entry containing k8s.io/apimachinery/pkg/apis/meta/v1.NamespaceAll
+// then it returns it and a tweak function filtering denied namespaces using a field selector.
+//
+// Else, denied namespaces are ignored and just the set of allowed namespaces is returned.
 func newInformerOptions(allowedNamespaces, deniedNamespaces map[string]struct{}, tweaks func(*v1.ListOptions)) (func(*v1.ListOptions), []string) {
 	if tweaks == nil {
 		tweaks = func(*v1.ListOptions) {} // nop
@@ -161,6 +191,8 @@ func newInformerOptions(allowedNamespaces, deniedNamespaces map[string]struct{},
 	return tweaks, namespaces
 }
 
+// denyNamespacesTweak is a simple method modifying the given list options
+// by adding a field selector not matching the given namespaces.
 func denyNamespacesTweak(options *metav1.ListOptions, namespaces map[string]struct{}) {
 	if len(namespaces) == 0 {
 		return
