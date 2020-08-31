@@ -26,7 +26,9 @@ import (
 
 func NewMonitoringInformerFactories(
 	allowNamespaces, denyNamespaces map[string]struct{},
-	monitoringClient monitoring.Interface, defaultResync time.Duration, tweakListOptions func(*metav1.ListOptions),
+	monitoringClient monitoring.Interface,
+	defaultResync time.Duration,
+	tweakListOptions func(*metav1.ListOptions),
 ) FactoriesForNamespaces {
 	tweaks, namespaces := newInformerOptions(
 		allowNamespaces, denyNamespaces, tweakListOptions,

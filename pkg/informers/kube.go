@@ -26,7 +26,9 @@ import (
 
 func NewKubeInformerFactories(
 	allowNamespaces, denyNamespaces map[string]struct{},
-	kubeClient kubernetes.Interface, defaultResync time.Duration, tweakListOptions func(*metav1.ListOptions),
+	kubeClient kubernetes.Interface,
+	defaultResync time.Duration,
+	tweakListOptions func(*metav1.ListOptions),
 ) FactoriesForNamespaces {
 	tweaks, namespaces := newInformerOptions(
 		allowNamespaces, denyNamespaces, tweakListOptions,
