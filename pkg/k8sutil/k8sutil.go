@@ -105,21 +105,21 @@ func IsResourceNotFoundError(err error) bool {
 	return false
 }
 
-func CreateOrUpdateService(sclient clientv1.ServiceInterface, svc *v1.Service) error {
-	service, err := sclient.Get(context.TODO(), svc.Name, metav1.GetOptions{})
+func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterface, svc *v1.Service) error {
+	service, err := sclient.Get(ctx, svc.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "retrieving service object failed")
 	}
 
 	if apierrors.IsNotFound(err) {
-		_, err = sclient.Create(context.TODO(), svc, metav1.CreateOptions{})
+		_, err = sclient.Create(ctx, svc, metav1.CreateOptions{})
 		if err != nil {
 			return errors.Wrap(err, "creating service object failed")
 		}
 	} else {
 		svc.ResourceVersion = service.ResourceVersion
 		svc.SetOwnerReferences(mergeOwnerReferences(service.GetOwnerReferences(), svc.GetOwnerReferences()))
-		_, err := sclient.Update(context.TODO(), svc, metav1.UpdateOptions{})
+		_, err := sclient.Update(ctx, svc, metav1.UpdateOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return errors.Wrap(err, "updating service object failed")
 		}
@@ -128,20 +128,20 @@ func CreateOrUpdateService(sclient clientv1.ServiceInterface, svc *v1.Service) e
 	return nil
 }
 
-func CreateOrUpdateEndpoints(eclient clientv1.EndpointsInterface, eps *v1.Endpoints) error {
-	endpoints, err := eclient.Get(context.TODO(), eps.Name, metav1.GetOptions{})
+func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInterface, eps *v1.Endpoints) error {
+	endpoints, err := eclient.Get(ctx, eps.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "retrieving existing kubelet endpoints object failed")
 	}
 
 	if apierrors.IsNotFound(err) {
-		_, err = eclient.Create(context.TODO(), eps, metav1.CreateOptions{})
+		_, err = eclient.Create(ctx, eps, metav1.CreateOptions{})
 		if err != nil {
 			return errors.Wrap(err, "creating kubelet endpoints object failed")
 		}
 	} else {
 		eps.ResourceVersion = endpoints.ResourceVersion
-		_, err = eclient.Update(context.TODO(), eps, metav1.UpdateOptions{})
+		_, err = eclient.Update(ctx, eps, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrap(err, "updating kubelet endpoints object failed")
 		}

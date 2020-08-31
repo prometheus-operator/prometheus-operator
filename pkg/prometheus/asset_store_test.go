@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -89,7 +90,7 @@ func TestAddBearerToken(t *testing.T) {
 			}
 
 			key := fmt.Sprintf("basicauth/%d", i)
-			err := store.addBearerToken(tc.ns, sel, key)
+			err := store.addBearerToken(context.Background(), tc.ns, sel, key)
 
 			if tc.err {
 				if err == nil {
@@ -220,7 +221,7 @@ func TestAddBasicAuth(t *testing.T) {
 			}
 
 			key := fmt.Sprintf("basicauth/%d", i)
-			err := store.addBasicAuth(tc.ns, basicAuth, key)
+			err := store.addBasicAuth(context.Background(), tc.ns, basicAuth, key)
 
 			if tc.err {
 				if err == nil {
@@ -564,7 +565,7 @@ func TestAddTLSConfig(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			store := newAssetStore(c.CoreV1(), c.CoreV1())
 
-			err := store.addTLSConfig(tc.ns, tc.tlsConfig)
+			err := store.addTLSConfig(context.Background(), tc.ns, tc.tlsConfig)
 
 			if tc.err {
 				if err == nil {

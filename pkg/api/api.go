@@ -15,7 +15,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"regexp"
@@ -100,7 +99,7 @@ func parsePrometheusStatusUrl(path string) objectReference {
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 	or := parsePrometheusStatusUrl(req.URL.Path)
 
-	p, err := api.mclient.MonitoringV1().Prometheuses(or.namespace).Get(context.TODO(), or.name, metav1.GetOptions{})
+	p, err := api.mclient.MonitoringV1().Prometheuses(or.namespace).Get(req.Context(), or.name, metav1.GetOptions{})
 	if err != nil {
 		if k8sutil.IsResourceNotFoundError(err) {
 			w.WriteHeader(404)
@@ -109,7 +108,7 @@ func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p.Status, _, err = prometheus.PrometheusStatus(api.kclient, p)
+	p.Status, _, err = prometheus.PrometheusStatus(req.Context(), api.kclient, p)
 	if err != nil {
 		api.logger.Log("error", err)
 	}

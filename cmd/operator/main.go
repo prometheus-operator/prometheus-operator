@@ -244,22 +244,28 @@ func Main() int {
 		cfg.Namespaces.ThanosRulerAllowList = cfg.Namespaces.AllowList
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	wg, ctx := errgroup.WithContext(ctx)
 	r := prometheus.NewRegistry()
-	po, err := prometheuscontroller.New(cfg, log.With(logger, "component", "prometheusoperator"), r)
+
+	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating prometheus controller failed: ", err)
+		cancel()
 		return 1
 	}
 
-	ao, err := alertmanagercontroller.New(cfg, log.With(logger, "component", "alertmanageroperator"), r)
+	ao, err := alertmanagercontroller.New(ctx, cfg, log.With(logger, "component", "alertmanageroperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
+		cancel()
 		return 1
 	}
 
-	to, err := thanoscontroller.New(cfg, log.With(logger, "component", "thanosoperator"), r)
+	to, err := thanoscontroller.New(ctx, cfg, log.With(logger, "component", "thanosoperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating thanos controller failed: ", err)
+		cancel()
 		return 1
 	}
 
@@ -267,6 +273,7 @@ func Main() int {
 	web, err := api.New(cfg, log.With(logger, "component", "api"))
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating api failed: ", err)
+		cancel()
 		return 1
 	}
 	admit := admission.New(log.With(logger, "component", "admissionwebhook"))
@@ -276,6 +283,7 @@ func Main() int {
 	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "listening failed", cfg.ListenAddress, err)
+		cancel()
 		return 1
 	}
 
@@ -288,6 +296,7 @@ func Main() int {
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
 			fmt.Fprint(os.Stderr, "invalid TLS config", err)
+			cancel()
 			return 1
 		}
 	}
@@ -321,12 +330,9 @@ func Main() int {
 	mux.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 	mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	wg, ctx := errgroup.WithContext(ctx)
-
-	wg.Go(func() error { return po.Run(ctx.Done()) })
-	wg.Go(func() error { return ao.Run(ctx.Done()) })
-	wg.Go(func() error { return to.Run(ctx.Done()) })
+	wg.Go(func() error { return po.Run(ctx) })
+	wg.Go(func() error { return ao.Run(ctx) })
+	wg.Go(func() error { return to.Run(ctx) })
 
 	if tlsConfig != nil {
 		r, err := rbacproxytls.NewCertReloader(
@@ -336,6 +342,7 @@ func Main() int {
 		)
 		if err != nil {
 			fmt.Fprint(os.Stderr, "failed to initialize certificate reloader", err)
+			cancel()
 			return 1
 		}
 

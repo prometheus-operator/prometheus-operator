@@ -108,7 +108,7 @@ func assetKeyFunc(obj interface{}) (string, error) {
 }
 
 // addTLSConfig processes the given *TLSConfig and adds the referenced CA, certifcate and key to the store.
-func (a *assetStore) addTLSConfig(ns string, tlsConfig *monitoringv1.TLSConfig) error {
+func (a *assetStore) addTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.TLSConfig) error {
 	if tlsConfig == nil {
 		return nil
 	}
@@ -121,10 +121,10 @@ func (a *assetStore) addTLSConfig(ns string, tlsConfig *monitoringv1.TLSConfig) 
 
 		switch {
 		case tlsConfig.CA.Secret != nil:
-			ca, err = a.getSecretKey(ns, *tlsConfig.CA.Secret)
+			ca, err = a.getSecretKey(ctx, ns, *tlsConfig.CA.Secret)
 
 		case tlsConfig.CA.ConfigMap != nil:
-			ca, err = a.getConfigMapKey(ns, *tlsConfig.CA.ConfigMap)
+			ca, err = a.getConfigMapKey(ctx, ns, *tlsConfig.CA.ConfigMap)
 		}
 
 		if err != nil {
@@ -142,10 +142,10 @@ func (a *assetStore) addTLSConfig(ns string, tlsConfig *monitoringv1.TLSConfig) 
 
 		switch {
 		case tlsConfig.Cert.Secret != nil:
-			cert, err = a.getSecretKey(ns, *tlsConfig.Cert.Secret)
+			cert, err = a.getSecretKey(ctx, ns, *tlsConfig.Cert.Secret)
 
 		case tlsConfig.Cert.ConfigMap != nil:
-			cert, err = a.getConfigMapKey(ns, *tlsConfig.Cert.ConfigMap)
+			cert, err = a.getConfigMapKey(ctx, ns, *tlsConfig.Cert.ConfigMap)
 		}
 
 		if err != nil {
@@ -156,7 +156,7 @@ func (a *assetStore) addTLSConfig(ns string, tlsConfig *monitoringv1.TLSConfig) 
 	}
 
 	if tlsConfig.KeySecret != nil {
-		key, err := a.getSecretKey(ns, *tlsConfig.KeySecret)
+		key, err := a.getSecretKey(ctx, ns, *tlsConfig.KeySecret)
 		if err != nil {
 			return errors.Wrap(err, "failed to get key")
 		}
@@ -167,17 +167,17 @@ func (a *assetStore) addTLSConfig(ns string, tlsConfig *monitoringv1.TLSConfig) 
 }
 
 // addTLSConfig processes the given *BasicAuth and adds the referenced credentials to the store.
-func (a *assetStore) addBasicAuth(ns string, ba *monitoringv1.BasicAuth, key string) error {
+func (a *assetStore) addBasicAuth(ctx context.Context, ns string, ba *monitoringv1.BasicAuth, key string) error {
 	if ba == nil {
 		return nil
 	}
 
-	username, err := a.getSecretKey(ns, ba.Username)
+	username, err := a.getSecretKey(ctx, ns, ba.Username)
 	if err != nil {
 		return errors.Wrap(err, "failed to get basic auth username")
 	}
 
-	password, err := a.getSecretKey(ns, ba.Password)
+	password, err := a.getSecretKey(ctx, ns, ba.Password)
 	if err != nil {
 		return errors.Wrap(err, "failed to get basic auth password")
 	}
@@ -191,12 +191,12 @@ func (a *assetStore) addBasicAuth(ns string, ba *monitoringv1.BasicAuth, key str
 }
 
 // addTLSConfig processes the given SecretKeySelector and adds the referenced data to the store.
-func (a *assetStore) addBearerToken(ns string, sel v1.SecretKeySelector, key string) error {
+func (a *assetStore) addBearerToken(ctx context.Context, ns string, sel v1.SecretKeySelector, key string) error {
 	if sel.Name == "" {
 		return nil
 	}
 
-	bearerToken, err := a.getSecretKey(ns, sel)
+	bearerToken, err := a.getSecretKey(ctx, ns, sel)
 	if err != nil {
 		return errors.Wrap(err, "failed to get bearer token")
 	}
@@ -206,7 +206,7 @@ func (a *assetStore) addBearerToken(ns string, sel v1.SecretKeySelector, key str
 	return nil
 }
 
-func (a *assetStore) getConfigMapKey(namespace string, sel v1.ConfigMapKeySelector) (string, error) {
+func (a *assetStore) getConfigMapKey(ctx context.Context, namespace string, sel v1.ConfigMapKeySelector) (string, error) {
 	obj, exists, err := a.objStore.Get(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      sel.Name,
@@ -218,7 +218,7 @@ func (a *assetStore) getConfigMapKey(namespace string, sel v1.ConfigMapKeySelect
 	}
 
 	if !exists {
-		cm, err := a.cmClient.ConfigMaps(namespace).Get(context.TODO(), sel.Name, metav1.GetOptions{})
+		cm, err := a.cmClient.ConfigMaps(namespace).Get(ctx, sel.Name, metav1.GetOptions{})
 		if err != nil {
 			return "", errors.Wrapf(err, "unable to get configmap %q", sel.Name)
 		}
@@ -236,7 +236,7 @@ func (a *assetStore) getConfigMapKey(namespace string, sel v1.ConfigMapKeySelect
 	return cm.Data[sel.Key], nil
 }
 
-func (a *assetStore) getSecretKey(namespace string, sel v1.SecretKeySelector) (string, error) {
+func (a *assetStore) getSecretKey(ctx context.Context, namespace string, sel v1.SecretKeySelector) (string, error) {
 	obj, exists, err := a.objStore.Get(&v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      sel.Name,
@@ -248,7 +248,7 @@ func (a *assetStore) getSecretKey(namespace string, sel v1.SecretKeySelector) (s
 	}
 
 	if !exists {
-		secret, err := a.sClient.Secrets(namespace).Get(context.TODO(), sel.Name, metav1.GetOptions{})
+		secret, err := a.sClient.Secrets(namespace).Get(ctx, sel.Name, metav1.GetOptions{})
 		if err != nil {
 			return "", errors.Wrapf(err, "unable to get secret %q", sel.Name)
 		}

@@ -94,7 +94,7 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
+func New(ctx context.Context, conf prometheusoperator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -143,11 +143,11 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 						options.LabelSelector = labelThanosRulerName
-						return o.kclient.CoreV1().ConfigMaps(namespace).List(context.TODO(), options)
+						return o.kclient.CoreV1().ConfigMaps(namespace).List(ctx, options)
 					},
 					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 						options.LabelSelector = labelThanosRulerName
-						return o.kclient.CoreV1().ConfigMaps(namespace).Watch(context.TODO(), options)
+						return o.kclient.CoreV1().ConfigMaps(namespace).Watch(ctx, options)
 					},
 				}
 			}),
@@ -161,11 +161,11 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 						options.LabelSelector = o.config.ThanosRulerSelector
-						return o.mclient.MonitoringV1().ThanosRulers(namespace).List(context.TODO(), options)
+						return o.mclient.MonitoringV1().ThanosRulers(namespace).List(ctx, options)
 					},
 					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 						options.LabelSelector = o.config.ThanosRulerSelector
-						return o.mclient.MonitoringV1().ThanosRulers(namespace).Watch(context.TODO(), options)
+						return o.mclient.MonitoringV1().ThanosRulers(namespace).Watch(ctx, options)
 					},
 				}
 			}),
@@ -181,10 +181,10 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 			listwatch.MultiNamespaceListerWatcher(o.logger, o.config.Namespaces.AllowList, o.config.Namespaces.DenyList, func(namespace string) cache.ListerWatcher {
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
-						return mclient.MonitoringV1().PrometheusRules(namespace).List(context.TODO(), options)
+						return mclient.MonitoringV1().PrometheusRules(namespace).List(ctx, options)
 					},
 					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
-						return mclient.MonitoringV1().PrometheusRules(namespace).Watch(context.TODO(), options)
+						return mclient.MonitoringV1().PrometheusRules(namespace).Watch(ctx, options)
 					},
 				}
 			}),
@@ -285,7 +285,7 @@ func (o *Operator) addHandlers() {
 }
 
 // Run the controller.
-func (o *Operator) Run(stopc <-chan struct{}) error {
+func (o *Operator) Run(ctx context.Context) error {
 	defer o.queue.ShutDown()
 
 	errChan := make(chan error)
@@ -305,26 +305,26 @@ func (o *Operator) Run(stopc <-chan struct{}) error {
 			return err
 		}
 		level.Info(o.logger).Log("msg", "CRD API endpoints ready")
-	case <-stopc:
+	case <-ctx.Done():
 		return nil
 	}
 
-	go o.worker()
+	go o.worker(ctx)
 
-	go o.thanosRulerInf.Run(stopc)
-	go o.cmapInf.Run(stopc)
-	go o.ruleInf.Run(stopc)
-	go o.nsRuleInf.Run(stopc)
+	go o.thanosRulerInf.Run(ctx.Done())
+	go o.cmapInf.Run(ctx.Done())
+	go o.ruleInf.Run(ctx.Done())
+	go o.nsRuleInf.Run(ctx.Done())
 	if o.nsRuleInf != o.nsThanosRulerInf {
-		go o.nsThanosRulerInf.Run(stopc)
+		go o.nsThanosRulerInf.Run(ctx.Done())
 	}
-	go o.ssetInf.Run(stopc)
-	if err := o.waitForCacheSync(stopc); err != nil {
+	go o.ssetInf.Run(ctx.Done())
+	if err := o.waitForCacheSync(ctx.Done()); err != nil {
 		return err
 	}
 	o.addHandlers()
 
-	<-stopc
+	<-ctx.Done()
 	return nil
 }
 
@@ -542,12 +542,12 @@ func (o *Operator) enqueue(obj interface{}) {
 // worker runs a worker thread that just dequeues items, processes them, and
 // marks them done. It enforces that the syncHandler is never invoked
 // concurrently with the same key.
-func (o *Operator) worker() {
-	for o.processNextWorkItem() {
+func (o *Operator) worker(ctx context.Context) {
+	for o.processNextWorkItem(ctx) {
 	}
 }
 
-func (o *Operator) processNextWorkItem() bool {
+func (o *Operator) processNextWorkItem(ctx context.Context) bool {
 	key, quit := o.queue.Get()
 	if quit {
 		return false
@@ -555,7 +555,7 @@ func (o *Operator) processNextWorkItem() bool {
 	defer o.queue.Done(key)
 
 	o.metrics.ReconcileCounter().Inc()
-	err := o.sync(key.(string))
+	err := o.sync(ctx, key.(string))
 	if err == nil {
 		o.queue.Forget(key)
 		return true
@@ -568,7 +568,7 @@ func (o *Operator) processNextWorkItem() bool {
 	return true
 }
 
-func (o *Operator) sync(key string) error {
+func (o *Operator) sync(ctx context.Context, key string) error {
 	obj, exists, err := o.thanosRulerInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
@@ -589,14 +589,14 @@ func (o *Operator) sync(key string) error {
 
 	level.Info(o.logger).Log("msg", "sync thanos-ruler", "key", key)
 
-	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(tr)
+	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(ctx, tr)
 	if err != nil {
 		return err
 	}
 
 	// Create governing service if it doesn't exist.
 	svcClient := o.kclient.CoreV1().Services(tr.Namespace)
-	if err = k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(tr, o.config)); err != nil {
+	if err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
@@ -613,7 +613,7 @@ func (o *Operator) sync(key string) error {
 			return errors.Wrap(err, "making thanos statefulset config failed")
 		}
 		operator.SanitizeSTS(sset)
-		if _, err := ssetClient.Create(context.TODO(), sset, metav1.CreateOptions{}); err != nil {
+		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 			return errors.Wrap(err, "creating thanos statefulset failed")
 		}
 		return nil
@@ -643,14 +643,14 @@ func (o *Operator) sync(key string) error {
 		return nil
 	}
 
-	_, err = ssetClient.Update(context.TODO(), sset, metav1.UpdateOptions{})
+	_, err = ssetClient.Update(ctx, sset, metav1.UpdateOptions{})
 	sErr, ok := err.(*apierrors.StatusError)
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
 		o.metrics.StsDeleteCreateCounter().Inc()
 		level.Info(o.logger).Log("msg", "resolving illegal update of ThanosRuler StatefulSet", "details", sErr.ErrStatus.Details)
 		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(context.TODO(), sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
 		}
 		return nil
@@ -708,14 +708,14 @@ func ListOptions(name string) metav1.ListOptions {
 // ThanosRulerStatus evaluates the current status of a ThanosRuler deployment with
 // respect to its specified resource object. It return the status and a list of
 // pods that are not updated.
-func ThanosRulerStatus(kclient kubernetes.Interface, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRulerStatus, []v1.Pod, error) {
+func ThanosRulerStatus(ctx context.Context, kclient kubernetes.Interface, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRulerStatus, []v1.Pod, error) {
 	res := &monitoringv1.ThanosRulerStatus{Paused: tr.Spec.Paused}
 
-	pods, err := kclient.CoreV1().Pods(tr.Namespace).List(context.TODO(), ListOptions(tr.Name))
+	pods, err := kclient.CoreV1().Pods(tr.Namespace).List(ctx, ListOptions(tr.Name))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.AppsV1().StatefulSets(tr.Namespace).Get(context.TODO(), statefulSetNameFromThanosName(tr.Name), metav1.GetOptions{})
+	sset, err := kclient.AppsV1().StatefulSets(tr.Namespace).Get(ctx, statefulSetNameFromThanosName(tr.Name), metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 	}
