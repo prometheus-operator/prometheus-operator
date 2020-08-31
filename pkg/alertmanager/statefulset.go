@@ -384,6 +384,12 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				// below Alertmanager v0.15.0 high availability flags are prefixed with 'mesh' instead of 'cluster'
 				amArgs[i] = strings.Replace(amArgs[i], "--cluster.", "--mesh.", 1)
 			}
+		} else {
+			// reconnect-timeout was added in 0.15 (https://github.com/prometheus/alertmanager/pull/1384)
+			// Override default 6h value to allow AlertManager cluster to
+			// quickly remove a cluster member after its pod restarted or during a
+			// regular rolling update.
+			amArgs = append(amArgs, "--cluster.reconnect-timeout=5m")
 		}
 		if version.Minor < 13 {
 			for i := range amArgs {
