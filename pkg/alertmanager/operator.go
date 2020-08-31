@@ -55,8 +55,8 @@ type Operator struct {
 	mclient monitoringclient.Interface
 	logger  log.Logger
 
-	alrtInfs *informers.InformersForResource
-	ssetInfs *informers.InformersForResource
+	alrtInfs *informers.ForResource
+	ssetInfs *informers.ForResource
 
 	queue workqueue.RateLimitingInterface
 
@@ -117,27 +117,30 @@ func New(ctx context.Context, c prometheusoperator.Config, logger log.Logger, r 
 
 	o.alrtInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList,
-			mclient, resyncPeriod,
+			o.config.Namespaces.AlertmanagerAllowList,
+			o.config.Namespaces.DenyList,
+			mclient,
+			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.LabelSelector = o.config.AlertManagerSelector
 			},
 		),
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertmanagerName),
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating alertmanager informers")
 	}
 
 	o.ssetInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			o.config.Namespaces.AlertmanagerAllowList, o.config.Namespaces.DenyList,
-			o.kclient, resyncPeriod, nil,
+			o.config.Namespaces.AlertmanagerAllowList,
+			o.config.Namespaces.DenyList,
+			o.kclient,
+			resyncPeriod,
+			nil,
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
@@ -151,7 +154,7 @@ func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 
 	for _, infs := range []struct {
 		name                 string
-		informersForResource *informers.InformersForResource
+		informersForResource *informers.ForResource
 	}{
 		{"Alertmanager", c.alrtInfs},
 		{"StatefulSet", c.ssetInfs},
@@ -434,9 +437,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "retrieving statefulset failed")
 	}
 
-	exists := !apierrors.IsNotFound(err)
-
-	if !exists {
+	if apierrors.IsNotFound(err) {
 		sset, err := makeStatefulSet(am, nil, c.config)
 		if err != nil {
 			return errors.Wrap(err, "making the statefulset, to create, failed")

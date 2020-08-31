@@ -27,7 +27,7 @@ import (
 func NewKubeInformerFactories(
 	allowNamespaces, denyNamespaces map[string]struct{},
 	kubeClient kubernetes.Interface, defaultResync time.Duration, tweakListOptions func(*metav1.ListOptions),
-) InformerFactoriesForNamespaces {
+) FactoriesForNamespaces {
 	tweaks, namespaces := newInformerOptions(
 		allowNamespaces, denyNamespaces, tweakListOptions,
 	)
@@ -49,6 +49,6 @@ func (i kubeInformersForNamespaces) Namespaces() sets.String {
 	return sets.StringKeySet(i)
 }
 
-func (i kubeInformersForNamespaces) ForResource(namespace string, resource schema.GroupVersionResource) (GenericInformer, error) {
+func (i kubeInformersForNamespaces) ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error) {
 	return i[namespace].ForResource(resource)
 }
