@@ -28,6 +28,28 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 )
 
+type mockListerWatcher struct {
+	listResult runtime.Object
+	evCh       chan watch.Event
+	stopped    bool
+}
+
+func (m *mockListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
+	return m.listResult, nil
+}
+
+func (m *mockListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
+	return m, nil
+}
+
+func (m *mockListerWatcher) Stop() {
+	m.stopped = true
+}
+
+func (m *mockListerWatcher) ResultChan() <-chan watch.Event {
+	return m.evCh
+}
+
 func newUnstructured(namespace string) *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
