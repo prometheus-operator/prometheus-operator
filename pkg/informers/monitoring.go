@@ -27,7 +27,7 @@ import (
 func NewMonitoringInformerFactories(
 	allowNamespaces, denyNamespaces map[string]struct{},
 	monitoringClient monitoring.Interface, defaultResync time.Duration, tweakListOptions func(*metav1.ListOptions),
-) InformerFactoriesForNamespaces {
+) FactoriesForNamespaces {
 	tweaks, namespaces := newInformerOptions(
 		allowNamespaces, denyNamespaces, tweakListOptions,
 	)
@@ -49,6 +49,6 @@ func (i monitoringInformersForNamespaces) Namespaces() sets.String {
 	return sets.StringKeySet(i)
 }
 
-func (i monitoringInformersForNamespaces) ForResource(namespace string, resource schema.GroupVersionResource) (GenericInformer, error) {
+func (i monitoringInformersForNamespaces) ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error) {
 	return i[namespace].ForResource(resource)
 }

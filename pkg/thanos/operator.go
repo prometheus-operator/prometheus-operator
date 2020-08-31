@@ -61,10 +61,10 @@ type Operator struct {
 	mclient monitoringclient.Interface
 	logger  log.Logger
 
-	thanosRulerInfs *informers.InformersForResource
-	cmapInfs        *informers.InformersForResource
-	ruleInfs        *informers.InformersForResource
-	ssetInfs        *informers.InformersForResource
+	thanosRulerInfs *informers.ForResource
+	cmapInfs        *informers.ForResource
+	ruleInfs        *informers.ForResource
+	ssetInfs        *informers.ForResource
 
 	nsThanosRulerInf cache.SharedIndexInformer
 	nsRuleInf        cache.SharedIndexInformer
@@ -139,54 +139,60 @@ func New(conf prometheusoperator.Config, logger log.Logger, r prometheus.Registe
 
 	o.cmapInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			o.config.Namespaces.ThanosRulerAllowList, o.config.Namespaces.DenyList,
-			o.kclient, resyncPeriod,
+			o.config.Namespaces.ThanosRulerAllowList,
+			o.config.Namespaces.DenyList,
+			o.kclient,
+			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.LabelSelector = labelThanosRulerName
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating configmap informers")
 	}
 
 	o.thanosRulerInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			o.config.Namespaces.ThanosRulerAllowList, o.config.Namespaces.DenyList,
-			mclient, resyncPeriod,
+			o.config.Namespaces.ThanosRulerAllowList,
+			o.config.Namespaces.DenyList,
+			mclient,
+			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.LabelSelector = o.config.ThanosRulerSelector
 			},
 		),
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ThanosRulerName),
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating thanosruler informers")
 	}
 
 	o.ruleInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			o.config.Namespaces.AllowList, o.config.Namespaces.DenyList,
-			mclient, resyncPeriod, nil,
+			o.config.Namespaces.AllowList,
+			o.config.Namespaces.DenyList,
+			mclient,
+			resyncPeriod,
+			nil,
 		),
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusRuleName),
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating prometheusrule informers")
 	}
 
 	o.ssetInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			o.config.Namespaces.ThanosRulerAllowList, o.config.Namespaces.DenyList,
-			o.kclient, resyncPeriod, nil,
+			o.config.Namespaces.ThanosRulerAllowList,
+			o.config.Namespaces.DenyList,
+			o.kclient,
+			resyncPeriod,
+			nil,
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
@@ -228,7 +234,7 @@ func (o *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 
 	for _, infs := range []struct {
 		name                 string
-		informersForResource *informers.InformersForResource
+		informersForResource *informers.ForResource
 	}{
 		{"ThanosRuler", o.thanosRulerInfs},
 		{"ConfigMap", o.cmapInfs},
@@ -578,7 +584,6 @@ func (o *Operator) processNextWorkItem() bool {
 
 func (o *Operator) sync(key string) error {
 	trobj, err := o.thanosRulerInfs.Get(key)
-
 	if apierrors.IsNotFound(err) {
 		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil

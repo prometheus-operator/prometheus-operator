@@ -64,13 +64,13 @@ type Operator struct {
 	nsPromInf cache.SharedIndexInformer
 	nsMonInf  cache.SharedIndexInformer
 
-	promInfs *informers.InformersForResource
-	smonInfs *informers.InformersForResource
-	pmonInfs *informers.InformersForResource
-	ruleInfs *informers.InformersForResource
-	cmapInfs *informers.InformersForResource
-	secrInfs *informers.InformersForResource
-	ssetInfs *informers.InformersForResource
+	promInfs *informers.ForResource
+	smonInfs *informers.ForResource
+	pmonInfs *informers.ForResource
+	ruleInfs *informers.ForResource
+	cmapInfs *informers.ForResource
+	secrInfs *informers.ForResource
+	ssetInfs *informers.ForResource
 
 	queue workqueue.RateLimitingInterface
 
@@ -244,15 +244,16 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 
 	c.promInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.PrometheusAllowList, c.config.Namespaces.DenyList,
-			mclient, resyncPeriod,
+			c.config.Namespaces.PrometheusAllowList,
+			c.config.Namespaces.DenyList,
+			mclient,
+			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.LabelSelector = c.config.PromSelector
 			},
 		),
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusName),
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating prometheus informers")
 	}
@@ -265,77 +266,88 @@ func New(conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, er
 
 	c.smonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AllowList, c.config.Namespaces.DenyList,
-			mclient, resyncPeriod, nil,
+			c.config.Namespaces.AllowList,
+			c.config.Namespaces.DenyList,
+			mclient,
+			resyncPeriod,
+			nil,
 		),
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ServiceMonitorName),
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating servicemonitor informers")
 	}
 
 	c.pmonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AllowList, c.config.Namespaces.DenyList,
-			mclient, resyncPeriod, nil,
+			c.config.Namespaces.AllowList,
+			c.config.Namespaces.DenyList,
+			mclient,
+			resyncPeriod,
+			nil,
 		),
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PodMonitorName),
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating podmonitor informers")
 	}
 
 	c.ruleInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			c.config.Namespaces.AllowList, c.config.Namespaces.DenyList,
-			mclient, resyncPeriod, nil,
+			c.config.Namespaces.AllowList,
+			c.config.Namespaces.DenyList,
+			mclient,
+			resyncPeriod,
+			nil,
 		),
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.PrometheusRuleName),
 	)
-
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating podmonitor informers")
+		return nil, errors.Wrap(err, "error creating prometheusrule informers")
 	}
 
 	c.cmapInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			c.config.Namespaces.AllowList, c.config.Namespaces.DenyList,
-			c.kclient, resyncPeriod,
+			c.config.Namespaces.AllowList,
+			c.config.Namespaces.DenyList,
+			c.kclient,
+			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.LabelSelector = labelPrometheusName
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
 	)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating configmap informers")
 	}
 
 	c.secrInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			c.config.Namespaces.PrometheusAllowList, c.config.Namespaces.DenyList,
-			c.kclient, resyncPeriod, nil,
+			c.config.Namespaces.PrometheusAllowList,
+			c.config.Namespaces.DenyList,
+			c.kclient,
+			resyncPeriod,
+			nil,
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
 	)
-
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating configmap informers")
+		return nil, errors.Wrap(err, "error creating secrets informers")
 	}
 
 	c.ssetInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			c.config.Namespaces.PrometheusAllowList, c.config.Namespaces.DenyList,
-			c.kclient, resyncPeriod, nil,
+			c.config.Namespaces.PrometheusAllowList,
+			c.config.Namespaces.DenyList,
+			c.kclient,
+			resyncPeriod,
+			nil,
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)
-
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating configmap informers")
+		return nil, errors.Wrap(err, "error creating statefulset informers")
 	}
 
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
@@ -375,7 +387,7 @@ func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 
 	for _, infs := range []struct {
 		name                 string
-		informersForResource *informers.InformersForResource
+		informersForResource *informers.ForResource
 	}{
 		{"Prometheus", c.promInfs},
 		{"ServiceMonitor", c.smonInfs},

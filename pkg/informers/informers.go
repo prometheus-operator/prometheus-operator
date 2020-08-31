@@ -19,9 +19,7 @@ import (
 	"time"
 
 	"github.com/coreos/prometheus-operator/pkg/listwatch"
-
 	"github.com/pkg/errors"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,24 +30,24 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-type GenericInformer interface {
+type InformLister interface {
 	Informer() cache.SharedIndexInformer
 	Lister() cache.GenericLister
 }
 
-// InformerFactoriesForNamespaces is a simple way to combine several shared informers into a single struct with unified listing power
-type InformerFactoriesForNamespaces interface {
-	ForResource(namespace string, resource schema.GroupVersionResource) (GenericInformer, error)
+// FactoriesForNamespaces is a way to combine several shared informers into a single struct with unified listing power.
+type FactoriesForNamespaces interface {
+	ForResource(namespace string, resource schema.GroupVersionResource) (InformLister, error)
 	Namespaces() sets.String
 }
 
-type InformersForResource struct {
-	informers []GenericInformer
+type ForResource struct {
+	informers []InformLister
 }
 
-func NewInformersForResource(ifs InformerFactoriesForNamespaces, resource schema.GroupVersionResource) (*InformersForResource, error) {
+func NewInformersForResource(ifs FactoriesForNamespaces, resource schema.GroupVersionResource) (*ForResource, error) {
 	namespaces := ifs.Namespaces().List()
-	var informers []GenericInformer
+	var informers []InformLister
 
 	for _, ns := range namespaces {
 		informer, err := ifs.ForResource(ns, resource)
@@ -59,34 +57,34 @@ func NewInformersForResource(ifs InformerFactoriesForNamespaces, resource schema
 		informers = append(informers, informer)
 	}
 
-	return &InformersForResource{
+	return &ForResource{
 		informers: informers,
 	}, nil
 }
 
-func (w *InformersForResource) Start(stopCh <-chan struct{}) {
+func (w *ForResource) Start(stopCh <-chan struct{}) {
 	for _, i := range w.informers {
 		go i.Informer().Run(stopCh)
 	}
 }
 
-func (w *InformersForResource) GetInformers() []GenericInformer {
+func (w *ForResource) GetInformers() []InformLister {
 	return w.informers
 }
 
-func (w *InformersForResource) AddEventHandler(handler cache.ResourceEventHandler) {
+func (w *ForResource) AddEventHandler(handler cache.ResourceEventHandler) {
 	for _, i := range w.informers {
 		i.Informer().AddEventHandler(handler)
 	}
 }
 
-func (w *InformersForResource) AddEventHandlerWithResyncPeriod(handler cache.ResourceEventHandler, resyncPeriod time.Duration) {
+func (w *ForResource) AddEventHandlerWithResyncPeriod(handler cache.ResourceEventHandler, resyncPeriod time.Duration) {
 	for _, i := range w.informers {
 		i.Informer().AddEventHandlerWithResyncPeriod(handler, resyncPeriod)
 	}
 }
 
-func (w *InformersForResource) HasSynced() bool {
+func (w *ForResource) HasSynced() bool {
 	for _, i := range w.informers {
 		if !i.Informer().HasSynced() {
 			return false
@@ -96,7 +94,7 @@ func (w *InformersForResource) HasSynced() bool {
 	return true
 }
 
-func (w *InformersForResource) List(selector labels.Selector) ([]runtime.Object, error) {
+func (w *ForResource) List(selector labels.Selector) ([]runtime.Object, error) {
 	var ret []runtime.Object
 
 	for _, inf := range w.informers {
@@ -110,7 +108,7 @@ func (w *InformersForResource) List(selector labels.Selector) ([]runtime.Object,
 	return ret, nil
 }
 
-func (w *InformersForResource) ListAllByNamespace(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
+func (w *ForResource) ListAllByNamespace(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
 	for _, inf := range w.informers {
 		err := cache.ListAllByNamespace(inf.Informer().GetIndexer(), namespace, selector, appendFn)
 		if err != nil {
@@ -121,17 +119,15 @@ func (w *InformersForResource) ListAllByNamespace(namespace string, selector lab
 	return nil
 }
 
-func (w *InformersForResource) Get(name string) (runtime.Object, error) {
+func (w *ForResource) Get(name string) (runtime.Object, error) {
 	var err error
 
 	for _, inf := range w.informers {
 		var ret runtime.Object
 		ret, err = inf.Lister().Get(name)
-
 		if apierrors.IsNotFound(err) {
 			continue
 		}
-
 		if err != nil {
 			return nil, err
 		}
@@ -154,25 +150,25 @@ func newInformerOptions(allowedNamespaces, deniedNamespaces map[string]struct{},
 
 		return func(options *v1.ListOptions) {
 			tweaks(options)
-			denyListTweak(options, deniedNamespaces)
+			denyNamespacesTweak(options, deniedNamespaces)
 		}, namespaces
 	}
 
-	for ns, _ := range allowedNamespaces {
+	for ns := range allowedNamespaces {
 		namespaces = append(namespaces, ns)
 	}
 
 	return tweaks, namespaces
 }
 
-func denyListTweak(options *metav1.ListOptions, namespaces map[string]struct{}) {
+func denyNamespacesTweak(options *metav1.ListOptions, namespaces map[string]struct{}) {
 	if len(namespaces) == 0 {
 		return
 	}
 
 	var denied []string
 
-	for ns, _ := range namespaces {
+	for ns := range namespaces {
 		denied = append(denied, "metadata.namespace!="+ns)
 	}
 
