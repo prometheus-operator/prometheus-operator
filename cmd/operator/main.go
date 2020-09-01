@@ -133,7 +133,8 @@ var (
 		logFormatLogfmt,
 		logFormatJson,
 	}
-	cfg = prometheuscontroller.Config{}
+	cfg                           = operator.Config{}
+	deprecatedConfigReloaderImage string
 
 	rawTLSCipherSuites string
 	serverTLS          bool
@@ -166,10 +167,11 @@ func init() {
 	// Prometheus Operator image, tagged with the same semver version. Default to
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
-	flagset.StringVar(&cfg.PrometheusConfigReloaderImage, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
-	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", operator.DefaultConfigMapReloaderImage, "Reload Image")
-	flagset.StringVar(&cfg.ConfigReloaderCPU, "config-reloader-cpu", "100m", "Config Reloader CPU. Value \"0\" disables it and causes no limit to be configured.")
-	flagset.StringVar(&cfg.ConfigReloaderMemory, "config-reloader-memory", "25Mi", "Config Reloader Memory. Value \"0\" disables it and causes no limit to be configured.")
+	flagset.StringVar(&cfg.ReloaderConfig.Image, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
+	// TODO(simonpasquier): remove the '--config-reloader-image' flag before releasing v0.45.
+	flagset.StringVar(&deprecatedConfigReloaderImage, "config-reloader-image", "", "Reload image. Deprecated, it will be removed in v0.45.0.")
+	flagset.StringVar(&cfg.ReloaderConfig.CPU, "config-reloader-cpu", "100m", "Config Reloader CPU request & limit. Value \"0\" disables it and causes no request/limit to be configured.")
+	flagset.StringVar(&cfg.ReloaderConfig.Memory, "config-reloader-memory", "25Mi", "Config Reloader Memory requst & limit. Value \"0\" disables it and causes no request/limit to be configured.")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image (path without tag/version)")
 	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image (path without tag/version)")
@@ -217,6 +219,14 @@ func Main() int {
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	logger.Log("msg", fmt.Sprintf("Starting Prometheus Operator version '%v'.", version.Version))
+
+	if deprecatedConfigReloaderImage != "" {
+		level.Warn(logger).Log(
+			"msg", "'--config-reloader-image' flag is ignored, only '--prometheus-config-reloader' is used",
+			"config-reloader-image", deprecatedConfigReloaderImage,
+			"prometheus-config-reloader", cfg.ReloaderConfig.Image,
+		)
+	}
 
 	if len(ns) > 0 && len(deniedNs) > 0 {
 		fmt.Fprint(os.Stderr, "--namespaces and --deny-namespaces are mutually exclusive. Please provide only one of them.\n")

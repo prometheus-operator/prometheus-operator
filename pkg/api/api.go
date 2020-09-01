@@ -27,6 +27,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
@@ -36,7 +37,7 @@ type API struct {
 	logger  log.Logger
 }
 
-func New(conf prometheus.Config, l log.Logger) (*API, error) {
+func New(conf operator.Config, l log.Logger) (*API, error) {
 	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")

@@ -26,7 +26,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prometheusoperator "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -69,17 +68,15 @@ type Config struct {
 	Host                         string
 	LocalHost                    string
 	ClusterDomain                string
-	ConfigReloaderImage          string
-	ConfigReloaderCPU            string
-	ConfigReloaderMemory         string
+	ReloaderConfig               operator.ReloaderConfig
 	AlertmanagerDefaultBaseImage string
-	Namespaces                   prometheusoperator.Namespaces
-	Labels                       prometheusoperator.Labels
+	Namespaces                   operator.Namespaces
+	Labels                       operator.Labels
 	AlertManagerSelector         string
 }
 
 // New creates a new controller.
-func New(ctx context.Context, c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
+func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -105,9 +102,7 @@ func New(ctx context.Context, c prometheusoperator.Config, logger log.Logger, r 
 			Host:                         c.Host,
 			LocalHost:                    c.LocalHost,
 			ClusterDomain:                c.ClusterDomain,
-			ConfigReloaderImage:          c.ConfigReloaderImage,
-			ConfigReloaderCPU:            c.ConfigReloaderCPU,
-			ConfigReloaderMemory:         c.ConfigReloaderMemory,
+			ReloaderConfig:               c.ReloaderConfig,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
 			Namespaces:                   c.Namespaces,
 			Labels:                       c.Labels,

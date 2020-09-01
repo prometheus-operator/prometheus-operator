@@ -44,7 +44,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 )
@@ -84,82 +83,9 @@ type Operator struct {
 	kubeletObjectName      string
 	kubeletObjectNamespace string
 	kubeletSyncEnabled     bool
-	config                 Config
+	config                 operator.Config
 
 	configGenerator *configGenerator
-}
-
-type Labels struct {
-	LabelsString string
-	LabelsMap    map[string]string
-}
-
-// Implement the flag.Value interface
-func (labels *Labels) String() string {
-	return labels.LabelsString
-}
-
-// Merge labels create a new map with labels merged.
-func (labels *Labels) Merge(otherLabels map[string]string) map[string]string {
-	mergedLabels := map[string]string{}
-
-	for key, value := range otherLabels {
-		mergedLabels[key] = value
-	}
-
-	for key, value := range labels.LabelsMap {
-		mergedLabels[key] = value
-	}
-	return mergedLabels
-}
-
-// Set implements the flag.Set interface.
-func (labels *Labels) Set(value string) error {
-	m := map[string]string{}
-	if value != "" {
-		splited := strings.Split(value, ",")
-		for _, pair := range splited {
-			sp := strings.Split(pair, "=")
-			m[sp[0]] = sp[1]
-		}
-	}
-	(*labels).LabelsMap = m
-	(*labels).LabelsString = value
-	return nil
-}
-
-// Config defines configuration parameters for the Operator.
-type Config struct {
-	Host                          string
-	ClusterDomain                 string
-	KubeletObject                 string
-	ListenAddress                 string
-	TLSInsecure                   bool
-	TLSConfig                     rest.TLSClientConfig
-	ServerTLSConfig               operator.TLSServerConfig
-	ConfigReloaderImage           string
-	ConfigReloaderCPU             string
-	ConfigReloaderMemory          string
-	PrometheusConfigReloaderImage string
-	AlertmanagerDefaultBaseImage  string
-	PrometheusDefaultBaseImage    string
-	ThanosDefaultBaseImage        string
-	Namespaces                    Namespaces
-	Labels                        Labels
-	LocalHost                     string
-	LogLevel                      string
-	LogFormat                     string
-	PromSelector                  string
-	AlertManagerSelector          string
-	ThanosRulerSelector           string
-	SecretListWatchSelector       string
-}
-
-type Namespaces struct {
-	// allow list/deny list for common custom resources
-	AllowList, DenyList map[string]struct{}
-	// allow list for prometheus/alertmanager custom resources
-	PrometheusAllowList, AlertmanagerAllowList, ThanosRulerAllowList map[string]struct{}
 }
 
 // BasicAuthCredentials represents a username password pair to be used with
@@ -178,7 +104,7 @@ type BearerToken string
 type TLSAsset string
 
 // New creates a new controller.
-func New(ctx context.Context, conf Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
+func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -1339,10 +1265,10 @@ func checkPrometheusSpecDeprecation(key string, p *monitoringv1.Prometheus, logg
 	}
 }
 
-func createSSetInputHash(p monitoringv1.Prometheus, c Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
+func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfigMapNames []string, ss interface{}) (string, error) {
 	hash, err := hashstructure.Hash(struct {
 		P monitoringv1.Prometheus
-		C Config
+		C operator.Config
 		S interface{}
 		R []string `hash:"set"`
 	}{p, c, ss, ruleConfigMapNames},

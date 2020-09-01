@@ -17,21 +17,37 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/version"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/oklog/run"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/thanos-io/thanos/pkg/reloader"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
-	logFormatLogfmt                     = "logfmt"
-	logFormatJson                       = "json"
+	logFormatLogfmt = "logfmt"
+	logFormatJson   = "json"
+
+	logLevelDebug = "debug"
+	logLevelInfo  = "info"
+	logLevelWarn  = "warn"
+	logLevelError = "error"
+	logLevelNone  = "none"
+
+	defaultWatchInterval = 3 * time.Minute // 3 minutes was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
+	defaultDelayInterval = 1 * time.Second // 1 second seems a reasonable amount of time for the kubelet to update the secrets/configmaps.
+	defaultRetryInterval = 5 * time.Second // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
+
 	statefulsetOrdinalEnvvar            = "STATEFULSET_ORDINAL_NUMBER"
 	statefulsetOrdinalFromEnvvarDefault = "POD_NAME"
 )
@@ -40,6 +56,13 @@ var (
 	availableLogFormats = []string{
 		logFormatLogfmt,
 		logFormatJson,
+	}
+	availableLogLevels = []string{
+		logLevelDebug,
+		logLevelInfo,
+		logLevelWarn,
+		logLevelError,
+		logLevelNone,
 	}
 )
 
@@ -51,17 +74,31 @@ func main() {
 	cfgSubstFile := app.Flag("config-envsubst-file", "output file for environment variable substituted config file").
 		String()
 
-	rulesDir := app.Flag("rules-dir", "Rules directory to watch non-recursively").Strings()
+	watchInterval := app.Flag("watch-interval", "how often the reloader re-reads the configuration file and directories").Default(defaultWatchInterval.String()).Duration()
+	delayInterval := app.Flag("delay-interval", "how long the reloader waits before reloading after it has detected a change").Default(defaultDelayInterval.String()).Duration()
+	retryInterval := app.Flag("retry-interval", "how long the reloader waits before retrying in case the endpoint returned an error").Default(defaultRetryInterval.String()).Duration()
+
+	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
 	createStatefulsetOrdinalFrom := app.Flag(
 		"statefulset-ordinal-from-envvar",
 		fmt.Sprintf("parse this environment variable to create %s, containing the statefulset ordinal number", statefulsetOrdinalEnvvar)).
 		Default(statefulsetOrdinalFromEnvvarDefault).String()
 
+	listenAddress := app.Flag(
+		"listen-address",
+		"address on which to expose metrics (disabled when empty)").
+		String()
+
 	logFormat := app.Flag(
 		"log-format",
-		fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(availableLogFormats, ", "))).
+		fmt.Sprintf("log format to use. Possible values: %s", strings.Join(availableLogFormats, ", "))).
 		Default(logFormatLogfmt).String()
+
+	logLevel := app.Flag(
+		"log-level",
+		fmt.Sprintf("log level to use. Possible values: %s", strings.Join(availableLogLevels, ", "))).
+		Default(logLevelInfo).String()
 
 	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
 		Default("http://127.0.0.1:9090/-/reload").URL()
@@ -72,29 +109,71 @@ func main() {
 	}
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
+
 	if *logFormat == logFormatJson {
 		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
 	}
+
+	switch *logLevel {
+	case logLevelDebug:
+		logger = level.NewFilter(logger, level.AllowDebug())
+	case logLevelWarn:
+		logger = level.NewFilter(logger, level.AllowWarn())
+	case logLevelError:
+		logger = level.NewFilter(logger, level.AllowError())
+	case logLevelNone:
+		logger = level.NewFilter(logger, level.AllowNone())
+	default:
+		logger = level.NewFilter(logger, level.AllowInfo())
+	}
+
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	if createStatefulsetOrdinalFrom != nil {
 		if err := createOrdinalEnvvar(*createStatefulsetOrdinalFrom); err != nil {
-			logger.Log("msg", fmt.Sprintf("Failed setting %s", statefulsetOrdinalEnvvar))
+			level.Warn(logger).Log("msg", fmt.Sprintf("Failed setting %s", statefulsetOrdinalEnvvar))
 		}
 	}
 
-	logger.Log("msg", fmt.Sprintf("Starting prometheus-config-reloader version '%v'.", version.Version))
+	level.Info(logger).Log("msg", fmt.Sprintf("Starting prometheus-config-reloader version '%v'.", version.Version))
+
+	r := prometheus.NewRegistry()
+	r.MustRegister(
+		prometheus.NewGoCollector(),
+		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
+	)
 
 	var g run.Group
 	{
 		ctx, cancel := context.WithCancel(context.Background())
-		rel := reloader.New(logger, *reloadURL, *cfgFile, *cfgSubstFile, *rulesDir)
+		rel := reloader.New(
+			logger,
+			r,
+			&reloader.Options{
+				ReloadURL:     *reloadURL,
+				CfgFile:       *cfgFile,
+				CfgOutputFile: *cfgSubstFile,
+				WatchedDirs:   *watchedDir,
+				DelayInterval: *delayInterval,
+				WatchInterval: *watchInterval,
+				RetryInterval: *retryInterval,
+			},
+		)
 
 		g.Add(func() error {
 			return rel.Watch(ctx)
 		}, func(error) {
 			cancel()
+		})
+	}
+
+	if *listenAddress != "" {
+		g.Add(func() error {
+			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
+			http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
+			return http.ListenAndServe(*listenAddress, nil)
+		}, func(error) {
 		})
 	}
 

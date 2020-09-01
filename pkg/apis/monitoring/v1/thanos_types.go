@@ -143,7 +143,7 @@ type ThanosRulerSpec struct {
 	// containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
 	// to change the behavior of an operator generated container. Containers described here modify
 	// an operator generated container if they share the same name and modifications are done via a
-	// strategic merge patch. The current container names are: `thanos-ruler` and `rules-configmap-reloader`.
+	// strategic merge patch. The current container names are: `thanos-ruler` and `config-reloader`.
 	// Overriding containers is entirely outside the scope of what the maintainers will support and by doing
 	// so, you accept that this behaviour may break at any time without notice.
 	Containers []v1.Container `json:"containers,omitempty"`
