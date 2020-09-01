@@ -32,6 +32,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/api"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
@@ -247,6 +248,8 @@ func Main() int {
 	ctx, cancel := context.WithCancel(context.Background())
 	wg, ctx := errgroup.WithContext(ctx)
 	r := prometheus.NewRegistry()
+
+	k8sutil.MustRegisterClientGoMetrics(r)
 
 	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
 	if err != nil {
