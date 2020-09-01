@@ -163,7 +163,7 @@ func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
 // Returns the CA, which can bs used to access the operator over TLS
 func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowlist,
 	namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces []string,
-	createRuleAdmissionHooks bool) ([]finalizerFn, error) {
+	createRuleAdmissionHooks, createClusterRoleBindings bool) ([]finalizerFn, error) {
 
 	var finalizers []finalizerFn
 
@@ -187,8 +187,20 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		return nil, errors.Wrap(err, "failed to update prometheus cluster role")
 	}
 
-	if _, err := CreateClusterRoleBinding(f.KubeClient, ns, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
-		return nil, errors.Wrap(err, "failed to create prometheus cluster role binding")
+	if createClusterRoleBindings {
+		if _, err := CreateClusterRoleBinding(f.KubeClient, ns, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+			return nil, errors.Wrap(err, "failed to create prometheus cluster role binding")
+		}
+	} else {
+		namespaces := namespaceAllowlist
+		namespaces = append(namespaces, prometheusInstanceNamespaces...)
+		namespaces = append(namespaces, alertmanagerInstanceNamespaces...)
+
+		for _, n := range namespaces {
+			if _, err := CreateRoleBindingForSubjectNamespace(f.KubeClient, n, ns, "../framework/ressources/prometheus-operator-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+				return nil, errors.Wrap(err, "failed to create prometheus operator role binding")
+			}
+		}
 	}
 
 	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(fmt.Sprintf("%s.%s.svc", prometheusOperatorServiceDeploymentName, ns), nil, nil)

@@ -16,6 +16,7 @@ package framework
 
 import (
 	"context"
+
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -25,6 +26,22 @@ import (
 func CreateRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) (finalizerFn, error) {
 	finalizerFn := func() error { return DeleteRoleBinding(kubeClient, ns, relativePath) }
 	roleBinding, err := parseRoleBindingYaml(relativePath)
+	if err != nil {
+		return finalizerFn, err
+	}
+
+	_, err = kubeClient.RbacV1().RoleBindings(ns).Create(context.TODO(), roleBinding, metav1.CreateOptions{})
+	return finalizerFn, err
+}
+
+func CreateRoleBindingForSubjectNamespace(kubeClient kubernetes.Interface, ns, subjectNs string, relativePath string) (finalizerFn, error) {
+	finalizerFn := func() error { return DeleteRoleBinding(kubeClient, ns, relativePath) }
+	roleBinding, err := parseRoleBindingYaml(relativePath)
+
+	for i := range roleBinding.Subjects {
+		roleBinding.Subjects[i].Namespace = subjectNs
+	}
+
 	if err != nil {
 		return finalizerFn, err
 	}

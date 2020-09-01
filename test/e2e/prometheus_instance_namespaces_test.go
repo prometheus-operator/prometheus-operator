@@ -34,7 +34,7 @@ func testPrometheusInstanceNamespaces_AllNs(t *testing.T) {
 	nonInstanceNs := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBACGlobal(t, instanceNs, framework.KubeClient)
 
-	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, nil, []string{instanceNs}, nil, false)
+	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, nil, []string{instanceNs}, nil, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func testPrometheusInstanceNamespaces_DenyList(t *testing.T) {
 		}
 	}
 
-	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, []string{deniedNs, instanceNs}, []string{instanceNs}, nil, false)
+	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, []string{deniedNs, instanceNs}, []string{instanceNs}, nil, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,7 +216,7 @@ func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
 		}
 	}
 
-	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, []string{allowedNs}, nil, []string{instanceNs}, nil, false)
+	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, []string{allowedNs}, nil, []string{instanceNs}, nil, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}

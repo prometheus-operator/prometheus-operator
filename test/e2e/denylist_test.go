@@ -18,9 +18,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
-
 	testFramework "github.com/coreos/prometheus-operator/test/framework"
+	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -38,7 +37,7 @@ func testDenyPrometheus(t *testing.T) {
 
 	ctx.SetupPrometheusRBAC(t, operatorNamespace, framework.KubeClient)
 
-	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, nil, nil, false)
+	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, nil, nil, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +80,7 @@ func testDenyServiceMonitor(t *testing.T) {
 
 	ctx.SetupPrometheusRBAC(t, operatorNamespace, framework.KubeClient)
 
-	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, nil, nil, false)
+	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, nil, nil, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}

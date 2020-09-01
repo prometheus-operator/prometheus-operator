@@ -1613,7 +1613,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches single namespace mainNS, not arbitraryNS.
-		_, err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{mainNS}, nil, nil, nil, false)
+		_, err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{mainNS}, nil, nil, nil, false, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1683,7 +1683,7 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		// Prometheus Operator only watches prometheusNS and ruleNS, not arbitraryNS.
-		_, err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{prometheusNS, ruleNS}, nil, nil, nil, false)
+		_, err := framework.CreatePrometheusOperator(operatorNS, *opImage, []string{prometheusNS, ruleNS}, nil, nil, nil, false, true)
 		if err != nil {
 			t.Fatal(err)
 		}
