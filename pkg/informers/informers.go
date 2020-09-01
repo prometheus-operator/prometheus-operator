@@ -16,7 +16,6 @@ package informers
 
 import (
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
@@ -89,13 +88,6 @@ func (w *ForResource) GetInformers() []InformLister {
 func (w *ForResource) AddEventHandler(handler cache.ResourceEventHandler) {
 	for _, i := range w.informers {
 		i.Informer().AddEventHandler(handler)
-	}
-}
-
-// AddEventHandlerWithResyncPeriod registers the given handler to all wrapped informers.
-func (w *ForResource) AddEventHandlerWithResyncPeriod(handler cache.ResourceEventHandler, resyncPeriod time.Duration) {
-	for _, i := range w.informers {
-		i.Informer().AddEventHandlerWithResyncPeriod(handler, resyncPeriod)
 	}
 }
 
@@ -198,11 +190,15 @@ func denyNamespacesTweak(options *metav1.ListOptions, namespaces map[string]stru
 		return
 	}
 
-	var denied []string
+	var selectors []string
 
 	for ns := range namespaces {
-		denied = append(denied, "metadata.namespace!="+ns)
+		selectors = append(selectors, "metadata.namespace!="+ns)
 	}
 
-	options.FieldSelector = strings.Join(denied, ",")
+	if options.FieldSelector != "" {
+		selectors = append(selectors, options.FieldSelector)
+	}
+
+	options.FieldSelector = strings.Join(selectors, ",")
 }
