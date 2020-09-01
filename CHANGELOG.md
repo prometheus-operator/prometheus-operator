@@ -1,3 +1,9 @@
+## 0.38.3 / 2020-08-31
+
+This release doesn't differ from `v0.38.2` from a feature/bugfix standpoint.
+The only difference is that the container images are now available from
+`quay.io/prometheus-operator` instead of `quay.io/coreos`.
+
 ## 0.38.2 / 2020-08-25
 
 * [BUGFIX] Retain metadata for embedded PVC objects (#3209)
