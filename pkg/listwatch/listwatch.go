@@ -70,9 +70,7 @@ func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.G
 				optionsModifier(options)
 			}
 
-			fieldSelector := options.FieldSelector
-			denyNamesTweak(options, deniedNamespaces)
-			options.FieldSelector = strings.Join([]string{options.FieldSelector, fieldSelector}, ",")
+			DenyTweak(options, "metadata.name", deniedNamespaces)
 		}
 
 		return cache.NewFilteredListWatchFromClient(c, "namespaces", metav1.NamespaceAll, tweak)
@@ -127,16 +125,22 @@ func IdenticalNamespaces(a, b map[string]struct{}) bool {
 	return true
 }
 
-func denyNamesTweak(options *metav1.ListOptions, names map[string]struct{}) {
-	if len(names) == 0 {
+// DenyTweak modifies the given list options
+// by adding a field selector not matching the given values.
+func DenyTweak(options *metav1.ListOptions, field string, valueSet map[string]struct{}) {
+	if len(valueSet) == 0 {
 		return
 	}
 
-	var denied []string
+	var selectors []string
 
-	for ns := range names {
-		denied = append(denied, "metadata.name!="+ns)
+	for value := range valueSet {
+		selectors = append(selectors, field+"!="+value)
 	}
 
-	options.FieldSelector = strings.Join(denied, ",")
+	if options.FieldSelector != "" {
+		selectors = append(selectors, options.FieldSelector)
+	}
+
+	options.FieldSelector = strings.Join(selectors, ",")
 }

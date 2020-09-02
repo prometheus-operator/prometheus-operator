@@ -349,7 +349,7 @@ func New(ctx context.Context, conf Config, logger log.Logger, r prometheus.Regis
 			c.kclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				options.FieldSelector = strings.Join([]string{options.FieldSelector, secretListWatchSelector.String()}, ",")
+				options.FieldSelector = secretListWatchSelector.String()
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),

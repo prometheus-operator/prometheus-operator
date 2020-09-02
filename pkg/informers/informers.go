@@ -15,12 +15,9 @@
 package informers
 
 import (
-	"strings"
-
 	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -43,7 +40,7 @@ type FactoriesForNamespaces interface {
 	Namespaces() sets.String
 }
 
-// ForResource contains a list informers for a concrete resource type,
+// ForResource contains a slice of InformLister for a concrete resource type,
 // one per namespace.
 type ForResource struct {
 	informers []InformLister
@@ -62,7 +59,7 @@ func NewInformersForResource(ifs FactoriesForNamespaces, resource schema.GroupVe
 	for _, ns := range namespaces {
 		informer, err := ifs.ForResource(ns, resource)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error getting informer for resource %v", resource)
+			return nil, errors.Wrapf(err, "error getting informer in namespace %q for resource %v", ns, resource)
 		}
 		informers = append(informers, informer)
 	}
@@ -153,10 +150,10 @@ func (w *ForResource) Get(name string) (runtime.Object, error) {
 	return nil, err
 }
 
-// newInformerOptions constructs a list option tweak function and a list of namespaces
+// newInformerOptions returns a list option tweak function and a list of namespaces
 // based on the given allowed and denied namespaces.
 //
-// If allowedNamespaces contains one entry containing k8s.io/apimachinery/pkg/apis/meta/v1.NamespaceAll
+// If allowedNamespaces contains one only entry equal to k8s.io/apimachinery/pkg/apis/meta/v1.NamespaceAll
 // then it returns it and a tweak function filtering denied namespaces using a field selector.
 //
 // Else, denied namespaces are ignored and just the set of allowed namespaces is returned.
@@ -168,12 +165,10 @@ func newInformerOptions(allowedNamespaces, deniedNamespaces map[string]struct{},
 	var namespaces []string
 
 	if listwatch.IsAllNamespaces(allowedNamespaces) {
-		namespaces = append(namespaces, v1.NamespaceAll)
-
 		return func(options *v1.ListOptions) {
 			tweaks(options)
-			denyNamespacesTweak(options, deniedNamespaces)
-		}, namespaces
+			listwatch.DenyTweak(options, "metadata.namespace", deniedNamespaces)
+		}, []string{v1.NamespaceAll}
 	}
 
 	for ns := range allowedNamespaces {
@@ -181,24 +176,4 @@ func newInformerOptions(allowedNamespaces, deniedNamespaces map[string]struct{},
 	}
 
 	return tweaks, namespaces
-}
-
-// denyNamespacesTweak is a simple method modifying the given list options
-// by adding a field selector not matching the given namespaces.
-func denyNamespacesTweak(options *metav1.ListOptions, namespaces map[string]struct{}) {
-	if len(namespaces) == 0 {
-		return
-	}
-
-	var selectors []string
-
-	for ns := range namespaces {
-		selectors = append(selectors, "metadata.namespace!="+ns)
-	}
-
-	if options.FieldSelector != "" {
-		selectors = append(selectors, options.FieldSelector)
-	}
-
-	options.FieldSelector = strings.Join(selectors, ",")
 }
