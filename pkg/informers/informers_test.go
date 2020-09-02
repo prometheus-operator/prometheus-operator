@@ -205,23 +205,6 @@ func TestNewInformerOptions(t *testing.T) {
 				"denied2": {},
 				"denied1": {},
 			},
-
-			expectedNamespaces: []string{
-				v1.NamespaceAll,
-			},
-			expectedOptions: v1.ListOptions{
-				FieldSelector: "metadata.namespace!=denied1,metadata.namespace!=denied2",
-			},
-		},
-		{
-			name: "all allowed namespaces no denied namespaces",
-			allowedNamespaces: map[string]struct{}{
-				v1.NamespaceAll: {},
-			},
-			deniedNamespaces: map[string]struct{}{
-				"denied2": {},
-				"denied1": {},
-			},
 			tweaks: func(options *v1.ListOptions) {
 				options.FieldSelector = "metadata.name=foo"
 			},
