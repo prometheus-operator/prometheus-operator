@@ -22,6 +22,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -65,12 +66,20 @@ var (
 )
 
 func (generator crdGenerator) generateYAMLManifests() error {
+	outputDir, err := filepath.Abs(generator.YAMLDir)
+	if err != nil {
+		return errors.Wrapf(err, "absolute CRD output path %s", generator.YAMLDir)
+	}
 	cmd := exec.Command(controllergen,
 		generator.ControllerGenOpts,
-		"paths="+controllerPath,
-		"output:crd:dir="+generator.YAMLDir,
+		"paths=.",
+		"output:crd:dir="+outputDir,
 	)
-	err := cmd.Run()
+	cmd.Dir, err = filepath.Abs(controllerPath)
+	if err != nil {
+		return errors.Wrapf(err, "absolute controller path %s", controllerPath)
+	}
+	err = cmd.Run()
 	if err != nil {
 		return errors.Wrapf(err, "running %s", cmd)
 	}

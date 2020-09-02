@@ -71,8 +71,8 @@ po-lint:
 
 DEEPCOPY_TARGET := pkg/apis/monitoring/v1/zz_generated.deepcopy.go
 $(DEEPCOPY_TARGET): $(CONTROLLER_GEN_BINARY)
-	$(CONTROLLER_GEN_BINARY) object:headerFile=./.header \
-		paths=./pkg/apis/monitoring/v1
+	cd ./pkg/apis/monitoring/v1 && $(CONTROLLER_GEN_BINARY) object:headerFile=$(CURDIR)/.header \
+		paths=.
 
 CLIENT_TARGET := pkg/client/versioned/clientset.go
 $(CLIENT_TARGET): $(K8S_GEN_DEPS)
