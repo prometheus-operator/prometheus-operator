@@ -81,7 +81,7 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
+func New(ctx context.Context, c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(c.Host, c.TLSInsecure, &c.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -123,11 +123,11 @@ func New(c prometheusoperator.Config, logger log.Logger, r prometheus.Registerer
 				return &cache.ListWatch{
 					ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 						options.LabelSelector = o.config.AlertManagerSelector
-						return o.mclient.MonitoringV1().Alertmanagers(namespace).List(context.TODO(), options)
+						return o.mclient.MonitoringV1().Alertmanagers(namespace).List(ctx, options)
 					},
 					WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 						options.LabelSelector = o.config.AlertManagerSelector
-						return o.mclient.MonitoringV1().Alertmanagers(namespace).Watch(context.TODO(), options)
+						return o.mclient.MonitoringV1().Alertmanagers(namespace).Watch(ctx, options)
 					},
 				}
 			}),
@@ -189,7 +189,7 @@ func (c *Operator) addHandlers() {
 }
 
 // Run the controller.
-func (c *Operator) Run(stopc <-chan struct{}) error {
+func (c *Operator) Run(ctx context.Context) error {
 	defer c.queue.ShutDown()
 
 	errChan := make(chan error)
@@ -209,20 +209,20 @@ func (c *Operator) Run(stopc <-chan struct{}) error {
 			return err
 		}
 		level.Info(c.logger).Log("msg", "CRD API endpoints ready")
-	case <-stopc:
+	case <-ctx.Done():
 		return nil
 	}
 
-	go c.worker()
+	go c.worker(ctx)
 
-	go c.alrtInf.Run(stopc)
-	go c.ssetInf.Run(stopc)
-	if err := c.waitForCacheSync(stopc); err != nil {
+	go c.alrtInf.Run(ctx.Done())
+	go c.ssetInf.Run(ctx.Done())
+	if err := c.waitForCacheSync(ctx.Done()); err != nil {
 		return err
 	}
 	c.addHandlers()
 
-	<-stopc
+	<-ctx.Done()
 	return nil
 }
 
@@ -270,12 +270,12 @@ func (c *Operator) enqueue(obj interface{}) {
 // worker runs a worker thread that just dequeues items, processes them
 // and marks them done. It enforces that the syncHandler is never invoked
 // concurrently with the same key.
-func (c *Operator) worker() {
-	for c.processNextWorkItem() {
+func (c *Operator) worker(ctx context.Context) {
+	for c.processNextWorkItem(ctx) {
 	}
 }
 
-func (c *Operator) processNextWorkItem() bool {
+func (c *Operator) processNextWorkItem(ctx context.Context) bool {
 	key, quit := c.queue.Get()
 	if quit {
 		return false
@@ -283,7 +283,7 @@ func (c *Operator) processNextWorkItem() bool {
 	defer c.queue.Done(key)
 
 	c.metrics.ReconcileCounter().Inc()
-	err := c.sync(key.(string))
+	err := c.sync(ctx, key.(string))
 	if err == nil {
 		c.queue.Forget(key)
 		return true
@@ -397,7 +397,7 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 	}
 }
 
-func (c *Operator) sync(key string) error {
+func (c *Operator) sync(ctx context.Context, key string) error {
 	obj, exists, err := c.alrtInf.GetIndexer().GetByKey(key)
 	if err != nil {
 		return err
@@ -420,7 +420,7 @@ func (c *Operator) sync(key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
-	if err = k8sutil.CreateOrUpdateService(svcClient, makeStatefulSetService(am, c.config)); err != nil {
+	if err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
@@ -437,7 +437,7 @@ func (c *Operator) sync(key string) error {
 			return errors.Wrap(err, "making the statefulset, to create, failed")
 		}
 		operator.SanitizeSTS(sset)
-		if _, err := ssetClient.Create(context.TODO(), sset, metav1.CreateOptions{}); err != nil {
+		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 			return errors.Wrap(err, "creating statefulset failed")
 		}
 		return nil
@@ -449,14 +449,14 @@ func (c *Operator) sync(key string) error {
 	}
 
 	operator.SanitizeSTS(sset)
-	_, err = ssetClient.Update(context.TODO(), sset, metav1.UpdateOptions{})
+	_, err = ssetClient.Update(ctx, sset, metav1.UpdateOptions{})
 	sErr, ok := err.(*apierrors.StatusError)
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
 		c.metrics.StsDeleteCreateCounter().Inc()
 		level.Info(c.logger).Log("msg", "resolving illegal update of Alertmanager StatefulSet", "details", sErr.ErrStatus.Details)
 		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(context.TODO(), sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
 		}
 		return nil
@@ -492,14 +492,14 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-func AlertmanagerStatus(kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
+func AlertmanagerStatus(ctx context.Context, kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
 	res := &monitoringv1.AlertmanagerStatus{Paused: a.Spec.Paused}
 
-	pods, err := kclient.CoreV1().Pods(a.Namespace).List(context.TODO(), ListOptions(a.Name))
+	pods, err := kclient.CoreV1().Pods(a.Namespace).List(ctx, ListOptions(a.Name))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.AppsV1().StatefulSets(a.Namespace).Get(context.TODO(), statefulSetNameFromAlertmanagerName(a.Name), metav1.GetOptions{})
+	sset, err := kclient.AppsV1().StatefulSets(a.Namespace).Get(ctx, statefulSetNameFromAlertmanagerName(a.Name), metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 	}

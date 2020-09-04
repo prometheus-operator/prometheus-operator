@@ -42,7 +42,7 @@ const labelThanosRulerName = "thanos-ruler-name"
 // large buffer.
 var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
-func (o *Operator) createOrUpdateRuleConfigMaps(t *monitoringv1.ThanosRuler) ([]string, error) {
+func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitoringv1.ThanosRuler) ([]string, error) {
 	cClient := o.kclient.CoreV1().ConfigMaps(t.Namespace)
 
 	namespaces, err := o.selectRuleNamespaces(t)
@@ -55,7 +55,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(t *monitoringv1.ThanosRuler) ([]
 		return nil, err
 	}
 
-	currentConfigMapList, err := cClient.List(context.TODO(), prometheusRulesConfigMapSelector(t.Name))
+	currentConfigMapList, err := cClient.List(ctx, prometheusRulesConfigMapSelector(t.Name))
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(t *monitoringv1.ThanosRuler) ([]
 			"thanos", t.Name,
 		)
 		for _, cm := range newConfigMaps {
-			_, err = cClient.Create(context.TODO(), &cm, metav1.CreateOptions{})
+			_, err = cClient.Create(ctx, &cm, metav1.CreateOptions{})
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to create ConfigMap '%v'", cm.Name)
 			}
@@ -110,7 +110,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(t *monitoringv1.ThanosRuler) ([]
 	// Simply deleting old ConfigMaps and creating new ones for now. Could be
 	// replaced by logic that only deletes obsolete ConfigMaps in the future.
 	for _, cm := range currentConfigMaps {
-		err := cClient.Delete(context.TODO(), cm.Name, metav1.DeleteOptions{})
+		err := cClient.Delete(ctx, cm.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to delete current ConfigMap '%v'", cm.Name)
 		}
@@ -122,7 +122,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(t *monitoringv1.ThanosRuler) ([]
 		"thanos", t.Name,
 	)
 	for _, cm := range newConfigMaps {
-		_, err = cClient.Create(context.TODO(), &cm, metav1.CreateOptions{})
+		_, err = cClient.Create(ctx, &cm, metav1.CreateOptions{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create new ConfigMap '%v'", cm.Name)
 		}

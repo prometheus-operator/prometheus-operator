@@ -30,10 +30,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -266,7 +266,7 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 	var pollErr error
 
 	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
-		st, _, pollErr := prometheus.PrometheusStatus(f.KubeClient, p)
+		st, _, pollErr := prometheus.PrometheusStatus(context.Background(), f.KubeClient, p)
 
 		if pollErr != nil {
 			return false, nil
