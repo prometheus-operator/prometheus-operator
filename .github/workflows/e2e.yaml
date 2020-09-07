@@ -1,4 +1,4 @@
-name: end-to-end
+name: e2e
 on:
   - push
   - pull_request
@@ -8,23 +8,21 @@ jobs:
     name: prometheus tests
     steps:
     - uses: actions/checkout@v2
-    - name: Start minikube
-      uses: manusa/actions-setup-minikube@v2.0.0
+    - name: Start KinD
+      uses: engineerd/setup-kind@v0.4.0
       with:
-        minikube version: 1.13.0
-        kubernetes version: 1.18.1
-    - name: Try the cluster !
-      run: kubectl get pods -A
-    - name: Build image
+        version: v0.8.1
+        image: kindest/node:v1.18.8
+    - name: Check cluster
+      run: |
+        kubectl cluster-info
+        kubectl get pods -A
+    - name: Build and load images
       run: |
         export SHELL=/bin/bash
-        eval $(minikube -p minikube docker-env)
         make build image
-        echo -n "verifying images:"
-        docker images
-    - name: Apply minikube config
-      run: |
-        minikube update-context
+        kind load docker-image quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
+        kind load docker-image quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
         kubectl apply -f scripts/minikube-rbac.yaml
     - name: Run tests
       run:
@@ -34,22 +32,21 @@ jobs:
     name: alertmanager tests
     steps:
     - uses: actions/checkout@v2
-    - name: Start minikube
-      uses: manusa/actions-setup-minikube@v2.0.0
+    - name: Start KinD
+      uses: engineerd/setup-kind@v0.4.0
       with:
-        minikube version: 1.13.0
-        kubernetes version: 1.18.1
-    - name: Try the cluster !
-      run: kubectl get pods -A
-    - name: Build image
+        version: v0.8.1
+        image: kindest/node:v1.18.8
+    - name: Check cluster
+      run: |
+        kubectl cluster-info
+        kubectl get pods -A
+    - name: Build and load images
       run: |
         export SHELL=/bin/bash
-        eval $(minikube -p minikube docker-env)
         make build image
-        echo -n "verifying images:"
-        docker images
-    - name: Apply minikube RBAC
-      run: |
+        kind load docker-image quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
+        kind load docker-image quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
         kubectl apply -f scripts/minikube-rbac.yaml
     - name: Run tests
       run:
@@ -59,22 +56,21 @@ jobs:
     name: thanos ruler tests
     steps:
     - uses: actions/checkout@v2
-    - name: Start minikube
-      uses: manusa/actions-setup-minikube@v2.0.0
+    - name: Start KinD
+      uses: engineerd/setup-kind@v0.4.0
       with:
-        minikube version: 1.13.0
-        kubernetes version: 1.18.1
-    - name: Try the cluster !
-      run: kubectl get pods -A
-    - name: Build image
+        version: v0.8.1
+        image: kindest/node:v1.18.8
+    - name: Check cluster
+      run: |
+        kubectl cluster-info
+        kubectl get pods -A
+    - name: Build and load images
       run: |
         export SHELL=/bin/bash
-        eval $(minikube -p minikube docker-env)
         make build image
-        echo -n "verifying images:"
-        docker images
-    - name: Apply minikube RBAC
-      run: |
+        kind load docker-image quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
+        kind load docker-image quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
         kubectl apply -f scripts/minikube-rbac.yaml
     - name: Run tests
       run:
