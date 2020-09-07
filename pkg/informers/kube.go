@@ -24,6 +24,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// NewKubeInformerFactories creates factories for kube resources
+// for the given allowed, and denied namespaces these parameters being mutually exclusive.
+// kubeClient, defaultResync, and tweakListOptions are being passed to the underlying informer factory.
 func NewKubeInformerFactories(
 	allowNamespaces, denyNamespaces map[string]struct{},
 	kubeClient kubernetes.Interface,
