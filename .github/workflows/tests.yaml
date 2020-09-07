@@ -1,0 +1,60 @@
+name: tests
+on:
+  - push
+  - pull_request
+jobs:
+  generate:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+    name: generate and format
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.14'
+    - run: make --always-make format generate && git diff --exit-code
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+    name: build
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.14'
+    - run: make operator
+  po-rule-migration:
+    runs-on: ubuntu-latest
+    name: Build Prometheus Operator rule config map to rule file CRDs CLI tool
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.14'
+    - run: cd cmd/po-rule-migration && go install
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Unit tests
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.14'
+    - run: make test-unit
+  extended-tests:
+    runs-on: ubuntu-latest
+    name: Extended tests
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.14'
+    - run: make test-long
