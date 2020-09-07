@@ -68,6 +68,13 @@ func testDenyPrometheus(t *testing.T) {
 			t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 		}
 	}
+
+	for _, allowed := range allowedNamespaces {
+		err := framework.DeletePrometheusAndWaitUntilGone(allowed, "allowed")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 
 func testDenyServiceMonitor(t *testing.T) {
@@ -175,6 +182,16 @@ func testDenyServiceMonitor(t *testing.T) {
 			t.Fatalf("expected to have 1 target, got %d", got)
 		}
 	}
+
+	for _, allowed := range allowedNamespaces {
+		if err := framework.MonClientV1.ServiceMonitors(allowed).Delete(context.TODO(), "allowed", metav1.DeleteOptions{}); err != nil {
+			t.Fatal("Deleting ServiceMonitor failed: ", err)
+		}
+
+		if err := framework.WaitForActiveTargets(allowed, "prometheus-allowed", 0); err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 
 func testDenyThanosRuler(t *testing.T) {
@@ -193,7 +210,6 @@ func testDenyThanosRuler(t *testing.T) {
 	}
 
 	for _, denied := range deniedNamespaces {
-		ctx.SetupPrometheusRBAC(t, denied, framework.KubeClient)
 		tr := framework.MakeBasicThanosRuler("denied", 1)
 		_, err = framework.MonClientV1.ThanosRulers(denied).Create(context.TODO(), tr, metav1.CreateOptions{})
 		if err != nil {
@@ -210,11 +226,18 @@ func testDenyThanosRuler(t *testing.T) {
 	}
 
 	for _, denied := range deniedNamespaces {
-		// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
+		// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied thanos ruler.
 		// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
 		sts, err := framework.KubeClient.AppsV1().StatefulSets(denied).Get(context.TODO(), "thanosruler-denied", metav1.GetOptions{})
 		if !api_errors.IsNotFound(err) {
 			t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
+		}
+	}
+
+	for _, allowed := range allowedNamespaces {
+		err := framework.DeleteThanosRulerAndWaitUntilGone(allowed, "allowed")
+		if err != nil {
+			t.Fatal(err)
 		}
 	}
 }
