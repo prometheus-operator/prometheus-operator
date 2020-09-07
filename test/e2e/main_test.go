@@ -221,6 +221,7 @@ func TestDenylist(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
 		"Prometheus":     testDenyPrometheus,
 		"ServiceMonitor": testDenyServiceMonitor,
+		"ThanosRuler":    testDenyThanosRuler,
 	}
 
 	for name, f := range testFuncs {
