@@ -27,7 +27,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/cache"
 
 	"github.com/ghodss/yaml"
 	"github.com/go-kit/kit/log/level"
@@ -179,7 +178,7 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 
 	for _, ns := range namespaces {
 		var marshalErr error
-		err := cache.ListAllByNamespace(c.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
+		err := c.ruleInfs.ListAllByNamespace(ns, ruleSelector, func(obj interface{}) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
 
 			if err := nsLabeler.EnforceNamespaceLabel(promRule); err != nil {

@@ -86,7 +86,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 
-	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true)
+	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,6 +223,7 @@ func TestDenylist(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
 		"Prometheus":     testDenyPrometheus,
 		"ServiceMonitor": testDenyServiceMonitor,
+		"ThanosRuler":    testDenyThanosRuler,
 	}
 
 	for name, f := range testFuncs {
