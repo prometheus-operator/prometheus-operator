@@ -134,6 +134,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
+| terminationGracePeriodSeconds | If specified, the pod's terminationGracePeriodSeconds. | *int64 | false | 
 | podMetadata | PodMetadata configures Labels and Annotations which are propagated to the alertmanager pods. | *[EmbeddedObjectMetadata](#embeddedobjectmetadata) | false |
 | image | Image if specified has precedence over baseImage, tag and sha combinations. Specifying the version is still necessary to ensure the Prometheus Operator knows what version of Alertmanager is being configured. | *string | false |
 | version | Version the cluster should be on. | string | false |
@@ -479,6 +480,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
+| terminationGracePeriodSeconds | If specified, the pod's terminationGracePeriodSeconds. | *int64 | false | 
 | podMetadata | PodMetadata configures Labels and Annotations which are propagated to the prometheus pods. | *[EmbeddedObjectMetadata](#embeddedobjectmetadata) | false |
 | serviceMonitorSelector | ServiceMonitors to be selected for target discovery. *Deprecated:* if neither this nor podMonitorSelector are specified, configuration is unmanaged. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | serviceMonitorNamespaceSelector | Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
