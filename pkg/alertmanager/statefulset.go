@@ -492,7 +492,12 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		resources.Limits[v1.ResourceMemory] = resource.MustParse(config.ConfigReloaderMemory)
 	}
 
-	terminationGracePeriod := int64(120)
+	//terminationGracePeriod := int64(120)
+	if nil != a.Spec.TerminationGracePeriodSeconds {
+		terminationGracePeriod = *a.Spec.TerminationGracePeriodSeconds
+	} else {
+		terminationGracePeriod = int64(120)
+	}
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
 	finalLabels := config.Labels.Merge(podLabels)
 
