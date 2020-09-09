@@ -1,5 +1,25 @@
 ## Next release
 
+## 0.42.0 / 2020-09-09
+
+Most importantly the Prometheus Operator now lives in its own indepent GitHub organization.
+
+* [CHANGE] Introduce initial governance (#3398)
+* [FEATURE] Move API types out into their own module (#3395)
+* [FEATURE] Create a monitoring mixin for prometheus-operator (#3333)
+* [ENHANCEMENT] Instrument client-go requests (#3465)
+* [ENHANCEMENT] pkg/prometheus: skip invalid service monitors (#3445)
+* [ENHANCEMENT] pkg/alertmanager: Use lower value for --cluster.reconnect-timeout (#3436)
+* [ENHANCEMENT] pkg/alertmanager: cleanup resources via OwnerReferences (#3423)
+* [ENHANCEMENT] Add prometheus_operator_reconcile_operations_total metric (#3415)
+* [ENHANCEMENT] pkg/operator/image.go: Adjust image path building (#3392)
+* [ENHANCEMENT] Specify timeouts per Alertmanager target when sending alerts. (#3385)
+* [ENHANCEMENT] Push container images to Docker Hub and Quay (#3390)
+* [ENHANCEMENT] Run single replica Alertmanager in HA cluster mode (#3382)
+* [ENHANCEMENT] decontainerize shellcheck (#3379)
+* [BUGFIX] Fix validation logic for SecretOrConfigMap (#3413)
+* [BUGFIX] Don't overwrite __param_target (#3377)
+
 ## 0.41.1 / 2020-08-12
 
 * [BUGFIX] Fix image url logic (#3402)
