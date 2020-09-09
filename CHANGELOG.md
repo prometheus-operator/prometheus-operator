@@ -2,11 +2,12 @@
 
 ## 0.42.0 / 2020-09-09
 
-Most importantly the Prometheus Operator now lives in its own indepent GitHub organization.
+The Prometheus Operator now lives in its own indepent GitHub organization.  
+We have also added a governance (#3398).
 
-* [CHANGE] Introduce initial governance (#3398)
 * [FEATURE] Move API types out into their own module (#3395)
 * [FEATURE] Create a monitoring mixin for prometheus-operator (#3333)
+* [ENHANCEMENT] Remove multilistwatcher and denylistfilter (#3440)
 * [ENHANCEMENT] Instrument client-go requests (#3465)
 * [ENHANCEMENT] pkg/prometheus: skip invalid service monitors (#3445)
 * [ENHANCEMENT] pkg/alertmanager: Use lower value for --cluster.reconnect-timeout (#3436)
@@ -14,9 +15,8 @@ Most importantly the Prometheus Operator now lives in its own indepent GitHub or
 * [ENHANCEMENT] Add prometheus_operator_reconcile_operations_total metric (#3415)
 * [ENHANCEMENT] pkg/operator/image.go: Adjust image path building (#3392)
 * [ENHANCEMENT] Specify timeouts per Alertmanager target when sending alerts. (#3385)
-* [ENHANCEMENT] Push container images to Docker Hub and Quay (#3390)
+* [ENHANCEMENT] Push container images to Quay into coreos and prometheus-operator orgs (#3390)
 * [ENHANCEMENT] Run single replica Alertmanager in HA cluster mode (#3382)
-* [ENHANCEMENT] decontainerize shellcheck (#3379)
 * [BUGFIX] Fix validation logic for SecretOrConfigMap (#3413)
 * [BUGFIX] Don't overwrite __param_target (#3377)
 
