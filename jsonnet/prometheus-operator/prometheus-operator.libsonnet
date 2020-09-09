@@ -15,7 +15,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
     },
 
     versions+:: {
-      prometheusOperator: 'v0.41.1',
+      prometheusOperator: 'v0.42.0',
       prometheusConfigReloader: self.prometheusOperator,
       configmapReloader: 'v0.4.0',
     },
