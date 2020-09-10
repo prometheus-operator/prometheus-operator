@@ -729,7 +729,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 		thanosArgs := []string{"sidecar",
 			fmt.Sprintf("--prometheus.url=http://%s:9090%s", c.LocalHost, path.Clean(webRoutePrefix)),
-			fmt.Sprintf("--tsdb.path=%s", storageDir),
 			fmt.Sprintf("--grpc-address=%s:10901", bindAddress),
 			fmt.Sprintf("--http-address=%s:10902", bindAddress),
 		}
@@ -772,13 +771,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					ContainerPort: 10901,
 				},
 			},
-			VolumeMounts: []v1.VolumeMount{
-				{
-					Name:      volName,
-					MountPath: storageDir,
-					SubPath:   subPathForStorage(p.Spec.Storage),
-				},
-			},
 			Resources: p.Spec.Thanos.Resources,
 		}
 
@@ -790,6 +782,17 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
 				},
 			})
+
+			container.Args = append(container.Args, fmt.Sprintf("--tsdb.path=%s", storageDir))
+			container.VolumeMounts = append(
+				container.VolumeMounts,
+				v1.VolumeMount{
+					Name:      volName,
+					MountPath: storageDir,
+					SubPath:   subPathForStorage(p.Spec.Storage),
+				},
+			)
+
 			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
 			// to avoid races during upload, if the uploads are configured.
 			disableCompaction = true
