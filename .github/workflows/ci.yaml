@@ -1,0 +1,129 @@
+name: ci
+on:
+  - push
+  - pull_request
+env:
+  golang-version: '1.14'
+  kind-version: 'v0.8.1'
+  kind-image: 'kindest/node:v1.18.8'  # Image defines which k8s version is used
+jobs:
+  generate:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+    name: Generate and format
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - run: make --always-make format generate && git diff --exit-code
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+    name: Build operator binary
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - run: make operator
+  po-rule-migration:
+    runs-on: ubuntu-latest
+    name: Build Prometheus Operator rule config map to rule file CRDs CLI tool
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - run: cd cmd/po-rule-migration && go install
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Unit tests
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - run: make test-unit
+  extended-tests:
+    runs-on: ubuntu-latest
+    name: Extended tests
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - run: make test-long
+  e2e-tests:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        suite: [alertmanager, prometheus, thanosruler]
+        include:
+          - suite: alertmanager
+            prometheus: "exclude"
+            alertmanager: ""
+            thanosruler: "exclude"
+          - suite: prometheus
+            prometheus: ""
+            alertmanager: "exclude"
+            thanosruler: "exclude"
+          - suite: thanosruler
+            prometheus: "exclude"
+            alertmanager: "exclude"
+            thanosruler: ""
+    steps:
+    - uses: actions/checkout@v2
+    - name: Start KinD
+      uses: engineerd/setup-kind@v0.4.0
+      with:
+        version: ${{ env.kind-version }}
+        image: ${{ env.kind-image }}
+    - name: Check cluster
+      run: |
+        kubectl cluster-info
+        kubectl get pods -A
+    - name: Build and load images
+      run: |
+        export SHELL=/bin/bash
+        make build image
+        kind load docker-image quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
+        kind load docker-image quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
+        kubectl apply -f scripts/minikube-rbac.yaml
+    - name: Run tests
+      run: >
+        EXCLUDE_ALERTMANAGER_TESTS=${{ matrix.alertmanager }}
+        EXCLUDE_PROMETHEUS_TESTS=${{ matrix.prometheus }}
+        EXCLUDE_THANOS_TESTS=${{ matrix.thanosruler }}
+        make test-e2e
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish container images to quay.io
+    if: github.event_name == 'push'
+    needs:
+    - generate
+    - build
+    - po-rule-migration
+    - unit-tests
+    - extended-tests
+    - e2e-tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Login to Quay.io
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+      - name: Build images and push
+        run: ./scripts/push-docker-image.sh
