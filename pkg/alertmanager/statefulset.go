@@ -130,6 +130,14 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 				EmptyDir: emptyDir,
 			},
 		})
+	} else if storageSpec.HostPath != nil {
+		hostPath := storageSpec.HostPath
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: volumeName(am.Name),
+			VolumeSource: v1.VolumeSource{
+				HostPath: hostPath,
+			},
+		})
 	} else {
 		pvcTemplate := storageSpec.VolumeClaimTemplate
 		if pvcTemplate.Name == "" {
@@ -462,6 +470,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 
 	terminationGracePeriod := int64(120)
 	finalLabels := config.Labels.Merge(podLabels)
+	privileged := true
 
 	// PodManagementPolicy is set to Parallel to mitigate issues in kuberentes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
@@ -495,6 +504,9 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 						LivenessProbe:  livenessProbe,
 						ReadinessProbe: readinessProbe,
 						Resources:      a.Spec.Resources,
+						SecurityContext: &v1.SecurityContext{
+							Privileged: &privileged,
+						},
 						Env: []v1.EnvVar{
 							{
 								// Necessary for '--cluster.listen-address' flag

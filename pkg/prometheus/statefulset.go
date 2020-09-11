@@ -215,6 +215,14 @@ func makeStatefulSet(
 				EmptyDir: emptyDir,
 			},
 		})
+	} else if storageSpec.HostPath != nil {
+		hostPath := storageSpec.HostPath
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: volumeName(p.Name),
+			VolumeSource: v1.VolumeSource{
+				HostPath: hostPath,
+			},
+		})
 	} else {
 		pvcTemplate := storageSpec.VolumeClaimTemplate
 		if pvcTemplate.Name == "" {
@@ -844,6 +852,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		prometheusConfigReloaderResources.Limits[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
 	}
 
+	privileged := true
+
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
@@ -855,6 +865,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			ReadinessProbe:           readinessProbe,
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+			SecurityContext: &v1.SecurityContext{
+				Privileged: &privileged,
+			},
 		}, {
 			Name:                     "prometheus-config-reloader",
 			Image:                    c.PrometheusConfigReloaderImage,

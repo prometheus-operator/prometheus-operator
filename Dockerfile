@@ -1,4 +1,4 @@
-FROM quay.io/prometheus/busybox:latest
+FROM golang:1.13
 
 ADD operator /bin/operator
 
