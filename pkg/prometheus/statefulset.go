@@ -215,6 +215,14 @@ func makeStatefulSet(
 				EmptyDir: emptyDir,
 			},
 		})
+	} else if storageSpec.HostPath != nil {
+		hostPath := storageSpec.HostPath
+		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: volumeName(p.Name),
+			VolumeSource: v1.VolumeSource{
+				HostPath: hostPath,
+			},
+		})
 	} else {
 		pvcTemplate := storageSpec.VolumeClaimTemplate
 		if pvcTemplate.Name == "" {
