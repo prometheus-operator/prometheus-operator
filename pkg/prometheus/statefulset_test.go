@@ -780,12 +780,24 @@ func TestThanosNoObjectStorage(t *testing.T) {
 	}
 
 	if sset.Spec.Template.Spec.Containers[2].Name != "thanos-sidecar" {
-		t.Fatalf("expected 3rd containers to be thanos-sidecar, got %s", sset.Spec.Template.Spec.Containers[2].Name)
+		t.Fatalf("expected 3rd container to be thanos-sidecar, got %s", sset.Spec.Template.Spec.Containers[2].Name)
 	}
 
 	for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
 		if strings.HasPrefix(arg, "--storage.tsdb.max-block-duration=2h") {
-			t.Fatal("Prometheus compaction should be enabled")
+			t.Fatal("Prometheus compaction should be disabled")
+		}
+	}
+
+	for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
+		if strings.HasPrefix(arg, "--tsdb.path=") {
+			t.Fatal("--tsdb.path argument should not be given to the Thanos sidecar")
+		}
+	}
+
+	for _, vol := range sset.Spec.Template.Spec.Containers[2].VolumeMounts {
+		if vol.MountPath == storageDir {
+			t.Fatal("Prometheus data volume should not be mounted in the Thanos sidecar")
 		}
 	}
 }
@@ -851,6 +863,32 @@ func TestThanosObjectStorage(t *testing.T) {
 		}
 		if !containsArg {
 			t.Fatalf("Prometheus is missing expected argument: %s", expectedArg)
+		}
+	}
+
+	{
+		var found bool
+		for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
+			if strings.HasPrefix(arg, "--tsdb.path=") {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("--tsdb.path argument should be given to the Thanos sidecar, got %q", strings.Join(sset.Spec.Template.Spec.Containers[3].Args, " "))
+		}
+	}
+
+	{
+		var found bool
+		for _, vol := range sset.Spec.Template.Spec.Containers[2].VolumeMounts {
+			if vol.MountPath == storageDir {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatal("Prometheus data volume should be mounted in the Thanos sidecar")
 		}
 	}
 }
