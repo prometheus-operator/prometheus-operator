@@ -472,7 +472,53 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	finalLabels := config.Labels.Merge(podLabels)
 	privileged := true
 
-	// PodManagementPolicy is set to Parallel to mitigate issues in kuberentes: https://github.com/kubernetes/kubernetes/issues/60164
+	defaultContainers := []v1.Container{
+		{
+			Args:           amArgs,
+			Name:           "alertmanager",
+			Image:          image,
+			Ports:          ports,
+			VolumeMounts:   amVolumeMounts,
+			LivenessProbe:  livenessProbe,
+			ReadinessProbe: readinessProbe,
+			Resources:      a.Spec.Resources,
+			Env: []v1.EnvVar{
+				{
+					// Necessary for '--cluster.listen-address' flag
+					Name: "POD_IP",
+					ValueFrom: &v1.EnvVarSource{
+						FieldRef: &v1.ObjectFieldSelector{
+							FieldPath: "status.podIP",
+						},
+					},
+				},
+			},
+			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		}, {
+			Name:  "config-reloader",
+			Image: config.ConfigReloaderImage,
+			Args: []string{
+				fmt.Sprintf("-webhook-url=%s", localReloadURL),
+				fmt.Sprintf("-volume-dir=%s", alertmanagerConfDir),
+			},
+			VolumeMounts: []v1.VolumeMount{
+				{
+					Name:      "config-volume",
+					ReadOnly:  true,
+					MountPath: alertmanagerConfDir,
+				},
+			},
+			Resources:                resources,
+			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		},
+	}
+
+	containers, err := k8sutil.MergePatchContainers(defaultContainers, a.Spec.Containers)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to merge containers spec")
+	}
+
+	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
 		ServiceName:         governingServiceName,

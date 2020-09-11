@@ -22,7 +22,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.34.0
+    app.kubernetes.io/version: v0.34.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -39,7 +39,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.34.0
+    app.kubernetes.io/version: v0.34.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -47,7 +47,20 @@ rules:
   resources:
   - customresourcedefinitions
   verbs:
-  - '*'
+  - create
+- apiGroups:
+  - apiextensions.k8s.io
+  resourceNames:
+  - alertmanagers.monitoring.coreos.com
+  - podmonitors.monitoring.coreos.com
+  - prometheuses.monitoring.coreos.com
+  - prometheusrules.monitoring.coreos.com
+  - servicemonitors.monitoring.coreos.com
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - update
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -113,7 +126,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.34.0
+    app.kubernetes.io/version: v0.34.1
   name: prometheus-operator
   namespace: default
 spec:
@@ -127,15 +140,15 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: v0.34.0
+        app.kubernetes.io/version: v0.34.1
     spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --logtostderr=true
         - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
-        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.34.0
-        image: quay.io/coreos/prometheus-operator:v0.34.0
+        - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.34.1
+        image: quay.io/coreos/prometheus-operator:v0.34.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -162,7 +175,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.34.0
+    app.kubernetes.io/version: v0.34.1
   name: prometheus-operator
   namespace: default
 ---
@@ -172,7 +185,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.34.0
+    app.kubernetes.io/version: v0.34.1
   name: prometheus-operator
   namespace: default
 spec:
