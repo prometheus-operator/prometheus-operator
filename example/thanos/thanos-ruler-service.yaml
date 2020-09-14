@@ -14,4 +14,4 @@ spec:
     targetPort: grpc
   - name: http
     port: 10902
-    targetPort: http
+    targetPort: web
