@@ -36,9 +36,9 @@ stack based on Prometheus and the Prometheus Operator.  This includes deployment
 metrics exporters such as the node_exporter for gathering node metrics, scrape target configuration linking Prometheus to various
 metrics endpoints, and example alerting rules for notification of potential issues in the cluster.
 
-The [stable/prometheus-operator](https://github.com/helm/charts/tree/master/stable/prometheus-operator)
-helm chart provides a similar feature set to kube-prometheus. This chart is maintained by the Helm community.
-For more information, please see the [chart's readme](https://github.com/helm/charts/tree/master/stable/prometheus-operator#prometheus-operator)
+The [prometheus-community/kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
+helm chart provides a similar feature set to kube-prometheus. This chart is maintained by the Prometheus community.
+For more information, please see the [chart's readme](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#kube-prometheus-stack)
 
 ## Prerequisites
 
