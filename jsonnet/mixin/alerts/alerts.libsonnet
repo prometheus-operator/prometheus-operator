@@ -5,9 +5,23 @@
         name: 'prometheus-operator',
         rules: [
           {
+            alert: 'PrometheusOperatorListErrors',
+            expr: |||
+              (sum by (controller,namespace) (rate(prometheus_operator_list_operations_failed_total{%(prometheusOperatorSelector)s}[10m])) / sum by (controller,namespace) (rate(prometheus_operator_list_operations_total{%(prometheusOperatorSelector)s}[10m]))) > 0.4
+            ||| % $._config,
+            labels: {
+              severity: 'warning',
+            },
+            annotations: {
+              description: 'Errors while performing List operations in controller {{$labels.controller}} in {{$labels.namespace}} namespace.',
+              summary: 'Errors while performing list operations in controller.',
+            },
+            'for': '15m',
+          },
+          {
             alert: 'PrometheusOperatorWatchErrors',
             expr: |||
-              (sum by (controller,namespace) (rate(prometheus_operator_watch_operations_failed_total{%(prometheusOperatorSelector)s}[1h])) / sum by (controller,namespace) (rate(prometheus_operator_watch_operations_total{%(prometheusOperatorSelector)s}[1h]))) > 0.1
+              (sum by (controller,namespace) (rate(prometheus_operator_watch_operations_failed_total{%(prometheusOperatorSelector)s}[10m])) / sum by (controller,namespace) (rate(prometheus_operator_watch_operations_total{%(prometheusOperatorSelector)s}[10m]))) > 0.4
             ||| % $._config,
             labels: {
               severity: 'warning',
