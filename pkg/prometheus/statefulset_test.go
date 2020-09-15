@@ -438,25 +438,6 @@ func TestListenLocal(t *testing.T) {
 		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
 	}
 
-	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
-	expectedLivenessProbe := &v1.Probe{
-		Handler: v1.Handler{
-			Exec: &v1.ExecAction{
-				Command: []string{
-					`sh`,
-					`-c`,
-					`if [ -x "$(command -v curl)" ]; then curl http://localhost:9090/-/healthy; elif [ -x "$(command -v wget)" ]; then wget -q -O /dev/null http://localhost:9090/-/healthy; else exit 1; fi`,
-				},
-			},
-		},
-		TimeoutSeconds:   3,
-		PeriodSeconds:    5,
-		FailureThreshold: 6,
-	}
-	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
-		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %v\n\nGot: %v", expectedLivenessProbe, actualLivenessProbe)
-	}
-
 	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 0 {
 		t.Fatal("Prometheus container should have 0 ports defined")
 	}

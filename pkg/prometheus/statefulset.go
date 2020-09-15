@@ -575,15 +575,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 
 	const localProbe = `if [ -x "$(command -v curl)" ]; then curl %s; elif [ -x "$(command -v wget)" ]; then wget -q -O /dev/null %s; else exit 1; fi`
 
-	var livenessProbeHandler v1.Handler
 	var readinessProbeHandler v1.Handler
-	var livenessFailureThreshold int32
 	if (version.Major == 1 && version.Minor >= 8) || version.Major == 2 {
 		{
 			healthyPath := path.Clean(webRoutePrefix + "/-/healthy")
 			if p.Spec.ListenLocal {
 				localHealthyPath := fmt.Sprintf("http://localhost:9090%s", healthyPath)
-				livenessProbeHandler.Exec = &v1.ExecAction{
+				readinessProbeHandler.Exec = &v1.ExecAction{
 					Command: []string{
 						"sh",
 						"-c",
@@ -591,7 +589,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 					},
 				}
 			} else {
-				livenessProbeHandler.HTTPGet = &v1.HTTPGetAction{
+				readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
 					Path: healthyPath,
 					Port: intstr.FromString(p.Spec.PortName),
 				}
@@ -617,27 +615,17 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			}
 		}
 
-		livenessFailureThreshold = 6
-
 	} else {
-		livenessProbeHandler = v1.Handler{
+		readinessProbeHandler = v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
 				Path: path.Clean(webRoutePrefix + "/status"),
 				Port: intstr.FromString(p.Spec.PortName),
 			},
 		}
-		readinessProbeHandler = livenessProbeHandler
-		// For larger servers, restoring a checkpoint on startup may take quite a bit of time.
-		// Wait up to 5 minutes (60 fails * 5s per fail)
-		livenessFailureThreshold = 60
 	}
 
-	livenessProbe := &v1.Probe{
-		Handler:          livenessProbeHandler,
-		PeriodSeconds:    5,
-		TimeoutSeconds:   probeTimeoutSeconds,
-		FailureThreshold: livenessFailureThreshold,
-	}
+	// TODO(paulfantom): Re-add livenessProbe and add startupProbe when kubernetes 1.21 is available.
+	// This would be a follow-up to https://github.com/prometheus-operator/prometheus-operator/pull/3502
 	readinessProbe := &v1.Probe{
 		Handler:          readinessProbeHandler,
 		TimeoutSeconds:   probeTimeoutSeconds,
@@ -846,7 +834,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			Ports:                    ports,
 			Args:                     promArgs,
 			VolumeMounts:             promVolumeMounts,
-			LivenessProbe:            livenessProbe,
 			ReadinessProbe:           readinessProbe,
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
