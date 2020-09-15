@@ -88,8 +88,11 @@ jobs:
       with:
         version: ${{ env.kind-version }}
         image: ${{ env.kind-image }}
-    - name: Check cluster
+    - name: Wait for cluster to finish bootstraping
       run: |
+        until [ "$(kubectl get pods --all-namespaces --no-headers | grep -cEv '([0-9]+)/\1')" -eq 0 ]; do
+            sleep 5s
+        done
         kubectl cluster-info
         kubectl get pods -A
     - name: Build and load images
