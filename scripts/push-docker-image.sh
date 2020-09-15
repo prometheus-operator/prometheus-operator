@@ -8,16 +8,16 @@ set -u
 
 CPU_ARCHS="amd64 arm64 arm"
 
+export TAG="${GITHUB_REF##*/}"
+
 # Push `-dev` images unless commit is tagged
 export REPO="${REPO:-"quay.io/prometheus-operator/prometheus-operator-dev"}"
 export REPO_PROMETHEUS_CONFIG_RELOADER="${REPO_PROMETHEUS_CONFIG_RELOADER:-"quay.io/prometheus-operator/prometheus-config-reloader-dev"}"
-if git describe --exact-match; then
+
+# Use main image repositories if TAG is a semver tag or it is a master branch
+if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+ ]] || [ "${TAG}" == "master" ]; then
 	export REPO="quay.io/prometheus-operator/prometheus-operator"
 	export REPO_PROMETHEUS_CONFIG_RELOADER="quay.io/prometheus-operator/prometheus-config-reloader"
-	export TAG="${GITHUB_REF#refs/tags/}"
-else
-	# Use branch name as dev image tags
-	TAG="${GITHUB_REF#refs/heads/}"
 fi
 
 for arch in ${CPU_ARCHS}; do
