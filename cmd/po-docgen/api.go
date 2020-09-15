@@ -51,6 +51,7 @@ var (
 	}
 
 	selfLinks = map[string]string{}
+	typesDoc  = map[string]KubeTypes{}
 )
 
 func toSectionLink(name string) string {
@@ -76,9 +77,10 @@ func printAPIDocs(paths []string) {
 	for _, t := range types {
 		strukt := t[0]
 		selfLinks[strukt.Name] = "#" + strings.ToLower(strukt.Name)
+		typesDoc[toLink(strukt.Name)] = t[1:]
 	}
 
-	// we need to parse once more to now add the self links
+	// we need to parse once more to now add the self links and the inlined fields
 	types = ParseDocumentationFrom(paths)
 
 	printTOC(types)
@@ -125,6 +127,15 @@ func ParseDocumentationFrom(srcs []string) []KubeTypes {
 				ks = append(ks, Pair{kubType.Name, fmtRawDoc(kubType.Doc), "", false})
 
 				for _, field := range structType.Fields.List {
+					// Treat inlined fields separately as we don't want the original types to appear in the doc.
+					if isInlined(field) {
+						// Skip external types, as we don't want their content to be part of the API documentation.
+						if isInternalType(field.Type) {
+							ks = append(ks, typesDoc[fieldType(field.Type)]...)
+						}
+						continue
+					}
+
 					typeString := fieldType(field.Type)
 					fieldMandatory := fieldRequired(field)
 					if n := fieldName(field); n != "-" {
@@ -215,18 +226,34 @@ func wrapInLink(text, link string) string {
 	return fmt.Sprintf("[%s](%s)", text, link)
 }
 
+func isInlined(field *ast.Field) bool {
+	jsonTag := reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1]).Get("json") // Delete first and last quotation
+	return strings.Contains(jsonTag, "inline")
+}
+
+func isInternalType(typ ast.Expr) bool {
+	switch typ.(type) {
+	case *ast.SelectorExpr:
+		e := typ.(*ast.SelectorExpr)
+		pkg := e.X.(*ast.Ident)
+		return strings.HasPrefix(pkg.Name, "monitoring")
+	case *ast.StarExpr:
+		return isInternalType(typ.(*ast.StarExpr).X)
+	case *ast.ArrayType:
+		return isInternalType(typ.(*ast.ArrayType).Elt)
+	case *ast.MapType:
+		mapType := typ.(*ast.MapType)
+		return isInternalType(mapType.Key) && isInternalType(mapType.Value)
+	default:
+		return true
+	}
+}
+
 // fieldName returns the name of the field as it should appear in JSON format
 // "-" indicates that this field is not part of the JSON representation
 func fieldName(field *ast.Field) string {
-	jsonTag := ""
-	if field.Tag != nil {
-		jsonTag = reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1]).Get("json") // Delete first and last quotation
-		if strings.Contains(jsonTag, "inline") {
-			return "-"
-		}
-	}
-
-	jsonTag = strings.Split(jsonTag, ",")[0] // This can return "-"
+	jsonTag := reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1]).Get("json") // Delete first and last quotation
+	jsonTag = strings.Split(jsonTag, ",")[0]                                              // This can return "-"
 	if jsonTag == "" {
 		if field.Names != nil {
 			return field.Names[0].Name
