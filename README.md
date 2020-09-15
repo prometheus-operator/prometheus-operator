@@ -29,13 +29,16 @@ post](https://coreos.com/blog/the-prometheus-operator.html).
 
 ## Prometheus Operator vs. kube-prometheus vs. community helm chart
 
+### Prometheus Operator
 The Prometheus Operator uses Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) to simplifiy the deployment and configuration of Prometheus, Alertmanager, and related monitoring components.
 
+### kube-prometheus
 [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) provides example configurations for a complete cluster monitoring
 stack based on Prometheus and the Prometheus Operator.  This includes deployment of multiple Prometheus and Alertmanager instances,
 metrics exporters such as the node_exporter for gathering node metrics, scrape target configuration linking Prometheus to various
 metrics endpoints, and example alerting rules for notification of potential issues in the cluster.
 
+### helm chart
 The [prometheus-community/kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
 helm chart provides a similar feature set to kube-prometheus. This chart is maintained by the Prometheus community.
 For more information, please see the [chart's readme](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#kube-prometheus-stack)
