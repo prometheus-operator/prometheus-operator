@@ -24,6 +24,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [Endpoint](#endpoint)
 * [NamespaceSelector](#namespaceselector)
 * [PodMetricsEndpoint](#podmetricsendpoint)
+* [PodMetricsEndpointTLSConfig](#podmetricsendpointtlsconfig)
 * [PodMonitor](#podmonitor)
 * [PodMonitorList](#podmonitorlist)
 * [PodMonitorSpec](#podmonitorspec)
@@ -288,6 +289,20 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 | relabelings | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
+
+[Back to TOC](#table-of-contents)
+
+## PodMetricsEndpointTLSConfig
+
+PodMetricsEndpointTLSConfig specifies TLS configuration parameters.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| ca | Struct containing the CA cert to use for the targets. | SecretOrConfigMap | false |
+| cert | Struct containing the client cert file for the targets. | SecretOrConfigMap | false |
+| keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| serverName | Used to verify the hostname for the targets. | string | false |
+| insecureSkipVerify | Disable target certificate validation. | bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -707,7 +722,7 @@ SafeTLSConfig specifies safe TLS configuration parameters.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| ca | Stuct containing the CA cert to use for the targets. | [SecretOrConfigMap](#secretorconfigmap) | false |
+| ca | Struct containing the CA cert to use for the targets. | [SecretOrConfigMap](#secretorconfigmap) | false |
 | cert | Struct containing the client cert file for the targets. | [SecretOrConfigMap](#secretorconfigmap) | false |
 | keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | serverName | Used to verify the hostname for the targets. | string | false |
@@ -782,6 +797,11 @@ TLSConfig extends the safe TLS configuration with file parameters.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
+| ca | Struct containing the CA cert to use for the targets. | SecretOrConfigMap | false |
+| cert | Struct containing the client cert file for the targets. | SecretOrConfigMap | false |
+| keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| serverName | Used to verify the hostname for the targets. | string | false |
+| insecureSkipVerify | Disable target certificate validation. | bool | false |
 | caFile | Path to the CA cert in the Prometheus container to use for the targets. | string | false |
 | certFile | Path to the client cert file in the Prometheus container for the targets. | string | false |
 | keyFile | Path to the client key file in the Prometheus container for the targets. | string | false |
