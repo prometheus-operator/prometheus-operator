@@ -58,13 +58,15 @@ Once the PR for the new release has been merged, make sure there is a release br
 
 Push the new or updated release branch to the upstream repository.
 
-Tag the new release with a tag named `v<major>.<minor>.<patch>`, e.g. `v2.1.3`. Note the `v` prefix.
+Tag the new release with a tag named `v<major>.<minor>.<patch>`, e.g. `v2.1.3`. Note the `v` prefix. Tag also the `github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring` module with `pkg/apis/monitoring/v<major>.<minor>.<patch>`.
 
 You can do the tagging on the commandline:
 
 ```bash
 $ tag=$(< VERSION) && git tag -s "v${tag}" -m "v${tag}"
 $ git push origin "v${tag}"
+$ tag=$(< VERSION) && git tag -s "pkg/apis/monitoring/v${tag}" -m "pkg/apis/monitoring/v${tag}"
+$ git push origin "pkg/apis/monitoring/v${tag}"
 ```
 
 Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to your Github account using the following [procedure](https://help.github.com/articles/generating-a-gpg-key/), you can replace the `-s` flag by `-a` flag of the `git tag` command to only annotate the tag without signing.
