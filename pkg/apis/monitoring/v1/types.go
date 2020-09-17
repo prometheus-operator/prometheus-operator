@@ -776,10 +776,19 @@ type PodMetricsEndpoint struct {
 	Interval string `json:"interval,omitempty"`
 	// Timeout after which the scrape is ended
 	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
+	// TLS configuration to use when scraping the endpoint.
+	TLSConfig *PodMetricsEndpointTLSConfig `json:"tlsConfig,omitempty"`
+	// Secret to mount to read bearer token for scraping targets. The secret
+	// needs to be in the same namespace as the pod monitor and accessible by
+	// the Prometheus Operator.
+	BearerTokenSecret v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 	// HonorLabels chooses the metric's labels on collisions with target labels.
 	HonorLabels bool `json:"honorLabels,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
+	// BasicAuth allow an endpoint to authenticate over basic authentication.
+	// More info: https://prometheus.io/docs/operating/configuration/#endpoint
+	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
 	// RelabelConfigs to apply to samples before ingestion.
@@ -787,6 +796,12 @@ type PodMetricsEndpoint struct {
 	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
 	ProxyURL *string `json:"proxyUrl,omitempty"`
+}
+
+// PodMetricsEndpointTLSConfig specifies TLS configuration parameters.
+// +k8s:openapi-gen=true
+type PodMetricsEndpointTLSConfig struct {
+	SafeTLSConfig `json:",inline"`
 }
 
 // Probe defines monitoring for a set of static targets or ingresses.
@@ -904,28 +919,48 @@ func (c *SecretOrConfigMap) Validate() error {
 	return nil
 }
 
-// TLSConfig specifies TLS configuration parameters.
+// SafeTLSConfig specifies safe TLS configuration parameters.
 // +k8s:openapi-gen=true
-type TLSConfig struct {
-	// Path to the CA cert in the Prometheus container to use for the targets.
-	CAFile string `json:"caFile,omitempty"`
-	// Stuct containing the CA cert to use for the targets.
+type SafeTLSConfig struct {
+	// Struct containing the CA cert to use for the targets.
 	CA SecretOrConfigMap `json:"ca,omitempty"`
-
-	// Path to the client cert file in the Prometheus container for the targets.
-	CertFile string `json:"certFile,omitempty"`
 	// Struct containing the client cert file for the targets.
 	Cert SecretOrConfigMap `json:"cert,omitempty"`
-
-	// Path to the client key file in the Prometheus container for the targets.
-	KeyFile string `json:"keyFile,omitempty"`
 	// Secret containing the client key file for the targets.
 	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
-
 	// Used to verify the hostname for the targets.
 	ServerName string `json:"serverName,omitempty"`
 	// Disable target certificate validation.
 	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
+}
+
+// Validate semantically validates the given SafeTLSConfig.
+func (c *SafeTLSConfig) Validate() error {
+	if c.CA != (SecretOrConfigMap{}) {
+		if err := c.CA.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if c.Cert != (SecretOrConfigMap{}) {
+		if err := c.Cert.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// TLSConfig extends the safe TLS configuration with file parameters.
+// +k8s:openapi-gen=true
+type TLSConfig struct {
+	SafeTLSConfig `json:",inline"`
+	// Path to the CA cert in the Prometheus container to use for the targets.
+	CAFile string `json:"caFile,omitempty"`
+	// Path to the client cert file in the Prometheus container for the targets.
+	CertFile string `json:"certFile,omitempty"`
+	// Path to the client key file in the Prometheus container for the targets.
+	KeyFile string `json:"keyFile,omitempty"`
 }
 
 // TLSConfigValidationError is returned by TLSConfig.Validate() on semantically
@@ -941,29 +976,19 @@ func (e *TLSConfigValidationError) Error() string {
 
 // Validate semantically validates the given TLSConfig.
 func (c *TLSConfig) Validate() error {
-	if c.CA != (SecretOrConfigMap{}) {
-		if c.CAFile != "" {
-			return &TLSConfigValidationError{"tls config can not both specify CAFile and CA"}
-		}
-		if err := c.CA.Validate(); err != nil {
-			return err
-		}
+	if c.CA != (SecretOrConfigMap{}) && c.CAFile != "" {
+		return &TLSConfigValidationError{"tls config can not both specify CAFile and CA"}
 	}
 
-	if c.Cert != (SecretOrConfigMap{}) {
-		if c.CertFile != "" {
-			return &TLSConfigValidationError{"tls config can not both specify CertFile and Cert"}
-		}
-		if err := c.Cert.Validate(); err != nil {
-			return err
-		}
+	if c.Cert != (SecretOrConfigMap{}) && c.CertFile != "" {
+		return &TLSConfigValidationError{"tls config can not both specify CertFile and Cert"}
 	}
 
 	if c.KeyFile != "" && c.KeySecret != nil {
 		return &TLSConfigValidationError{"tls config can not both specify KeyFile and KeySecret"}
 	}
 
-	return nil
+	return c.SafeTLSConfig.Validate()
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

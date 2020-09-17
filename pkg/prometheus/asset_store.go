@@ -107,12 +107,8 @@ func assetKeyFunc(obj interface{}) (string, error) {
 	return "", errors.Errorf("unsupported type: %T", obj)
 }
 
-// addTLSConfig processes the given *TLSConfig and adds the referenced CA, certifcate and key to the store.
-func (a *assetStore) addTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.TLSConfig) error {
-	if tlsConfig == nil {
-		return nil
-	}
-
+// addSafeTLSConfig processes the given SafeTLSConfig and adds the referenced CA, certificate and key to the store.
+func (a *assetStore) addSafeTLSConfig(ctx context.Context, ns string, tlsConfig monitoringv1.SafeTLSConfig) error {
 	if tlsConfig.CA != (monitoringv1.SecretOrConfigMap{}) {
 		var (
 			ca  string
@@ -166,7 +162,7 @@ func (a *assetStore) addTLSConfig(ctx context.Context, ns string, tlsConfig *mon
 	return nil
 }
 
-// addTLSConfig processes the given *BasicAuth and adds the referenced credentials to the store.
+// addBasicAuth processes the given *BasicAuth and adds the referenced credentials to the store.
 func (a *assetStore) addBasicAuth(ctx context.Context, ns string, ba *monitoringv1.BasicAuth, key string) error {
 	if ba == nil {
 		return nil
@@ -190,7 +186,7 @@ func (a *assetStore) addBasicAuth(ctx context.Context, ns string, ba *monitoring
 	return nil
 }
 
-// addTLSConfig processes the given SecretKeySelector and adds the referenced data to the store.
+// addBearerToken processes the given SecretKeySelector and adds the referenced data to the store.
 func (a *assetStore) addBearerToken(ctx context.Context, ns string, sel v1.SecretKeySelector, key string) error {
 	if sel.Name == "" {
 		return nil

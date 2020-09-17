@@ -289,27 +289,29 @@ func TestAddTLSConfig(t *testing.T) {
 			// CA, cert and key in secret.
 			ns: "ns1",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CA: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key4",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key5",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key4",
+						Key: "key6",
 					},
-				},
-				Cert: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
-						},
-						Key: "key5",
-					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "secret",
-					},
-					Key: "key6",
 				},
 			},
 
@@ -321,27 +323,29 @@ func TestAddTLSConfig(t *testing.T) {
 			// CA in configmap, cert and key in secret.
 			ns: "ns1",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CA: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key1",
 						},
-						Key: "key1",
 					},
-				},
-				Cert: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key5",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key5",
+						Key: "key6",
 					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "secret",
-					},
-					Key: "key6",
 				},
 			},
 
@@ -353,27 +357,29 @@ func TestAddTLSConfig(t *testing.T) {
 			// CA and cert in configmap, key in secret.
 			ns: "ns1",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CA: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key1",
 						},
-						Key: "key1",
 					},
-				},
-				Cert: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key2",
 						},
-						Key: "key2",
 					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "secret",
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key6",
 					},
-					Key: "key6",
 				},
 			},
 
@@ -385,27 +391,29 @@ func TestAddTLSConfig(t *testing.T) {
 			// Wrong namespace.
 			ns: "ns2",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CA: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key1",
 						},
-						Key: "key1",
 					},
-				},
-				Cert: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key2",
 						},
-						Key: "key2",
 					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "secret",
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key6",
 					},
-					Key: "key6",
 				},
 			},
 
@@ -415,27 +423,29 @@ func TestAddTLSConfig(t *testing.T) {
 			// Wrong configmap selector for CA.
 			ns: "ns1",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CA: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key4",
 						},
-						Key: "key4",
 					},
-				},
-				Cert: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key2",
 						},
-						Key: "key2",
 					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "secret",
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key6",
 					},
-					Key: "key6",
 				},
 			},
 
@@ -445,27 +455,29 @@ func TestAddTLSConfig(t *testing.T) {
 			// Wrong secret selector for CA.
 			ns: "ns1",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CA: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key2",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key1",
+						Key: "key6",
 					},
-				},
-				Cert: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
-						},
-						Key: "key2",
-					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "secret",
-					},
-					Key: "key6",
 				},
 			},
 
@@ -475,27 +487,29 @@ func TestAddTLSConfig(t *testing.T) {
 			// Wrong configmap selector for cert.
 			ns: "ns1",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CA: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key1",
 						},
-						Key: "key1",
 					},
-				},
-				Cert: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key4",
 						},
-						Key: "key4",
 					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "secret",
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key6",
 					},
-					Key: "key6",
 				},
 			},
 
@@ -505,27 +519,29 @@ func TestAddTLSConfig(t *testing.T) {
 			// Wrong secret selector for cert.
 			ns: "ns1",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CA: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cm",
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cm",
+							},
+							Key: "key1",
 						},
-						Key: "key1",
 					},
-				},
-				Cert: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key2",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key2",
+						Key: "key6",
 					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "secret",
-					},
-					Key: "key6",
 				},
 			},
 
@@ -535,27 +551,29 @@ func TestAddTLSConfig(t *testing.T) {
 			// Wrong key selector.
 			ns: "ns1",
 			tlsConfig: &monitoringv1.TLSConfig{
-				CA: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key4",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key5",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key4",
+						Key: "key7",
 					},
-				},
-				Cert: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
-						},
-						Key: "key5",
-					},
-				},
-				KeySecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "secret",
-					},
-					Key: "key7",
 				},
 			},
 
@@ -565,7 +583,7 @@ func TestAddTLSConfig(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			store := newAssetStore(c.CoreV1(), c.CoreV1())
 
-			err := store.addTLSConfig(context.Background(), tc.ns, tc.tlsConfig)
+			err := store.addSafeTLSConfig(context.Background(), tc.ns, tc.tlsConfig.SafeTLSConfig)
 
 			if tc.err {
 				if err == nil {

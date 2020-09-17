@@ -1483,7 +1483,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "selecting ServiceMonitors failed")
 	}
 
-	pmons, err := c.selectPodMonitors(p)
+	pmons, err := c.selectPodMonitors(ctx, p, store)
 	if err != nil {
 		return errors.Wrap(err, "selecting PodMonitors failed")
 	}
@@ -1608,8 +1608,10 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 	}
 
 	for i, rw := range p.Spec.RemoteWrite {
-		if err := store.addTLSConfig(ctx, p.GetNamespace(), rw.TLSConfig); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
+		if rw.TLSConfig != nil {
+			if err := store.addSafeTLSConfig(ctx, p.GetNamespace(), rw.TLSConfig.SafeTLSConfig); err != nil {
+				return errors.Wrapf(err, "remote write %d", i)
+			}
 		}
 	}
 
@@ -1701,8 +1703,10 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 				break
 			}
 
-			if err = store.addTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
-				break
+			if endpoint.TLSConfig != nil {
+				if err = store.addSafeTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig.SafeTLSConfig); err != nil {
+					break
+				}
 			}
 		}
 
@@ -1729,10 +1733,10 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 	return res, nil
 }
 
-func (c *Operator) selectPodMonitors(p *monitoringv1.Prometheus) (map[string]*monitoringv1.PodMonitor, error) {
+func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assetStore) (map[string]*monitoringv1.PodMonitor, error) {
 	namespaces := []string{}
-	// Selectors might overlap. Deduplicate them along the keyFunc.
-	res := make(map[string]*monitoringv1.PodMonitor)
+	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
+	podMonitors := make(map[string]*monitoringv1.PodMonitor)
 
 	podMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorSelector)
 	if err != nil {
@@ -1756,18 +1760,56 @@ func (c *Operator) selectPodMonitors(p *monitoringv1.Prometheus) (map[string]*mo
 
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select PodMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
-	podMonitors := []string{}
 	for _, ns := range namespaces {
 		c.pmonInfs.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				res[k] = obj.(*monitoringv1.PodMonitor)
-				podMonitors = append(podMonitors, k)
+				podMonitors[k] = obj.(*monitoringv1.PodMonitor)
 			}
 		})
 	}
 
-	level.Debug(c.logger).Log("msg", "selected PodMonitors", "podmonitors", strings.Join(podMonitors, ","), "namespace", p.Namespace, "prometheus", p.Name)
+	res := make(map[string]*monitoringv1.PodMonitor, len(podMonitors))
+	for namespaceAndName, pm := range podMonitors {
+		var err error
+
+		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
+			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
+
+			if err = store.addBearerToken(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret, pmKey); err != nil {
+				break
+			}
+
+			if err = store.addBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth, pmKey); err != nil {
+				break
+			}
+
+			if endpoint.TLSConfig != nil {
+				if err = store.addSafeTLSConfig(ctx, pm.GetNamespace(), endpoint.TLSConfig.SafeTLSConfig); err != nil {
+					break
+				}
+			}
+		}
+
+		if err != nil {
+			level.Warn(c.logger).Log(
+				"msg", "skipping podmonitor",
+				"error", err.Error(),
+				"podmonitor", namespaceAndName,
+				"namespace", p.Namespace,
+				"prometheus", p.Name,
+			)
+			continue
+		}
+
+		res[namespaceAndName] = pm
+	}
+
+	pmKeys := []string{}
+	for k := range res {
+		pmKeys = append(pmKeys, k)
+	}
+	level.Debug(c.logger).Log("msg", "selected PodMonitors", "podmonitors", strings.Join(pmKeys, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	return res, nil
 }

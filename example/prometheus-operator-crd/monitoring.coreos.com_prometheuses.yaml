@@ -767,7 +767,7 @@ spec:
                           description: TLS Config to use for alertmanager connection.
                           properties:
                             ca:
-                              description: Stuct containing the CA cert to use for
+                              description: Struct containing the CA cert to use for
                                 the targets.
                               properties:
                                 configMap:
@@ -974,7 +974,8 @@ spec:
                     description: TLS Config to use for accessing apiserver.
                     properties:
                       ca:
-                        description: Stuct containing the CA cert to use for the targets.
+                        description: Struct containing the CA cert to use for the
+                          targets.
                         properties:
                           configMap:
                             description: ConfigMap containing data to use for the
@@ -3672,7 +3673,7 @@ spec:
                       description: TLS Config to use for remote read.
                       properties:
                         ca:
-                          description: Stuct containing the CA cert to use for the
+                          description: Struct containing the CA cert to use for the
                             targets.
                           properties:
                             configMap:
@@ -3909,7 +3910,7 @@ spec:
                       description: TLS Config to use for remote write.
                       properties:
                         ca:
-                          description: Stuct containing the CA cert to use for the
+                          description: Struct containing the CA cert to use for the
                             targets.
                           properties:
                             configMap:
@@ -4763,7 +4764,8 @@ spec:
                       Maps to the ''--grpc-server-tls-*'' CLI args.'
                     properties:
                       ca:
-                        description: Stuct containing the CA cert to use for the targets.
+                        description: Struct containing the CA cert to use for the
+                          targets.
                         properties:
                           configMap:
                             description: ConfigMap containing data to use for the
