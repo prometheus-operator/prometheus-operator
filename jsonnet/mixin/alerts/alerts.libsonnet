@@ -35,7 +35,7 @@
           {
             alert: 'PrometheusOperatorReconcileErrors',
             expr: |||
-              (sum by (controller,namespace) (rate(prometheus_operator_reconcile_errors_total{%(prometheusOperatorSelector)s}[5m])) / (sum by (controller,namespace) (rate(prometheus_operator_reconcile_operations_total{%(prometheusOperatorSelector)s}[5m])) > 0.1
+              (sum by (controller,namespace) (rate(prometheus_operator_reconcile_errors_total{%(prometheusOperatorSelector)s}[5m]))) / (sum by (controller,namespace) (rate(prometheus_operator_reconcile_operations_total{%(prometheusOperatorSelector)s}[5m]))) > 0.1
             ||| % $._config,
             labels: {
               severity: 'warning',
