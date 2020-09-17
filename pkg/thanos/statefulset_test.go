@@ -98,10 +98,38 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	}, defaultTestConfig, nil, "")
 	require.NoError(t, err)
 	if _, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok {
-		t.Fatal("Pod labes are not properly propagated")
+		t.Fatal("Pod labels are not properly propagated")
 	}
 	if !reflect.DeepEqual(annotations, sset.Spec.Template.ObjectMeta.Annotations) {
-		t.Fatal("Pod annotaitons are not properly propagated")
+		t.Fatal("Pod annotations are not properly propagated")
+	}
+}
+
+func TestServiceLabelsAnnotations(t *testing.T) {
+	annotations := map[string]string{
+		"testannotation": "testvalue",
+	}
+	labels := map[string]string{
+		"testlabel": "testvalue",
+	}
+	service := makeStatefulSetService(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			ServiceMetadata: &monitoringv1.EmbeddedObjectMetadata{
+				Annotations: annotations,
+				Labels:      labels,
+			},
+		},
+	}, defaultTestConfig)
+	if _, ok := service.ObjectMeta.Labels["testlabel"]; !ok {
+		t.Fatal("Service labels are not properly propagated")
+	}
+	if label, ok := service.ObjectMeta.Labels["operated-thanos-ruler"]; label != "true" && !ok {
+		t.Fatal("Operated label is not set")
+	}
+	if !reflect.DeepEqual(annotations, service.ObjectMeta.Annotations) {
+		t.Fatal("Service annotations are not properly propagated")
 	}
 }
 

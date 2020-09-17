@@ -59,6 +59,8 @@ type ThanosRulerList struct {
 type ThanosRulerSpec struct {
 	// PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods.
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
+	// ServiceMetadata configures Labels and Annotations which are propagated to the thanos ruler service.
+	ServiceMetadata *EmbeddedObjectMetadata `json:"serviceMetadata,omitempty"`
 	// Thanos container image URL.
 	Image string `json:"image,omitempty"`
 	// An optional list of references to secrets in the same namespace

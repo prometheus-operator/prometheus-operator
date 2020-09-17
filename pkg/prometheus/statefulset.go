@@ -234,6 +234,9 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Servi
 		p.Spec.PortName = defaultPortName
 	}
 
+	labels := config.Labels.Merge(p.Spec.ServiceMetadata.Labels)
+	labels["operated-prometheus"] = "true"
+
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: governingServiceName,
@@ -245,9 +248,8 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Servi
 					UID:        p.GetUID(),
 				},
 			},
-			Labels: config.Labels.Merge(map[string]string{
-				"operated-prometheus": "true",
-			}),
+			Labels:      labels,
+			Annotations: p.Spec.ServiceMetadata.Annotations,
 		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",

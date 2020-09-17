@@ -444,12 +444,14 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 		tr.Spec.PortName = defaultPortName
 	}
 
+	labels := config.Labels.Merge(tr.Spec.ServiceMetadata.Labels)
+	labels["operated-thanos-ruler"] = "true"
+
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: governingServiceName,
-			Labels: config.Labels.Merge(map[string]string{
-				"operated-thanos-ruler": "true",
-			}),
+			Name:        governingServiceName,
+			Labels:      labels,
+			Annotations: tr.Spec.ServiceMetadata.Annotations,
 			OwnerReferences: []metav1.OwnerReference{
 				metav1.OwnerReference{
 					Name:       tr.GetName(),

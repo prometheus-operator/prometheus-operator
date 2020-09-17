@@ -138,6 +138,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | podMetadata | PodMetadata configures Labels and Annotations which are propagated to the alertmanager pods. | *[EmbeddedObjectMetadata](#embeddedobjectmetadata) | false |
+| serviceMetadata | ServiceMetadata configures Labels and Annotations which are propagated to the alertmanager service. | *[EmbeddedObjectMetadata](#embeddedobjectmetadata) | false |
 | image | Image if specified has precedence over baseImage, tag and sha combinations. Specifying the version is still necessary to ensure the Prometheus Operator knows what version of Alertmanager is being configured. | *string | false |
 | version | Version the cluster should be on. | string | false |
 | tag | Tag of Alertmanager container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. Deprecated: use 'image' instead.  The image tag can be specified as part of the image URL. | string | false |
@@ -500,6 +501,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | podMetadata | PodMetadata configures Labels and Annotations which are propagated to the prometheus pods. | *[EmbeddedObjectMetadata](#embeddedobjectmetadata) | false |
+| serviceMetadata | ServiceMetadata configures Labels and Annotations which are propagated to the prometheus service. | *[EmbeddedObjectMetadata](#embeddedobjectmetadata) | false |
 | serviceMonitorSelector | ServiceMonitors to be selected for target discovery. *Deprecated:* if neither this nor podMonitorSelector are specified, configuration is unmanaged. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | serviceMonitorNamespaceSelector | Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | podMonitorSelector | *Experimental* PodMonitors to be selected for target discovery. *Deprecated:* if neither this nor serviceMonitorSelector are specified, configuration is unmanaged. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
@@ -872,6 +874,7 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | podMetadata | PodMetadata contains Labels and Annotations gets propagated to the thanos ruler pods. | *[EmbeddedObjectMetadata](#embeddedobjectmetadata) | false |
+| serviceMetadata | ServiceMetadata configures Labels and Annotations which are propagated to the thanos ruler service. | *[EmbeddedObjectMetadata](#embeddedobjectmetadata) | false |
 | image | Thanos container image URL. | string | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling thanos images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core) | false |
 | paused | When a ThanosRuler deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |

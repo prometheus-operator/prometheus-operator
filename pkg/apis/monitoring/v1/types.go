@@ -85,6 +85,8 @@ type PrometheusList struct {
 type PrometheusSpec struct {
 	// PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
+	// ServiceMetadata configures Labels and Annotations which are propagated to the prometheus service.
+	ServiceMetadata *EmbeddedObjectMetadata `json:"serviceMetadata,omitempty"`
 	// ServiceMonitors to be selected for target discovery. *Deprecated:* if
 	// neither this nor podMonitorSelector are specified, configuration is
 	// unmanaged.
@@ -1112,6 +1114,8 @@ type Alertmanager struct {
 type AlertmanagerSpec struct {
 	// PodMetadata configures Labels and Annotations which are propagated to the alertmanager pods.
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
+	// ServiceMetadata configures Labels and Annotations which are propagated to the alertmanager service.
+	ServiceMetadata *EmbeddedObjectMetadata `json:"serviceMetadata,omitempty"`
 	// Image if specified has precedence over baseImage, tag and sha
 	// combinations. Specifying the version is still necessary to ensure the
 	// Prometheus Operator knows what version of Alertmanager is being

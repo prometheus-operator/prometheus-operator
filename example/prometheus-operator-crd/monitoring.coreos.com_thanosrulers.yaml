@@ -3296,6 +3296,34 @@ spec:
                 description: ServiceAccountName is the name of the ServiceAccount
                   to use to run the Thanos Ruler Pods.
                 type: string
+              serviceMetadata:
+                description: ServiceMetadata configures Labels and Annotations which
+                  are propagated to the thanos ruler service.
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: 'Annotations is an unstructured key value map stored
+                      with a resource that may be set by external tools to store and
+                      retrieve arbitrary metadata. They are not queryable and should
+                      be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: 'Map of string keys and values that can be used to
+                      organize and categorize (scope and select) objects. May match
+                      selectors of replication controllers and services. More info:
+                      http://kubernetes.io/docs/user-guide/labels'
+                    type: object
+                  name:
+                    description: 'Name must be unique within a namespace. Is required
+                      when creating resources, although some resources may allow a
+                      client to request the generation of an appropriate name automatically.
+                      Name is primarily intended for creation idempotence and configuration
+                      definition. Cannot be updated. More info: http://kubernetes.io/docs/user-guide/identifiers#names'
+                    type: string
+                type: object
               storage:
                 description: Storage spec to specify how storage shall be used.
                 properties:

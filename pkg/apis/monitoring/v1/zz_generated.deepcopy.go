@@ -152,6 +152,11 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		*out = new(EmbeddedObjectMetadata)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ServiceMetadata != nil {
+		in, out := &in.ServiceMetadata, &out.ServiceMetadata
+		*out = new(EmbeddedObjectMetadata)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Image != nil {
 		in, out := &in.Image, &out.Image
 		*out = new(string)
@@ -914,6 +919,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(EmbeddedObjectMetadata)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ServiceMetadata != nil {
+		in, out := &in.ServiceMetadata, &out.ServiceMetadata
+		*out = new(EmbeddedObjectMetadata)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ServiceMonitorSelector != nil {
 		in, out := &in.ServiceMonitorSelector, &out.ServiceMonitorSelector
 		*out = new(metav1.LabelSelector)
@@ -1624,6 +1634,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 	*out = *in
 	if in.PodMetadata != nil {
 		in, out := &in.PodMetadata, &out.PodMetadata
+		*out = new(EmbeddedObjectMetadata)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.ServiceMetadata != nil {
+		in, out := &in.ServiceMetadata, &out.ServiceMetadata
 		*out = new(EmbeddedObjectMetadata)
 		(*in).DeepCopyInto(*out)
 	}
