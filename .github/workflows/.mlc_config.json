@@ -1,0 +1,13 @@
+{
+    "ignorePatterns": [
+        {
+            "pattern": "^http://127.0.0.1"
+        },
+        {
+            "pattern": "^http://localhost"
+        },
+        {
+            "pattern": "^http://proxyserver"
+        }
+    ]
+}
