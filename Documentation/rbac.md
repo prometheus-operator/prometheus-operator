@@ -89,13 +89,15 @@ rules:
 
 > Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus Operator `Pod`. The `ServiceAccount` used by the Prometheus Operator `Pod` can be specified in the `Deployment` object used to deploy it.
 
-When the Prometheus Operator boots up for the first time it registers the `customresourcedefinitions` it uses, therefore the `create` action on those is required.
-
-As the Prometheus Operator works extensively with the `customresourcedefinitions` it registers, it requires all actions on those objects. Those are:
+As the Prometheus Operator works extensively with its `customresourcedefinitions`, it requires all actions on those objects. Those are:
 
 * `alertmanagers`
+* `podmonitors`
+* `probes`
 * `prometheuses`
+* `prometheusrules`
 * `servicemonitors`
+* `thanosrulers`
 
 Alertmanager and Prometheus clusters are created using `statefulsets` therefore all changes to an Alertmanager or Prometheus object result in a change to the `statefulsets`, which means all actions must be permitted.
 
