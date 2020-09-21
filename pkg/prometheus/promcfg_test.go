@@ -62,13 +62,14 @@ func TestConfigGeneration(t *testing.T) {
 
 func TestGlobalSettings(t *testing.T) {
 	type testCase struct {
-		EvaluationInterval string
-		ScrapeInterval     string
-		ScrapeTimeout      string
-		ExternalLabels     map[string]string
-		QueryLogFile       string
-		Version            string
-		Expected           string
+		EvaluationInterval  string
+		ScrapeInterval      string
+		ScrapeTimeout       string
+		ExternalLabels      map[string]string
+		AdditionalRuleFiles []string
+		QueryLogFile        string
+		Version             string
+		Expected            string
 	}
 
 	testcases := []testCase{
@@ -145,6 +146,25 @@ alerting:
 `,
 		},
 		{
+			Version:             "v2.15.2",
+			AdditionalRuleFiles: []string{"/foo/bar/*.yaml"},
+			Expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: /
+    prometheus_replica: $(POD_NAME)
+rule_files:
+- /foo/bar/*.yaml
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`,
+		},
+		{
 			Version: "v2.15.2",
 			ExternalLabels: map[string]string{
 				"key1": "value1",
@@ -194,12 +214,13 @@ alerting:
 			&monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{},
 				Spec: monitoringv1.PrometheusSpec{
-					EvaluationInterval: tc.EvaluationInterval,
-					ScrapeInterval:     tc.ScrapeInterval,
-					ScrapeTimeout:      tc.ScrapeTimeout,
-					ExternalLabels:     tc.ExternalLabels,
-					QueryLogFile:       tc.QueryLogFile,
-					Version:            tc.Version,
+					EvaluationInterval:      tc.EvaluationInterval,
+					ScrapeInterval:          tc.ScrapeInterval,
+					ScrapeTimeout:           tc.ScrapeTimeout,
+					ExternalLabels:          tc.ExternalLabels,
+					QueryLogFile:            tc.QueryLogFile,
+					Version:                 tc.Version,
+					AdditionalRuleFilePaths: tc.AdditionalRuleFiles,
 				},
 			},
 			map[string]*monitoringv1.ServiceMonitor{},

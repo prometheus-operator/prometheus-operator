@@ -997,6 +997,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		**out = **in
 	}
 	out.Rules = in.Rules
+	if in.AdditionalRuleFilePaths != nil {
+		in, out := &in.AdditionalRuleFilePaths, &out.AdditionalRuleFilePaths
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.ExternalLabels != nil {
 		in, out := &in.ExternalLabels, &out.ExternalLabels
 		*out = make(map[string]string, len(*in))
