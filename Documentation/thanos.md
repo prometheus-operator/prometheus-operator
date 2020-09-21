@@ -5,7 +5,7 @@ _Note: This guide is valid for Prometheus Operator v0.28+ and Thanos v0.2+ and a
 [Thanos](https://github.com/thanos-io/thanos/) is a set of components that can be composed into a highly available,
 multi Prometheus metric system with potentially unlimited storage capacity, if your Object Storage allows for it.
 
-Before continuing with Prometheus Operator Thanos integration, it is recommended to read more about Thanos in the [documentation](https://thanos.io/getting-started.md/).
+Before continuing with Prometheus Operator Thanos integration, it is recommended to read more about Thanos in the [documentation](https://thanos.io/tip/thanos/getting-started.md/).
 
 ## What Prometheus Operator helps with?
 
@@ -117,14 +117,14 @@ The recording and alerting rules used by a `ThanosRuler` component, are configur
 
 Deploying the sidecar was the first step towards getting Thanos up and running, but there are more components to be deployed, that complete Thanos:
 
-- [Querier](https://thanos.io/components/query.md/)
+- [Querier](https://thanos.io/tip/components/query.md/)
 
 Additionally, when object storage backup is desired:
 
-- [Store](https://thanos.io/components/store.md/)
-- [Compactor](https://thanos.io/components/compact.md/)
+- [Store](https://thanos.io/tip/components/store.md/)
+- [Compactor](https://thanos.io/tip/components/compact.md/)
 
-Again, take a look at the Thanos documentation for more details on these components: https://thanos.io/quick-tutorial.md
+Again, take a look at the Thanos documentation for more details on these components: https://thanos.io/tip/thanos/quick-tutorial.md
 
 kube-thanos project has already supported several thanos components.
 For more details, please checkout [kube-thanos](https://github.com/thanos-io/kube-thanos/).
