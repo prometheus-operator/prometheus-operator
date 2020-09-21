@@ -11,6 +11,8 @@ Feel free to ask questions in #prometheus-operator on Kubernetes Slack!
 Note: This repository is about prometheus-operator itself, if you have questions about:
 - helm installation, go to https://github.com/helm/charts repository
 - kube-prometheus setup, go to https://github.com/prometheus-operator/kube-prometheus
+- prometheus basic configuration, go to https://prometheus.io/docs/introduction/overview/
+- bugs in prometheus, go to https://github.com/prometheus/prometheus/issues
 
 -->
 
