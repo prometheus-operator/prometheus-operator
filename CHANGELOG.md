@@ -1,5 +1,9 @@
 ## Next release
 
+## 0.42.1 / 2020-09-21
+
+* [BUGFIX] Bump client-go to fix watch bug 
+
 ## 0.42.0 / 2020-09-09
 
 The Prometheus Operator now lives in its own indepent GitHub organization.  
