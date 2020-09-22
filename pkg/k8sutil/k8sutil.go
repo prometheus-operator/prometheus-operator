@@ -118,6 +118,7 @@ func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterfac
 		}
 	} else {
 		svc.ResourceVersion = service.ResourceVersion
+		svc.Spec.IPFamily = service.Spec.IPFamily
 		svc.SetOwnerReferences(mergeOwnerReferences(service.GetOwnerReferences(), svc.GetOwnerReferences()))
 		_, err := sclient.Update(ctx, svc, metav1.UpdateOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
