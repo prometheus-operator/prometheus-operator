@@ -1216,3 +1216,29 @@ func TestTerminationPolicy(t *testing.T) {
 		}
 	}
 }
+
+func TestWebPageTitle(t *testing.T) {
+	var pageTitle string = "my-page-title"
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Web: &monitoringv1.WebSpec{
+				PageTitle: &pageTitle,
+			},
+		},
+	}, defaultTestConfig, nil, "")
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--web.page-title=my-page-title" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus web page title is not correctly set.")
+	}
+}

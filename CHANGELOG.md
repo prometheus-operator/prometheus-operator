@@ -1,5 +1,7 @@
 ## Next release
 
+* [ENHANCEMENT] Allow overridability of the web page title (#3525)
+
 ## 0.42.0 / 2020-09-09
 
 The Prometheus Operator now lives in its own indepent GitHub organization.  

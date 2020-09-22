@@ -193,6 +193,8 @@ type PrometheusSpec struct {
 	// VolumeMounts specified will be appended to other VolumeMounts in the prometheus container,
 	// that are generated as a result of StorageSpec objects.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
+	// WebSpec defines the web command line flags when starting Prometheus.
+	Web *WebSpec `json:"web,omitempty"`
 	// A selector to select which PrometheusRules to mount for loading alerting/recording
 	// rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus
 	// Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom
@@ -466,6 +468,13 @@ type QuerySpec struct {
 	MaxSamples *int32 `json:"maxSamples,omitempty"`
 	// Maximum time a query may take before being aborted.
 	Timeout *string `json:"timeout,omitempty"`
+}
+
+// WebSpec defines the query command line flags when starting Prometheus.
+// +k8s:openapi-gen=true
+type WebSpec struct {
+	// The prometheus web page title
+	PageTitle *string `json:"pageTitle,omitempty"`
 }
 
 // ThanosSpec defines parameters for a Prometheus server within a Thanos deployment.

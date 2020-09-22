@@ -370,6 +370,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				)
 			}
 		}
+
 	default:
 		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
@@ -388,6 +389,12 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 				fmt.Sprintf("-query.timeout=%s", *p.Spec.Query.Timeout),
 			)
 		}
+	}
+
+	if p.Spec.Web != nil && p.Spec.Web.PageTitle != nil {
+		promArgs = append(promArgs,
+			fmt.Sprintf("-web.page-title=%s", *p.Spec.Web.PageTitle),
+		)
 	}
 
 	if p.Spec.EnableAdminAPI {
@@ -910,11 +917,7 @@ func prefixedName(name string) string {
 }
 
 func subPathForStorage(s *monitoringv1.StorageSpec) string {
-	if s == nil {
-		return ""
-	}
-
-	if s.DisableMountSubPath {
+	if s == nil || s.DisableMountSubPath {
 		return ""
 	}
 

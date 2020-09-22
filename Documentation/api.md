@@ -60,6 +60,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
 * [ThanosSpec](#thanosspec)
+* [WebSpec](#webspec)
 * [ThanosRuler](#thanosruler)
 * [ThanosRulerList](#thanosrulerlist)
 * [ThanosRulerSpec](#thanosrulerspec)
@@ -533,6 +534,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | storage | Storage spec to specify how storage shall be used. | *[StorageSpec](#storagespec) | false |
 | volumes | Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will be appended to other volumes that are generated as a result of StorageSpec objects. | []v1.Volume | false |
 | volumeMounts | VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition. VolumeMounts specified will be appended to other VolumeMounts in the prometheus container, that are generated as a result of StorageSpec objects. | []v1.VolumeMount | false |
+| web | WebSpec defines the web command line flags when starting Prometheus. | *[WebSpec](#webspec) | false |
 | ruleSelector | A selector to select which PrometheusRules to mount for loading alerting/recording rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom resources selected by RuleSelector. Make sure it does not match any config maps that you do not want to be migrated. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | ruleNamespaceSelector | Namespaces to be selected for PrometheusRules discovery. If unspecified, only the same namespace as the Prometheus object is in is used. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | alerting | Define details regarding alerting. | *[AlertingSpec](#alertingspec) | false |
@@ -827,6 +829,16 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | logLevel | LogLevel for Thanos sidecar to be configured with. | string | false |
 | logFormat | LogFormat for Thanos sidecar to be configured with. | string | false |
 | minTime | MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y. | string | false |
+
+[Back to TOC](#table-of-contents)
+
+## WebSpec
+
+WebSpec defines the query command line flags when starting Prometheus.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| pageTitle | The prometheus web page title | *string | false |
 
 [Back to TOC](#table-of-contents)
 
