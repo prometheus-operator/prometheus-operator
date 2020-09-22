@@ -5,7 +5,7 @@ This documentation is for an alpha feature.
 </div>
 
 # Monitoring Kubernetes Ingress with Ambassador
-[Ambassador](https://www.getambassador.io/) is a popular open-source API gateway for Kubernetes. Built on [Envoy Proxy](https://www.envoyproxy.io), Ambassador natively exposes statistics that give you better insight to what is happening at the edge of your Kubernetes cluster. In this guide we will: 
+[Ambassador](https://getambassador.io/) is a popular open-source API gateway for Kubernetes. Built on [Envoy Proxy](https://envoyproxy.io), Ambassador natively exposes statistics that give you better insight to what is happening at the edge of your Kubernetes cluster. In this guide we will:
 
 * Create a simple Kubernetes application
 * Deploy Ambassador as your Kubernetes ingress controller
@@ -17,7 +17,7 @@ This documentation is for an alpha feature.
 * The [Kubernetes command line tool](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
 ## Deploy and Expose an Application on Kubernetes
-First, we need an application running on Kubernetes for our users to access. You can deploy any application you would like but, for simplicity, we will use a [sample application](https://www.getambassador.io/user-guide/getting-started#3-creating-your-first-service) provided by the Ambassador team.
+First, we need an application running on Kubernetes for our users to access. You can deploy any application you would like but, for simplicity, we will use a [sample application](https://getambassador.io/user-guide/getting-started#3-creating-your-first-service) provided by the Ambassador team.
 
 We can quickly deploy this application using `kubectl`:
 
@@ -62,7 +62,7 @@ Now that we have an application running in Kubernetes, we need to expose it to t
 
 3. Route traffic to your application
 
-    You configure Ambassador to expose your application using [annotations](https://www.getambassador.io/reference/configuration/) on the Kubernetes service of the application like the one below.
+    You configure Ambassador to expose your application using [annotations](https://getambassador.io/reference/configuration/) on the Kubernetes service of the application like the one below.
 
     ```yaml
     ---
@@ -194,4 +194,4 @@ Envoy's metrics data model is remarkably similar to that of Prometheus and uses 
 | envoy_cluster_upstream_rq | envoy_cluster_upstream_rq <br></br> envoy_cluster_upstream_rq_xx <br></br> envoy_cluster_upstream_rq_total <br></br> envoy_cluster_upstream_rq_retry | Statistics regarding traffic from Envoy to each upstream service. Tracking this will give you insight to how the request is performing after reaching Ambassador. It will help you pinpoint whether failures are happening in Ambassador or the upstream service. |
 
 
-Envoy collects many more statistics including some regarding rate limiting, circuit breaking, and distributed tracing. See the [Envoy's documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/stats) for more information on the metrics envoy collects.
+Envoy collects many more statistics including some regarding rate limiting, circuit breaking, and distributed tracing. See the [Envoy's documentation](https://envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/stats) for more information on the metrics envoy collects.

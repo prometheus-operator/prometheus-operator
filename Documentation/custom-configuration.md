@@ -4,7 +4,7 @@
 </div>
 
 
-**Deprecation Warning:** The _custom configuration_ option of the Prometheus Operator will be deprecated in favor of the [_additional scrape config_](./additional-scrape-config.md) option.
+**Deprecation Warning:** The _custom configuration_ option of the Prometheus Operator will be deprecated in favor of the [_additional scrape config_](additional-scrape-config.md) option.
 
 
 # Custom Configuration

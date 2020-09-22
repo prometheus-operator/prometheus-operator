@@ -7,7 +7,7 @@ configuration.
 ## Prerequisites
 
 This guide assumes that you have already [deployed the Prometheus
-Operator](Documentation/user-guides/getting-started.md) and that [admission
+Operator](getting-started.md) and that [admission
 controllers are
 enabled](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller)
 on your cluster.
