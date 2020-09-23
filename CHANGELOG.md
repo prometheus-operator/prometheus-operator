@@ -1,6 +1,7 @@
 ## Next release
 
 * [ENHANCEMENT] Allow overridability of the web page title (#3525)
+* [BUGFIX] set pkg/apis/monitoring tag to v0.42.1 (#3531)
 
 ## 0.42.0 / 2020-09-09
 
