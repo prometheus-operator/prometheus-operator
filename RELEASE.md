@@ -41,6 +41,12 @@ Bump the version in the `VERSION` file in the root of the repository. Once that'
 $ make clean generate
 ```
 
+Bump the version for `github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring` package in go.mod. This can be done with the following command:
+
+```bash
+$ go get -u github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+```
+
 Now that all version information has been updated, an entry for the new version can be added to the `CHANGELOG.md` file.
 
 Entries in the `CHANGELOG.md` are meant to be in this order:
