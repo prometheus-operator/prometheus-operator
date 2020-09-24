@@ -19,7 +19,10 @@ import (
 	"strings"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,46 +32,40 @@ import (
 )
 
 // NewUnprivilegedNamespaceListWatchFromClient mimics
-// cache.NewListWatchFromClient.
-// It allows for the creation of a cache.ListWatch for namespaces from a client
-// that does not have `List` privileges. If the slice of namespaces contains
-// only v1.NamespaceAll, then this func assumes that the client has List and
-// Watch privileges and returns a regular cache.ListWatch, since there is no
-// other way to get all namespaces.
+// cache.NewListWatchFromClient. It allows for the creation of a
+// cache.ListWatch for namespaces from a client that does not have `List`
+// privileges. If the slice of namespaces contains only v1.NamespaceAll, then
+// this func assumes that the client has List and Watch privileges and returns
+// a regular cache.ListWatch, since there is no other way to get all
+// namespaces.
 //
 // The allowed namespaces and denied namespaces are mutually exclusive.
-// See NewFilteredUnprivilegedNamespaceListWatchFromClient for a description on how they are applied.
-func NewUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, allowedNamespaces, deniedNamespaces map[string]struct{}, fieldSelector fields.Selector) cache.ListerWatcher {
+//
+// If allowed namespaces contain multiple items, the given denied namespaces have no effect.
+//
+// If the allowed namespaces includes exactly one entry with the value v1.NamespaceAll (empty string),
+// the given denied namespaces are applied.
+func NewUnprivilegedNamespaceListWatchFromClient(
+	l log.Logger,
+	c cache.Getter,
+	allowedNamespaces, deniedNamespaces map[string]struct{},
+	fieldSelector fields.Selector,
+) cache.ListerWatcher {
+	if l == nil {
+		l = log.NewNopLogger()
+	}
+
 	optionsModifier := func(options *metav1.ListOptions) {
 		options.FieldSelector = fieldSelector.String()
 	}
-	return NewFilteredUnprivilegedNamespaceListWatchFromClient(l, c, allowedNamespaces, deniedNamespaces, optionsModifier)
-}
 
-// NewFilteredUnprivilegedNamespaceListWatchFromClient mimics
-// cache.NewUnprivilegedNamespaceListWatchFromClient.
-// It allows for the creation of a cache.ListWatch for allowed or denied namespaces
-// from a client that does not have `List` privileges.
-//
-// If the given allowed namespaces contain only v1.NamespaceAll,
-// then this function assumes that the client has List and
-// Watch privileges and returns a regular cache.ListWatch, since there is no
-// other way to get all namespaces.
-//
-// The given allowed and denied namespaces are mutually exclusive.
-// If allowed namespaces contain multiple items, the given denied namespaces have no effect.
-// If the allowed namespaces includes exactly one entry with the value v1.NamespaceAll (empty string),
-// the given denied namespaces are applied.
-func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, allowedNamespaces, deniedNamespaces map[string]struct{}, optionsModifier func(options *metav1.ListOptions)) cache.ListerWatcher {
 	// If the only namespace given is `v1.NamespaceAll`, then this
 	// cache.ListWatch must be privileged. In this case, return a regular
 	// cache.ListWatch tweaked with denylist fieldselector
 	// filtering the given denied namespaces.
 	if IsAllNamespaces(allowedNamespaces) {
 		tweak := func(options *metav1.ListOptions) {
-			if optionsModifier != nil {
-				optionsModifier(options)
-			}
+			optionsModifier(options)
 
 			DenyTweak(options, "metadata.name", deniedNamespaces)
 		}
@@ -87,8 +84,12 @@ func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.G
 				VersionedParams(&options, scheme.ParameterCodec).
 				Do(context.TODO()).
 				Into(result)
+			if apierrors.IsNotFound(err) {
+				level.Info(l).Log("msg", "namespace not found", "namespace", name)
+				continue
+			}
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "unexpected error while listing namespaces")
 			}
 			list.Items = append(list.Items, *result)
 		}
