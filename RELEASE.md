@@ -44,7 +44,7 @@ For a patch release, work in the branch of the minor release you want to patch.
 
 For a new major or minor release, create the corresponding release branch based on the master branch.
 
-Once that's done, a number of files have to be re-generated, this is automated with the following make target:
+A number of files have to be re-generated, this is automated with the following make target:
 
 ```bash
 $ make clean generate
