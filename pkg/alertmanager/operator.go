@@ -144,7 +144,7 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 }
 
 // waitForCacheSync waits for the informers' caches to be synced.
-func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
+func (c *Operator) waitForCacheSync(ctx context.Context) error {
 	ok := true
 
 	for _, infs := range []struct {
@@ -155,11 +155,8 @@ func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !cache.WaitForCacheSync(stopc, inf.Informer().HasSynced) {
-				level.Error(c.logger).Log("msg", fmt.Sprintf("failed to sync %s cache", infs.name))
+			if !operator.WaitForCacheSync(ctx, log.With(c.logger, "informer", infs.name), inf.Informer()) {
 				ok = false
-			} else {
-				level.Debug(c.logger).Log("msg", fmt.Sprintf("successfully synced %s cache", infs.name))
 			}
 		}
 	}
@@ -167,6 +164,7 @@ func (c *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 	if !ok {
 		return errors.New("failed to sync caches")
 	}
+
 	level.Info(c.logger).Log("msg", "successfully synced all caches")
 	return nil
 }
@@ -214,7 +212,7 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	go c.alrtInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
-	if err := c.waitForCacheSync(ctx.Done()); err != nil {
+	if err := c.waitForCacheSync(ctx); err != nil {
 		return err
 	}
 	c.addHandlers()

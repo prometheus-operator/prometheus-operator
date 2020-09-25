@@ -347,33 +347,28 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !cache.WaitForCacheSync(ctx.Done(), inf.Informer().HasSynced) {
-				level.Error(c.logger).Log("msg", fmt.Sprintf("failed to sync %s cache", infs.name))
+			if !operator.WaitForCacheSync(ctx, log.With(c.logger, "informer", infs.name), inf.Informer()) {
 				ok = false
-			} else {
-				level.Debug(c.logger).Log("msg", fmt.Sprintf("successfully synced %s cache", infs.name))
 			}
 		}
 	}
 
-	informers := []struct {
+	for _, inf := range []struct {
 		name     string
 		informer cache.SharedIndexInformer
 	}{
 		{"PromNamespace", c.nsPromInf},
 		{"MonNamespace", c.nsMonInf},
-	}
-	for _, inf := range informers {
-		if !cache.WaitForCacheSync(ctx.Done(), inf.informer.HasSynced) {
-			level.Error(c.logger).Log("msg", fmt.Sprintf("failed to sync %s cache", inf.name))
+	} {
+		if !operator.WaitForCacheSync(ctx, log.With(c.logger, "informer", inf.name), inf.informer) {
 			ok = false
-		} else {
-			level.Debug(c.logger).Log("msg", fmt.Sprintf("successfully synced %s cache", inf.name))
 		}
 	}
+
 	if !ok {
 		return errors.New("failed to sync caches")
 	}
+
 	level.Info(c.logger).Log("msg", "successfully synced all caches")
 	return nil
 }

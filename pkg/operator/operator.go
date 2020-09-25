@@ -15,6 +15,11 @@
 package operator
 
 import (
+	"context"
+	"time"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -200,4 +205,40 @@ func SanitizeSTS(sts *appsv1.StatefulSet) {
 		sts.Spec.VolumeClaimTemplates[i].APIVersion = ""
 		sts.Spec.VolumeClaimTemplates[i].Kind = ""
 	}
+}
+
+// WaitForCacheSync synchronizes the informer's cache and will log a warning
+// every minute if the operation hasn't completed yet.
+// Under normal circumstances, the cache sync should be fast. If it takes more
+// than 1 minute, it means that something is stuck and the message will
+// indicate to the admin which informer is the culprit.
+// See https://github.com/prometheus-operator/prometheus-operator/issues/3347.
+func WaitForCacheSync(ctx context.Context, logger log.Logger, inf cache.SharedIndexInformer) bool {
+	ctx, cancel := context.WithCancel(ctx)
+
+	done := make(chan struct{})
+	go func() {
+		t := time.NewTicker(time.Minute)
+		defer t.Stop()
+
+		select {
+		case <-t.C:
+			level.Warn(logger).Log("msg", "cache sync not yet completed")
+		case <-ctx.Done():
+			close(done)
+		}
+	}()
+
+	ok := cache.WaitForCacheSync(ctx.Done(), inf.HasSynced)
+	if !ok {
+		level.Error(logger).Log("msg", "failed to sync cache")
+	} else {
+		level.Debug(logger).Log("msg", "successfully synced cache")
+	}
+
+	// Stop the logging goroutine and wait for its exit.
+	cancel()
+	<-done
+
+	return ok
 }
