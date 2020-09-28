@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -39,7 +40,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 	p1.Spec.Version = "v1.7.0"
 	p2 := monitoringv1.Prometheus{}
 	p2.Spec.Version = "v1.7.2"
-	c := Config{}
+	c := operator.Config{}
 
 	p1Hash, err := createSSetInputHash(p1, c, []string{}, nil)
 	if err != nil {

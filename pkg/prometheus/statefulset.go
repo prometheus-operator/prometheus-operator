@@ -63,7 +63,7 @@ var (
 
 func makeStatefulSet(
 	p monitoringv1.Prometheus,
-	config *Config,
+	config *operator.Config,
 	ruleConfigMapNames []string,
 	inputHash string,
 ) (*appsv1.StatefulSet, error) {
@@ -194,7 +194,7 @@ func makeStatefulSet(
 	return statefulset, nil
 }
 
-func makeEmptyConfigurationSecret(p *monitoringv1.Prometheus, config Config) (*v1.Secret, error) {
+func makeEmptyConfigurationSecret(p *monitoringv1.Prometheus, config operator.Config) (*v1.Secret, error) {
 	s := makeConfigSecret(p, config)
 
 	s.ObjectMeta.Annotations = map[string]string{
@@ -204,7 +204,7 @@ func makeEmptyConfigurationSecret(p *monitoringv1.Prometheus, config Config) (*v
 	return s, nil
 }
 
-func makeConfigSecret(p *monitoringv1.Prometheus, config Config) *v1.Secret {
+func makeConfigSecret(p *monitoringv1.Prometheus, config operator.Config) *v1.Secret {
 	boolTrue := true
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -227,7 +227,7 @@ func makeConfigSecret(p *monitoringv1.Prometheus, config Config) *v1.Secret {
 	}
 }
 
-func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Service {
+func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) *v1.Service {
 	p = p.DeepCopy()
 
 	if p.Spec.PortName == "" {
@@ -275,7 +275,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config Config) *v1.Servi
 	return svc
 }
 
-func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapNames []string,
+func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConfigMapNames []string,
 	version semver.Version) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
@@ -451,12 +451,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		}
 	}
 
-	localReloadURL := &url.URL{
-		Scheme: "http",
-		Host:   c.LocalHost + ":9090",
-		Path:   path.Clean(webRoutePrefix + "/-/reload"),
-	}
-
 	volumes := []v1.Volume{
 		{
 			Name: "config",
@@ -562,24 +556,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		})
 	}
 
-	configReloadVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      "config",
-			MountPath: confDir,
-		},
-		{
-			Name:      "config-out",
-			MountPath: confOutDir,
-		},
-	}
-
-	configReloadArgs := []string{
-		fmt.Sprintf("--log-format=%s", c.LogFormat),
-		fmt.Sprintf("--reload-url=%s", localReloadURL),
-		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
-		fmt.Sprintf("--config-envsubst-file=%s", path.Join(confOutDir, configEnvsubstFilename)),
-	}
-
 	const localProbe = `if [ -x "$(command -v curl)" ]; then curl %s; elif [ -x "$(command -v wget)" ]; then wget -q -O /dev/null %s; else exit 1; fi`
 
 	var readinessProbeHandler v1.Handler
@@ -667,40 +643,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 	finalLabels := c.Labels.Merge(podLabels)
 
 	var additionalContainers []v1.Container
-
-	if len(ruleConfigMapNames) != 0 {
-		container := v1.Container{
-			Name:  "rules-configmap-reloader",
-			Image: c.ConfigReloaderImage,
-			Args: []string{
-				fmt.Sprintf("--webhook-url=%s", localReloadURL),
-			},
-			VolumeMounts: []v1.VolumeMount{},
-			Resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{}, Requests: v1.ResourceList{}},
-			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-		}
-
-		if c.ConfigReloaderCPU != "0" {
-			container.Resources.Limits[v1.ResourceCPU] = resource.MustParse(c.ConfigReloaderCPU)
-			container.Resources.Requests[v1.ResourceCPU] = resource.MustParse(c.ConfigReloaderCPU)
-		}
-		if c.ConfigReloaderMemory != "0" {
-			container.Resources.Limits[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
-			container.Resources.Requests[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
-		}
-
-		for _, name := range ruleConfigMapNames {
-			mountPath := rulesDir + "/" + name
-			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
-				Name:      name,
-				MountPath: mountPath,
-			})
-			container.Args = append(container.Args, fmt.Sprintf("--volume-dir=%s", mountPath))
-		}
-
-		additionalContainers = append(additionalContainers, container)
-	}
 
 	disableCompaction := p.Spec.DisableCompaction
 	if p.Spec.Thanos != nil {
@@ -823,15 +765,29 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 		promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
 	}
 
-	prometheusConfigReloaderResources := v1.ResourceRequirements{
-		Limits: v1.ResourceList{}, Requests: v1.ResourceList{}}
-	if c.ConfigReloaderCPU != "0" {
-		prometheusConfigReloaderResources.Limits[v1.ResourceCPU] = resource.MustParse(c.ConfigReloaderCPU)
-		prometheusConfigReloaderResources.Requests[v1.ResourceCPU] = resource.MustParse(c.ConfigReloaderCPU)
+	configReloaderArgs := []string{
+		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
+		fmt.Sprintf("--config-envsubst-file=%s", path.Join(confOutDir, configEnvsubstFilename)),
 	}
-	if c.ConfigReloaderMemory != "0" {
-		prometheusConfigReloaderResources.Limits[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
-		prometheusConfigReloaderResources.Requests[v1.ResourceMemory] = resource.MustParse(c.ConfigReloaderMemory)
+	configReloaderVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      "config",
+			MountPath: confDir,
+		},
+		{
+			Name:      "config-out",
+			MountPath: confOutDir,
+		},
+	}
+	if len(ruleConfigMapNames) != 0 {
+		for _, name := range ruleConfigMapNames {
+			mountPath := rulesDir + "/" + name
+			configReloaderVolumeMounts = append(configReloaderVolumeMounts, v1.VolumeMount{
+				Name:      name,
+				MountPath: mountPath,
+			})
+			configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", mountPath))
+		}
 	}
 
 	operatorContainers := append([]v1.Container{
@@ -844,23 +800,21 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *Config, ruleConfigMapName
 			ReadinessProbe:           readinessProbe,
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-		}, {
-			Name:                     "prometheus-config-reloader",
-			Image:                    c.PrometheusConfigReloaderImage,
-			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			Env: []v1.EnvVar{
-				{
-					Name: "POD_NAME",
-					ValueFrom: &v1.EnvVarSource{
-						FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
-					},
-				},
-			},
-			Command:      []string{"/bin/prometheus-config-reloader"},
-			Args:         configReloadArgs,
-			VolumeMounts: configReloadVolumeMounts,
-			Resources:    prometheusConfigReloaderResources,
 		},
+		operator.CreateConfigReloader(
+			c.ReloaderConfig,
+			url.URL{
+				Scheme: "http",
+				Host:   c.LocalHost + ":9090",
+				Path:   path.Clean(webRoutePrefix + "/-/reload"),
+			},
+			p.Spec.ListenLocal,
+			c.LocalHost,
+			p.Spec.LogFormat,
+			p.Spec.LogLevel,
+			configReloaderArgs,
+			configReloaderVolumeMounts,
+		),
 	}, additionalContainers...)
 
 	containers, err := k8sutil.MergePatchContainers(operatorContainers, p.Spec.Containers)

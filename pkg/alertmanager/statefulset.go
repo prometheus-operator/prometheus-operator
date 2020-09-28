@@ -271,12 +271,6 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		amArgs = append(amArgs, fmt.Sprintf("--cluster.advertise-address=%s", a.Spec.ClusterAdvertiseAddress))
 	}
 
-	localReloadURL := &url.URL{
-		Scheme: "http",
-		Host:   config.LocalHost + ":9093",
-		Path:   path.Clean(webRoutePrefix + "/-/reload"),
-	}
-
 	livenessProbeHandler := v1.Handler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/healthy"),
@@ -490,24 +484,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 
 	amVolumeMounts = append(amVolumeMounts, a.Spec.VolumeMounts...)
 
-	resources := v1.ResourceRequirements{Limits: v1.ResourceList{}}
-	if config.ConfigReloaderCPU != "0" {
-		resources.Limits[v1.ResourceCPU] = resource.MustParse(config.ConfigReloaderCPU)
-	}
-	if config.ConfigReloaderMemory != "0" {
-		resources.Limits[v1.ResourceMemory] = resource.MustParse(config.ConfigReloaderMemory)
-	}
-
 	terminationGracePeriod := int64(120)
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
 	finalLabels := config.Labels.Merge(podLabels)
 
-	configReloaderArgs := []string{
-		fmt.Sprintf("-webhook-url=%s", localReloadURL),
-	}
+	var configReloaderArgs []string
 	for _, reloadWatchDir := range reloadWatchDirs {
-		configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("-volume-dir=%s", reloadWatchDir))
+		configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", reloadWatchDir))
 	}
+
 	defaultContainers := []v1.Container{
 		{
 			Args:           amArgs,
@@ -530,14 +515,21 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				},
 			},
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-		}, {
-			Name:                     "config-reloader",
-			Image:                    config.ConfigReloaderImage,
-			Args:                     configReloaderArgs,
-			VolumeMounts:             configReloaderVolumeMounts,
-			Resources:                resources,
-			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
+		operator.CreateConfigReloader(
+			config.ReloaderConfig,
+			url.URL{
+				Scheme: "http",
+				Host:   config.LocalHost + ":9093",
+				Path:   path.Clean(webRoutePrefix + "/-/reload"),
+			},
+			a.Spec.ListenLocal,
+			config.LocalHost,
+			a.Spec.LogFormat,
+			a.Spec.LogLevel,
+			configReloaderArgs,
+			configReloaderVolumeMounts,
+		),
 	}
 
 	containers, err := k8sutil.MergePatchContainers(defaultContainers, a.Spec.Containers)

@@ -23,17 +23,20 @@ require (
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/prometheus v1.8.2-0.20200907175821-8219b442c864
 	github.com/stretchr/testify v1.5.1
-	github.com/thanos-io/thanos v0.11.0
+	github.com/thanos-io/thanos v0.13.1-0.20200910143741-e0b7f7b32e9c
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.18.8
 	k8s.io/apiextensions-apiserver v0.18.2
 	k8s.io/apimachinery v0.18.8
-	k8s.io/client-go v0.18.8
+	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/component-base v0.18.2
 	k8s.io/klog v1.0.0
 	k8s.io/utils v0.0.0-20200414100711-2df71ebbae66
 )
 
-replace github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => ./pkg/apis/monitoring
+replace (
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => ./pkg/apis/monitoring
+	k8s.io/client-go => k8s.io/client-go v0.18.8
+)

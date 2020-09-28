@@ -28,7 +28,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	prometheusoperator "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -80,12 +79,10 @@ type Config struct {
 	Host                   string
 	TLSInsecure            bool
 	TLSConfig              rest.TLSClientConfig
-	ConfigReloaderImage    string
-	ConfigReloaderCPU      string
-	ConfigReloaderMemory   string
+	ReloaderConfig         operator.ReloaderConfig
 	ThanosDefaultBaseImage string
-	Namespaces             prometheusoperator.Namespaces
-	Labels                 prometheusoperator.Labels
+	Namespaces             operator.Namespaces
+	Labels                 operator.Labels
 	LocalHost              string
 	LogLevel               string
 	LogFormat              string
@@ -93,7 +90,7 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, conf prometheusoperator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
+func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
 	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -123,9 +120,7 @@ func New(ctx context.Context, conf prometheusoperator.Config, logger log.Logger,
 			Host:                   conf.Host,
 			TLSInsecure:            conf.TLSInsecure,
 			TLSConfig:              conf.TLSConfig,
-			ConfigReloaderImage:    conf.ConfigReloaderImage,
-			ConfigReloaderCPU:      conf.ConfigReloaderCPU,
-			ConfigReloaderMemory:   conf.ConfigReloaderMemory,
+			ReloaderConfig:         conf.ReloaderConfig,
 			ThanosDefaultBaseImage: conf.ThanosDefaultBaseImage,
 			Namespaces:             conf.Namespaces,
 			Labels:                 conf.Labels,

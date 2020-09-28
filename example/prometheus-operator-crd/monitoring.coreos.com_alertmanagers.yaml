@@ -669,9 +669,14 @@ spec:
                   The secret is mounted into /etc/alertmanager/config.
                 type: string
               containers:
-                description: Containers allows injecting additional containers. This
+                description: 'Containers allows injecting additional containers. This
                   is meant to allow adding an authentication proxy to an Alertmanager
-                  pod.
+                  pod. Containers described here modify an operator generated container
+                  if they share the same name and modifications are done via a strategic
+                  merge patch. The current container names are: `alertmanager` and
+                  `config-reloader`. Overriding containers is entirely outside the
+                  scope of what the maintainers will support and by doing so, you
+                  accept that this behaviour may break at any time without notice.'
                 items:
                   description: A single application container that you want to run
                     within a pod.

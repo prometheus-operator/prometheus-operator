@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -31,13 +32,14 @@ import (
 )
 
 var (
-	defaultTestConfig = &Config{
-		ConfigReloaderImage:           "jimmidyson/configmap-reload:latest",
-		ConfigReloaderCPU:             "100m",
-		ConfigReloaderMemory:          "25Mi",
-		PrometheusConfigReloaderImage: "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
-		ThanosDefaultBaseImage:        "quay.io/thanos/thanos",
+	defaultTestConfig = &operator.Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			CPU:    "100m",
+			Memory: "25Mi",
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+		},
+		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
+		ThanosDefaultBaseImage:     "quay.io/thanos/thanos",
 	}
 )
 
@@ -1012,13 +1014,14 @@ func TestRetention(t *testing.T) {
 }
 
 func TestSidecarsNoCPULimits(t *testing.T) {
-	testConfig := &Config{
-		ConfigReloaderImage:           "jimmidyson/configmap-reload:latest",
-		ConfigReloaderCPU:             "0",
-		ConfigReloaderMemory:          "50Mi",
-		PrometheusConfigReloaderImage: "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
-		ThanosDefaultBaseImage:        "quay.io/thanos/thanos:v0.7.0",
+	testConfig := &operator.Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			CPU:    "0",
+			Memory: "50Mi",
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+		},
+		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
+		ThanosDefaultBaseImage:     "quay.io/thanos/thanos:v0.7.0",
 	}
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{},
@@ -1037,19 +1040,20 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 	}
 	for _, c := range sset.Spec.Template.Spec.Containers {
 		if (c.Name == "prometheus-config-reloader" || c.Name == "rules-configmap-reloader") && !reflect.DeepEqual(c.Resources, expectedResources) {
-			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
 		}
 	}
 }
 
 func TestSidecarsNoMemoryLimits(t *testing.T) {
-	testConfig := &Config{
-		ConfigReloaderImage:           "jimmidyson/configmap-reload:latest",
-		ConfigReloaderCPU:             "100m",
-		ConfigReloaderMemory:          "0",
-		PrometheusConfigReloaderImage: "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-		PrometheusDefaultBaseImage:    "quay.io/prometheus/prometheus",
-		ThanosDefaultBaseImage:        "quay.io/thanos/thanos:v0.7.0",
+	testConfig := &operator.Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			CPU:    "100m",
+			Memory: "0",
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+		},
+		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
+		ThanosDefaultBaseImage:     "quay.io/thanos/thanos:v0.7.0",
 	}
 	sset, err := makeStatefulSet(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{},
@@ -1068,7 +1072,7 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 	}
 	for _, c := range sset.Spec.Template.Spec.Containers {
 		if (c.Name == "prometheus-config-reloader" || c.Name == "rules-configmap-reloader") && !reflect.DeepEqual(c.Resources, expectedResources) {
-			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
 		}
 	}
 }

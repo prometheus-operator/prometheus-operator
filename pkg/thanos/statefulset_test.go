@@ -26,15 +26,18 @@ import (
 
 	"github.com/kylelemons/godebug/pretty"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
 	defaultTestConfig = Config{
-		ConfigReloaderImage:    "jimmidyson/configmap-reload:latest",
-		ConfigReloaderCPU:      "100m",
-		ConfigReloaderMemory:   "25Mi",
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPU:    "100m",
+			Memory: "25Mi",
+		},
 		ThanosDefaultBaseImage: "quay.io/thanos/thanos",
 	}
 	emptyQueryEndpoints = []string{""}

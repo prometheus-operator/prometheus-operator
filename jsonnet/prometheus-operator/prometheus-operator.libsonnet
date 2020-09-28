@@ -17,12 +17,10 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
     versions+:: {
       prometheusOperator: 'v0.42.1',
       prometheusConfigReloader: self.prometheusOperator,
-      configmapReloader: 'v0.4.0',
     },
 
     imageRepos+:: {
       prometheusOperator: 'quay.io/prometheus-operator/prometheus-operator',
-      configmapReloader: 'jimmidyson/configmap-reload',
       prometheusConfigReloader: 'quay.io/prometheus-operator/prometheus-config-reloader',
     },
   },
@@ -36,8 +34,6 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
 
     image:: $._config.imageRepos.prometheusOperator,
     version:: $._config.versions.prometheusOperator,
-    configReloaderImage:: $._config.imageRepos.configmapReloader,
-    configReloaderVersion:: $._config.versions.configmapReloader,
     prometheusConfigReloaderImage:: $._config.imageRepos.prometheusConfigReloader,
     prometheusConfigReloaderVersion:: $._config.versions.prometheusConfigReloader,
 
@@ -148,7 +144,6 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
           // Prometheus Operator is run with a read-only root file system. By
           // default glog saves logfiles to /tmp. Make it log to stderr instead.
           '--logtostderr=true',
-          '--config-reloader-image=' + po.configReloaderImage + ':' + po.configReloaderVersion,
           '--prometheus-config-reloader=' + po.prometheusConfigReloaderImage + ':' + po.prometheusConfigReloaderVersion,
         ]) +
         container.mixin.securityContext.withAllowPrivilegeEscalation(false) +
