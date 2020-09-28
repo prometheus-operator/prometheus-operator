@@ -467,6 +467,7 @@ func (c *Operator) Run(ctx context.Context) error {
 		go c.reconcileNodeEndpoints(ctx)
 	}
 
+	c.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
 }

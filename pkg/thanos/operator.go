@@ -326,6 +326,7 @@ func (o *Operator) Run(ctx context.Context) error {
 	}
 	o.addHandlers()
 
+	o.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
 }

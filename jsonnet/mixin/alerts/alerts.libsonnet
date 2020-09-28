@@ -60,6 +60,20 @@
             },
             'for': '10m',
           },
+          {
+            alert: 'PrometheusOperatorNotReady',
+            expr: |||
+              min by(namespace, controller) (max_over_time(prometheus_operator_ready{%(prometheusOperatorSelector)s}[5m]) == 0)
+            ||| % $._config,
+            labels: {
+              severity: 'warning',
+            },
+            annotations: {
+              description: "Prometheus operator in {{ $labels.namespace }} namespace isn't ready to reconcile {{ $labels.controller }} resources.",
+              summary: 'Prometheus operator not ready',
+            },
+            'for': '5m',
+          },
         ],
       },
     ],

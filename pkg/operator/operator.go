@@ -44,6 +44,7 @@ type Metrics struct {
 	// objects. It is split in the dimensions of Kubernetes objects and
 	// corresponding actions (add, delete, update).
 	triggerByCounter *prometheus.CounterVec
+	ready            prometheus.Gauge
 }
 
 // NewMetrics initializes operator metrics and registers them with the given registerer.
@@ -85,6 +86,10 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 			Name: "prometheus_operator_watch_operations_failed_total",
 			Help: "Total number of watch operations that failed",
 		}),
+		ready: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "prometheus_operator_ready",
+			Help: "1 when the controller is ready to reconcile resources, 0 otherwise",
+		}),
 	}
 	m.reg.MustRegister(
 		m.reconcileCounter,
@@ -95,6 +100,7 @@ func NewMetrics(name string, r prometheus.Registerer) *Metrics {
 		m.listFailedCounter,
 		m.watchCounter,
 		m.watchFailedCounter,
+		m.ready,
 	)
 	return &m
 }
@@ -117,6 +123,11 @@ func (m *Metrics) StsDeleteCreateCounter() prometheus.Counter {
 // TriggerByCounter returns a counter to track operator actions by operation (add/delete/update) and action.
 func (m *Metrics) TriggerByCounter(triggered_by, action string) prometheus.Counter {
 	return m.triggerByCounter.WithLabelValues(triggered_by, action)
+}
+
+// Ready returns a gauge to track whether the controller is ready or not.
+func (m *Metrics) Ready() prometheus.Gauge {
+	return m.ready
 }
 
 // MustRegister registers metrics with the Metrics registerer.
