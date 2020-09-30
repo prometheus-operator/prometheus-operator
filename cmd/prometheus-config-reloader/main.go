@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"regexp"
 	"strings"
@@ -170,8 +171,14 @@ func main() {
 
 	if *listenAddress != "" {
 		g.Add(func() error {
-			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
 			http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
+			http.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
+			http.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+			http.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+			http.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+			http.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
+
+			level.Info(logger).Log("msg", "Starting web server", "listen", *listenAddress)
 			return http.ListenAndServe(*listenAddress, nil)
 		}, func(error) {
 		})
