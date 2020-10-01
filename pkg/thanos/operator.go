@@ -223,7 +223,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 }
 
 // waitForCacheSync waits for the informers' caches to be synced.
-func (o *Operator) waitForCacheSync(stopc <-chan struct{}) error {
+func (o *Operator) waitForCacheSync(ctx context.Context) error {
 	ok := true
 
 	for _, infs := range []struct {
@@ -236,33 +236,28 @@ func (o *Operator) waitForCacheSync(stopc <-chan struct{}) error {
 		{"StatefulSet", o.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !cache.WaitForCacheSync(stopc, inf.Informer().HasSynced) {
-				level.Error(o.logger).Log("msg", fmt.Sprintf("failed to sync %s cache", infs.name))
+			if !operator.WaitForCacheSync(ctx, log.With(o.logger, "informer", infs.name), inf.Informer()) {
 				ok = false
-			} else {
-				level.Debug(o.logger).Log("msg", fmt.Sprintf("successfully synced %s cache", infs.name))
 			}
 		}
 	}
 
-	informers := []struct {
+	for _, inf := range []struct {
 		name     string
 		informer cache.SharedIndexInformer
 	}{
 		{"ThanosRulerNamespace", o.nsThanosRulerInf},
 		{"RuleNamespace", o.nsRuleInf},
-	}
-	for _, inf := range informers {
-		if !cache.WaitForCacheSync(stopc, inf.informer.HasSynced) {
-			level.Error(o.logger).Log("msg", fmt.Sprintf("failed to sync %s cache", inf.name))
+	} {
+		if !operator.WaitForCacheSync(ctx, log.With(o.logger, "informer", inf.name), inf.informer) {
 			ok = false
-		} else {
-			level.Debug(o.logger).Log("msg", fmt.Sprintf("successfully synced %s cache", inf.name))
 		}
 	}
+
 	if !ok {
 		return errors.New("failed to sync caches")
 	}
+
 	level.Info(o.logger).Log("msg", "successfully synced all caches")
 	return nil
 }
@@ -326,11 +321,12 @@ func (o *Operator) Run(ctx context.Context) error {
 		go o.nsThanosRulerInf.Run(ctx.Done())
 	}
 	go o.ssetInfs.Start(ctx.Done())
-	if err := o.waitForCacheSync(ctx.Done()); err != nil {
+	if err := o.waitForCacheSync(ctx); err != nil {
 		return err
 	}
 	o.addHandlers()
 
+	o.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
 }

@@ -236,9 +236,10 @@ func TestDenylist(t *testing.T) {
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":     testPrometheusInstanceNamespaces_AllNs,
-		"AllowList": testPrometheusInstanceNamespaces_AllowList,
-		"DenyList":  testPrometheusInstanceNamespaces_DenyList,
+		"AllNs":             testPrometheusInstanceNamespaces_AllNs,
+		"AllowList":         testPrometheusInstanceNamespaces_AllowList,
+		"DenyList":          testPrometheusInstanceNamespaces_DenyList,
+		"NamespaceNotFound": testPrometheusInstanceNamespaces_NamespaceNotFound,
 	}
 
 	for name, f := range testFuncs {

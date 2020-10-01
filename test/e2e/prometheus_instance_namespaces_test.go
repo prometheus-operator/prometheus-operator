@@ -314,3 +314,107 @@ func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
 		}
 	}
 }
+
+// testPrometheusInstanceNamespaces_NamespaceNotFound verifies that the
+// operator can reconcile Prometheus and associated resources even when
+// it's configured to watch namespaces that don't exist.
+// See https://github.com/prometheus-operator/prometheus-operator/issues/3347
+func testPrometheusInstanceNamespaces_NamespaceNotFound(t *testing.T) {
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+
+	// create three namespaces:
+	//
+	// 1. "operator" ns:
+	//   - hosts the prometheus operator deployment
+	//
+	// 2. "instance" ns:
+	//   - will be configured on prometheus operator as --prometheus-instance-namespaces="instance"
+	//   - hosts a prometheus CR which must be reconciled.
+	//     This prometheus instance must pick up targets (service monitors)
+	//     in the "allowed" namespace.
+	//
+	// 3. "allowed" ns:
+	//   - will be configured on prometheus operator as --namespaces="allowed"
+	//   - hosts a service monitor CR which must be reconciled
+	operatorNs := ctx.CreateNamespace(t, framework.KubeClient)
+	allowedNs := ctx.CreateNamespace(t, framework.KubeClient)
+	instanceNs := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBACGlobal(t, instanceNs, framework.KubeClient)
+
+	for _, ns := range []string{allowedNs, instanceNs} {
+		err := testFramework.AddLabelsToNamespace(framework.KubeClient, ns, map[string]string{
+			"monitored": "true",
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Configure the operator to watch also a non-existing namespace (e.g. "notfound").
+	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, []string{"notfound", allowedNs}, nil, []string{"notfound", instanceNs}, nil, false, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create Prometheus custom resource in the "instance" namespace.
+	// Let this Prometheus custom resource match service monitors in namespaces having the label `"monitored": "true"`.
+	// This will match the service monitors created in the "allowed" namespace.
+	// Expose the created Prometheus service.
+	{
+		p := framework.MakeBasicPrometheus(instanceNs, "instance", "instance", 1)
+
+		p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"monitored": "true",
+			},
+		}
+
+		p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"group": "monitored",
+			},
+		}
+
+		// Create the prometheus service and wait until it is ready.
+		_, err := framework.CreatePrometheusAndWaitUntilReady(instanceNs, p)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
+		if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, instanceNs, svc); err != nil {
+			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+		} else {
+			ctx.AddFinalizerFn(finalizerFn)
+		}
+	}
+
+	{
+		// Create a simple echo server in the "allowed" namespace,
+		// Expose a service pointing to it, and create a service monitor
+		// pointing to that service.
+		// Wait, until that service appears as a target in the "instance" Prometheus.
+		echo := framework.MakeEchoDeployment("allowed")
+
+		if err := testFramework.CreateDeployment(framework.KubeClient, allowedNs, echo); err != nil {
+			t.Fatal(err)
+		}
+
+		svc := framework.MakeEchoService("allowed", "monitored", v1.ServiceTypeClusterIP)
+		if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, allowedNs, svc); err != nil {
+			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
+		} else {
+			ctx.AddFinalizerFn(finalizerFn)
+		}
+
+		s := framework.MakeBasicServiceMonitor("monitored")
+		if _, err := framework.MonClientV1.ServiceMonitors(allowedNs).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+			t.Fatal("Creating ServiceMonitor failed: ", err)
+		}
+
+		if err := framework.WaitForActiveTargets(instanceNs, "prometheus-instance", 1); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
