@@ -658,9 +658,6 @@ func (cg *configGenerator) generateProbeConfig(
 	enforcedNamespaceLabel string) yaml.MapSlice {
 
 	jobName := fmt.Sprintf("%s/%s", m.Namespace, m.Name)
-	if m.Spec.JobName != "" {
-		jobName = m.Spec.JobName
-	}
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -692,7 +689,14 @@ func (cg *configGenerator) generateProbeConfig(
 	}})
 
 	var relabelings []yaml.MapSlice
-
+	if m.Spec.JobName != "" {
+		relabelings = append(relabelings, []yaml.MapSlice{
+			{
+				{Key: "target_label", Value: "job"},
+				{Key: "replacement", Value: m.Spec.JobName},
+			},
+		}...)
+	}
 	// Generate static_config section.
 	if m.Spec.Targets.StaticConfig != nil {
 		staticConfig := yaml.MapSlice{

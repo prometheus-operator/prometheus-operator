@@ -654,7 +654,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: blackbox
+- job_name: default/testprobe1
   honor_timestamps: true
   metrics_path: /probe
   scheme: http
@@ -668,6 +668,8 @@ scrape_configs:
     labels:
       static: label
   relabel_configs:
+  - target_label: job
+    replacement: blackbox
   - source_labels:
     - __address__
     target_label: __param_target
