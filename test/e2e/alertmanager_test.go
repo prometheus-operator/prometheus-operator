@@ -31,10 +31,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
-	"github.com/golang/protobuf/proto"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {
@@ -327,8 +327,8 @@ func testAMClusterGossipSilences(t *testing.T) {
 				return false, nil
 			}
 
-			if silences[0].ID != silId {
-				return false, errors.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silId, silences[0].ID)
+			if *silences[0].ID != silId {
+				return false, errors.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silId, *silences[0].ID)
 			}
 			return true, nil
 		})
@@ -636,7 +636,6 @@ inhibit_rules:
 
 		go func() {
 			ticker := time.NewTicker(100 * time.Millisecond)
-			start := time.Now()
 			failures := 0
 			for {
 				select {
@@ -644,7 +643,6 @@ inhibit_rules:
 					err := framework.SendAlertToAlertmanager(
 						ns,
 						"alertmanager-rolling-deploy-"+strconv.Itoa(replica),
-						start,
 					)
 					if err != nil {
 						failures++
