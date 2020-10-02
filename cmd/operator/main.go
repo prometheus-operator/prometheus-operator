@@ -43,6 +43,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	promversion "github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
@@ -329,6 +330,7 @@ func Main() int {
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 		validationTriggeredCounter,
 		validationErrorsCounter,
+		promversion.NewCollector("prometheus_operator"),
 	)
 
 	admit.RegisterMetrics(

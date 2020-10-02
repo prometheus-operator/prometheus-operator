@@ -21,6 +21,7 @@ require (
 	github.com/prometheus-community/prom-label-proxy v0.1.1-0.20200616110844-0fbfa11fa8f3
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.42.1
 	github.com/prometheus/client_golang v1.7.1
+	github.com/prometheus/common v0.13.0
 	github.com/prometheus/prometheus v1.8.2-0.20200907175821-8219b442c864
 	github.com/stretchr/testify v1.5.1
 	github.com/thanos-io/thanos v0.13.1-0.20200910143741-e0b7f7b32e9c
