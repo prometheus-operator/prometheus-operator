@@ -217,9 +217,11 @@ func amImage(version string) string {
 func (f *Framework) WaitForAlertmanagerInitialized(ns, name string, amountPeers int, forceEnableClusterMode bool) error {
 	var pollError error
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
+
 		amStatus, err := f.GetAlertmanagerStatus(ns, name)
 		if err != nil {
-			return false, err
+			pollError = fmt.Errorf("failed to query Alertmanager: %s", err)
+			return false, nil
 		}
 
 		isAlertmanagerInClusterMode := amountPeers > 1 || forceEnableClusterMode
@@ -261,6 +263,7 @@ func (f *Framework) GetAlertmanagerStatus(ns, n string) (models.AlertmanagerStat
 	var amStatus models.AlertmanagerStatus
 	request := ProxyGetPod(f.KubeClient, ns, n, "/api/v2/status")
 	resp, err := request.DoRaw(context.TODO())
+
 	if err != nil {
 		return amStatus, err
 	}
@@ -268,7 +271,6 @@ func (f *Framework) GetAlertmanagerStatus(ns, n string) (models.AlertmanagerStat
 	if err := json.Unmarshal(resp, &amStatus); err != nil {
 		return amStatus, err
 	}
-
 	return amStatus, nil
 }
 
@@ -282,7 +284,6 @@ func (f *Framework) GetAlertmanagerMetrics(ns, n string) (textparse.Parser, erro
 }
 
 func (f *Framework) CreateSilence(ns, n string) (string, error) {
-
 	var createSilenceResponse silence.PostSilencesOKBody
 
 	request := ProxyPostPod(
@@ -304,7 +305,6 @@ func (f *Framework) CreateSilence(ns, n string) (string, error) {
 // SendAlertToAlertmanager sends an alert to the alertmanager in the given
 // namespace (ns) with the given name (n).
 func (f *Framework) SendAlertToAlertmanager(ns, n string) error {
-
 	alerts := models.PostableAlerts{{
 		Alert: models.Alert{
 			GeneratorURL: "http://prometheus-test-0:9090/graph?g0.expr=vector%281%29\u0026g0.tab=1",
@@ -347,21 +347,25 @@ func (f *Framework) GetSilences(ns, n string) (models.GettableSilences, error) {
 // configuration via the Alertmanager's API and checks if it contains the given
 // string.
 func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expectedString string) error {
+	var pollError error
 	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
 		amStatus, err := f.GetAlertmanagerStatus(ns, "alertmanager-"+amName+"-0")
+
 		if err != nil {
-			return false, err
+			pollError = fmt.Errorf("failed to query Alertmanager: %s", err)
+			return false, nil
 		}
 
-		if strings.Contains(*amStatus.Config.Original, expectedString) {
-			return true, nil
+		if !strings.Contains(*amStatus.Config.Original, expectedString) {
+			pollError = fmt.Errorf("failed to get matching config expected %q but got %q", expectedString, *amStatus.Config.Original)
+			return false, nil
 		}
 
-		return false, nil
+		return true, nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to wait for alertmanager config to contain %q: %v", expectedString, err)
+		return fmt.Errorf("failed to wait for alertmanager config: %v: %v", err, pollError)
 	}
 
 	return nil
