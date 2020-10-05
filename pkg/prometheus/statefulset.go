@@ -556,7 +556,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 		})
 	}
 
-	const localProbe = `if [ -x "$(command -v curl)" ]; then curl %s; elif [ -x "$(command -v wget)" ]; then wget -q -O /dev/null %s; else exit 1; fi`
+	const localProbe = `if [ -x "$(command -v curl)" ]; then exec curl %s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %s; else exit 1; fi`
 
 	var readinessProbeHandler v1.Handler
 	if (version.Major == 1 && version.Minor >= 8) || version.Major == 2 {
