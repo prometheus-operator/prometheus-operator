@@ -579,15 +579,18 @@ func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
 }
 
 func (c *Operator) syncNodeEndpointsWithLogError(ctx context.Context) {
+	level.Debug(c.logger).Log("msg", "Syncing nodes into Endpoints object")
+
 	c.nodeEndpointSyncs.Inc()
 	err := c.syncNodeEndpoints(ctx)
 	if err != nil {
 		c.nodeEndpointSyncErrors.Inc()
-		level.Error(c.logger).Log("msg", "syncing nodes into Endpoints object failed", "err", err)
+		level.Error(c.logger).Log("msg", "Syncing nodes into Endpoints object failed", "err", err)
 	}
 }
 
 func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
+	logger := log.With(c.logger, "operation", "syncNodeEndpoints")
 	eps := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
@@ -620,13 +623,17 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 		return errors.Wrap(err, "listing nodes failed")
 	}
 
+	level.Debug(logger).Log("Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes.Items))
+
 	addresses, errs := getNodeAddresses(nodes)
 	if len(errs) > 0 {
 		for _, err := range errs {
-			level.Warn(c.logger).Log("err", err)
+			level.Warn(logger).Log("err", err)
 		}
 		c.nodeAddressLookupErrors.Add(float64(len(errs)))
 	}
+	level.Debug(logger).Log("Nodes converted to endpoint addresses", "num_addresses", len(addresses))
+
 	eps.Subsets[0].Addresses = addresses
 
 	svc := &v1.Service{
@@ -656,11 +663,13 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 		},
 	}
 
+	level.Debug(logger).Log("msg", "Updating Kubernetes service", "service", c.kubeletObjectName, "ns", c.kubeletObjectNamespace)
 	err = k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
 	if err != nil {
 		return errors.Wrap(err, "synchronizing kubelet service object failed")
 	}
 
+	level.Debug(logger).Log("msg", "Updating Kubernetes endpoint", "endpoint", c.kubeletObjectName, "ns", c.kubeletObjectNamespace)
 	err = k8sutil.CreateOrUpdateEndpoints(ctx, c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
 	if err != nil {
 		return errors.Wrap(err, "synchronizing kubelet endpoints object failed")
