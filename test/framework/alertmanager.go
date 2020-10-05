@@ -29,9 +29,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
+	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/pkg/errors"
+	"github.com/prometheus/alertmanager/api/v2/client/silence"
+	"github.com/prometheus/alertmanager/api/v2/models"
 	"github.com/prometheus/prometheus/pkg/labels"
 	"github.com/prometheus/prometheus/pkg/textparse"
 )
@@ -221,28 +223,31 @@ func (f *Framework) WaitForAlertmanagerInitialized(ns, name string, amountPeers 
 		}
 
 		isAlertmanagerInClusterMode := amountPeers > 1 || forceEnableClusterMode
-		if !isAlertmanagerInClusterMode && amStatus.Status == "success" {
+		if !isAlertmanagerInClusterMode {
 			return true, nil
 		}
 
-		if amStatus.Data.ClusterStatus == nil {
+		if amStatus.Cluster == nil {
 			pollError = fmt.Errorf("do not have a cluster status")
 			return false, nil
 		}
 
-		if len(amStatus.Data.ClusterStatus.Peers) == amountPeers {
-			return true, nil
-
+		if *amStatus.Cluster.Status != "ready" {
+			pollError = fmt.Errorf("failed to get cluser status, expected ready, got %s", *amStatus.Cluster.Status)
+			return false, nil
 		}
 
-		pollError = fmt.Errorf(
-			"failed to get correct amount of peers, expected %d, got %d, addresses %v",
-			amountPeers,
-			len(amStatus.Data.ClusterStatus.Peers),
-			amStatus.Data.ClusterStatus.Peers,
-		)
+		if len(amStatus.Cluster.Peers) != amountPeers {
 
-		return false, nil
+			var addrs = make([]string, len(amStatus.Cluster.Peers))
+			for i := range amStatus.Cluster.Peers {
+				addrs[i] = *amStatus.Cluster.Peers[i].Name
+			}
+			pollError = fmt.Errorf("failed to get correct amount of peers, expected %d, got %d, addresses %v", amountPeers, len(amStatus.Cluster.Peers), addrs)
+			return false, nil
+
+		}
+		return true, nil
 	})
 
 	if err != nil {
@@ -252,9 +257,9 @@ func (f *Framework) WaitForAlertmanagerInitialized(ns, name string, amountPeers 
 	return nil
 }
 
-func (f *Framework) GetAlertmanagerStatus(ns, n string) (amAPIStatusResp, error) {
-	var amStatus amAPIStatusResp
-	request := ProxyGetPod(f.KubeClient, ns, n, "/api/v1/status")
+func (f *Framework) GetAlertmanagerStatus(ns, n string) (models.AlertmanagerStatus, error) {
+	var amStatus models.AlertmanagerStatus
+	request := ProxyGetPod(f.KubeClient, ns, n, "/api/v2/status")
 	resp, err := request.DoRaw(context.TODO())
 	if err != nil {
 		return amStatus, err
@@ -277,12 +282,13 @@ func (f *Framework) GetAlertmanagerMetrics(ns, n string) (textparse.Parser, erro
 }
 
 func (f *Framework) CreateSilence(ns, n string) (string, error) {
-	var createSilenceResponse amAPICreateSilResp
+
+	var createSilenceResponse silence.PostSilencesOKBody
 
 	request := ProxyPostPod(
 		f.KubeClient, ns, n,
-		"/api/v1/silences",
-		`{"id":"","createdBy":"Max Mustermann","comment":"1234","startsAt":"2030-04-09T09:16:15.114Z","endsAt":"2031-04-09T11:16:15.114Z","matchers":[{"name":"test","value":"123","isRegex":false}]}`,
+		"/api/v2/silences",
+		`{"createdBy":"Max Mustermann","comment":"1234","startsAt":"2030-04-09T09:16:15.114Z","endsAt":"2031-04-09T11:16:15.114Z","matchers":[{"name":"test","value":"123","isRegex":false}]}`,
 	)
 	resp, err := request.DoRaw(context.TODO())
 	if err != nil {
@@ -292,89 +298,49 @@ func (f *Framework) CreateSilence(ns, n string) (string, error) {
 	if err := json.Unmarshal(resp, &createSilenceResponse); err != nil {
 		return "", err
 	}
-
-	if createSilenceResponse.Status != "success" {
-		return "", errors.Errorf(
-			"expected Alertmanager to return 'success', but got '%v' instead",
-			createSilenceResponse.Status,
-		)
-	}
-
-	return createSilenceResponse.Data.SilenceID, nil
-}
-
-// alert represents an alert that can be posted to the /api/v1/alerts endpoint
-// of an Alertmanager.
-// Taken from github.com/prometheus/common/model/alert.go.Alert.
-type alert struct {
-	// Label value pairs for purpose of aggregation, matching, and disposition
-	// dispatching. This must minimally include an "alertname" label.
-	Labels map[string]string `json:"labels"`
-
-	// Extra key/value information which does not define alert identity.
-	Annotations map[string]string `json:"annotations"`
-
-	// The known time range for this alert. Both ends are optional.
-	StartsAt     time.Time `json:"startsAt,omitempty"`
-	EndsAt       time.Time `json:"endsAt,omitempty"`
-	GeneratorURL string    `json:"generatorURL"`
+	return createSilenceResponse.SilenceID, nil
 }
 
 // SendAlertToAlertmanager sends an alert to the alertmanager in the given
 // namespace (ns) with the given name (n).
-func (f *Framework) SendAlertToAlertmanager(ns, n string, start time.Time) error {
-	alerts := []*alert{&alert{
-		Labels: map[string]string{
-			"alertname": "ExampleAlert", "prometheus": "my-prometheus",
+func (f *Framework) SendAlertToAlertmanager(ns, n string) error {
+
+	alerts := models.PostableAlerts{{
+		Alert: models.Alert{
+			GeneratorURL: "http://prometheus-test-0:9090/graph?g0.expr=vector%281%29\u0026g0.tab=1",
+			Labels: map[string]string{
+				"alertname": "ExampleAlert", "prometheus": "my-prometheus",
+			},
 		},
-		Annotations:  map[string]string{},
-		StartsAt:     start,
-		GeneratorURL: "http://prometheus-test-0:9090/graph?g0.expr=vector%281%29\u0026g0.tab=1",
 	}}
+
 	b, err := json.Marshal(alerts)
 	if err != nil {
 		return err
 	}
 
-	var postAlertResp amAPIPostAlertResp
-	request := ProxyPostPod(f.KubeClient, ns, n, "api/v1/alerts", string(b))
-	resp, err := request.DoRaw(context.TODO())
+	request := ProxyPostPod(f.KubeClient, ns, n, "api/v2/alerts", string(b))
+	_, err = request.DoRaw(context.TODO())
 	if err != nil {
 		return err
 	}
-
-	if err := json.Unmarshal(resp, &postAlertResp); err != nil {
-		return err
-	}
-
-	if postAlertResp.Status != "success" {
-		return errors.Errorf("expected Alertmanager to return 'success' but got %q instead", postAlertResp.Status)
-	}
-
 	return nil
 }
 
-func (f *Framework) GetSilences(ns, n string) ([]amAPISil, error) {
-	var getSilencesResponse amAPIGetSilResp
+func (f *Framework) GetSilences(ns, n string) (models.GettableSilences, error) {
+	var getSilencesResponse models.GettableSilences
 
-	request := ProxyGetPod(f.KubeClient, ns, n, "/api/v1/silences")
+	request := ProxyGetPod(f.KubeClient, ns, n, "/api/v2/silences")
 	resp, err := request.DoRaw(context.TODO())
 	if err != nil {
-		return getSilencesResponse.Data, err
+		return getSilencesResponse, err
 	}
 
 	if err := json.Unmarshal(resp, &getSilencesResponse); err != nil {
-		return getSilencesResponse.Data, err
+		return getSilencesResponse, err
 	}
 
-	if getSilencesResponse.Status != "success" {
-		return getSilencesResponse.Data, errors.Errorf(
-			"expected Alertmanager to return 'success', but got '%v' instead",
-			getSilencesResponse.Status,
-		)
-	}
-
-	return getSilencesResponse.Data, nil
+	return getSilencesResponse, nil
 }
 
 // WaitForAlertmanagerConfigToContainString retrieves the Alertmanager
@@ -382,12 +348,12 @@ func (f *Framework) GetSilences(ns, n string) ([]amAPISil, error) {
 // string.
 func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expectedString string) error {
 	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
-		config, err := f.GetAlertmanagerStatus(ns, "alertmanager-"+amName+"-0")
+		amStatus, err := f.GetAlertmanagerStatus(ns, "alertmanager-"+amName+"-0")
 		if err != nil {
 			return false, err
 		}
 
-		if strings.Contains(config.Data.ConfigYAML, expectedString) {
+		if strings.Contains(*amStatus.Config.Original, expectedString) {
 			return true, nil
 		}
 
@@ -439,46 +405,4 @@ func (f *Framework) WaitForAlertmanagerConfigToBeReloaded(ns, amName string, pre
 	}
 
 	return nil
-}
-
-type amAPICreateSilResp struct {
-	Status string             `json:"status"`
-	Data   amAPICreateSilData `json:"data"`
-}
-
-type amAPIPostAlertResp struct {
-	Status string `json:"status"`
-}
-
-type amAPICreateSilData struct {
-	SilenceID string `json:"silenceId"`
-}
-
-type amAPIGetSilResp struct {
-	Status string     `json:"status"`
-	Data   []amAPISil `json:"data"`
-}
-
-type amAPISil struct {
-	ID        string `json:"id"`
-	CreatedBy string `json:"createdBy"`
-}
-
-type amAPIStatusResp struct {
-	Status string          `json:"status"`
-	Data   amAPIStatusData `json:"data"`
-}
-
-type amAPIStatusData struct {
-	ClusterStatus *clusterStatus `json:"clusterStatus,omitempty"`
-	ConfigYAML    string         `json:"configYAML"`
-}
-
-type clusterPeer struct {
-	Name    string `json:"name"`
-	Address string `json:"address"`
-}
-
-type clusterStatus struct {
-	Peers []clusterPeer `json:"peers"`
 }
