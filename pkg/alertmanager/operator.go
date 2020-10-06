@@ -280,6 +280,7 @@ func (c *Operator) processNextWorkItem(ctx context.Context) bool {
 
 	c.metrics.ReconcileCounter().Inc()
 	err := c.sync(ctx, key.(string))
+	c.metrics.SetSyncStatus(key.(string), err == nil)
 	if err == nil {
 		c.queue.Forget(key)
 		return true
@@ -399,6 +400,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	aobj, err := c.alrtInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
+		c.metrics.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}

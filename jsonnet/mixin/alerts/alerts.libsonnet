@@ -33,6 +33,20 @@
             'for': '15m',
           },
           {
+            alert: 'PrometheusOperatorSyncFailed',
+            expr: |||
+              min_over_time(prometheus_operator_syncs{status="failed",%(prometheusOperatorSelector)s}[5m]) > 0
+            ||| % $._config,
+            labels: {
+              severity: 'warning',
+            },
+            annotations: {
+              description: 'Controller {{ $labels.controller }} in {{ $labels.namespace }} namespace fails to reconcile {{ $value }} objects.',
+              summary: 'Last controller reconciliation failed',
+            },
+            'for': '10m',
+          },
+          {
             alert: 'PrometheusOperatorReconcileErrors',
             expr: |||
               (sum by (controller,namespace) (rate(prometheus_operator_reconcile_errors_total{%(prometheusOperatorSelector)s}[5m]))) / (sum by (controller,namespace) (rate(prometheus_operator_reconcile_operations_total{%(prometheusOperatorSelector)s}[5m]))) > 0.1

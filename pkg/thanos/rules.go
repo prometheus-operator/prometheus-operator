@@ -213,6 +213,10 @@ func (o *Operator) selectRules(t *monitoringv1.ThanosRuler, namespaces []string)
 		"thanos", t.Name,
 	)
 
+	if tKey, ok := o.keyFunc(t); ok {
+		o.metrics.SetSelectedResources(tKey, monitoringv1.PrometheusRuleKind, len(rules))
+		o.metrics.SetRejectedResources(tKey, monitoringv1.PrometheusRuleKind, 0)
+	}
 	return rules, nil
 }
 
@@ -220,7 +224,7 @@ func generateContent(promRule monitoringv1.PrometheusRuleSpec) (string, error) {
 
 	content, err := yaml.Marshal(promRule)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to unmarshal content")
+		return "", errors.Wrap(err, "failed to marshal content")
 	}
 	return string(content), nil
 }

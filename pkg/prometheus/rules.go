@@ -213,14 +213,18 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 		"prometheus", p.Name,
 	)
 
+	if pKey, ok := c.keyFunc(p); ok {
+		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules))
+		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, 0)
+	}
+
 	return rules, nil
 }
 
 func generateContent(promRule monitoringv1.PrometheusRuleSpec) (string, error) {
-
 	content, err := yaml.Marshal(promRule)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to unmarshal content")
+		return "", errors.Wrap(err, "failed to marshal content")
 	}
 	return string(content), nil
 }

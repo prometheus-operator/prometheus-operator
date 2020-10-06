@@ -561,6 +561,7 @@ func (o *Operator) processNextWorkItem(ctx context.Context) bool {
 
 	o.metrics.ReconcileCounter().Inc()
 	err := o.sync(ctx, key.(string))
+	o.metrics.SetSyncStatus(key.(string), err == nil)
 	if err == nil {
 		o.queue.Forget(key)
 		return true
@@ -576,6 +577,7 @@ func (o *Operator) processNextWorkItem(ctx context.Context) bool {
 func (o *Operator) sync(ctx context.Context, key string) error {
 	trobj, err := o.thanosRulerInfs.Get(key)
 	if apierrors.IsNotFound(err) {
+		o.metrics.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
