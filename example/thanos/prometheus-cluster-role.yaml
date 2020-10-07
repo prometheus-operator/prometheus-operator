@@ -1,5 +1,5 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: prometheus-self
   namespace: default
@@ -8,6 +8,7 @@ rules:
   - ""
   resources:
   - nodes
+  - nodes/metrics
   - services
   - endpoints
   - pods
@@ -15,3 +16,9 @@ rules:
   - get
   - list
   - watch
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
