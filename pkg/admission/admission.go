@@ -132,6 +132,8 @@ func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit
 	}
 
 	responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
+	responseAdmissionReview.APIVersion = requestedAdmissionReview.APIVersion
+	responseAdmissionReview.Kind = requestedAdmissionReview.Kind
 
 	respBytes, err := json.Marshal(responseAdmissionReview)
 
@@ -255,6 +257,9 @@ func (a *Admission) serve(w http.ResponseWriter, r *http.Request, admit admitFun
 	}
 
 	responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
+
+	responseAdmissionReview.APIVersion = requestedAdmissionReview.APIVersion
+	responseAdmissionReview.Kind = requestedAdmissionReview.Kind
 
 	respBytes, err := json.Marshal(responseAdmissionReview)
 
