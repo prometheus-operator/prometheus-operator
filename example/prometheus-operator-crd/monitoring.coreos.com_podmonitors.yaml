@@ -428,6 +428,11 @@ spec:
                       are ANDed.
                     type: object
                 type: object
+              targetLimit:
+                description: TargetLimit defines a limit on the number of scraped
+                  targets that will be accepted.
+                format: int64
+                type: integer
             required:
             - podMetricsEndpoints
             - selector

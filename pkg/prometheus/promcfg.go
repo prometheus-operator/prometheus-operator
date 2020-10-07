@@ -262,7 +262,8 @@ func (cg *configGenerator) generateConfig(
 					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
-					p.Spec.EnforcedSampleLimit))
+					p.Spec.EnforcedSampleLimit,
+					p.Spec.EnforcedTargetLimit))
 		}
 	}
 	for _, identifier := range pMonIdentifiers {
@@ -278,7 +279,8 @@ func (cg *configGenerator) generateConfig(
 					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
-					p.Spec.EnforcedSampleLimit))
+					p.Spec.EnforcedSampleLimit,
+					p.Spec.EnforcedTargetLimit))
 		}
 	}
 
@@ -415,7 +417,8 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
-	enforcedSampleLimit *uint64) yaml.MapSlice {
+	enforcedSampleLimit *uint64,
+	enforcedTargetLimit *uint64) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
@@ -628,7 +631,11 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getSampleLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
+		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
+	}
+
+	if m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
 	}
 
 	if ep.MetricRelabelConfigs != nil {
@@ -852,7 +859,8 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
-	enforcedSampleLimit *uint64) yaml.MapSlice {
+	enforcedSampleLimit *uint64,
+	enforcedTargetLimit *uint64) yaml.MapSlice {
 
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
@@ -1093,7 +1101,11 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getSampleLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
+		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
+	}
+
+	if m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
 	}
 
 	if ep.MetricRelabelConfigs != nil {
@@ -1112,7 +1124,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	return cfg
 }
 
-func getSampleLimit(user uint64, enforced *uint64) uint64 {
+func getLimit(user uint64, enforced *uint64) uint64 {
 	if enforced != nil {
 		if user < *enforced && user != 0 || *enforced == 0 {
 			return user
