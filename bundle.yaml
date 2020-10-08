@@ -5062,6 +5062,11 @@ spec:
                       are ANDed.
                     type: object
                 type: object
+              targetLimit:
+                description: TargetLimit defines a limit on the number of scraped
+                  targets that will be accepted.
+                format: int64
+                type: integer
             required:
             - podMetricsEndpoints
             - selector
@@ -7491,6 +7496,15 @@ spec:
                   by admins to enforce the SampleLimit to keep overall number of samples/series
                   under the desired limit. Note that if SampleLimit is lower that
                   value will be taken instead.
+                format: int64
+                type: integer
+              enforcedTargetLimit:
+                description: EnforcedTargetLimit defines a global limit on the number
+                  of scraped targets. This overrides any TargetLimit set per ServiceMonitor
+                  or/and PodMonitor. It is meant to be used by admins to enforce the
+                  TargetLimit to keep overall number of targets under the desired
+                  limit. Note that if TargetLimit is higher that value will be taken
+                  instead.
                 format: int64
                 type: integer
               evaluationInterval:
@@ -12174,6 +12188,11 @@ spec:
                 items:
                   type: string
                 type: array
+              targetLimit:
+                description: TargetLimit defines a limit on the number of scraped
+                  targets that will be accepted.
+                format: int64
+                type: integer
             required:
             - endpoints
             - selector

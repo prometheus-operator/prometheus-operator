@@ -451,6 +451,11 @@ spec:
                 items:
                   type: string
                 type: array
+              targetLimit:
+                description: TargetLimit defines a limit on the number of scraped
+                  targets that will be accepted.
+                format: int64
+                type: integer
             required:
             - endpoints
             - selector

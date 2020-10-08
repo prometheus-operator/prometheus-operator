@@ -2198,6 +2198,15 @@ spec:
                   value will be taken instead.
                 format: int64
                 type: integer
+              enforcedTargetLimit:
+                description: EnforcedTargetLimit defines a global limit on the number
+                  of scraped targets. This overrides any TargetLimit set per ServiceMonitor
+                  or/and PodMonitor. It is meant to be used by admins to enforce the
+                  TargetLimit to keep overall number of targets under the desired
+                  limit. Note that if TargetLimit is higher that value will be taken
+                  instead.
+                format: int64
+                type: integer
               evaluationInterval:
                 description: Interval between consecutive evaluations.
                 type: string
