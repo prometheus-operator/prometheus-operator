@@ -18,6 +18,9 @@ package prometheus
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -109,59 +112,78 @@ func assetKeyFunc(obj interface{}) (string, error) {
 	return "", errors.Errorf("unsupported type: %T", obj)
 }
 
-// addSafeTLSConfig processes the given SafeTLSConfig and adds the referenced CA, certificate and key to the store.
-func (a *assetStore) addSafeTLSConfig(ctx context.Context, ns string, tlsConfig monitoringv1.SafeTLSConfig) error {
-	if tlsConfig.CA != (monitoringv1.SecretOrConfigMap{}) {
-		var (
-			ca  string
-			err error
-		)
+// addTLSAssets processes the given SafeTLSConfig and adds the referenced CA, certificate and key to the store.
+func (a *assetStore) addTLSAssets(ctx context.Context, ns string, tlsConfig monitoringv1.SafeTLSConfig) error {
+	var (
+		err  error
+		ca   string
+		cert string
+		key  string
+	)
 
-		switch {
-		case tlsConfig.CA.Secret != nil:
-			ca, err = a.getSecretKey(ctx, ns, *tlsConfig.CA.Secret)
-
-		case tlsConfig.CA.ConfigMap != nil:
-			ca, err = a.getConfigMapKey(ctx, ns, *tlsConfig.CA.ConfigMap)
-		}
-
-		if err != nil {
-			return errors.Wrap(err, "failed to get CA")
-		}
-
-		a.tlsAssets[tlsAssetKeyFromSelector(ns, tlsConfig.CA)] = TLSAsset(ca)
+	ca, err = a.getKey(ctx, ns, tlsConfig.CA)
+	if err != nil {
+		return errors.Wrap(err, "failed to get CA")
 	}
 
-	if tlsConfig.Cert != (monitoringv1.SecretOrConfigMap{}) {
-		var (
-			cert string
-			err  error
-		)
-
-		switch {
-		case tlsConfig.Cert.Secret != nil:
-			cert, err = a.getSecretKey(ctx, ns, *tlsConfig.Cert.Secret)
-
-		case tlsConfig.Cert.ConfigMap != nil:
-			cert, err = a.getConfigMapKey(ctx, ns, *tlsConfig.Cert.ConfigMap)
-		}
-
-		if err != nil {
-			return errors.Wrap(err, "failed to get cert")
-		}
-
-		a.tlsAssets[tlsAssetKeyFromSelector(ns, tlsConfig.Cert)] = TLSAsset(cert)
+	cert, err = a.getKey(ctx, ns, tlsConfig.Cert)
+	if err != nil {
+		return errors.Wrap(err, "failed to get cert")
 	}
 
 	if tlsConfig.KeySecret != nil {
-		key, err := a.getSecretKey(ctx, ns, *tlsConfig.KeySecret)
+		key, err = a.getSecretKey(ctx, ns, *tlsConfig.KeySecret)
 		if err != nil {
 			return errors.Wrap(err, "failed to get key")
 		}
+	}
+
+	if ca != "" {
+		block, _ := pem.Decode([]byte(ca))
+		if block == nil {
+			return errors.New("failed to decode CA certificate")
+		}
+		_, err = x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse CA certificate")
+		}
+		a.tlsAssets[tlsAssetKeyFromSelector(ns, tlsConfig.CA)] = TLSAsset(ca)
+	}
+
+	if cert != "" && key != "" {
+		_, err = tls.X509KeyPair([]byte(cert), []byte(key))
+		if err != nil {
+			return errors.Wrap(err, "failed to load X509 key pair")
+		}
+		a.tlsAssets[tlsAssetKeyFromSelector(ns, tlsConfig.Cert)] = TLSAsset(cert)
 		a.tlsAssets[tlsAssetKeyFromSelector(ns, monitoringv1.SecretOrConfigMap{Secret: tlsConfig.KeySecret})] = TLSAsset(key)
 	}
 
 	return nil
+}
+
+// addSafeTLSConfig validates the given SafeTLSConfig and adds it to the store.
+func (a *assetStore) addSafeTLSConfig(ctx context.Context, ns string, tlsConfig monitoringv1.SafeTLSConfig) error {
+	err := tlsConfig.Validate()
+	if err != nil {
+		return errors.Wrap(err, "failed to validate TLS configuration")
+	}
+
+	return a.addTLSAssets(ctx, ns, tlsConfig)
+}
+
+// addTLSConfig validates the given TLSConfig and adds it to the store.
+func (a *assetStore) addTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.TLSConfig) error {
+	if tlsConfig == nil {
+		return nil
+	}
+
+	err := tlsConfig.Validate()
+	if err != nil {
+		return errors.Wrap(err, "failed to validate TLS configuration")
+	}
+
+	return a.addTLSAssets(ctx, ns, tlsConfig.SafeTLSConfig)
 }
 
 // addBasicAuth processes the given *BasicAuth and adds the referenced credentials to the store.
@@ -202,6 +224,17 @@ func (a *assetStore) addBearerToken(ctx context.Context, ns string, sel v1.Secre
 	a.bearerTokenAssets[key] = BearerToken(bearerToken)
 
 	return nil
+}
+
+func (a *assetStore) getKey(ctx context.Context, namespace string, sel monitoringv1.SecretOrConfigMap) (string, error) {
+	switch {
+	case sel.Secret != nil:
+		return a.getSecretKey(ctx, namespace, *sel.Secret)
+	case sel.ConfigMap != nil:
+		return a.getConfigMapKey(ctx, namespace, *sel.ConfigMap)
+	default:
+		return "", nil
+	}
 }
 
 func (a *assetStore) getConfigMapKey(ctx context.Context, namespace string, sel v1.ConfigMapKeySelector) (string, error) {
