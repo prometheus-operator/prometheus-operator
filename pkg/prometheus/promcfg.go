@@ -634,7 +634,8 @@ func (cg *configGenerator) generatePodMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
 	}
 
-	if m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil {
+	if version.Major == 2 && version.Minor >= 21 &&
+		(m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil) {
 		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
 	}
 
@@ -1104,7 +1105,8 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
 	}
 
-	if m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil {
+	if version.Major == 2 && version.Minor >= 21 &&
+		(m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil) {
 		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
 	}
 
