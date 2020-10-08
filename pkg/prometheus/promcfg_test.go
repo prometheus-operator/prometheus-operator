@@ -2347,6 +2347,7 @@ alerting:
 		t.Fatal("expected Prometheus configuration and actual configuration do not match")
 	}
 }
+
 func TestHonorLabelsOverriding(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
@@ -2475,6 +2476,7 @@ alerting:
 		t.Fatal("expected Prometheus configuration and actual configuration do not match")
 	}
 }
+
 func TestTargetLabels(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
@@ -3408,38 +3410,467 @@ func TestHonorTimestamps(t *testing.T) {
 	}
 }
 
-func TestGetLimit(t *testing.T) {
-	tcs := []struct {
-		Enforced uint64
-		Expected uint64
-		User     uint64
+func TestSampleLimits(t *testing.T) {
+	expectNoLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	expectLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  sample_limit: %d
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	for _, tc := range []struct {
+		enforcedLimit int
+		limit         int
+		expected      string
 	}{
 		{
-			Enforced: 100,
-			User:     1000,
-			Expected: 100,
+			enforcedLimit: -1,
+			limit:         -1,
+			expected:      expectNoLimit,
 		},
 		{
-			Enforced: 99,
-			User:     88,
-			Expected: 88,
+			enforcedLimit: 1000,
+			limit:         -1,
+			expected:      fmt.Sprintf(expectLimit, 1000),
 		},
 		{
-			Enforced: 0,
-			User:     888,
-			Expected: 888,
+			enforcedLimit: 1000,
+			limit:         2000,
+			expected:      fmt.Sprintf(expectLimit, 1000),
 		},
 		{
-			Enforced: 1,
-			User:     0,
-			Expected: 1,
+			enforcedLimit: 1000,
+			limit:         500,
+			expected:      fmt.Sprintf(expectLimit, 500),
 		},
-	}
+	} {
+		t.Run(fmt.Sprintf("enforcedlimit(%d) limit(%d)", tc.enforcedLimit, tc.limit), func(t *testing.T) {
+			cg := &configGenerator{}
 
-	for _, tc := range tcs {
-		actual := getLimit(tc.User, &tc.Enforced)
-		if actual != tc.Expected {
-			t.Fatalf("Got %d, Expected: %d, Enforced: %d, User: %d", actual, tc.Expected, tc.Enforced, tc.User)
-		}
+			prometheus := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Version: "v2.20.0",
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			}
+			if tc.enforcedLimit >= 0 {
+				i := uint64(tc.enforcedLimit)
+				prometheus.Spec.EnforcedSampleLimit = &i
+			}
+
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			}
+			if tc.limit >= 0 {
+				serviceMonitor.Spec.SampleLimit = uint64(tc.limit)
+			}
+
+			cfg, err := cg.generateConfig(
+				&prometheus,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				map[string]BasicAuthCredentials{},
+				map[string]BearerToken{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
+	}
+}
+
+func TestTargetLimits(t *testing.T) {
+	expectNoLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	expectLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  target_limit: %d
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	for _, tc := range []struct {
+		version       string
+		enforcedLimit int
+		limit         int
+		expected      string
+	}{
+		{
+			version:       "v2.15.0",
+			enforcedLimit: -1,
+			limit:         -1,
+			expected:      expectNoLimit,
+		},
+		{
+			version:       "v2.21.0",
+			enforcedLimit: -1,
+			limit:         -1,
+			expected:      expectNoLimit,
+		},
+		{
+			version:       "v2.15.0",
+			enforcedLimit: 1000,
+			limit:         -1,
+			expected:      expectNoLimit,
+		},
+		{
+			version:       "v2.21.0",
+			enforcedLimit: 1000,
+			limit:         -1,
+			expected:      fmt.Sprintf(expectLimit, 1000),
+		},
+		{
+			version:       "v2.15.0",
+			enforcedLimit: 1000,
+			limit:         2000,
+			expected:      expectNoLimit,
+		},
+		{
+			version:       "v2.21.0",
+			enforcedLimit: 1000,
+			limit:         2000,
+			expected:      fmt.Sprintf(expectLimit, 1000),
+		},
+		{
+			version:       "v2.15.0",
+			enforcedLimit: 1000,
+			limit:         500,
+			expected:      expectNoLimit,
+		},
+		{
+			version:       "v2.21.0",
+			enforcedLimit: 1000,
+			limit:         500,
+			expected:      fmt.Sprintf(expectLimit, 500),
+		},
+	} {
+		t.Run(fmt.Sprintf("%s enforcedlimit(%d) limit(%d)", tc.version, tc.enforcedLimit, tc.limit), func(t *testing.T) {
+			cg := &configGenerator{}
+
+			prometheus := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Version: tc.version,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			}
+			if tc.enforcedLimit >= 0 {
+				i := uint64(tc.enforcedLimit)
+				prometheus.Spec.EnforcedTargetLimit = &i
+			}
+
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			}
+			if tc.limit >= 0 {
+				serviceMonitor.Spec.TargetLimit = uint64(tc.limit)
+			}
+
+			cfg, err := cg.generateConfig(
+				&prometheus,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				map[string]BasicAuthCredentials{},
+				map[string]BearerToken{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
 	}
 }
