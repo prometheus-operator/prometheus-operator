@@ -40,6 +40,7 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.31
+          args: --timeout 10m0s
   build:
     runs-on: ${{ matrix.os }}
     strategy:
