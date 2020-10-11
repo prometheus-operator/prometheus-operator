@@ -52,7 +52,7 @@ receivers:
 Save the above Alertmanager config in a file called `alertmanager.yaml` and create a secret from it using `kubectl`.
 
 Alertmanager instances require the secret resource naming to follow the format
-`alertmanager-{ALERTMANAGER_NAME}`. In the previous example, the name of the Alertmanager is `example`, so the secret name must be `alertmanager-example`, and the name of the config file `alertmanager.yaml`
+`alertmanager-{ALERTMANAGER_NAME}`. In the previous example, the name of the Alertmanager is `example`, so the secret name must be `alertmanager-example`, and the name of the config file `alertmanager.yaml`. Also, the name of the secret can be set through the field `configSecret` in Alertmanager configuration, if you desire to use a different one. 
 
 ```bash
 $ kubectl create secret generic alertmanager-example --from-file=alertmanager.yaml
