@@ -44,6 +44,7 @@ K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(TOOLS_BIN_DIR)/$(bin))
 
 GO_BUILD_RECIPE=GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
 pkgs = $(shell go list ./... | grep -v /test/ | grep -v /contrib/)
+pkgs += $(shell go list $(GO_PKG)/pkg/apis/monitoring...)
 
 .PHONY: all
 all: format generate build test
