@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 package v1
 
 type AlertmanagerExpansion interface{}
-
-type AlertmanagerConfigExpansion interface{}
 
 type PodMonitorExpansion interface{}
 

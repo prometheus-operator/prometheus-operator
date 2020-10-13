@@ -981,9 +981,9 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| basicAuth |  | *[BasicAuth](#basicauth) | false |
+| basicAuth |  | *monitoringv1.BasicAuth | false |
 | bearerTokenSecret |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| tlsConfig |  | *[TLSConfig](#tlsconfig) | false |
+| tlsConfig |  | *monitoringv1.SafeTLSConfig | false |
 | proxyURL |  | *string | false |
 
 [Back to TOC](#table-of-contents)
@@ -1008,7 +1008,7 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | ----- | ----------- | ------ | -------- |
 | name |  | string | true |
 | value |  | string | true |
-| regex |  | *bool | false |
+| regex |  | bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1019,13 +1019,16 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved |  | *bool | false |
-| routingKey |  | *string | false |
-| serviceKey |  | *string | false |
+| routingKey |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| serviceKey |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | url |  | *string | false |
 | client |  | *string | false |
 | clientURL |  | *string | false |
 | description |  | *string | false |
 | severity |  | *string | false |
+| class |  | *string | false |
+| group |  | *string | false |
+| component |  | *string | false |
 | details |  | [][PagerDutyConfigDetail](#pagerdutyconfigdetail) | false |
 | httpConfig |  | *[HTTPConfig](#httpconfig) | false |
 
@@ -1065,7 +1068,7 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | groupInterval |  | string | false |
 | repeatInterval |  | string | false |
 | matchers |  | [][Matcher](#matcher) | false |
-| continue |  | *bool | false |
+| continue |  | bool | false |
 | routes |  | [][Route](#route) | false |
 
 [Back to TOC](#table-of-contents)

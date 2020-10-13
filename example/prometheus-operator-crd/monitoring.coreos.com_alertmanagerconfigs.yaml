@@ -16,7 +16,7 @@ spec:
     singular: alertmanagerconfig
   scope: Namespaced
   versions:
-  - name: v1
+  - name: v1alpha1
     schema:
       openAPIV3Schema:
         description: AlertmanagerConfig defines a namespaced AlertmanagerConfig to
@@ -67,9 +67,13 @@ spec:
                     pagerDutyConfigs:
                       items:
                         properties:
+                          class:
+                            type: string
                           client:
                             type: string
                           clientURL:
+                            type: string
+                          component:
                             type: string
                           description:
                             type: string
@@ -85,6 +89,8 @@ spec:
                               - value
                               type: object
                             type: array
+                          group:
+                            type: string
                           httpConfig:
                             properties:
                               basicAuth:
@@ -158,8 +164,8 @@ spec:
                               proxyURL:
                                 type: string
                               tlsConfig:
-                                description: TLSConfig extends the safe TLS configuration
-                                  with file parameters.
+                                description: SafeTLSConfig specifies safe TLS configuration
+                                  parameters.
                                 properties:
                                   ca:
                                     description: Struct containing the CA cert to
@@ -208,10 +214,6 @@ spec:
                                         - key
                                         type: object
                                     type: object
-                                  caFile:
-                                    description: Path to the CA cert in the Prometheus
-                                      container to use for the targets.
-                                    type: string
                                   cert:
                                     description: Struct containing the client cert
                                       file for the targets.
@@ -259,17 +261,9 @@ spec:
                                         - key
                                         type: object
                                     type: object
-                                  certFile:
-                                    description: Path to the client cert file in the
-                                      Prometheus container for the targets.
-                                    type: string
                                   insecureSkipVerify:
                                     description: Disable target certificate validation.
                                     type: boolean
-                                  keyFile:
-                                    description: Path to the client key file in the
-                                      Prometheus container for the targets.
-                                    type: string
                                   keySecret:
                                     description: Secret containing the client key
                                       file for the targets.
@@ -298,11 +292,45 @@ spec:
                                 type: object
                             type: object
                           routingKey:
-                            type: string
+                            description: SecretKeySelector selects a key of a Secret.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  TODO: Add other useful fields. apiVersion, kind,
+                                  uid?'
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
                           sendResolved:
                             type: boolean
                           serviceKey:
-                            type: string
+                            description: SecretKeySelector selects a key of a Secret.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  TODO: Add other useful fields. apiVersion, kind,
+                                  uid?'
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
                           severity:
                             type: string
                           url:
@@ -344,7 +372,8 @@ spec:
                   repeatInterval:
                     type: string
                   routes:
-                    items: {}
+                    items:
+                      type: object
                     type: array
                 type: object
             type: object

@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,14 +23,6 @@ type AlertmanagerListerExpansion interface{}
 // AlertmanagerNamespaceListerExpansion allows custom methods to be added to
 // AlertmanagerNamespaceLister.
 type AlertmanagerNamespaceListerExpansion interface{}
-
-// AlertmanagerConfigListerExpansion allows custom methods to be added to
-// AlertmanagerConfigLister.
-type AlertmanagerConfigListerExpansion interface{}
-
-// AlertmanagerConfigNamespaceListerExpansion allows custom methods to be added to
-// AlertmanagerConfigNamespaceLister.
-type AlertmanagerConfigNamespaceListerExpansion interface{}
 
 // PodMonitorListerExpansion allows custom methods to be added to
 // PodMonitorLister.

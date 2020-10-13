@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,6 @@ type FakeMonitoringV1 struct {
 
 func (c *FakeMonitoringV1) Alertmanagers(namespace string) v1.AlertmanagerInterface {
 	return &FakeAlertmanagers{c, namespace}
-}
-
-func (c *FakeMonitoringV1) AlertmanagerConfigs(namespace string) v1.AlertmanagerConfigInterface {
-	return &FakeAlertmanagerConfigs{c, namespace}
 }
 
 func (c *FakeMonitoringV1) PodMonitors(namespace string) v1.PodMonitorInterface {

@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ import (
 type Interface interface {
 	// Alertmanagers returns a AlertmanagerInformer.
 	Alertmanagers() AlertmanagerInformer
-	// AlertmanagerConfigs returns a AlertmanagerConfigInformer.
-	AlertmanagerConfigs() AlertmanagerConfigInformer
 	// PodMonitors returns a PodMonitorInformer.
 	PodMonitors() PodMonitorInformer
 	// Probes returns a ProbeInformer.
@@ -54,11 +52,6 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Alertmanagers returns a AlertmanagerInformer.
 func (v *version) Alertmanagers() AlertmanagerInformer {
 	return &alertmanagerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// AlertmanagerConfigs returns a AlertmanagerConfigInformer.
-func (v *version) AlertmanagerConfigs() AlertmanagerConfigInformer {
-	return &alertmanagerConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // PodMonitors returns a PodMonitorInformer.

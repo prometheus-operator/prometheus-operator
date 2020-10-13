@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import (
 type MonitoringV1Interface interface {
 	RESTClient() rest.Interface
 	AlertmanagersGetter
-	AlertmanagerConfigsGetter
 	PodMonitorsGetter
 	ProbesGetter
 	PrometheusesGetter
@@ -41,10 +40,6 @@ type MonitoringV1Client struct {
 
 func (c *MonitoringV1Client) Alertmanagers(namespace string) AlertmanagerInterface {
 	return newAlertmanagers(c, namespace)
-}
-
-func (c *MonitoringV1Client) AlertmanagerConfigs(namespace string) AlertmanagerConfigInterface {
-	return newAlertmanagerConfigs(c, namespace)
 }
 
 func (c *MonitoringV1Client) PodMonitors(namespace string) PodMonitorInterface {
