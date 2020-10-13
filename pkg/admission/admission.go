@@ -50,8 +50,8 @@ var (
 // Admission is a validating and mutating webhook that ensures PrometheusRules pushed into the cluster will be
 // valid when loaded by a Prometheus
 type Admission struct {
-	validationErrorsCounter    *prometheus.Counter
-	validationTriggeredCounter *prometheus.Counter
+	validationErrorsCounter    prometheus.Counter
+	validationTriggeredCounter prometheus.Counter
 	logger                     log.Logger
 }
 
@@ -64,7 +64,7 @@ func (a *Admission) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/admission-prometheusrules/mutate", a.servePrometheusRulesMutate)
 }
 
-func (a *Admission) RegisterMetrics(validationTriggeredCounter, validationErrorsCounter *prometheus.Counter) {
+func (a *Admission) RegisterMetrics(validationTriggeredCounter, validationErrorsCounter prometheus.Counter) {
 	a.validationTriggeredCounter = validationTriggeredCounter
 	a.validationErrorsCounter = validationErrorsCounter
 }
@@ -182,27 +182,27 @@ func (a *Admission) mutatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionRe
 }
 
 func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionResponse {
-	(*a.validationTriggeredCounter).Inc()
+	a.validationTriggeredCounter.Inc()
 	level.Debug(a.logger).Log("msg", "Validating prometheusrules")
 
 	if ar.Request.Resource != ruleResource {
 		err := fmt.Errorf("expected resource to be %v, but received %v", ruleResource, ar.Request.Resource)
 		level.Warn(a.logger).Log("err", err)
-		(*a.validationErrorsCounter).Inc()
+		a.validationErrorsCounter.Inc()
 		return toAdmissionResponseFailure("Unexpected resource kind", []error{err})
 	}
 
 	promRule := &monitoringv1.PrometheusRule{}
 	if err := json.Unmarshal(ar.Request.Object.Raw, promRule); err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalRules, "err", err)
-		(*a.validationErrorsCounter).Inc()
+		a.validationErrorsCounter.Inc()
 		return toAdmissionResponseFailure(errUnmarshalRules, []error{err})
 	}
 
 	rules := &PrometheusRules{}
 	if err := json.Unmarshal(ar.Request.Object.Raw, rules); err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalAdmission, "err", err)
-		(*a.validationErrorsCounter).Inc()
+		a.validationErrorsCounter.Inc()
 		return toAdmissionResponseFailure(errUnmarshalAdmission, []error{err})
 	}
 
@@ -214,7 +214,7 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 			level.Info(a.logger).Log("msg", m, "err", err)
 		}
 
-		(*a.validationErrorsCounter).Inc()
+		a.validationErrorsCounter.Inc()
 		return toAdmissionResponseFailure("Rules are not valid", errors)
 	}
 

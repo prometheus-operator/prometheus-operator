@@ -170,8 +170,8 @@ func api() *Admission {
 	})
 	a := &Admission{
 		logger:                     log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)),
-		validationErrorsCounter:    &validationErrors,
-		validationTriggeredCounter: &validationTriggered}
+		validationErrorsCounter:    validationErrors,
+		validationTriggeredCounter: validationTriggered}
 	a.logger = level.NewFilter(a.logger, level.AllowNone())
 	return a
 }
