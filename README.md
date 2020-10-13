@@ -30,7 +30,7 @@ post](https://coreos.com/blog/the-prometheus-operator.html).
 ## Prometheus Operator vs. kube-prometheus vs. community helm chart
 
 ### Prometheus Operator
-The Prometheus Operator uses Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) to simplifiy the deployment and configuration of Prometheus, Alertmanager, and related monitoring components.
+The Prometheus Operator uses Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) to simplify the deployment and configuration of Prometheus, Alertmanager, and related monitoring components.
 
 ### kube-prometheus
 [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) provides example configurations for a complete cluster monitoring
