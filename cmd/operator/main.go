@@ -192,7 +192,13 @@ func init() {
 }
 
 func Main() int {
+	version.RegisterFlags()
 	flagset.Parse(os.Args[1:])
+
+	if version.ShouldPrintVersion() {
+		version.Print(os.Stdout, "prometheus-operator")
+		return 0
+	}
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	if cfg.LogFormat == logFormatJson {
@@ -218,7 +224,8 @@ func Main() int {
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
-	logger.Log("msg", fmt.Sprintf("Starting Prometheus Operator version '%v'.", version.Version))
+	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
+	level.Info(logger).Log("build_context", version.BuildContext())
 
 	if deprecatedConfigReloaderImage != "" {
 		level.Warn(logger).Log(
@@ -329,6 +336,7 @@ func Main() int {
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 		validationTriggeredCounter,
 		validationErrorsCounter,
+		version.NewCollector("prometheus_operator"),
 	)
 
 	admit.RegisterMetrics(

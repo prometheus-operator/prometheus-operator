@@ -24,10 +24,17 @@ import (
 	"github.com/ghodss/yaml"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/version"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func main() {
+	version.RegisterParseFlags()
+	if version.ShouldPrintVersion() {
+		version.Print(os.Stdout, "po-lint")
+		os.Exit(0)
+	}
+
 	files := os.Args[1:]
 
 	for _, filename := range files {

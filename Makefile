@@ -42,7 +42,20 @@ K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(TYPES_V1ALPHA1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(TOOLS_BIN_DIR)/$(bin))
 
-GO_BUILD_RECIPE=GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
+# The ldflags for the go build process to set the version related data.
+# The environments variables are in sync with GitHub Action specification.
+# When changing the CI system remember to update env variables respectively.
+#
+# source: https://docs.github.com/en/free-pro-team@latest/actions/reference/environment-variables#default-environment-variables
+GO_BUILD_VERSION_LDFLAGS=\
+	-X $(GO_PKG)/pkg/version.Revision=$(GITHUB_SHA)  \
+	-X $(GO_PKG)/pkg/version.BuildUser=$(GITHUB_ACTOR)  \
+	-X $(GO_PKG)/pkg/version.BuildDate=$(shell date +"%Y%m%d-%T") \
+	-X $(GO_PKG)/pkg/version.Branch=$(GITHUB_REF:refs/heads/%=%) \
+	-X $(GO_PKG)/pkg/version.Version=$(VERSION)
+
+GO_BUILD_RECIPE=GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -ldflags="-s $(GO_BUILD_VERSION_LDFLAGS)"
+
 pkgs = $(shell go list ./... | grep -v /test/ | grep -v /contrib/)
 
 .PHONY: all

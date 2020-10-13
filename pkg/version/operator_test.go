@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package version_test
 
 import (
-	"os"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/version"
 )
 
-func main() {
-	version.RegisterParseFlags()
-	if version.ShouldPrintVersion() {
-		version.Print(os.Stdout, "po-docgen")
-		os.Exit(0)
-	}
+func TestOperatorInfo(t *testing.T) {
+	restore := setAllVersionFieldsTo("test-value")
+	defer restore()
 
-	switch os.Args[1] {
-	case "api":
-		printAPIDocs(os.Args[2:])
-	case "compatibility":
-		printCompatMatrixDocs()
-	}
+	expOut := "(version=test-value, branch=test-value, revision=test-value)"
+	assert.Equal(t, expOut, version.Info())
+}
+
+func TestOperatorBuildContext(t *testing.T) {
+	restore := setAllVersionFieldsTo("test-value")
+	defer restore()
+
+	expOut := "(go=test-value, user=test-value, date=test-value)"
+	assert.Equal(t, expOut, version.BuildContext())
 }

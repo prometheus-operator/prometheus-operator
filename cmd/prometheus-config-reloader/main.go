@@ -103,9 +103,16 @@ func main() {
 	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
 		Default("http://127.0.0.1:9090/-/reload").URL()
 
+	version.RegisterIntoKingpinFlags(app)
+
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
+	}
+
+	if version.ShouldPrintVersion() {
+		version.Print(os.Stdout, "prometheus-config-reloader")
+		os.Exit(0)
 	}
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
