@@ -332,8 +332,8 @@ func Main() int {
 	)
 
 	admit.RegisterMetrics(
-		&validationTriggeredCounter,
-		&validationErrorsCounter,
+		validationTriggeredCounter,
+		validationErrorsCounter,
 	)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
