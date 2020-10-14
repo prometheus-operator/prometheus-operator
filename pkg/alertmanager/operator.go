@@ -861,6 +861,7 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 		})
 	}
 
+	var rejected int
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
 	for namespaceAndName, amc := range amConfigs {
 		var err error
@@ -897,6 +898,7 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 		}
 
 		if err != nil {
+			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping alertmanagerconfig",
 				"error", err.Error(),
@@ -915,6 +917,11 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 		amcKeys = append(amcKeys, k)
 	}
 	level.Debug(c.logger).Log("msg", "selected AlertmanagerConfigs", "aletmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
+
+	if amKey, ok := c.keyFunc(am); ok {
+		c.metrics.SetSelectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, len(res))
+		c.metrics.SetRejectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, rejected)
+	}
 
 	return res, nil
 }
