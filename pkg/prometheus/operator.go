@@ -948,16 +948,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	objs, err := c.promInfs.List(labels.Everything())
-	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "listing all Prometheus instances from cache failed",
-			"err", err,
-		)
-		return
-	}
-
-	for _, obj := range objs {
+	err = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for Prometheus instances in the namespace.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
@@ -1026,7 +1017,14 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			c.enqueue(p)
 			return
 		}
+	})
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "listing all Prometheus instances from cache failed",
+			"err", err,
+		)
 	}
+
 }
 
 // worker runs a worker thread that just dequeues items, processes them, and

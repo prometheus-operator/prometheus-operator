@@ -190,6 +190,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"Thanos":                                 testThanos,
 		"PromStaticProbe":                        testPromStaticProbe,
 		"PromSecurePodMonitor":                   testPromSecurePodMonitor,
+		"PromSharedResourcesReconciliation":      testPromSharedResourcesReconciliation,
 	}
 
 	for name, f := range testFuncs {

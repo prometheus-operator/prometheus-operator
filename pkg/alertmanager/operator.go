@@ -379,16 +379,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	objs, err := c.alrtInfs.List(labels.Everything())
-	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "listing all Alertmanager instances from cache failed",
-			"err", err,
-		)
-		return
-	}
-
-	for _, obj := range objs {
+	err = c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for Alertmanager instances in the namespace.
 		am := obj.(*monitoringv1.Alertmanager)
 		if am.Namespace == nsName {
@@ -411,6 +402,12 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 			c.enqueue(am)
 			return
 		}
+	})
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "listing all Alertmanager instances from cache failed",
+			"err", err,
+		)
 	}
 }
 
