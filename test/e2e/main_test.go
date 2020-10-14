@@ -149,6 +149,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMClusterGossipSilences":         testAMClusterGossipSilences,
 		"AMReloadConfig":                  testAMReloadConfig,
 		"AMZeroDowntimeRollingDeployment": testAMZeroDowntimeRollingDeployment,
+		"AMConfigCRD":                     testAMConfigCRD,
 	}
 
 	for name, f := range testFuncs {

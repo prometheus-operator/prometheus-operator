@@ -34,6 +34,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -712,4 +713,108 @@ inhibit_rules:
 	if c != 1 {
 		t.Fatalf("Only one notification expected, but %d received after rolling update of Alertmanager cluster.\n\n%s", c, logs)
 	}
+}
+
+func testAMConfigCRD(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	alertmanager := framework.MakeBasicAlertmanager("amconfig-crd", 1)
+	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	routingKeySecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "pd-receiver-routing-key",
+		},
+		Data: map[string][]byte{
+			"routing-key": []byte("1234abc"),
+		},
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), routingKeySecret, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	configCR := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "e2e-test-amconfig",
+			Namespace: ns,
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "e2e",
+				Matchers: []monitoringv1alpha1.Matcher{},
+				Continue: true,
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+					RoutingKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "pd-receiver-routing-key",
+						},
+						Key: "routing-key",
+					},
+				}},
+			}},
+		},
+	}
+
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	// Wait for the change above to take effect.
+	err := wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), "alertmanager-amconfig-crd-generated", metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		if cfgSecret.Data["alertmanager.yaml"] == nil {
+			return false, nil
+		}
+
+		expected := fmt.Sprintf(`global:
+  resolve_timeout: 5m
+route:
+  receiver: "null"
+  group_by:
+  - job
+  routes:
+  - receiver: %v-e2e-test-amconfig-e2e
+    match:
+      namespace: %v
+    continue: true
+  - receiver: "null"
+    match:
+      alertname: DeadMansSwitch
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+receivers:
+- name: "null"
+- name: %v-e2e-test-amconfig-e2e
+  pagerduty_configs:
+  - send_resolved: false
+    routing_key: 1234abc
+templates: []
+`, ns, ns, ns)
+
+		if string(cfgSecret.Data["alertmanager.yaml"]) != expected {
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 }
