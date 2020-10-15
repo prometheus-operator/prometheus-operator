@@ -124,7 +124,15 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
                             ]) +
                             policyRule.withVerbs(['get', 'list', 'watch']);
 
-      local rules = [monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
+      local ingressRule = policyRule.new() +
+                          policyRule.withApiGroups(['networking.k8s.io']) +
+                          policyRule.withResources([
+                            'ingresses',
+                          ]) +
+                          policyRule.withVerbs(['get', 'list', 'watch']);
+
+
+      local rules = [monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule, ingressRule];
 
       clusterRole.new() +
       clusterRole.mixin.metadata.withLabels(po.commonLabels) +
