@@ -742,6 +742,18 @@ func testAMConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	apiKeySecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "og-receiver-api-key",
+		},
+		Data: map[string][]byte{
+			"api-key": []byte("1234abc"),
+		},
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), apiKeySecret, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
 	// A valid AlertmanagerConfig resource.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -756,6 +768,14 @@ func testAMConfigCRD(t *testing.T) {
 			},
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
+				OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+					APIKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "og-receiver-api-key",
+						},
+						Key: "api-key",
+					},
+				}},
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
 					RoutingKey: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
@@ -838,6 +858,9 @@ route:
 receivers:
 - name: "null"
 - name: %v-e2e-test-amconfig-e2e
+  opsgenie_configs:
+  - send_resolved: false
+    api_key: 1234abc
   pagerduty_configs:
   - send_resolved: false
     routing_key: 1234abc

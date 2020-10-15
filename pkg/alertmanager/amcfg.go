@@ -96,6 +96,7 @@ type inhibitRule struct {
 
 type receiver struct {
 	Name             string             `yaml:"name" json:"name"`
+	OpsgenieConfigs  []*opsgenieConfig  `yaml:"opsgenie_configs,omitempty" json:"opsgenie_configs,omitempty"`
 	PagerdutyConfigs []*pagerdutyConfig `yaml:"pagerduty_configs,omitempty" json:"pagerduty_configs,omitempty"`
 	WebhookConfigs   []*webhookConfig   `yaml:"webhook_configs,omitempty" json:"webhook_configs,omitempty"`
 }
@@ -125,6 +126,21 @@ type pagerdutyConfig struct {
 	Group         string            `yaml:"group,omitempty" json:"group,omitempty"`
 }
 
+type opsgenieConfig struct {
+	VSendResolved bool                `yaml:"send_resolved" json:"send_resolved"`
+	HTTPConfig    *httpClientConfig   `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	APIKey        string              `yaml:"api_key,omitempty" json:"api_key,omitempty"`
+	APIURL        string              `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	Message       string              `yaml:"message,omitempty" json:"message,omitempty"`
+	Description   string              `yaml:"description,omitempty" json:"description,omitempty"`
+	Source        string              `yaml:"source,omitempty" json:"source,omitempty"`
+	Details       map[string]string   `yaml:"details,omitempty" json:"details,omitempty"`
+	Responders    []opsgenieResponder `yaml:"responders,omitempty" json:"responders,omitempty"`
+	Tags          string              `yaml:"tags,omitempty" json:"tags,omitempty"`
+	Note          string              `yaml:"note,omitempty" json:"note,omitempty"`
+	Priority      string              `yaml:"priority,omitempty" json:"priority,omitempty"`
+}
+
 type httpClientConfig struct {
 	BasicAuth       *basicAuth          `yaml:"basic_auth,omitempty"`
 	BearerToken     string              `yaml:"bearer_token,omitempty"`
@@ -148,6 +164,13 @@ type pagerdutyImage struct {
 	Src  string `yaml:"src,omitempty" json:"src,omitempty"`
 	Alt  string `yaml:"alt,omitempty" json:"alt,omitempty"`
 	Href string `yaml:"href,omitempty" json:"href,omitempty"`
+}
+
+type opsgenieResponder struct {
+	ID       string `yaml:"id,omitempty" json:"id,omitempty"`
+	Name     string `yaml:"name,omitempty" json:"name,omitempty"`
+	Username string `yaml:"username,omitempty" json:"username,omitempty"`
+	Type     string `yaml:"type,omitempty" json:"type,omitempty"`
 }
 
 func loadCfg(s string) (*alertmanagerConfig, error) {
@@ -321,8 +344,21 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	var opsgenieConfigs []*opsgenieConfig
+	if l := len(in.OpsGenieConfigs); l > 0 {
+		opsgenieConfigs = make([]*opsgenieConfig, l)
+		for i := range in.OpsGenieConfigs {
+			receiver, err := cg.convertOpsgenieConfig(ctx, in.OpsGenieConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "OpsGenieConfigs[%d]", i)
+			}
+			opsgenieConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             prefixReceiverName(in.Name, crKey),
+		OpsgenieConfigs:  opsgenieConfigs,
 		PagerdutyConfigs: pagerdutyConfigs,
 		WebhookConfigs:   webhookConfigs,
 	}, nil
@@ -423,6 +459,84 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 		}
 	}
 	out.Details = details
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
+
+	return out, nil
+}
+
+func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsGenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
+	out := &opsgenieConfig{}
+
+	if in.SendResolved != nil {
+		out.VSendResolved = *in.SendResolved
+	}
+
+	if in.APIKey != nil {
+		apiKey, err := cg.store.getSecretKey(ctx, crKey.Namespace, *in.APIKey)
+		if err != nil {
+			return nil, errors.Errorf("failed to get api key %q from secret %q", in.APIKey.Key, in.APIKey.Name)
+		}
+		out.APIKey = apiKey
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = *in.APIURL
+	}
+
+	if in.Message != nil {
+		out.Message = *in.Message
+	}
+
+	if in.Description != nil {
+		out.Description = *in.Description
+	}
+
+	if in.Source != nil {
+		out.Source = *in.Source
+	}
+
+	if in.Tags != nil {
+		out.Tags = *in.Tags
+	}
+
+	if in.Note != nil {
+		out.Note = *in.Note
+	}
+
+	if in.Priority != nil {
+		out.Priority = *in.Priority
+	}
+
+	var details map[string]string
+	if l := len(in.Details); l > 0 {
+		details = make(map[string]string, l)
+		for _, d := range in.Details {
+			details[d.Key] = d.Value
+		}
+	}
+	out.Details = details
+
+	var responders []opsgenieResponder
+	if l := len(in.Responders); l > 0 {
+		responders = make([]opsgenieResponder, l)
+		for _, r := range in.Responders {
+			var responder opsgenieResponder = opsgenieResponder{
+				ID:       r.ID,
+				Name:     r.Name,
+				Username: r.Username,
+				Type:     r.Type,
+			}
+			responders = append(responders, responder)
+		}
+	}
+	out.Responders = responders
 
 	if in.HTTPConfig != nil {
 		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
