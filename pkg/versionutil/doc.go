@@ -12,28 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package version_test
-
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/prometheus-operator/prometheus-operator/pkg/version"
-)
-
-func TestOperatorInfo(t *testing.T) {
-	restore := setAllVersionFieldsTo("test-value")
-	defer restore()
-
-	expOut := "(version=test-value, branch=test-value, revision=test-value)"
-	assert.Equal(t, expOut, version.Info())
-}
-
-func TestOperatorBuildContext(t *testing.T) {
-	restore := setAllVersionFieldsTo("test-value")
-	defer restore()
-
-	expOut := "(go=test-value, user=test-value, date=test-value)"
-	assert.Equal(t, expOut, version.BuildContext())
-}
+// Extends the https://github.com/prometheus/common/blob/master/version/info.go package by
+// adding common CLI support and test coverage.
+package versionutil

@@ -17,13 +17,13 @@ package main
 import (
 	"os"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/version"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
 func main() {
-	version.RegisterParseFlags()
-	if version.ShouldPrintVersion() {
-		version.Print(os.Stdout, "po-docgen")
+	versionutil.RegisterParseFlags()
+	if versionutil.ShouldPrintVersion() {
+		versionutil.Print(os.Stdout, "po-docgen")
 		os.Exit(0)
 	}
 

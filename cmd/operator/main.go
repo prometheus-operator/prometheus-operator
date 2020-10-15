@@ -36,13 +36,14 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
-	"github.com/prometheus-operator/prometheus-operator/pkg/version"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
 	rbacproxytls "github.com/brancz/kube-rbac-proxy/pkg/tls"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
@@ -192,11 +193,11 @@ func init() {
 }
 
 func Main() int {
-	version.RegisterFlags()
+	versionutil.RegisterFlags()
 	flagset.Parse(os.Args[1:])
 
-	if version.ShouldPrintVersion() {
-		version.Print(os.Stdout, "prometheus-operator")
+	if versionutil.ShouldPrintVersion() {
+		versionutil.Print(os.Stdout, "prometheus-operator")
 		return 0
 	}
 

@@ -25,7 +25,7 @@ import (
 
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/version"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,14 +36,14 @@ import (
 )
 
 func main() {
-	version.RegisterFlags()
+	versionutil.RegisterFlags()
 
 	var ruleConfigMapName = flag.String("rule-config-map", "", "path to rule ConfigMap")
 	var ruleCRDSDestination = flag.String("rule-crds-destination", "", "destination new crds should be created in")
 	flag.Parse()
 
-	if version.ShouldPrintVersion() {
-		version.Print(os.Stdout, "po-rule-migration")
+	if versionutil.ShouldPrintVersion() {
+		versionutil.Print(os.Stdout, "po-rule-migration")
 		os.Exit(0)
 	}
 

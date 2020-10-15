@@ -12,18 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Holds the generic data related to version info.
-package version
+package versionutil_test
 
-import "runtime"
+import (
+	"testing"
 
-// Those fields should be populated via go -ldflags settings.
-// GoVersion information is populated at build-time.
-var (
-	Version   = "unknown"
-	Revision  = "unknown"
-	Branch    = "unknown"
-	BuildUser = "unknown"
-	BuildDate = "unknown"
-	GoVersion = runtime.Version()
+	"github.com/prometheus/common/version"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestOperatorInfo(t *testing.T) {
+	restore := setAllVersionFieldsTo("test-value")
+	defer restore()
+
+	expOut := "(version=test-value, branch=test-value, revision=test-value)"
+	assert.Equal(t, expOut, version.Info())
+}
+
+func TestOperatorBuildContext(t *testing.T) {
+	restore := setAllVersionFieldsTo("test-value")
+	defer restore()
+
+	expOut := "(go=test-value, user=test-value, date=test-value)"
+	assert.Equal(t, expOut, version.BuildContext())
+}

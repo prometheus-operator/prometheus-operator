@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package version_test
+package versionutil_test
 
 import (
 	"bytes"
@@ -21,9 +21,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/version"
-
+	"github.com/prometheus/common/version"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
 func TestShouldPrintVersion(t *testing.T) {
@@ -48,7 +49,7 @@ func TestShouldPrintVersion(t *testing.T) {
 				"%s, version test-value (branch: test-value, revision: test-value)\n"+
 					"  build user:       test-value\n"+
 					"  build date:       test-value\n"+
-					"  go version:       test-value\n", program),
+					"  go version:       test-value", program),
 		},
 	}
 	for tn, tc := range tests {
@@ -61,13 +62,13 @@ func TestShouldPrintVersion(t *testing.T) {
 			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 			// when
-			version.RegisterParseFlags()
+			versionutil.RegisterParseFlags()
 			// then
-			assert.Equal(t, true, version.ShouldPrintVersion())
+			assert.Equal(t, true, versionutil.ShouldPrintVersion())
 
 			// when
 			var buf bytes.Buffer
-			version.Print(&buf, program)
+			versionutil.Print(&buf, program)
 			// then
 			assert.Equal(t, tc.expOutput, buf.String())
 		})
@@ -84,10 +85,10 @@ func TestShouldNotPrintVersion(t *testing.T) {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 	// when
-	version.RegisterParseFlags()
+	versionutil.RegisterParseFlags()
 
 	// then
-	assert.False(t, version.ShouldPrintVersion())
+	assert.False(t, versionutil.ShouldPrintVersion())
 }
 
 // snapshotOSArgsAndFlags the os.Args and flag.CommandLine and allows you to restore them.

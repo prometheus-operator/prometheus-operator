@@ -13,17 +13,16 @@
 // limitations under the License.
 
 // Holds the CLI related version functions that unifies handling version printing in all CLIs binaries.
-package version
+package versionutil
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io"
-	"strings"
-	"text/template"
 
 	"gopkg.in/alecthomas/kingpin.v2"
+
+	"github.com/prometheus/common/version"
 )
 
 var (
@@ -55,37 +54,13 @@ func ShouldPrintVersion() bool {
 	return printVer || printShort
 }
 
-// versionInfoTmpl contains the go template used by Print.
-// Same printing template that Prometheus has: https://github.com/prometheus/common/blob/317b7b125e8fddda956d0c9574e5f03f438ed5bc/version/info.go#L58-L65
-var versionInfoTmpl = `
-{{.program}}, version {{.version}} (branch: {{.branch}}, revision: {{.revision}})
-  build user:       {{.buildUser}}
-  build date:       {{.buildDate}}
-  go version:       {{.goVersion}}
-`
-
 // Print version information to a given out writer.
 func Print(out io.Writer, program string) {
 	if printShort {
-		fmt.Fprint(out, Version)
+		fmt.Fprint(out, version.Version)
 		return
 	}
-
-	m := map[string]string{
-		"program":   program,
-		"version":   Version,
-		"revision":  Revision,
-		"branch":    Branch,
-		"buildUser": BuildUser,
-		"buildDate": BuildDate,
-		"goVersion": GoVersion,
+	if printVer {
+		fmt.Fprint(out, version.Print(program))
 	}
-	t := template.Must(template.New("version").Parse(versionInfoTmpl))
-
-	var buf bytes.Buffer
-	if err := t.ExecuteTemplate(&buf, "version", m); err != nil {
-		panic(err)
-	}
-
-	fmt.Fprintln(out, strings.TrimSpace(buf.String()))
 }
