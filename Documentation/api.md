@@ -994,8 +994,8 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| matcher |  | [][Matcher](#matcher) | false |
-| matcher |  | [][Matcher](#matcher) | false |
+| targetMatch |  | [][Matcher](#matcher) | false |
+| sourceMatch |  | [][Matcher](#matcher) | false |
 | equal |  | []string | false |
 
 [Back to TOC](#table-of-contents)
