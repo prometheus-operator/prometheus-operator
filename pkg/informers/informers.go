@@ -99,20 +99,17 @@ func (w *ForResource) HasSynced() bool {
 	return true
 }
 
-// List lists based on the requested selector.
-// It invokes all wrapped informers, the result is concatenated.
-func (w *ForResource) List(selector labels.Selector) ([]runtime.Object, error) {
-	var ret []runtime.Object
-
+// ListAll invokes the ListAll method for all wrapped informers passing the
+// same selector and appendFn.
+func (w *ForResource) ListAll(selector labels.Selector, appendFn cache.AppendFunc) error {
 	for _, inf := range w.informers {
-		objs, err := inf.Lister().List(selector)
+		err := cache.ListAll(inf.Informer().GetIndexer(), selector, appendFn)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		ret = append(ret, objs...)
 	}
 
-	return ret, nil
+	return nil
 }
 
 // ListAllByNamespace invokes all wrapped informers passing the same appendFn.

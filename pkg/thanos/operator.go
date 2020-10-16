@@ -797,9 +797,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	objs, err := o.thanosRulerInfs.List(labels.Everything())
-
-	for _, obj := range objs {
+	err = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for ThanosRuler instances in the namespace.
 		tr := obj.(*monitoringv1.ThanosRuler)
 		if tr.Namespace == nsName {
@@ -822,7 +820,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			o.enqueue(tr)
 			return
 		}
-	}
+	})
 	if err != nil {
 		level.Error(o.logger).Log(
 			"msg", "listing all ThanosRuler instances from cache failed",

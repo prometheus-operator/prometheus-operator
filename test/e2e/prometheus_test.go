@@ -932,6 +932,7 @@ func testPromResourceUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
 func testPromStorageLabelsAnnotations(t *testing.T) {
 	t.Parallel()
 
@@ -1875,6 +1876,59 @@ func testPromDiscovery(t *testing.T) {
 	}
 }
 
+func testPromSharedResourcesReconciliation(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	s := framework.MakeBasicServiceMonitor("reconcile-test")
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		t.Fatalf("Creating ServiceMonitor failed: %v", err)
+	}
+
+	// Create 2 Prometheus different Prometheus instances that watch the service monitor created above.
+	for _, prometheusName := range []string{"test", "test2"} {
+		p := framework.MakeBasicPrometheus(ns, prometheusName, "reconcile-test", 1)
+		p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		svc := framework.MakePrometheusService(prometheusName, fmt.Sprintf("reconcile-%s", prometheusName), v1.ServiceTypeClusterIP)
+		if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, svc); err != nil {
+			t.Fatal(err)
+		} else {
+			ctx.AddFinalizerFn(finalizerFn)
+		}
+
+		_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+		if err != nil {
+			t.Fatalf("Generated Secret could not be retrieved for %s: %v", prometheusName, err)
+		}
+
+		err = framework.WaitForActiveTargets(ns, svc.Name, 1)
+		if err != nil {
+			t.Fatalf("Validating Prometheus active targets failed for %s: %v", prometheusName, err)
+		}
+	}
+
+	if err := framework.MonClientV1.ServiceMonitors(ns).Delete(context.TODO(), "reconcile-test", metav1.DeleteOptions{}); err != nil {
+		t.Fatalf("Deleting ServiceMonitor failed: %v", err)
+	}
+
+	// Delete the service monitors and check that both Prometheus instances are updated.
+	for _, prometheusName := range []string{"test", "test2"} {
+		svc := framework.MakePrometheusService(prometheusName, fmt.Sprintf("reconcile-%s", prometheusName), v1.ServiceTypeClusterIP)
+
+		if err := framework.WaitForActiveTargets(ns, svc.Name, 0); err != nil {
+			t.Fatalf("Validating Prometheus active targets failed for %s: %v", prometheusName, err)
+		}
+	}
+}
+
 func testPromAlertmanagerDiscovery(t *testing.T) {
 	t.Parallel()
 
@@ -2306,7 +2360,6 @@ func testPromGetAuthSecret(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 // testOperatorNSScope tests the multi namespace feature of the Prometheus Operator.
@@ -3000,7 +3053,6 @@ func testPromStaticProbe(t *testing.T) {
 	}); err != nil {
 		t.Fatal("waiting for static probe targets timed out.")
 	}
-
 }
 
 func testPromSecurePodMonitor(t *testing.T) {
@@ -3229,7 +3281,6 @@ func testPromSecurePodMonitor(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func() (bool, error) {
