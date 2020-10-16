@@ -576,6 +576,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				SecurityContext:               a.Spec.SecurityContext,
 				Tolerations:                   a.Spec.Tolerations,
 				Affinity:                      a.Spec.Affinity,
+				TopologySpreadConstraints:     a.Spec.TopologySpreadConstraints,
 			},
 		},
 	}, nil

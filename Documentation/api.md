@@ -171,6 +171,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | false |
 | affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
+| topologySpreadConstraints | If specified, the pod's topology spread constraints. | []v1.TopologySpreadConstraint | false |
 | securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext. | *v1.PodSecurityContext | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods. | string | false |
 | listenLocal | ListenLocal makes the Alertmanager server listen on loopback, so that it does not bind against the Pod IP. Note this is only for the Alertmanager UI, not the gossip communication. | bool | false |
@@ -558,6 +559,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | configMaps | ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods. The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name>. | []string | false |
 | affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
+| topologySpreadConstraints | If specified, the pod's topology spread constraints. | []v1.TopologySpreadConstraint | false |
 | remoteWrite | If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteWriteSpec](#remotewritespec) | false |
 | remoteRead | If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way. | [][RemoteReadSpec](#remotereadspec) | false |
 | securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext. | *v1.PodSecurityContext | false |
@@ -895,6 +897,7 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | resources | Resources defines the resource requirements for single Pods. If not provided, no requests/limits will be set | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | false |
 | affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
+| topologySpreadConstraints | If specified, the pod's topology spread constraints. | []v1.TopologySpreadConstraint | false |
 | securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext. | *v1.PodSecurityContext | false |
 | priorityClassName | Priority class assigned to the Pods | string | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Thanos Ruler Pods. | string | false |
