@@ -17640,6 +17640,14 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
 ---
 apiVersion: apps/v1
 kind: Deployment
