@@ -428,6 +428,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				SecurityContext:               tr.Spec.SecurityContext,
 				Tolerations:                   tr.Spec.Tolerations,
 				Affinity:                      tr.Spec.Affinity,
+				TopologySpreadConstraints:     tr.Spec.TopologySpreadConstraints,
 			},
 		},
 	}, nil

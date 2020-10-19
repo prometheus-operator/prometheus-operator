@@ -849,6 +849,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 				Volumes:                       volumes,
 				Tolerations:                   p.Spec.Tolerations,
 				Affinity:                      p.Spec.Affinity,
+				TopologySpreadConstraints:     p.Spec.TopologySpreadConstraints,
 			},
 		},
 	}, nil

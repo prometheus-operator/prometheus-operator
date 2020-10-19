@@ -225,6 +225,8 @@ type PrometheusSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// If specified, the pod's tolerations.
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// If specified, the pod's topology spread constraints.
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// If specified, the remote_write spec. This is an experimental feature, it may change in any upcoming release in a breaking way.
 	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 	// If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way.
@@ -1205,6 +1207,8 @@ type AlertmanagerSpec struct {
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
 	// If specified, the pod's tolerations.
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// If specified, the pod's topology spread constraints.
+	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to the default PodSecurityContext.
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
