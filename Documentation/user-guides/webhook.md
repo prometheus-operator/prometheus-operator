@@ -44,7 +44,7 @@ variant also adds annotations to validated `PrometheusRule`s
 The following example deploys the validating admission webhook:
 
 ```yaml
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: prometheus-operator-rulesvalidation
