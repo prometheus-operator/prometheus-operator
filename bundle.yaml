@@ -43,7 +43,21 @@ spec:
                       items:
                         type: string
                       type: array
-                    matcher:
+                    sourceMatch:
+                      items:
+                        properties:
+                          name:
+                            type: string
+                          regex:
+                            type: boolean
+                          value:
+                            type: string
+                        required:
+                        - name
+                        - value
+                        type: object
+                      type: array
+                    targetMatch:
                       items:
                         properties:
                           name:

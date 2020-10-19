@@ -102,8 +102,8 @@ type PagerDutyConfigDetail struct {
 }
 
 type InhibitRule struct {
-	TargetMatch []Matcher `json:"matcher,omitempty"`
-	SourceMatch []Matcher `json:"matcher,omitempty"`
+	TargetMatch []Matcher `json:"targetMatch,omitempty"`
+	SourceMatch []Matcher `json:"sourceMatch,omitempty"`
 	Equal       []string  `json:"equal,omitempty"`
 }
 
