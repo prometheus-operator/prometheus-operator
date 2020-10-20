@@ -9,7 +9,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.1.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-kit/kit v0.10.0
-	github.com/go-openapi/swag v0.19.9
+	github.com/go-openapi/swag v0.19.10
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-cmp v0.5.0
