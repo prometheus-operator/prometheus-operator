@@ -167,44 +167,7 @@ generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET
 .PHONY: generate-remote-write-certs
 generate-remote-write-certs:
 	mkdir -p test/e2e/remote_write_certs && \
-	openssl req -newkey rsa:4096 \
-		-new -nodes -x509 -sha256 \
-		-days 3650 \
-		-out test/e2e/remote_write_certs/ca.crt \
-		-keyout test/e2e/remote_write_certs/ca.key \
-		-subj "/CN=caandserver.com"
-	openssl req -new -newkey rsa:4096 \
-		-keyout test/e2e/remote_write_certs/client.key \
-		-out test/e2e/remote_write_certs/client.csr \
-		-nodes \
-		-subj "/CN=PrometheusRemoteWriteClient"
-	openssl x509 -req -sha256 \
-		-days 3650 \
-		-in test/e2e/remote_write_certs/client.csr \
-		-CA test/e2e/remote_write_certs/ca.crt \
-		-CAkey test/e2e/remote_write_certs/ca.key \
-		-set_serial 02 \
-		-out test/e2e/remote_write_certs/client.crt
-	rm test/e2e/remote_write_certs/client.csr
-	openssl req -newkey rsa:4096 \
-		-new -nodes -x509 -sha256 \
-		-days 3650 \
-		-out test/e2e/remote_write_certs/bad_ca.crt \
-		-keyout test/e2e/remote_write_certs/bad_ca.key \
-		-subj "/CN=badcaandserver.com"
-	openssl req -new -newkey rsa:4096 \
-		-keyout test/e2e/remote_write_certs/bad_client.key \
-		-out test/e2e/remote_write_certs/bad_client.csr \
-		-nodes \
-		-subj "/CN=BadPrometheusRemoteWriteClient"
-	openssl x509 -req -sha256 \
-		-days 3650 \
-		-in test/e2e/remote_write_certs/bad_client.csr \
-		-CA test/e2e/remote_write_certs/bad_ca.crt \
-		-CAkey test/e2e/remote_write_certs/bad_ca.key \
-		-set_serial 02 \
-		-out test/e2e/remote_write_certs/bad_client.crt
-	rm test/e2e/remote_write_certs/bad_client.csr
+	(cd scripts && GOOS=$(OS) GOARCH=$(ARCH) go run -v ./certs/.)
 
 bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh

@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"testing"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -514,7 +515,7 @@ func (f *Framework) GetHealthyTargets(ns, svcName string) ([]*Target, error) {
 		case healthGood:
 			healthyTargets = append(healthyTargets, target)
 		case healthBad:
-			return nil, errors.New(target.LastError)
+			return nil, errors.Errorf("target %q: %s", target.ScrapeURL, target.LastError)
 		}
 	}
 
@@ -547,6 +548,24 @@ func (f *Framework) CheckPrometheusFiringAlert(ns, svcName, alertName string) (b
 	}
 
 	return alertstate == "firing", nil
+}
+
+// PrintPrometheusLogs prints the logs for each Prometheus replica.
+func (f *Framework) PrintPrometheusLogs(t *testing.T, p *monitoringv1.Prometheus) {
+	if p == nil {
+		return
+	}
+
+	replicas := int(*p.Spec.Replicas)
+	for i := 0; i < replicas; i++ {
+		l, err := GetLogs(f.KubeClient, p.Namespace, fmt.Sprintf("prometheus-%s-%d", p.Name, i), "prometheus")
+		if err != nil {
+			t.Logf("failed to retrieve logs for replica[%d]: %v", i, err)
+			continue
+		}
+		t.Logf("Prometheus #%d replica logs:", i)
+		t.Logf("%s", l)
+	}
 }
 
 func (f *Framework) WaitForPrometheusFiringAlert(ns, svcName, alertName string) error {
