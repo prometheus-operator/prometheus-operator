@@ -23,22 +23,24 @@ require (
 	github.com/prometheus/alertmanager v0.21.0
 	github.com/prometheus/client_golang v1.8.0
 	github.com/prometheus/common v0.14.0
-	github.com/prometheus/prometheus v1.8.2-0.20200907175821-8219b442c864
-	github.com/stretchr/testify v1.5.1
-	github.com/thanos-io/thanos v0.13.1-0.20200910143741-e0b7f7b32e9c
-	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
+	github.com/prometheus/prometheus v1.8.2-0.20201015110737-0a7fdd3b7696
+	github.com/stretchr/testify v1.6.1
+	github.com/thanos-io/thanos v0.16.0-rc.1
+	golang.org/x/sync v0.0.0-20200930132711-30421366ff76
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.18.8
-	k8s.io/apiextensions-apiserver v0.18.2
-	k8s.io/apimachinery v0.18.8
+	k8s.io/api v0.19.2
+	k8s.io/apiextensions-apiserver v0.19.2
+	k8s.io/apimachinery v0.19.2
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/component-base v0.18.2
+	k8s.io/component-base v0.19.2
 	k8s.io/klog v1.0.0
-	k8s.io/utils v0.0.0-20200414100711-2df71ebbae66
+	k8s.io/utils v0.0.0-20200729134348-d5654de09c73
 )
 
 replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => ./pkg/apis/monitoring
-	k8s.io/client-go => k8s.io/client-go v0.18.8
+	// A replace directive is needed for k8s.io/client-go because Cortex (which
+	// is an indirect dependency through Thanos) has a requirement on v12.0.0.
+	k8s.io/client-go => k8s.io/client-go v0.19.2
 )
