@@ -15,7 +15,7 @@ require (
 	github.com/google/go-cmp v0.5.2
 	github.com/hashicorp/go-version v1.2.1
 	github.com/kylelemons/godebug v1.1.0
-	github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452
+	github.com/mitchellh/hashstructure v1.0.1-0.20200508175121-8fdbea448aa6
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/prom-label-proxy v0.1.1-0.20200616110844-0fbfa11fa8f3
