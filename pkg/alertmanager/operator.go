@@ -869,8 +869,20 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 			for j, pdConfig := range receiver.PagerDutyConfigs {
 				pdcKey := fmt.Sprintf("%s/pagerduty/%d", amcKey, j)
 
+				if pdConfig.RoutingKey != nil {
+					if _, err = store.getSecretKey(ctx, amc.GetNamespace(), *pdConfig.RoutingKey); err != nil {
+						break
+					}
+				}
+
+				if pdConfig.ServiceKey != nil {
+					if _, err = store.getSecretKey(ctx, amc.GetNamespace(), *pdConfig.ServiceKey); err != nil {
+						break
+					}
+				}
+
 				if pdConfig.HTTPConfig == nil {
-					break
+					continue
 				}
 
 				if pdConfig.HTTPConfig.BearerTokenSecret != nil {
@@ -888,7 +900,7 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 				}
 			}
 
-			// don't continue looping over other receivers
+			// Don't continue looping over other receivers.
 			if err != nil {
 				break
 			}
