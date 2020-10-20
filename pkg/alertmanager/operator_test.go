@@ -15,8 +15,206 @@
 package alertmanager
 
 import (
+	"context"
 	"testing"
+
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
+
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
+
+func TestCheckAlertmanagerConfig(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"key1": []byte("val1"),
+			},
+		},
+	)
+
+	for _, tc := range []struct {
+		amConfig *monitoringv1alpha1.AlertmanagerConfig
+		ok       bool
+	}{
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "empty",
+					Namespace: "ns1",
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "missing-receiver",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "not-existing",
+					},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-receivers",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+						Routes: []monitoringv1alpha1.Route{{
+							Receiver: "recv2",
+						}},
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}, {
+						Name: "recv2",
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "duplicate-receivers",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}, {
+						Name: "recv1",
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "missing-pagerduty-service-key",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+							ServiceKey: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+								Key:                  "not-existing",
+							},
+						}},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-pagerduty-service-key",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+							ServiceKey: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+								Key:                  "key1",
+							},
+						}},
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "missing-pagerduty-routing-key",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+							RoutingKey: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+								Key:                  "not-existing",
+							},
+						}},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-pagerduty-routing-key",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+							RoutingKey: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+								Key:                  "key1",
+							},
+						}},
+					}},
+				},
+			},
+			ok: true,
+		},
+	} {
+		t.Run(tc.amConfig.Name, func(t *testing.T) {
+			store := newAssetStore(c.CoreV1(), c.CoreV1())
+			err := checkAlertmanagerConfig(context.Background(), tc.amConfig, store)
+			if tc.ok {
+				if err != nil {
+					t.Fatalf("expecting no error but got %q", err)
+				}
+				return
+			}
+
+			if err == nil {
+				t.Fatal("expecting error but got none")
+			}
+		})
+	}
+}
 
 func TestListOptions(t *testing.T) {
 	for i := 0; i < 1000; i++ {
