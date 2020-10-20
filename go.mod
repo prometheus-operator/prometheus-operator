@@ -3,7 +3,7 @@ module github.com/prometheus-operator/prometheus-operator
 go 1.15
 
 require (
-	github.com/blang/semver v3.5.1+incompatible
+	github.com/blang/semver/v4 v4.0.0
 	github.com/brancz/kube-rbac-proxy v0.5.0
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/evanphx/json-patch v4.5.0+incompatible
