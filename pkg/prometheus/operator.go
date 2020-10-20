@@ -1440,6 +1440,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		if err := store.addBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
+		if err := store.addTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
 	}
 
 	if p.Spec.APIServerConfig != nil {
@@ -1538,14 +1541,6 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		Data: map[string][]byte{},
 	}
 
-	for i, rw := range p.Spec.RemoteWrite {
-		if rw.TLSConfig != nil {
-			if err := store.addSafeTLSConfig(ctx, p.GetNamespace(), rw.TLSConfig.SafeTLSConfig); err != nil {
-				return errors.Wrapf(err, "remote write %d", i)
-			}
-		}
-	}
-
 	for key, asset := range store.tlsAssets {
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
@@ -1636,7 +1631,7 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 			}
 
 			if endpoint.TLSConfig != nil {
-				if err = store.addSafeTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig.SafeTLSConfig); err != nil {
+				if err = store.addTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
 					break
 				}
 			}
@@ -1814,10 +1809,6 @@ func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
 	tlsConf := e.TLSConfig
 	if tlsConf == nil {
 		return nil
-	}
-
-	if err := e.TLSConfig.Validate(); err != nil {
-		return err
 	}
 
 	if tlsConf.CAFile != "" || tlsConf.CertFile != "" || tlsConf.KeyFile != "" {

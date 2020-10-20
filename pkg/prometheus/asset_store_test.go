@@ -26,6 +26,44 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
+var (
+	caPEM = `-----BEGIN CERTIFICATE-----
+MIIB4zCCAY2gAwIBAgIUf+9T+SQuY7RzRfLrT/m3ZLZa/nswDQYJKoZIhvcNAQEL
+BQAwRTELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoM
+GEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDAgFw0yMDEwMTkxMzA1MDlaGA8yMTIw
+MDkyNTEzMDUwOVowRTELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUx
+ITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDBcMA0GCSqGSIb3DQEB
+AQUAA0sAMEgCQQDbXwmz6fkHnfs3p5dirgW/m5G1eOSddS8atIwhOzaYSNG03/Z4
+P6HWCGDCgUg77fOsX+tzYWkXy0T+GwQrTLDdAgMBAAGjUzBRMB0GA1UdDgQWBBTC
+CNvaPTFE1Xt5WUREDoF/mTOg7DAfBgNVHSMEGDAWgBTCCNvaPTFE1Xt5WUREDoF/
+mTOg7DAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA0EAzhzA2n5nSnka
+k9iw9ZHayRBSgnGAYKFdiGyvceKPzR3LJ8vMdGeYh/TSHHgZ4QSam/J7vHWCkJmc
+7c98vpkIaw==
+-----END CERTIFICATE-----`
+
+	certPEM = `-----BEGIN CERTIFICATE-----
+MIIBiTCCATMCFCgn66sq14Tsx6iP8nRdP4/uiguXMA0GCSqGSIb3DQEBCwUAMEUx
+CzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRl
+cm5ldCBXaWRnaXRzIFB0eSBMdGQwIBcNMjAxMDE5MTMwNTI5WhgPMjEyMDA5MjUx
+MzA1MjlaMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYD
+VQQKDBhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwXDANBgkqhkiG9w0BAQEFAANL
+ADBIAkEA1wNGN6zrF4eBpW/LcNt3Qxy9bZZss6c/pUy5V4n2O+tZZuvKXF3Q6g4+
+fOZ5xgqzqPgg2UzrG1Mmt/Ol4UikZQIDAQABMA0GCSqGSIb3DQEBCwUAA0EAGsWD
+5UlmIIbFOi50jqNE3KitIwbPuY8nYR8pS2HYSE+eVKpGFmmzIRXkb4ZmdVymI+vG
+B9nfCt+guZqCLxZMDQ==
+-----END CERTIFICATE-----`
+
+	keyPEM = `-----BEGIN RSA PRIVATE KEY-----
+MIIBPAIBAAJBANcDRjes6xeHgaVvy3Dbd0McvW2WbLOnP6VMuVeJ9jvrWWbrylxd
+0OoOPnzmecYKs6j4INlM6xtTJrfzpeFIpGUCAwEAAQJAMhPxJsZ/ett0trNzDrYO
+8PKgrAV9C9rIWBemk1zunMWmmtBt295sEK555iedWanANhTYKlaezUXMBZaoHIhc
+AQIhAPB6QM5fGEsH1VSXEgaSb/EewQLFGjkWj9DtFtwOtmWpAiEA5OQ7NTVq9ULq
+6qAI/JJ6qVGCjS/bmUQD2aBrUUhdxl0CIQDrOvsno/fUdS4ll70nNplPqICu3/Ud
+wMcfXLwOuEmNOQIhAMSYi4o+IWobWe7AGjfmEFkR25ItAu73jl8D/GlKQNE5AiEA
+hvBlhCknnq89u57O41ID6Mqxz3bRxNxpkqhfMyVWcVU=
+-----END RSA PRIVATE KEY-----`
+)
+
 func TestAddBearerToken(t *testing.T) {
 	c := fake.NewSimpleClientset(
 		&v1.Secret{
@@ -258,9 +296,9 @@ func TestAddTLSConfig(t *testing.T) {
 				Namespace: "ns1",
 			},
 			Data: map[string]string{
-				"key1": "val1",
-				"key2": "val2",
-				"key3": "val3",
+				"cmCA":   caPEM,
+				"cmCert": certPEM,
+				"cmKey":  keyPEM,
 			},
 		},
 		&v1.Secret{
@@ -269,9 +307,12 @@ func TestAddTLSConfig(t *testing.T) {
 				Namespace: "ns1",
 			},
 			Data: map[string][]byte{
-				"key4": []byte("val4"),
-				"key5": []byte("val5"),
-				"key6": []byte("val6"),
+				"secretCA":   []byte(caPEM),
+				"secretCert": []byte(certPEM),
+				"secretKey":  []byte(keyPEM),
+
+				"invalidCA": []byte("invalidCA"),
+				"wrongKey":  []byte("wrongKey"),
 			},
 		},
 	)
@@ -295,7 +336,7 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
-							Key: "key4",
+							Key: "secretCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
@@ -303,21 +344,21 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
-							Key: "key5",
+							Key: "secretCert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key6",
+						Key: "secretKey",
 					},
 				},
 			},
 
-			expectedCA:   "val4",
-			expectedCert: "val5",
-			expectedKey:  "val6",
+			expectedCA:   caPEM,
+			expectedCert: certPEM,
+			expectedKey:  keyPEM,
 		},
 		{
 			// CA in configmap, cert and key in secret.
@@ -329,7 +370,7 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key1",
+							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
@@ -337,21 +378,21 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
-							Key: "key5",
+							Key: "secretCert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key6",
+						Key: "secretKey",
 					},
 				},
 			},
 
-			expectedCA:   "val1",
-			expectedCert: "val5",
-			expectedKey:  "val6",
+			expectedCA:   caPEM,
+			expectedCert: certPEM,
+			expectedKey:  keyPEM,
 		},
 		{
 			// CA and cert in configmap, key in secret.
@@ -363,7 +404,7 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key1",
+							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
@@ -371,21 +412,21 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key2",
+							Key: "cmCert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key6",
+						Key: "secretKey",
 					},
 				},
 			},
 
-			expectedCA:   "val1",
-			expectedCert: "val2",
-			expectedKey:  "val6",
+			expectedCA:   caPEM,
+			expectedCert: certPEM,
+			expectedKey:  keyPEM,
 		},
 		{
 			// Wrong namespace.
@@ -397,7 +438,7 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key1",
+							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
@@ -405,14 +446,14 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key2",
+							Key: "cmCert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key6",
+						Key: "secretKey",
 					},
 				},
 			},
@@ -429,7 +470,7 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key4",
+							Key: "secretCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
@@ -437,14 +478,14 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key2",
+							Key: "cmCert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key6",
+						Key: "secretKey",
 					},
 				},
 			},
@@ -461,7 +502,7 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
-							Key: "key1",
+							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
@@ -469,14 +510,14 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key2",
+							Key: "cmCert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key6",
+						Key: "secretKey",
 					},
 				},
 			},
@@ -493,7 +534,7 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key1",
+							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
@@ -501,14 +542,14 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key4",
+							Key: "secretCert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key6",
+						Key: "secretKey",
 					},
 				},
 			},
@@ -525,7 +566,7 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "cm",
 							},
-							Key: "key1",
+							Key: "cmCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
@@ -533,14 +574,14 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
-							Key: "key2",
+							Key: "cmCert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key6",
+						Key: "secretKey",
 					},
 				},
 			},
@@ -557,7 +598,7 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
-							Key: "key4",
+							Key: "secretCA",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
@@ -565,14 +606,128 @@ func TestAddTLSConfig(t *testing.T) {
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
-							Key: "key5",
+							Key: "secretCert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "secret",
 						},
-						Key: "key7",
+						Key: "cmKey",
+					},
+				},
+			},
+
+			err: true,
+		},
+		{
+			// Cert without key.
+			ns: "ns1",
+			tlsConfig: &monitoringv1.TLSConfig{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "secretCA",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "secretCert",
+						},
+					},
+				},
+			},
+
+			err: true,
+		},
+		{
+			// Key without cert.
+			ns: "ns1",
+			tlsConfig: &monitoringv1.TLSConfig{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "secretCA",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "secretKey",
+					},
+				},
+			},
+
+			err: true,
+		},
+		{
+			// Cert with wrong key.
+			ns: "ns1",
+			tlsConfig: &monitoringv1.TLSConfig{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "secretCA",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "secretCert",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "wrongKey",
+					},
+				},
+			},
+
+			err: true,
+		},
+		{
+			// Invalid CA certificate.
+			ns: "ns1",
+			tlsConfig: &monitoringv1.TLSConfig{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "invalidCA",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "secretCert",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "secretKey",
 					},
 				},
 			},
@@ -613,7 +768,7 @@ func TestAddTLSConfig(t *testing.T) {
 				t.Fatalf("expecting to find key %q but got nothing", key)
 			}
 			if string(cert) != tc.expectedCert {
-				t.Fatalf("expecting cert %q, got %q", tc.expectedCert, ca)
+				t.Fatalf("expecting cert %q, got %q", tc.expectedCert, cert)
 			}
 
 			key = tlsAssetKeyFromSecretSelector(tc.ns, tc.tlsConfig.KeySecret)
@@ -623,7 +778,7 @@ func TestAddTLSConfig(t *testing.T) {
 				t.Fatalf("expecting to find key %q but got nothing", key)
 			}
 			if string(k) != tc.expectedKey {
-				t.Fatalf("expecting cert key %q, got %q", tc.expectedCert, ca)
+				t.Fatalf("expecting cert key %q, got %q", tc.expectedCert, k)
 			}
 		})
 	}

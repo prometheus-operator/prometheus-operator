@@ -972,6 +972,14 @@ func (c *SafeTLSConfig) Validate() error {
 		}
 	}
 
+	if c.Cert != (SecretOrConfigMap{}) && c.KeySecret == nil {
+		return &TLSConfigValidationError{"client cert specified without client key"}
+	}
+
+	if c.KeySecret != nil && c.Cert == (SecretOrConfigMap{}) {
+		return &TLSConfigValidationError{"client key specified without client cert"}
+	}
+
 	return nil
 }
 
@@ -1000,19 +1008,40 @@ func (e *TLSConfigValidationError) Error() string {
 
 // Validate semantically validates the given TLSConfig.
 func (c *TLSConfig) Validate() error {
-	if c.CA != (SecretOrConfigMap{}) && c.CAFile != "" {
-		return &TLSConfigValidationError{"tls config can not both specify CAFile and CA"}
+	if c.CA != (SecretOrConfigMap{}) {
+		if c.CAFile != "" {
+			return &TLSConfigValidationError{"tls config can not both specify CAFile and CA"}
+		}
+		if err := c.CA.Validate(); err != nil {
+			return &TLSConfigValidationError{"tls config CA is invalid"}
+		}
 	}
 
-	if c.Cert != (SecretOrConfigMap{}) && c.CertFile != "" {
-		return &TLSConfigValidationError{"tls config can not both specify CertFile and Cert"}
+	if c.Cert != (SecretOrConfigMap{}) {
+		if c.CertFile != "" {
+			return &TLSConfigValidationError{"tls config can not both specify CertFile and Cert"}
+		}
+		if err := c.Cert.Validate(); err != nil {
+			return &TLSConfigValidationError{"tls config Cert is invalid"}
+		}
 	}
 
 	if c.KeyFile != "" && c.KeySecret != nil {
 		return &TLSConfigValidationError{"tls config can not both specify KeyFile and KeySecret"}
 	}
 
-	return c.SafeTLSConfig.Validate()
+	hasCert := c.CertFile != "" || c.Cert != (SecretOrConfigMap{})
+	hasKey := c.KeyFile != "" || c.KeySecret != nil
+
+	if hasCert && !hasKey {
+		return &TLSConfigValidationError{"tls config can not specify client cert without client key"}
+	}
+
+	if hasKey && !hasCert {
+		return &TLSConfigValidationError{"tls config can not specify client key without client cert"}
+	}
+
+	return nil
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.
