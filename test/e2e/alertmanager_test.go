@@ -742,6 +742,7 @@ func testAMConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// A valid AlertmanagerConfig resource.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "e2e-test-amconfig",
@@ -770,6 +771,37 @@ func testAMConfigCRD(t *testing.T) {
 	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
+
+	// An AlertmanagerConfig resource that references a missing secret key, it
+	// should be rejected by the operator.
+	configCR = &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "e2e-test-amconfig-2",
+			Namespace: ns,
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "e2e",
+				Matchers: []monitoringv1alpha1.Matcher{},
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+					RoutingKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "pd-receiver-routing-key",
+						},
+						Key: "non-existing-key",
+					},
+				}},
+			}},
+		},
+	}
+
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
 	// Wait for the change above to take effect.
 	err := wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), "alertmanager-amconfig-crd-generated", metav1.GetOptions{})

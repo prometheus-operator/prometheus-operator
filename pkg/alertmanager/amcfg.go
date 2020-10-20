@@ -21,7 +21,7 @@ import (
 	"sort"
 
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus/alertmanager/config"
@@ -187,7 +187,6 @@ func (cg *configGenerator) generateConfig(
 	baseConfig alertmanagerConfig,
 	amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig,
 ) ([]byte, error) {
-
 	// amConfigIdentifiers is a sorted slice of keys from
 	// amConfigs map, used to always generate the config in the
 	// same order
@@ -213,7 +212,11 @@ func (cg *configGenerator) generateConfig(
 
 		// add receivers to baseConfig.Receivers
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
-			baseConfig.Receivers = append(baseConfig.Receivers, cg.convertReceiver(ctx, &receiver, crKey))
+			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
+			}
+			baseConfig.Receivers = append(baseConfig.Receivers, receivers)
 		}
 
 		// add inhibitRules to baseConfig.InhibitRules
@@ -284,24 +287,27 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 	}
 }
 
-func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1alpha1.Receiver, crKey types.NamespacedName) *receiver {
-
+func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1alpha1.Receiver, crKey types.NamespacedName) (*receiver, error) {
 	var pagerdutyConfigs []*pagerdutyConfig
+
 	if l := len(in.PagerDutyConfigs); l > 0 {
 		pagerdutyConfigs = make([]*pagerdutyConfig, l)
 		for i := range in.PagerDutyConfigs {
-			pagerdutyConfigs[i] = cg.convertPagerdutyConfig(ctx, in.PagerDutyConfigs[i], crKey)
+			receiver, err := cg.convertPagerdutyConfig(ctx, in.PagerDutyConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "PagerDutyConfig[%d]", i)
+			}
+			pagerdutyConfigs[i] = receiver
 		}
 	}
 
 	return &receiver{
 		Name:             prefixReceiverName(in.Name, crKey),
 		PagerdutyConfigs: pagerdutyConfigs,
-	}
+	}, nil
 }
 
-func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) *pagerdutyConfig {
-
+func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {
 	out := &pagerdutyConfig{}
 
 	if in.SendResolved != nil {
@@ -311,9 +317,7 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 	if in.RoutingKey != nil {
 		routingKey, err := cg.store.getSecretKey(ctx, crKey.Namespace, *in.RoutingKey)
 		if err != nil {
-			level.Warn(cg.logger).Log("msg", "failed to get routing key from secret for pagerduty, ignoring it and continuing",
-				"secret", in.RoutingKey.Name, "namespace", crKey.Namespace, "alertmanagerconfig", crKey.Name)
-
+			return nil, errors.Errorf("failed to get routing key %q from secret %q", in.RoutingKey.Key, in.RoutingKey.Name)
 		}
 		out.RoutingKey = routingKey
 	}
@@ -321,8 +325,7 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 	if in.ServiceKey != nil {
 		serviceKey, err := cg.store.getSecretKey(ctx, crKey.Namespace, *in.ServiceKey)
 		if err != nil {
-			level.Warn(cg.logger).Log("msg", "failed to get service key from secret for pagerduty, ignoring it and continuing",
-				"secret", in.ServiceKey.Name, "namespace", crKey.Namespace, "alertmanagerconfig", crKey.Name)
+			return nil, errors.Errorf("failed to get service key %q from secret %q", in.ServiceKey.Key, in.ServiceKey.Name)
 		}
 		out.ServiceKey = serviceKey
 	}
@@ -369,10 +372,14 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 	out.Details = details
 
 	if in.HTTPConfig != nil {
-		out.HTTPConfig = cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
 	}
 
-	return out
+	return out, nil
 }
 
 func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.NamespacedName) *inhibitRule {
@@ -433,7 +440,7 @@ func prefixReceiverName(receiverName string, crKey types.NamespacedName) string 
 	return crKey.Namespace + "-" + crKey.Name + "-" + receiverName
 }
 
-func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) *httpClientConfig {
+func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
 	out := &httpClientConfig{}
 
 	if in.ProxyURL != nil {
@@ -443,13 +450,12 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 	if in.BasicAuth != nil {
 		username, err := cg.store.getSecretKey(ctx, crKey.Namespace, in.BasicAuth.Username)
 		if err != nil {
-			level.Warn(cg.logger).Log("msg", "failed to extract basicauth username from Secret for HTTPConfig, ignoring it and continuing",
-				"secret", in.BasicAuth.Username.Name, "namespace", crKey.Namespace, "alertmanagerconfig", crKey.Name)
+			return nil, errors.Errorf("failed to get BasicAuth username key %q from secret %q", in.BasicAuth.Username.Key, in.BasicAuth.Username.Name)
 		}
+
 		password, err := cg.store.getSecretKey(ctx, crKey.Namespace, in.BasicAuth.Password)
 		if err != nil {
-			level.Warn(cg.logger).Log("msg", "failed to extract basicauth password from Secret for HTTPConfig, ignoring it and continuing",
-				"secret", in.BasicAuth.Username.Name, "namespace", crKey.Namespace, "alertmanagerconfig", crKey.Name)
+			return nil, errors.Errorf("failed to get BasicAuth password key %q from secret %q", in.BasicAuth.Password.Key, in.BasicAuth.Password.Name)
 		}
 
 		if username != "" && password != "" {
@@ -464,14 +470,12 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 	if in.BearerTokenSecret != nil {
 		bearerToken, err := cg.store.getSecretKey(ctx, crKey.Namespace, *in.BearerTokenSecret)
 		if err != nil {
-			level.Warn(cg.logger).Log("msg", "failed to extract bearer token from Secret for HTTPConfig, ignoring it and continuing",
-				"secret", in.BearerTokenSecret.Name, "namespace", crKey.Namespace, "alertmanagerconfig", crKey.Name)
-		} else {
-			out.BearerToken = bearerToken
+			return nil, errors.Errorf("failed to get bearer token key %q from secret %q", in.BearerTokenSecret.Key, in.BearerTokenSecret.Name)
 		}
+		out.BearerToken = bearerToken
 	}
 
-	return out
+	return out, nil
 }
 
 func (cg *configGenerator) convertTLSConfig(ctx context.Context, in *monitoringv1.SafeTLSConfig, crKey types.NamespacedName) commoncfg.TLSConfig {
