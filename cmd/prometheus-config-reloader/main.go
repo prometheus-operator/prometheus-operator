@@ -23,13 +23,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/version"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/version"
 	"github.com/thanos-io/thanos/pkg/reloader"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -103,9 +104,16 @@ func main() {
 	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
 		Default("http://127.0.0.1:9090/-/reload").URL()
 
+	versionutil.RegisterIntoKingpinFlags(app)
+
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
+	}
+
+	if versionutil.ShouldPrintVersion() {
+		versionutil.Print(os.Stdout, "prometheus-config-reloader")
+		os.Exit(0)
 	}
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
@@ -136,7 +144,8 @@ func main() {
 		}
 	}
 
-	level.Info(logger).Log("msg", fmt.Sprintf("Starting prometheus-config-reloader version '%v'.", version.Version))
+	level.Info(logger).Log("msg", "Starting prometheus-config-reloader", "version", version.Info())
+	level.Info(logger).Log("build_context", version.BuildContext())
 
 	r := prometheus.NewRegistry()
 	r.MustRegister(

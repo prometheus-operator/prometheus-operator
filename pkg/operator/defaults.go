@@ -14,9 +14,7 @@
 
 package operator
 
-import (
-	"github.com/prometheus-operator/prometheus-operator/pkg/version"
-)
+import "github.com/prometheus/common/version"
 
 const (
 	DefaultAlertmanagerVersion   = "v0.21.0"
