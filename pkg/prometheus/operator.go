@@ -24,6 +24,7 @@ import (
 	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -87,21 +88,6 @@ type Operator struct {
 
 	configGenerator *configGenerator
 }
-
-// BasicAuthCredentials represents a username password pair to be used with
-// basic http authentication, see https://tools.ietf.org/html/rfc7617.
-type BasicAuthCredentials struct {
-	username string
-	password string
-}
-
-// BearerToken represents a bearer token, see
-// https://tools.ietf.org/html/rfc6750.
-type BearerToken string
-
-// TLSAsset represents any TLS related opaque string, e.g. CA files, client
-// certificates.
-type TLSAsset string
 
 // New creates a new controller.
 func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
@@ -1162,7 +1148,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	assetStore := newAssetStore(c.kclient.CoreV1(), c.kclient.CoreV1())
+	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
 
 	if err := c.createOrUpdateConfigurationSecret(ctx, p, ruleConfigMapNames, assetStore); err != nil {
 		return errors.Wrap(err, "creating config failed")
@@ -1383,7 +1369,7 @@ func gzipConfig(buf *bytes.Buffer, conf []byte) error {
 	return nil
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, ruleConfigMapNames []string, store *assetStore) error {
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, ruleConfigMapNames []string, store *assets.Store) error {
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
@@ -1431,22 +1417,22 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	for i, remote := range p.Spec.RemoteRead {
-		if err := store.addBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
+		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote read %d", i)
 		}
 	}
 
 	for i, remote := range p.Spec.RemoteWrite {
-		if err := store.addBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
+		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
-		if err := store.addTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
+		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
 	}
 
 	if p.Spec.APIServerConfig != nil {
-		if err := store.addBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
+		if err := store.AddBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
 			return errors.Wrap(err, "apiserver config")
 		}
 	}
@@ -1470,8 +1456,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		smons,
 		pmons,
 		bmons,
-		store.basicAuthAssets,
-		store.bearerTokenAssets,
+		store.BasicAuthAssets,
+		store.BearerTokenAssets,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
@@ -1519,7 +1505,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	return err
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assetStore) error {
+func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) error {
 	boolTrue := true
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 
@@ -1541,7 +1527,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		Data: map[string][]byte{},
 	}
 
-	for key, asset := range store.tlsAssets {
+	for key, asset := range store.TLSAssets {
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
 
@@ -1570,7 +1556,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 	return nil
 }
 
-func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assetStore) (map[string]*monitoringv1.ServiceMonitor, error) {
+func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.ServiceMonitor, error) {
 	namespaces := []string{}
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	serviceMonitors := make(map[string]*monitoringv1.ServiceMonitor)
@@ -1622,16 +1608,16 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 
 			smKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
 
-			if err = store.addBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
+			if err = store.AddBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
 				break
 			}
 
-			if err = store.addBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth, smKey); err != nil {
+			if err = store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth, smKey); err != nil {
 				break
 			}
 
 			if endpoint.TLSConfig != nil {
-				if err = store.addTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
+				if err = store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
 					break
 				}
 			}
@@ -1666,7 +1652,7 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 	return res, nil
 }
 
-func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assetStore) (map[string]*monitoringv1.PodMonitor, error) {
+func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.PodMonitor, error) {
 	namespaces := []string{}
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	podMonitors := make(map[string]*monitoringv1.PodMonitor)
@@ -1710,16 +1696,16 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
 			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
 
-			if err = store.addBearerToken(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret, pmKey); err != nil {
+			if err = store.AddBearerToken(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret, pmKey); err != nil {
 				break
 			}
 
-			if err = store.addBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth, pmKey); err != nil {
+			if err = store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth, pmKey); err != nil {
 				break
 			}
 
 			if endpoint.TLSConfig != nil {
-				if err = store.addSafeTLSConfig(ctx, pm.GetNamespace(), endpoint.TLSConfig.SafeTLSConfig); err != nil {
+				if err = store.AddSafeTLSConfig(ctx, pm.GetNamespace(), &endpoint.TLSConfig.SafeTLSConfig); err != nil {
 					break
 				}
 			}

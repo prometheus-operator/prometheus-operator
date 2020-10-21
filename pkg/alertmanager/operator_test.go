@@ -23,6 +23,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
 func TestCheckAlertmanagerConfig(t *testing.T) {
@@ -294,7 +295,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
-			store := newAssetStore(c.CoreV1(), c.CoreV1())
+			store := assets.NewStore(c.CoreV1(), c.CoreV1())
 			err := checkAlertmanagerConfig(context.Background(), tc.amConfig, store)
 			if tc.ok {
 				if err != nil {

@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus/alertmanager/config"
 	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
@@ -197,12 +198,12 @@ func (c alertmanagerConfig) String() string {
 type configGenerator struct {
 	logger  log.Logger
 	kclient kubernetes.Interface
-	store   *assetStore
+	store   *assets.Store
 }
 
-func newConfigGenerator(logger log.Logger, kclient kubernetes.Interface, store *assetStore) *configGenerator {
+func newConfigGenerator(logger log.Logger, kclient kubernetes.Interface, store *assets.Store) *configGenerator {
 	if store == nil {
-		store = newAssetStore(kclient.CoreV1(), kclient.CoreV1())
+		store = assets.NewStore(kclient.CoreV1(), kclient.CoreV1())
 	}
 
 	cg := &configGenerator{
@@ -372,7 +373,7 @@ func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitori
 	}
 
 	if in.URLSecret != nil {
-		url, err := cg.store.getSecretKey(ctx, crKey.Namespace, *in.URLSecret)
+		url, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.URLSecret)
 		if err != nil {
 			return nil, errors.Errorf("failed to get key %q from secret %q", in.URLSecret.Key, in.URLSecret.Name)
 		}
@@ -404,7 +405,7 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 	}
 
 	if in.RoutingKey != nil {
-		routingKey, err := cg.store.getSecretKey(ctx, crKey.Namespace, *in.RoutingKey)
+		routingKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.RoutingKey)
 		if err != nil {
 			return nil, errors.Errorf("failed to get routing key %q from secret %q", in.RoutingKey.Key, in.RoutingKey.Name)
 		}
@@ -412,7 +413,7 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 	}
 
 	if in.ServiceKey != nil {
-		serviceKey, err := cg.store.getSecretKey(ctx, crKey.Namespace, *in.ServiceKey)
+		serviceKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.ServiceKey)
 		if err != nil {
 			return nil, errors.Errorf("failed to get service key %q from secret %q", in.ServiceKey.Key, in.ServiceKey.Name)
 		}
@@ -479,7 +480,7 @@ func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitor
 	}
 
 	if in.APIKey != nil {
-		apiKey, err := cg.store.getSecretKey(ctx, crKey.Namespace, *in.APIKey)
+		apiKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APIKey)
 		if err != nil {
 			return nil, errors.Errorf("failed to get api key %q from secret %q", in.APIKey.Key, in.APIKey.Name)
 		}
@@ -615,12 +616,12 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 	}
 
 	if in.BasicAuth != nil {
-		username, err := cg.store.getSecretKey(ctx, crKey.Namespace, in.BasicAuth.Username)
+		username, err := cg.store.GetSecretKey(ctx, crKey.Namespace, in.BasicAuth.Username)
 		if err != nil {
 			return nil, errors.Errorf("failed to get BasicAuth username key %q from secret %q", in.BasicAuth.Username.Key, in.BasicAuth.Username.Name)
 		}
 
-		password, err := cg.store.getSecretKey(ctx, crKey.Namespace, in.BasicAuth.Password)
+		password, err := cg.store.GetSecretKey(ctx, crKey.Namespace, in.BasicAuth.Password)
 		if err != nil {
 			return nil, errors.Errorf("failed to get BasicAuth password key %q from secret %q", in.BasicAuth.Password.Key, in.BasicAuth.Password.Name)
 		}
@@ -635,7 +636,7 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 	}
 
 	if in.BearerTokenSecret != nil {
-		bearerToken, err := cg.store.getSecretKey(ctx, crKey.Namespace, *in.BearerTokenSecret)
+		bearerToken, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.BearerTokenSecret)
 		if err != nil {
 			return nil, errors.Errorf("failed to get bearer token key %q from secret %q", in.BearerTokenSecret.Key, in.BearerTokenSecret.Name)
 		}
@@ -652,13 +653,13 @@ func (cg *configGenerator) convertTLSConfig(ctx context.Context, in *monitoringv
 	}
 
 	if in.CA != (monitoringv1.SecretOrConfigMap{}) {
-		out.CAFile = path.Join(tlsAssetsDir, tlsAssetKeyFromSelector(crKey.Namespace, in.CA).String())
+		out.CAFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(crKey.Namespace, in.CA).String())
 	}
 	if in.Cert != (monitoringv1.SecretOrConfigMap{}) {
-		out.CertFile = path.Join(tlsAssetsDir, tlsAssetKeyFromSelector(crKey.Namespace, in.Cert).String())
+		out.CertFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(crKey.Namespace, in.Cert).String())
 	}
 	if in.KeySecret != nil {
-		out.KeyFile = path.Join(tlsAssetsDir, tlsAssetKeyFromSecretSelector(crKey.Namespace, in.KeySecret).String())
+		out.KeyFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSecretSelector(crKey.Namespace, in.KeySecret).String())
 	}
 
 	return out
