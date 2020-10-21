@@ -936,6 +936,38 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 				return err
 			}
 		}
+
+		for j, whConfig := range receiver.WebhookConfigs {
+			whcKey := fmt.Sprintf("%s/webhook/%d", amcKey, j)
+
+			if whConfig.URL == nil && whConfig.URLSecret == nil {
+				return errors.New("one of url or urlSecret should be specified")
+			}
+
+			if whConfig.URLSecret != nil {
+				if _, err := store.getSecretKey(ctx, amc.GetNamespace(), *whConfig.URLSecret); err != nil {
+					return err
+				}
+			}
+
+			if whConfig.HTTPConfig == nil {
+				continue
+			}
+
+			if whConfig.HTTPConfig.BearerTokenSecret != nil {
+				if err := store.addBearerToken(ctx, amc.GetNamespace(), *whConfig.HTTPConfig.BearerTokenSecret, whcKey); err != nil {
+					return err
+				}
+			}
+
+			if err := store.addBasicAuth(ctx, amc.GetNamespace(), whConfig.HTTPConfig.BasicAuth, whcKey); err != nil {
+				return err
+			}
+
+			if err := store.addTLSConfig(ctx, amc.GetNamespace(), whConfig.HTTPConfig.TLSConfig); err != nil {
+				return err
+			}
+		}
 	}
 
 	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames)

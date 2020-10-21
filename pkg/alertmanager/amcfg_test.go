@@ -229,6 +229,62 @@ receivers:
 templates: []
 `,
 		},
+		{
+			name: "CR with Webhook Receiver",
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-pd-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"routingKey": []byte("1234abc"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+								URL: func(s string) *string {
+									return &s
+								}("http://test.url"),
+							}},
+						}},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace-myamc-test
+    match:
+      namespace: mynamespace
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace-myamc-test
+  webhook_configs:
+  - send_resolved: false
+    url: http://test.url
+templates: []
+`,
+		},
 	}
 
 	for _, tc := range testCases {

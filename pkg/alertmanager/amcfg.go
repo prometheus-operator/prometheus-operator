@@ -97,6 +97,14 @@ type inhibitRule struct {
 type receiver struct {
 	Name             string             `yaml:"name" json:"name"`
 	PagerdutyConfigs []*pagerdutyConfig `yaml:"pagerduty_configs,omitempty" json:"pagerduty_configs,omitempty"`
+	WebhookConfigs   []*webhookConfig   `yaml:"webhook_configs,omitempty" json:"webhook_configs,omitempty"`
+}
+
+type webhookConfig struct {
+	VSendResolved bool              `yaml:"send_resolved" json:"send_resolved"`
+	URL           string            `yaml:"url,omitempty" json:"url,omitempty"`
+	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	MaxAlerts     int32             `yaml:"max_alerts,omitempty" json:"max_alerts,omitempty"`
 }
 
 type pagerdutyConfig struct {
@@ -301,10 +309,55 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	var webhookConfigs []*webhookConfig
+	if l := len(in.WebhookConfigs); l > 0 {
+		webhookConfigs = make([]*webhookConfig, l)
+		for i := range in.WebhookConfigs {
+			receiver, err := cg.convertWebhookConfig(ctx, in.WebhookConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "WebhookConfig[%d]", i)
+			}
+			webhookConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             prefixReceiverName(in.Name, crKey),
 		PagerdutyConfigs: pagerdutyConfigs,
+		WebhookConfigs:   webhookConfigs,
 	}, nil
+}
+
+func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitoringv1alpha1.WebhookConfig, crKey types.NamespacedName) (*webhookConfig, error) {
+	out := &webhookConfig{}
+
+	if in.SendResolved != nil {
+		out.VSendResolved = *in.SendResolved
+	}
+
+	if in.URLSecret != nil {
+		url, err := cg.store.getSecretKey(ctx, crKey.Namespace, *in.URLSecret)
+		if err != nil {
+			return nil, errors.Errorf("failed to get key %q from secret %q", in.URLSecret.Key, in.URLSecret.Name)
+		}
+		out.URL = url
+	} else if in.URL != nil {
+		out.URL = *in.URL
+	}
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
+
+	if in.MaxAlerts != nil {
+		out.MaxAlerts = *in.MaxAlerts
+	}
+
+	return out, nil
 }
 
 func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {

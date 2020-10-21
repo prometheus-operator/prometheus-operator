@@ -71,6 +71,7 @@ type Route struct {
 type Receiver struct {
 	Name             string            `json:"name"`
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerDutyConfigs,omitempty"`
+	WebhookConfigs   []WebhookConfig   `json:"webhookConfigs,omitempty"`
 }
 
 type PagerDutyConfig struct {
@@ -87,6 +88,14 @@ type PagerDutyConfig struct {
 	Component    *string                 `json:"component,omitempty"`
 	Details      []PagerDutyConfigDetail `json:"details,omitempty"`
 	HTTPConfig   *HTTPConfig             `json:"httpConfig,omitempty"`
+}
+
+type WebhookConfig struct {
+	SendResolved *bool                 `json:"sendResolved,omitempty"`
+	URL          *string               `json:"url,omitempty"`
+	URLSecret    *v1.SecretKeySelector `json:"urlSecret,omitempty"`
+	HTTPConfig   *HTTPConfig           `json:"httpConfig,omitempty"`
+	MaxAlerts    *int32                `json:"maxAlerts,omitempty"`
 }
 
 type HTTPConfig struct {

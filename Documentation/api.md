@@ -75,6 +75,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [PagerDutyConfigDetail](#pagerdutyconfigdetail)
 * [Receiver](#receiver)
 * [Route](#route)
+* [WebhookConfig](#webhookconfig)
 
 ## APIServerConfig
 
@@ -1056,6 +1057,7 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | ----- | ----------- | ------ | -------- |
 | name |  | string | true |
 | pagerDutyConfigs |  | [][PagerDutyConfig](#pagerdutyconfig) | false |
+| webhookConfigs |  | [][WebhookConfig](#webhookconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1073,5 +1075,19 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | matchers |  | [][Matcher](#matcher) | false |
 | continue |  | bool | false |
 | routes |  | [][Route](#route) | false |
+
+[Back to TOC](#table-of-contents)
+
+## WebhookConfig
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved |  | *bool | false |
+| url |  | *string | false |
+| urlSecret |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| httpConfig |  | *[HTTPConfig](#httpconfig) | false |
+| maxAlerts |  | *int32 | false |
 
 [Back to TOC](#table-of-contents)
