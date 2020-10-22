@@ -861,52 +861,7 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 	var rejected int
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
 	for namespaceAndName, amc := range amConfigs {
-		var err error
-
-		for i, receiver := range amc.Spec.Receivers {
-			amcKey := fmt.Sprintf("alertmanagerConfig/%s/%s/%d", amc.GetNamespace(), amc.GetName(), i)
-
-			for j, pdConfig := range receiver.PagerDutyConfigs {
-				pdcKey := fmt.Sprintf("%s/pagerduty/%d", amcKey, j)
-
-				if pdConfig.RoutingKey != nil {
-					if _, err = store.getSecretKey(ctx, amc.GetNamespace(), *pdConfig.RoutingKey); err != nil {
-						break
-					}
-				}
-
-				if pdConfig.ServiceKey != nil {
-					if _, err = store.getSecretKey(ctx, amc.GetNamespace(), *pdConfig.ServiceKey); err != nil {
-						break
-					}
-				}
-
-				if pdConfig.HTTPConfig == nil {
-					continue
-				}
-
-				if pdConfig.HTTPConfig.BearerTokenSecret != nil {
-					if err = store.addBearerToken(ctx, amc.GetNamespace(), *pdConfig.HTTPConfig.BearerTokenSecret, pdcKey); err != nil {
-						break
-					}
-				}
-
-				if err = store.addBasicAuth(ctx, amc.GetNamespace(), pdConfig.HTTPConfig.BasicAuth, pdcKey); err != nil {
-					break
-				}
-
-				if err = store.addTLSConfig(ctx, amc.GetNamespace(), pdConfig.HTTPConfig.TLSConfig); err != nil {
-					break
-				}
-			}
-
-			// Don't continue looping over other receivers.
-			if err != nil {
-				break
-			}
-		}
-
-		if err != nil {
+		if err := checkAlertmanagerConfig(ctx, amc, store); err != nil {
 			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping alertmanagerconfig",
@@ -933,6 +888,75 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 	}
 
 	return res, nil
+}
+
+// checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
+// and has no missing references to other objects.
+func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assetStore) error {
+	receiverNames := make(map[string]struct{})
+
+	for i, receiver := range amc.Spec.Receivers {
+		if _, found := receiverNames[receiver.Name]; found {
+			return errors.Errorf("%q receiver is not unique", receiver.Name)
+		}
+		receiverNames[receiver.Name] = struct{}{}
+
+		amcKey := fmt.Sprintf("alertmanagerConfig/%s/%s/%d", amc.GetNamespace(), amc.GetName(), i)
+
+		for j, pdConfig := range receiver.PagerDutyConfigs {
+			pdcKey := fmt.Sprintf("%s/pagerduty/%d", amcKey, j)
+
+			if pdConfig.RoutingKey != nil {
+				if _, err := store.getSecretKey(ctx, amc.GetNamespace(), *pdConfig.RoutingKey); err != nil {
+					return err
+				}
+			}
+
+			if pdConfig.ServiceKey != nil {
+				if _, err := store.getSecretKey(ctx, amc.GetNamespace(), *pdConfig.ServiceKey); err != nil {
+					return err
+				}
+			}
+
+			if pdConfig.HTTPConfig == nil {
+				continue
+			}
+
+			if pdConfig.HTTPConfig.BearerTokenSecret != nil {
+				if err := store.addBearerToken(ctx, amc.GetNamespace(), *pdConfig.HTTPConfig.BearerTokenSecret, pdcKey); err != nil {
+					return err
+				}
+			}
+
+			if err := store.addBasicAuth(ctx, amc.GetNamespace(), pdConfig.HTTPConfig.BasicAuth, pdcKey); err != nil {
+				return err
+			}
+
+			if err := store.addTLSConfig(ctx, amc.GetNamespace(), pdConfig.HTTPConfig.TLSConfig); err != nil {
+				return err
+			}
+		}
+	}
+
+	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames)
+}
+
+func checkAlertmanagerRoutes(route *monitoringv1alpha1.Route, receivers map[string]struct{}) error {
+	if route == nil {
+		return nil
+	}
+
+	if _, found := receivers[route.Receiver]; !found {
+		return errors.Errorf("receiver %q not found", route.Receiver)
+	}
+
+	for _, r := range route.Routes {
+		if err := checkAlertmanagerRoutes(&r, receivers); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // listMatchingNamespaces lists all the namespaces that match the provided
