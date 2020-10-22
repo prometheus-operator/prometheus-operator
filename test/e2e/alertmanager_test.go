@@ -764,6 +764,11 @@ func testAMConfigCRD(t *testing.T) {
 						Key: "routing-key",
 					},
 				}},
+				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+					URL: func(s string) *string {
+						return &s
+					}("http://test.url"),
+				}},
 			}},
 		},
 	}
@@ -836,6 +841,9 @@ receivers:
   pagerduty_configs:
   - send_resolved: false
     routing_key: 1234abc
+  webhook_configs:
+  - send_resolved: false
+    url: http://test.url
 templates: []
 `, ns, ns, ns)
 
