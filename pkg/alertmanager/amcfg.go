@@ -30,7 +30,6 @@ import (
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 )
 
 // Customization of Config type from alertmanager repo:
@@ -196,20 +195,14 @@ func (c alertmanagerConfig) String() string {
 }
 
 type configGenerator struct {
-	logger  log.Logger
-	kclient kubernetes.Interface
-	store   *assets.Store
+	logger log.Logger
+	store  *assets.Store
 }
 
-func newConfigGenerator(logger log.Logger, kclient kubernetes.Interface, store *assets.Store) *configGenerator {
-	if store == nil {
-		store = assets.NewStore(kclient.CoreV1(), kclient.CoreV1())
-	}
-
+func newConfigGenerator(logger log.Logger, store *assets.Store) *configGenerator {
 	cg := &configGenerator{
-		logger:  logger,
-		kclient: kclient,
-		store:   store,
+		logger: logger,
+		store:  store,
 	}
 	return cg
 }

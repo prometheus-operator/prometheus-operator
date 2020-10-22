@@ -22,6 +22,7 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus/alertmanager/config"
 
 	corev1 "k8s.io/api/core/v1"
@@ -347,7 +348,8 @@ templates: []
 	}
 
 	for _, tc := range testCases {
-		cg := newConfigGenerator(nil, tc.kclient, nil)
+		store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
+		cg := newConfigGenerator(nil, store)
 		cfgBytes, err := cg.generateConfig(context.TODO(), tc.baseConfig, tc.amConfigs)
 		if err != nil {
 			t.Fatal(err)

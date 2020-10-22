@@ -748,7 +748,7 @@ receivers:
 		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
 	}
 
-	conf, err := newConfigGenerator(c.logger, c.kclient, store).generateConfig(ctx, *baseConfig, amConfigs)
+	conf, err := newConfigGenerator(c.logger, store).generateConfig(ctx, *baseConfig, amConfigs)
 	if err != nil {
 		return errors.Wrap(err, "generating Alertmanager config yaml failed")
 	}
