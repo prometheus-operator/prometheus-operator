@@ -30,7 +30,7 @@ var (
 		}, nil,
 	)
 	descPrometheusEnforcedSampleLimit = prometheus.NewDesc(
-		"prometheus_operator_enforced_sample_limit",
+		"prometheus_operator_prometheus_enforced_sample_limit",
 		"Global limit on the number of scraped samples per scrape target.",
 		[]string{
 			"namespace",
@@ -72,7 +72,7 @@ func (c *prometheusCollector) collectPrometheus(ch chan<- prometheus.Metric, p *
 		replicas = float64(*p.Spec.Replicas)
 	}
 	ch <- prometheus.MustNewConstMetric(descPrometheusSpecReplicas, prometheus.GaugeValue, replicas, p.Namespace, p.Name)
-	// Include EnforcedSampleLimit in metrics if set in PrometheusSpec.
+	// Include EnforcedSampleLimit in metrics if set in Prometheus object.
 	if p.Spec.EnforcedSampleLimit != nil {
 		ch <- prometheus.MustNewConstMetric(descPrometheusEnforcedSampleLimit, prometheus.GaugeValue, float64(*p.Spec.EnforcedSampleLimit), p.Namespace, p.Name)
 	}
