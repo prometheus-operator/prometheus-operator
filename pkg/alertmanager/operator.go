@@ -944,6 +944,21 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 				return err
 			}
 		}
+
+		for _, wcConfig := range receiver.WeChatConfigs {
+			if wcConfig.APIURL != nil {
+				_, err := url.Parse(*wcConfig.APIURL)
+				if err != nil {
+					return errors.New("api url not valid")
+				}
+			}
+
+			if wcConfig.APISecret != nil {
+				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *wcConfig.APISecret); err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames)

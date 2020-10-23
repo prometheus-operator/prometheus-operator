@@ -32,6 +32,7 @@ import (
 )
 
 func TestGenerateConfig(t *testing.T) {
+	weChatCorpID := "wechatcorpid"
 	type testCase struct {
 		name       string
 		kclient    kubernetes.Interface
@@ -280,7 +281,7 @@ templates: []
 receivers:
 - name: "null"
 - name: mynamespace-myamc-test
-  webhook_configs:
+webhook_configs:
   - send_resolved: false
     url: http://test.url
 templates: []
@@ -342,6 +343,67 @@ receivers:
   opsgenie_configs:
   - send_resolved: false
     api_key: 1234abc
+templates: []
+`,
+		},
+		{
+			name: "CR with WeChat Receiver",
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-wechat-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"apiSecret": []byte("wechatsecret"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
+								APISecret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-wechat-test-receiver",
+									},
+									Key: "apiSecret",
+								},
+								CorpID: &weChatCorpID,
+							}},
+						}},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace-myamc-test
+    match:
+      namespace: mynamespace
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace-myamc-test
+  wechat_configs:
+  - send_resolved: false
+    api_secret: wechatsecret
+    corp_id: wechatcorpid
 templates: []
 `,
 		},
