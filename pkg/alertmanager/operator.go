@@ -928,6 +928,24 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 			}
 		}
 
+		for j, sConfig := range receiver.SlackConfigs {
+			scKey := fmt.Sprintf("%s/slack/%d", amcKey, j)
+
+			if sConfig.APIURL != nil {
+				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *sConfig.APIURL); err != nil {
+					return err
+				}
+			}
+
+			if err := sConfig.Validate(); err != nil {
+				return err
+			}
+
+			if err := configureHTTPConfigInStore(ctx, sConfig.HTTPConfig, amc.GetNamespace(), scKey, store); err != nil {
+				return err
+			}
+		}
+
 		for j, whConfig := range receiver.WebhookConfigs {
 			whcKey := fmt.Sprintf("%s/webhook/%d", amcKey, j)
 

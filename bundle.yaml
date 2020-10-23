@@ -616,6 +616,332 @@ spec:
                             type: string
                         type: object
                       type: array
+                    slackConfigs:
+                      items:
+                        description: SlackConfig configures notifications via Slack.
+                        properties:
+                          actions:
+                            items:
+                              description: SlackAction configures a single Slack action
+                                that is sent with each notification. See https://api.slack.com/docs/message-attachments#action_fields
+                                and https://api.slack.com/docs/message-buttons for
+                                more information.
+                              properties:
+                                confirm:
+                                  description: SlackConfirmationField protect users
+                                    from destructive actions or particularly distinguished
+                                    decisions by asking them to confirm their button
+                                    click one more time. See https://api.slack.com/docs/interactive-message-field-guide#confirmation_fields
+                                    for more information.
+                                  properties:
+                                    dismissText:
+                                      type: string
+                                    okText:
+                                      type: string
+                                    text:
+                                      type: string
+                                    title:
+                                      type: string
+                                  required:
+                                  - text
+                                  type: object
+                                name:
+                                  type: string
+                                style:
+                                  type: string
+                                text:
+                                  type: string
+                                type:
+                                  type: string
+                                url:
+                                  type: string
+                                value:
+                                  type: string
+                              required:
+                              - text
+                              - type
+                              type: object
+                            type: array
+                          apiURL:
+                            description: SecretKeySelector selects a key of a Secret.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  TODO: Add other useful fields. apiVersion, kind,
+                                  uid?'
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                          callbackId:
+                            type: string
+                          channel:
+                            type: string
+                          color:
+                            type: string
+                          fallback:
+                            type: string
+                          fields:
+                            items:
+                              description: SlackField configures a single Slack field
+                                that is sent with each notification. Each field must
+                                contain a title, value, and optionally, a boolean
+                                value to indicate if the field is short enough to
+                                be displayed next to other fields designated as short.
+                                See https://api.slack.com/docs/message-attachments#fields
+                                for more information.
+                              properties:
+                                short:
+                                  type: boolean
+                                title:
+                                  type: string
+                                value:
+                                  type: string
+                              required:
+                              - title
+                              - value
+                              type: object
+                            type: array
+                          footer:
+                            type: string
+                          httpConfig:
+                            properties:
+                              basicAuth:
+                                description: 'BasicAuth allow an endpoint to authenticate
+                                  over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
+                                properties:
+                                  password:
+                                    description: The secret in the service monitor
+                                      namespace that contains the password for authentication.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  username:
+                                    description: The secret in the service monitor
+                                      namespace that contains the username for authentication.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                type: object
+                              bearerTokenSecret:
+                                description: SecretKeySelector selects a key of a
+                                  Secret.
+                                properties:
+                                  key:
+                                    description: The key of the secret to select from.  Must
+                                      be a valid secret key.
+                                    type: string
+                                  name:
+                                    description: 'Name of the referent. More info:
+                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      TODO: Add other useful fields. apiVersion, kind,
+                                      uid?'
+                                    type: string
+                                  optional:
+                                    description: Specify whether the Secret or its
+                                      key must be defined
+                                    type: boolean
+                                required:
+                                - key
+                                type: object
+                              proxyURL:
+                                type: string
+                              tlsConfig:
+                                description: SafeTLSConfig specifies safe TLS configuration
+                                  parameters.
+                                properties:
+                                  ca:
+                                    description: Struct containing the CA cert to
+                                      use for the targets.
+                                    properties:
+                                      configMap:
+                                        description: ConfigMap containing data to
+                                          use for the targets.
+                                        properties:
+                                          key:
+                                            description: The key to select.
+                                            type: string
+                                          name:
+                                            description: 'Name of the referent. More
+                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                              TODO: Add other useful fields. apiVersion,
+                                              kind, uid?'
+                                            type: string
+                                          optional:
+                                            description: Specify whether the ConfigMap
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                      secret:
+                                        description: Secret containing data to use
+                                          for the targets.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            description: 'Name of the referent. More
+                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                              TODO: Add other useful fields. apiVersion,
+                                              kind, uid?'
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                    type: object
+                                  cert:
+                                    description: Struct containing the client cert
+                                      file for the targets.
+                                    properties:
+                                      configMap:
+                                        description: ConfigMap containing data to
+                                          use for the targets.
+                                        properties:
+                                          key:
+                                            description: The key to select.
+                                            type: string
+                                          name:
+                                            description: 'Name of the referent. More
+                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                              TODO: Add other useful fields. apiVersion,
+                                              kind, uid?'
+                                            type: string
+                                          optional:
+                                            description: Specify whether the ConfigMap
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                      secret:
+                                        description: Secret containing data to use
+                                          for the targets.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            description: 'Name of the referent. More
+                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                              TODO: Add other useful fields. apiVersion,
+                                              kind, uid?'
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                    type: object
+                                  insecureSkipVerify:
+                                    description: Disable target certificate validation.
+                                    type: boolean
+                                  keySecret:
+                                    description: Secret containing the client key
+                                      file for the targets.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  serverName:
+                                    description: Used to verify the hostname for the
+                                      targets.
+                                    type: string
+                                type: object
+                            type: object
+                          iconEmoji:
+                            type: string
+                          iconURL:
+                            type: string
+                          imageURL:
+                            type: string
+                          linkNames:
+                            type: boolean
+                          mrkdwnIn:
+                            items:
+                              type: string
+                            type: array
+                          pretext:
+                            type: string
+                          sendResolved:
+                            type: boolean
+                          shortFields:
+                            type: boolean
+                          text:
+                            type: string
+                          thumbURL:
+                            type: string
+                          title:
+                            type: string
+                          titleLink:
+                            type: string
+                          username:
+                            type: string
+                        type: object
+                      type: array
                     weChatConfigs:
                       items:
                         properties:

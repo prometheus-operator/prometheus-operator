@@ -79,6 +79,7 @@ type Receiver struct {
 	Name             string            `json:"name"`
 	OpsGenieConfigs  []OpsGenieConfig  `json:"opsgenieConfigs,omitempty"`
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerDutyConfigs,omitempty"`
+	SlackConfigs     []SlackConfig     `json:"slackConfigs,omitempty"`
 	WebhookConfigs   []WebhookConfig   `json:"webhookConfigs,omitempty"`
 	WeChatConfigs    []WeChatConfig    `json:"weChatConfigs,omitempty"`
 }
@@ -97,6 +98,118 @@ type PagerDutyConfig struct {
 	Component    *string                 `json:"component,omitempty"`
 	Details      []PagerDutyConfigDetail `json:"details,omitempty"`
 	HTTPConfig   *HTTPConfig             `json:"httpConfig,omitempty"`
+}
+
+// SlackConfig configures notifications via Slack.
+type SlackConfig struct {
+	SendResolved *bool                 `json:"sendResolved,omitempty"`
+	APIURL       *v1.SecretKeySelector `json:"apiURL,omitempty"`
+	Channel      *string               `json:"channel,omitempty"`
+	Username     *string               `json:"username,omitempty"`
+	Color        *string               `json:"color,omitempty"`
+	Title        *string               `json:"title,omitempty"`
+	TitleLink    *string               `json:"titleLink,omitempty"`
+	Pretext      *string               `json:"pretext,omitempty"`
+	Text         *string               `json:"text,omitempty"`
+	Fields       []SlackField          `json:"fields,omitempty"`
+	ShortFields  *bool                 `json:"shortFields,omitempty"`
+	Footer       *string               `json:"footer,omitempty"`
+	Fallback     *string               `json:"fallback,omitempty"`
+	CallbackID   *string               `json:"callbackId,omitempty"`
+	IconEmoji    *string               `json:"iconEmoji,omitempty"`
+	IconURL      *string               `json:"iconURL,omitempty"`
+	ImageURL     *string               `json:"imageURL,omitempty"`
+	ThumbURL     *string               `json:"thumbURL,omitempty"`
+	LinkNames    *bool                 `json:"linkNames,omitempty"`
+	MrkdwnIn     []string              `json:"mrkdwnIn,omitempty"`
+	Actions      []SlackAction         `json:"actions,omitempty"`
+	HTTPConfig   *HTTPConfig           `json:"httpConfig,omitempty"`
+}
+
+// Validate ensures SlackConfig is valid
+func (sc *SlackConfig) Validate() error {
+	for _, action := range sc.Actions {
+		if err := action.Validate(); err != nil {
+			return err
+		}
+	}
+	for _, field := range sc.Fields {
+		if err := field.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SlackAction configures a single Slack action that is sent with each notification.
+// See https://api.slack.com/docs/message-attachments#action_fields and https://api.slack.com/docs/message-buttons
+// for more information.
+type SlackAction struct {
+	Type         string                  `json:"type"`
+	Text         string                  `json:"text"`
+	URL          string                  `json:"url,omitempty"`
+	Style        string                  `json:"style,omitempty"`
+	Name         string                  `json:"name,omitempty"`
+	Value        string                  `json:"value,omitempty"`
+	ConfirmField *SlackConfirmationField `json:"confirm,omitempty"`
+}
+
+// Validate ensures SlackAction is valid
+func (sa *SlackAction) Validate() error {
+	if sa.Type == "" {
+		return errors.New("missing type in Slack action configuration")
+	}
+	if sa.Text == "" {
+		return errors.New("missing text in Slack action configuration")
+	}
+	if sa.URL == "" && sa.Name == "" {
+		return errors.New("missing name or url in Slack action configuration")
+	}
+	if sa.ConfirmField != nil {
+		if err := sa.ConfirmField.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SlackConfirmationField protect users from destructive actions or particularly distinguished decisions
+// by asking them to confirm their button click one more time.
+// See https://api.slack.com/docs/interactive-message-field-guide#confirmation_fields for more information.
+type SlackConfirmationField struct {
+	Text        string  `json:"text"`
+	Title       *string `json:"title,omitempty"`
+	OkText      *string `json:"okText,omitempty"`
+	DismissText *string `json:"dismissText,omitempty"`
+}
+
+// Validate ensures SlackConfirmationField is valid
+func (scf *SlackConfirmationField) Validate() error {
+	if scf.Text == "" {
+		return errors.New("missing text in Slack confirmation configuration")
+	}
+	return nil
+}
+
+// SlackField configures a single Slack field that is sent with each notification.
+// Each field must contain a title, value, and optionally, a boolean value to indicate if the field
+// is short enough to be displayed next to other fields designated as short.
+// See https://api.slack.com/docs/message-attachments#fields for more information.
+type SlackField struct {
+	Title string `json:"title"`
+	Value string `json:"value"`
+	Short *bool  `json:"short,omitempty"`
+}
+
+// Validate ensures SlackField is valid
+func (sf *SlackField) Validate() error {
+	if sf.Title == "" {
+		return errors.New("missing title in Slack field configuration")
+	}
+	if sf.Value == "" {
+		return errors.New("missing value in Slack field configuration")
+	}
+	return nil
 }
 
 type WebhookConfig struct {

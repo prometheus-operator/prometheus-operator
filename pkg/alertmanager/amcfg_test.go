@@ -17,6 +17,7 @@ package alertmanager
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/kylelemons/godebug/pretty"
@@ -38,6 +39,11 @@ func TestGenerateConfig(t *testing.T) {
 		baseConfig alertmanagerConfig
 		amConfigs  map[string]*monitoringv1alpha1.AlertmanagerConfig
 		expected   string
+	}
+
+	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
+	if err != nil {
+		t.Fatal("Could not parse slack API URL")
 	}
 
 	testCases := []testCase{
@@ -231,18 +237,8 @@ templates: []
 `,
 		},
 		{
-			name: "CR with Webhook Receiver",
-			kclient: fake.NewSimpleClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "am-pd-test-receiver",
-						Namespace: "mynamespace",
-					},
-					Data: map[string][]byte{
-						"routingKey": []byte("1234abc"),
-					},
-				},
-			),
+			name:    "CR with Webhook Receiver",
+			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -403,6 +399,80 @@ receivers:
   - send_resolved: false
     api_secret: wechatsecret
     corp_id: wechatcorpid
+templates: []
+`,
+		},
+		{
+
+			name:    "CR with Slack Receiver",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "text",
+										Name: "my-action",
+										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+											Text: "text",
+										},
+									},
+								},
+								Fields: []monitoringv1alpha1.SlackField{
+									{
+										Title: "title",
+										Value: "value",
+									},
+								},
+							}},
+						}},
+					},
+				},
+			},
+			expected: `global:
+  resolve_timeout: 0s
+  slack_api_url: http://slack.example.com
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace-myamc-test
+    match:
+      namespace: mynamespace
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace-myamc-test
+  slack_configs:
+  - send_resolved: false
+    fields:
+    - title: title
+      value: value
+    actions:
+    - type: type
+      text: text
+      name: my-action
+      confirm:
+        text: text
 templates: []
 `,
 		},

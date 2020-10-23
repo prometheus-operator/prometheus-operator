@@ -78,6 +78,10 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [PagerDutyConfigDetail](#pagerdutyconfigdetail)
 * [Receiver](#receiver)
 * [Route](#route)
+* [SlackAction](#slackaction)
+* [SlackConfig](#slackconfig)
+* [SlackConfirmationField](#slackconfirmationfield)
+* [SlackField](#slackfield)
 * [WeChatConfig](#wechatconfig)
 * [WebhookConfig](#webhookconfig)
 
@@ -1107,6 +1111,7 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | name |  | string | true |
 | opsgenieConfigs |  | [][OpsGenieConfig](#opsgenieconfig) | false |
 | pagerDutyConfigs |  | [][PagerDutyConfig](#pagerdutyconfig) | false |
+| slackConfigs |  | [][SlackConfig](#slackconfig) | false |
 | webhookConfigs |  | [][WebhookConfig](#webhookconfig) | false |
 | weChatConfigs |  | [][WeChatConfig](#wechatconfig) | false |
 
@@ -1126,6 +1131,78 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | matchers |  | [][Matcher](#matcher) | false |
 | continue |  | bool | false |
 | routes |  | [][Route](#route) | false |
+
+[Back to TOC](#table-of-contents)
+
+## SlackAction
+
+SlackAction configures a single Slack action that is sent with each notification. See https://api.slack.com/docs/message-attachments#action_fields and https://api.slack.com/docs/message-buttons for more information.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| type |  | string | true |
+| text |  | string | true |
+| url |  | string | false |
+| style |  | string | false |
+| name |  | string | false |
+| value |  | string | false |
+| confirm |  | *[SlackConfirmationField](#slackconfirmationfield) | false |
+
+[Back to TOC](#table-of-contents)
+
+## SlackConfig
+
+SlackConfig configures notifications via Slack.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved |  | *bool | false |
+| apiURL |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| channel |  | *string | false |
+| username |  | *string | false |
+| color |  | *string | false |
+| title |  | *string | false |
+| titleLink |  | *string | false |
+| pretext |  | *string | false |
+| text |  | *string | false |
+| fields |  | [][SlackField](#slackfield) | false |
+| shortFields |  | *bool | false |
+| footer |  | *string | false |
+| fallback |  | *string | false |
+| callbackId |  | *string | false |
+| iconEmoji |  | *string | false |
+| iconURL |  | *string | false |
+| imageURL |  | *string | false |
+| thumbURL |  | *string | false |
+| linkNames |  | *bool | false |
+| mrkdwnIn |  | []string | false |
+| actions |  | [][SlackAction](#slackaction) | false |
+| httpConfig |  | *[HTTPConfig](#httpconfig) | false |
+
+[Back to TOC](#table-of-contents)
+
+## SlackConfirmationField
+
+SlackConfirmationField protect users from destructive actions or particularly distinguished decisions by asking them to confirm their button click one more time. See https://api.slack.com/docs/interactive-message-field-guide#confirmation_fields for more information.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| text |  | string | true |
+| title |  | *string | false |
+| okText |  | *string | false |
+| dismissText |  | *string | false |
+
+[Back to TOC](#table-of-contents)
+
+## SlackField
+
+SlackField configures a single Slack field that is sent with each notification. Each field must contain a title, value, and optionally, a boolean value to indicate if the field is short enough to be displayed next to other fields designated as short. See https://api.slack.com/docs/message-attachments#fields for more information.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| title |  | string | true |
+| value |  | string | true |
+| short |  | *bool | false |
 
 [Back to TOC](#table-of-contents)
 

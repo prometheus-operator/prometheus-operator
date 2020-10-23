@@ -98,6 +98,7 @@ type receiver struct {
 	Name             string             `yaml:"name" json:"name"`
 	OpsgenieConfigs  []*opsgenieConfig  `yaml:"opsgenie_configs,omitempty" json:"opsgenie_configs,omitempty"`
 	PagerdutyConfigs []*pagerdutyConfig `yaml:"pagerduty_configs,omitempty" json:"pagerduty_configs,omitempty"`
+	SlackConfigs     []*slackConfig     `yaml:"slack_configs,omitempty" json:"slack_configs,omitempty"`
 	WebhookConfigs   []*webhookConfig   `yaml:"webhook_configs,omitempty" json:"webhook_configs,omitempty"`
 	WeChatConfigs    []*weChatConfig    `yaml:"wechat_configs,omitempty" json:"wechat_config,omitempty"`
 }
@@ -156,6 +157,31 @@ type weChatConfig struct {
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 }
 
+type slackConfig struct {
+	VSendResolved bool              `yaml:"send_resolved" json:"send_resolved"`
+	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	Channel       string            `yaml:"channel,omitempty" json:"channel,omitempty"`
+	Username      string            `yaml:"username,omitempty" json:"username,omitempty"`
+	Color         string            `yaml:"color,omitempty" json:"color,omitempty"`
+	Title         string            `yaml:"title,omitempty" json:"title,omitempty"`
+	TitleLink     string            `yaml:"title_link,omitempty" json:"title_link,omitempty"`
+	Pretext       string            `yaml:"pretext,omitempty" json:"pretext,omitempty"`
+	Text          string            `yaml:"text,omitempty" json:"text,omitempty"`
+	Fields        []slackField      `yaml:"fields,omitempty" json:"fields,omitempty"`
+	ShortFields   bool              `yaml:"short_fields,omitempty" json:"short_fields,omitempty"`
+	Footer        string            `yaml:"footer,omitempty" json:"footer,omitempty"`
+	Fallback      string            `yaml:"fallback,omitempty" json:"fallback,omitempty"`
+	CallbackID    string            `yaml:"callback_id,omitempty" json:"callback_id,omitempty"`
+	IconEmoji     string            `yaml:"icon_emoji,omitempty" json:"icon_emoji,omitempty"`
+	IconURL       string            `yaml:"icon_url,omitempty" json:"icon_url,omitempty"`
+	ImageURL      string            `yaml:"image_url,omitempty" json:"image_url,omitempty"`
+	ThumbURL      string            `yaml:"thumb_url,omitempty" json:"thumb_url,omitempty"`
+	LinkNames     bool              `yaml:"link_names,omitempty" json:"link_names,omitempty"`
+	MrkdwnIn      []string          `yaml:"mrkdwn_in,omitempty" json:"mrkdwn_in,omitempty"`
+	Actions       []slackAction     `yaml:"actions,omitempty" json:"actions,omitempty"`
+}
+
 type httpClientConfig struct {
 	BasicAuth       *basicAuth          `yaml:"basic_auth,omitempty"`
 	BearerToken     string              `yaml:"bearer_token,omitempty"`
@@ -186,6 +212,29 @@ type opsgenieResponder struct {
 	Name     string `yaml:"name,omitempty" json:"name,omitempty"`
 	Username string `yaml:"username,omitempty" json:"username,omitempty"`
 	Type     string `yaml:"type,omitempty" json:"type,omitempty"`
+}
+
+type slackField struct {
+	Title string `yaml:"title,omitempty" json:"title,omitempty"`
+	Value string `yaml:"value,omitempty" json:"value,omitempty"`
+	Short bool   `yaml:"short,omitempty" json:"short,omitempty"`
+}
+
+type slackAction struct {
+	Type         string                  `yaml:"type,omitempty"  json:"type,omitempty"`
+	Text         string                  `yaml:"text,omitempty"  json:"text,omitempty"`
+	URL          string                  `yaml:"url,omitempty"   json:"url,omitempty"`
+	Style        string                  `yaml:"style,omitempty" json:"style,omitempty"`
+	Name         string                  `yaml:"name,omitempty"  json:"name,omitempty"`
+	Value        string                  `yaml:"value,omitempty"  json:"value,omitempty"`
+	ConfirmField *slackConfirmationField `yaml:"confirm,omitempty"  json:"confirm,omitempty"`
+}
+
+type slackConfirmationField struct {
+	Text        string `yaml:"text,omitempty"  json:"text,omitempty"`
+	Title       string `yaml:"title,omitempty"  json:"title,omitempty"`
+	OkText      string `yaml:"ok_text,omitempty"  json:"ok_text,omitempty"`
+	DismissText string `yaml:"dismiss_text,omitempty"  json:"dismiss_text,omitempty"`
 }
 
 func loadCfg(s string) (*alertmanagerConfig, error) {
@@ -341,6 +390,18 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	var slackConfigs []*slackConfig
+	if l := len(in.SlackConfigs); l > 0 {
+		slackConfigs = make([]*slackConfig, l)
+		for i := range in.SlackConfigs {
+			receiver, err := cg.convertSlackConfig(ctx, in.SlackConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "SlackConfig[%d]", i)
+			}
+			slackConfigs[i] = receiver
+		}
+	}
+
 	var webhookConfigs []*webhookConfig
 	if l := len(in.WebhookConfigs); l > 0 {
 		webhookConfigs = make([]*webhookConfig, l)
@@ -381,6 +442,7 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		Name:             prefixReceiverName(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
 		PagerdutyConfigs: pagerdutyConfigs,
+		SlackConfigs:     slackConfigs,
 		WebhookConfigs:   webhookConfigs,
 		WeChatConfigs:    weChatConfigs,
 	}, nil
@@ -413,6 +475,152 @@ func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitori
 
 	if in.MaxAlerts != nil {
 		out.MaxAlerts = *in.MaxAlerts
+	}
+
+	return out, nil
+}
+
+func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoringv1alpha1.SlackConfig, crKey types.NamespacedName) (*slackConfig, error) {
+	out := &slackConfig{}
+
+	if in.SendResolved != nil {
+		out.VSendResolved = *in.SendResolved
+	}
+
+	if in.APIURL != nil {
+		url, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APIURL)
+		if err != nil {
+			return nil, errors.Errorf("failed to get key %q from secret %q", in.APIURL.Key, in.APIURL.Name)
+		}
+		out.APIURL = url
+	}
+
+	if in.Channel != nil {
+		out.Channel = *in.Channel
+	}
+
+	if in.Username != nil {
+		out.Username = *in.Username
+	}
+
+	if in.Color != nil {
+		out.Color = *in.Color
+	}
+
+	if in.Title != nil {
+		out.Title = *in.Title
+	}
+
+	if in.TitleLink != nil {
+		out.TitleLink = *in.TitleLink
+	}
+
+	if in.Pretext != nil {
+		out.Pretext = *in.Pretext
+	}
+
+	if in.Text != nil {
+		out.Text = *in.Text
+	}
+
+	if in.ShortFields != nil {
+		out.ShortFields = *in.ShortFields
+	}
+
+	if in.Footer != nil {
+		out.Footer = *in.Footer
+	}
+
+	if in.Fallback != nil {
+		out.Fallback = *in.Fallback
+	}
+
+	if in.CallbackID != nil {
+		out.CallbackID = *in.CallbackID
+	}
+
+	if in.IconEmoji != nil {
+		out.IconEmoji = *in.IconEmoji
+	}
+
+	if in.IconURL != nil {
+		out.IconURL = *in.IconURL
+	}
+
+	if in.ImageURL != nil {
+		out.ImageURL = *in.ImageURL
+	}
+
+	if in.ThumbURL != nil {
+		out.ThumbURL = *in.ThumbURL
+	}
+
+	if in.LinkNames != nil {
+		out.LinkNames = *in.LinkNames
+	}
+
+	out.MrkdwnIn = in.MrkdwnIn
+
+	var actions []slackAction
+	if l := len(in.Actions); l > 0 {
+		actions = make([]slackAction, l)
+		for i, a := range in.Actions {
+			var action slackAction = slackAction{
+				Type:  a.Type,
+				Text:  a.Text,
+				URL:   a.URL,
+				Style: a.Style,
+				Name:  a.Name,
+				Value: a.Value,
+			}
+
+			if a.ConfirmField != nil {
+				var confirmField slackConfirmationField = slackConfirmationField{
+					Text: a.ConfirmField.Text,
+				}
+
+				if a.ConfirmField.Title != nil {
+					confirmField.Title = *a.ConfirmField.Title
+				}
+
+				if a.ConfirmField.OkText != nil {
+					confirmField.OkText = *a.ConfirmField.OkText
+				}
+
+				if a.ConfirmField.DismissText != nil {
+					confirmField.DismissText = *a.ConfirmField.DismissText
+				}
+
+				action.ConfirmField = &confirmField
+			}
+
+			actions[i] = action
+		}
+		out.Actions = actions
+	}
+
+	if l := len(in.Fields); l > 0 {
+		var fields []slackField = make([]slackField, l)
+		for i, f := range in.Fields {
+			var field slackField = slackField{
+				Title: f.Title,
+				Value: f.Value,
+			}
+
+			if f.Short != nil {
+				field.Short = *f.Short
+			}
+			fields[i] = field
+		}
+		out.Fields = fields
+	}
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
 	}
 
 	return out, nil

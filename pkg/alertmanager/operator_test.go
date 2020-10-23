@@ -392,6 +392,340 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			},
 			ok: true,
 		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-empty-slack",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{},
+						},
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-empty-action-type",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-empty-action-text",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-empty-action-url-and-name",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "text",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-valid-action-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "text",
+										URL:  "http://localhost",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-valid-action-name",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "text",
+										Name: "my-action",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-invalid-action-confirm-field",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "text",
+										Name: "my-action",
+										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+											Text: "",
+										},
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-vali-action-confirm-field",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "text",
+										Name: "my-action",
+										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+											Text: "text",
+										},
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
+		}, {
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-empty-field-title",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Fields: []monitoringv1alpha1.SlackField{
+									{
+										Title: "",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-empty-field-value",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Fields: []monitoringv1alpha1.SlackField{
+									{
+										Title: "title",
+										Value: "",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-valid-field",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Fields: []monitoringv1alpha1.SlackField{
+									{
+										Title: "title",
+										Value: "value",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-valid-action-and-field",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								Actions: []monitoringv1alpha1.SlackAction{
+									{
+										Type: "type",
+										Text: "text",
+										Name: "my-action",
+										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+											Text: "text",
+										},
+									},
+								},
+								Fields: []monitoringv1alpha1.SlackField{
+									{
+										Title: "title",
+										Value: "value",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
+		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStore(c.CoreV1(), c.CoreV1())
