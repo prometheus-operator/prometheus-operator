@@ -23,6 +23,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -90,21 +91,6 @@ type Config struct {
 	Labels                       operator.Labels
 	AlertManagerSelector         string
 }
-
-// BasicAuthCredentials represents a username password pair to be used with
-// basic http authentication, see https://tools.ietf.org/html/rfc7617.
-type BasicAuthCredentials struct {
-	username string
-	password string
-}
-
-// BearerToken represents a bearer token, see
-// https://tools.ietf.org/html/rfc6750.
-type BearerToken string
-
-// TLSAsset represents any tls related opaque string, e.g. ca files, client
-// certificates.
-type TLSAsset string
 
 // New creates a new controller.
 func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
@@ -653,7 +639,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	level.Info(c.logger).Log("msg", "sync alertmanager", "key", key)
 
-	assetStore := newAssetStore(c.kclient.CoreV1(), c.kclient.CoreV1())
+	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
 
 	if err := c.provisionAlertmanagerConfiguration(context.TODO(), am, assetStore); err != nil {
 		return errors.Wrap(err, "provision alertmanager configuration")
@@ -715,7 +701,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assetStore) error {
+func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
 
 	secretName := defaultConfigSecretName(am.Name)
 	if am.Spec.ConfigSecret != "" {
@@ -762,7 +748,7 @@ receivers:
 		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
 	}
 
-	conf, err := newConfigGenerator(c.logger, c.kclient, store).generateConfig(ctx, *baseConfig, amConfigs)
+	conf, err := newConfigGenerator(c.logger, store).generateConfig(ctx, *baseConfig, amConfigs)
 	if err != nil {
 		return errors.Wrap(err, "generating Alertmanager config yaml failed")
 	}
@@ -822,7 +808,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assetStore) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
 	namespaces := []string{}
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	amConfigs := make(map[string]*monitoringv1alpha1.AlertmanagerConfig)
@@ -892,7 +878,7 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 
 // checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
 // and has no missing references to other objects.
-func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assetStore) error {
+func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) error {
 	receiverNames := make(map[string]struct{})
 
 	for i, receiver := range amc.Spec.Receivers {
@@ -907,18 +893,18 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 			pdcKey := fmt.Sprintf("%s/pagerduty/%d", amcKey, j)
 
 			if pdConfig.RoutingKey != nil {
-				if _, err := store.getSecretKey(ctx, amc.GetNamespace(), *pdConfig.RoutingKey); err != nil {
+				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *pdConfig.RoutingKey); err != nil {
 					return err
 				}
 			}
 
 			if pdConfig.ServiceKey != nil {
-				if _, err := store.getSecretKey(ctx, amc.GetNamespace(), *pdConfig.ServiceKey); err != nil {
+				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *pdConfig.ServiceKey); err != nil {
 					return err
 				}
 			}
 
-			if err := store.configureHTTPConfigInStore(ctx, pdConfig.HTTPConfig, amc.GetNamespace(), pdcKey); err != nil {
+			if err := configureHTTPConfigInStore(ctx, pdConfig.HTTPConfig, amc.GetNamespace(), pdcKey, store); err != nil {
 				return err
 			}
 		}
@@ -927,7 +913,7 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 			ogcKey := fmt.Sprintf("%s/opsgenie/%d", amcKey, j)
 
 			if ogConfig.APIKey != nil {
-				if _, err := store.getSecretKey(ctx, amc.GetNamespace(), *ogConfig.APIKey); err != nil {
+				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *ogConfig.APIKey); err != nil {
 					return err
 				}
 			}
@@ -936,7 +922,7 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 				return err
 			}
 
-			if err := store.configureHTTPConfigInStore(ctx, ogConfig.HTTPConfig, amc.GetNamespace(), ogcKey); err != nil {
+			if err := configureHTTPConfigInStore(ctx, ogConfig.HTTPConfig, amc.GetNamespace(), ogcKey, store); err != nil {
 				return err
 			}
 		}
@@ -949,12 +935,12 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 			}
 
 			if whConfig.URLSecret != nil {
-				if _, err := store.getSecretKey(ctx, amc.GetNamespace(), *whConfig.URLSecret); err != nil {
+				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *whConfig.URLSecret); err != nil {
 					return err
 				}
 			}
 
-			if err := store.configureHTTPConfigInStore(ctx, whConfig.HTTPConfig, amc.GetNamespace(), whcKey); err != nil {
+			if err := configureHTTPConfigInStore(ctx, whConfig.HTTPConfig, amc.GetNamespace(), whcKey, store); err != nil {
 				return err
 			}
 		}
@@ -981,6 +967,29 @@ func checkAlertmanagerRoutes(route *monitoringv1alpha1.Route, receivers map[stri
 	return nil
 }
 
+// configureHTTPConfigInStore configure the asset store for HTTPConfigs.
+func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alpha1.HTTPConfig, namespace string, key string, store *assets.Store) error {
+	if httpConfig == nil {
+		return nil
+	}
+
+	var err error
+	if httpConfig.BearerTokenSecret != nil {
+		if err = store.AddBearerToken(ctx, namespace, *httpConfig.BearerTokenSecret, key); err != nil {
+			return err
+		}
+	}
+
+	if err = store.AddBasicAuth(ctx, namespace, httpConfig.BasicAuth, key); err != nil {
+		return err
+	}
+
+	if err = store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
+		return err
+	}
+	return nil
+}
+
 // listMatchingNamespaces lists all the namespaces that match the provided
 // selector.
 func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, error) {
@@ -994,7 +1003,7 @@ func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, e
 	return ns, nil
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecret(am *monitoringv1.Alertmanager, store *assetStore) error {
+func (c *Operator) createOrUpdateTLSAssetSecret(am *monitoringv1.Alertmanager, store *assets.Store) error {
 	boolTrue := true
 	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
 
@@ -1013,10 +1022,10 @@ func (c *Operator) createOrUpdateTLSAssetSecret(am *monitoringv1.Alertmanager, s
 				},
 			},
 		},
-		Data: make(map[string][]byte, len(store.tlsAssets)),
+		Data: make(map[string][]byte, len(store.TLSAssets)),
 	}
 
-	for key, asset := range store.tlsAssets {
+	for key, asset := range store.TLSAssets {
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
 

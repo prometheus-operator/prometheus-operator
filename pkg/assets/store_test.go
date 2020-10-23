@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package prometheus
+package assets
 
 import (
 	"context"
@@ -118,7 +118,7 @@ func TestAddBearerToken(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := newAssetStore(c.CoreV1(), c.CoreV1())
+			store := NewStore(c.CoreV1(), c.CoreV1())
 
 			sel := v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
@@ -128,7 +128,7 @@ func TestAddBearerToken(t *testing.T) {
 			}
 
 			key := fmt.Sprintf("basicauth/%d", i)
-			err := store.addBearerToken(context.Background(), tc.ns, sel, key)
+			err := store.AddBearerToken(context.Background(), tc.ns, sel, key)
 
 			if tc.err {
 				if err == nil {
@@ -141,7 +141,7 @@ func TestAddBearerToken(t *testing.T) {
 				t.Fatalf("expecting no error, got %q", err)
 			}
 
-			s, found := store.bearerTokenAssets[key]
+			s, found := store.BearerTokenAssets[key]
 
 			if !found {
 				t.Fatalf("expecting to find key %q but got nothing", key)
@@ -241,7 +241,7 @@ func TestAddBasicAuth(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := newAssetStore(c.CoreV1(), c.CoreV1())
+			store := NewStore(c.CoreV1(), c.CoreV1())
 
 			basicAuth := &monitoringv1.BasicAuth{
 				Username: v1.SecretKeySelector{
@@ -259,7 +259,7 @@ func TestAddBasicAuth(t *testing.T) {
 			}
 
 			key := fmt.Sprintf("basicauth/%d", i)
-			err := store.addBasicAuth(context.Background(), tc.ns, basicAuth, key)
+			err := store.AddBasicAuth(context.Background(), tc.ns, basicAuth, key)
 
 			if tc.err {
 				if err == nil {
@@ -272,16 +272,16 @@ func TestAddBasicAuth(t *testing.T) {
 				t.Fatalf("expecting no error, got %q", err)
 			}
 
-			s, found := store.basicAuthAssets[key]
+			s, found := store.BasicAuthAssets[key]
 
 			if !found {
 				t.Fatalf("expecting to find key %q but got nothing", key)
 			}
 
-			if s.username != tc.expectedUser {
+			if s.Username != tc.expectedUser {
 				t.Fatalf("expecting username %q, got %q", tc.expectedUser, s)
 			}
-			if s.password != tc.expectedPassword {
+			if s.Password != tc.expectedPassword {
 				t.Fatalf("expecting password %q, got %q", tc.expectedPassword, s)
 			}
 		})
@@ -736,9 +736,9 @@ func TestAddTLSConfig(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := newAssetStore(c.CoreV1(), c.CoreV1())
+			store := NewStore(c.CoreV1(), c.CoreV1())
 
-			err := store.addSafeTLSConfig(context.Background(), tc.ns, tc.tlsConfig.SafeTLSConfig)
+			err := store.AddSafeTLSConfig(context.Background(), tc.ns, &tc.tlsConfig.SafeTLSConfig)
 
 			if tc.err {
 				if err == nil {
@@ -751,9 +751,9 @@ func TestAddTLSConfig(t *testing.T) {
 				t.Fatalf("expecting no error, got %q", err)
 			}
 
-			key := tlsAssetKeyFromSelector(tc.ns, tc.tlsConfig.CA)
+			key := TLSAssetKeyFromSelector(tc.ns, tc.tlsConfig.CA)
 
-			ca, found := store.tlsAssets[key]
+			ca, found := store.TLSAssets[key]
 			if !found {
 				t.Fatalf("expecting to find key %q but got nothing", key)
 			}
@@ -761,9 +761,9 @@ func TestAddTLSConfig(t *testing.T) {
 				t.Fatalf("expecting CA %q, got %q", tc.expectedCA, ca)
 			}
 
-			key = tlsAssetKeyFromSelector(tc.ns, tc.tlsConfig.Cert)
+			key = TLSAssetKeyFromSelector(tc.ns, tc.tlsConfig.Cert)
 
-			cert, found := store.tlsAssets[key]
+			cert, found := store.TLSAssets[key]
 			if !found {
 				t.Fatalf("expecting to find key %q but got nothing", key)
 			}
@@ -771,9 +771,9 @@ func TestAddTLSConfig(t *testing.T) {
 				t.Fatalf("expecting cert %q, got %q", tc.expectedCert, cert)
 			}
 
-			key = tlsAssetKeyFromSecretSelector(tc.ns, tc.tlsConfig.KeySecret)
+			key = TLSAssetKeyFromSecretSelector(tc.ns, tc.tlsConfig.KeySecret)
 
-			k, found := store.tlsAssets[key]
+			k, found := store.TLSAssets[key]
 			if !found {
 				t.Fatalf("expecting to find key %q but got nothing", key)
 			}
