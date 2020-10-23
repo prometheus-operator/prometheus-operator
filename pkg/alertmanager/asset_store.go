@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -107,6 +108,29 @@ func assetKeyFunc(obj interface{}) (string, error) {
 		return fmt.Sprintf("1/%s/%s", v.GetNamespace(), v.GetName()), nil
 	}
 	return "", errors.Errorf("unsupported type: %T", obj)
+}
+
+// configureHTTPConfigInStore configure the asset store for HTTPConfigs.
+func (a *assetStore) configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alpha1.HTTPConfig, namespace string, key string) error {
+	if httpConfig == nil {
+		return nil
+	}
+
+	var err error
+	if httpConfig.BearerTokenSecret != nil {
+		if err = a.addBearerToken(ctx, namespace, *httpConfig.BearerTokenSecret, key); err != nil {
+			return err
+		}
+	}
+
+	if err = a.addBasicAuth(ctx, namespace, httpConfig.BasicAuth, key); err != nil {
+		return err
+	}
+
+	if err = a.addTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
+		return err
+	}
+	return nil
 }
 
 // addTLSConfig processes the given *SafeTLSConfig and adds the referenced CA, certifcate and key to the store.

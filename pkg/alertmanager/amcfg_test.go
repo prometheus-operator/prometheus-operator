@@ -197,10 +197,10 @@ templates: []
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
+							Receiver: "test-pd",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
+							Name: "test-pd",
 							PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
 								RoutingKey: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{
@@ -216,13 +216,13 @@ templates: []
 			expected: `route:
   receiver: "null"
   routes:
-  - receiver: mynamespace-myamc-test
+  - receiver: mynamespace-myamc-test-pd
     match:
       namespace: mynamespace
     continue: true
 receivers:
 - name: "null"
-- name: mynamespace-myamc-test
+- name: mynamespace-myamc-test-pd
   pagerduty_configs:
   - send_resolved: false
     routing_key: 1234abc
@@ -282,6 +282,65 @@ receivers:
   webhook_configs:
   - send_resolved: false
     url: http://test.url
+templates: []
+`,
+		},
+		{
+			name: "CR with Opsgenie Receiver",
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-og-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"apiKey": []byte("1234abc"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+								APIKey: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-og-test-receiver",
+									},
+									Key: "apiKey",
+								},
+							}},
+						}},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace-myamc-test
+    match:
+      namespace: mynamespace
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace-myamc-test
+  opsgenie_configs:
+  - send_resolved: false
+    api_key: 1234abc
 templates: []
 `,
 		},

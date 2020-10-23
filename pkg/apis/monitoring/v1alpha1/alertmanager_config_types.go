@@ -15,6 +15,9 @@
 package v1alpha1
 
 import (
+	"regexp"
+
+	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	v1 "k8s.io/api/core/v1"
@@ -28,6 +31,10 @@ const (
 	AlertmanagerConfigKind    = "AlertmanagerConfig"
 	AlertmanagerConfigName    = "alertmanagerconfigs"
 	AlertmanagerConfigKindKey = "alertmanagerconfig"
+)
+
+var (
+	opsGenieTypeRe = regexp.MustCompile("^(team|user|escalation|schedule)$")
 )
 
 // AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated across multiple namespaces configuring one Alertmanager.
@@ -70,6 +77,7 @@ type Route struct {
 
 type Receiver struct {
 	Name             string            `json:"name"`
+	OpsGenieConfigs  []OpsGenieConfig  `json:"opsgenieConfigs,omitempty"`
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerDutyConfigs,omitempty"`
 	WebhookConfigs   []WebhookConfig   `json:"webhookConfigs,omitempty"`
 }
@@ -98,11 +106,61 @@ type WebhookConfig struct {
 	MaxAlerts    *int32                `json:"maxAlerts,omitempty"`
 }
 
+type OpsGenieConfig struct {
+	SendResolved *bool                     `json:"sendResolved,omitempty"`
+	APIKey       *v1.SecretKeySelector     `json:"apiKey,omitempty"`
+	APIURL       *string                   `json:"apiURL,omitempty"`
+	Message      *string                   `json:"message,omitempty"`
+	Description  *string                   `json:"description,omitempty"`
+	Source       *string                   `json:"source,omitempty"`
+	Tags         *string                   `json:"tags,omitempty"`
+	Note         *string                   `json:"note,omitempty"`
+	Priority     *string                   `json:"priority,omitempty"`
+	Details      []OpsGenieConfigDetail    `json:"details,omitempty"`
+	Responders   []OpsGenieConfigResponder `json:"responders,omitempty"`
+	HTTPConfig   *HTTPConfig               `json:"httpConfig,omitempty"`
+}
+
+// Validate ensures OpsGenieConfig is valid
+func (o *OpsGenieConfig) Validate() error {
+	for _, responder := range o.Responders {
+		if err := responder.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type OpsGenieConfigResponder struct {
+	ID       string `json:"id,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Username string `json:"username,omitempty"`
+	Type     string `json:"type,omitempty"`
+}
+
+// Validate ensures OpsGenieConfigResponder is valid
+func (r *OpsGenieConfigResponder) Validate() error {
+	if r.ID == "" && r.Name == "" && r.Username == "" {
+		return errors.Errorf("responder must have at least an ID, a Name or an Username defined")
+	}
+
+	if !opsGenieTypeRe.MatchString(r.Type) {
+		return errors.Errorf("responder type should match team, user, escalation or schedule")
+	}
+
+	return nil
+}
+
 type HTTPConfig struct {
 	BasicAuth         *monitoringv1.BasicAuth     `json:"basicAuth,omitempty"`
 	BearerTokenSecret *v1.SecretKeySelector       `json:"bearerTokenSecret,omitempty"`
 	TLSConfig         *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	ProxyURL          *string                     `json:"proxyURL,omitempty"`
+}
+
+type OpsGenieConfigDetail struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 type PagerDutyConfigDetail struct {

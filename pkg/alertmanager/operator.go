@@ -918,21 +918,25 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 				}
 			}
 
-			if pdConfig.HTTPConfig == nil {
-				continue
+			if err := store.configureHTTPConfigInStore(ctx, pdConfig.HTTPConfig, amc.GetNamespace(), pdcKey); err != nil {
+				return err
 			}
+		}
 
-			if pdConfig.HTTPConfig.BearerTokenSecret != nil {
-				if err := store.addBearerToken(ctx, amc.GetNamespace(), *pdConfig.HTTPConfig.BearerTokenSecret, pdcKey); err != nil {
+		for j, ogConfig := range receiver.OpsGenieConfigs {
+			ogcKey := fmt.Sprintf("%s/opsgenie/%d", amcKey, j)
+
+			if ogConfig.APIKey != nil {
+				if _, err := store.getSecretKey(ctx, amc.GetNamespace(), *ogConfig.APIKey); err != nil {
 					return err
 				}
 			}
 
-			if err := store.addBasicAuth(ctx, amc.GetNamespace(), pdConfig.HTTPConfig.BasicAuth, pdcKey); err != nil {
+			if err := ogConfig.Validate(); err != nil {
 				return err
 			}
 
-			if err := store.addTLSConfig(ctx, amc.GetNamespace(), pdConfig.HTTPConfig.TLSConfig); err != nil {
+			if err := store.configureHTTPConfigInStore(ctx, ogConfig.HTTPConfig, amc.GetNamespace(), ogcKey); err != nil {
 				return err
 			}
 		}
@@ -950,21 +954,7 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 				}
 			}
 
-			if whConfig.HTTPConfig == nil {
-				continue
-			}
-
-			if whConfig.HTTPConfig.BearerTokenSecret != nil {
-				if err := store.addBearerToken(ctx, amc.GetNamespace(), *whConfig.HTTPConfig.BearerTokenSecret, whcKey); err != nil {
-					return err
-				}
-			}
-
-			if err := store.addBasicAuth(ctx, amc.GetNamespace(), whConfig.HTTPConfig.BasicAuth, whcKey); err != nil {
-				return err
-			}
-
-			if err := store.addTLSConfig(ctx, amc.GetNamespace(), whConfig.HTTPConfig.TLSConfig); err != nil {
+			if err := store.configureHTTPConfigInStore(ctx, whConfig.HTTPConfig, amc.GetNamespace(), whcKey); err != nil {
 				return err
 			}
 		}

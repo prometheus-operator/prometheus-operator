@@ -71,6 +71,9 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [HTTPConfig](#httpconfig)
 * [InhibitRule](#inhibitrule)
 * [Matcher](#matcher)
+* [OpsGenieConfig](#opsgenieconfig)
+* [OpsGenieConfigDetail](#opsgenieconfigdetail)
+* [OpsGenieConfigResponder](#opsgenieconfigresponder)
 * [PagerDutyConfig](#pagerdutyconfig)
 * [PagerDutyConfigDetail](#pagerdutyconfigdetail)
 * [Receiver](#receiver)
@@ -1016,6 +1019,51 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 
 [Back to TOC](#table-of-contents)
 
+## OpsGenieConfig
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved |  | *bool | false |
+| apiKey |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| apiURL |  | *string | false |
+| message |  | *string | false |
+| description |  | *string | false |
+| source |  | *string | false |
+| tags |  | *string | false |
+| note |  | *string | false |
+| priority |  | *string | false |
+| details |  | [][OpsGenieConfigDetail](#opsgenieconfigdetail) | false |
+| responders |  | [][OpsGenieConfigResponder](#opsgenieconfigresponder) | false |
+| httpConfig |  | *[HTTPConfig](#httpconfig) | false |
+
+[Back to TOC](#table-of-contents)
+
+## OpsGenieConfigDetail
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| key |  | string | true |
+| value |  | string | true |
+
+[Back to TOC](#table-of-contents)
+
+## OpsGenieConfigResponder
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| id |  | string | false |
+| name |  | string | false |
+| username |  | string | false |
+| type |  | string | false |
+
+[Back to TOC](#table-of-contents)
+
 ## PagerDutyConfig
 
 
@@ -1056,6 +1104,7 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | name |  | string | true |
+| opsgenieConfigs |  | [][OpsGenieConfig](#opsgenieconfig) | false |
 | pagerDutyConfigs |  | [][PagerDutyConfig](#pagerdutyconfig) | false |
 | webhookConfigs |  | [][WebhookConfig](#webhookconfig) | false |
 
