@@ -32,7 +32,6 @@ import (
 )
 
 func TestGenerateConfig(t *testing.T) {
-	weChatCorpID := "wechatcorpid"
 	type testCase struct {
 		name       string
 		kclient    kubernetes.Interface
@@ -281,7 +280,7 @@ templates: []
 receivers:
 - name: "null"
 - name: mynamespace-myamc-test
-webhook_configs:
+  webhook_configs:
   - send_resolved: false
     url: http://test.url
 templates: []
@@ -384,7 +383,7 @@ templates: []
 									},
 									Key: "apiSecret",
 								},
-								CorpID: &weChatCorpID,
+								CorpID: strPtr("wechatcorpid"),
 							}},
 						}},
 					},

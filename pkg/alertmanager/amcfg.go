@@ -367,7 +367,11 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 	if l := len(in.WeChatConfigs); l > 0 {
 		weChatConfigs = make([]*weChatConfig, l)
 		for i := range in.WeChatConfigs {
-			weChatConfigs[i] = cg.convertWeChatConfig(ctx, in.WeChatConfigs[i], crKey)
+			receiver, err := cg.convertWeChatConfig(ctx, in.WeChatConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "WeChatConfig[%d]", i)
+			}
+			weChatConfigs[i] = receiver
 		}
 	}
 
@@ -576,7 +580,7 @@ func (cg *configGenerator) convertWeChatConfig(ctx context.Context, in monitorin
 	if in.APISecret != nil {
 		apiSecret, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APISecret)
 		if err != nil {
-			return nil, errors.Errorf("failed to get key %q from secret %q", in.APISecret)
+			return nil, errors.Errorf("failed to get secret %q", in.APISecret)
 		}
 		out.APISecret = apiSecret
 	}

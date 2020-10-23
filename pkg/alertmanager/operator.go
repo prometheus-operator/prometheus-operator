@@ -17,6 +17,7 @@ package alertmanager
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 	"time"
