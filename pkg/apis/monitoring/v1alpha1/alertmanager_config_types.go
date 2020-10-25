@@ -15,9 +15,9 @@
 package v1alpha1
 
 import (
+	"errors"
 	"regexp"
 
-	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	v1 "k8s.io/api/core/v1"
@@ -141,11 +141,11 @@ type OpsGenieConfigResponder struct {
 // Validate ensures OpsGenieConfigResponder is valid
 func (r *OpsGenieConfigResponder) Validate() error {
 	if r.ID == "" && r.Name == "" && r.Username == "" {
-		return errors.Errorf("responder must have at least an ID, a Name or an Username defined")
+		return errors.New("responder must have at least an ID, a Name or an Username defined")
 	}
 
 	if !opsGenieTypeRe.MatchString(r.Type) {
-		return errors.Errorf("responder type should match team, user, escalation or schedule")
+		return errors.New("responder type should match team, user, escalation or schedule")
 	}
 
 	return nil
