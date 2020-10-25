@@ -46,6 +46,7 @@ import (
 // If the allowed namespaces includes exactly one entry with the value v1.NamespaceAll (empty string),
 // the given denied namespaces are applied.
 func NewUnprivilegedNamespaceListWatchFromClient(
+	ctx context.Context,
 	l log.Logger,
 	c cache.Getter,
 	allowedNamespaces, deniedNamespaces map[string]struct{},
@@ -82,7 +83,7 @@ func NewUnprivilegedNamespaceListWatchFromClient(
 				Resource("namespaces").
 				Name(name).
 				VersionedParams(&options, scheme.ParameterCodec).
-				Do(context.TODO()).
+				Do(ctx).
 				Into(result)
 			if apierrors.IsNotFound(err) {
 				level.Info(l).Log("msg", "namespace not found", "namespace", name)

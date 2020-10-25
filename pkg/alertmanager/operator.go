@@ -208,7 +208,7 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 		}
 		nsInf := cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(
-				listwatch.NewUnprivilegedNamespaceListWatchFromClient(o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
 			),
 			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
 		)
@@ -641,11 +641,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
 
-	if err := c.provisionAlertmanagerConfiguration(context.TODO(), am, assetStore); err != nil {
+	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore); err != nil {
 		return errors.Wrap(err, "provision alertmanager configuration")
 	}
 
-	if err := c.createOrUpdateTLSAssetSecret(am, assetStore); err != nil {
+	if err := c.createOrUpdateTLSAssetSecret(ctx, am, assetStore); err != nil {
 		return errors.Wrap(err, "creating tls asset secret failed")
 	}
 
@@ -1003,7 +1003,7 @@ func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, e
 	return ns, nil
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecret(am *monitoringv1.Alertmanager, store *assets.Store) error {
+func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
 	boolTrue := true
 	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
 
@@ -1029,7 +1029,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(am *monitoringv1.Alertmanager, s
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
 
-	_, err := sClient.Get(context.TODO(), tlsAssetsSecret.Name, metav1.GetOptions{})
+	_, err := sClient.Get(ctx, tlsAssetsSecret.Name, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(
@@ -1039,11 +1039,11 @@ func (c *Operator) createOrUpdateTLSAssetSecret(am *monitoringv1.Alertmanager, s
 				am.Namespace,
 			)
 		}
-		_, err = sClient.Create(context.TODO(), tlsAssetsSecret, metav1.CreateOptions{})
+		_, err = sClient.Create(ctx, tlsAssetsSecret, metav1.CreateOptions{})
 		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 
 	} else {
-		_, err = sClient.Update(context.TODO(), tlsAssetsSecret, metav1.UpdateOptions{})
+		_, err = sClient.Update(ctx, tlsAssetsSecret, metav1.UpdateOptions{})
 		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 	}
 
