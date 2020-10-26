@@ -1144,6 +1144,8 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | toParty |  | *string | false |
 | toTag |  | *string | false |
 | message |  | *string | false |
+| messageType |  | *string | false |
+| httpConfig |  | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
 

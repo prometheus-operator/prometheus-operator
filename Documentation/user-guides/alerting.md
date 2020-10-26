@@ -18,7 +18,7 @@ The Alertmanager may be used to:
 
 Prometheus' configuration also includes "rule files", which contain the [alerting rules][alerting-rules]. When an alerting rule triggers it fires that alert against *all* Alertmanager instances, on *every* rule evaluation interval. The Alertmanager instances communicate to each other which notifications have already been sent out. For more information on this system design, see the [High Availability scheme description][ha-scheme].
 
-The Prometheus Operator also introduces an AlertmanagerConfig resource, which allows users to declaratively describe Alertmanager configurations. It is recommended to use the AlertmanagerConfig resource than manage the configurations manually.
+The Prometheus Operator also introduces an AlertmanagerConfig resource, which allows users to declaratively describe Alertmanager configurations. The AlertmanagerConfig resource is currently v1alpha1, testing and feedback are welcome.
 
 First, create an example Alertmanager cluster, with three instances.
 
@@ -32,12 +32,13 @@ spec:
   replicas: 3
 ```
 
-The Alertmanager instances will not be able to start up, unless a valid configuration is given. To create a configuration, AlertmanagerConfig resource or manully created secret could be used.
+The Alertmanager instances will not be able to start up, unless a valid configuration is given. An config file Secret will be composed by taking an optional base config file Secret specified through the `configSecret` field in the Alertmanager resource Spec, and merging that with any AlertmanagerConfig resources that get matched by using the `alertmanagerConfigSelector` and `alertmanagerConfigNamespaceSelector` selectors from the `Alertmanager` resource.
+
 For more information on configuring Alertmanager, see the Prometheus [Alerting Configuration document][alerting-config].
 
 ## AlertmanagerConfig Resource
 
-The following example configuration creates an AlertmanagerConfig resource that sends notifications against a non-existent `wechat` receiver, allowing the Alertmanager to start up, without issuing any notifications.
+The following example configuration creates an AlertmanagerConfig resource that sends notifications to a non-existent `wechat` receiver:
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager-config-example.yaml)
 ```yaml
@@ -79,7 +80,7 @@ Save the above AlertmanagerConfig in a file called `alertmanager-config.yaml` an
 $ kubectl create -f alertmanager-config.yaml
 ```
 
-Alertmanager require a `alertmanagerConfigSelector` for finding those AlertmanagerConfig resources. In the previous example, the label `alertmanagerConfig: example` is added, so Alertmanager instance should be updated, adding the `alertmanagerConfigSelector`:
+The `alertmanagerConfigSelector` field in the Alertmanager resource Spec needs to be specified so that the operator can select such AlertmanagerConfig resources. In the previous example, the label `alertmanagerConfig: example` is added, so the Alertmanager instance should be updated, adding the `alertmanagerConfigSelector`:
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager-selector-example.yaml)
 ```yaml
@@ -96,7 +97,7 @@ spec:
 
 ## Manually Managed Secret
 
-The following example configuration sends notifications against a non-existent `webhook`, allowing the Alertmanager to start up, without issuing any notifications.
+The following example configuration sends notifications against to a `webhook`:
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager.yaml)
 ```yaml
@@ -146,7 +147,7 @@ templates:
 
 ## Expose Alertmanager
 
-Once the `AlertmanagerConfig` or the configuration Secret is mounted by Alertmanager Pods created through the Alertmanager object.
+Once the operator merges the optional manually specified Secret with any selected `AlertmanagerConfig` resources, a new configuration Secret is created with the name `alertmanager-<Alertmanager name>-generated`, and is mounted into Alertmanager Pods created through the Alertmanager object.
 
 To be able to view the web UI, expose it through a Service. A simple way to do this is to use a Service of type `NodePort`.
 
