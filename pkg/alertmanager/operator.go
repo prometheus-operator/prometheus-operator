@@ -946,7 +946,9 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 			}
 		}
 
-		for _, wcConfig := range receiver.WeChatConfigs {
+		for j, wcConfig := range receiver.WeChatConfigs {
+			wcKey := fmt.Sprintf("%s/wechat/%d", amcKey, j)
+
 			if wcConfig.APIURL != nil {
 				_, err := url.Parse(*wcConfig.APIURL)
 				if err != nil {
@@ -958,6 +960,10 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *wcConfig.APISecret); err != nil {
 					return err
 				}
+			}
+
+			if err := configureHTTPConfigInStore(ctx, wcConfig.HTTPConfig, amc.GetNamespace(), wcKey, store); err != nil {
+				return err
 			}
 		}
 	}

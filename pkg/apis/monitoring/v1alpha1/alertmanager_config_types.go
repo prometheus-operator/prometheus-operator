@@ -179,6 +179,8 @@ type WeChatConfig struct {
 	ToParty      *string               `json:"toParty,omitempty"`
 	ToTag        *string               `json:"toTag,omitempty"`
 	Message      *string               `json:"message,omitempty"`
+	MessageType  *string               `json:"messageType,omitempty"`
+	HTTPConfig   *HTTPConfig           `json:"httpConfig,omitempty"`
 }
 
 type InhibitRule struct {
