@@ -28,8 +28,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/pkg/errors"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
 func PathToOSFile(relativPath string) (*os.File, error) {
