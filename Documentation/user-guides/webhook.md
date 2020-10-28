@@ -68,6 +68,8 @@ webhooks:
           - UPDATE
         resources:
           - prometheusrules
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
 ```
 
 The `caBundle` contains the base64-encoded CA certificate used to sign the
