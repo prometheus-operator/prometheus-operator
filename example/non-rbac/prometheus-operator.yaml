@@ -23,7 +23,6 @@ spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --logtostderr=true
         - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.43.0
         image: quay.io/prometheus-operator/prometheus-operator:v0.43.0
         name: prometheus-operator

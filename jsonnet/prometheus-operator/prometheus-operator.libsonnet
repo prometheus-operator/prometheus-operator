@@ -151,9 +151,6 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
         container.withPorts(containerPort.newNamed(targetPort, 'http')) +
         container.withArgs([
           '--kubelet-service=kube-system/kubelet',
-          // Prometheus Operator is run with a read-only root file system. By
-          // default glog saves logfiles to /tmp. Make it log to stderr instead.
-          '--logtostderr=true',
           '--prometheus-config-reloader=' + po.prometheusConfigReloaderImage + ':' + po.prometheusConfigReloaderVersion,
         ]) +
         container.mixin.securityContext.withAllowPrivilegeEscalation(false) +
