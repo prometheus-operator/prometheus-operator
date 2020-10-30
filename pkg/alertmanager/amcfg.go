@@ -99,6 +99,7 @@ type receiver struct {
 	OpsgenieConfigs  []*opsgenieConfig  `yaml:"opsgenie_configs,omitempty" json:"opsgenie_configs,omitempty"`
 	PagerdutyConfigs []*pagerdutyConfig `yaml:"pagerduty_configs,omitempty" json:"pagerduty_configs,omitempty"`
 	WebhookConfigs   []*webhookConfig   `yaml:"webhook_configs,omitempty" json:"webhook_configs,omitempty"`
+	WeChatConfigs    []*weChatConfig    `yaml:"wechat_configs,omitempty" json:"wechat_config,omitempty"`
 }
 
 type webhookConfig struct {
@@ -139,6 +140,20 @@ type opsgenieConfig struct {
 	Tags          string              `yaml:"tags,omitempty" json:"tags,omitempty"`
 	Note          string              `yaml:"note,omitempty" json:"note,omitempty"`
 	Priority      string              `yaml:"priority,omitempty" json:"priority,omitempty"`
+}
+
+type weChatConfig struct {
+	VSendResolved bool              `yaml:"send_resolved" json:"send_resolved"`
+	APISecret     string            `yaml:"api_secret,omitempty" json:"api_secret,omitempty"`
+	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	CorpID        string            `yaml:"corp_id,omitempty" json:"corp_id,omitempty"`
+	AgentID       string            `yaml:"agent_id,omitempty" json:"agent_id,omitempty"`
+	ToUser        string            `yaml:"to_user,omitempty" json:"to_user,omitempty"`
+	ToParty       string            `yaml:"to_party,omitempty" json:"to_party,omitempty"`
+	ToTag         string            `yaml:"to_tag,omitempty" json:"to_tag,omitempty"`
+	Message       string            `yaml:"message,omitempty" json:"message,omitempty"`
+	MessageType   string            `yaml:"message_type,omitempty" json:"message,omitempty"`
+	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 }
 
 type httpClientConfig struct {
@@ -350,11 +365,24 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	var weChatConfigs []*weChatConfig
+	if l := len(in.WeChatConfigs); l > 0 {
+		weChatConfigs = make([]*weChatConfig, l)
+		for i := range in.WeChatConfigs {
+			receiver, err := cg.convertWeChatConfig(ctx, in.WeChatConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "WeChatConfig[%d]", i)
+			}
+			weChatConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             prefixReceiverName(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
 		PagerdutyConfigs: pagerdutyConfigs,
 		WebhookConfigs:   webhookConfigs,
+		WeChatConfigs:    weChatConfigs,
 	}, nil
 }
 
@@ -531,6 +559,65 @@ func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitor
 		}
 	}
 	out.Responders = responders
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
+
+	return out, nil
+}
+
+func (cg *configGenerator) convertWeChatConfig(ctx context.Context, in monitoringv1alpha1.WeChatConfig, crKey types.NamespacedName) (*weChatConfig, error) {
+
+	out := &weChatConfig{}
+
+	if in.SendResolved != nil {
+		out.VSendResolved = *in.SendResolved
+	}
+
+	if in.APISecret != nil {
+		apiSecret, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APISecret)
+		if err != nil {
+			return nil, errors.Errorf("failed to get secret %q", in.APISecret)
+		}
+		out.APISecret = apiSecret
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = *in.APIURL
+	}
+
+	if in.CorpID != nil {
+		out.CorpID = *in.CorpID
+	}
+
+	if in.AgentID != nil {
+		out.AgentID = *in.AgentID
+	}
+
+	if in.ToUser != nil {
+		out.ToUser = *in.ToUser
+	}
+
+	if in.ToParty != nil {
+		out.ToParty = *in.ToParty
+	}
+
+	if in.ToTag != nil {
+		out.ToTag = *in.ToTag
+	}
+
+	if in.Message != nil {
+		out.Message = *in.Message
+	}
+
+	if in.MessageType != nil {
+		out.MessageType = *in.MessageType
+	}
 
 	if in.HTTPConfig != nil {
 		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)

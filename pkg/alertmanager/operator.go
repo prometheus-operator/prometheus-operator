@@ -17,6 +17,7 @@ package alertmanager
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 	"time"
@@ -941,6 +942,27 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 			}
 
 			if err := configureHTTPConfigInStore(ctx, whConfig.HTTPConfig, amc.GetNamespace(), whcKey, store); err != nil {
+				return err
+			}
+		}
+
+		for j, wcConfig := range receiver.WeChatConfigs {
+			wcKey := fmt.Sprintf("%s/wechat/%d", amcKey, j)
+
+			if wcConfig.APIURL != nil {
+				_, err := url.Parse(*wcConfig.APIURL)
+				if err != nil {
+					return errors.New("api url not valid")
+				}
+			}
+
+			if wcConfig.APISecret != nil {
+				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *wcConfig.APISecret); err != nil {
+					return err
+				}
+			}
+
+			if err := configureHTTPConfigInStore(ctx, wcConfig.HTTPConfig, amc.GetNamespace(), wcKey, store); err != nil {
 				return err
 			}
 		}

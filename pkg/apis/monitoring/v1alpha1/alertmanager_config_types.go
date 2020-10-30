@@ -80,6 +80,7 @@ type Receiver struct {
 	OpsGenieConfigs  []OpsGenieConfig  `json:"opsgenieConfigs,omitempty"`
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerDutyConfigs,omitempty"`
 	WebhookConfigs   []WebhookConfig   `json:"webhookConfigs,omitempty"`
+	WeChatConfigs    []WeChatConfig    `json:"weChatConfigs,omitempty"`
 }
 
 type PagerDutyConfig struct {
@@ -166,6 +167,20 @@ type OpsGenieConfigDetail struct {
 type PagerDutyConfigDetail struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+}
+
+type WeChatConfig struct {
+	SendResolved *bool                 `json:"sendResolved,omitempty"`
+	APISecret    *v1.SecretKeySelector `json:"apiSecret,omitempty"`
+	APIURL       *string               `json:"apiURL,omitempty"`
+	CorpID       *string               `json:"corpID,omitempty"`
+	AgentID      *string               `json:"agentID,omitempty"`
+	ToUser       *string               `json:"toUser,omitempty"`
+	ToParty      *string               `json:"toParty,omitempty"`
+	ToTag        *string               `json:"toTag,omitempty"`
+	Message      *string               `json:"message,omitempty"`
+	MessageType  *string               `json:"messageType,omitempty"`
+	HTTPConfig   *HTTPConfig           `json:"httpConfig,omitempty"`
 }
 
 type InhibitRule struct {

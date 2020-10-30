@@ -730,15 +730,18 @@ func testAMConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	routingKeySecret := &v1.Secret{
+	// reuse the secret for pagerduty and wechat
+	testingSecret := "testing-secret"
+	testingSecretKey := "testing-secret-key"
+	testingKeySecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "pd-receiver-routing-key",
+			Name: testingSecret,
 		},
 		Data: map[string][]byte{
-			"routing-key": []byte("1234abc"),
+			testingSecretKey: []byte("1234abc"),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), routingKeySecret, metav1.CreateOptions{}); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), testingKeySecret, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -779,15 +782,26 @@ func testAMConfigCRD(t *testing.T) {
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
 					RoutingKey: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "pd-receiver-routing-key",
+							Name: testingSecret,
 						},
-						Key: "routing-key",
+						Key: testingSecretKey,
 					},
 				}},
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
 					URL: func(s string) *string {
 						return &s
 					}("http://test.url"),
+				}},
+				WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
+					APISecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: testingSecret,
+						},
+						Key: testingSecretKey,
+					},
+					CorpID: func(str string) *string {
+						return &str
+					}("testingCorpID"),
 				}},
 			}},
 		},
@@ -814,7 +828,7 @@ func testAMConfigCRD(t *testing.T) {
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
 					RoutingKey: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "pd-receiver-routing-key",
+							Name: testingSecret,
 						},
 						Key: "non-existing-key",
 					},
@@ -867,6 +881,10 @@ receivers:
   webhook_configs:
   - send_resolved: false
     url: http://test.url
+  wechat_configs:
+  - send_resolved: false
+    api_secret: 1234abc
+    corp_id: testingCorpID
 templates: []
 `, ns, ns, ns)
 

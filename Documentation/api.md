@@ -78,6 +78,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [PagerDutyConfigDetail](#pagerdutyconfigdetail)
 * [Receiver](#receiver)
 * [Route](#route)
+* [WeChatConfig](#wechatconfig)
 * [WebhookConfig](#webhookconfig)
 
 ## APIServerConfig
@@ -1107,6 +1108,7 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | opsgenieConfigs |  | [][OpsGenieConfig](#opsgenieconfig) | false |
 | pagerDutyConfigs |  | [][PagerDutyConfig](#pagerdutyconfig) | false |
 | webhookConfigs |  | [][WebhookConfig](#webhookconfig) | false |
+| weChatConfigs |  | [][WeChatConfig](#wechatconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1124,6 +1126,26 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 | matchers |  | [][Matcher](#matcher) | false |
 | continue |  | bool | false |
 | routes |  | [][Route](#route) | false |
+
+[Back to TOC](#table-of-contents)
+
+## WeChatConfig
+
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved |  | *bool | false |
+| apiSecret |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| apiURL |  | *string | false |
+| corpID |  | *string | false |
+| agentID |  | *string | false |
+| toUser |  | *string | false |
+| toParty |  | *string | false |
+| toTag |  | *string | false |
+| message |  | *string | false |
+| messageType |  | *string | false |
+| httpConfig |  | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
 

@@ -26,6 +26,10 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
+func strPtr(str string) *string {
+	return &str
+}
+
 func TestCheckAlertmanagerConfig(t *testing.T) {
 	c := fake.NewSimpleClientset(
 		&v1.Secret{
@@ -233,9 +237,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: func(str string) *string {
-									return &str
-								}("http://test.local"),
+								URL: strPtr("http://test.local"),
 							},
 						},
 					}},
@@ -292,6 +294,103 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "wechat-valid",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
+							{
+								CorpID: strPtr("testingCorpID"),
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "wechat-invalid-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
+							{
+								CorpID: strPtr("testingCorpID"),
+								APIURL: strPtr("http://::invalid-url"),
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "wechat-invalid-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
+							{
+								CorpID: strPtr("testingCorpID"),
+								APISecret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+									Key:                  "not-existing",
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "wechat-valid-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
+							{
+								CorpID: strPtr("testingCorpID"),
+								APISecret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
