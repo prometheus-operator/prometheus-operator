@@ -239,9 +239,21 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForCacheSync(ctx, log.With(c.logger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.logger, "informer", infs.name), inf.Informer()) {
 				ok = false
 			}
+		}
+	}
+
+	for _, inf := range []struct {
+		name     string
+		informer cache.SharedIndexInformer
+	}{
+		{"AlertmanagerNamespace", c.nsAlrtInf},
+		{"AlertmanagerConfigNamespace", c.nsAlrtCfgInf},
+	} {
+		if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.logger, "informer", inf.name), inf.informer) {
+			ok = false
 		}
 	}
 
