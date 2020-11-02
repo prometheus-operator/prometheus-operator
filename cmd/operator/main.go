@@ -46,6 +46,7 @@ import (
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
+	klog "k8s.io/klog"
 	klogv2 "k8s.io/klog/v2"
 )
 
@@ -144,7 +145,7 @@ var (
 )
 
 func init() {
-	//With migration to klog-gokit, calling klogv2.InitFlags(flagset) is not applicable.
+	// With migration to klog-gokit, calling klogv2.InitFlags(flagset) is not applicable.
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
 	flagset.BoolVar(&serverTLS, "web.enable-tls", false, "Activate prometheus operator web server TLS.  "+
 		" This is useful for example when using the rule validation webhook.")
@@ -226,6 +227,8 @@ func Main() int {
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	// Above level 6, the k8s client would log bearer tokens in clear-text.
+	klog.ClampLevel(6)
+	klog.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
 	klogv2.ClampLevel(6)
 	klogv2.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
 
