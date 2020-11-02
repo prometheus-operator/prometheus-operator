@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -1049,7 +1050,11 @@ func (c *Operator) prometheusForStatefulSet(sset interface{}) *monitoringv1.Prom
 		return nil
 	}
 
-	promKey := statefulSetKeyToPrometheusKey(key)
+	match, promKey := statefulSetKeyToPrometheusKey(key)
+	if !match {
+		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus key format", "key", key)
+		return nil
+	}
 
 	p, err := c.promInfs.Get(promKey)
 	if apierrors.IsNotFound(err) {
@@ -1068,18 +1073,35 @@ func prometheusNameFromStatefulSetName(name string) string {
 	return strings.TrimPrefix(name, "prometheus-")
 }
 
-func statefulSetNameFromPrometheusName(name string) string {
-	return "prometheus-" + name
+func statefulSetNameFromPrometheusName(name string, shard int) string {
+	if shard == 0 {
+		return fmt.Sprintf("prometheus-%s", name)
+	}
+	return fmt.Sprintf("prometheus-%s-shard-%d", name, shard)
 }
 
-func statefulSetKeyToPrometheusKey(key string) string {
-	keyParts := strings.Split(key, "/")
-	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "prometheus-")
+var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
+var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
+
+func statefulSetKeyToPrometheusKey(key string) (bool, string) {
+	r := prometheusKeyInStatefulSet
+	if prometheusKeyInShardStatefulSet.MatchString(key) {
+		r = prometheusKeyInShardStatefulSet
+	}
+
+	matches := r.FindAllStringSubmatch(key, 2)
+	if len(matches) != 1 {
+		return false, ""
+	}
+	if len(matches[0]) != 3 {
+		return false, ""
+	}
+	return true, matches[0][1] + "/" + matches[0][2]
 }
 
-func prometheusKeyToStatefulSetKey(key string) string {
+func prometheusKeyToStatefulSetKey(key string, shard int) string {
 	keyParts := strings.Split(key, "/")
-	return keyParts[0] + "/prometheus-" + keyParts[1]
+	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(keyParts[1], shard))
 }
 
 func (c *Operator) handleStatefulSetDelete(obj interface{}) {
@@ -1165,64 +1187,88 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
-	// Ensure we have a StatefulSet running Prometheus deployed.
-	obj, err := c.ssetInfs.Get(prometheusKeyToStatefulSetKey(key))
 
-	if err != nil && !apierrors.IsNotFound(err) {
-		return errors.Wrap(err, "retrieving statefulset failed")
-	}
+	// Ensure we have a StatefulSet running Prometheus deployed and that StatefulSet names are created correctly.
+	expected := expectedStatefulSetShardNames(p)
+	for shard, ssetName := range expected {
+		level.Debug(c.logger).Log("msg", "reconciling statefulset", "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 
-	exists := !apierrors.IsNotFound(err)
-
-	spec := appsv1.StatefulSetSpec{}
-	if obj != nil {
-		ss := obj.(*appsv1.StatefulSet)
-		spec = ss.Spec
-	}
-	newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, spec)
-	if err != nil {
-		return err
-	}
-
-	sset, err := makeStatefulSet(*p, &c.config, ruleConfigMapNames, newSSetInputHash)
-	if err != nil {
-		return errors.Wrap(err, "making statefulset failed")
-	}
-	operator.SanitizeSTS(sset)
-
-	if !exists {
-		level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
-		level.Debug(c.logger).Log("msg", "creating Prometheus statefulset")
-		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
-			return errors.Wrap(err, "creating statefulset failed")
+		obj, err := c.ssetInfs.Get(prometheusKeyToStatefulSetKey(key, shard))
+		exists := !apierrors.IsNotFound(err)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return errors.Wrap(err, "retrieving statefulset failed")
 		}
-		return nil
+
+		spec := appsv1.StatefulSetSpec{}
+		if obj != nil {
+			ss := obj.(*appsv1.StatefulSet)
+			spec = ss.Spec
+		}
+		newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, spec)
+		if err != nil {
+			return err
+		}
+
+		sset, err := makeStatefulSet(ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard))
+		if err != nil {
+			return errors.Wrap(err, "making statefulset failed")
+		}
+		operator.SanitizeSTS(sset)
+
+		if !exists {
+			level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
+			level.Debug(c.logger).Log("msg", "creating Prometheus statefulset")
+			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
+				return errors.Wrap(err, "creating statefulset failed")
+			}
+			return nil
+		}
+
+		oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
+		if newSSetInputHash == oldSSetInputHash {
+			level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+			return nil
+		}
+
+		level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
+
+		_, err = ssetClient.Update(ctx, sset, metav1.UpdateOptions{})
+		sErr, ok := err.(*apierrors.StatusError)
+
+		if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
+			c.metrics.StsDeleteCreateCounter().Inc()
+			level.Info(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet", "details", sErr.ErrStatus.Details)
+			propagationPolicy := metav1.DeletePropagationForeground
+			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
+			}
+			return nil
+		}
+
+		if err != nil {
+			return errors.Wrap(err, "updating StatefulSet failed")
+		}
 	}
 
-	oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
-	if newSSetInputHash == oldSSetInputHash {
-		level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
-		return nil
+	ssets := map[string]struct{}{}
+	for _, ssetName := range expected {
+		ssets[ssetName] = struct{}{}
 	}
 
-	level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
+	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prometheusNameLabelName: p.Name}), func(obj interface{}) {
+		s := obj.(*appsv1.StatefulSet)
 
-	_, err = ssetClient.Update(ctx, sset, metav1.UpdateOptions{})
-	sErr, ok := err.(*apierrors.StatusError)
+		if _, ok := ssets[s.Name]; ok {
+			// Do not delete statefulsets that we still expect to exist. This
+			// is to cleanup StatefulSets when shards are reduced.
+			return
+		}
 
-	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
-		c.metrics.StsDeleteCreateCounter().Inc()
-		level.Info(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet", "details", sErr.ErrStatus.Details)
 		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
+		if err := ssetClient.Delete(context.TODO(), s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+			level.Error(c.logger).Log("failed to delete StatefulSet to cleanup")
 		}
-		return nil
-	}
-
-	if err != nil {
-		return errors.Wrap(err, "updating StatefulSet failed")
-	}
+	})
 
 	return nil
 }
@@ -1295,31 +1341,33 @@ func PrometheusStatus(ctx context.Context, kclient kubernetes.Interface, p *moni
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
-	}
-
-	res.Replicas = int32(len(pods.Items))
 
 	var oldPods []v1.Pod
-	for _, pod := range pods.Items {
-		ready, err := k8sutil.PodRunningAndReady(pod)
+	expected := expectedStatefulSetShardNames(p)
+	for _, ssetName := range expected {
+		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(context.TODO(), ssetName, metav1.GetOptions{})
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "cannot determine pod ready state")
+			return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 		}
-		if ready {
-			res.AvailableReplicas++
-			// TODO(fabxc): detect other fields of the pod template
-			// that are mutable.
-			if needsUpdate(&pod, sset.Spec.Template) {
-				oldPods = append(oldPods, pod)
-			} else {
-				res.UpdatedReplicas++
+
+		res.Replicas = int32(len(pods.Items))
+
+		for _, pod := range pods.Items {
+			ready, err := k8sutil.PodRunningAndReady(pod)
+			if err != nil {
+				return nil, nil, errors.Wrap(err, "cannot determine pod ready state")
 			}
-			continue
+			if ready {
+				res.AvailableReplicas++
+				if needsUpdate(&pod, sset.Spec.Template) {
+					oldPods = append(oldPods, pod)
+				} else {
+					res.UpdatedReplicas++
+				}
+				continue
+			}
+			res.UnavailableReplicas++
 		}
-		res.UnavailableReplicas++
 	}
 
 	return res, oldPods, nil

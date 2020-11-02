@@ -328,6 +328,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				tr.Spec.LogLevel,
 				configReloaderArgs,
 				configReloaderVolumeMounts,
+				-1,
 			),
 		)
 	}

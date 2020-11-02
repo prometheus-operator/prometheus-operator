@@ -304,7 +304,12 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 			return false, nil
 		}
 
-		if st.UpdatedReplicas == *p.Spec.Replicas {
+		shards := p.Spec.Shards
+		defaultShards := int32(1)
+		if shards == nil {
+			shards = &defaultShards
+		}
+		if st.UpdatedReplicas == (*p.Spec.Replicas * *shards) {
 			return true, nil
 		}
 

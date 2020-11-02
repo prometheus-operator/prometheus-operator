@@ -1479,6 +1479,15 @@ scrape_configs:
   - target_label: job
     replacement: crio
     action: replace
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs:
   - source_labels:
     - __name__
@@ -1609,6 +1618,15 @@ scrape_configs:
     action: replace
   - target_label: ns-key
     replacement: pod-monitor-ns
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs:
   - source_labels:
     - pod_name
@@ -1755,6 +1773,15 @@ scrape_configs:
     action: replace
   - target_label: ns-key
     replacement: default
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
@@ -1964,6 +1991,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2075,6 +2111,15 @@ scrape_configs:
     replacement: default/testpodmonitor1
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2206,6 +2251,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2334,6 +2388,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2463,6 +2526,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2591,6 +2663,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2718,6 +2799,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2826,6 +2916,15 @@ scrape_configs:
     replacement: default/testpodmonitor1
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2935,6 +3034,15 @@ scrape_configs:
     - __meta_kubernetes_service_name
     target_label: job
     replacement: ${1}
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -3465,6 +3573,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -3525,6 +3642,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   sample_limit: %d
 alerting:
   alert_relabel_configs:
@@ -3683,6 +3809,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -3743,6 +3878,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   target_limit: %d
 alerting:
   alert_relabel_configs:
