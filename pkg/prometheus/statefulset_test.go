@@ -650,6 +650,75 @@ func TestTagAndShaAndVersion(t *testing.T) {
 	}
 }
 
+func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
+	prometheusBaseImageConfig := &operator.Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			CPU:    "100m",
+			Memory: "25Mi",
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+		},
+		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
+		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
+	}
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+	}, prometheusBaseImageConfig, nil, "")
+
+	require.NoError(t, err)
+
+	image := sset.Spec.Template.Spec.Containers[0].Image
+	expected := "nondefaultuseflag/quay.io/prometheus/prometheus"
+	if image != expected {
+		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
+	}
+}
+
+func TestThanosDefaultBaseImageFlag(t *testing.T) {
+	thanosBaseImageConfig := &operator.Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			CPU:    "100m",
+			Memory: "25Mi",
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+		},
+		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
+		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
+	}
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{},
+		},
+	}, thanosBaseImageConfig, nil, "")
+
+	require.NoError(t, err)
+
+	image := sset.Spec.Template.Spec.Containers[2].Image
+	expected := "nondefaultuseflag/quay.io/thanos/thanos" + ":" + operator.DefaultThanosVersion
+	if image != expected {
+		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
+	}
+}
+
 func TestThanosTagAndShaAndVersion(t *testing.T) {
 	{
 		thanosTag := "my-unrelated-tag"

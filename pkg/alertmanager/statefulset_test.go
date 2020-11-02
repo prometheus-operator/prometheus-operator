@@ -447,6 +447,39 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 	}
 }
 
+func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
+	alertManagerBaseImageConfig := Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPU:    "100m",
+			Memory: "25Mi",
+		},
+		AlertmanagerDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/alertmanager",
+	}
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+	}, nil, alertManagerBaseImageConfig)
+
+	require.NoError(t, err)
+
+	image := sset.Spec.Template.Spec.Containers[0].Image
+	expected := "nondefaultuseflag/quay.io/prometheus/alertmanager" + ":" + operator.DefaultAlertmanagerVersion
+	if image != expected {
+		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
+	}
+}
+
 func TestSHAAndTagAndVersion(t *testing.T) {
 	{
 		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{

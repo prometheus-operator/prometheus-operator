@@ -210,7 +210,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659
 	a = a.DeepCopy()
 
-	amBaseImage := operator.StringValOrDefault(a.Spec.BaseImage, operator.DefaultAlertmanagerBaseImage)
+	amBaseImage := operator.StringValOrDefault(a.Spec.BaseImage, config.AlertmanagerDefaultBaseImage)
 	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
 	amTag := operator.StringValOrDefault(a.Spec.Tag, "")
 	amSHA := operator.StringValOrDefault(a.Spec.SHA, "")
