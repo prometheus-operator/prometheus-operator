@@ -144,7 +144,7 @@ var (
 )
 
 func init() {
-	//klogv2.InitFlags(flagset)
+	//With migration to klog-gokit, calling klogv2.InitFlags(flagset) is not applicable.
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
 	flagset.BoolVar(&serverTLS, "web.enable-tls", false, "Activate prometheus operator web server TLS.  "+
 		" This is useful for example when using the rule validation webhook.")
