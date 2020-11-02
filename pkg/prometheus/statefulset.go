@@ -281,7 +281,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
 
-	baseImage := operator.StringValOrDefault(p.Spec.BaseImage, operator.DefaultPrometheusBaseImage)
+	baseImage := operator.StringValOrDefault(p.Spec.BaseImage, c.PrometheusDefaultBaseImage)
 	if p.Spec.Image != nil && strings.TrimSpace(*p.Spec.Image) != "" {
 		baseImage = *p.Spec.Image
 	}
@@ -646,7 +646,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 
 	disableCompaction := p.Spec.DisableCompaction
 	if p.Spec.Thanos != nil {
-		thBaseImage := operator.StringPtrValOrDefault(p.Spec.Thanos.BaseImage, operator.DefaultThanosBaseImage)
+		thBaseImage := operator.StringPtrValOrDefault(p.Spec.Thanos.BaseImage, c.ThanosDefaultBaseImage)
 		thVersion := operator.StringPtrValOrDefault(p.Spec.Thanos.Version, operator.DefaultThanosVersion)
 		thTag := operator.StringPtrValOrDefault(p.Spec.Thanos.Tag, "")
 		thSHA := operator.StringPtrValOrDefault(p.Spec.Thanos.SHA, "")
