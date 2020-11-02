@@ -137,27 +137,6 @@ func GetLogs(kubeClient kubernetes.Interface, namespace string, podName, contain
 	return string(logs), err
 }
 
-func (f *Framework) Poll(timeout, pollInterval time.Duration, pollFunc func() (bool, error)) error {
-	t := time.After(timeout)
-	ticker := time.NewTicker(pollInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-t:
-			return fmt.Errorf("timed out")
-		case <-ticker.C:
-			b, err := pollFunc()
-			if err != nil {
-				return err
-			}
-			if b {
-				return nil
-			}
-		}
-	}
-}
-
 func ProxyGetPod(kubeClient kubernetes.Interface, namespace, podName, path string) *rest.Request {
 	return kubeClient.
 		CoreV1().
