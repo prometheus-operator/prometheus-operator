@@ -108,6 +108,29 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	}
 }
 
+func TestThanosDefaultBaseImageFlag(t *testing.T) {
+	thanosBaseImageConfig := Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPU:    "100m",
+			Memory: "25Mi",
+		},
+		ThanosDefaultBaseImage: "nondefaultuseflag/quay.io/thanos/thanos",
+	}
+
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{QueryEndpoints: emptyQueryEndpoints},
+	}, thanosBaseImageConfig, nil, "")
+	require.NoError(t, err)
+
+	image := sset.Spec.Template.Spec.Containers[0].Image
+	expected := "nondefaultuseflag/quay.io/thanos/thanos" + ":" + operator.DefaultThanosVersion
+	if image != expected {
+		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
+	}
+
+}
+
 func TestStatefulSetVolumes(t *testing.T) {
 	expected := &appsv1.StatefulSet{
 		Spec: appsv1.StatefulSetSpec{
