@@ -667,12 +667,12 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, prometheusBaseImageConfig, nil, "")
+	}, prometheusBaseImageConfig, nil, "", 0)
 
 	require.NoError(t, err)
 
@@ -700,7 +700,7 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	sset, err := makeStatefulSet(monitoringv1.Prometheus{
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
@@ -708,7 +708,7 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{},
 		},
-	}, thanosBaseImageConfig, nil, "")
+	}, thanosBaseImageConfig, nil, "", 0)
 
 	require.NoError(t, err)
 
