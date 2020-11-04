@@ -39,8 +39,8 @@ const (
 	tlsAssetsDir           = "/etc/alertmanager/certs"
 	secretsDir             = "/etc/alertmanager/secrets/"
 	configmapsDir          = "/etc/alertmanager/configmaps/"
-	alertmanagerConfDir    = "/etc/alertmanager/config"
-	alertmanagerConfFile   = alertmanagerConfDir + "/alertmanager.yaml"
+	alertmanagerConfigDir  = "/etc/alertmanager/config"
+	alertmanagerConfigFile = "alertmanager.yaml"
 	alertmanagerStorageDir = "/alertmanager"
 	defaultPortName        = "web"
 )
@@ -228,7 +228,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	}
 
 	amArgs := []string{
-		fmt.Sprintf("--config.file=%s", alertmanagerConfFile),
+		fmt.Sprintf("--config.file=%s", path.Join(alertmanagerConfigDir, alertmanagerConfigFile)),
 		fmt.Sprintf("--storage.path=%s", alertmanagerStorageDir),
 		fmt.Sprintf("--data.retention=%s", a.Spec.Retention),
 	}
@@ -428,7 +428,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	amVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config-volume",
-			MountPath: alertmanagerConfDir,
+			MountPath: alertmanagerConfigDir,
 		},
 		{
 			Name:      "tls-assets",
@@ -442,11 +442,11 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		},
 	}
 
-	reloadWatchDirs := []string{alertmanagerConfDir}
+	reloadWatchDirs := []string{alertmanagerConfigDir}
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config-volume",
-			MountPath: alertmanagerConfDir,
+			MountPath: alertmanagerConfigDir,
 			ReadOnly:  true,
 		},
 	}

@@ -90,6 +90,7 @@ type Config struct {
 	Namespaces                   operator.Namespaces
 	Labels                       operator.Labels
 	AlertManagerSelector         string
+	SecretListWatchSelector      string
 }
 
 // New creates a new controller.
@@ -109,11 +110,6 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 		return nil, errors.Wrap(err, "instantiating monitoring client failed")
 	}
 
-	secretListWatchSelector, err := fields.ParseSelector(c.SecretListWatchSelector)
-	if err != nil {
-		return nil, errors.Wrap(err, "can not parse secrets selector value")
-	}
-
 	o := &Operator{
 		kclient: client,
 		mclient: mclient,
@@ -129,46 +125,61 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 			Namespaces:                   c.Namespaces,
 			Labels:                       c.Labels,
 			AlertManagerSelector:         c.AlertManagerSelector,
+			SecretListWatchSelector:      c.SecretListWatchSelector,
 		},
 	}
 
-	o.alrtInfs, err = informers.NewInformersForResource(
+	if err := o.bootstrap(); err != nil {
+		return nil, err
+	}
+
+	return o, nil
+}
+
+func (c *Operator) bootstrap() error {
+	var err error
+
+	c.alrtInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			o.config.Namespaces.AlertmanagerAllowList,
-			o.config.Namespaces.DenyList,
-			mclient,
+			c.config.Namespaces.AlertmanagerAllowList,
+			c.config.Namespaces.DenyList,
+			c.mclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				options.LabelSelector = o.config.AlertManagerSelector
+				options.LabelSelector = c.config.AlertManagerSelector
 			},
 		),
 		monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertmanagerName),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating alertmanager informers")
+		return errors.Wrap(err, "error creating alertmanager informers")
 	}
 
-	o.alrtCfgInfs, err = informers.NewInformersForResource(
+	c.alrtCfgInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
-			o.config.Namespaces.AllowList,
-			o.config.Namespaces.DenyList,
-			mclient,
+			c.config.Namespaces.AllowList,
+			c.config.Namespaces.DenyList,
+			c.mclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				options.LabelSelector = o.config.AlertManagerSelector
+				options.LabelSelector = c.config.AlertManagerSelector
 			},
 		),
 		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.AlertmanagerConfigName),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating alertmanagerconfig informers")
+		return errors.Wrap(err, "error creating alertmanagerconfig informers")
 	}
 
-	o.secrInfs, err = informers.NewInformersForResource(
+	secretListWatchSelector, err := fields.ParseSelector(c.config.SecretListWatchSelector)
+	if err != nil {
+		return errors.Wrap(err, "can not parse secrets selector value")
+	}
+	c.secrInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			o.config.Namespaces.AllowList,
-			o.config.Namespaces.DenyList,
-			o.kclient,
+			c.config.Namespaces.AllowList,
+			c.config.Namespaces.DenyList,
+			c.kclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.FieldSelector = secretListWatchSelector.String()
@@ -177,21 +188,21 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 		v1.SchemeGroupVersion.WithResource("secrets"),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating secret informers")
+		return errors.Wrap(err, "error creating secret informers")
 	}
 
-	o.ssetInfs, err = informers.NewInformersForResource(
+	c.ssetInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			o.config.Namespaces.AlertmanagerAllowList,
-			o.config.Namespaces.DenyList,
-			o.kclient,
+			c.config.Namespaces.AlertmanagerAllowList,
+			c.config.Namespaces.DenyList,
+			c.kclient,
 			resyncPeriod,
 			nil,
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating statefulset informers")
+		return errors.Wrap(err, "error creating statefulset informers")
 	}
 
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) cache.SharedIndexInformer {
@@ -215,14 +226,14 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 
 		return nsInf
 	}
-	o.nsAlrtCfgInf = newNamespaceInformer(o, o.config.Namespaces.AllowList)
-	if listwatch.IdenticalNamespaces(o.config.Namespaces.AllowList, o.config.Namespaces.AlertmanagerAllowList) {
-		o.nsAlrtInf = o.nsAlrtCfgInf
+	c.nsAlrtCfgInf = newNamespaceInformer(c, c.config.Namespaces.AllowList)
+	if listwatch.IdenticalNamespaces(c.config.Namespaces.AllowList, c.config.Namespaces.AlertmanagerAllowList) {
+		c.nsAlrtInf = c.nsAlrtCfgInf
 	} else {
-		o.nsAlrtInf = newNamespaceInformer(o, o.config.Namespaces.AlertmanagerAllowList)
+		c.nsAlrtInf = newNamespaceInformer(c, c.config.Namespaces.AlertmanagerAllowList)
 	}
 
-	return o, nil
+	return nil
 }
 
 // waitForCacheSync waits for the informers' caches to be synced.
@@ -653,7 +664,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
 
-	if err := c.provisionAlertmanagerConfiguration(context.TODO(), am, assetStore); err != nil {
+	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore); err != nil {
 		return errors.Wrap(err, "provision alertmanager configuration")
 	}
 
@@ -714,26 +725,37 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
-
 	secretName := defaultConfigSecretName(am.Name)
 	if am.Spec.ConfigSecret != "" {
 		secretName = am.Spec.ConfigSecret
 	}
 
+	// Tentatively retrieve the secret containing the user-provided Alertmanager
+	// configuration.
 	secret, err := c.kclient.CoreV1().Secrets(am.Namespace).Get(ctx, secretName, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrap(err, "get base configuration secret")
+	}
+
+	var secretData map[string][]byte
+	if secret != nil {
+		secretData = secret.Data
 	}
 
 	rawBaseConfig := []byte(`route:
   receiver: 'null'
 receivers:
 - name: 'null'`)
-	if secret != nil && secret.Data["alertmanager.yaml"] != nil {
-		rawBaseConfig = secret.Data["alertmanager.yaml"]
+	if len(secretData[alertmanagerConfigFile]) > 0 {
+		rawBaseConfig = secretData[alertmanagerConfigFile]
 	} else {
-		level.Info(c.logger).Log("msg", "either base config secret not found, or alertmanager.yaml field not specified",
-			"secret", secretName, "alertmanager", am.Name, "namespace", am.Namespace)
+		if secret == nil {
+			level.Info(c.logger).Log("msg", "base config secret not found",
+				"secret", secretName, "alertmanager", am.Name, "namespace", am.Namespace)
+		} else {
+			level.Info(c.logger).Log("msg", "key not found in base config secret",
+				"secret", secretName, "key", alertmanagerConfigFile, "alertmanager", am.Name, "namespace", am.Namespace)
+		}
 	}
 
 	baseConfig, err := loadCfg(string(rawBaseConfig))
@@ -748,7 +770,8 @@ receivers:
 			"base config secret", secretName, "mounted config secret", generatedConfigSecretName(am.Name),
 			"alertmanager", am.Name, "namespace", am.Namespace,
 		)
-		err = c.createOrUpdateGeneratedConfigSecret(ctx, am, rawBaseConfig)
+
+		err = c.createOrUpdateGeneratedConfigSecret(ctx, am, rawBaseConfig, secretData)
 		if err != nil {
 			return errors.Wrap(err, "create or update generated config secret failed")
 		}
@@ -760,12 +783,13 @@ receivers:
 		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
 	}
 
-	conf, err := newConfigGenerator(c.logger, store).generateConfig(ctx, *baseConfig, amConfigs)
+	generator := newConfigGenerator(c.logger, store)
+	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
 	if err != nil {
 		return errors.Wrap(err, "generating Alertmanager config yaml failed")
 	}
 
-	err = c.createOrUpdateGeneratedConfigSecret(ctx, am, conf)
+	err = c.createOrUpdateGeneratedConfigSecret(ctx, am, generatedConfig, secretData)
 	if err != nil {
 		return errors.Wrap(err, "create or update generated config secret failed")
 	}
@@ -773,7 +797,7 @@ receivers:
 	return nil
 }
 
-func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte) error {
+func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {
 	boolTrue := true
 	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
 
@@ -792,8 +816,13 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 				},
 			},
 		},
-		Data: map[string][]byte{"alertmanager.yaml": conf},
+		Data: map[string][]byte{},
 	}
+
+	for k, v := range additionalData {
+		generatedConfigSecret.Data[k] = v
+	}
+	generatedConfigSecret.Data[alertmanagerConfigFile] = conf
 
 	_, err := sClient.Get(ctx, generatedConfigSecret.Name, metav1.GetOptions{})
 	if err != nil {
@@ -807,14 +836,13 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 		}
 		_, err = sClient.Create(ctx, generatedConfigSecret, metav1.CreateOptions{})
 		level.Debug(c.logger).Log("msg", "created generated config secret", "secretname", generatedConfigSecret.Name)
-
 	} else {
 		_, err = sClient.Update(ctx, generatedConfigSecret, metav1.UpdateOptions{})
 		level.Debug(c.logger).Log("msg", "updated generated config secret", "secretname", generatedConfigSecret.Name)
 	}
 
 	if err != nil {
-		return errors.Wrapf(err, "failed to create generated config secret for Alertmanager %v in namespace %v", am.Name, am.Namespace)
+		return errors.Wrapf(err, "failed to update generated config secret for Alertmanager %v in namespace %v", am.Name, am.Namespace)
 	}
 
 	return nil

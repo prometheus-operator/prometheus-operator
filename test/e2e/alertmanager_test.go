@@ -25,6 +25,7 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -715,7 +716,7 @@ inhibit_rules:
 	}
 }
 
-func testAMConfigCRD(t *testing.T) {
+func testAlertmanagerConfigCRD(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
@@ -830,6 +831,9 @@ func testAMConfigCRD(t *testing.T) {
 	// Wait for the change above to take effect.
 	err := wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), "alertmanager-amconfig-crd-generated", metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
 		if err != nil {
 			return false, err
 		}
@@ -879,5 +883,71 @@ templates: []
 	if err != nil {
 		t.Fatal(err)
 	}
+}
 
+func testUserDefinedAlertmanagerConfig(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	yamlConfig := `route:
+  receiver: "void"
+receivers:
+- name: "void"
+`
+	amConfig := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "amconfig",
+		},
+		Data: map[string][]byte{
+			"alertmanager.yaml": []byte(yamlConfig),
+			"template1.tmpl":    []byte(`template1`),
+		},
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), amConfig, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	alertmanager := framework.MakeBasicAlertmanager("user-amconfig", 1)
+	alertmanager.Spec.ConfigSecret = "amconfig"
+	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+		t.Fatal(err)
+	}
+
+	// Wait for the change above to take effect.
+	var lastErr error
+	err := wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), "alertmanager-user-amconfig-generated", metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			lastErr = err
+			return false, nil
+		}
+		if err != nil {
+			return false, err
+		}
+
+		if cfgSecret.Data["template1.tmpl"] == nil {
+			lastErr = errors.New("'template1.yaml' key is missing")
+			return false, nil
+		}
+
+		if cfgSecret.Data["alertmanager.yaml"] == nil {
+			lastErr = errors.New("'alertmanager.yaml' key is missing")
+			return false, nil
+		}
+
+		if string(cfgSecret.Data["alertmanager.yaml"]) != yamlConfig {
+			lastErr = errors.Errorf("expected Alertmanager configuration %q, got %q", yamlConfig, cfgSecret.Data["alertmanager.yaml"])
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		t.Fatalf("%v: %v", err, lastErr)
+	}
 }
