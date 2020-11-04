@@ -1,3 +1,7 @@
+## 0.43.1 / 2020-11-04
+
+* [BUGFIX] Fix Alertmanager controller to wait for all informers to be synced before reconciling. #3641
+
 ## 0.43.0 / 2020-10-26
 
 This release introduces a new `AlertmanagerConfig` CRD that allows to split the
