@@ -665,7 +665,7 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 	return nil
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleSmonAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -676,7 +676,7 @@ func (c *Operator) handleSmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.ServiceMonitor).ResourceVersion == cur.(*monitoringv1.ServiceMonitor).ResourceVersion {
 		return
@@ -691,7 +691,7 @@ func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleSmonDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -702,7 +702,7 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handlePmonAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -712,7 +712,7 @@ func (c *Operator) handlePmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PodMonitor).ResourceVersion == cur.(*monitoringv1.PodMonitor).ResourceVersion {
 		return
@@ -727,7 +727,7 @@ func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handlePmonDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -738,7 +738,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleBmonAdd(obj interface{}) {
 	if o, ok := c.getObject(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe added")
@@ -747,7 +747,7 @@ func (c *Operator) handleBmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.Probe).ResourceVersion == cur.(*monitoringv1.Probe).ResourceVersion {
 		return
@@ -760,7 +760,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleBmonDelete(obj interface{}) {
 	if o, ok := c.getObject(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe delete")
@@ -769,7 +769,7 @@ func (c *Operator) handleBmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleRuleAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -780,7 +780,7 @@ func (c *Operator) handleRuleAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PrometheusRule).ResourceVersion == cur.(*monitoringv1.PrometheusRule).ResourceVersion {
 		return
@@ -795,7 +795,7 @@ func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleRuleDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -806,7 +806,7 @@ func (c *Operator) handleRuleDelete(obj interface{}) {
 	}
 }
 
-// TODO: Do we need to enque secrets just for the namespace or in general?
+// TODO: Do we need to enqueue secrets just for the namespace or in general?
 func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -841,7 +841,7 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 	}
 }
 
-// TODO: Do we need to enque configmaps just for the namespace or in general?
+// TODO: Do we need to enqueue configmaps just for the namespace or in general?
 func (c *Operator) handleConfigMapAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -1523,7 +1523,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// Compress config to avoid 1mb secret limit for a while
 	var buf bytes.Buffer
 	if err = gzipConfig(&buf, conf); err != nil {
-		return errors.Wrap(err, "couldnt gzip config")
+		return errors.Wrap(err, "couldn't gzip config")
 	}
 	s.Data[configFilename] = buf.Bytes()
 

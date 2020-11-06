@@ -89,7 +89,7 @@ func DeleteServiceAndWaitUntilGone(kubeClient kubernetes.Interface, namespace st
 func getEndpoints(kubeClient kubernetes.Interface, namespace, serviceName string) (*v1.Endpoints, error) {
 	endpoints, err := kubeClient.CoreV1().Endpoints(namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("requesting endpoints for servce %v failed", serviceName))
+		return nil, errors.Wrap(err, fmt.Sprintf("requesting endpoints for service %v failed", serviceName))
 	}
 	return endpoints, nil
 }

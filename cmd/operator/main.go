@@ -173,7 +173,7 @@ func init() {
 	// TODO(simonpasquier): remove the '--config-reloader-image' flag before releasing v0.45.
 	flagset.StringVar(&deprecatedConfigReloaderImage, "config-reloader-image", "", "Reload image. Deprecated, it will be removed in v0.45.0.")
 	flagset.StringVar(&cfg.ReloaderConfig.CPU, "config-reloader-cpu", "100m", "Config Reloader CPU request & limit. Value \"0\" disables it and causes no request/limit to be configured.")
-	flagset.StringVar(&cfg.ReloaderConfig.Memory, "config-reloader-memory", "25Mi", "Config Reloader Memory requst & limit. Value \"0\" disables it and causes no request/limit to be configured.")
+	flagset.StringVar(&cfg.ReloaderConfig.Memory, "config-reloader-memory", "25Mi", "Config Reloader Memory request & limit. Value \"0\" disables it and causes no request/limit to be configured.")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image (path without tag/version)")
 	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image (path without tag/version)")
