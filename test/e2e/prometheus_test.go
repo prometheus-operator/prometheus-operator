@@ -180,7 +180,7 @@ func createK8sResources(t *testing.T, ns, certsDir string, cKey testFramework.Ke
 
 func createK8sSampleApp(t *testing.T, name, ns string) (string, int32) {
 
-	simple, err := testFramework.MakeDeployment("../../test/framework/ressources/basic-auth-app-deployment.yaml")
+	simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -984,7 +984,7 @@ func testPromStorageLabelsAnnotations(t *testing.T) {
 		t.Errorf("incorrect volume claim label, want: %v, got: %v", "foo", val)
 	}
 	if val := p.Spec.Storage.VolumeClaimTemplate.Annotations["test-annotation"]; val != "bar" {
-		t.Errorf("incorrect volume claim annoation, want: %v, got: %v", "bar", val)
+		t.Errorf("incorrect volume claim annotation, want: %v, got: %v", "bar", val)
 	}
 
 	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
@@ -2463,7 +2463,7 @@ func testPromGetAuthSecret(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			simple, err := testFramework.MakeDeployment("../../test/framework/ressources/basic-auth-app-deployment.yaml")
+			simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2989,7 +2989,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	simple, err := testFramework.MakeDeployment("../../test/framework/ressources/basic-auth-app-deployment.yaml")
+	simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3392,7 +3392,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			simple, err := testFramework.MakeDeployment("../../test/framework/ressources/basic-auth-app-deployment.yaml")
+			simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
 			if err != nil {
 				t.Fatal(err)
 			}

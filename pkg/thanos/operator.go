@@ -377,7 +377,7 @@ func (o *Operator) handleThanosRulerUpdate(old, cur interface{}) {
 	o.enqueue(key)
 }
 
-// TODO: Do we need to enque configmaps just for the namespace or in general?
+// TODO: Do we need to enqueue configmaps just for the namespace or in general?
 func (o *Operator) handleConfigMapAdd(obj interface{}) {
 	meta, ok := o.getObjectMeta(obj)
 	if ok {
@@ -412,7 +412,7 @@ func (o *Operator) handleConfigMapUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (o *Operator) handleRuleAdd(obj interface{}) {
 	meta, ok := o.getObjectMeta(obj)
 	if ok {
@@ -423,7 +423,7 @@ func (o *Operator) handleRuleAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PrometheusRule).ResourceVersion == cur.(*monitoringv1.PrometheusRule).ResourceVersion {
 		return
@@ -438,7 +438,7 @@ func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (o *Operator) handleRuleDelete(obj interface{}) {
 	meta, ok := o.getObjectMeta(obj)
 	if ok {

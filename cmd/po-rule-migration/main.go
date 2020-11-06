@@ -61,7 +61,7 @@ func main() {
 
 	destPath, err := filepath.Abs(*ruleCRDSDestination)
 	if err != nil {
-		log.Fatalf("failed to get absolut path of '%v': %v", ruleCRDSDestination, err.Error())
+		log.Fatalf("failed to get absolute path of '%v': %v", ruleCRDSDestination, err.Error())
 	}
 	ruleCRDSDestination = &destPath
 

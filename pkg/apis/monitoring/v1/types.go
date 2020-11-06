@@ -395,7 +395,7 @@ type ArbitraryFSAccessThroughSMsConfig struct {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusStatus struct {
-	// Represents whether any actions on the underlaying managed objects are
+	// Represents whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	Paused bool `json:"paused"`
 	// Total number of non-terminated pods targeted by this Prometheus deployment
@@ -1236,7 +1236,7 @@ type AlertmanagerSpec struct {
 	// and the actual ExternalURL is still true, but the server serves requests
 	// under a different route prefix. For example for use with `kubectl proxy`.
 	RoutePrefix string `json:"routePrefix,omitempty"`
-	// If set to true all actions on the underlaying managed objects are not
+	// If set to true all actions on the underlying managed objects are not
 	// goint to be performed, except for delete actions.
 	Paused bool `json:"paused,omitempty"`
 	// Define which Nodes the Pods are scheduled on.
@@ -1313,7 +1313,7 @@ type AlertmanagerList struct {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type AlertmanagerStatus struct {
-	// Represents whether any actions on the underlaying managed objects are
+	// Represents whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	Paused bool `json:"paused"`
 	// Total number of non-terminated pods targeted by this Alertmanager

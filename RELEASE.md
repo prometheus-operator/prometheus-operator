@@ -1,6 +1,6 @@
 # Release schedule
 
-Following [Prometheus](https://github.com/prometheus/prometheus/blob/master/RELEASE.md) and [Thanos](https://github.com/thanos-io/thanos/blob/master/docs/release-process.md), this project aims for a predictible release schedule.
+Following [Prometheus](https://github.com/prometheus/prometheus/blob/master/RELEASE.md) and [Thanos](https://github.com/thanos-io/thanos/blob/master/docs/release-process.md), this project aims for a predictable release schedule.
 
 Release cadence of first pre-releases being cut is 6 weeks.
 

@@ -37,7 +37,7 @@ future.
 
 ## 0.42.0 / 2020-09-09
 
-The Prometheus Operator now lives in its own indepent GitHub organization.  
+The Prometheus Operator now lives in its own independent GitHub organization.  
 We have also added a governance (#3398).
 
 * [FEATURE] Move API types out into their own module (#3395)
@@ -562,7 +562,7 @@ but causes this change.
 * [CHANGE] Default to Alertmanager v0.7.0.
 * [FEATURE] Add route prefix support to Alertmanager resource.
 * [FEATURE] Add metrics on expected replicas.
-* [FEATURE] Support for runing Alertmanager v0.7.0.
+* [FEATURE] Support for running Alertmanager v0.7.0.
 * [BUGFIX] Fix sensitive rollout triggering.
 
 ## 0.9.1 / 2017-05-18

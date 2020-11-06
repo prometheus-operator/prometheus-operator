@@ -208,7 +208,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		namespaces = append(namespaces, alertmanagerInstanceNamespaces...)
 
 		for _, n := range namespaces {
-			if _, err := CreateRoleBindingForSubjectNamespace(f.KubeClient, n, ns, "../framework/ressources/prometheus-operator-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+			if _, err := CreateRoleBindingForSubjectNamespace(f.KubeClient, n, ns, "../framework/resources/prometheus-operator-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
 				return nil, errors.Wrap(err, "failed to create prometheus operator role binding")
 			}
 		}
@@ -382,13 +382,13 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 	}
 
 	if createRuleAdmissionHooks {
-		if finalizer, err := CreateMutatingHook(f.KubeClient, certBytes, ns, "../../test/framework/ressources/prometheus-operator-mutatingwebhook.yaml"); err != nil {
+		if finalizer, err := CreateMutatingHook(f.KubeClient, certBytes, ns, "../../test/framework/resources/prometheus-operator-mutatingwebhook.yaml"); err != nil {
 			return nil, errors.Wrap(err, "failed to create mutating webhook")
 		} else {
 			finalizers = append(finalizers, finalizer)
 		}
 
-		if finalizer, err := CreateValidatingHook(f.KubeClient, certBytes, ns, "../../test/framework/ressources/prometheus-operator-validatingwebhook.yaml"); err != nil {
+		if finalizer, err := CreateValidatingHook(f.KubeClient, certBytes, ns, "../../test/framework/resources/prometheus-operator-validatingwebhook.yaml"); err != nil {
 			return nil, errors.Wrap(err, "failed to create validating webhook")
 		} else {
 			finalizers = append(finalizers, finalizer)
@@ -408,7 +408,7 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	if finalizerFn, err := CreateRoleBinding(kubeClient, ns, "../framework/ressources/prometheus-role-binding.yml"); err != nil {
+	if finalizerFn, err := CreateRoleBinding(kubeClient, ns, "../framework/resources/prometheus-role-binding.yml"); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus role binding"))
 	} else {
 		ctx.AddFinalizerFn(finalizerFn)

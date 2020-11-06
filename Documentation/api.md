@@ -171,7 +171,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | volumeMounts | VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition. VolumeMounts specified will be appended to other VolumeMounts in the alertmanager container, that are generated as a result of StorageSpec objects. | []v1.VolumeMount | false |
 | externalUrl | The external URL the Alertmanager instances will be available under. This is necessary to generate correct URLs. This is necessary if Alertmanager is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Alertmanager registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
-| paused | If set to true all actions on the underlaying managed objects are not goint to be performed, except for delete actions. | bool | false |
+| paused | If set to true all actions on the underlying managed objects are not goint to be performed, except for delete actions. | bool | false |
 | nodeSelector | Define which Nodes the Pods are scheduled on. | map[string]string | false |
 | resources | Define resources requests and limits for single Pods. | [v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core) | false |
 | affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
@@ -198,7 +198,7 @@ AlertmanagerStatus is the most recent observed status of the Alertmanager cluste
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| paused | Represents whether any actions on the underlaying managed objects are being performed. Only delete actions will be performed. | bool | true |
+| paused | Represents whether any actions on the underlying managed objects are being performed. Only delete actions will be performed. | bool | true |
 | replicas | Total number of non-terminated pods targeted by this Alertmanager cluster (their labels match the selector). | int32 | true |
 | updatedReplicas | Total number of non-terminated pods targeted by this Alertmanager cluster that have the desired version spec. | int32 | true |
 | availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this Alertmanager cluster. | int32 | true |
@@ -598,7 +598,7 @@ PrometheusStatus is the most recent observed status of the Prometheus cluster. R
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| paused | Represents whether any actions on the underlaying managed objects are being performed. Only delete actions will be performed. | bool | true |
+| paused | Represents whether any actions on the underlying managed objects are being performed. Only delete actions will be performed. | bool | true |
 | replicas | Total number of non-terminated pods targeted by this Prometheus deployment (their labels match the selector). | int32 | true |
 | updatedReplicas | Total number of non-terminated pods targeted by this Prometheus deployment that have the desired version spec. | int32 | true |
 | availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this Prometheus deployment. | int32 | true |

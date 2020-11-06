@@ -100,7 +100,7 @@ func TestAllNS(t *testing.T) {
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
 	// (or at least did not fail before calling t.Parallel). As all tests in
-	// testAllNS are parallel, the defered ctx.Cleanup above would be run before
+	// testAllNS are parallel, the deferred ctx.Cleanup above would be run before
 	// all tests finished. Wrapping it in testAllNSPrometheus and testAllNSAlertmanager
 	// fixes this.
 	t.Run("x", testAllNSAlertmanager)

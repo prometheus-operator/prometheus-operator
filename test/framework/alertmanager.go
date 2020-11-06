@@ -106,7 +106,7 @@ func (f *Framework) SecretFromYaml(filepath string) (*v1.Secret, error) {
 }
 
 func (f *Framework) AlertmanagerConfigSecret(ns, name string) (*v1.Secret, error) {
-	s, err := f.SecretFromYaml("../../test/framework/ressources/alertmanager-main-secret.yaml")
+	s, err := f.SecretFromYaml("../../test/framework/resources/alertmanager-main-secret.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (f *Framework) WaitForAlertmanagerInitialized(ns, name string, amountPeers 
 		}
 
 		if *amStatus.Cluster.Status != "ready" {
-			pollError = fmt.Errorf("failed to get cluser status, expected ready, got %s", *amStatus.Cluster.Status)
+			pollError = fmt.Errorf("failed to get cluster status, expected ready, got %s", *amStatus.Cluster.Status)
 			return false, nil
 		}
 

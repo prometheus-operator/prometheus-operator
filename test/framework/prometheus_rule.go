@@ -129,7 +129,7 @@ func (f *Framework) UpdateRule(ns string, ar *monitoringv1.PrometheusRule) (*mon
 func (f *Framework) DeleteRule(ns string, r string) error {
 	err := f.MonClientV1.PrometheusRules(ns).Delete(context.TODO(), r, metav1.DeleteOptions{})
 	if err != nil {
-		return fmt.Errorf("deleteing %v Prometheus rule in namespace %v failed: %v", r, ns, err.Error())
+		return fmt.Errorf("deleting %v Prometheus rule in namespace %v failed: %v", r, ns, err.Error())
 	}
 
 	return nil

@@ -324,7 +324,7 @@ func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
 	}
 }
 
-// TODO: Do we need to enque secrets just for the namespace or in general?
+// TODO: Do we need to enqueue secrets just for the namespace or in general?
 func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
