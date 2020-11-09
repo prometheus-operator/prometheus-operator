@@ -757,6 +757,18 @@ func testAMConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	slackApiURLSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "s-receiver-api-url",
+		},
+		Data: map[string][]byte{
+			"api-url": []byte("http://slack.example.com"),
+		},
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), slackApiURLSecret, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
 	// A valid AlertmanagerConfig resource.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -785,6 +797,30 @@ func testAMConfigCRD(t *testing.T) {
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
+					},
+				}},
+				SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+					APIURL: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "s-receiver-api-url",
+						},
+						Key: "api-url",
+					},
+					Actions: []monitoringv1alpha1.SlackAction{
+						{
+							Type: "type",
+							Text: "text",
+							Name: "my-action",
+							ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+								Text: "text",
+							},
+						},
+					},
+					Fields: []monitoringv1alpha1.SlackField{
+						{
+							Title: "title",
+							Value: "value",
+						},
 					},
 				}},
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
@@ -878,6 +914,18 @@ receivers:
   pagerduty_configs:
   - send_resolved: false
     routing_key: 1234abc
+  slack_configs:
+  - send_resolved: false
+    api_url: http://slack.example.com
+    fields:
+    - title: title
+      value: value
+    actions:
+    - type: type
+      text: text
+      name: my-action
+      confirm:
+        text: text
   webhook_configs:
   - send_resolved: false
     url: http://test.url

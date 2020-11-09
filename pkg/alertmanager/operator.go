@@ -892,95 +892,167 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 // checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
 // and has no missing references to other objects.
 func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) error {
+	receiverNames, err := checkReceivers(ctx, amc, store)
+	if err != nil {
+		return err
+	}
+
+	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames)
+}
+
+func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
+	var err error
 	receiverNames := make(map[string]struct{})
 
 	for i, receiver := range amc.Spec.Receivers {
 		if _, found := receiverNames[receiver.Name]; found {
-			return errors.Errorf("%q receiver is not unique", receiver.Name)
+			return nil, errors.Errorf("%q receiver is not unique", receiver.Name)
 		}
 		receiverNames[receiver.Name] = struct{}{}
 
 		amcKey := fmt.Sprintf("alertmanagerConfig/%s/%s/%d", amc.GetNamespace(), amc.GetName(), i)
 
-		for j, pdConfig := range receiver.PagerDutyConfigs {
-			pdcKey := fmt.Sprintf("%s/pagerduty/%d", amcKey, j)
-
-			if pdConfig.RoutingKey != nil {
-				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *pdConfig.RoutingKey); err != nil {
-					return err
-				}
-			}
-
-			if pdConfig.ServiceKey != nil {
-				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *pdConfig.ServiceKey); err != nil {
-					return err
-				}
-			}
-
-			if err := configureHTTPConfigInStore(ctx, pdConfig.HTTPConfig, amc.GetNamespace(), pdcKey, store); err != nil {
-				return err
-			}
+		err = checkPagerDutyConfigs(ctx, receiver.PagerDutyConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
 		}
 
-		for j, ogConfig := range receiver.OpsGenieConfigs {
-			ogcKey := fmt.Sprintf("%s/opsgenie/%d", amcKey, j)
-
-			if ogConfig.APIKey != nil {
-				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *ogConfig.APIKey); err != nil {
-					return err
-				}
-			}
-
-			if err := ogConfig.Validate(); err != nil {
-				return err
-			}
-
-			if err := configureHTTPConfigInStore(ctx, ogConfig.HTTPConfig, amc.GetNamespace(), ogcKey, store); err != nil {
-				return err
-			}
+		err = checkOpsGenieConfigs(ctx, receiver.OpsGenieConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
+		}
+		err = checkSlackConfigs(ctx, receiver.SlackConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
 		}
 
-		for j, whConfig := range receiver.WebhookConfigs {
-			whcKey := fmt.Sprintf("%s/webhook/%d", amcKey, j)
-
-			if whConfig.URL == nil && whConfig.URLSecret == nil {
-				return errors.New("one of url or urlSecret should be specified")
-			}
-
-			if whConfig.URLSecret != nil {
-				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *whConfig.URLSecret); err != nil {
-					return err
-				}
-			}
-
-			if err := configureHTTPConfigInStore(ctx, whConfig.HTTPConfig, amc.GetNamespace(), whcKey, store); err != nil {
-				return err
-			}
+		err = checkWebhookConfigs(ctx, receiver.WebhookConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
 		}
 
-		for j, wcConfig := range receiver.WeChatConfigs {
-			wcKey := fmt.Sprintf("%s/wechat/%d", amcKey, j)
-
-			if wcConfig.APIURL != nil {
-				_, err := url.Parse(*wcConfig.APIURL)
-				if err != nil {
-					return errors.New("api url not valid")
-				}
-			}
-
-			if wcConfig.APISecret != nil {
-				if _, err := store.GetSecretKey(ctx, amc.GetNamespace(), *wcConfig.APISecret); err != nil {
-					return err
-				}
-			}
-
-			if err := configureHTTPConfigInStore(ctx, wcConfig.HTTPConfig, amc.GetNamespace(), wcKey, store); err != nil {
-				return err
-			}
+		err = checkWechatConfigs(ctx, receiver.WeChatConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames)
+	return receiverNames, nil
+}
+
+func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.PagerDutyConfig, namespace string, key string, store *assets.Store) error {
+	for i, config := range configs {
+		pagerDutyConfigKey := fmt.Sprintf("%s/pagerduty/%d", key, i)
+
+		if config.RoutingKey != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.RoutingKey); err != nil {
+				return err
+			}
+		}
+
+		if config.ServiceKey != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.ServiceKey); err != nil {
+				return err
+			}
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, pagerDutyConfigKey, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsGenieConfig, namespace string, key string, store *assets.Store) error {
+	for i, config := range configs {
+		opsgenieConfigKey := fmt.Sprintf("%s/opsgenie/%d", key, i)
+
+		if config.APIKey != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey); err != nil {
+				return err
+			}
+		}
+
+		if err := config.Validate(); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, opsgenieConfigKey, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackConfig, namespace string, key string, store *assets.Store) error {
+	for i, config := range configs {
+		slackConfigKey := fmt.Sprintf("%s/slack/%d", key, i)
+
+		if config.APIURL != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APIURL); err != nil {
+				return err
+			}
+		}
+
+		if err := config.Validate(); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, slackConfigKey, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.WebhookConfig, namespace string, key string, store *assets.Store) error {
+	for i, config := range configs {
+		webhookConfigKey := fmt.Sprintf("%s/webhook/%d", key, i)
+
+		if config.URL == nil && config.URLSecret == nil {
+			return errors.New("one of url or urlSecret should be specified")
+		}
+
+		if config.URLSecret != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.URLSecret); err != nil {
+				return err
+			}
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, webhookConfigKey, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChatConfig, namespace string, key string, store *assets.Store) error {
+	for i, config := range configs {
+		wechatConfigKey := fmt.Sprintf("%s/wechat/%d", key, i)
+
+		if config.APIURL != nil {
+			_, err := url.Parse(*config.APIURL)
+			if err != nil {
+				return errors.New("api url not valid")
+			}
+		}
+
+		if config.APISecret != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APISecret); err != nil {
+				return err
+			}
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, wechatConfigKey, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func checkAlertmanagerRoutes(route *monitoringv1alpha1.Route, receivers map[string]struct{}) error {
