@@ -1,9 +1,12 @@
 # How to Contribute
 
-CoreOS projects are [Apache 2.0 licensed](LICENSE) and accept contributions via
-GitHub pull requests.  This document outlines some of the conventions on
-development workflow, commit message formatting, contact points and other
-resources to make it easier to get your contribution accepted.
+This project is licensed under the [Apache 2.0 license](LICENSE) and accept
+contributions via GitHub pull requests.  This document outlines some of the
+conventions on development workflow, commit message formatting, contact points
+and other resources to make it easier to get your contribution accepted.
+
+To maintain a safe and welcoming community, all participants must adhere to the
+project's [Code of Conduct](code-of-conduct.md).
 
 # Certificate of Origin
 
