@@ -269,6 +269,18 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		amArgs = append(amArgs, fmt.Sprintf("--cluster.advertise-address=%s", a.Spec.ClusterAdvertiseAddress))
 	}
 
+	if a.Spec.ClusterGossipInterval != "" {
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.gossip-interval=%s", a.Spec.ClusterGossipInterval))
+	}
+
+	if a.Spec.ClusterPushpullInterval != "" {
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.pushpull-interval=%s", a.Spec.ClusterPushpullInterval))
+	}
+
+	if a.Spec.ClusterPeerTimeout != "" {
+		amArgs = append(amArgs, fmt.Sprintf("--cluster.peer-timeout=%s", a.Spec.ClusterPeerTimeout))
+	}
+
 	livenessProbeHandler := v1.Handler{
 		HTTPGet: &v1.HTTPGetAction{
 			Path: path.Clean(webRoutePrefix + "/-/healthy"),
