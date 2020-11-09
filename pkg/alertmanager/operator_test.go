@@ -18,12 +18,18 @@ import (
 	"context"
 	"testing"
 
+	"github.com/go-kit/kit/log"
+	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	monitoringfake "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func strPtr(str string) *string {
@@ -750,5 +756,252 @@ func TestListOptions(t *testing.T) {
 		if o.LabelSelector != "app=alertmanager,alertmanager=test" && o.LabelSelector != "alertmanager=test,app=alertmanager" {
 			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app=alertmanager,alertmanager=test\"\n\nGot:      %#+v", o.LabelSelector)
 		}
+	}
+}
+
+func TestProvisionAlertmanagerConfiguration(t *testing.T) {
+	for _, tc := range []struct {
+		am      *monitoringv1.Alertmanager
+		objects []runtime.Object
+
+		ok           bool
+		expectedKeys []string
+	}{
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "empty",
+					Namespace: "test",
+				},
+			},
+			ok: true,
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "empty-with-selector",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					AlertmanagerConfigSelector: &metav1.LabelSelector{},
+				},
+			},
+			ok: true,
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "invalid-user-config",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret: "amconfig",
+				},
+			},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"alertmanager.yaml": []byte(`invalid`),
+					},
+				},
+			},
+			ok: false,
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-user-config",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret: "amconfig",
+				},
+			},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"alertmanager.yaml": []byte(`{route: {receiver: empty}, receivers: [{name: empty}]}`),
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-user-config-with-selector",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret:               "amconfig",
+					AlertmanagerConfigSelector: &metav1.LabelSelector{},
+				},
+			},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"alertmanager.yaml": []byte(`{route: {receiver: empty}, receivers: [{name: empty}]}`),
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-user-config-and-additional-secret",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret: "amconfig",
+				},
+			},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"alertmanager.yaml": []byte(`{route: {receiver: empty}, receivers: [{name: empty}]}`),
+						"key1":              []byte(`val1`),
+					},
+				},
+			},
+			ok:           true,
+			expectedKeys: []string{"key1"},
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-user-config-and-additional-secret-with-selectors",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret:               "amconfig",
+					AlertmanagerConfigSelector: &metav1.LabelSelector{},
+				},
+			},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"alertmanager.yaml": []byte(`{route: {receiver: empty}, receivers: [{name: empty}]}`),
+						"key1":              []byte(`val1`),
+					},
+				},
+			},
+			ok:           true,
+			expectedKeys: []string{"key1"},
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "no-user-config-but-additional-secret",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret: "amconfig",
+				},
+			},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"key1": []byte(`val1`),
+					},
+				},
+			},
+			ok:           true,
+			expectedKeys: []string{"key1"},
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "no-user-config-but-additional-secret-with-selectors",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret:               "amconfig",
+					AlertmanagerConfigSelector: &metav1.LabelSelector{},
+				},
+			},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"key1": []byte(`val1`),
+					},
+				},
+			},
+			ok:           true,
+			expectedKeys: []string{"key1"},
+		},
+	} {
+		t.Run(tc.am.Name, func(t *testing.T) {
+			c := fake.NewSimpleClientset(tc.objects...)
+
+			o := &Operator{
+				kclient: c,
+				mclient: monitoringfake.NewSimpleClientset(),
+				logger:  log.NewNopLogger(),
+				metrics: operator.NewMetrics("alertmanager", prometheus.NewRegistry()),
+			}
+
+			err := o.bootstrap(context.Background())
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			err = o.provisionAlertmanagerConfiguration(context.Background(), tc.am, store)
+
+			if !tc.ok {
+				if err == nil {
+					t.Fatal("expecting error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expecting no error but got %q", err)
+			}
+
+			secret, err := c.CoreV1().Secrets(tc.am.Namespace).Get(context.Background(), generatedConfigSecretName(tc.am.Name), metav1.GetOptions{})
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			expected := append(tc.expectedKeys, alertmanagerConfigFile)
+			if len(secret.Data) != len(expected) {
+				t.Fatalf("expecting %d items to be present in the generated secret but got %d", len(expected), len(secret.Data))
+			}
+			for _, k := range expected {
+				if _, found := secret.Data[k]; !found {
+					t.Fatalf("expecting key %q to be present in the generated secret but got nothing", k)
+				}
+			}
+		})
 	}
 }
