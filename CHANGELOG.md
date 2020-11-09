@@ -1,3 +1,7 @@
+## 0.43.2 / 2020-11-06
+
+* [BUGFIX] Fix issue with additional data from the Alertmanager config's secret not being kept. #3647
+
 ## 0.43.1 / 2020-11-04
 
 * [BUGFIX] Fix Alertmanager controller to wait for all informers to be synced before reconciling. #3641
