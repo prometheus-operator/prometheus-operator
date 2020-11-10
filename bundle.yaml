@@ -2215,13 +2215,13 @@ spec:
                   [1] RFC1918: https://tools.ietf.org/html/rfc1918'
                 type: string
               clusterGossipInterval:
-                description: Interval between gossip attempts
+                description: Interval between gossip attempts.
                 type: string
               clusterPeerTimeout:
-                description: Timeout for cluster peering
+                description: Timeout for cluster peering.
                 type: string
               clusterPushpullInterval:
-                description: Interval between pushpull attempts
+                description: Interval between pushpull attempts.
                 type: string
               configMaps:
                 description: ConfigMaps is a list of ConfigMaps in the same namespace
