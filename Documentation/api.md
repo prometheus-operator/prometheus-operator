@@ -189,9 +189,9 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | priorityClassName | Priority class assigned to the Pods | string | false |
 | additionalPeers | AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster. | []string | false |
 | clusterAdvertiseAddress | ClusterAdvertiseAddress is the explicit address to advertise in cluster. Needs to be provided for non RFC1918 [1] (public) addresses. [1] RFC1918: https://tools.ietf.org/html/rfc1918 | string | false |
-| clusterGossipInterval | Interval between gossip attempts | string | false |
-| clusterPushpullInterval | Interval between pushpull attempts | string | false |
-| clusterPeerTimeout | Timeout for cluster peering | string | false |
+| clusterGossipInterval | Interval between gossip attempts. | string | false |
+| clusterPushpullInterval | Interval between pushpull attempts. | string | false |
+| clusterPeerTimeout | Timeout for cluster peering. | string | false |
 | portName | Port name used for the pods and governing service. This defaults to web | string | false |
 | forceEnableClusterMode | ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica. Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each. | bool | false |
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
