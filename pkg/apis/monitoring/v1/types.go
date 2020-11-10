@@ -1283,11 +1283,11 @@ type AlertmanagerSpec struct {
 	// Needs to be provided for non RFC1918 [1] (public) addresses.
 	// [1] RFC1918: https://tools.ietf.org/html/rfc1918
 	ClusterAdvertiseAddress string `json:"clusterAdvertiseAddress,omitempty"`
-	// Interval between gossip attempts
+	// Interval between gossip attempts.
 	ClusterGossipInterval string `json:"clusterGossipInterval,omitempty"`
-	// Interval between pushpull attempts
+	// Interval between pushpull attempts.
 	ClusterPushpullInterval string `json:"clusterPushpullInterval,omitempty"`
-	// Timeout for cluster peering
+	// Timeout for cluster peering.
 	ClusterPeerTimeout string `json:"clusterPeerTimeout,omitempty"`
 	// Port name used for the pods and governing service.
 	// This defaults to web
