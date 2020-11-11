@@ -918,17 +918,17 @@ func TestThanosObjectStorageFile(t *testing.T) {
 	{
 		var containsArg bool
 		expectedArg := "--objstore.config-file=" + testPath
-
-		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
+		for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
 			if arg == expectedArg {
 				containsArg = true
 				break
 			}
 		}
 		if !containsArg {
-			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArg)
+			t.Fatalf("Thanos sidecar is missing expected argument: %s", expectedArg)
 		}
 	}
+
 	{
 		var containsArg bool
 		const expectedArg = "--storage.tsdb.max-block-duration=2h"
