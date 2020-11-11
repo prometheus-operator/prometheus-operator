@@ -759,11 +759,15 @@ spec:
                         scheme:
                           description: Scheme to use when firing alerts.
                           type: string
+                        timeout:
+                          description: Timeout is a per-target Alertmanager timeout
+                            when pushing alerts.
+                          type: string
                         tlsConfig:
                           description: TLS Config to use for alertmanager connection.
                           properties:
                             ca:
-                              description: Stuct containing the CA cert to use for
+                              description: Struct containing the CA cert to use for
                                 the targets.
                               properties:
                                 configMap:
@@ -970,7 +974,8 @@ spec:
                     description: TLS Config to use for accessing apiserver.
                     properties:
                       ca:
-                        description: Stuct containing the CA cert to use for the targets.
+                        description: Struct containing the CA cert to use for the
+                          targets.
                         properties:
                           configMap:
                             description: ConfigMap containing data to use for the
@@ -1121,11 +1126,10 @@ spec:
                   the behavior of an operator generated container. Containers described
                   here modify an operator generated container if they share the same
                   name and modifications are done via a strategic merge patch. The
-                  current container names are: `prometheus`, `prometheus-config-reloader`,
-                  `rules-configmap-reloader`, and `thanos-sidecar`. Overriding containers
-                  is entirely outside the scope of what the maintainers will support
-                  and by doing so, you accept that this behaviour may break at any
-                  time without notice.'
+                  current container names are: `prometheus`, `config-reloader`, and
+                  `thanos-sidecar`. Overriding containers is entirely outside the
+                  scope of what the maintainers will support and by doing so, you
+                  accept that this behaviour may break at any time without notice.'
                 items:
                   description: A single application container that you want to run
                     within a pod.
@@ -2192,6 +2196,15 @@ spec:
                   by admins to enforce the SampleLimit to keep overall number of samples/series
                   under the desired limit. Note that if SampleLimit is lower that
                   value will be taken instead.
+                format: int64
+                type: integer
+              enforcedTargetLimit:
+                description: EnforcedTargetLimit defines a global limit on the number
+                  of scraped targets. This overrides any TargetLimit set per ServiceMonitor
+                  or/and PodMonitor. It is meant to be used by admins to enforce the
+                  TargetLimit to keep overall number of targets under the desired
+                  limit. Note that if TargetLimit is higher that value will be taken
+                  instead.
                 format: int64
                 type: integer
               evaluationInterval:
@@ -3668,7 +3681,7 @@ spec:
                       description: TLS Config to use for remote read.
                       properties:
                         ca:
-                          description: Stuct containing the CA cert to use for the
+                          description: Struct containing the CA cert to use for the
                             targets.
                           properties:
                             configMap:
@@ -3905,7 +3918,7 @@ spec:
                       description: TLS Config to use for remote write.
                       properties:
                         ca:
-                          description: Stuct containing the CA cert to use for the
+                          description: Struct containing the CA cert to use for the
                             targets.
                           properties:
                             configMap:
@@ -4086,7 +4099,9 @@ spec:
                   will _not_ be added when value is set to empty string (`""`).
                 type: string
               replicas:
-                description: Number of instances to deploy for a Prometheus deployment.
+                description: Number of replicas of each shard to deploy for a Prometheus
+                  deployment. Number of replicas multiplied by shards is the total
+                  number of Pods created.
                 format: int32
                 type: integer
               resources:
@@ -4477,6 +4492,17 @@ spec:
                   if SHA is set. Deprecated: use ''image'' instead.  The image digest
                   can be specified as part of the image URL.'
                 type: string
+              shards:
+                description: 'EXPERIMENTAL: Number of shards to distribute targets
+                  onto. Number of replicas multiplied by shards is the total number
+                  of Pods created. Note that scaling down shards will not reshard
+                  data onto remaining instances, it must be manually moved. Increasing
+                  shards will not reshard data either but it will continue to be available
+                  from the same instances. To query globally use Thanos sidecar and
+                  Thanos querier or remote write data to a central location. Sharding
+                  is done on the content of the `__address__` target meta-label.'
+                format: int32
+                type: integer
               storage:
                 description: Storage spec to specify how storage shall be used.
                 properties:
@@ -4759,7 +4785,8 @@ spec:
                       Maps to the ''--grpc-server-tls-*'' CLI args.'
                     properties:
                       ca:
-                        description: Stuct containing the CA cert to use for the targets.
+                        description: Struct containing the CA cert to use for the
+                          targets.
                         properties:
                           configMap:
                             description: ConfigMap containing data to use for the
@@ -5017,6 +5044,100 @@ spec:
                         to. If the operator is Exists, the value should be empty,
                         otherwise just a regular string.
                       type: string
+                  type: object
+                type: array
+              topologySpreadConstraints:
+                description: If specified, the pod's topology spread constraints.
+                items:
+                  description: TopologySpreadConstraint specifies how to spread matching
+                    pods among the given topology.
+                  properties:
+                    labelSelector:
+                      description: LabelSelector is used to find matching pods. Pods
+                        that match this label selector are counted to determine the
+                        number of pods in their corresponding topology domain.
+                      properties:
+                        matchExpressions:
+                          description: matchExpressions is a list of label selector
+                            requirements. The requirements are ANDed.
+                          items:
+                            description: A label selector requirement is a selector
+                              that contains values, a key, and an operator that relates
+                              the key and values.
+                            properties:
+                              key:
+                                description: key is the label key that the selector
+                                  applies to.
+                                type: string
+                              operator:
+                                description: operator represents a key's relationship
+                                  to a set of values. Valid operators are In, NotIn,
+                                  Exists and DoesNotExist.
+                                type: string
+                              values:
+                                description: values is an array of string values.
+                                  If the operator is In or NotIn, the values array
+                                  must be non-empty. If the operator is Exists or
+                                  DoesNotExist, the values array must be empty. This
+                                  array is replaced during a strategic merge patch.
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - key
+                            - operator
+                            type: object
+                          type: array
+                        matchLabels:
+                          additionalProperties:
+                            type: string
+                          description: matchLabels is a map of {key,value} pairs.
+                            A single {key,value} in the matchLabels map is equivalent
+                            to an element of matchExpressions, whose key field is
+                            "key", the operator is "In", and the values array contains
+                            only "value". The requirements are ANDed.
+                          type: object
+                      type: object
+                    maxSkew:
+                      description: 'MaxSkew describes the degree to which pods may
+                        be unevenly distributed. It''s the maximum permitted difference
+                        between the number of matching pods in any two topology domains
+                        of a given topology type. For example, in a 3-zone cluster,
+                        MaxSkew is set to 1, and pods with the same labelSelector
+                        spread as 1/1/0: | zone1 | zone2 | zone3 | |   P   |   P   |       |
+                        - if MaxSkew is 1, incoming pod can only be scheduled to zone3
+                        to become 1/1/1; scheduling it onto zone1(zone2) would make
+                        the ActualSkew(2-0) on zone1(zone2) violate MaxSkew(1). -
+                        if MaxSkew is 2, incoming pod can be scheduled onto any zone.
+                        It''s a required field. Default value is 1 and 0 is not allowed.'
+                      format: int32
+                      type: integer
+                    topologyKey:
+                      description: TopologyKey is the key of node labels. Nodes that
+                        have a label with this key and identical values are considered
+                        to be in the same topology. We consider each <key, value>
+                        as a "bucket", and try to put balanced number of pods into
+                        each bucket. It's a required field.
+                      type: string
+                    whenUnsatisfiable:
+                      description: 'WhenUnsatisfiable indicates how to deal with a
+                        pod if it doesn''t satisfy the spread constraint. - DoNotSchedule
+                        (default) tells the scheduler not to schedule it - ScheduleAnyway
+                        tells the scheduler to still schedule it It''s considered
+                        as "Unsatisfiable" if and only if placing incoming pod on
+                        any topology violates "MaxSkew". For example, in a 3-zone
+                        cluster, MaxSkew is set to 1, and pods with the same labelSelector
+                        spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   |
+                        If WhenUnsatisfiable is set to DoNotSchedule, incoming pod
+                        can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2)
+                        as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In
+                        other words, the cluster can still be imbalanced, but scheduler
+                        won''t make it *more* imbalanced. It''s a required field.'
+                      type: string
+                  required:
+                  - maxSkew
+                  - topologyKey
+                  - whenUnsatisfiable
                   type: object
                 type: array
               version:
@@ -6266,6 +6387,14 @@ spec:
                 description: Enable compression of the write-ahead log using Snappy.
                   This flag is only available in versions of Prometheus >= 2.11.0.
                 type: boolean
+              web:
+                description: WebSpec defines the web command line flags when starting
+                  Prometheus.
+                properties:
+                  pageTitle:
+                    description: The prometheus web page title
+                    type: string
+                type: object
             type: object
           status:
             description: 'Most recent observed status of the Prometheus cluster. Read-only.
@@ -6278,7 +6407,7 @@ spec:
                 format: int32
                 type: integer
               paused:
-                description: Represents whether any actions on the underlaying managed
+                description: Represents whether any actions on the underlying managed
                   objects are being performed. Only delete actions will be performed.
                 type: boolean
               replicas:

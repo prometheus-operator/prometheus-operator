@@ -64,17 +64,17 @@ func CreateIngress(kubeClient kubernetes.Interface, namespace string, i *v1beta1
 
 func SetupNginxIngressControllerIncDefaultBackend(kubeClient kubernetes.Interface, namespace string) error {
 	// Create Nginx Ingress Replication Controller
-	if err := createReplicationControllerViaYml(kubeClient, namespace, "./framework/ressources/nxginx-ingress-controller.yml"); err != nil {
+	if err := createReplicationControllerViaYml(kubeClient, namespace, "./framework/resources/nxginx-ingress-controller.yml"); err != nil {
 		return errors.Wrap(err, "creating nginx ingress replication controller failed")
 	}
 
 	// Create Default HTTP Backend Replication Controller
-	if err := createReplicationControllerViaYml(kubeClient, namespace, "./framework/ressources/default-http-backend.yml"); err != nil {
+	if err := createReplicationControllerViaYml(kubeClient, namespace, "./framework/resources/default-http-backend.yml"); err != nil {
 		return errors.Wrap(err, "creating default http backend replication controller failed")
 	}
 
 	// Create Default HTTP Backend Service
-	manifest, err := os.Open("./framework/ressources/default-http-backend-service.yml")
+	manifest, err := os.Open("./framework/resources/default-http-backend-service.yml")
 	if err != nil {
 		return errors.Wrap(err, "reading default http backend service yaml failed")
 	}
@@ -98,17 +98,17 @@ func SetupNginxIngressControllerIncDefaultBackend(kubeClient kubernetes.Interfac
 
 func DeleteNginxIngressControllerIncDefaultBackend(kubeClient kubernetes.Interface, namespace string) error {
 	// Delete Nginx Ingress Replication Controller
-	if err := deleteReplicationControllerViaYml(kubeClient, namespace, "./framework/ressources/nxginx-ingress-controller.yml"); err != nil {
+	if err := deleteReplicationControllerViaYml(kubeClient, namespace, "./framework/resources/nxginx-ingress-controller.yml"); err != nil {
 		return errors.Wrap(err, "deleting nginx ingress replication controller failed")
 	}
 
 	// Delete Default HTTP Backend Replication Controller
-	if err := deleteReplicationControllerViaYml(kubeClient, namespace, "./framework/ressources/default-http-backend.yml"); err != nil {
+	if err := deleteReplicationControllerViaYml(kubeClient, namespace, "./framework/resources/default-http-backend.yml"); err != nil {
 		return errors.Wrap(err, "deleting default http backend replication controller failed")
 	}
 
 	// Delete Default HTTP Backend Service
-	manifest, err := os.Open("./framework/ressources/default-http-backend-service.yml")
+	manifest, err := os.Open("./framework/resources/default-http-backend-service.yml")
 	if err != nil {
 		return errors.Wrap(err, "reading default http backend service yaml failed")
 	}

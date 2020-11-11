@@ -20,8 +20,8 @@ import (
 	"strings"
 	"testing"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/operator"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -32,9 +32,11 @@ import (
 
 var (
 	defaultTestConfig = Config{
-		ConfigReloaderImage:          "jimmidyson/configmap-reload:latest",
-		ConfigReloaderCPU:            "100m",
-		ConfigReloaderMemory:         "25Mi",
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPU:    "100m",
+			Memory: "25Mi",
+		},
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
 )
@@ -581,9 +583,11 @@ func sliceContains(slice []string, match string) bool {
 
 func TestSidecarsNoCPULimits(t *testing.T) {
 	testConfig := Config{
-		ConfigReloaderImage:          "jimmidyson/configmap-reload:latest",
-		ConfigReloaderCPU:            "0",
-		ConfigReloaderMemory:         "25Mi",
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPU:    "0",
+			Memory: "25Mi",
+		},
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
@@ -597,19 +601,24 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 		Limits: v1.ResourceList{
 			v1.ResourceMemory: resource.MustParse("25Mi"),
 		},
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("25Mi"),
+		},
 	}
 	for _, c := range sset.Spec.Template.Spec.Containers {
 		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
-			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
 		}
 	}
 }
 
 func TestSidecarsNoMemoryLimits(t *testing.T) {
 	testConfig := Config{
-		ConfigReloaderImage:          "jimmidyson/configmap-reload:latest",
-		ConfigReloaderCPU:            "100m",
-		ConfigReloaderMemory:         "0",
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPU:    "100m",
+			Memory: "0",
+		},
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
@@ -623,10 +632,13 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 		Limits: v1.ResourceList{
 			v1.ResourceCPU: resource.MustParse("100m"),
 		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU: resource.MustParse("100m"),
+		},
 	}
 	for _, c := range sset.Spec.Template.Spec.Containers {
 		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
-			t.Fatal("Unexpected resource requests/limits set, when none should be set.")
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
 		}
 	}
 }
@@ -669,6 +681,33 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 
 	if !containsEmptyClusterListenAddress {
 		t.Fatal("expected stateful set to contain arg '--cluster.listen-address='")
+	}
+}
+
+func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testing.T) {
+	a := monitoringv1.Alertmanager{}
+	replicas := int32(1)
+	a.Spec.Version = operator.DefaultAlertmanagerVersion
+	a.Spec.Replicas = &replicas
+	a.Spec.ForceEnableClusterMode = true
+
+	statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	amArgs := statefulSet.Template.Spec.Containers[0].Args
+
+	containsEmptyClusterListenAddress := false
+
+	for _, arg := range amArgs {
+		if arg == "--cluster.listen-address=" {
+			containsEmptyClusterListenAddress = true
+		}
+	}
+
+	if containsEmptyClusterListenAddress {
+		t.Fatal("expected stateful set to not contain arg '--cluster.listen-address='")
 	}
 }
 

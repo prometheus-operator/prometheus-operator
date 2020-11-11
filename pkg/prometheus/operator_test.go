@@ -18,8 +18,9 @@ import (
 	"reflect"
 	"testing"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"k8s.io/api/core/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kylelemons/godebug/pretty"
@@ -39,7 +40,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 	p1.Spec.Version = "v1.7.0"
 	p2 := monitoringv1.Prometheus{}
 	p2.Spec.Version = "v1.7.2"
-	c := Config{}
+	c := operator.Config{}
 
 	p1Hash, err := createSSetInputHash(p1, c, []string{}, nil)
 	if err != nil {
@@ -135,5 +136,69 @@ func TestGetNodeAddresses(t *testing.T) {
 				t.Error(pretty.Compare(ips, c.expectedAddresses))
 			}
 		})
+	}
+}
+
+func TestStatefulSetKeyToPrometheusKey(t *testing.T) {
+	cases := []struct {
+		input         string
+		expectedKey   string
+		expectedMatch bool
+	}{
+		{
+			input:         "namespace/prometheus-test",
+			expectedKey:   "namespace/test",
+			expectedMatch: true,
+		},
+		{
+			input:         "namespace/prometheus-test-shard-1",
+			expectedKey:   "namespace/test",
+			expectedMatch: true,
+		},
+		{
+			input:         "allns-z-thanosrulercreatedeletecluster-qcwdmj-0/thanos-ruler-test",
+			expectedKey:   "",
+			expectedMatch: false,
+		},
+	}
+
+	for _, c := range cases {
+		match, key := statefulSetKeyToPrometheusKey(c.input)
+		if c.expectedKey != key {
+			t.Fatalf("Expected prometheus key %q got %q", c.expectedKey, key)
+		}
+		if c.expectedMatch != match {
+			notExp := ""
+			if !c.expectedMatch {
+				notExp = "not "
+			}
+			t.Fatalf("Expected input %sto be matching a prometheus key, but did not", notExp)
+		}
+	}
+}
+
+func TestPrometheusKeyToStatefulSetKey(t *testing.T) {
+	cases := []struct {
+		name     string
+		shard    int
+		expected string
+	}{
+		{
+			name:     "namespace/test",
+			shard:    0,
+			expected: "namespace/prometheus-test",
+		},
+		{
+			name:     "namespace/test",
+			shard:    1,
+			expected: "namespace/prometheus-test-shard-1",
+		},
+	}
+
+	for _, c := range cases {
+		got := prometheusKeyToStatefulSetKey(c.name, c.shard)
+		if c.expected != got {
+			t.Fatalf("Expected key %q got %q", c.expected, got)
+		}
 	}
 }

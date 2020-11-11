@@ -23,8 +23,9 @@ import (
 	"path"
 	"path/filepath"
 
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring"
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,9 +36,16 @@ import (
 )
 
 func main() {
+	versionutil.RegisterFlags()
+
 	var ruleConfigMapName = flag.String("rule-config-map", "", "path to rule ConfigMap")
 	var ruleCRDSDestination = flag.String("rule-crds-destination", "", "destination new crds should be created in")
 	flag.Parse()
+
+	if versionutil.ShouldPrintVersion() {
+		versionutil.Print(os.Stdout, "po-rule-migration")
+		os.Exit(0)
+	}
 
 	if *ruleConfigMapName == "" {
 		log.Print("please specify 'rule-config-map' flag")
@@ -53,7 +61,7 @@ func main() {
 
 	destPath, err := filepath.Abs(*ruleCRDSDestination)
 	if err != nil {
-		log.Fatalf("failed to get absolut path of '%v': %v", ruleCRDSDestination, err.Error())
+		log.Fatalf("failed to get absolute path of '%v': %v", ruleCRDSDestination, err.Error())
 	}
 	ruleCRDSDestination = &destPath
 

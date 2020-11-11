@@ -14,22 +14,19 @@
 
 package operator
 
-import (
-	"github.com/coreos/prometheus-operator/pkg/version"
-)
+import "github.com/prometheus/common/version"
 
 const (
-	DefaultAlertmanagerVersion    = "v0.21.0"
-	DefaultAlertmanagerBaseImage  = "quay.io/prometheus/alertmanager"
-	DefaultAlertmanagerImage      = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
-	DefaultThanosVersion          = "v0.14.0"
-	DefaultThanosBaseImage        = "quay.io/thanos/thanos"
-	DefaultThanosImage            = DefaultThanosBaseImage + ":" + DefaultThanosVersion
-	DefaultConfigMapReloaderImage = "jimmidyson/configmap-reload:v0.4.0"
+	DefaultAlertmanagerVersion   = "v0.21.0"
+	DefaultAlertmanagerBaseImage = "quay.io/prometheus/alertmanager"
+	DefaultAlertmanagerImage     = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
+	DefaultThanosVersion         = "v0.15.0"
+	DefaultThanosBaseImage       = "quay.io/thanos/thanos"
+	DefaultThanosImage           = DefaultThanosBaseImage + ":" + DefaultThanosVersion
 )
 
 var (
-	DefaultPrometheusConfigReloaderImage = "quay.io/coreos/prometheus-config-reloader:v" + version.Version
+	DefaultPrometheusConfigReloaderImage = "quay.io/prometheus-operator/prometheus-config-reloader:v" + version.Version
 
 	PrometheusCompatibilityMatrix = []string{
 		"v1.4.0",
@@ -74,7 +71,11 @@ var (
 		"v2.19.0",
 		"v2.19.1",
 		"v2.19.2",
+		"v2.19.3",
 		"v2.20.0",
+		"v2.20.1",
+		"v2.21.0",
+		"v2.22.0",
 	}
 	DefaultPrometheusVersion   = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
 	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"

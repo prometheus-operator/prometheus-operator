@@ -15,15 +15,13 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
     },
 
     versions+:: {
-      prometheusOperator: 'v0.40.0',
+      prometheusOperator: 'v0.43.2',
       prometheusConfigReloader: self.prometheusOperator,
-      configmapReloader: 'v0.4.0',
     },
 
     imageRepos+:: {
-      prometheusOperator: 'quay.io/coreos/prometheus-operator',
-      configmapReloader: 'jimmidyson/configmap-reload',
-      prometheusConfigReloader: 'quay.io/coreos/prometheus-config-reloader',
+      prometheusOperator: 'quay.io/prometheus-operator/prometheus-operator',
+      prometheusConfigReloader: 'quay.io/prometheus-operator/prometheus-config-reloader',
     },
   },
 
@@ -36,13 +34,12 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
 
     image:: $._config.imageRepos.prometheusOperator,
     version:: $._config.versions.prometheusOperator,
-    configReloaderImage:: $._config.imageRepos.configmapReloader,
-    configReloaderVersion:: $._config.versions.configmapReloader,
     prometheusConfigReloaderImage:: $._config.imageRepos.prometheusConfigReloader,
     prometheusConfigReloaderVersion:: $._config.versions.prometheusConfigReloader,
 
     // Prefixing with 0 to ensure these manifests are listed and therefore created first.
     '0alertmanagerCustomResourceDefinition': import 'alertmanager-crd.libsonnet',
+    '0alertmanagerConfigCustomResourceDefinition': import 'alertmanagerconfig-crd.libsonnet',
     '0prometheusCustomResourceDefinition': import 'prometheus-crd.libsonnet',
     '0servicemonitorCustomResourceDefinition': import 'servicemonitor-crd.libsonnet',
     '0podmonitorCustomResourceDefinition': import 'podmonitor-crd.libsonnet',
@@ -70,6 +67,7 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
                              policyRule.withResources([
                                'alertmanagers',
                                'alertmanagers/finalizers',
+                               'alertmanagerconfigs',
                                'prometheuses',
                                'prometheuses/finalizers',
                                'thanosrulers',
@@ -126,7 +124,15 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
                             ]) +
                             policyRule.withVerbs(['get', 'list', 'watch']);
 
-      local rules = [monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule];
+      local ingressRule = policyRule.new() +
+                          policyRule.withApiGroups(['networking.k8s.io']) +
+                          policyRule.withResources([
+                            'ingresses',
+                          ]) +
+                          policyRule.withVerbs(['get', 'list', 'watch']);
+
+
+      local rules = [monitoringRule, appsRule, coreRule, podRule, routingRule, nodeRule, namespaceRule, ingressRule];
 
       clusterRole.new() +
       clusterRole.mixin.metadata.withLabels(po.commonLabels) +
@@ -145,10 +151,6 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
         container.withPorts(containerPort.newNamed(targetPort, 'http')) +
         container.withArgs([
           '--kubelet-service=kube-system/kubelet',
-          // Prometheus Operator is run with a read-only root file system. By
-          // default glog saves logfiles to /tmp. Make it log to stderr instead.
-          '--logtostderr=true',
-          '--config-reloader-image=' + po.configReloaderImage + ':' + po.configReloaderVersion,
           '--prometheus-config-reloader=' + po.prometheusConfigReloaderImage + ':' + po.prometheusConfigReloaderVersion,
         ]) +
         container.mixin.securityContext.withAllowPrivilegeEscalation(false) +

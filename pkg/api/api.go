@@ -15,7 +15,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"regexp"
@@ -25,10 +24,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned"
-	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/prometheus"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
 type API struct {
@@ -37,7 +37,7 @@ type API struct {
 	logger  log.Logger
 }
 
-func New(conf prometheus.Config, l log.Logger) (*API, error) {
+func New(conf operator.Config, l log.Logger) (*API, error) {
 	cfg, err := k8sutil.NewClusterConfig(conf.Host, conf.TLSInsecure, &conf.TLSConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "instantiating cluster config failed")
@@ -100,7 +100,7 @@ func parsePrometheusStatusUrl(path string) objectReference {
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 	or := parsePrometheusStatusUrl(req.URL.Path)
 
-	p, err := api.mclient.MonitoringV1().Prometheuses(or.namespace).Get(context.TODO(), or.name, metav1.GetOptions{})
+	p, err := api.mclient.MonitoringV1().Prometheuses(or.namespace).Get(req.Context(), or.name, metav1.GetOptions{})
 	if err != nil {
 		if k8sutil.IsResourceNotFoundError(err) {
 			w.WriteHeader(404)
@@ -109,7 +109,7 @@ func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p.Status, _, err = prometheus.PrometheusStatus(api.kclient, p)
+	p.Status, _, err = prometheus.PrometheusStatus(req.Context(), api.kclient, p)
 	if err != nil {
 		api.logger.Log("error", err)
 	}

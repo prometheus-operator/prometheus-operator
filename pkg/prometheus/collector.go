@@ -15,8 +15,7 @@
 package prometheus
 
 import (
-	"github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"
 )
@@ -30,25 +29,40 @@ var (
 			"name",
 		}, nil,
 	)
+	descPrometheusEnforcedSampleLimit = prometheus.NewDesc(
+		"prometheus_operator_prometheus_enforced_sample_limit",
+		"Global limit on the number of scraped samples per scrape target.",
+		[]string{
+			"namespace",
+			"name",
+		}, nil,
+	)
 )
 
 type prometheusCollector struct {
-	store cache.Store
+	stores []cache.Store
 }
 
 func NewPrometheusCollector(s cache.Store) *prometheusCollector {
-	return &prometheusCollector{store: s}
+	return &prometheusCollector{stores: []cache.Store{s}}
+}
+
+func NewPrometheusCollectorForStores(s ...cache.Store) *prometheusCollector {
+	return &prometheusCollector{stores: s}
 }
 
 // Describe implements the prometheus.Collector interface.
 func (c *prometheusCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- descPrometheusSpecReplicas
+	ch <- descPrometheusEnforcedSampleLimit
 }
 
 // Collect implements the prometheus.Collector interface.
 func (c *prometheusCollector) Collect(ch chan<- prometheus.Metric) {
-	for _, p := range c.store.List() {
-		c.collectPrometheus(ch, p.(*v1.Prometheus))
+	for _, s := range c.stores {
+		for _, p := range s.List() {
+			c.collectPrometheus(ch, p.(*v1.Prometheus))
+		}
 	}
 }
 
@@ -58,4 +72,8 @@ func (c *prometheusCollector) collectPrometheus(ch chan<- prometheus.Metric, p *
 		replicas = float64(*p.Spec.Replicas)
 	}
 	ch <- prometheus.MustNewConstMetric(descPrometheusSpecReplicas, prometheus.GaugeValue, replicas, p.Namespace, p.Name)
+	// Include EnforcedSampleLimit in metrics if set in Prometheus object.
+	if p.Spec.EnforcedSampleLimit != nil {
+		ch <- prometheus.MustNewConstMetric(descPrometheusEnforcedSampleLimit, prometheus.GaugeValue, float64(*p.Spec.EnforcedSampleLimit), p.Namespace, p.Name)
+	}
 }

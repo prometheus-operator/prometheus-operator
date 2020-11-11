@@ -22,9 +22,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/thanos"
 	"github.com/pkg/errors"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/thanos"
 )
 
 func (f *Framework) MakeBasicThanosRuler(name string, replicas int32) *monitoringv1.ThanosRuler {
@@ -69,7 +69,7 @@ func (f *Framework) WaitForThanosRulerReady(tr *monitoringv1.ThanosRuler, timeou
 	var pollErr error
 
 	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
-		st, _, pollErr := thanos.ThanosRulerStatus(f.KubeClient, tr)
+		st, _, pollErr := thanos.ThanosRulerStatus(context.Background(), f.KubeClient, tr)
 
 		if pollErr != nil {
 			return false, nil

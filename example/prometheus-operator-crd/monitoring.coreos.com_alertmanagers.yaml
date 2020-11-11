@@ -646,6 +646,96 @@ spec:
                         type: array
                     type: object
                 type: object
+              alertmanagerConfigNamespaceSelector:
+                description: Namespaces to be selected for AlertmanagerConfig discovery.
+                  If nil, only check own namespace.
+                properties:
+                  matchExpressions:
+                    description: matchExpressions is a list of label selector requirements.
+                      The requirements are ANDed.
+                    items:
+                      description: A label selector requirement is a selector that
+                        contains values, a key, and an operator that relates the key
+                        and values.
+                      properties:
+                        key:
+                          description: key is the label key that the selector applies
+                            to.
+                          type: string
+                        operator:
+                          description: operator represents a key's relationship to
+                            a set of values. Valid operators are In, NotIn, Exists
+                            and DoesNotExist.
+                          type: string
+                        values:
+                          description: values is an array of string values. If the
+                            operator is In or NotIn, the values array must be non-empty.
+                            If the operator is Exists or DoesNotExist, the values
+                            array must be empty. This array is replaced during a strategic
+                            merge patch.
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - key
+                      - operator
+                      type: object
+                    type: array
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: matchLabels is a map of {key,value} pairs. A single
+                      {key,value} in the matchLabels map is equivalent to an element
+                      of matchExpressions, whose key field is "key", the operator
+                      is "In", and the values array contains only "value". The requirements
+                      are ANDed.
+                    type: object
+                type: object
+              alertmanagerConfigSelector:
+                description: AlertmanagerConfigs to be selected for to merge and configure
+                  Alertmanager with.
+                properties:
+                  matchExpressions:
+                    description: matchExpressions is a list of label selector requirements.
+                      The requirements are ANDed.
+                    items:
+                      description: A label selector requirement is a selector that
+                        contains values, a key, and an operator that relates the key
+                        and values.
+                      properties:
+                        key:
+                          description: key is the label key that the selector applies
+                            to.
+                          type: string
+                        operator:
+                          description: operator represents a key's relationship to
+                            a set of values. Valid operators are In, NotIn, Exists
+                            and DoesNotExist.
+                          type: string
+                        values:
+                          description: values is an array of string values. If the
+                            operator is In or NotIn, the values array must be non-empty.
+                            If the operator is Exists or DoesNotExist, the values
+                            array must be empty. This array is replaced during a strategic
+                            merge patch.
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - key
+                      - operator
+                      type: object
+                    type: array
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: matchLabels is a map of {key,value} pairs. A single
+                      {key,value} in the matchLabels map is equivalent to an element
+                      of matchExpressions, whose key field is "key", the operator
+                      is "In", and the values array contains only "value". The requirements
+                      are ANDed.
+                    type: object
+                type: object
               baseImage:
                 description: 'Base image that is used to deploy pods, without tag.
                   Deprecated: use ''image'' instead'
@@ -669,9 +759,14 @@ spec:
                   The secret is mounted into /etc/alertmanager/config.
                 type: string
               containers:
-                description: Containers allows injecting additional containers. This
+                description: 'Containers allows injecting additional containers. This
                   is meant to allow adding an authentication proxy to an Alertmanager
-                  pod.
+                  pod. Containers described here modify an operator generated container
+                  if they share the same name and modifications are done via a strategic
+                  merge patch. The current container names are: `alertmanager` and
+                  `config-reloader`. Overriding containers is entirely outside the
+                  scope of what the maintainers will support and by doing so, you
+                  accept that this behaviour may break at any time without notice.'
                 items:
                   description: A single application container that you want to run
                     within a pod.
@@ -1719,6 +1814,12 @@ spec:
                   under. This is necessary to generate correct URLs. This is necessary
                   if Alertmanager is not served from root of a DNS name.
                 type: string
+              forceEnableClusterMode:
+                description: ForceEnableClusterMode ensures Alertmanager does not
+                  deactivate the cluster mode when running with a single replica.
+                  Use case is e.g. spanning an Alertmanager cluster across Kubernetes
+                  clusters with a single replica in each.
+                type: boolean
               image:
                 description: Image if specified has precedence over baseImage, tag
                   and sha combinations. Specifying the version is still necessary
@@ -2808,7 +2909,7 @@ spec:
                 description: Define which Nodes the Pods are scheduled on.
                 type: object
               paused:
-                description: If set to true all actions on the underlaying managed
+                description: If set to true all actions on the underlying managed
                   objects are not goint to be performed, except for delete actions.
                 type: boolean
               podMetadata:
@@ -3326,6 +3427,100 @@ spec:
                         to. If the operator is Exists, the value should be empty,
                         otherwise just a regular string.
                       type: string
+                  type: object
+                type: array
+              topologySpreadConstraints:
+                description: If specified, the pod's topology spread constraints.
+                items:
+                  description: TopologySpreadConstraint specifies how to spread matching
+                    pods among the given topology.
+                  properties:
+                    labelSelector:
+                      description: LabelSelector is used to find matching pods. Pods
+                        that match this label selector are counted to determine the
+                        number of pods in their corresponding topology domain.
+                      properties:
+                        matchExpressions:
+                          description: matchExpressions is a list of label selector
+                            requirements. The requirements are ANDed.
+                          items:
+                            description: A label selector requirement is a selector
+                              that contains values, a key, and an operator that relates
+                              the key and values.
+                            properties:
+                              key:
+                                description: key is the label key that the selector
+                                  applies to.
+                                type: string
+                              operator:
+                                description: operator represents a key's relationship
+                                  to a set of values. Valid operators are In, NotIn,
+                                  Exists and DoesNotExist.
+                                type: string
+                              values:
+                                description: values is an array of string values.
+                                  If the operator is In or NotIn, the values array
+                                  must be non-empty. If the operator is Exists or
+                                  DoesNotExist, the values array must be empty. This
+                                  array is replaced during a strategic merge patch.
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - key
+                            - operator
+                            type: object
+                          type: array
+                        matchLabels:
+                          additionalProperties:
+                            type: string
+                          description: matchLabels is a map of {key,value} pairs.
+                            A single {key,value} in the matchLabels map is equivalent
+                            to an element of matchExpressions, whose key field is
+                            "key", the operator is "In", and the values array contains
+                            only "value". The requirements are ANDed.
+                          type: object
+                      type: object
+                    maxSkew:
+                      description: 'MaxSkew describes the degree to which pods may
+                        be unevenly distributed. It''s the maximum permitted difference
+                        between the number of matching pods in any two topology domains
+                        of a given topology type. For example, in a 3-zone cluster,
+                        MaxSkew is set to 1, and pods with the same labelSelector
+                        spread as 1/1/0: | zone1 | zone2 | zone3 | |   P   |   P   |       |
+                        - if MaxSkew is 1, incoming pod can only be scheduled to zone3
+                        to become 1/1/1; scheduling it onto zone1(zone2) would make
+                        the ActualSkew(2-0) on zone1(zone2) violate MaxSkew(1). -
+                        if MaxSkew is 2, incoming pod can be scheduled onto any zone.
+                        It''s a required field. Default value is 1 and 0 is not allowed.'
+                      format: int32
+                      type: integer
+                    topologyKey:
+                      description: TopologyKey is the key of node labels. Nodes that
+                        have a label with this key and identical values are considered
+                        to be in the same topology. We consider each <key, value>
+                        as a "bucket", and try to put balanced number of pods into
+                        each bucket. It's a required field.
+                      type: string
+                    whenUnsatisfiable:
+                      description: 'WhenUnsatisfiable indicates how to deal with a
+                        pod if it doesn''t satisfy the spread constraint. - DoNotSchedule
+                        (default) tells the scheduler not to schedule it - ScheduleAnyway
+                        tells the scheduler to still schedule it It''s considered
+                        as "Unsatisfiable" if and only if placing incoming pod on
+                        any topology violates "MaxSkew". For example, in a 3-zone
+                        cluster, MaxSkew is set to 1, and pods with the same labelSelector
+                        spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   |
+                        If WhenUnsatisfiable is set to DoNotSchedule, incoming pod
+                        can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2)
+                        as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In
+                        other words, the cluster can still be imbalanced, but scheduler
+                        won''t make it *more* imbalanced. It''s a required field.'
+                      type: string
+                  required:
+                  - maxSkew
+                  - topologyKey
+                  - whenUnsatisfiable
                   type: object
                 type: array
               version:
@@ -4583,7 +4778,7 @@ spec:
                 format: int32
                 type: integer
               paused:
-                description: Represents whether any actions on the underlaying managed
+                description: Represents whether any actions on the underlying managed
                   objects are being performed. Only delete actions will be performed.
                 type: boolean
               replicas:

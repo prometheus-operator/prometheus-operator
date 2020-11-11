@@ -240,14 +240,15 @@ spec:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: Name or number of the pod port this endpoint refers
-                        to. Mutually exclusive with port.
+                      description: Name or number of the target port of the Pod behind
+                        the Service, the port must be specified with container port
+                        property. Mutually exclusive with port.
                       x-kubernetes-int-or-string: true
                     tlsConfig:
                       description: TLS configuration to use when scraping the endpoint
                       properties:
                         ca:
-                          description: Stuct containing the CA cert to use for the
+                          description: Struct containing the CA cert to use for the
                             targets.
                           properties:
                             configMap:
@@ -450,6 +451,11 @@ spec:
                 items:
                   type: string
                 type: array
+              targetLimit:
+                description: TargetLimit defines a limit on the number of scraped
+                  targets that will be accepted.
+                format: int64
+                type: integer
             required:
             - endpoints
             - selector

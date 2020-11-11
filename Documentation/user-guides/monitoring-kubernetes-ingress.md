@@ -1,11 +1,11 @@
 <br>
 <div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.<br><br>
-This documentation is for an alpha feature. For questions and feedback on the Prometheus OCS Alpha program, email <a href="mailto:tectonic-alpha-feedback@coreos.com">tectonic-alpha-feedback@coreos.com</a>.
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.<br><br>
+This documentation is for an alpha feature.
 </div>
 
 # Monitoring Kubernetes Ingress with Ambassador
-[Ambassador](https://www.getambassador.io/) is a popular open-source API gateway for Kubernetes. Built on [Envoy Proxy](https://www.envoyproxy.io), Ambassador natively exposes statistics that give you better insight to what is happening at the edge of your Kubernetes cluster. In this guide we will: 
+[Ambassador](https://getambassador.io/) is a popular open-source API gateway for Kubernetes. Built on [Envoy Proxy](https://envoyproxy.io), Ambassador natively exposes statistics that give you better insight to what is happening at the edge of your Kubernetes cluster. In this guide we will:
 
 * Create a simple Kubernetes application
 * Deploy Ambassador as your Kubernetes ingress controller
@@ -17,7 +17,7 @@ This documentation is for an alpha feature. For questions and feedback on the Pr
 * The [Kubernetes command line tool](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
 ## Deploy and Expose an Application on Kubernetes
-First, we need an application running on Kubernetes for our users to access. You can deploy any application you would like but, for simplicity, we will use a [sample application](https://www.getambassador.io/user-guide/getting-started#3-creating-your-first-service) provided by the Ambassador team.
+First, we need an application running on Kubernetes for our users to access. You can deploy any application you would like but, for simplicity, we will use a [sample application](https://getambassador.io/user-guide/getting-started#3-creating-your-first-service) provided by the Ambassador team.
 
 We can quickly deploy this application using `kubectl`:
 
@@ -62,7 +62,7 @@ Now that we have an application running in Kubernetes, we need to expose it to t
 
 3. Route traffic to your application
 
-    You configure Ambassador to expose your application using [annotations](https://www.getambassador.io/reference/configuration/) on the Kubernetes service of the application like the one below.
+    You configure Ambassador to expose your application using [annotations](https://getambassador.io/reference/configuration/) on the Kubernetes service of the application like the one below.
 
     ```yaml
     ---
@@ -94,10 +94,10 @@ You now have an application running in Kubernetes and exposed to the internet.
 ## Deploy Prometheus 
 Now that we have an application running and exposed by Ambassador, we need to configure Prometheus to scrape the metrics from Ambassador. The Prometheus Operator gives us a way to deploy and manage Prometheus deployments using Kubernetes-style resources
 
-The Prometheus Operator creates Kubernetes Custom Resource Definitions (CRDs) so we can manage our Prometheus deployment using Kubernetes-style declarative YAML manifests. To deploy the Prometheus Operator, you can clone the [repository](https://github.com/coreos/prometheus-operator) and follow the instructions in the README. You can also just create it with `kubectl`:
+The Prometheus Operator creates Kubernetes Custom Resource Definitions (CRDs) so we can manage our Prometheus deployment using Kubernetes-style declarative YAML manifests. To deploy the Prometheus Operator, you can clone the [repository](https://github.com/prometheus-operator/prometheus-operator) and follow the instructions in the README. You can also just create it with `kubectl`:
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/coreos/prometheus-operator/master/bundle.yaml
+kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml
 ```
 
 Once the Prometheus operator is running, we need to create a Prometheus instance. The Prometheus Operator manages Prometheus deployments with the `Prometheus` CRD. To create a Prometheus instance and Kubernetes service, copy the following YAML to a file called `prometheus.yaml` and deploy it with `kubectl`:
@@ -194,4 +194,4 @@ Envoy's metrics data model is remarkably similar to that of Prometheus and uses 
 | envoy_cluster_upstream_rq | envoy_cluster_upstream_rq <br></br> envoy_cluster_upstream_rq_xx <br></br> envoy_cluster_upstream_rq_total <br></br> envoy_cluster_upstream_rq_retry | Statistics regarding traffic from Envoy to each upstream service. Tracking this will give you insight to how the request is performing after reaching Ambassador. It will help you pinpoint whether failures are happening in Ambassador or the upstream service. |
 
 
-Envoy collects many more statistics including some regarding rate limiting, circuit breaking, and distributed tracing. See the [Envoy's documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/stats) for more information on the metrics envoy collects.
+Envoy collects many more statistics including some regarding rate limiting, circuit breaking, and distributed tracing. See the [Envoy's documentation](https://envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/stats) for more information on the metrics envoy collects.

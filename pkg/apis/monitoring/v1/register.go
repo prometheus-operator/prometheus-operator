@@ -19,7 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/coreos/prometheus-operator/pkg/apis/monitoring"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 )
 
 // SchemeGroupVersion is the group version used to register these objects

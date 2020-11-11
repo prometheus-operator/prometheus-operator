@@ -1,9 +1,12 @@
 # How to Contribute
 
-CoreOS projects are [Apache 2.0 licensed](LICENSE) and accept contributions via
-GitHub pull requests.  This document outlines some of the conventions on
-development workflow, commit message formatting, contact points and other
-resources to make it easier to get your contribution accepted.
+This project is licensed under the [Apache 2.0 license](LICENSE) and accept
+contributions via GitHub pull requests.  This document outlines some of the
+conventions on development workflow, commit message formatting, contact points
+and other resources to make it easier to get your contribution accepted.
+
+To maintain a safe and welcoming community, all participants must adhere to the
+project's [Code of Conduct](code-of-conduct.md).
 
 # Certificate of Origin
 
@@ -14,9 +17,9 @@ contribution. See the [DCO](DCO) file for details.
 
 # Email and Chat
 
-The project currently uses the general CoreOS email list and IRC channel:
-- Email: [coreos-dev](https://groups.google.com/forum/#!forum/coreos-dev)
-- IRC: #[coreos](irc://irc.freenode.org:6667/#coreos) IRC channel on freenode.org
+The project currently uses the [Kubernetes Slack](https://slack.k8s.io/):
+- [#prometheus-operator](https://kubernetes.slack.com/archives/CFFDS2Z7F)
+- [#prometheus-operator-dev](https://kubernetes.slack.com/archives/C01B03QCSMN)
 
 Please avoid emailing maintainers found in the MAINTAINERS file directly. They
 are very busy and read the mailing lists.
@@ -39,12 +42,6 @@ This is a rough outline of what a contributor's workflow looks like:
 - Submit a pull request to the original repository.
 
 Thanks for your contributions!
-
-### Coding Style
-
-CoreOS projects written in Go follow a set of style guidelines that we've documented 
-[here](https://github.com/coreos/docs/tree/master/golang). Please follow them when 
-working on your contributions.
 
 ### Format of the Commit Message
 

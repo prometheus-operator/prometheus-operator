@@ -22,12 +22,11 @@ import (
 	"strconv"
 	"strings"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	namespacelabeler "github.com/coreos/prometheus-operator/pkg/namespace-labeler"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespace-labeler"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/cache"
 
 	"github.com/ghodss/yaml"
 	"github.com/go-kit/kit/log/level"
@@ -42,7 +41,7 @@ const labelPrometheusName = "prometheus-name"
 // large buffer.
 var maxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
-func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]string, error) {
+func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus) ([]string, error) {
 	cClient := c.kclient.CoreV1().ConfigMaps(p.Namespace)
 
 	namespaces, err := c.selectRuleNamespaces(p)
@@ -55,7 +54,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 		return nil, err
 	}
 
-	currentConfigMapList, err := cClient.List(context.TODO(), prometheusRulesConfigMapSelector(p.Name))
+	currentConfigMapList, err := cClient.List(ctx, prometheusRulesConfigMapSelector(p.Name))
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +98,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 			"prometheus", p.Name,
 		)
 		for _, cm := range newConfigMaps {
-			_, err = cClient.Create(context.TODO(), &cm, metav1.CreateOptions{})
+			_, err = cClient.Create(ctx, &cm, metav1.CreateOptions{})
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to create ConfigMap '%v'", cm.Name)
 			}
@@ -110,7 +109,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 	// Simply deleting old ConfigMaps and creating new ones for now. Could be
 	// replaced by logic that only deletes obsolete ConfigMaps in the future.
 	for _, cm := range currentConfigMaps {
-		err := cClient.Delete(context.TODO(), cm.Name, metav1.DeleteOptions{})
+		err := cClient.Delete(ctx, cm.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to delete current ConfigMap '%v'", cm.Name)
 		}
@@ -122,7 +121,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(p *monitoringv1.Prometheus) ([]s
 		"prometheus", p.Name,
 	)
 	for _, cm := range newConfigMaps {
-		_, err = cClient.Create(context.TODO(), &cm, metav1.CreateOptions{})
+		_, err = cClient.Create(ctx, &cm, metav1.CreateOptions{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create new ConfigMap '%v'", cm.Name)
 		}
@@ -179,7 +178,7 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 
 	for _, ns := range namespaces {
 		var marshalErr error
-		err := cache.ListAllByNamespace(c.ruleInf.GetIndexer(), ns, ruleSelector, func(obj interface{}) {
+		err := c.ruleInfs.ListAllByNamespace(ns, ruleSelector, func(obj interface{}) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
 
 			if err := nsLabeler.EnforceNamespaceLabel(promRule); err != nil {
@@ -214,14 +213,18 @@ func (c *Operator) selectRules(p *monitoringv1.Prometheus, namespaces []string) 
 		"prometheus", p.Name,
 	)
 
+	if pKey, ok := c.keyFunc(p); ok {
+		c.metrics.SetSelectedResources(pKey, monitoringv1.PrometheusRuleKind, len(rules))
+		c.metrics.SetRejectedResources(pKey, monitoringv1.PrometheusRuleKind, 0)
+	}
+
 	return rules, nil
 }
 
 func generateContent(promRule monitoringv1.PrometheusRuleSpec) (string, error) {
-
 	content, err := yaml.Marshal(promRule)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to unmarshal content")
+		return "", errors.Wrap(err, "failed to marshal content")
 	}
 	return string(content), nil
 }

@@ -21,7 +21,7 @@ import (
 	"os"
 	"testing"
 
-	operatorFramework "github.com/coreos/prometheus-operator/test/framework"
+	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 	opImage = flag.String(
 		"operator-image",
 		"",
-		"operator image, e.g. quay.io/coreos/prometheus-operator",
+		"operator image, e.g. quay.io/prometheus-operator/prometheus-operator",
 	)
 	flag.Parse()
 
@@ -86,7 +86,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 
-	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true)
+	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func TestAllNS(t *testing.T) {
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
 	// (or at least did not fail before calling t.Parallel). As all tests in
-	// testAllNS are parallel, the defered ctx.Cleanup above would be run before
+	// testAllNS are parallel, the deferred ctx.Cleanup above would be run before
 	// all tests finished. Wrapping it in testAllNSPrometheus and testAllNSAlertmanager
 	// fixes this.
 	t.Run("x", testAllNSAlertmanager)
@@ -149,6 +149,8 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMClusterGossipSilences":         testAMClusterGossipSilences,
 		"AMReloadConfig":                  testAMReloadConfig,
 		"AMZeroDowntimeRollingDeployment": testAMZeroDowntimeRollingDeployment,
+		"AMAlertmanagerConfigCRD":         testAlertmanagerConfigCRD,
+		"AMUserDefinedAlertmanagerConfig": testUserDefinedAlertmanagerConfig,
 	}
 
 	for name, f := range testFuncs {
@@ -179,6 +181,8 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromOnlyUpdatedOnRelevantChanges":       testPromOnlyUpdatedOnRelevantChanges,
 		"PromWhenDeleteCRDCleanUpViaOwnerRef":    testPromWhenDeleteCRDCleanUpViaOwnerRef,
 		"PromDiscovery":                          testPromDiscovery,
+		"ShardingProvisioning":                   testShardingProvisioning,
+		"Resharding":                             testResharding,
 		"PromAlertmanagerDiscovery":              testPromAlertmanagerDiscovery,
 		"PromExposingWithKubernetesAPI":          testPromExposingWithKubernetesAPI,
 		"PromDiscoverTargetPort":                 testPromDiscoverTargetPort,
@@ -188,6 +192,8 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromTLSConfigViaSecret":                 testPromTLSConfigViaSecret,
 		"Thanos":                                 testThanos,
 		"PromStaticProbe":                        testPromStaticProbe,
+		"PromSecurePodMonitor":                   testPromSecurePodMonitor,
+		"PromSharedResourcesReconciliation":      testPromSharedResourcesReconciliation,
 	}
 
 	for name, f := range testFuncs {
@@ -223,6 +229,7 @@ func TestDenylist(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
 		"Prometheus":     testDenyPrometheus,
 		"ServiceMonitor": testDenyServiceMonitor,
+		"ThanosRuler":    testDenyThanosRuler,
 	}
 
 	for name, f := range testFuncs {
@@ -234,9 +241,10 @@ func TestDenylist(t *testing.T) {
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":     testPrometheusInstanceNamespaces_AllNs,
-		"AllowList": testPrometheusInstanceNamespaces_AllowList,
-		"DenyList":  testPrometheusInstanceNamespaces_DenyList,
+		"AllNs":             testPrometheusInstanceNamespaces_AllNs,
+		"AllowList":         testPrometheusInstanceNamespaces_AllowList,
+		"DenyList":          testPrometheusInstanceNamespaces_DenyList,
+		"NamespaceNotFound": testPrometheusInstanceNamespaces_NamespaceNotFound,
 	}
 
 	for name, f := range testFuncs {

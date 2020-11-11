@@ -13,5 +13,5 @@ e2e tests are written as Go test. All go test techniques apply, e.g. picking
 what to run, timeout length. Let's say I want to run all tests in "test/e2e/":
 
 ```
-$ go test -v ./test/e2e/ --kubeconfig "$HOME/.kube/config" --operator-image=quay.io/coreos/prometheus-operator
+$ go test -v ./test/e2e/ --kubeconfig "$HOME/.kube/config" --operator-image=quay.io/prometheus-operator/prometheus-operator
 ```

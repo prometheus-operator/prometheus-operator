@@ -28,14 +28,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/coreos/prometheus-operator/pkg/k8sutil"
 	"github.com/pkg/errors"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
 func PathToOSFile(relativPath string) (*os.File, error) {
 	path, err := filepath.Abs(relativPath)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed generate absolut file path of %s", relativPath))
+		return nil, errors.Wrap(err, fmt.Sprintf("failed generate absolute file path of %s", relativPath))
 	}
 
 	manifest, err := os.Open(path)
@@ -135,27 +135,6 @@ func GetLogs(kubeClient kubernetes.Interface, namespace string, podName, contain
 		return "", err
 	}
 	return string(logs), err
-}
-
-func (f *Framework) Poll(timeout, pollInterval time.Duration, pollFunc func() (bool, error)) error {
-	t := time.After(timeout)
-	ticker := time.NewTicker(pollInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-t:
-			return fmt.Errorf("timed out")
-		case <-ticker.C:
-			b, err := pollFunc()
-			if err != nil {
-				return err
-			}
-			if b {
-				return nil
-			}
-		}
-	}
 }
 
 func ProxyGetPod(kubeClient kubernetes.Interface, namespace, podName, path string) *rest.Request {

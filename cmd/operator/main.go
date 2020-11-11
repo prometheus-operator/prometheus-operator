@@ -29,22 +29,25 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/coreos/prometheus-operator/pkg/admission"
-	alertmanagercontroller "github.com/coreos/prometheus-operator/pkg/alertmanager"
-	"github.com/coreos/prometheus-operator/pkg/api"
-	"github.com/coreos/prometheus-operator/pkg/operator"
-	prometheuscontroller "github.com/coreos/prometheus-operator/pkg/prometheus"
-	thanoscontroller "github.com/coreos/prometheus-operator/pkg/thanos"
-	"github.com/coreos/prometheus-operator/pkg/version"
+	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
+	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
+	"github.com/prometheus-operator/prometheus-operator/pkg/api"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prometheuscontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	thanoscontroller "github.com/prometheus-operator/prometheus-operator/pkg/thanos"
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 
 	rbacproxytls "github.com/brancz/kube-rbac-proxy/pkg/tls"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/klog"
+	klog "k8s.io/klog"
+	klogv2 "k8s.io/klog/v2"
 )
 
 const (
@@ -132,7 +135,8 @@ var (
 		logFormatLogfmt,
 		logFormatJson,
 	}
-	cfg = prometheuscontroller.Config{}
+	cfg                           = operator.Config{}
+	deprecatedConfigReloaderImage string
 
 	rawTLSCipherSuites string
 	serverTLS          bool
@@ -141,7 +145,7 @@ var (
 )
 
 func init() {
-	klog.InitFlags(flagset)
+	// With migration to klog-gokit, calling klogv2.InitFlags(flagset) is not applicable.
 	flagset.StringVar(&cfg.ListenAddress, "web.listen-address", ":8080", "Address on which to expose metrics and web interface.")
 	flagset.BoolVar(&serverTLS, "web.enable-tls", false, "Activate prometheus operator web server TLS.  "+
 		" This is useful for example when using the rule validation webhook.")
@@ -165,10 +169,11 @@ func init() {
 	// Prometheus Operator image, tagged with the same semver version. Default to
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
-	flagset.StringVar(&cfg.PrometheusConfigReloaderImage, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
-	flagset.StringVar(&cfg.ConfigReloaderImage, "config-reloader-image", operator.DefaultConfigMapReloaderImage, "Reload Image")
-	flagset.StringVar(&cfg.ConfigReloaderCPU, "config-reloader-cpu", "100m", "Config Reloader CPU. Value \"0\" disables it and causes no limit to be configured.")
-	flagset.StringVar(&cfg.ConfigReloaderMemory, "config-reloader-memory", "25Mi", "Config Reloader Memory. Value \"0\" disables it and causes no limit to be configured.")
+	flagset.StringVar(&cfg.ReloaderConfig.Image, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
+	// TODO(simonpasquier): remove the '--config-reloader-image' flag before releasing v0.45.
+	flagset.StringVar(&deprecatedConfigReloaderImage, "config-reloader-image", "", "Reload image. Deprecated, it will be removed in v0.45.0.")
+	flagset.StringVar(&cfg.ReloaderConfig.CPU, "config-reloader-cpu", "100m", "Config Reloader CPU request & limit. Value \"0\" disables it and causes no request/limit to be configured.")
+	flagset.StringVar(&cfg.ReloaderConfig.Memory, "config-reloader-memory", "25Mi", "Config Reloader Memory request & limit. Value \"0\" disables it and causes no request/limit to be configured.")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
 	flagset.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image (path without tag/version)")
 	flagset.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image (path without tag/version)")
@@ -189,7 +194,13 @@ func init() {
 }
 
 func Main() int {
+	versionutil.RegisterFlags()
 	flagset.Parse(os.Args[1:])
+
+	if versionutil.ShouldPrintVersion() {
+		versionutil.Print(os.Stdout, "prometheus-operator")
+		return 0
+	}
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	if cfg.LogFormat == logFormatJson {
@@ -215,7 +226,22 @@ func Main() int {
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
-	logger.Log("msg", fmt.Sprintf("Starting Prometheus Operator version '%v'.", version.Version))
+	// Above level 6, the k8s client would log bearer tokens in clear-text.
+	klog.ClampLevel(6)
+	klog.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
+	klogv2.ClampLevel(6)
+	klogv2.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
+
+	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
+	level.Info(logger).Log("build_context", version.BuildContext())
+
+	if deprecatedConfigReloaderImage != "" {
+		level.Warn(logger).Log(
+			"msg", "'--config-reloader-image' flag is ignored, only '--prometheus-config-reloader' is used",
+			"config-reloader-image", deprecatedConfigReloaderImage,
+			"prometheus-config-reloader", cfg.ReloaderConfig.Image,
+		)
+	}
 
 	if len(ns) > 0 && len(deniedNs) > 0 {
 		fmt.Fprint(os.Stderr, "--namespaces and --deny-namespaces are mutually exclusive. Please provide only one of them.\n")
@@ -244,22 +270,30 @@ func Main() int {
 		cfg.Namespaces.ThanosRulerAllowList = cfg.Namespaces.AllowList
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	wg, ctx := errgroup.WithContext(ctx)
 	r := prometheus.NewRegistry()
-	po, err := prometheuscontroller.New(cfg, log.With(logger, "component", "prometheusoperator"), r)
+
+	k8sutil.MustRegisterClientGoMetrics(r)
+
+	po, err := prometheuscontroller.New(ctx, cfg, log.With(logger, "component", "prometheusoperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating prometheus controller failed: ", err)
+		cancel()
 		return 1
 	}
 
-	ao, err := alertmanagercontroller.New(cfg, log.With(logger, "component", "alertmanageroperator"), r)
+	ao, err := alertmanagercontroller.New(ctx, cfg, log.With(logger, "component", "alertmanageroperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating alertmanager controller failed: ", err)
+		cancel()
 		return 1
 	}
 
-	to, err := thanoscontroller.New(cfg, log.With(logger, "component", "thanosoperator"), r)
+	to, err := thanoscontroller.New(ctx, cfg, log.With(logger, "component", "thanosoperator"), r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating thanos controller failed: ", err)
+		cancel()
 		return 1
 	}
 
@@ -267,6 +301,7 @@ func Main() int {
 	web, err := api.New(cfg, log.With(logger, "component", "api"))
 	if err != nil {
 		fmt.Fprint(os.Stderr, "instantiating api failed: ", err)
+		cancel()
 		return 1
 	}
 	admit := admission.New(log.With(logger, "component", "admissionwebhook"))
@@ -276,6 +311,7 @@ func Main() int {
 	l, err := net.Listen("tcp", cfg.ListenAddress)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "listening failed", cfg.ListenAddress, err)
+		cancel()
 		return 1
 	}
 
@@ -288,6 +324,7 @@ func Main() int {
 			cfg.ServerTLSConfig.ClientCAFile, cfg.ServerTLSConfig.MinVersion, cfg.ServerTLSConfig.CipherSuites)
 		if tlsConfig == nil || err != nil {
 			fmt.Fprint(os.Stderr, "invalid TLS config", err)
+			cancel()
 			return 1
 		}
 	}
@@ -307,11 +344,12 @@ func Main() int {
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 		validationTriggeredCounter,
 		validationErrorsCounter,
+		version.NewCollector("prometheus_operator"),
 	)
 
 	admit.RegisterMetrics(
-		&validationTriggeredCounter,
-		&validationErrorsCounter,
+		validationTriggeredCounter,
+		validationErrorsCounter,
 	)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
@@ -321,12 +359,9 @@ func Main() int {
 	mux.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 	mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	wg, ctx := errgroup.WithContext(ctx)
-
-	wg.Go(func() error { return po.Run(ctx.Done()) })
-	wg.Go(func() error { return ao.Run(ctx.Done()) })
-	wg.Go(func() error { return to.Run(ctx.Done()) })
+	wg.Go(func() error { return po.Run(ctx) })
+	wg.Go(func() error { return ao.Run(ctx) })
+	wg.Go(func() error { return to.Run(ctx) })
 
 	if tlsConfig != nil {
 		r, err := rbacproxytls.NewCertReloader(
@@ -336,6 +371,7 @@ func Main() int {
 		)
 		if err != nil {
 			fmt.Fprint(os.Stderr, "failed to initialize certificate reloader", err)
+			cancel()
 			return 1
 		}
 

@@ -21,15 +21,16 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	v1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/operator"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 const (
@@ -73,38 +74,40 @@ func stringMapToMapSlice(m map[string]string) yaml.MapSlice {
 	return res
 }
 
+func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls v1.SafeTLSConfig) yaml.MapSlice {
+	pathForSelector := func(sel v1.SecretOrConfigMap) string {
+		return path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(namespace, sel).String())
+	}
+	tlsConfig := yaml.MapSlice{
+		{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
+	}
+	if tls.CA.Secret != nil || tls.CA.ConfigMap != nil {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathForSelector(tls.CA)})
+	}
+	if tls.Cert.Secret != nil || tls.Cert.ConfigMap != nil {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathForSelector(tls.Cert)})
+	}
+	if tls.KeySecret != nil {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathForSelector(v1.SecretOrConfigMap{Secret: tls.KeySecret})})
+	}
+	if tls.ServerName != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
+	}
+	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
+	return cfg
+}
+
 func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *v1.TLSConfig) yaml.MapSlice {
 	if tls != nil {
-		pathPrefix := path.Join(tlsAssetsDir, namespace)
-		tlsConfig := yaml.MapSlice{
-			{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
-		}
+		tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
 		if tls.CAFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
-		}
-		if tls.CA.Secret != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathPrefix + "_" + tls.CA.Secret.Name + "_" + tls.CA.Secret.Key})
-		}
-		if tls.CA.ConfigMap != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathPrefix + "_" + tls.CA.ConfigMap.Name + "_" + tls.CA.ConfigMap.Key})
 		}
 		if tls.CertFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
 		}
-		if tls.Cert.Secret != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathPrefix + "_" + tls.Cert.Secret.Name + "_" + tls.Cert.Secret.Key})
-		}
-		if tls.Cert.ConfigMap != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathPrefix + "_" + tls.Cert.ConfigMap.Name + "_" + tls.Cert.ConfigMap.Key})
-		}
 		if tls.KeyFile != "" {
 			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
-		}
-		if tls.KeySecret != nil {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathPrefix + "_" + tls.KeySecret.Name + "_" + tls.KeySecret.Key})
-		}
-		if tls.ServerName != "" {
-			tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
 		}
 		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 	}
@@ -155,8 +158,8 @@ func (cg *configGenerator) generateConfig(
 	sMons map[string]*v1.ServiceMonitor,
 	pMons map[string]*v1.PodMonitor,
 	probes map[string]*v1.Probe,
-	basicAuthSecrets map[string]BasicAuthCredentials,
-	bearerTokens map[string]BearerToken,
+	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	bearerTokens map[string]assets.BearerToken,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertManagerConfigs []byte,
@@ -244,6 +247,10 @@ func (cg *configGenerator) generateConfig(
 	sort.Strings(probeIdentifiers)
 
 	apiserverConfig := p.Spec.APIServerConfig
+	shards := int32(1)
+	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
+		shards = *p.Spec.Shards
+	}
 
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range sMonIdentifiers {
@@ -260,7 +267,11 @@ func (cg *configGenerator) generateConfig(
 					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
-					p.Spec.EnforcedSampleLimit))
+					p.Spec.EnforcedSampleLimit,
+					p.Spec.EnforcedTargetLimit,
+					shards,
+				),
+			)
 		}
 	}
 	for _, identifier := range pMonIdentifiers {
@@ -271,11 +282,16 @@ func (cg *configGenerator) generateConfig(
 					pMons[identifier], ep, i,
 					apiserverConfig,
 					basicAuthSecrets,
+					bearerTokens,
 					p.Spec.OverrideHonorLabels,
 					p.Spec.OverrideHonorTimestamps,
 					p.Spec.IgnoreNamespaceSelectors,
 					p.Spec.EnforcedNamespaceLabel,
-					p.Spec.EnforcedSampleLimit))
+					p.Spec.EnforcedSampleLimit,
+					p.Spec.EnforcedTargetLimit,
+					shards,
+				),
+			)
 		}
 	}
 
@@ -406,13 +422,16 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	m *v1.PodMonitor,
 	ep v1.PodMetricsEndpoint,
 	i int, apiserverConfig *v1.APIServerConfig,
-	basicAuthSecrets map[string]BasicAuthCredentials,
+	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	bearerTokens map[string]assets.BearerToken,
 	ignoreHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
-	enforcedSampleLimit *uint64) yaml.MapSlice {
-
+	enforcedSampleLimit *uint64,
+	enforcedTargetLimit *uint64,
+	shards int32,
+) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
 		{
@@ -455,6 +474,27 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	}
 	if ep.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme})
+	}
+
+	if ep.TLSConfig != nil {
+		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
+	}
+
+	if ep.BearerTokenSecret.Name != "" {
+		if s, ok := bearerTokens[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
+		}
+	}
+
+	if ep.BasicAuth != nil {
+		if s, ok := basicAuthSecrets[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
+			cfg = append(cfg, yaml.MapItem{
+				Key: "basic_auth", Value: yaml.MapSlice{
+					{Key: "username", Value: s.Username},
+					{Key: "password", Value: s.Password},
+				},
+			})
+		}
 	}
 
 	var (
@@ -600,10 +640,17 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
 	// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
 	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
+
+	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getSampleLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
+		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
+	}
+
+	if version.Major == 2 && version.Minor >= 21 &&
+		(m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil) {
+		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
 	}
 
 	if ep.MetricRelabelConfigs != nil {
@@ -626,16 +673,13 @@ func (cg *configGenerator) generateProbeConfig(
 	version semver.Version,
 	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
-	basicAuthSecrets map[string]BasicAuthCredentials,
+	basicAuthSecrets map[string]assets.BasicAuthCredentials,
 	ignoreHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string) yaml.MapSlice {
 
 	jobName := fmt.Sprintf("%s/%s", m.Namespace, m.Name)
-	if m.Spec.JobName != "" {
-		jobName = m.Spec.JobName
-	}
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -667,7 +711,14 @@ func (cg *configGenerator) generateProbeConfig(
 	}})
 
 	var relabelings []yaml.MapSlice
-
+	if m.Spec.JobName != "" {
+		relabelings = append(relabelings, []yaml.MapSlice{
+			{
+				{Key: "target_label", Value: "job"},
+				{Key: "replacement", Value: m.Spec.JobName},
+			},
+		}...)
+	}
 	// Generate static_config section.
 	if m.Spec.Targets.StaticConfig != nil {
 		staticConfig := yaml.MapSlice{
@@ -787,10 +838,6 @@ func (cg *configGenerator) generateProbeConfig(
 		// Relabelings for prober.
 		relabelings = append(relabelings, []yaml.MapSlice{
 			{
-				{Key: "source_labels", Value: []string{"__address__"}},
-				{Key: "target_label", Value: "__param_target"},
-			},
-			{
 				{Key: "source_labels", Value: []string{"__param_target"}},
 				{Key: "target_label", Value: "instance"},
 			},
@@ -821,14 +868,16 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	ep v1.Endpoint,
 	i int,
 	apiserverConfig *v1.APIServerConfig,
-	basicAuthSecrets map[string]BasicAuthCredentials,
-	bearerTokens map[string]BearerToken,
+	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	bearerTokens map[string]assets.BearerToken,
 	overrideHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string,
-	enforcedSampleLimit *uint64) yaml.MapSlice {
-
+	enforcedSampleLimit *uint64,
+	enforcedTargetLimit *uint64,
+	shards int32,
+) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
 		{
@@ -889,8 +938,8 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		if s, ok := basicAuthSecrets[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{
 				Key: "basic_auth", Value: yaml.MapSlice{
-					{Key: "username", Value: s.username},
-					{Key: "password", Value: s.password},
+					{Key: "username", Value: s.Username},
+					{Key: "password", Value: s.Password},
 				},
 			})
 		}
@@ -1065,10 +1114,17 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
 	// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
 	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
+
+	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getSampleLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
+		cfg = append(cfg, yaml.MapItem{Key: "sample_limit", Value: getLimit(m.Spec.SampleLimit, enforcedSampleLimit)})
+	}
+
+	if version.Major == 2 && version.Minor >= 21 &&
+		(m.Spec.TargetLimit > 0 || enforcedTargetLimit != nil) {
+		cfg = append(cfg, yaml.MapItem{Key: "target_limit", Value: getLimit(m.Spec.TargetLimit, enforcedTargetLimit)})
 	}
 
 	if ep.MetricRelabelConfigs != nil {
@@ -1087,7 +1143,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	return cfg
 }
 
-func getSampleLimit(user uint64, enforced *uint64) uint64 {
+func getLimit(user uint64, enforced *uint64) uint64 {
 	if enforced != nil {
 		if user < *enforced && user != 0 || *enforced == 0 {
 			return user
@@ -1095,6 +1151,19 @@ func getSampleLimit(user uint64, enforced *uint64) uint64 {
 		return *enforced
 	}
 	return user
+}
+
+func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return append(relabelings, yaml.MapSlice{
+		{Key: "source_labels", Value: []string{"__address__"}},
+		{Key: "target_label", Value: "__tmp_hash"},
+		{Key: "modulus", Value: shards},
+		{Key: "action", Value: "hashmod"},
+	}, yaml.MapSlice{
+		{Key: "source_labels", Value: []string{"__tmp_hash"}},
+		{Key: "regex", Value: "$(SHARD)"},
+		{Key: "action", Value: "keep"},
+	})
 }
 
 // appendPre17RelabelConfig appends relabel config to pre-1.7 prometheus versions
@@ -1188,7 +1257,7 @@ func getNamespacesFromNamespaceSelector(nsel *v1.NamespaceSelector, namespace st
 	return nsel.MatchNames
 }
 
-func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]BasicAuthCredentials, role string) yaml.MapItem {
+func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]assets.BasicAuthCredentials, role string) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
 			Key:   "role",
@@ -1217,8 +1286,8 @@ func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverCon
 			if s, ok := basicAuthSecrets["apiserver"]; ok {
 				k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
 					Key: "basic_auth", Value: yaml.MapSlice{
-						{Key: "username", Value: s.username},
-						{Key: "password", Value: s.password},
+						{Key: "username", Value: s.Username},
+						{Key: "password", Value: s.Password},
 					},
 				})
 			}
@@ -1245,7 +1314,7 @@ func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverCon
 	}
 }
 
-func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoints, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapSlice {
+func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoints, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapSlice {
 	if am.Scheme == "" {
 		am.Scheme = "http"
 	}
@@ -1257,6 +1326,10 @@ func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am
 	cfg := yaml.MapSlice{
 		{Key: "path_prefix", Value: am.PathPrefix},
 		{Key: "scheme", Value: am.Scheme},
+	}
+
+	if am.Timeout != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "timeout", Value: am.Timeout})
 	}
 
 	// TODO: If we want to support secret refs for alertmanager config tls
@@ -1322,7 +1395,7 @@ func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am
 	return cfg
 }
 
-func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
+func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
@@ -1353,8 +1426,8 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, spec
 			if s, ok := basicAuthSecrets[fmt.Sprintf("remoteRead/%d", i)]; ok {
 				cfg = append(cfg, yaml.MapItem{
 					Key: "basic_auth", Value: yaml.MapSlice{
-						{Key: "username", Value: s.username},
-						{Key: "password", Value: s.password},
+						{Key: "username", Value: s.Username},
+						{Key: "password", Value: s.Password},
 					},
 				})
 			}
@@ -1386,7 +1459,7 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, spec
 	}
 }
 
-func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]BasicAuthCredentials) yaml.MapItem {
+func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
@@ -1448,8 +1521,8 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *
 			if s, ok := basicAuthSecrets[fmt.Sprintf("remoteWrite/%d", i)]; ok {
 				cfg = append(cfg, yaml.MapItem{
 					Key: "basic_auth", Value: yaml.MapSlice{
-						{Key: "username", Value: s.username},
-						{Key: "password", Value: s.password},
+						{Key: "username", Value: s.Username},
+						{Key: "password", Value: s.Password},
 					},
 				})
 			}

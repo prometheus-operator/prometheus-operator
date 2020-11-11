@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@ import (
 	sync "sync"
 	time "time"
 
-	internalinterfaces "github.com/coreos/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
-	monitoring "github.com/coreos/prometheus-operator/pkg/client/informers/externalversions/monitoring"
-	versioned "github.com/coreos/prometheus-operator/pkg/client/versioned"
+	internalinterfaces "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/monitoring"
+	versioned "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

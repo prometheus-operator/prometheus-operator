@@ -1,6 +1,6 @@
 <br>
 <div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.<br><br>
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.<br><br>
 This documentation is for an alpha feature. For questions and feedback on the Prometheus OCS Alpha program, email <a href="mailto:tectonic-alpha-feedback@coreos.com">tectonic-alpha-feedback@coreos.com</a>.
 </div>
 
@@ -18,6 +18,8 @@ The Alertmanager may be used to:
 
 Prometheus' configuration also includes "rule files", which contain the [alerting rules][alerting-rules]. When an alerting rule triggers it fires that alert against *all* Alertmanager instances, on *every* rule evaluation interval. The Alertmanager instances communicate to each other which notifications have already been sent out. For more information on this system design, see the [High Availability scheme description][ha-scheme].
 
+The Prometheus Operator also introduces an AlertmanagerConfig resource, which allows users to declaratively describe Alertmanager configurations. The AlertmanagerConfig resource is currently v1alpha1, testing and feedback are welcome.
+
 First, create an example Alertmanager cluster, with three instances.
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager-example.yaml)
@@ -30,8 +32,72 @@ spec:
   replicas: 3
 ```
 
-The Alertmanager instances will not be able to start up, unless a valid configuration is given. The following example configuration sends notifications against a non-existent `webhook`, allowing the Alertmanager to start up, without issuing any notifications.
+The Alertmanager instances will not be able to start up, unless a valid configuration is given. An config file Secret will be composed by taking an optional base config file Secret specified through the `configSecret` field in the Alertmanager resource Spec, and merging that with any AlertmanagerConfig resources that get matched by using the `alertmanagerConfigSelector` and `alertmanagerConfigNamespaceSelector` selectors from the `Alertmanager` resource.
+
 For more information on configuring Alertmanager, see the Prometheus [Alerting Configuration document][alerting-config].
+
+## AlertmanagerConfig Resource
+
+The following example configuration creates an AlertmanagerConfig resource that sends notifications to a non-existent `wechat` receiver:
+
+[embedmd]:# (../../example/user-guides/alerting/alertmanager-config-example.yaml)
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: config-example
+  labels:
+    alertmanagerConfig: example
+spec:
+  route:
+    groupBy: ['job']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 12h
+    receiver: 'wechat-example'
+  receivers:
+  - name: 'wechat-example'
+    weChatConfigs:
+    - apiURL: 'http://wechatserver:8080/'
+      corpID: 'wechat-corpid'
+      apiSecret:
+        name: 'wechat-config'
+        key: 'apiSecret'
+
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: wechat-config
+data:
+  apiSecret: d2VjaGF0LXNlY3JldAo=
+```
+
+Save the above AlertmanagerConfig in a file called `alertmanager-config.yaml` and create a resource from it using `kubectl`.
+
+```bash
+$ kubectl create -f alertmanager-config.yaml
+```
+
+The `alertmanagerConfigSelector` field in the Alertmanager resource Spec needs to be specified so that the operator can select such AlertmanagerConfig resources. In the previous example, the label `alertmanagerConfig: example` is added, so the Alertmanager instance should be updated, adding the `alertmanagerConfigSelector`:
+
+[embedmd]:# (../../example/user-guides/alerting/alertmanager-selector-example.yaml)
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  name: example
+spec:
+  replicas: 3
+  alertmanagerConfigSelector:
+    matchLabels:
+      alertmanagerConfig: example
+```
+
+## Manually Managed Secret
+
+The following example configuration sends notifications against to a `webhook`:
 
 [embedmd]:# (../../example/user-guides/alerting/alertmanager.yaml)
 ```yaml
@@ -49,10 +115,10 @@ receivers:
   - url: 'http://alertmanagerwh:30500/'
 ```
 
-Save the above Alertmanager config in a file called `alertmanager.yaml` and create a secret from it using `kubectl`.
+Save the above Alertmanager config in a file called `alertmanager.yaml` and create a secret from it using `kubectl`
 
 Alertmanager instances require the secret resource naming to follow the format
-`alertmanager-{ALERTMANAGER_NAME}`. In the previous example, the name of the Alertmanager is `example`, so the secret name must be `alertmanager-example`, and the name of the config file `alertmanager.yaml`
+`alertmanager-{ALERTMANAGER_NAME}`. In the previous example, the name of the Alertmanager is `example`, so the secret name must be `alertmanager-example`, and the name of the config file `alertmanager.yaml`. Also, the name of the secret can be set through the field `configSecret` in Alertmanager configuration, if you desire to use a different one.
 
 ```bash
 $ kubectl create secret generic alertmanager-example --from-file=alertmanager.yaml
@@ -79,7 +145,9 @@ templates:
 - '*.tmpl'
 ```
 
-Once created this Secret is mounted by Alertmanager Pods created through the Alertmanager object.
+## Expose Alertmanager
+
+Once the operator merges the optional manually specified Secret with any selected `AlertmanagerConfig` resources, a new configuration Secret is created with the name `alertmanager-<Alertmanager name>-generated`, and is mounted into Alertmanager Pods created through the Alertmanager object.
 
 To be able to view the web UI, expose it through a Service. A simple way to do this is to use a Service of type `NodePort`.
 
@@ -102,6 +170,8 @@ spec:
 ```
 
 Once created it allows the web UI to be accessible via a Node's IP and the port `30903`.
+
+## Fire Alerts
 
 This Alertmanager cluster is now fully functional and highly available, but no alerts are fired against it. Create  Prometheus instances to fire alerts to the Alertmanagers.
 

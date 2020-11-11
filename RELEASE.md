@@ -1,6 +1,6 @@
 # Release schedule
 
-Following [Prometheus](https://github.com/prometheus/prometheus/blob/master/RELEASE.md) and [Thanos](https://github.com/thanos-io/thanos/blob/master/docs/release-process.md), this project aims for a predictible release schedule.
+Following [Prometheus](https://github.com/prometheus/prometheus/blob/master/RELEASE.md) and [Thanos](https://github.com/thanos-io/thanos/blob/master/docs/release-process.md), this project aims for a predictable release schedule.
 
 Release cadence of first pre-releases being cut is 6 weeks.
 
@@ -9,11 +9,14 @@ Release cadence of first pre-releases being cut is 6 weeks.
 | v0.39   | 2020-05-06                                 | Pawel Krupa (GitHub: @paulfantom)           |
 | v0.40   | 2020-06-17                                 | Lili Cosic (GitHub: @lilic)                 |
 | v0.41   | 2020-07-29                                 | Sergiusz Urbaniak (GitHub: @s-urbaniak)     |
-| v0.42   | 2020-09-09                                 | **searching for volunteer**                 |
+| v0.42   | 2020-09-09                                 | Matthias Loibl (GitHub: @metalmatze)        |
+| v0.43   | 2020-10-21                                 | Simon Pasquier (GitHub: @simonpasquier)     |
+| v0.44   | 2020-12-02                                 | Pawel Krupa (GitHub: @paulfantom)           |
+| v0.45   | 2021-01-13                                 | **searching for volunteer**                 |
 
 # How to cut a new release
 
-> This guide is strongly based on the [Prometheus release instructions](https://github.com/prometheus/prometheus/wiki/HOWTO-cut-a-new-release).
+> This guide is strongly based on the [Prometheus release instructions](https://github.com/prometheus/prometheus/blob/master/RELEASE.md).
 
 ## Branch management and versioning strategy
 
@@ -27,16 +30,30 @@ If a bug fix got accidentally merged into master, cherry-pick commits have to be
 
 Maintaining the release branches for older minor releases happens on a best effort basis.
 
+## Update Go dependencies
+
+A couple of days before the release, consider submitting a PR against the `master` branch to update the Go dependencies.
+
+## Update operand versions
+
+A couple of days before the release, update the [default versions](https://github.com/prometheus-operator/prometheus-operator/blob/f6ce472ecd6064fb6769e306b55b149dfb6af903/pkg/operator/defaults.go#L20-L31) of Prometheus, Alertmanager and Thanos if newer versions are available.
+
 ## Prepare your release
 
-For a patch release, work in the branch of the minor release you want to patch.
+For a new major or minor release, work from the `master` branch. For a patch release, work in the branch of the minor release you want to patch (e.g. `release-0.43` if you're releasing `v0.43.2`).
 
-For a new major or minor release, create the corresponding release branch based on the master branch.
+Bump the version in the `VERSION` file in the root of the repository.
 
-Bump the version in the `VERSION` file in the root of the repository. Once that's done, a number of files have to be re-generated, this is automated with the following make target:
+A number of files have to be re-generated, this is automated with the following make target:
 
 ```bash
-$ make generate
+$ make clean generate
+```
+
+Bump the version of the `pkg/apis/monitoring` package in `go.mod`:
+
+```bash
+$ go mod edit -require "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring@v$(< VERSION)"
 ```
 
 Now that all version information has been updated, an entry for the new version can be added to the `CHANGELOG.md` file.
@@ -48,27 +65,33 @@ Entries in the `CHANGELOG.md` are meant to be in this order:
 * `[ENHANCEMENT]`
 * `[BUGFIX]`
 
-Create a PR for the version and changelog changes to be reviewed.
+Create a PR for the changes to be reviewed.
 
-## Draft the new release
+## Publish the new release
 
-Once the PR for the new release has been merged, make sure there is a release branch for the respective release. For new minor releases create the `release-<major>.<minor>` branch, for patch releases, merge  the master branch into the existing release branch. Should the release be a patch release for an older minor release, cherry-pick the respective changes.
+For new minor and major releases, create the `release-<major>.<minor>` branch starting at the PR merge commit.
 
-Push the new or updated release branch to the upstream repository.
+From now on, all work happens on the `release-<major>.<minor>` branch.
 
-Tag the new release with a tag named `v<major>.<minor>.<patch>`, e.g. `v2.1.3`. Note the `v` prefix.
-
-You can do the tagging on the commandline:
+Tag the new release with a tag named `v<major>.<minor>.<patch>`, e.g. `v2.1.3`. Note the `v` prefix. Tag also the `github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring` module with `pkg/apis/monitoring/v<major>.<minor>.<patch>`. You can do the tagging on the commandline:
 
 ```bash
-$ tag=$(< VERSION) && git tag -s "v${tag}" -m "v${tag}"
-$ git push origin "v${tag}"
+$ tag="v$(< VERSION)"
+$ git tag -s "${tag}" -m "${tag}"
+$ git tag -s "pkg/apis/monitoring/${tag}" -m "pkg/apis/monitoring/${tag}"
+$ git push origin "${tag}" "pkg/apis/monitoring/${tag}"
 ```
 
 Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to your Github account using the following [procedure](https://help.github.com/articles/generating-a-gpg-key/), you can replace the `-s` flag by `-a` flag of the `git tag` command to only annotate the tag without signing.
 
-Our CI pipeline will automatically push a new docker image to quay.io.
+Our CI pipeline will automatically push the container images to [quay.io](https://quay.io/organization/prometheus-operator).
 
-Go to  https://github.com/coreos/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
+Go to  https://github.com/prometheus-operator/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
+
+For patch releases, submit a pull request to merge back the release branch into the `master` branch.
+
+## Update kube-prometheus
+
+Bump the versions of `github.com/prometheus-operator/prometheus-operator` in [prometheus-operator/kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) (see this [pull request](https://github.com/prometheus-operator/kube-prometheus/pull/674) for example).
 
 Take a breath. You're done releasing.

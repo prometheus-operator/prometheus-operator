@@ -20,35 +20,43 @@ import (
 	"testing"
 
 	"github.com/go-openapi/swag"
+	"github.com/kylelemons/godebug/pretty"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	yaml "gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/operator"
-
-	"github.com/kylelemons/godebug/pretty"
+	"k8s.io/utils/pointer"
 )
 
 func TestConfigGeneration(t *testing.T) {
 	for _, v := range operator.PrometheusCompatibilityMatrix {
-		cfg, err := generateTestConfig(v)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		for i := 0; i < 1000; i++ {
-			testcfg, err := generateTestConfig(v)
+		t.Run(v, func(t *testing.T) {
+			t.Parallel()
+			cfg, err := generateTestConfig(v)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if !bytes.Equal(cfg, testcfg) {
-				t.Fatalf("Config generation is not deterministic.\n\n\nFirst generation: \n\n%s\n\nDifferent generation: \n\n%s\n\n", string(cfg), string(testcfg))
+			reps := 1000
+			if testing.Short() {
+				reps = 100
 			}
-		}
+
+			for i := 0; i < reps; i++ {
+				testcfg, err := generateTestConfig(v)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if !bytes.Equal(cfg, testcfg) {
+					t.Fatalf("Config generation is not deterministic.\n\n\nFirst generation: \n\n%s\n\nDifferent generation: \n\n%s\n\n", string(cfg), string(testcfg))
+				}
+			}
+		})
 	}
 }
 
@@ -197,8 +205,8 @@ alerting:
 			map[string]*monitoringv1.ServiceMonitor{},
 			nil,
 			nil,
-			map[string]BasicAuthCredentials{},
-			map[string]BearerToken{},
+			map[string]assets.BasicAuthCredentials{},
+			map[string]assets.BearerToken{},
 			nil,
 			nil,
 			nil,
@@ -417,7 +425,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 				},
 			},
 		},
-		map[string]BasicAuthCredentials{},
+		map[string]assets.BasicAuthCredentials{},
 		nil,
 		nil,
 		nil,
@@ -521,7 +529,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 			},
 		},
-		map[string]BasicAuthCredentials{},
+		map[string]assets.BasicAuthCredentials{},
 		nil,
 		nil,
 		nil,
@@ -627,7 +635,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 				},
 			},
 		},
-		map[string]BasicAuthCredentials{},
+		map[string]assets.BasicAuthCredentials{},
 		nil,
 		nil,
 		nil,
@@ -647,7 +655,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: blackbox
+- job_name: default/testprobe1
   honor_timestamps: true
   metrics_path: /probe
   scheme: http
@@ -661,6 +669,8 @@ scrape_configs:
     labels:
       static: label
   relabel_configs:
+  - target_label: job
+    replacement: blackbox
   - source_labels:
     - __address__
     target_label: __param_target
@@ -738,7 +748,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 				},
 			},
 		},
-		map[string]BasicAuthCredentials{},
+		map[string]assets.BasicAuthCredentials{},
 		nil,
 		nil,
 		nil,
@@ -787,9 +797,6 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_ingress_name
     target_label: ingress
-  - source_labels:
-    - __address__
-    target_label: __param_target
   - source_labels:
     - __param_target
     target_label: instance
@@ -868,7 +875,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 			},
 		},
-		map[string]BasicAuthCredentials{},
+		map[string]assets.BasicAuthCredentials{},
 		nil,
 		nil,
 		nil,
@@ -918,9 +925,6 @@ scrape_configs:
     - __meta_kubernetes_ingress_name
     target_label: ingress
   - source_labels:
-    - __address__
-    target_label: __param_target
-  - source_labels:
     - __param_target
     target_label: instance
   - target_label: __address__
@@ -963,7 +967,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 
 	testcases := []struct {
 		apiserverConfig  *monitoringv1.APIServerConfig
-		basicAuthSecrets map[string]BasicAuthCredentials
+		basicAuthSecrets map[string]assets.BasicAuthCredentials
 		expected         string
 	}{
 		{
@@ -984,7 +988,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 				BearerTokenFile: "bearer_token_file",
 				TLSConfig:       nil,
 			},
-			map[string]BasicAuthCredentials{
+			map[string]assets.BasicAuthCredentials{
 				"apiserver": {
 					"foo",
 					"bar",
@@ -1048,8 +1052,8 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1127,8 +1131,8 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1181,6 +1185,87 @@ alerting:
 	}
 }
 
+func TestAlertmanagerTimeoutConfig(t *testing.T) {
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				Version: "v2.11.0",
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Name:       "alertmanager-main",
+							Namespace:  "default",
+							Port:       intstr.FromString("web"),
+							APIVersion: "v2",
+							Timeout:    pointer.StringPtr("60s"),
+						},
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		nil,
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// If this becomes an endless sink of maintenance, then we should just
+	// change this to check that just the `api_version` is set with
+	// something like json-path.
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers:
+  - path_prefix: /
+    scheme: http
+    timeout: 60s
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - default
+    api_version: v2
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_service_name
+      regex: alertmanager-main
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_endpoint_port_name
+      regex: web
+`
+
+	result := string(cfg)
+
+	if expected != result {
+		fmt.Println(pretty.Compare(expected, result))
+		t.Fatal("expected Prometheus configuration and actual configuration do not match")
+	}
+}
+
 func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
@@ -1204,8 +1289,8 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		[]byte(`- action: drop
   source_labels: [__meta_kubernetes_node_name]
@@ -1317,8 +1402,8 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1394,6 +1479,15 @@ scrape_configs:
   - target_label: job
     replacement: crio
     action: replace
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs:
   - source_labels:
     - __name__
@@ -1462,8 +1556,8 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1524,6 +1618,15 @@ scrape_configs:
     action: replace
   - target_label: ns-key
     replacement: pod-monitor-ns
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs:
   - source_labels:
     - pod_name
@@ -1595,8 +1698,8 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1670,6 +1773,15 @@ scrape_configs:
     action: replace
   - target_label: ns-key
     replacement: default
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
@@ -1708,8 +1820,8 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		[]byte(`- static_configs:
@@ -1804,8 +1916,8 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1879,6 +1991,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -1934,8 +2055,8 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1990,6 +2111,15 @@ scrape_configs:
     replacement: default/testpodmonitor1
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2046,8 +2176,8 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2121,6 +2251,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2175,8 +2314,8 @@ func TestSettingHonorLabels(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2249,6 +2388,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2263,6 +2411,7 @@ alerting:
 		t.Fatal("expected Prometheus configuration and actual configuration do not match")
 	}
 }
+
 func TestHonorLabelsOverriding(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
@@ -2303,8 +2452,8 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2377,6 +2526,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2391,6 +2549,7 @@ alerting:
 		t.Fatal("expected Prometheus configuration and actual configuration do not match")
 	}
 }
+
 func TestTargetLabels(t *testing.T) {
 	cg := &configGenerator{}
 	cfg, err := cg.generateConfig(
@@ -2430,8 +2589,8 @@ func TestTargetLabels(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2504,6 +2663,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2557,8 +2725,8 @@ func TestPodTargetLabels(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2631,6 +2799,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2684,8 +2861,8 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2739,6 +2916,15 @@ scrape_configs:
     replacement: default/testpodmonitor1
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2784,8 +2970,8 @@ func TestEmptyEndointPorts(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2848,6 +3034,15 @@ scrape_configs:
     - __meta_kubernetes_service_name
     target_label: job
     replacement: ${1}
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2918,8 +3113,8 @@ func generateTestConfig(version string) ([]byte, error) {
 		makeServiceMonitors(),
 		makePodMonitors(),
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -3324,39 +3519,503 @@ func TestHonorTimestamps(t *testing.T) {
 	}
 }
 
-func TestGetSampleLimit(t *testing.T) {
-	tcs := []struct {
-		Enforced uint64
-		Expected uint64
-		User     uint64
+func TestSampleLimits(t *testing.T) {
+	expectNoLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	expectLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  sample_limit: %d
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	for _, tc := range []struct {
+		enforcedLimit int
+		limit         int
+		expected      string
 	}{
 		{
-			Enforced: 100,
-			User:     1000,
-			Expected: 100,
+			enforcedLimit: -1,
+			limit:         -1,
+			expected:      expectNoLimit,
 		},
 		{
-			Enforced: 99,
-			User:     88,
-			Expected: 88,
+			enforcedLimit: 1000,
+			limit:         -1,
+			expected:      fmt.Sprintf(expectLimit, 1000),
 		},
 		{
-			Enforced: 0,
-			User:     888,
-			Expected: 888,
+			enforcedLimit: 1000,
+			limit:         2000,
+			expected:      fmt.Sprintf(expectLimit, 1000),
 		},
 		{
-			Enforced: 1,
-			User:     0,
-			Expected: 1,
+			enforcedLimit: 1000,
+			limit:         500,
+			expected:      fmt.Sprintf(expectLimit, 500),
 		},
-	}
+	} {
+		t.Run(fmt.Sprintf("enforcedlimit(%d) limit(%d)", tc.enforcedLimit, tc.limit), func(t *testing.T) {
+			cg := &configGenerator{}
 
-	for _, tc := range tcs {
-		actual := getSampleLimit(tc.User, &tc.Enforced)
-		if actual != tc.Expected {
-			t.Fatalf("Got %d, Expected: %d, Enforced: %d, User: %d", actual, tc.Expected, tc.Enforced, tc.User)
-		}
-	}
+			prometheus := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Version: "v2.20.0",
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			}
+			if tc.enforcedLimit >= 0 {
+				i := uint64(tc.enforcedLimit)
+				prometheus.Spec.EnforcedSampleLimit = &i
+			}
 
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			}
+			if tc.limit >= 0 {
+				serviceMonitor.Spec.SampleLimit = uint64(tc.limit)
+			}
+
+			cfg, err := cg.generateConfig(
+				&prometheus,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				map[string]assets.BasicAuthCredentials{},
+				map[string]assets.BearerToken{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
+	}
+}
+
+func TestTargetLimits(t *testing.T) {
+	expectNoLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	expectLimit := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: default/testservicemonitor1/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: endpoints
+    namespaces:
+      names:
+      - default
+  scrape_interval: 30s
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_endpoint_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Node;(.*)
+    replacement: ${1}
+    target_label: node
+  - source_labels:
+    - __meta_kubernetes_endpoint_address_target_kind
+    - __meta_kubernetes_endpoint_address_target_name
+    separator: ;
+    regex: Pod;(.*)
+    replacement: ${1}
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: job
+    replacement: ${1}
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
+  target_limit: %d
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	for _, tc := range []struct {
+		version       string
+		enforcedLimit int
+		limit         int
+		expected      string
+	}{
+		{
+			version:       "v2.15.0",
+			enforcedLimit: -1,
+			limit:         -1,
+			expected:      expectNoLimit,
+		},
+		{
+			version:       "v2.21.0",
+			enforcedLimit: -1,
+			limit:         -1,
+			expected:      expectNoLimit,
+		},
+		{
+			version:       "v2.15.0",
+			enforcedLimit: 1000,
+			limit:         -1,
+			expected:      expectNoLimit,
+		},
+		{
+			version:       "v2.21.0",
+			enforcedLimit: 1000,
+			limit:         -1,
+			expected:      fmt.Sprintf(expectLimit, 1000),
+		},
+		{
+			version:       "v2.15.0",
+			enforcedLimit: 1000,
+			limit:         2000,
+			expected:      expectNoLimit,
+		},
+		{
+			version:       "v2.21.0",
+			enforcedLimit: 1000,
+			limit:         2000,
+			expected:      fmt.Sprintf(expectLimit, 1000),
+		},
+		{
+			version:       "v2.15.0",
+			enforcedLimit: 1000,
+			limit:         500,
+			expected:      expectNoLimit,
+		},
+		{
+			version:       "v2.21.0",
+			enforcedLimit: 1000,
+			limit:         500,
+			expected:      fmt.Sprintf(expectLimit, 500),
+		},
+	} {
+		t.Run(fmt.Sprintf("%s enforcedlimit(%d) limit(%d)", tc.version, tc.enforcedLimit, tc.limit), func(t *testing.T) {
+			cg := &configGenerator{}
+
+			prometheus := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Version: tc.version,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+				},
+			}
+			if tc.enforcedLimit >= 0 {
+				i := uint64(tc.enforcedLimit)
+				prometheus.Spec.EnforcedTargetLimit = &i
+			}
+
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			}
+			if tc.limit >= 0 {
+				serviceMonitor.Spec.TargetLimit = uint64(tc.limit)
+			}
+
+			cfg, err := cg.generateConfig(
+				&prometheus,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				map[string]assets.BasicAuthCredentials{},
+				map[string]assets.BearerToken{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
+	}
 }

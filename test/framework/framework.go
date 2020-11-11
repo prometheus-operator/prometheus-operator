@@ -35,10 +35,12 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	certutil "k8s.io/client-go/util/cert"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringclient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	v1monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	v1alpha1monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1alpha1"
 )
 
 const (
@@ -48,12 +50,14 @@ const (
 )
 
 type Framework struct {
-	KubeClient      kubernetes.Interface
-	MonClientV1     monitoringclient.MonitoringV1Interface
-	APIServerClient apiclient.Interface
-	HTTPClient      *http.Client
-	MasterHost      string
-	DefaultTimeout  time.Duration
+	KubeClient        kubernetes.Interface
+	MonClientV1       v1monitoringclient.MonitoringV1Interface
+	MonClientV1alpha1 v1alpha1monitoringclient.MonitoringV1alpha1Interface
+	APIServerClient   apiclient.Interface
+	HTTPClient        *http.Client
+	MasterHost        string
+	DefaultTimeout    time.Duration
+	RestConfig        *rest.Config
 }
 
 // New setups a test framework and returns it.
@@ -78,18 +82,25 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 		return nil, errors.Wrap(err, "creating http-client failed")
 	}
 
-	mClientV1, err := monitoringclient.NewForConfig(config)
+	mClientV1, err := v1monitoringclient.NewForConfig(config)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating v1 monitoring client failed")
 	}
 
+	mClientV1alpha1, err := v1alpha1monitoringclient.NewForConfig(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating v1alpha1 monitoring client failed")
+	}
+
 	f := &Framework{
-		MasterHost:      config.Host,
-		KubeClient:      cli,
-		MonClientV1:     mClientV1,
-		APIServerClient: apiCli,
-		HTTPClient:      httpc,
-		DefaultTimeout:  time.Minute,
+		RestConfig:        config,
+		MasterHost:        config.Host,
+		KubeClient:        cli,
+		MonClientV1:       mClientV1,
+		MonClientV1alpha1: mClientV1alpha1,
+		APIServerClient:   apiCli,
+		HTTPClient:        httpc,
+		DefaultTimeout:    time.Minute,
 	}
 
 	return f, nil
@@ -163,7 +174,7 @@ func (f *Framework) MakeEchoDeployment(group string) *appsv1.Deployment {
 // Returns the CA, which can bs used to access the operator over TLS
 func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowlist,
 	namespaceDenylist, prometheusInstanceNamespaces, alertmanagerInstanceNamespaces []string,
-	createRuleAdmissionHooks bool) ([]finalizerFn, error) {
+	createRuleAdmissionHooks, createClusterRoleBindings bool) ([]finalizerFn, error) {
 
 	var finalizers []finalizerFn
 
@@ -187,8 +198,20 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		return nil, errors.Wrap(err, "failed to update prometheus cluster role")
 	}
 
-	if _, err := CreateClusterRoleBinding(f.KubeClient, ns, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
-		return nil, errors.Wrap(err, "failed to create prometheus cluster role binding")
+	if createClusterRoleBindings {
+		if _, err := CreateClusterRoleBinding(f.KubeClient, ns, "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+			return nil, errors.Wrap(err, "failed to create prometheus cluster role binding")
+		}
+	} else {
+		namespaces := namespaceAllowlist
+		namespaces = append(namespaces, prometheusInstanceNamespaces...)
+		namespaces = append(namespaces, alertmanagerInstanceNamespaces...)
+
+		for _, n := range namespaces {
+			if _, err := CreateRoleBindingForSubjectNamespace(f.KubeClient, n, ns, "../framework/resources/prometheus-operator-role-binding.yaml"); err != nil && !apierrors.IsAlreadyExists(err) {
+				return nil, errors.Wrap(err, "failed to create prometheus operator role binding")
+			}
+		}
 	}
 
 	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(fmt.Sprintf("%s.%s.svc", prometheusOperatorServiceDeploymentName, ns), nil, nil)
@@ -249,10 +272,19 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		return nil, errors.Wrap(err, "initialize ThanosRuler CRD")
 	}
 
+	err = f.CreateCRDAndWaitUntilReady(monitoringv1alpha1.AlertmanagerConfigName, func(opts metav1.ListOptions) (runtime.Object, error) {
+		return f.MonClientV1alpha1.AlertmanagerConfigs(v1.NamespaceAll).List(context.TODO(), opts)
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "initialize AlertmanagerConfig CRD")
+	}
+
 	deploy, err := MakeDeployment("../../example/rbac/prometheus-operator/prometheus-operator-deployment.yaml")
 	if err != nil {
 		return nil, err
 	}
+
+	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
 
 	if opImage != "" {
 		// Override operator image used, if specified when running tests.
@@ -269,7 +301,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		for i, arg := range deploy.Spec.Template.Spec.Containers[0].Args {
 			if strings.Contains(arg, "--prometheus-config-reloader=") {
 				deploy.Spec.Template.Spec.Containers[0].Args[i] = "--prometheus-config-reloader=" +
-					"quay.io/coreos/prometheus-config-reloader:" +
+					"quay.io/prometheus-operator/prometheus-config-reloader:" +
 					repoAndTag[1]
 			}
 		}
@@ -350,13 +382,13 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 	}
 
 	if createRuleAdmissionHooks {
-		if finalizer, err := CreateMutatingHook(f.KubeClient, certBytes, ns, "../../test/framework/ressources/prometheus-operator-mutatingwebhook.yaml"); err != nil {
+		if finalizer, err := CreateMutatingHook(f.KubeClient, certBytes, ns, "../../test/framework/resources/prometheus-operator-mutatingwebhook.yaml"); err != nil {
 			return nil, errors.Wrap(err, "failed to create mutating webhook")
 		} else {
 			finalizers = append(finalizers, finalizer)
 		}
 
-		if finalizer, err := CreateValidatingHook(f.KubeClient, certBytes, ns, "../../test/framework/ressources/prometheus-operator-validatingwebhook.yaml"); err != nil {
+		if finalizer, err := CreateValidatingHook(f.KubeClient, certBytes, ns, "../../test/framework/resources/prometheus-operator-validatingwebhook.yaml"); err != nil {
 			return nil, errors.Wrap(err, "failed to create validating webhook")
 		} else {
 			finalizers = append(finalizers, finalizer)
@@ -376,7 +408,7 @@ func (ctx *TestCtx) SetupPrometheusRBAC(t *testing.T, ns string, kubeClient kube
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	if finalizerFn, err := CreateRoleBinding(kubeClient, ns, "../framework/ressources/prometheus-role-binding.yml"); err != nil {
+	if finalizerFn, err := CreateRoleBinding(kubeClient, ns, "../framework/resources/prometheus-role-binding.yml"); err != nil {
 		t.Fatal(errors.Wrap(err, "failed to create prometheus role binding"))
 	} else {
 		ctx.AddFinalizerFn(finalizerFn)

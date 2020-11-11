@@ -1,4 +1,86 @@
-## Next release
+## 0.43.2 / 2020-11-06
+
+* [BUGFIX] Fix issue with additional data from the Alertmanager config's secret not being kept. #3647
+
+## 0.43.1 / 2020-11-04
+
+* [BUGFIX] Fix Alertmanager controller to wait for all informers to be synced before reconciling. #3641
+
+## 0.43.0 / 2020-10-26
+
+This release introduces a new `AlertmanagerConfig` CRD that allows to split the
+Alertmanager configuration in different objects. For now the CRD only supports
+the PagerDuty, OpsGenie and webhook receivers, [other
+integrations](https://github.com/prometheus-operator/prometheus-operator/issues?q=is%3Aissue+is%3Aopen+%22receiver+type%22)
+will follow in future releases of the operator. The current version of the CRD
+is `v1alpha1` meaning that testing/feedback is encouraged and welcome but the
+feature is not yet considered stable and the API is subject to change in the
+future.
+
+* [CHANGE] Use a single reloader sidecar (instead of 2) for Prometheus. The `--config-reloader-image` flag is deprecated and will be removed in a future release (not before v0.45.0). *Make sure to start the operator with a version of `--prometheus-config-reloader` that is at least `v0.43.0` otherwise the Prometheus pods will fail to start.* #3457
+* [FEATURE] Add `targetLimit` and `enforcedTargetLimit` to the Prometheus CRD. #3571
+* [FEATURE] Add initial support for `AlertmanagerConfig` CRD. #3451
+* [FEATURE] Add support for Pod Topology Spread Constraints to Prometheus, Alertmanager, and ThanosRuler CRDs. #3598
+* [ENHANCEMENT] Allow customization of the Prometheus web page title. #3525
+* [ENHANCEMENT] Add metrics for selected/rejected resources and synchronization status. #3421
+* [ENHANCEMENT] Configure Thanos sidecar for uploads only when needed. #3485
+* [ENHANCEMENT] Add `--version` flag to all binaries + `prometheus_operator_build_info` metric. #359
+* [ENHANCEMENT] Add `prometheus_operator_prometheus_enforced_sample_limit` metric. #3617
+* [BUGFIX] Remove liveness probes to avoid killing Prometheus during the replay of the WAL. #3502
+* [BUGFIX] Fix `spec.ipFamily: Invalid value: "null": field is immutable` error when updating governing services. #3526
+* [BUGFIX] Generate more unique job names for Probes. #3481
+* [BUGFIX] Don't block when the operator is configured to watch namespaces that don't exist yet. #3545
+* [BUGFIX] Use `exec` in readiness probes to reduce the chance of leaking zombie processes. #3567
+* [BUGFIX] Fix broken AdmissionReview. #3574
+* [BUGFIX] Fix reconciliation when 2 resources share the same secret. #3590
+* [BUGFIX] Discard invalid TLS configurations. #3578
+
+## 0.42.1 / 2020-09-21
+
+* [BUGFIX] Bump client-go to fix watch bug 
+
+## 0.42.0 / 2020-09-09
+
+The Prometheus Operator now lives in its own independent GitHub organization.  
+We have also added a governance (#3398).
+
+* [FEATURE] Move API types out into their own module (#3395)
+* [FEATURE] Create a monitoring mixin for prometheus-operator (#3333)
+* [ENHANCEMENT] Remove multilistwatcher and denylistfilter (#3440)
+* [ENHANCEMENT] Instrument client-go requests (#3465)
+* [ENHANCEMENT] pkg/prometheus: skip invalid service monitors (#3445)
+* [ENHANCEMENT] pkg/alertmanager: Use lower value for --cluster.reconnect-timeout (#3436)
+* [ENHANCEMENT] pkg/alertmanager: cleanup resources via OwnerReferences (#3423)
+* [ENHANCEMENT] Add prometheus_operator_reconcile_operations_total metric (#3415)
+* [ENHANCEMENT] pkg/operator/image.go: Adjust image path building (#3392)
+* [ENHANCEMENT] Specify timeouts per Alertmanager target when sending alerts. (#3385)
+* [ENHANCEMENT] Push container images to Quay into coreos and prometheus-operator orgs (#3390)
+* [ENHANCEMENT] Run single replica Alertmanager in HA cluster mode (#3382)
+* [BUGFIX] Fix validation logic for SecretOrConfigMap (#3413)
+* [BUGFIX] Don't overwrite __param_target (#3377)
+
+## 0.41.1 / 2020-08-12
+
+* [BUGFIX] Fix image url logic (#3402)
+
+## 0.41.0 / 2020-07-29
+
+* [CHANGE] Configmap-reload: Update to v0.4.0 (#3334)
+* [CHANGE] Update prometheus compatibility matrix to v2.19.2 (#3316)
+* [FEATURE] Add Synthetic Probes support. This includes support for job names. (#2832, #3318, #3312, #3306)
+* [FEATURE] Support Prometheus vertical compaction (#3281)
+* [ENHANCEMENT] pkg: Instrument resources being tracked by the operator (#3360)
+* [ENHANCEMENT] Add SecretListWatchSelector to reduce memory and CPU footprint (#3355)
+* [ENHANCEMENT] Added support for configuring CA, cert, and key via secret or configmap. (#3249)
+* [ENHANCEMENT] Consolidate image url logic, deprecating `baseImage`, `sha`, and `tag` in favor of `image` field in CRDs. (#3103, #3358)
+* [ENHANCEMENT] Decouple alertmanager pod labels from selector labels (#3317)
+* [ENHANCEMENT] pkg/prometheus: Ensure relabeling of container label in ServiceMonitors (#3315)
+* [ENHANCEMENT] misc: Remove v1beta1 crd remainings (#3311)
+* [ENHANCEMENT] Normalize default durations (#3308)
+* [ENHANCEMENT] pkg/prometheus: Allow enforcing namespace label in Probe configs (#3304)
+* [BUGFIX] Revert "Normalize default durations" (#3364)
+* [BUGFIX] Reload alertmanager on configmap/secret change (#3319)
+* [BUGFIX] listwatch: Do not duplicate resource versions (#3373)
 
 ## 0.40.0 / 2020-06-17
 
@@ -484,7 +566,7 @@ but causes this change.
 * [CHANGE] Default to Alertmanager v0.7.0.
 * [FEATURE] Add route prefix support to Alertmanager resource.
 * [FEATURE] Add metrics on expected replicas.
-* [FEATURE] Support for runing Alertmanager v0.7.0.
+* [FEATURE] Support for running Alertmanager v0.7.0.
 * [BUGFIX] Fix sensitive rollout triggering.
 
 ## 0.9.1 / 2017-05-18

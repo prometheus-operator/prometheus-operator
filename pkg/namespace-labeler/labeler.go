@@ -15,7 +15,7 @@
 package namespacelabeler
 
 import (
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -99,11 +99,12 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 			if err != nil {
 				return errors.Wrap(err, "failed to parse promql expression")
 			}
-			err = injectproxy.SetRecursive(parsedExpr, []*labels.Matcher{{
+			enforcer := injectproxy.NewEnforcer(&labels.Matcher{
 				Name:  l.enforcedNsLabel,
 				Type:  labels.MatchEqual,
 				Value: rule.Namespace,
-			}})
+			})
+			err = enforcer.EnforceNode(parsedExpr)
 			if err != nil {
 				return errors.Wrap(err, "failed to inject labels to expression")
 			}

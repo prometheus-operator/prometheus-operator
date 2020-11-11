@@ -31,7 +31,7 @@ func testAlertmanagerInstanceNamespaces_AllNs(t *testing.T) {
 	nonInstanceNs := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBACGlobal(t, instanceNs, framework.KubeClient)
 
-	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, nil, nil, []string{instanceNs}, false)
+	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, nil, nil, []string{instanceNs}, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func testAlertmanagerInstanceNamespaces_DenyNs(t *testing.T) {
 	instanceNs := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBACGlobal(t, instanceNs, framework.KubeClient)
 
-	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, []string{instanceNs}, nil, []string{instanceNs}, false)
+	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, []string{instanceNs}, nil, []string{instanceNs}, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -10,7 +10,7 @@ Feel free to ask questions in #prometheus-operator on Kubernetes Slack!
 
 Note: This repository is about prometheus-operator itself, if you have questions about:
 - helm installation, go to https://github.com/helm/charts repository
-- kube-prometheus setup, go to https://github.com/coreos/kube-prometheus
+- kube-prometheus setup, go to https://github.com/prometheus-operator/kube-prometheus
 
 -->
 

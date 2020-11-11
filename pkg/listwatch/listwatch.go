@@ -16,13 +16,13 @@ package listwatch
 
 import (
 	"context"
-	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,48 +32,48 @@ import (
 )
 
 // NewUnprivilegedNamespaceListWatchFromClient mimics
-// cache.NewListWatchFromClient.
-// It allows for the creation of a cache.ListWatch for namespaces from a client
-// that does not have `List` privileges. If the slice of namespaces contains
-// only v1.NamespaceAll, then this func assumes that the client has List and
-// Watch privileges and returns a regular cache.ListWatch, since there is no
-// other way to get all namespaces.
+// cache.NewListWatchFromClient. It allows for the creation of a
+// cache.ListWatch for namespaces from a client that does not have `List`
+// privileges. If the slice of namespaces contains only v1.NamespaceAll, then
+// this func assumes that the client has List and Watch privileges and returns
+// a regular cache.ListWatch, since there is no other way to get all
+// namespaces.
 //
 // The allowed namespaces and denied namespaces are mutually exclusive.
-// See NewFilteredUnprivilegedNamespaceListWatchFromClient for a description on how they are applied.
-func NewUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, allowedNamespaces, deniedNamespaces map[string]struct{}, fieldSelector fields.Selector) cache.ListerWatcher {
+//
+// If allowed namespaces contain multiple items, the given denied namespaces have no effect.
+//
+// If the allowed namespaces includes exactly one entry with the value v1.NamespaceAll (empty string),
+// the given denied namespaces are applied.
+func NewUnprivilegedNamespaceListWatchFromClient(
+	ctx context.Context,
+	l log.Logger,
+	c cache.Getter,
+	allowedNamespaces, deniedNamespaces map[string]struct{},
+	fieldSelector fields.Selector,
+) cache.ListerWatcher {
+	if l == nil {
+		l = log.NewNopLogger()
+	}
+
 	optionsModifier := func(options *metav1.ListOptions) {
 		options.FieldSelector = fieldSelector.String()
 	}
-	return NewFilteredUnprivilegedNamespaceListWatchFromClient(l, c, allowedNamespaces, deniedNamespaces, optionsModifier)
-}
 
-// NewFilteredUnprivilegedNamespaceListWatchFromClient mimics
-// cache.NewUnprivilegedNamespaceListWatchFromClient.
-// It allows for the creation of a cache.ListWatch for allowed or denied namespaces
-// from a client that does not have `List` privileges.
-//
-// If the given allowed namespaces contain only v1.NamespaceAll,
-// then this function assumes that the client has List and
-// Watch privileges and returns a regular cache.ListWatch, since there is no
-// other way to get all namespaces.
-//
-// The given allowed and denied namespaces are mutually exclusive.
-// If allowed namespaces contain multiple items, the given denied namespaces have no effect.
-// If the allowed namespaces includes exactly one entry with the value v1.NamespaceAll (empty string),
-// the given denied namespaces are applied.
-func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.Getter, allowedNamespaces, deniedNamespaces map[string]struct{}, optionsModifier func(options *metav1.ListOptions)) cache.ListerWatcher {
 	// If the only namespace given is `v1.NamespaceAll`, then this
 	// cache.ListWatch must be privileged. In this case, return a regular
-	// cache.ListWatch decorated with a denylist watcher
+	// cache.ListWatch tweaked with denylist fieldselector
 	// filtering the given denied namespaces.
 	if IsAllNamespaces(allowedNamespaces) {
-		return newDenylistListerWatcher(
-			l,
-			deniedNamespaces,
-			cache.NewFilteredListWatchFromClient(c, "namespaces", metav1.NamespaceAll, optionsModifier),
-		)
+		tweak := func(options *metav1.ListOptions) {
+			optionsModifier(options)
+
+			DenyTweak(options, "metadata.name", deniedNamespaces)
+		}
+
+		return cache.NewFilteredListWatchFromClient(c, "namespaces", metav1.NamespaceAll, tweak)
 	}
+
 	listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
 		optionsModifier(&options)
 		list := &v1.NamespaceList{}
@@ -83,10 +83,14 @@ func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.G
 				Resource("namespaces").
 				Name(name).
 				VersionedParams(&options, scheme.ParameterCodec).
-				Do(context.TODO()).
+				Do(ctx).
 				Into(result)
+			if apierrors.IsNotFound(err) {
+				level.Info(l).Log("msg", "namespace not found", "namespace", name)
+				continue
+			}
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "unexpected error while listing namespaces")
 			}
 			list.Items = append(list.Items, *result)
 		}
@@ -99,166 +103,6 @@ func NewFilteredUnprivilegedNamespaceListWatchFromClient(l log.Logger, c cache.G
 		return watch.NewFake(), nil
 	}
 	return &cache.ListWatch{ListFunc: listFunc, WatchFunc: watchFunc}
-}
-
-// MultiNamespaceListerWatcher takes allowed and denied namespaces and a
-// cache.ListerWatcher generator func and returns a single cache.ListerWatcher
-// capable of operating on multiple namespaces.
-//
-// Allowed namespaces and denied namespaces are mutually exclusive.
-// If allowed namespaces contain multiple items, the given denied namespaces have no effect.
-// If the allowed namespaces includes exactly one entry with the value v1.NamespaceAll (empty string),
-// the given denied namespaces are applied.
-func MultiNamespaceListerWatcher(l log.Logger, allowedNamespaces, deniedNamespaces map[string]struct{}, f func(string) cache.ListerWatcher) cache.ListerWatcher {
-	// If there is only one namespace then there is no need to create a
-	// multi lister watcher proxy.
-	if IsAllNamespaces(allowedNamespaces) {
-		return newDenylistListerWatcher(l, deniedNamespaces, f(v1.NamespaceAll))
-	}
-	if len(allowedNamespaces) == 1 {
-		for n := range allowedNamespaces {
-			return f(n)
-		}
-	}
-
-	var lws []cache.ListerWatcher
-	for n := range allowedNamespaces {
-		lws = append(lws, f(n))
-	}
-	return multiListerWatcher(lws)
-}
-
-// multiListerWatcher abstracts several cache.ListerWatchers, allowing them
-// to be treated as a single cache.ListerWatcher.
-type multiListerWatcher []cache.ListerWatcher
-
-// List implements the ListerWatcher interface.
-// It combines the output of the List method of every ListerWatcher into
-// a single result.
-func (mlw multiListerWatcher) List(options metav1.ListOptions) (runtime.Object, error) {
-	l := metav1.List{}
-	var resourceVersions []string
-	for _, lw := range mlw {
-		list, err := lw.List(options)
-		if err != nil {
-			return nil, err
-		}
-		items, err := meta.ExtractList(list)
-		if err != nil {
-			return nil, err
-		}
-		metaObj, err := meta.ListAccessor(list)
-		if err != nil {
-			return nil, err
-		}
-		for _, item := range items {
-			l.Items = append(l.Items, runtime.RawExtension{Object: item.DeepCopyObject()})
-		}
-		resourceVersions = append(resourceVersions, metaObj.GetResourceVersion())
-	}
-	// Combine the resource versions so that the composite Watch method can
-	// distribute appropriate versions to each underlying Watch func.
-	l.ListMeta.ResourceVersion = strings.Join(resourceVersions, "/")
-	return &l, nil
-}
-
-// Watch implements the ListerWatcher interface.
-// It returns a watch.Interface that combines the output from the
-// watch.Interface of every cache.ListerWatcher into a single result chan.
-func (mlw multiListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
-	resourceVersions := make([]string, len(mlw))
-	// Allow resource versions to be "".
-	if options.ResourceVersion != "" {
-		rvs := strings.Split(options.ResourceVersion, "/")
-		if len(rvs) != len(mlw) {
-			return nil, fmt.Errorf("expected resource version to have %d parts to match the number of ListerWatchers", len(mlw))
-		}
-		resourceVersions = rvs
-	}
-	return newMultiWatch(mlw, resourceVersions, options)
-}
-
-// multiWatch abstracts multiple watch.Interface's, allowing them
-// to be treated as a single watch.Interface.
-type multiWatch struct {
-	result   chan watch.Event
-	stopped  chan struct{}
-	stoppers []func()
-}
-
-// newMultiWatch returns a new multiWatch or an error if one of the underlying
-// Watch funcs errored. The length of []cache.ListerWatcher and []string must
-// match.
-func newMultiWatch(lws []cache.ListerWatcher, resourceVersions []string, options metav1.ListOptions) (*multiWatch, error) {
-	var (
-		result   = make(chan watch.Event)
-		stopped  = make(chan struct{})
-		stoppers []func()
-		wg       sync.WaitGroup
-	)
-
-	wg.Add(len(lws))
-
-	for i, lw := range lws {
-		o := options.DeepCopy()
-		o.ResourceVersion = resourceVersions[i]
-		w, err := lw.Watch(*o)
-		if err != nil {
-			return nil, err
-		}
-
-		go func() {
-			defer wg.Done()
-
-			for {
-				event, ok := <-w.ResultChan()
-				if !ok {
-					return
-				}
-
-				select {
-				case result <- event:
-				case <-stopped:
-					return
-				}
-			}
-		}()
-		stoppers = append(stoppers, w.Stop)
-	}
-
-	// result chan must be closed,
-	// once all event sender goroutines exited.
-	go func() {
-		wg.Wait()
-		close(result)
-	}()
-
-	return &multiWatch{
-		result:   result,
-		stoppers: stoppers,
-		stopped:  stopped,
-	}, nil
-}
-
-// ResultChan implements the watch.Interface interface.
-func (mw *multiWatch) ResultChan() <-chan watch.Event {
-	return mw.result
-}
-
-// Stop implements the watch.Interface interface.
-// It stops all of the underlying watch.Interfaces and closes the backing chan.
-// Can safely be called more than once.
-func (mw *multiWatch) Stop() {
-	select {
-	case <-mw.stopped:
-		// nothing to do, we are already stopped
-	default:
-		for _, stop := range mw.stoppers {
-			stop()
-		}
-		close(mw.stopped)
-	}
-	return
 }
 
 // IsAllNamespaces checks if the given map of namespaces
@@ -281,4 +125,24 @@ func IdenticalNamespaces(a, b map[string]struct{}) bool {
 	}
 
 	return true
+}
+
+// DenyTweak modifies the given list options
+// by adding a field selector not matching the given values.
+func DenyTweak(options *metav1.ListOptions, field string, valueSet map[string]struct{}) {
+	if len(valueSet) == 0 {
+		return
+	}
+
+	var selectors []string
+
+	for value := range valueSet {
+		selectors = append(selectors, field+"!="+value)
+	}
+
+	if options.FieldSelector != "" {
+		selectors = append(selectors, options.FieldSelector)
+	}
+
+	options.FieldSelector = strings.Join(selectors, ",")
 }

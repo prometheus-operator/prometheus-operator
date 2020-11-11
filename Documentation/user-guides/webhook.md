@@ -7,7 +7,7 @@ configuration.
 ## Prerequisites
 
 This guide assumes that you have already [deployed the Prometheus
-Operator](Documentation/user-guides/getting-started.md) and that [admission
+Operator](getting-started.md) and that [admission
 controllers are
 enabled](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller)
 on your cluster.
@@ -44,7 +44,7 @@ variant also adds annotations to validated `PrometheusRule`s
 The following example deploys the validating admission webhook:
 
 ```yaml
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: prometheus-operator-rulesvalidation
@@ -68,6 +68,8 @@ webhooks:
           - UPDATE
         resources:
           - prometheusrules
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
 ```
 
 The `caBundle` contains the base64-encoded CA certificate used to sign the

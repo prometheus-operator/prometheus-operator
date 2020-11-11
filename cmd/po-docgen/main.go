@@ -16,9 +16,17 @@ package main
 
 import (
 	"os"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
 func main() {
+	versionutil.RegisterParseFlags()
+	if versionutil.ShouldPrintVersion() {
+		versionutil.Print(os.Stdout, "po-docgen")
+		os.Exit(0)
+	}
+
 	switch os.Args[1] {
 	case "api":
 		printAPIDocs(os.Args[2:])

@@ -20,10 +20,10 @@ import (
 	"path"
 	"strings"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/coreos/prometheus-operator/pkg/k8sutil"
-	"github.com/coreos/prometheus-operator/pkg/operator"
 	"github.com/pkg/errors"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -145,7 +145,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 
 func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string) (*appsv1.StatefulSetSpec, error) {
 	// Before editing 'tr' create deep copy, to prevent side effects. For more
-	// details see https://github.com/coreos/prometheus-operator/issues/1659
+	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659
 	tr = tr.DeepCopy()
 
 	if tr.Spec.QueryConfig == nil && len(tr.Spec.QueryEndpoints) < 1 {
@@ -153,7 +153,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	}
 
 	trBaseImage := operator.StringValOrDefault(config.ThanosDefaultBaseImage, operator.DefaultThanosBaseImage)
-	trImagePath := operator.BuildImagePath(trBaseImage, operator.DefaultThanosVersion, "", "")
+	trImagePath, err := operator.BuildImagePath(trBaseImage, operator.DefaultThanosVersion, "", "")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to build image path")
+	}
 	if strings.TrimSpace(tr.Spec.Image) != "" {
 		trImagePath = tr.Spec.Image
 	}
@@ -294,44 +297,40 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.query-url=%s", tr.Spec.AlertQueryURL))
 	}
 
-	localReloadURL := &url.URL{
-		Scheme: "http",
-		Host:   config.LocalHost + ":10902",
-		Path:   path.Clean(tr.Spec.RoutePrefix + "/-/reload"),
-	}
-
-	additionalContainers := []v1.Container{}
+	var additionalContainers []v1.Container
 	if len(ruleConfigMapNames) != 0 {
-		reloader := v1.Container{
-			Name:  "rules-configmap-reloader",
-			Image: config.ConfigReloaderImage,
-			Args: []string{
-				fmt.Sprintf("--webhook-url=%s", localReloadURL),
-			},
-			VolumeMounts: []v1.VolumeMount{},
-			Resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{}, Requests: v1.ResourceList{}},
-			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-		}
-
-		if config.ConfigReloaderCPU != "0" {
-			reloader.Resources.Limits[v1.ResourceCPU] = resource.MustParse(config.ConfigReloaderCPU)
-			reloader.Resources.Requests[v1.ResourceCPU] = resource.MustParse(config.ConfigReloaderCPU)
-		}
-		if config.ConfigReloaderMemory != "0" {
-			reloader.Resources.Limits[v1.ResourceMemory] = resource.MustParse(config.ConfigReloaderMemory)
-			reloader.Resources.Requests[v1.ResourceMemory] = resource.MustParse(config.ConfigReloaderMemory)
-		}
+		var (
+			configReloaderArgs         []string
+			configReloaderVolumeMounts []v1.VolumeMount
+		)
 
 		for _, name := range ruleConfigMapNames {
 			mountPath := rulesDir + "/" + name
-			reloader.VolumeMounts = append(reloader.VolumeMounts, v1.VolumeMount{
+			configReloaderVolumeMounts = append(configReloaderVolumeMounts, v1.VolumeMount{
 				Name:      name,
 				MountPath: mountPath,
 			})
-			reloader.Args = append(reloader.Args, fmt.Sprintf("--volume-dir=%s", mountPath))
+			configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", mountPath))
 		}
-		additionalContainers = append(additionalContainers, reloader)
+
+		additionalContainers = append(
+			additionalContainers,
+			operator.CreateConfigReloader(
+				config.ReloaderConfig,
+				url.URL{
+					Scheme: "http",
+					Host:   config.LocalHost + ":10902",
+					Path:   path.Clean(tr.Spec.RoutePrefix + "/-/reload"),
+				},
+				tr.Spec.ListenLocal,
+				config.LocalHost,
+				tr.Spec.LogFormat,
+				tr.Spec.LogLevel,
+				configReloaderArgs,
+				configReloaderVolumeMounts,
+				-1,
+			),
+		)
 	}
 
 	podAnnotations := map[string]string{}
@@ -430,6 +429,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				SecurityContext:               tr.Spec.SecurityContext,
 				Tolerations:                   tr.Spec.Tolerations,
 				Affinity:                      tr.Spec.Affinity,
+				TopologySpreadConstraints:     tr.Spec.TopologySpreadConstraints,
 			},
 		},
 	}, nil

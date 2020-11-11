@@ -1,6 +1,6 @@
 <br>
 <div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
 </div>
 
 # Compatibility
@@ -61,7 +61,11 @@ The versions of Prometheus compatible to be run with the Prometheus Operator are
 * v2.19.0
 * v2.19.1
 * v2.19.2
+* v2.19.3
 * v2.20.0
+* v2.20.1
+* v2.21.0
+* v2.22.0
 
 ## Alertmanager
 

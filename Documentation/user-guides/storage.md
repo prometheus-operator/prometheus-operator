@@ -1,6 +1,6 @@
 <br>
 <div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.12.0, Prometheus Operator requires use of Kubernetes v1.7.x and up.
+    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
 </div>
 
 # Storage
@@ -30,7 +30,7 @@ parameters:
 
 For best results, use volumes that have high I/O throughput. These examples use SSD EBS volumes. Read the Kubernetes [Persistent Volumes][persistent-volumes] documentation to adapt this `StorageClass` to your needs.
 
-The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource (note that if you're using [kube-prometheus](https://github.com/coreos/kube-prometheus), then instead of making the following change to your `Prometheus` resource, see the [prometheus-pvc.jsonnet](https://github.com/coreos/kube-prometheus/blob/master/examples/prometheus-pvc.jsonnet) example).
+The `StorageClass` that was created can be specified in the `storage` section in the `Prometheus` resource (note that if you're using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus), then instead of making the following change to your `Prometheus` resource, see the [prometheus-pvc.jsonnet](https://github.com/prometheus-operator/kube-prometheus/blob/master/examples/prometheus-pvc.jsonnet) example).
 
 [embedmd]:# (../../example/storage/persisted-prometheus.yaml)
 ```yaml
