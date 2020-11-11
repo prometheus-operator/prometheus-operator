@@ -98,7 +98,7 @@ type ThanosRulerSpec struct {
 	ObjectStorageConfig *v1.SecretKeySelector `json:"objectStorageConfig,omitempty"`
 	// ObjectStorageConfigFile specifies the path of the object storage configuration file.
 	// Can't be used with ObjectStorageConfig at the same time.
-	ObjectStorageConfigFile *string `json:"ObjectStorageConfigFile,omitempty"`
+	ObjectStorageConfigFile *string `json:"objectStorageConfigFile,omitempty"`
 	// ListenLocal makes the Thanos ruler listen on loopback, so that it
 	// does not bind against the Pod IP.
 	ListenLocal bool `json:"listenLocal,omitempty"`
