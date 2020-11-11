@@ -689,6 +689,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		thTag := operator.StringPtrValOrDefault(p.Spec.Thanos.Tag, "")
 		thSHA := operator.StringPtrValOrDefault(p.Spec.Thanos.SHA, "")
 		thanosImage, err := operator.BuildImagePath(thBaseImage, thVersion, thTag, thSHA)
+
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to build image path")
 		}
@@ -749,14 +750,18 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Resources: p.Spec.Thanos.Resources,
 		}
 
-		if p.Spec.Thanos.ObjectStorageConfig != nil {
-			container.Args = append(container.Args, "--objstore.config=$(OBJSTORE_CONFIG)")
-			container.Env = append(container.Env, v1.EnvVar{
-				Name: "OBJSTORE_CONFIG",
-				ValueFrom: &v1.EnvVarSource{
-					SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
-				},
-			})
+		if p.Spec.Thanos.ObjectStorageConfig != nil || p.Spec.Thanos.ObjectStorageConfigFile != nil {
+			if p.Spec.Thanos.ObjectStorageConfig != nil {
+				container.Args = append(container.Args, "--objstore.config=$(OBJSTORE_CONFIG)")
+				container.Env = append(container.Env, v1.EnvVar{
+					Name: "OBJSTORE_CONFIG",
+					ValueFrom: &v1.EnvVarSource{
+						SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
+					},
+				})
+			} else {
+				container.Args = append(container.Args, "--objstore.config-file=" + *p.Spec.Thanos.ObjectStorageConfigFile)
+			}
 
 			container.Args = append(container.Args, fmt.Sprintf("--tsdb.path=%s", storageDir))
 			container.VolumeMounts = append(
