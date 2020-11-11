@@ -276,7 +276,7 @@ func TestObjectStorageFile(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
-			QueryEndpoints: emptyQueryEndpoints,
+			QueryEndpoints:          emptyQueryEndpoints,
 			ObjectStorageConfigFile: &testPath,
 		},
 	}, defaultTestConfig, nil, "")

@@ -760,7 +760,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 					},
 				})
 			} else {
-				container.Args = append(container.Args, "--objstore.config-file=" + *p.Spec.Thanos.ObjectStorageConfigFile)
+				container.Args = append(container.Args, "--objstore.config-file="+*p.Spec.Thanos.ObjectStorageConfigFile)
 			}
 
 			container.Args = append(container.Args, fmt.Sprintf("--tsdb.path=%s", storageDir))
