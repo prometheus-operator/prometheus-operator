@@ -174,6 +174,8 @@ type PrometheusSpec struct {
 	EvaluationInterval string `json:"evaluationInterval,omitempty"`
 	// /--rules.*/ command-line arguments.
 	Rules Rules `json:"rules,omitempty"`
+	// List of additional file path globs to read rules from.
+	AdditionalRuleFilePaths []string `json:"additionalRuleFilePaths,omitempty"`
 	// The labels to add to any time series or alerts when communicating with
 	// external systems (federation, remote storage, Alertmanager).
 	ExternalLabels map[string]string `json:"externalLabels,omitempty"`

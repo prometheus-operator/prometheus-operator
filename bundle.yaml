@@ -7065,6 +7065,11 @@ spec:
                 required:
                 - key
                 type: object
+              additionalRuleFilePaths:
+                description: List of additional file path globs to read rules from.
+                items:
+                  type: string
+                type: array
               additionalScrapeConfigs:
                 description: 'AdditionalScrapeConfigs allows specifying a key of a
                   Secret containing additional Prometheus scrape configurations. Scrape

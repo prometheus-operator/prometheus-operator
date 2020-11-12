@@ -553,6 +553,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | scrapeTimeout | Number of seconds to wait for target to respond before erroring. | string | false |
 | evaluationInterval | Interval between consecutive evaluations. | string | false |
 | rules | /--rules.*/ command-line arguments. | [Rules](#rules) | false |
+| additionalRuleFilePaths | List of additional file path globs to read rules from. | []string | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
 | enableAdminAPI | Enable access to prometheus web admin API. Defaults to the value of `false`. WARNING: Enabling the admin APIs enables mutating endpoints, to delete data, shutdown Prometheus, and more. Enabling this should be done with care and the user is advised to add additional authentication authorization via a proxy to ensure only clients authorized to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis | bool | false |
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |

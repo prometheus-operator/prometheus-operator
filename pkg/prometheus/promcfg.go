@@ -211,6 +211,12 @@ func (cg *configGenerator) generateConfig(
 	for _, name := range ruleConfigMapNames {
 		ruleFilePaths = append(ruleFilePaths, rulesDir+"/"+name+"/*.yaml")
 	}
+	if p.Spec.AdditionalRuleFilePaths != nil {
+		for _, glob := range p.Spec.AdditionalRuleFilePaths {
+			ruleFilePaths = append(ruleFilePaths, glob)
+		}
+	}
+
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "rule_files",
 		Value: ruleFilePaths,
