@@ -284,18 +284,17 @@ func TestObjectStorageFile(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	if sset.Spec.Template.Spec.Containers[0].Name != "thanos-ruler" {
-		t.Fatalf("expected 1st containers to be thanos-ruler, got %s", sset.Spec.Template.Spec.Containers[0].Name)
-	}
-
 	{
 		var containsArg bool
 		expectedArg := "--objstore.config-file=" + testPath
-
-		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
-			if arg == expectedArg {
-				containsArg = true
-				break
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-ruler" {
+				for _, arg := range container.Args {
+					if arg == expectedArg {
+						containsArg = true
+						break
+					}
+				}
 			}
 		}
 		if !containsArg {

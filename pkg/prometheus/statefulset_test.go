@@ -907,21 +907,17 @@ func TestThanosObjectStorageFile(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	if sset.Spec.Template.Spec.Containers[0].Name != "prometheus" {
-		t.Fatalf("expected 1st containers to be prometheus, got %s", sset.Spec.Template.Spec.Containers[0].Name)
-	}
-
-	if sset.Spec.Template.Spec.Containers[2].Name != "thanos-sidecar" {
-		t.Fatalf("expected 3rd containers to be thanos-sidecar, got %s", sset.Spec.Template.Spec.Containers[2].Name)
-	}
-
 	{
 		var containsArg bool
 		expectedArg := "--objstore.config-file=" + testPath
-		for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
-			if arg == expectedArg {
-				containsArg = true
-				break
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-sidecar" {
+				for _, arg := range container.Args {
+					if arg == expectedArg {
+						containsArg = true
+						break
+					}
+				}
 			}
 		}
 		if !containsArg {
@@ -932,11 +928,16 @@ func TestThanosObjectStorageFile(t *testing.T) {
 	{
 		var containsArg bool
 		const expectedArg = "--storage.tsdb.max-block-duration=2h"
-		for _, arg := range sset.Spec.Template.Spec.Containers[0].Args {
-			if arg == expectedArg {
-				containsArg = true
-				break
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "prometheus" {
+				for _, arg := range container.Args {
+					if arg == expectedArg {
+						containsArg = true
+						break
+					}
+				}
 			}
+
 		}
 		if !containsArg {
 			t.Fatalf("Prometheus is missing expected argument: %s", expectedArg)
@@ -945,10 +946,14 @@ func TestThanosObjectStorageFile(t *testing.T) {
 
 	{
 		var found bool
-		for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
-			if strings.HasPrefix(arg, "--tsdb.path=") {
-				found = true
-				break
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-sidecar" {
+				for _, arg := range container.Args {
+					if strings.HasPrefix(arg, "--tsdb.path=") {
+						found = true
+						break
+					}
+				}
 			}
 		}
 		if !found {
@@ -958,10 +963,14 @@ func TestThanosObjectStorageFile(t *testing.T) {
 
 	{
 		var found bool
-		for _, vol := range sset.Spec.Template.Spec.Containers[2].VolumeMounts {
-			if vol.MountPath == storageDir {
-				found = true
-				break
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-sidecar" {
+				for _, vol := range container.VolumeMounts {
+					if vol.MountPath == storageDir {
+						found = true
+						break
+					}
+				}
 			}
 		}
 		if !found {

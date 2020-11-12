@@ -759,7 +759,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 						SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
 					},
 				})
-			} else {
+			}
+
+			if p.Spec.Thanos.ObjectStorageConfigFile != nil {
 				container.Args = append(container.Args, "--objstore.config-file="+*p.Spec.Thanos.ObjectStorageConfigFile)
 			}
 

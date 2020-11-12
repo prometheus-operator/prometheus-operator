@@ -260,7 +260,9 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				SecretKeyRef: tr.Spec.ObjectStorageConfig,
 			},
 		})
-	} else if tr.Spec.ObjectStorageConfigFile != nil {
+	}
+
+	if tr.Spec.ObjectStorageConfigFile != nil {
 		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+*tr.Spec.ObjectStorageConfigFile)
 	}
 
