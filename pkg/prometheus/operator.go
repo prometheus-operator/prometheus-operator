@@ -1791,7 +1791,7 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 func (c *Operator) selectProbes(p *monitoringv1.Prometheus) (map[string]*monitoringv1.Probe, error) {
 	namespaces := []string{}
 	// Selectors might overlap. Deduplicate them along the keyFunc.
-	res := make(map[string]*monitoringv1.Probe)
+	probes := make(map[string]*monitoringv1.Probe)
 
 	bMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeSelector)
 	if err != nil {
@@ -1815,21 +1815,41 @@ func (c *Operator) selectProbes(p *monitoringv1.Prometheus) (map[string]*monitor
 
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select Probes from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
-	probes := make([]string, 0)
 	for _, ns := range namespaces {
 		c.probeInfs.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
 			if k, ok := c.keyFunc(obj); ok {
-				res[k] = obj.(*monitoringv1.Probe)
-				probes = append(probes, k)
+				probes[k] = obj.(*monitoringv1.Probe)
 			}
 		})
 	}
 
-	level.Debug(c.logger).Log("msg", "selected Probes", "probes", strings.Join(probes, ","), "namespace", p.Namespace, "prometheus", p.Name)
+	var rejected int
+	res := make(map[string]*monitoringv1.Probe, len(probes))
+	for probeName, probe := range probes {
+		if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
+			rejected++
+			level.Warn(c.logger).Log(
+				"msg", "skipping probe",
+				"error", "Probe needs at least one target of type staticConfig or ingress",
+				"probe", probeName,
+				"namespace", p.Namespace,
+				"prometheus", p.Name,
+			)
+			continue
+		}
+
+		res[probeName] = probe
+	}
+
+	probeKeys := make([]string, 0)
+	for k := range res {
+		probeKeys = append(probeKeys, k)
+	}
+	level.Debug(c.logger).Log("msg", "selected Probes", "probes", strings.Join(probeKeys, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	if pKey, ok := c.keyFunc(p); ok {
 		c.metrics.SetSelectedResources(pKey, monitoringv1.ProbesKind, len(res))
-		c.metrics.SetRejectedResources(pKey, monitoringv1.ProbesKind, 0)
+		c.metrics.SetRejectedResources(pKey, monitoringv1.ProbesKind, rejected)
 	}
 
 	return res, nil
