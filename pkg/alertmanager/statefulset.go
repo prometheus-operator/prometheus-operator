@@ -220,7 +220,15 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	}
 	if a.Spec.Image != nil && strings.TrimSpace(*a.Spec.Image) != "" {
 		amImagePath = *a.Spec.Image
-	}
+	} /* Sample code: If agreed I can make changes in all places
+	else {
+		amImagePath, err := operator.BuildImagePathNew(a.Spec.BaseImage, config.AlertmanagerDefaultBaseImage,
+													   a.Spec.Version, operator.DefaultAlertmanagerVersion,
+													   amTag, amSHA)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to build image path")
+		}
+	}*/
 
 	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {

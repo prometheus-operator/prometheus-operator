@@ -51,6 +51,43 @@ func BuildImagePath(image, version, tag, sha string) (string, error) {
 	return image, nil
 }
 
+// BuildImagePathNew builds a container image path based on
+// the given parameters.
+// Pick the image from specBase if specified, otherwise use configBase.
+// If the image contains tag or digest then image will be returned.
+// Otherwise, return image with either SHA, TAG, VERSION in that order.
+// Pick version from specVersion if specified, otherwise use configVersion.
+// Inspired by kubernetes code handling of image building.
+func BuildImagePathNew(specBaseImage, configBaseImage, specVersion, configVersion, specTag, specSha string) (string, error) {
+	image := StringValOrDefault(specBaseImage, configBaseImage)
+	named, err := dockerref.ParseNormalizedNamed(image)
+	if err != nil {
+		return "", fmt.Errorf("couldn't parse image reference %q: %v", image, err)
+	}
+	_, isTagged := named.(dockerref.Tagged)
+	_, isDigested := named.(dockerref.Digested)
+	if isTagged || isDigested {
+		return image, nil
+	}
+
+	version := StringValOrDefault(specVersion, configVersion)
+	tag := StringValOrDefault(specTag, "")
+	sha := StringValOrDefault(specSha, "")
+	if sha != "" {
+		return fmt.Sprintf("%s@sha256:%s", image, sha), nil
+	} else if tag != "" {
+		imageTag, err := dockerref.WithTag(named, tag)
+		if err != nil {
+			return "", err
+		}
+		return imageTag.String(), nil
+	} else if version != "" {
+		return image + ":" + version, nil
+	}
+
+	return image, nil
+}
+
 // StringValOrDefault returns the default val if the
 // given string is empty/whitespace.
 // Otherwise returns the value of the string..
