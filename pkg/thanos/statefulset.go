@@ -152,13 +152,12 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
 
-	trBaseImage := operator.StringValOrDefault(config.ThanosDefaultBaseImage, config.ThanosDefaultBaseImage)
-	trImagePath, err := operator.BuildImagePath(trBaseImage, operator.DefaultThanosVersion, "", "")
+	trImagePath, err := operator.BuildImagePath(
+		tr.Spec.Image,
+		operator.StringValOrDefault(config.ThanosDefaultBaseImage, operator.DefaultThanosBaseImage),
+		operator.DefaultThanosVersion, "", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build image path")
-	}
-	if strings.TrimSpace(tr.Spec.Image) != "" {
-		trImagePath = tr.Spec.Image
 	}
 
 	if tr.Spec.EvaluationInterval == "" {

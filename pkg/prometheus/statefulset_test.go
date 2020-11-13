@@ -499,6 +499,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 		}
 	}
+	// For tests which set monitoringv1.PrometheusSpec.Image, the result will be Image only. SHA, Tag, Version are not considered.
 	{
 		image := "my-reg/prometheus"
 		sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
@@ -514,7 +515,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		}
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
+		expected := image
 		if resultImage != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
@@ -534,7 +535,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		}
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus:latest"
+		expected := image
 		if resultImage != expected {
 			t.Fatalf("Explicit image should have precedence. Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
@@ -552,7 +553,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		}
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus:v2.3.2"
+		expected := image
 		if resultImage != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
@@ -571,7 +572,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		}
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
+		expected := image
 		if resultImage != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
@@ -588,7 +589,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		}
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus"
+		expected := image
 		if resultImage != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
@@ -606,13 +607,13 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		}
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
+		expected := image
 		if resultImage != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
 	}
 	{
-		image := "my-reg/prometheus"
+		image := ""
 		sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				Tag:   "my-unrelated-tag",
@@ -624,13 +625,13 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		}
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "docker.io/my-reg/prometheus:my-unrelated-tag"
+		expected := "quay.io/prometheus/prometheus:my-unrelated-tag"
 		if resultImage != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
 	}
 	{
-		image := "my-reg/prometheus"
+		image := "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb325"
 		sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				SHA:   "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
@@ -643,7 +644,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 		}
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
+		expected := "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb325"
 		if resultImage != expected {
 			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 		}
