@@ -430,6 +430,8 @@ type StorageSpec struct {
 	EmptyDir *v1.EmptyDirVolumeSource `json:"emptyDir,omitempty"`
 	// A PVC spec to be used by the Prometheus StatefulSets.
 	VolumeClaimTemplate EmbeddedPersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+	// HostPathVolumeSource to be used by the Prometheus StatefulSets.
+	HostPath *v1.HostPathVolumeSource `json:"hostPath,omitempty"`
 }
 
 // EmbeddedPersistentVolumeClaim is an embedded version of k8s.io/api/core/v1.PersistentVolumeClaim.

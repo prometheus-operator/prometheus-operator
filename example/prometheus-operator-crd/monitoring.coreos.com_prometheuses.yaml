@@ -4531,6 +4531,21 @@ spec:
                           The default is nil which means that the limit is undefined.
                           More info: http://kubernetes.io/docs/user-guide/volumes#emptydir'
                         type: string
+                    type: objects
+                  hostPath:
+                    description: HostPathVolumeSource to be used by the Prometheus StatefulSets.
+                    properties:
+                      path:
+                        description: 'Path of the directory on the host. If the path
+                          is a symlink, it will follow the link to the real path. More
+                          info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath'
+                        type: string
+                      type:
+                        description: 'Type for HostPath Volume Defaults to "" More info:
+                          https://kubernetes.io/docs/concepts/storage/volumes#hostpath'
+                        type: string
+                    required:
+                    - path
                     type: object
                   volumeClaimTemplate:
                     description: A PVC spec to be used by the Prometheus StatefulSets.
