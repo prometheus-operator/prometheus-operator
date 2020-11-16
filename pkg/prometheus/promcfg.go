@@ -535,13 +535,13 @@ func (cg *configGenerator) generatePodMonitorConfig(
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: ".+"},
+				{Key: "regex", Value: ".*"},
 			})
 		case metav1.LabelSelectorOpDoesNotExist:
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "drop"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: ".+"},
+				{Key: "regex", Value: ".*"},
 			})
 		}
 	}
@@ -794,13 +794,13 @@ func (cg *configGenerator) generateProbeConfig(
 				relabelings = append(relabelings, yaml.MapSlice{
 					{Key: "action", Value: "keep"},
 					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key)}},
-					{Key: "regex", Value: ".+"},
+					{Key: "regex", Value: ".*"},
 				})
 			case metav1.LabelSelectorOpDoesNotExist:
 				relabelings = append(relabelings, yaml.MapSlice{
 					{Key: "action", Value: "drop"},
 					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key)}},
-					{Key: "regex", Value: ".+"},
+					{Key: "regex", Value: ".*"},
 				})
 			}
 		}
@@ -983,13 +983,13 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: ".+"},
+				{Key: "regex", Value: ".*"},
 			})
 		case metav1.LabelSelectorOpDoesNotExist:
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "drop"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: ".+"},
+				{Key: "regex", Value: ".*"},
 			})
 		}
 	}
