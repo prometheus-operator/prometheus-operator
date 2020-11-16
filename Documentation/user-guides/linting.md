@@ -35,7 +35,7 @@ lint_files() {
   elif [ -x "$(command -v docker)" ]; then
     echo "Using Dockerized linter."
     docker run --rm --volume "$PWD:/data:ro" --workdir /data ${LINTER} \
-    /bin/bash -c "find $1/$2 | xargs /go/bin/po-lint"
+    /bin/bash -c "/go/bin/po-lint $1/$2"
   else
     echo "Linter executable not found."
     exit 1
