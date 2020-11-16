@@ -11894,7 +11894,8 @@ spec:
                     type: string
                   objectStorageConfig:
                     description: ObjectStorageConfig configures object storage in
-                      Thanos.
+                      Thanos. Alternative to ObjectStorageConfigFile, and lower order
+                      priority.
                     properties:
                       key:
                         description: The key of the secret to select from.  Must be
@@ -11911,6 +11912,11 @@ spec:
                     required:
                     - key
                     type: object
+                  objectStorageConfigFile:
+                    description: ObjectStorageConfigFile specifies the path of the
+                      object storage configuration file. When used alongside with
+                      ObjectStorageConfig, ObjectStorageConfigFile takes precedence.
+                    type: string
                   resources:
                     description: Resources defines the resource requirements for the
                       Thanos sidecar. If not provided, no requests/limits will be
@@ -16926,6 +16932,7 @@ spec:
                 type: object
               objectStorageConfig:
                 description: ObjectStorageConfig configures object storage in Thanos.
+                  Alternative to ObjectStorageConfigFile, and lower order priority.
                 properties:
                   key:
                     description: The key of the secret to select from.  Must be a
@@ -16941,6 +16948,11 @@ spec:
                 required:
                 - key
                 type: object
+              objectStorageConfigFile:
+                description: ObjectStorageConfigFile specifies the path of the object
+                  storage configuration file. When used alongside with ObjectStorageConfig,
+                  ObjectStorageConfigFile takes precedence.
+                type: string
               paused:
                 description: When a ThanosRuler deployment is paused, no actions except
                   for deletion will be performed on the underlying objects.

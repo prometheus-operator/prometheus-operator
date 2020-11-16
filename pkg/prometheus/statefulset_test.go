@@ -894,6 +894,91 @@ func TestThanosObjectStorage(t *testing.T) {
 	}
 }
 
+func TestThanosObjectStorageFile(t *testing.T) {
+	testPath := "/vault/secret/config.yaml"
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				ObjectStorageConfigFile: &testPath,
+			},
+		},
+	}, defaultTestConfig, nil, "", 0)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	{
+		var containsArg bool
+		expectedArg := "--objstore.config-file=" + testPath
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-sidecar" {
+				for _, arg := range container.Args {
+					if arg == expectedArg {
+						containsArg = true
+						break
+					}
+				}
+			}
+		}
+		if !containsArg {
+			t.Fatalf("Thanos sidecar is missing expected argument: %s", expectedArg)
+		}
+	}
+
+	{
+		var containsArg bool
+		const expectedArg = "--storage.tsdb.max-block-duration=2h"
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "prometheus" {
+				for _, arg := range container.Args {
+					if arg == expectedArg {
+						containsArg = true
+						break
+					}
+				}
+			}
+
+		}
+		if !containsArg {
+			t.Fatalf("Prometheus is missing expected argument: %s", expectedArg)
+		}
+	}
+
+	{
+		var found bool
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-sidecar" {
+				for _, arg := range container.Args {
+					if strings.HasPrefix(arg, "--tsdb.path=") {
+						found = true
+						break
+					}
+				}
+			}
+		}
+		if !found {
+			t.Fatalf("--tsdb.path argument should be given to the Thanos sidecar, got %q", strings.Join(sset.Spec.Template.Spec.Containers[3].Args, " "))
+		}
+	}
+
+	{
+		var found bool
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-sidecar" {
+				for _, vol := range container.VolumeMounts {
+					if vol.MountPath == storageDir {
+						found = true
+						break
+					}
+				}
+			}
+		}
+		if !found {
+			t.Fatal("Prometheus data volume should be mounted in the Thanos sidecar")
+		}
+	}
+}
+
 func TestThanosTracing(t *testing.T) {
 	testKey := "thanos-config-secret-test"
 

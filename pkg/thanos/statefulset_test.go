@@ -271,6 +271,38 @@ func TestObjectStorage(t *testing.T) {
 	}
 }
 
+func TestObjectStorageFile(t *testing.T) {
+	testPath := "/vault/secret/config.yaml"
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints:          emptyQueryEndpoints,
+			ObjectStorageConfigFile: &testPath,
+		},
+	}, defaultTestConfig, nil, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	{
+		var containsArg bool
+		expectedArg := "--objstore.config-file=" + testPath
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-ruler" {
+				for _, arg := range container.Args {
+					if arg == expectedArg {
+						containsArg = true
+						break
+					}
+				}
+			}
+		}
+		if !containsArg {
+			t.Fatalf("Thanos ruler is missing expected argument: %s", expectedArg)
+		}
+	}
+}
+
 func TestLabelsAndAlertDropLabels(t *testing.T) {
 	labelPrefix := "--label="
 	alertDropLabelPrefix := "--alert.label-drop="

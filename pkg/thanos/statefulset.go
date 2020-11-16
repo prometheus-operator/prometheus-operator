@@ -262,6 +262,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
+	if tr.Spec.ObjectStorageConfigFile != nil {
+		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+*tr.Spec.ObjectStorageConfigFile)
+	}
+
 	if tr.Spec.TracingConfig != nil {
 		trCLIArgs = append(trCLIArgs, "--tracing.config=$(TRACING_CONFIG)")
 		trEnvVars = append(trEnvVars, v1.EnvVar{
