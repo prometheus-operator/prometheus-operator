@@ -155,7 +155,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	trImagePath, err := operator.BuildImagePath(
 		tr.Spec.Image,
 		operator.StringValOrDefault(config.ThanosDefaultBaseImage, operator.DefaultThanosBaseImage),
-		operator.DefaultThanosVersion, "", "")
+		operator.DefaultThanosVersion,
+		"",
+		"",
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build image path")
 	}

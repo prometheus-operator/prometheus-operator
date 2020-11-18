@@ -320,7 +320,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	prometheusImagePath, err := operator.BuildImagePath(
 		operator.StringPtrValOrDefault(p.Spec.Image, ""),
 		operator.StringValOrDefault(p.Spec.BaseImage, c.PrometheusDefaultBaseImage),
-		p.Spec.Version, p.Spec.Tag, p.Spec.SHA)
+		p.Spec.Version,
+		p.Spec.Tag,
+		p.Spec.SHA,
+	)
 	if err != nil {
 		return nil, err
 	}

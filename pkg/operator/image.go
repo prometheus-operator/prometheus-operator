@@ -24,8 +24,8 @@ import (
 // BuildImagePath builds a container image path based on
 // the given parameters.
 // Return specImage if not empty.
-// If the image contains tag or digest then image will be returned.
-// Otherwise, return image with either SHA, TAG, VERSION in that order.
+// If image contains a tag or digest then image will be returned.
+// Otherwise, return image suffixed by either SHA, tag or version(in that order).
 // Inspired by kubernetes code handling of image building.
 func BuildImagePath(specImage, image, version, tag, sha string) (string, error) {
 	if strings.TrimSpace(specImage) != "" {
