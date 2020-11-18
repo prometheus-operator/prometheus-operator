@@ -209,17 +209,17 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	// Before editing 'a' create deep copy, to prevent side effects. For more
 	// details see https://github.com/prometheus-operator/prometheus-operator/issues/1659
 	a = a.DeepCopy()
-
-	amBaseImage := operator.StringValOrDefault(a.Spec.BaseImage, operator.DefaultAlertmanagerBaseImage)
 	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
-	amTag := operator.StringValOrDefault(a.Spec.Tag, "")
-	amSHA := operator.StringValOrDefault(a.Spec.SHA, "")
-	amImagePath, err := operator.BuildImagePath(amBaseImage, amVersion, amTag, amSHA)
+
+	amImagePath, err := operator.BuildImagePath(
+		operator.StringPtrValOrDefault(a.Spec.Image, ""),
+		operator.StringValOrDefault(a.Spec.BaseImage, config.AlertmanagerDefaultBaseImage),
+		amVersion,
+		operator.StringValOrDefault(a.Spec.Tag, ""),
+		operator.StringValOrDefault(a.Spec.SHA, ""),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build image path")
-	}
-	if a.Spec.Image != nil && strings.TrimSpace(*a.Spec.Image) != "" {
-		amImagePath = *a.Spec.Image
 	}
 
 	version, err := semver.ParseTolerant(amVersion)

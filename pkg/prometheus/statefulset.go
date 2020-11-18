@@ -317,11 +317,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
 
-	baseImage := operator.StringValOrDefault(p.Spec.BaseImage, operator.DefaultPrometheusBaseImage)
-	if p.Spec.Image != nil && strings.TrimSpace(*p.Spec.Image) != "" {
-		baseImage = *p.Spec.Image
-	}
-	prometheusImagePath, err := operator.BuildImagePath(baseImage, p.Spec.Version, p.Spec.Tag, p.Spec.SHA)
+	prometheusImagePath, err := operator.BuildImagePath(
+		operator.StringPtrValOrDefault(p.Spec.Image, ""),
+		operator.StringValOrDefault(p.Spec.BaseImage, c.PrometheusDefaultBaseImage),
+		p.Spec.Version,
+		p.Spec.Tag,
+		p.Spec.SHA,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -684,18 +686,15 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 	disableCompaction := p.Spec.DisableCompaction
 	if p.Spec.Thanos != nil {
-		thBaseImage := operator.StringPtrValOrDefault(p.Spec.Thanos.BaseImage, operator.DefaultThanosBaseImage)
-		thVersion := operator.StringPtrValOrDefault(p.Spec.Thanos.Version, operator.DefaultThanosVersion)
-		thTag := operator.StringPtrValOrDefault(p.Spec.Thanos.Tag, "")
-		thSHA := operator.StringPtrValOrDefault(p.Spec.Thanos.SHA, "")
-		thanosImage, err := operator.BuildImagePath(thBaseImage, thVersion, thTag, thSHA)
-
+		thanosImage, err := operator.BuildImagePath(
+			operator.StringPtrValOrDefault(p.Spec.Thanos.Image, ""),
+			operator.StringPtrValOrDefault(p.Spec.Thanos.BaseImage, c.ThanosDefaultBaseImage),
+			operator.StringPtrValOrDefault(p.Spec.Thanos.Version, operator.DefaultThanosVersion),
+			operator.StringPtrValOrDefault(p.Spec.Thanos.Tag, ""),
+			operator.StringPtrValOrDefault(p.Spec.Thanos.SHA, ""),
+		)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to build image path")
-		}
-		// If the image path is set in the custom resource, override other image settings.
-		if p.Spec.Thanos.Image != nil && strings.TrimSpace(*p.Spec.Thanos.Image) != "" {
-			thanosImage = *p.Spec.Thanos.Image
 		}
 
 		bindAddress := "[$(POD_IP)]"

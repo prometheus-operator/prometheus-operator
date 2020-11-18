@@ -23,9 +23,14 @@ import (
 
 // BuildImagePath builds a container image path based on
 // the given parameters.
-// If the image contains tag or digest then image will be returned.
+// Return specImage if not empty.
+// If image contains a tag or digest then image will be returned.
+// Otherwise, return image suffixed by either SHA, tag or version(in that order).
 // Inspired by kubernetes code handling of image building.
-func BuildImagePath(image, version, tag, sha string) (string, error) {
+func BuildImagePath(specImage, image, version, tag, sha string) (string, error) {
+	if strings.TrimSpace(specImage) != "" {
+		return specImage, nil
+	}
 	named, err := dockerref.ParseNormalizedNamed(image)
 	if err != nil {
 		return "", fmt.Errorf("couldn't parse image reference %q: %v", image, err)
