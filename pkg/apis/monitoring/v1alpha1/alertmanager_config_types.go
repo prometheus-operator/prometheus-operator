@@ -154,13 +154,13 @@ type PagerDutyConfig struct {
 	// The part or component of the affected system that is broken.
 	Component *string `json:"component,omitempty"`
 	// Arbitrary key/value pairs that provide further detail about the incident.
-	Details []PagerDutyConfigDetail `json:"details,omitempty"`
+	Details []KeyValue `json:"details,omitempty"`
 	// HTTP client configuration.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
-// PagerDutyConfigDetail defines a (key, value) tuple.
-type PagerDutyConfigDetail struct {
+// KeyValue defines a (key, value) tuple.
+type KeyValue struct {
 	// Key of the tuple.
 	Key string `json:"key"`
 	// Value of the tuple.
@@ -334,7 +334,7 @@ type OpsGenieConfig struct {
 	// Priority level of alert. Possible values are P1, P2, P3, P4, and P5.
 	Priority *string `json:"priority,omitempty"`
 	// A set of arbitrary key/value pairs that provide further detail about the incident.
-	Details []OpsGenieConfigDetail `json:"details,omitempty"`
+	Details []KeyValue `json:"details,omitempty"`
 	// List of responders responsible for notifications.
 	Responders []OpsGenieConfigResponder `json:"responders,omitempty"`
 	// HTTP client configuration.
@@ -375,11 +375,6 @@ func (r *OpsGenieConfigResponder) Validate() error {
 	}
 
 	return nil
-}
-
-type OpsGenieConfigDetail struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
 }
 
 // HTTPConfig defines a client HTTP configuration.

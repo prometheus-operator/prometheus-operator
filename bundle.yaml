@@ -145,10 +145,13 @@ spec:
                             description: A set of arbitrary key/value pairs that provide
                               further detail about the incident.
                             items:
+                              description: KeyValue defines a (key, value) tuple.
                               properties:
                                 key:
+                                  description: Key of the tuple.
                                   type: string
                                 value:
+                                  description: Value of the tuple.
                                   type: string
                               required:
                               - key
@@ -427,8 +430,7 @@ spec:
                             description: Arbitrary key/value pairs that provide further
                               detail about the incident.
                             items:
-                              description: PagerDutyConfigDetail defines a (key, value)
-                                tuple.
+                              description: KeyValue defines a (key, value) tuple.
                               properties:
                                 key:
                                   description: Key of the tuple.

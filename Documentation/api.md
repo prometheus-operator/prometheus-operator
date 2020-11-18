@@ -70,12 +70,11 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerConfigSpec](#alertmanagerconfigspec)
 * [HTTPConfig](#httpconfig)
 * [InhibitRule](#inhibitrule)
+* [KeyValue](#keyvalue)
 * [Matcher](#matcher)
 * [OpsGenieConfig](#opsgenieconfig)
-* [OpsGenieConfigDetail](#opsgenieconfigdetail)
 * [OpsGenieConfigResponder](#opsgenieconfigresponder)
 * [PagerDutyConfig](#pagerdutyconfig)
-* [PagerDutyConfigDetail](#pagerdutyconfigdetail)
 * [Receiver](#receiver)
 * [Route](#route)
 * [SlackAction](#slackaction)
@@ -1018,6 +1017,17 @@ InhibitRule defines an inhibition rule that allows to mute alerts when other ale
 
 [Back to TOC](#table-of-contents)
 
+## KeyValue
+
+KeyValue defines a (key, value) tuple.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| key | Key of the tuple. | string | true |
+| value | Value of the tuple. | string | true |
+
+[Back to TOC](#table-of-contents)
+
 ## Matcher
 
 Matcher defines how to match on alert's labels.
@@ -1045,20 +1055,9 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 | tags | Comma separated list of tags attached to the notifications. | *string | false |
 | note | Additional alert note. | *string | false |
 | priority | Priority level of alert. Possible values are P1, P2, P3, P4, and P5. | *string | false |
-| details | A set of arbitrary key/value pairs that provide further detail about the incident. | [][OpsGenieConfigDetail](#opsgenieconfigdetail) | false |
+| details | A set of arbitrary key/value pairs that provide further detail about the incident. | [][KeyValue](#keyvalue) | false |
 | responders | List of responders responsible for notifications. | [][OpsGenieConfigResponder](#opsgenieconfigresponder) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
-
-[Back to TOC](#table-of-contents)
-
-## OpsGenieConfigDetail
-
-
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| key |  | string | true |
-| value |  | string | true |
 
 [Back to TOC](#table-of-contents)
 
@@ -1092,19 +1091,8 @@ PagerDutyConfig configures notifications via PagerDuty. See https://prometheus.i
 | class | The class/type of the event. | *string | false |
 | group | A cluster or grouping of sources. | *string | false |
 | component | The part or component of the affected system that is broken. | *string | false |
-| details | Arbitrary key/value pairs that provide further detail about the incident. | [][PagerDutyConfigDetail](#pagerdutyconfigdetail) | false |
+| details | Arbitrary key/value pairs that provide further detail about the incident. | [][KeyValue](#keyvalue) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
-
-[Back to TOC](#table-of-contents)
-
-## PagerDutyConfigDetail
-
-PagerDutyConfigDetail defines a (key, value) tuple.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| key | Key of the tuple. | string | true |
-| value | Value of the tuple. | string | true |
 
 [Back to TOC](#table-of-contents)
 
