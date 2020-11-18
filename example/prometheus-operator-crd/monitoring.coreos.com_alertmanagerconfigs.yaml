@@ -20,7 +20,7 @@ spec:
     schema:
       openAPIV3Schema:
         description: AlertmanagerConfig defines a namespaced AlertmanagerConfig to
-          be aggregated across multiple namespaces configuring one Alertmanager.
+          be aggregated across multiple namespaces configuring one Alertmanager cluster.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -35,22 +35,39 @@ spec:
           metadata:
             type: object
           spec:
+            description: AlertmanagerConfigSpec is a specification of the desired
+              behavior of the Alertmanager configuration. By definition, the Alertmanager
+              configuration only applies to alerts that
             properties:
               inhibitRules:
+                description: List of inhibition rules. The rules will only apply to
+                  alerts matching the resource’s namespace.
                 items:
+                  description: InhibitRule defines an inhibition rule that allows
+                    to mute alerts when other alerts are already firing. See https://prometheus.io/docs/alerting/latest/configuration/#inhibit_rule
                   properties:
                     equal:
+                      description: Labels that must have an equal value in the source
+                        and target alert for the inhibition to take effect.
                       items:
                         type: string
                       type: array
                     sourceMatch:
+                      description: Matchers for which one or more alerts have to exist
+                        for the inhibition to take effect. The operator enforces that
+                        the alert matches the resource’s namespace.
                       items:
+                        description: Matcher defines how to match on alert's labels.
                         properties:
                           name:
+                            description: Label to match.
                             type: string
                           regex:
+                            description: Whether to match on equality (false) or regular-expression
+                              (true).
                             type: boolean
                           value:
+                            description: Label value to match.
                             type: string
                         required:
                         - name
@@ -58,13 +75,21 @@ spec:
                         type: object
                       type: array
                     targetMatch:
+                      description: Matchers that have to be fulfilled in the alerts
+                        to be muted. The operator enforces that the alert matches
+                        the resource’s namespace.
                       items:
+                        description: Matcher defines how to match on alert's labels.
                         properties:
                           name:
+                            description: Label to match.
                             type: string
                           regex:
+                            description: Whether to match on equality (false) or regular-expression
+                              (true).
                             type: boolean
                           value:
+                            description: Label value to match.
                             type: string
                         required:
                         - name
@@ -74,15 +99,25 @@ spec:
                   type: object
                 type: array
               receivers:
+                description: List of receivers.
                 items:
+                  description: Receiver defines one or more notification integrations.
                   properties:
                     name:
+                      description: Name of the receiver. Must be unique across all
+                        items from the list.
                       type: string
                     opsgenieConfigs:
+                      description: List of OpsGenie configurations.
                       items:
+                        description: OpsGenieConfig configures notifications via OpsGenie.
+                          See https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config
                         properties:
                           apiKey:
-                            description: SecretKeySelector selects a key of a Secret.
+                            description: The secret's key contains the OpsGenie API
+                              key. The secret needs to be in the same namespace as
+                              the AlertmanagerConfig object and accessible by the
+                              Prometheus Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -101,10 +136,14 @@ spec:
                             - key
                             type: object
                           apiURL:
+                            description: The URL to send OpsGenie API requests to.
                             type: string
                           description:
+                            description: Description of the incident.
                             type: string
                           details:
+                            description: A set of arbitrary key/value pairs that provide
+                              further detail about the incident.
                             items:
                               properties:
                                 key:
@@ -117,10 +156,10 @@ spec:
                               type: object
                             type: array
                           httpConfig:
+                            description: HTTP client configuration.
                             properties:
                               basicAuth:
-                                description: 'BasicAuth allow an endpoint to authenticate
-                                  over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
+                                description: BasicAuth for the client.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -166,8 +205,11 @@ spec:
                                     type: object
                                 type: object
                               bearerTokenSecret:
-                                description: SecretKeySelector selects a key of a
-                                  Secret.
+                                description: The secret's key that contains the bearer
+                                  token to be used by the client for authentication.
+                                  The secret needs to be in the same namespace as
+                                  the AlertmanagerConfig object and accessible by
+                                  the Prometheus Operator.
                                 properties:
                                   key:
                                     description: The key of the secret to select from.  Must
@@ -187,10 +229,10 @@ spec:
                                 - key
                                 type: object
                               proxyURL:
+                                description: Optional proxy URL.
                                 type: string
                               tlsConfig:
-                                description: SafeTLSConfig specifies safe TLS configuration
-                                  parameters.
+                                description: TLS configuration for the client.
                                 properties:
                                   ca:
                                     description: Struct containing the CA cert to
@@ -317,51 +359,82 @@ spec:
                                 type: object
                             type: object
                           message:
+                            description: Alert text limited to 130 characters.
                             type: string
                           note:
+                            description: Additional alert note.
                             type: string
                           priority:
+                            description: Priority level of alert. Possible values
+                              are P1, P2, P3, P4, and P5.
                             type: string
                           responders:
+                            description: List of responders responsible for notifications.
                             items:
+                              description: OpsGenieConfigResponder defines a responder
+                                to an incident. One of id, name or username has to
+                                be defined.
                               properties:
                                 id:
+                                  description: ID of the responder.
                                   type: string
                                 name:
+                                  description: Name of the responder.
                                   type: string
                                 type:
+                                  description: Type of responder.
                                   type: string
                                 username:
+                                  description: Username of the responder.
                                   type: string
                               type: object
                             type: array
                           sendResolved:
+                            description: Whether or not to notify about resolved alerts.
                             type: boolean
                           source:
+                            description: Backlink to the sender of the notification.
                             type: string
                           tags:
+                            description: Comma separated list of tags attached to
+                              the notifications.
                             type: string
                         type: object
                       type: array
                     pagerDutyConfigs:
+                      description: List of PagerDuty configurations.
                       items:
+                        description: PagerDutyConfig configures notifications via
+                          PagerDuty. See https://prometheus.io/docs/alerting/latest/configuration/#pagerduty_config
                         properties:
                           class:
+                            description: The class/type of the event.
                             type: string
                           client:
+                            description: Client identification.
                             type: string
                           clientURL:
+                            description: Backlink to the sender of notification.
                             type: string
                           component:
+                            description: The part or component of the affected system
+                              that is broken.
                             type: string
                           description:
+                            description: Description of the incident.
                             type: string
                           details:
+                            description: Arbitrary key/value pairs that provide further
+                              detail about the incident.
                             items:
+                              description: PagerDutyConfigDetail defines a (key, value)
+                                tuple.
                               properties:
                                 key:
+                                  description: Key of the tuple.
                                   type: string
                                 value:
+                                  description: Value of the tuple.
                                   type: string
                               required:
                               - key
@@ -369,12 +442,13 @@ spec:
                               type: object
                             type: array
                           group:
+                            description: A cluster or grouping of sources.
                             type: string
                           httpConfig:
+                            description: HTTP client configuration.
                             properties:
                               basicAuth:
-                                description: 'BasicAuth allow an endpoint to authenticate
-                                  over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
+                                description: BasicAuth for the client.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -420,8 +494,11 @@ spec:
                                     type: object
                                 type: object
                               bearerTokenSecret:
-                                description: SecretKeySelector selects a key of a
-                                  Secret.
+                                description: The secret's key that contains the bearer
+                                  token to be used by the client for authentication.
+                                  The secret needs to be in the same namespace as
+                                  the AlertmanagerConfig object and accessible by
+                                  the Prometheus Operator.
                                 properties:
                                   key:
                                     description: The key of the secret to select from.  Must
@@ -441,10 +518,10 @@ spec:
                                 - key
                                 type: object
                               proxyURL:
+                                description: Optional proxy URL.
                                 type: string
                               tlsConfig:
-                                description: SafeTLSConfig specifies safe TLS configuration
-                                  parameters.
+                                description: TLS configuration for the client.
                                 properties:
                                   ca:
                                     description: Struct containing the CA cert to
@@ -571,7 +648,11 @@ spec:
                                 type: object
                             type: object
                           routingKey:
-                            description: SecretKeySelector selects a key of a Secret.
+                            description: The secret's key that contains the PagerDuty
+                              integration key (when using Events API v2). Either this
+                              field or serviceKey needs to be defined. The secret
+                              needs to be in the same namespace as the AlertmanagerConfig
+                              object and accessible by the Prometheus Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -590,9 +671,15 @@ spec:
                             - key
                             type: object
                           sendResolved:
+                            description: Whether or not to notify about resolved alerts.
                             type: boolean
                           serviceKey:
-                            description: SecretKeySelector selects a key of a Secret.
+                            description: The secret's keu that contains the PagerDuty
+                              service key (when using integration type "Prometheus").
+                              Either this field or routingKey needs to be defined.
+                              The secret needs to be in the same namespace as the
+                              AlertmanagerConfig object and accessible by the Prometheus
+                              Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -611,19 +698,25 @@ spec:
                             - key
                             type: object
                           severity:
+                            description: Severity of the incident.
                             type: string
                           url:
+                            description: The URL to send requests to.
                             type: string
                         type: object
                       type: array
                     slackConfigs:
+                      description: List of Slack configurations.
                       items:
                         description: SlackConfig configures notifications via Slack.
+                          See https://prometheus.io/docs/alerting/latest/configuration/#slack_config
                         properties:
                           actions:
+                            description: A list of Slack actions that are sent with
+                              each notification.
                             items:
                               description: SlackAction configures a single Slack action
-                                that is sent with each notification. See https://api.slack.com/docs/message-attachments#action_fields
+                                that is sent with each notification.  See https://api.slack.com/docs/message-attachments#action_fields
                                 and https://api.slack.com/docs/message-buttons for
                                 more information.
                               properties:
@@ -663,7 +756,10 @@ spec:
                               type: object
                             type: array
                           apiURL:
-                            description: SecretKeySelector selects a key of a Secret.
+                            description: The secret's key that contains the Slack
+                              webhook URL. The secret needs to be in the same namespace
+                              as the AlertmanagerConfig object and accessible by the
+                              Prometheus Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -684,12 +780,16 @@ spec:
                           callbackId:
                             type: string
                           channel:
+                            description: The channel or user to send notifications
+                              to.
                             type: string
                           color:
                             type: string
                           fallback:
                             type: string
                           fields:
+                            description: A list of Slack fields that are sent with
+                              each notification.
                             items:
                               description: SlackField configures a single Slack field
                                 that is sent with each notification. Each field must
@@ -713,10 +813,10 @@ spec:
                           footer:
                             type: string
                           httpConfig:
+                            description: HTTP client configuration.
                             properties:
                               basicAuth:
-                                description: 'BasicAuth allow an endpoint to authenticate
-                                  over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
+                                description: BasicAuth for the client.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -762,8 +862,11 @@ spec:
                                     type: object
                                 type: object
                               bearerTokenSecret:
-                                description: SecretKeySelector selects a key of a
-                                  Secret.
+                                description: The secret's key that contains the bearer
+                                  token to be used by the client for authentication.
+                                  The secret needs to be in the same namespace as
+                                  the AlertmanagerConfig object and accessible by
+                                  the Prometheus Operator.
                                 properties:
                                   key:
                                     description: The key of the secret to select from.  Must
@@ -783,10 +886,10 @@ spec:
                                 - key
                                 type: object
                               proxyURL:
+                                description: Optional proxy URL.
                                 type: string
                               tlsConfig:
-                                description: SafeTLSConfig specifies safe TLS configuration
-                                  parameters.
+                                description: TLS configuration for the client.
                                 properties:
                                   ca:
                                     description: Struct containing the CA cert to
@@ -927,6 +1030,7 @@ spec:
                           pretext:
                             type: string
                           sendResolved:
+                            description: Whether or not to notify about resolved alerts.
                             type: boolean
                           shortFields:
                             type: boolean
@@ -943,12 +1047,18 @@ spec:
                         type: object
                       type: array
                     weChatConfigs:
+                      description: List of WeChat configurations.
                       items:
+                        description: WeChatConfig configures notifications via WeChat.
+                          See https://prometheus.io/docs/alerting/latest/configuration/#wechat_config
                         properties:
                           agentID:
                             type: string
                           apiSecret:
-                            description: SecretKeySelector selects a key of a Secret.
+                            description: The secret's key that contains the WeChat
+                              API key. The secret needs to be in the same namespace
+                              as the AlertmanagerConfig object and accessible by the
+                              Prometheus Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -967,14 +1077,16 @@ spec:
                             - key
                             type: object
                           apiURL:
+                            description: The WeChat API URL.
                             type: string
                           corpID:
+                            description: The corp id for authentication.
                             type: string
                           httpConfig:
+                            description: HTTP client configuration.
                             properties:
                               basicAuth:
-                                description: 'BasicAuth allow an endpoint to authenticate
-                                  over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
+                                description: BasicAuth for the client.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -1020,8 +1132,11 @@ spec:
                                     type: object
                                 type: object
                               bearerTokenSecret:
-                                description: SecretKeySelector selects a key of a
-                                  Secret.
+                                description: The secret's key that contains the bearer
+                                  token to be used by the client for authentication.
+                                  The secret needs to be in the same namespace as
+                                  the AlertmanagerConfig object and accessible by
+                                  the Prometheus Operator.
                                 properties:
                                   key:
                                     description: The key of the secret to select from.  Must
@@ -1041,10 +1156,10 @@ spec:
                                 - key
                                 type: object
                               proxyURL:
+                                description: Optional proxy URL.
                                 type: string
                               tlsConfig:
-                                description: SafeTLSConfig specifies safe TLS configuration
-                                  parameters.
+                                description: TLS configuration for the client.
                                 properties:
                                   ca:
                                     description: Struct containing the CA cert to
@@ -1171,10 +1286,13 @@ spec:
                                 type: object
                             type: object
                           message:
+                            description: API request data as defined by the WeChat
+                              API.
                             type: string
                           messageType:
                             type: string
                           sendResolved:
+                            description: Whether or not to notify about resolved alerts.
                             type: boolean
                           toParty:
                             type: string
@@ -1185,13 +1303,16 @@ spec:
                         type: object
                       type: array
                     webhookConfigs:
+                      description: List of webhook configurations.
                       items:
+                        description: WebhookConfig configures notifications via a
+                          generic receiver supporting the webhook payload. See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
                         properties:
                           httpConfig:
+                            description: HTTP client configuration.
                             properties:
                               basicAuth:
-                                description: 'BasicAuth allow an endpoint to authenticate
-                                  over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
+                                description: BasicAuth for the client.
                                 properties:
                                   password:
                                     description: The secret in the service monitor
@@ -1237,8 +1358,11 @@ spec:
                                     type: object
                                 type: object
                               bearerTokenSecret:
-                                description: SecretKeySelector selects a key of a
-                                  Secret.
+                                description: The secret's key that contains the bearer
+                                  token to be used by the client for authentication.
+                                  The secret needs to be in the same namespace as
+                                  the AlertmanagerConfig object and accessible by
+                                  the Prometheus Operator.
                                 properties:
                                   key:
                                     description: The key of the secret to select from.  Must
@@ -1258,10 +1382,10 @@ spec:
                                 - key
                                 type: object
                               proxyURL:
+                                description: Optional proxy URL.
                                 type: string
                               tlsConfig:
-                                description: SafeTLSConfig specifies safe TLS configuration
-                                  parameters.
+                                description: TLS configuration for the client.
                                 properties:
                                   ca:
                                     description: Struct containing the CA cert to
@@ -1388,14 +1512,24 @@ spec:
                                 type: object
                             type: object
                           maxAlerts:
+                            description: Maximum number of alerts to be sent per webhook
+                              message.
                             format: int32
                             type: integer
                           sendResolved:
+                            description: Whether or not to notify about resolved alerts.
                             type: boolean
                           url:
+                            description: The URL to send HTTP POST requests to. "urlSecret"
+                              takes precedence over "url". One of "urlSecret" and
+                              "url" should be defined.
                             type: string
                           urlSecret:
-                            description: SecretKeySelector selects a key of a Secret.
+                            description: The secret's key that contains the webhook
+                              URL to send HTTP requests to. One of "urlSecret" and
+                              "url" should be defined. The secret needs to be in the
+                              same namespace as the AlertmanagerConfig object and
+                              accessible by the Prometheus Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -1420,25 +1554,47 @@ spec:
                   type: object
                 type: array
               route:
+                description: The Alertmanager route definition for alerts matching
+                  the resource’s namespace. It will be added to the generated Alertmanager
+                  configuration as a first-level route.
                 properties:
                   continue:
+                    description: Boolean indicating whether an alert should continue
+                      matching subsequent sibling nodes. It will always be overridden
+                      to true for the first-level route by the Prometheus operator.
                     type: boolean
                   groupBy:
+                    description: List of labels to group by.
                     items:
                       type: string
                     type: array
                   groupInterval:
+                    description: How long to wait before sending an updated notification.
+                      Must match the regular expression [0-9]+(ms|s|m|h) (milliseconds
+                      seconds minutes hours).
                     type: string
                   groupWait:
+                    description: How long to wait before sending the initial notification.
+                      Must match the regular expression [0-9]+(ms|s|m|h) (milliseconds
+                      seconds minutes hours).
                     type: string
                   matchers:
+                    description: 'List of matchers that the alert’s labels should
+                      match. For the first level route, the operator removes any existing
+                      equality and regexp matcher on the "namespace" label and adds
+                      a "namespace: <object namespace>" matcher.'
                     items:
+                      description: Matcher defines how to match on alert's labels.
                       properties:
                         name:
+                          description: Label to match.
                           type: string
                         regex:
+                          description: Whether to match on equality (false) or regular-expression
+                            (true).
                           type: boolean
                         value:
+                          description: Label value to match.
                           type: string
                       required:
                       - name
@@ -1446,8 +1602,14 @@ spec:
                       type: object
                     type: array
                   receiver:
+                    description: Name of the receiver for this route. If present,
+                      it should be listed in the “receivers” field. The field can
+                      be omitted only for nested routes otherwise it is mandatory.
                     type: string
                   repeatInterval:
+                    description: How long to wait before repeating the last notification.
+                      Must match the regular expression [0-9]+(ms|s|m|h) (milliseconds
+                      seconds minutes hours).
                     type: string
                   routes:
                     items:
