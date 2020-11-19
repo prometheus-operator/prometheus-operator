@@ -21,6 +21,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
@@ -258,6 +259,18 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	var pushoverConfigs []*pushoverConfig
+	if l := len(in.PushoverConfigs); l > 0 {
+		pushoverConfigs = make([]*pushoverConfig, l)
+		for i := range in.PushoverConfigs {
+			receiver, err := cg.convertPushoverConfig(ctx, in.PushoverConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "PushoverConfig[%d]", i)
+			}
+			pushoverConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             prefixReceiverName(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -267,6 +280,7 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		WeChatConfigs:    weChatConfigs,
 		EmailConfigs:     emailConfigs,
 		VictorOpsConfigs: victorOpsConfigs,
+		PushoverConfigs:  pushoverConfigs,
 	}, nil
 }
 
@@ -803,6 +817,71 @@ func (cg *configGenerator) convertVictorOpsConfig(ctx context.Context, in monito
 	}
 	out.CustomFields = customFields
 
+	if in.HTTPConfig != nil {
+		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
+	return out, nil
+}
+
+func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitoringv1alpha1.PushoverConfig, crKey types.NamespacedName) (*pushoverConfig, error) {
+	out := &pushoverConfig{}
+
+	if in.SendResolved != nil {
+		out.VSendResolved = *in.SendResolved
+	}
+	if in.UserKey != nil {
+		userKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
+		if err != nil {
+			return nil, errors.Errorf("failed to get secret %q", in.UserKey)
+		}
+		out.UserKey = userKey
+	}
+	if in.Token != nil {
+		token, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
+		if err != nil {
+			return nil, errors.Errorf("failed to get secret %q", in.Token)
+		}
+		out.Token = token
+	}
+	if in.Title != nil {
+		out.Title = *in.Title
+	}
+	if in.Message != nil {
+		out.Message = *in.Message
+	}
+	if in.URL != nil {
+		out.URL = *in.URL
+	}
+	if in.URLTitle != nil {
+		out.URLTitle = *in.URLTitle
+	}
+	if in.Sound != nil {
+		out.Sound = *in.Sound
+	}
+	if in.Priority != nil {
+		out.Priority = *in.Priority
+	}
+	if in.Retry != nil {
+		retry, err := time.ParseDuration(*in.Retry)
+		if err != nil {
+			return nil, errors.Errorf("failed to parse Retry duration: %s", err)
+		}
+		out.Retry = duration(retry)
+	}
+	if in.Expire != nil {
+		expire, err := time.ParseDuration(*in.Expire)
+		if err != nil {
+			return nil, errors.Errorf("failed to parse Expire duration: %s", err)
+		}
+		out.Expire = duration(expire)
+	}
+	if in.HTML != nil {
+		out.HTML = *in.HTML
+	}
 	if in.HTTPConfig != nil {
 		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
 		if err != nil {

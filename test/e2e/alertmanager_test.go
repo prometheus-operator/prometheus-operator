@@ -869,6 +869,20 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						return &str
 					}("abc"),
 				}},
+				PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
+					UserKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: testingSecret,
+						},
+						Key: testingSecretKey,
+					},
+					Token: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: testingSecret,
+						},
+						Key: testingSecretKey,
+					},
+				}},
 			}},
 		},
 	}
@@ -975,6 +989,10 @@ receivers:
   - send_resolved: false
     api_key: 1234abc
     routing_key: abc
+  pushover_configs:
+  - send_resolved: false
+    user_key: 1234abc
+    token: 1234abc
 templates: []
 `, ns, ns, ns)
 

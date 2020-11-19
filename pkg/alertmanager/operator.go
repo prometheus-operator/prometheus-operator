@@ -974,6 +974,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return nil, err
 		}
+
+		err = checkPushoverConfigs(ctx, receiver.PushoverConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return receiverNames, nil
@@ -1172,6 +1177,48 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 
 		victoropsConfigKey := fmt.Sprintf("%s/victorops/%d", key, i)
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, victoropsConfigKey, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.PushoverConfig, namespace string, key string, store *assets.Store) error {
+	for i, config := range configs {
+
+		if config.UserKey != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.UserKey); err != nil {
+				return err
+			}
+		}
+		if config.Token != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.UserKey); err != nil {
+				return err
+			}
+		}
+
+		if config.URL != nil {
+			_, err := url.Parse(*config.URL)
+			if err != nil {
+				return errors.New("url is not valid")
+			}
+		}
+		if config.Retry != nil {
+			_, err := time.ParseDuration(*config.Retry)
+			if err != nil {
+				return errors.New("invalid retry duration")
+			}
+		}
+		if config.Expire != nil {
+			_, err := time.ParseDuration(*config.Expire)
+			if err != nil {
+				return errors.New("invalid expire duration")
+			}
+		}
+
+		pushoverConfigKey := fmt.Sprintf("%s/pushover/%d", key, i)
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, pushoverConfigKey, store); err != nil {
 			return err
 		}
 	}

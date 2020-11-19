@@ -76,6 +76,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [OpsGenieConfig](#opsgenieconfig)
 * [OpsGenieConfigResponder](#opsgenieconfigresponder)
 * [PagerDutyConfig](#pagerdutyconfig)
+* [PushoverConfig](#pushoverconfig)
 * [Receiver](#receiver)
 * [Route](#route)
 * [SlackAction](#slackaction)
@@ -1121,6 +1122,28 @@ PagerDutyConfig configures notifications via PagerDuty. See https://prometheus.i
 
 [Back to TOC](#table-of-contents)
 
+## PushoverConfig
+
+PushoverConfig configures notifications via Pushover. See https://prometheus.io/docs/alerting/latest/configuration/#pushover_config
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
+| userKey | The recipient user’s user key. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| token | Your registered application’s API token, see https://pushover.net/apps | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| title | Notification title. | *string | false |
+| message | Notification message. | *string | false |
+| url | A supplementary URL shown alongside the message. | *string | false |
+| urlTitle | A title for supplementary URL, otherwise just the URL is shown | *string | false |
+| sound | The name of one of the sounds supported by device clients to override the user's default sound choice | *string | false |
+| priority | Priority, see https://pushover.net/api#priority | *string | false |
+| retry | How often the Pushover servers will send the same notification to the user. Must be at least 30 seconds. | *string | false |
+| expire | How long your notification will continue to be retried for, unless the user acknowledges the notification. | *string | false |
+| html | Whether notification message is HTML or plain text. | *bool | false |
+| httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
+
+[Back to TOC](#table-of-contents)
+
 ## Receiver
 
 Receiver defines one or more notification integrations.
@@ -1135,6 +1158,7 @@ Receiver defines one or more notification integrations.
 | wechatConfigs | List of WeChat configurations. | [][WeChatConfig](#wechatconfig) | false |
 | emailConfigs | List of Email configurations. | [][EmailConfig](#emailconfig) | false |
 | victoropsConfigs | List of VictorOps configurations. | [][VictorOpsConfig](#victoropsconfig) | false |
+| pushoverConfigs | List of Pushover configurations. | [][PushoverConfig](#pushoverconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
