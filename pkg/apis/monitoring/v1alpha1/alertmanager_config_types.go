@@ -113,13 +113,13 @@ type Receiver struct {
 	// List of OpsGenie configurations.
 	OpsGenieConfigs []OpsGenieConfig `json:"opsgenieConfigs,omitempty"`
 	// List of PagerDuty configurations.
-	PagerDutyConfigs []PagerDutyConfig `json:"pagerDutyConfigs,omitempty"`
+	PagerDutyConfigs []PagerDutyConfig `json:"pagerdutyConfigs,omitempty"`
 	// List of Slack configurations.
 	SlackConfigs []SlackConfig `json:"slackConfigs,omitempty"`
 	// List of webhook configurations.
 	WebhookConfigs []WebhookConfig `json:"webhookConfigs,omitempty"`
 	// List of WeChat configurations.
-	WeChatConfigs []WeChatConfig `json:"weChatConfigs,omitempty"`
+	WeChatConfigs []WeChatConfig `json:"wechatConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
