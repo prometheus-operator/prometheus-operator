@@ -147,7 +147,7 @@ type weChatConfig struct {
 	ToParty       string            `yaml:"to_party,omitempty" json:"to_party,omitempty"`
 	ToTag         string            `yaml:"to_tag,omitempty" json:"to_tag,omitempty"`
 	Message       string            `yaml:"message,omitempty" json:"message,omitempty"`
-	MessageType   string            `yaml:"message_type,omitempty" json:"message,omitempty"`
+	MessageType   string            `yaml:"message_type,omitempty" json:"message_type,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 }
 
