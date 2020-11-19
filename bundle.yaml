@@ -37,7 +37,8 @@ spec:
           spec:
             description: AlertmanagerConfigSpec is a specification of the desired
               behavior of the Alertmanager configuration. By definition, the Alertmanager
-              configuration only applies to alerts that
+              configuration only applies to alerts for which the `namespace` label
+              is equal to the namespace of the AlertmanagerConfig resource.
             properties:
               inhibitRules:
                 description: List of inhibition rules. The rules will only apply to
@@ -114,9 +115,9 @@ spec:
                           See https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config
                         properties:
                           apiKey:
-                            description: The secret's key contains the OpsGenie API
-                              key. The secret needs to be in the same namespace as
-                              the AlertmanagerConfig object and accessible by the
+                            description: The secret's key that contains the OpsGenie
+                              API key. The secret needs to be in the same namespace
+                              as the AlertmanagerConfig object and accessible by the
                               Prometheus Operator.
                             properties:
                               key:
@@ -652,7 +653,7 @@ spec:
                           routingKey:
                             description: The secret's key that contains the PagerDuty
                               integration key (when using Events API v2). Either this
-                              field or serviceKey needs to be defined. The secret
+                              field or `serviceKey` needs to be defined. The secret
                               needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
                             properties:
@@ -676,9 +677,9 @@ spec:
                             description: Whether or not to notify about resolved alerts.
                             type: boolean
                           serviceKey:
-                            description: The secret's keu that contains the PagerDuty
+                            description: The secret's key that contains the PagerDuty
                               service key (when using integration type "Prometheus").
-                              Either this field or routingKey needs to be defined.
+                              Either this field or `routingKey` needs to be defined.
                               The secret needs to be in the same namespace as the
                               AlertmanagerConfig object and accessible by the Prometheus
                               Operator.
@@ -718,7 +719,7 @@ spec:
                               each notification.
                             items:
                               description: SlackAction configures a single Slack action
-                                that is sent with each notification.  See https://api.slack.com/docs/message-attachments#action_fields
+                                that is sent with each notification. See https://api.slack.com/docs/message-attachments#action_fields
                                 and https://api.slack.com/docs/message-buttons for
                                 more information.
                               properties:
@@ -1522,16 +1523,17 @@ spec:
                             description: Whether or not to notify about resolved alerts.
                             type: boolean
                           url:
-                            description: The URL to send HTTP POST requests to. "urlSecret"
-                              takes precedence over "url". One of "urlSecret" and
-                              "url" should be defined.
+                            description: The URL to send HTTP POST requests to. `urlSecret`
+                              takes precedence over `url`. One of `urlSecret` and
+                              `url` should be defined.
                             type: string
                           urlSecret:
                             description: The secret's key that contains the webhook
-                              URL to send HTTP requests to. One of "urlSecret" and
-                              "url" should be defined. The secret needs to be in the
-                              same namespace as the AlertmanagerConfig object and
-                              accessible by the Prometheus Operator.
+                              URL to send HTTP requests to. `urlSecret` takes precedence
+                              over `url`. One of `urlSecret` and `url` should be defined.
+                              The secret needs to be in the same namespace as the
+                              AlertmanagerConfig object and accessible by the Prometheus
+                              Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -1572,19 +1574,19 @@ spec:
                     type: array
                   groupInterval:
                     description: How long to wait before sending an updated notification.
-                      Must match the regular expression [0-9]+(ms|s|m|h) (milliseconds
+                      Must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds
                       seconds minutes hours).
                     type: string
                   groupWait:
                     description: How long to wait before sending the initial notification.
-                      Must match the regular expression [0-9]+(ms|s|m|h) (milliseconds
+                      Must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds
                       seconds minutes hours).
                     type: string
                   matchers:
                     description: 'List of matchers that the alert’s labels should
                       match. For the first level route, the operator removes any existing
-                      equality and regexp matcher on the "namespace" label and adds
-                      a "namespace: <object namespace>" matcher.'
+                      equality and regexp matcher on the `namespace` label and adds
+                      a `namespace: <object namespace>` matcher.'
                     items:
                       description: Matcher defines how to match on alert's labels.
                       properties:
@@ -1605,12 +1607,12 @@ spec:
                     type: array
                   receiver:
                     description: Name of the receiver for this route. If present,
-                      it should be listed in the “receivers” field. The field can
+                      it should be listed in the `receivers` field. The field can
                       be omitted only for nested routes otherwise it is mandatory.
                     type: string
                   repeatInterval:
                     description: How long to wait before repeating the last notification.
-                      Must match the regular expression [0-9]+(ms|s|m|h) (milliseconds
+                      Must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds
                       seconds minutes hours).
                     type: string
                   routes:

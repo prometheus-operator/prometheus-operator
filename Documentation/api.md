@@ -982,7 +982,7 @@ AlertmanagerConfigList is a list of AlertmanagerConfig.
 
 ## AlertmanagerConfigSpec
 
-AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration. By definition, the Alertmanager configuration only applies to alerts that
+AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration. By definition, the Alertmanager configuration only applies to alerts for which the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -994,7 +994,7 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 
 ## HTTPConfig
 
-HTTPConfig defines a client HTTP configuration.
+HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/alerting/latest/configuration/#http_config
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1047,7 +1047,7 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| apiKey | The secret's key contains the OpsGenie API key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| apiKey | The secret's key that contains the OpsGenie API key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | apiURL | The URL to send OpsGenie API requests to. | *string | false |
 | message | Alert text limited to 130 characters. | *string | false |
 | description | Description of the incident. | *string | false |
@@ -1081,8 +1081,8 @@ PagerDutyConfig configures notifications via PagerDuty. See https://prometheus.i
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| routingKey | The secret's key that contains the PagerDuty integration key (when using Events API v2). Either this field or serviceKey needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| serviceKey | The secret's keu that contains the PagerDuty service key (when using integration type \"Prometheus\"). Either this field or routingKey needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| routingKey | The secret's key that contains the PagerDuty integration key (when using Events API v2). Either this field or `serviceKey` needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| serviceKey | The secret's key that contains the PagerDuty service key (when using integration type \"Prometheus\"). Either this field or `routingKey` needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | url | The URL to send requests to. | *string | false |
 | client | Client identification. | *string | false |
 | clientURL | Backlink to the sender of notification. | *string | false |
@@ -1117,12 +1117,12 @@ Route defines a node in the routing tree.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| receiver | Name of the receiver for this route. If present, it should be listed in the “receivers” field. The field can be omitted only for nested routes otherwise it is mandatory. | string | false |
+| receiver | Name of the receiver for this route. If present, it should be listed in the `receivers` field. The field can be omitted only for nested routes otherwise it is mandatory. | string | false |
 | groupBy | List of labels to group by. | []string | false |
-| groupWait | How long to wait before sending the initial notification. Must match the regular expression [0-9]+(ms\|s\|m\|h) (milliseconds seconds minutes hours). | string | false |
-| groupInterval | How long to wait before sending an updated notification. Must match the regular expression [0-9]+(ms\|s\|m\|h) (milliseconds seconds minutes hours). | string | false |
-| repeatInterval | How long to wait before repeating the last notification. Must match the regular expression [0-9]+(ms\|s\|m\|h) (milliseconds seconds minutes hours). | string | false |
-| matchers | List of matchers that the alert’s labels should match. For the first level route, the operator removes any existing equality and regexp matcher on the \"namespace\" label and adds a \"namespace: <object namespace>\" matcher. | [][Matcher](#matcher) | false |
+| groupWait | How long to wait before sending the initial notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |
+| groupInterval | How long to wait before sending an updated notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |
+| repeatInterval | How long to wait before repeating the last notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |
+| matchers | List of matchers that the alert’s labels should match. For the first level route, the operator removes any existing equality and regexp matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher. | [][Matcher](#matcher) | false |
 | continue | Boolean indicating whether an alert should continue matching subsequent sibling nodes. It will always be overridden to true for the first-level route by the Prometheus operator. | bool | false |
 | routes |  | [][Route](#route) | false |
 
@@ -1130,7 +1130,7 @@ Route defines a node in the routing tree.
 
 ## SlackAction
 
-SlackAction configures a single Slack action that is sent with each notification.  See https://api.slack.com/docs/message-attachments#action_fields and https://api.slack.com/docs/message-buttons for more information.
+SlackAction configures a single Slack action that is sent with each notification. See https://api.slack.com/docs/message-attachments#action_fields and https://api.slack.com/docs/message-buttons for more information.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1227,8 +1227,8 @@ WebhookConfig configures notifications via a generic receiver supporting the web
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| url | The URL to send HTTP POST requests to. \"urlSecret\" takes precedence over \"url\". One of \"urlSecret\" and \"url\" should be defined. | *string | false |
-| urlSecret | The secret's key that contains the webhook URL to send HTTP requests to. One of \"urlSecret\" and \"url\" should be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| url | The URL to send HTTP POST requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. | *string | false |
+| urlSecret | The secret's key that contains the webhook URL to send HTTP requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 | maxAlerts | Maximum number of alerts to be sent per webhook message. | *int32 | false |
 

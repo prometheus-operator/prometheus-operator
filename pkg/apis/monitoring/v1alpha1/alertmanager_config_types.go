@@ -60,7 +60,8 @@ type AlertmanagerConfigList struct {
 }
 
 // AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
-// By definition, the Alertmanager configuration only applies to alerts that
+// By definition, the Alertmanager configuration only applies to alerts for which
+// the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
 type AlertmanagerConfigSpec struct {
 	// The Alertmanager route definition for alerts matching the resource’s
 	// namespace. It will be added to the generated Alertmanager configuration
@@ -76,27 +77,27 @@ type AlertmanagerConfigSpec struct {
 // Route defines a node in the routing tree.
 type Route struct {
 	// Name of the receiver for this route. If present, it should be listed in
-	// the “receivers” field. The field can be omitted only for nested routes
+	// the `receivers` field. The field can be omitted only for nested routes
 	// otherwise it is mandatory.
 	Receiver string `json:"receiver,omitempty"`
 	// List of labels to group by.
 	GroupBy []string `json:"groupBy,omitempty"`
 	// How long to wait before sending the initial notification. Must match the
-	// regular expression [0-9]+(ms|s|m|h) (milliseconds seconds minutes
+	// regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes
 	// hours).
 	GroupWait string `json:"groupWait,omitempty"`
 	// How long to wait before sending an updated notification. Must match the
-	// regular expression [0-9]+(ms|s|m|h) (milliseconds seconds minutes
+	// regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes
 	// hours).
 	GroupInterval string `json:"groupInterval,omitempty"`
 	// How long to wait before repeating the last notification. Must match the
-	// regular expression [0-9]+(ms|s|m|h) (milliseconds seconds minutes
+	// regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes
 	// hours).
 	RepeatInterval string `json:"repeatInterval,omitempty"`
 	// List of matchers that the alert’s labels should match. For the first
 	// level route, the operator removes any existing equality and regexp
-	// matcher on the "namespace" label and adds a "namespace: <object
-	// namespace>" matcher.
+	// matcher on the `namespace` label and adds a `namespace: <object
+	// namespace>` matcher.
 	Matchers []Matcher `json:"matchers,omitempty"`
 	// Boolean indicating whether an alert should continue matching subsequent
 	// sibling nodes. It will always be overridden to true for the first-level
@@ -127,12 +128,12 @@ type PagerDutyConfig struct {
 	// Whether or not to notify about resolved alerts.
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// The secret's key that contains the PagerDuty integration key (when using
-	// Events API v2). Either this field or serviceKey needs to be defined.
+	// Events API v2). Either this field or `serviceKey` needs to be defined.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	RoutingKey *v1.SecretKeySelector `json:"routingKey,omitempty"`
-	// The secret's keu that contains the PagerDuty service key (when using
-	// integration type "Prometheus"). Either this field or routingKey needs to
+	// The secret's key that contains the PagerDuty service key (when using
+	// integration type "Prometheus"). Either this field or `routingKey` needs to
 	// be defined.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
@@ -157,14 +158,6 @@ type PagerDutyConfig struct {
 	Details []KeyValue `json:"details,omitempty"`
 	// HTTP client configuration.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
-}
-
-// KeyValue defines a (key, value) tuple.
-type KeyValue struct {
-	// Key of the tuple.
-	Key string `json:"key"`
-	// Value of the tuple.
-	Value string `json:"value"`
 }
 
 // SlackConfig configures notifications via Slack.
@@ -218,8 +211,8 @@ func (sc *SlackConfig) Validate() error {
 }
 
 // SlackAction configures a single Slack action that is sent with each
-// notification.  See
-// https://api.slack.com/docs/message-attachments#action_fields and
+// notification.
+// See https://api.slack.com/docs/message-attachments#action_fields and
 // https://api.slack.com/docs/message-buttons for more information.
 type SlackAction struct {
 	Type         string                  `json:"type"`
@@ -252,8 +245,8 @@ func (sa *SlackAction) Validate() error {
 
 // SlackConfirmationField protect users from destructive actions or
 // particularly distinguished decisions by asking them to confirm their button
-// click one more time. See
-// https://api.slack.com/docs/interactive-message-field-guide#confirmation_fields
+// click one more time.
+// See https://api.slack.com/docs/interactive-message-field-guide#confirmation_fields
 // for more information.
 type SlackConfirmationField struct {
 	Text        string  `json:"text"`
@@ -296,17 +289,18 @@ func (sf *SlackField) Validate() error {
 type WebhookConfig struct {
 	// Whether or not to notify about resolved alerts.
 	SendResolved *bool `json:"sendResolved,omitempty"`
-	// The URL to send HTTP POST requests to. "urlSecret" takes precedence over
-	// "url". One of "urlSecret" and "url" should be defined.
+	// The URL to send HTTP POST requests to. `urlSecret` takes precedence over
+	// `url`. One of `urlSecret` and `url` should be defined.
 	URL *string `json:"url,omitempty"`
 	// The secret's key that contains the webhook URL to send HTTP requests to.
-	// One of "urlSecret" and "url" should be defined.
+	// `urlSecret` takes precedence over `url`. One of `urlSecret` and `url`
+	// should be defined.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	URLSecret *v1.SecretKeySelector `json:"urlSecret,omitempty"`
 	// HTTP client configuration.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
-	//Maximum number of alerts to be sent per webhook message.
+	// Maximum number of alerts to be sent per webhook message.
 	MaxAlerts *int32 `json:"maxAlerts,omitempty"`
 }
 
@@ -315,7 +309,7 @@ type WebhookConfig struct {
 type OpsGenieConfig struct {
 	// Whether or not to notify about resolved alerts.
 	SendResolved *bool `json:"sendResolved,omitempty"`
-	// The secret's key contains the OpsGenie API key.
+	// The secret's key that contains the OpsGenie API key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
@@ -378,6 +372,7 @@ func (r *OpsGenieConfigResponder) Validate() error {
 }
 
 // HTTPConfig defines a client HTTP configuration.
+// See https://prometheus.io/docs/alerting/latest/configuration/#http_config
 type HTTPConfig struct {
 	// BasicAuth for the client.
 	BasicAuth *monitoringv1.BasicAuth `json:"basicAuth,omitempty"`
@@ -430,6 +425,14 @@ type InhibitRule struct {
 	// Labels that must have an equal value in the source and target alert for
 	// the inhibition to take effect.
 	Equal []string `json:"equal,omitempty"`
+}
+
+// KeyValue defines a (key, value) tuple.
+type KeyValue struct {
+	// Key of the tuple.
+	Key string `json:"key"`
+	// Value of the tuple.
+	Value string `json:"value"`
 }
 
 // Matcher defines how to match on alert's labels.
