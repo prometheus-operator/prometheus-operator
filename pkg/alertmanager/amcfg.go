@@ -17,8 +17,10 @@ package alertmanager
 import (
 	"context"
 	"fmt"
+	"net"
 	"path"
 	"sort"
+	"strings"
 
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
@@ -232,6 +234,18 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	var emailConfigs []*emailConfig
+	if l := len(in.EmailConfigs); l > 0 {
+		emailConfigs = make([]*emailConfig, l)
+		for i := range in.EmailConfigs {
+			receiver, err := cg.convertEmailConfig(ctx, in.EmailConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "EmailConfig[%d]", i)
+			}
+			emailConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             prefixReceiverName(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -239,6 +253,7 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		SlackConfigs:     slackConfigs,
 		WebhookConfigs:   webhookConfigs,
 		WeChatConfigs:    weChatConfigs,
+		EmailConfigs:     emailConfigs,
 	}, nil
 }
 
@@ -627,6 +642,92 @@ func (cg *configGenerator) convertWeChatConfig(ctx context.Context, in monitorin
 			return nil, err
 		}
 		out.HTTPConfig = httpConfig
+	}
+
+	return out, nil
+}
+
+func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
+	out := &emailConfig{}
+
+	if in.SendResolved != nil {
+		out.VSendResolved = *in.SendResolved
+	}
+
+	if in.To == nil || *in.To == "" {
+		return nil, errors.New("missing to address in email config")
+	}
+	out.To = *in.To
+
+	if in.From != nil {
+		out.From = *in.From
+	}
+
+	if in.Hello != nil {
+		out.Hello = *in.Hello
+	}
+
+	if in.Smarthost != nil {
+		host, port, err := net.SplitHostPort(*in.Smarthost)
+		if err != nil {
+			return nil, errors.New("failed to extract host and port from Smarthost")
+		}
+		out.Smarthost.Host = host
+		out.Smarthost.Port = port
+	}
+
+	if in.AuthUsername != nil {
+		out.AuthUsername = *in.AuthUsername
+	}
+
+	if in.AuthPassword != nil {
+		authPassword, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.AuthPassword)
+		if err != nil {
+			return nil, errors.Errorf("failed to get secret %q", in.AuthPassword)
+		}
+		out.AuthPassword = authPassword
+	}
+	if in.AuthSecret != nil {
+		authSecret, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.AuthSecret)
+		if err != nil {
+			return nil, errors.Errorf("failed to get secret %q", in.AuthSecret)
+		}
+		out.AuthSecret = authSecret
+	}
+
+	if in.AuthIdentity != nil {
+		out.AuthIdentity = *in.AuthIdentity
+	}
+
+	var headers map[string]string
+	if l := len(in.Headers); l > 0 {
+		headers = make(map[string]string, l)
+
+		var key string
+		for _, d := range in.Headers {
+			key = strings.Title(key)
+			if _, ok := headers[key]; ok {
+				return nil, errors.Errorf("duplicate header %q in email config", key)
+			}
+			headers[key] = d.Value
+		}
+	}
+	out.Headers = headers
+
+	if in.HTML != nil {
+		out.HTML = *in.HTML
+	}
+
+	if in.Text != nil {
+		out.Text = *in.Text
+	}
+
+	if in.RequireTLS != nil {
+		out.RequireTLS = in.RequireTLS
+	}
+
+	if in.TLSConfig != nil {
+		out.TLSConfig = cg.convertTLSConfig(ctx, in.TLSConfig, crKey)
 	}
 
 	return out, nil

@@ -842,6 +842,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					}("testingCorpID"),
 				}},
 				EmailConfigs: []monitoringv1alpha1.EmailConfig{{
+					To: func(str string) *string {
+						return &str
+					}("test@example.com"),
 					AuthPassword: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,
@@ -952,10 +955,11 @@ receivers:
   - send_resolved: false
     api_secret: 1234abc
     corp_id: testingCorpID
-	email_configs:
-	- send_resolved: false
-		auth_password: 1234abc
-		auth_secret: 1234abc
+  email_configs:
+  - send_resolved: false
+    to: test@example.com
+    auth_password: 1234abc
+    auth_secret: 1234abc
 templates: []
 `, ns, ns, ns)
 

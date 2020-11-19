@@ -120,6 +120,8 @@ type Receiver struct {
 	WebhookConfigs []WebhookConfig `json:"webhookConfigs,omitempty"`
 	// List of WeChat configurations.
 	WeChatConfigs []WeChatConfig `json:"wechatConfigs,omitempty"`
+	// List of Email configurations.
+	EmailConfigs []EmailConfig `json:"emailConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -409,6 +411,37 @@ type WeChatConfig struct {
 	MessageType *string `json:"messageType,omitempty"`
 	// HTTP client configuration.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// EmailConfig configures notifications via Email.
+type EmailConfig struct {
+	// Whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// The email address to send notifications to.
+	To *string `json:"to,omitempty"`
+	// The sender address.
+	From *string `json:"from,omitempty"`
+	// The hostname to identify to the SMTP server.
+	Hello *string `json:"hello,omitempty"`
+	// The SMTP host through which emails are sent.
+	Smarthost *string `json:"smarthost,omitempty"`
+	// SMTP authentication information.
+	AuthUsername *string               `json:"authUsername,omitempty"`
+	AuthPassword *v1.SecretKeySelector `json:"authPassword,omitempty"`
+	AuthSecret   *v1.SecretKeySelector `json:"authSecret,omitempty"`
+	AuthIdentity *string               `json:"authIdentity,omitempty"`
+	// Further headers email header key/value pairs. Overrides any headers
+	// previously set by the notification implementation.
+	Headers []KeyValue `json:"headers,omitempty"`
+	// The HTML body of the email notification.
+	HTML *string `json:"html,omitempty"`
+	// The text body of the email notification.
+	Text *string `json:"text,omitempty"`
+	// The SMTP TLS requirement.
+	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
+	RequireTLS *bool `json:"requireTLS,omitempty"`
+	// TLS configuration
+	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other
