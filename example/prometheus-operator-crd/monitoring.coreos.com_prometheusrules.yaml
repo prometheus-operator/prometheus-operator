@@ -19,7 +19,8 @@ spec:
   - name: v1
     schema:
       openAPIV3Schema:
-        description: PrometheusRule defines alerting rules for a Prometheus instance
+        description: PrometheusRule defines recording and alerting rules for a Prometheus
+          instance
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation

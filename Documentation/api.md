@@ -477,7 +477,7 @@ PrometheusList is a list of Prometheuses.
 
 ## PrometheusRule
 
-PrometheusRule defines alerting rules for a Prometheus instance
+PrometheusRule defines recording and alerting rules for a Prometheus instance
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
