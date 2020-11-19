@@ -1231,18 +1231,24 @@ func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.Push
 	return nil
 }
 
-func checkAlertmanagerRoutes(route *monitoringv1alpha1.Route, receivers map[string]struct{}) error {
-	if route == nil {
+// checkAlertmanagerRoutes verifies that the given route and all its children are semantically valid.
+func checkAlertmanagerRoutes(r *monitoringv1alpha1.Route, receivers map[string]struct{}) error {
+	if r == nil {
 		return nil
 	}
 
-	if _, found := receivers[route.Receiver]; !found {
-		return errors.Errorf("receiver %q not found", route.Receiver)
+	if _, found := receivers[r.Receiver]; !found {
+		return errors.Errorf("receiver %q not found", r.Receiver)
 	}
 
-	for _, r := range route.Routes {
-		if err := checkAlertmanagerRoutes(&r, receivers); err != nil {
-			return err
+	children, err := r.ChildRoutes()
+	if err != nil {
+		return err
+	}
+
+	for i := range children {
+		if err := checkAlertmanagerRoutes(&children[i], receivers); err != nil {
+			return errors.Wrapf(err, "route[%d]", i)
 		}
 	}
 

@@ -2393,8 +2393,9 @@ spec:
                       seconds minutes hours).
                     type: string
                   routes:
+                    description: Child routes.
                     items:
-                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
                     type: array
                 type: object
             type: object
