@@ -92,9 +92,7 @@ func (cg *configGenerator) generateConfig(
 		}
 
 		// add routes to subRoutes
-		if amConfigs[amConfigIdentifier].Spec.Route != nil {
-			subRoutes = append(subRoutes, convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
-		}
+		subRoutes = append(subRoutes, convertRoute(&amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
 
 		// add receivers to baseConfig.Receivers
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
@@ -313,8 +311,8 @@ func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitori
 		out.HTTPConfig = httpConfig
 	}
 
-	if in.MaxAlerts != nil {
-		out.MaxAlerts = *in.MaxAlerts
+	if in.MaxAlerts > 0 {
+		out.MaxAlerts = in.MaxAlerts
 	}
 
 	return out, nil
@@ -323,6 +321,23 @@ func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitori
 func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoringv1alpha1.SlackConfig, crKey types.NamespacedName) (*slackConfig, error) {
 	out := &slackConfig{
 		VSendResolved: in.SendResolved,
+		Channel:       in.Channel,
+		Username:      in.Username,
+		Color:         in.Color,
+		Title:         in.Title,
+		TitleLink:     in.TitleLink,
+		Pretext:       in.Pretext,
+		Text:          in.Text,
+		ShortFields:   in.ShortFields,
+		Footer:        in.Footer,
+		Fallback:      in.Fallback,
+		CallbackID:    in.CallbackID,
+		IconEmoji:     in.IconEmoji,
+		IconURL:       in.IconURL,
+		ImageURL:      in.ImageURL,
+		ThumbURL:      in.ThumbURL,
+		LinkNames:     in.LinkNames,
+		MrkdwnIn:      in.MrkdwnIn,
 	}
 
 	if in.APIURL != nil {
@@ -332,72 +347,6 @@ func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoring
 		}
 		out.APIURL = url
 	}
-
-	if in.Channel != nil {
-		out.Channel = *in.Channel
-	}
-
-	if in.Username != nil {
-		out.Username = *in.Username
-	}
-
-	if in.Color != nil {
-		out.Color = *in.Color
-	}
-
-	if in.Title != nil {
-		out.Title = *in.Title
-	}
-
-	if in.TitleLink != nil {
-		out.TitleLink = *in.TitleLink
-	}
-
-	if in.Pretext != nil {
-		out.Pretext = *in.Pretext
-	}
-
-	if in.Text != nil {
-		out.Text = *in.Text
-	}
-
-	if in.ShortFields != nil {
-		out.ShortFields = *in.ShortFields
-	}
-
-	if in.Footer != nil {
-		out.Footer = *in.Footer
-	}
-
-	if in.Fallback != nil {
-		out.Fallback = *in.Fallback
-	}
-
-	if in.CallbackID != nil {
-		out.CallbackID = *in.CallbackID
-	}
-
-	if in.IconEmoji != nil {
-		out.IconEmoji = *in.IconEmoji
-	}
-
-	if in.IconURL != nil {
-		out.IconURL = *in.IconURL
-	}
-
-	if in.ImageURL != nil {
-		out.ImageURL = *in.ImageURL
-	}
-
-	if in.ThumbURL != nil {
-		out.ThumbURL = *in.ThumbURL
-	}
-
-	if in.LinkNames != nil {
-		out.LinkNames = *in.LinkNames
-	}
-
-	out.MrkdwnIn = in.MrkdwnIn
 
 	var actions []slackAction
 	if l := len(in.Actions); l > 0 {
@@ -413,23 +362,13 @@ func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoring
 			}
 
 			if a.ConfirmField != nil {
-				var confirmField slackConfirmationField = slackConfirmationField{
-					Text: a.ConfirmField.Text,
-				}
 
-				if a.ConfirmField.Title != nil {
-					confirmField.Title = *a.ConfirmField.Title
+				action.ConfirmField = &slackConfirmationField{
+					Text:        a.ConfirmField.Text,
+					Title:       a.ConfirmField.Title,
+					OkText:      a.ConfirmField.OkText,
+					DismissText: a.ConfirmField.DismissText,
 				}
-
-				if a.ConfirmField.OkText != nil {
-					confirmField.OkText = *a.ConfirmField.OkText
-				}
-
-				if a.ConfirmField.DismissText != nil {
-					confirmField.DismissText = *a.ConfirmField.DismissText
-				}
-
-				action.ConfirmField = &confirmField
 			}
 
 			actions[i] = action
@@ -467,6 +406,14 @@ func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoring
 func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {
 	out := &pagerdutyConfig{
 		VSendResolved: in.SendResolved,
+		Class:         in.Class,
+		Client:        in.Client,
+		ClientURL:     in.ClientURL,
+		Component:     in.Component,
+		Description:   in.Description,
+		Group:         in.Group,
+		Severity:      in.Severity,
+		URL:           in.URL,
 	}
 
 	if in.RoutingKey != nil {
@@ -483,38 +430,6 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 			return nil, errors.Errorf("failed to get service key %q from secret %q", in.ServiceKey.Key, in.ServiceKey.Name)
 		}
 		out.ServiceKey = serviceKey
-	}
-
-	if in.URL != nil {
-		out.URL = *in.URL
-	}
-
-	if in.Client != nil {
-		out.Client = *in.Client
-	}
-
-	if in.ClientURL != nil {
-		out.ClientURL = *in.ClientURL
-	}
-
-	if in.Description != nil {
-		out.Description = *in.Description
-	}
-
-	if in.Severity != nil {
-		out.Severity = *in.Severity
-	}
-
-	if in.Class != nil {
-		out.Class = *in.Class
-	}
-
-	if in.Group != nil {
-		out.Group = *in.Group
-	}
-
-	if in.Component != nil {
-		out.Component = *in.Component
 	}
 
 	var details map[string]string
@@ -540,6 +455,13 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsGenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
 	out := &opsgenieConfig{
 		VSendResolved: in.SendResolved,
+		APIURL:        in.APIURL,
+		Message:       in.Message,
+		Description:   in.Description,
+		Source:        in.Source,
+		Tags:          in.Tags,
+		Note:          in.Note,
+		Priority:      in.Priority,
 	}
 
 	if in.APIKey != nil {
@@ -548,34 +470,6 @@ func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitor
 			return nil, errors.Errorf("failed to get api key %q from secret %q", in.APIKey.Key, in.APIKey.Name)
 		}
 		out.APIKey = apiKey
-	}
-
-	if in.APIURL != nil {
-		out.APIURL = *in.APIURL
-	}
-
-	if in.Message != nil {
-		out.Message = *in.Message
-	}
-
-	if in.Description != nil {
-		out.Description = *in.Description
-	}
-
-	if in.Source != nil {
-		out.Source = *in.Source
-	}
-
-	if in.Tags != nil {
-		out.Tags = *in.Tags
-	}
-
-	if in.Note != nil {
-		out.Note = *in.Note
-	}
-
-	if in.Priority != nil {
-		out.Priority = *in.Priority
 	}
 
 	var details map[string]string
@@ -617,6 +511,14 @@ func (cg *configGenerator) convertWeChatConfig(ctx context.Context, in monitorin
 
 	out := &weChatConfig{
 		VSendResolved: in.SendResolved,
+		APIURL:        in.APIURL,
+		CorpID:        in.CorpID,
+		AgentID:       in.AgentID,
+		ToUser:        in.ToUser,
+		ToParty:       in.ToParty,
+		ToTag:         in.ToTag,
+		Message:       in.Message,
+		MessageType:   in.MessageType,
 	}
 
 	if in.APISecret != nil {
@@ -625,38 +527,6 @@ func (cg *configGenerator) convertWeChatConfig(ctx context.Context, in monitorin
 			return nil, errors.Errorf("failed to get secret %q", in.APISecret)
 		}
 		out.APISecret = apiSecret
-	}
-
-	if in.APIURL != nil {
-		out.APIURL = *in.APIURL
-	}
-
-	if in.CorpID != nil {
-		out.CorpID = *in.CorpID
-	}
-
-	if in.AgentID != nil {
-		out.AgentID = *in.AgentID
-	}
-
-	if in.ToUser != nil {
-		out.ToUser = *in.ToUser
-	}
-
-	if in.ToParty != nil {
-		out.ToParty = *in.ToParty
-	}
-
-	if in.ToTag != nil {
-		out.ToTag = *in.ToTag
-	}
-
-	if in.Message != nil {
-		out.Message = *in.Message
-	}
-
-	if in.MessageType != nil {
-		out.MessageType = *in.MessageType
 	}
 
 	if in.HTTPConfig != nil {
@@ -673,32 +543,27 @@ func (cg *configGenerator) convertWeChatConfig(ctx context.Context, in monitorin
 func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
 	out := &emailConfig{
 		VSendResolved: in.SendResolved,
+		To:            in.To,
+		From:          in.From,
+		Hello:         in.Hello,
+		AuthUsername:  in.AuthUsername,
+		AuthIdentity:  in.AuthIdentity,
+		HTML:          in.HTML,
+		Text:          in.Text,
+		RequireTLS:    in.RequireTLS,
 	}
 
-	if in.To == nil || *in.To == "" {
+	if in.To == "" {
 		return nil, errors.New("missing to address in email config")
 	}
-	out.To = *in.To
 
-	if in.From != nil {
-		out.From = *in.From
-	}
-
-	if in.Hello != nil {
-		out.Hello = *in.Hello
-	}
-
-	if in.Smarthost != nil {
-		host, port, err := net.SplitHostPort(*in.Smarthost)
+	if in.Smarthost != "" {
+		host, port, err := net.SplitHostPort(in.Smarthost)
 		if err != nil {
 			return nil, errors.New("failed to extract host and port from Smarthost")
 		}
 		out.Smarthost.Host = host
 		out.Smarthost.Port = port
-	}
-
-	if in.AuthUsername != nil {
-		out.AuthUsername = *in.AuthUsername
 	}
 
 	if in.AuthPassword != nil {
@@ -708,16 +573,13 @@ func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoring
 		}
 		out.AuthPassword = authPassword
 	}
+
 	if in.AuthSecret != nil {
 		authSecret, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.AuthSecret)
 		if err != nil {
 			return nil, errors.Errorf("failed to get secret %q", in.AuthSecret)
 		}
 		out.AuthSecret = authSecret
-	}
-
-	if in.AuthIdentity != nil {
-		out.AuthIdentity = *in.AuthIdentity
 	}
 
 	var headers map[string]string
@@ -735,18 +597,6 @@ func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoring
 	}
 	out.Headers = headers
 
-	if in.HTML != nil {
-		out.HTML = *in.HTML
-	}
-
-	if in.Text != nil {
-		out.Text = *in.Text
-	}
-
-	if in.RequireTLS != nil {
-		out.RequireTLS = in.RequireTLS
-	}
-
 	if in.TLSConfig != nil {
 		out.TLSConfig = cg.convertTLSConfig(ctx, in.TLSConfig, crKey)
 	}
@@ -756,7 +606,13 @@ func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoring
 
 func (cg *configGenerator) convertVictorOpsConfig(ctx context.Context, in monitoringv1alpha1.VictorOpsConfig, crKey types.NamespacedName) (*victorOpsConfig, error) {
 	out := &victorOpsConfig{
-		VSendResolved: in.SendResolved,
+		VSendResolved:     in.SendResolved,
+		APIURL:            in.APIURL,
+		RoutingKey:        in.RoutingKey,
+		MessageType:       in.MessageType,
+		EntityDisplayName: in.EntityDisplayName,
+		StateMessage:      in.StateMessage,
+		MonitoringTool:    in.MonitoringTool,
 	}
 
 	if in.APIKey != nil {
@@ -766,26 +622,8 @@ func (cg *configGenerator) convertVictorOpsConfig(ctx context.Context, in monito
 		}
 		out.APIKey = apiKey
 	}
-	if in.APIURL != nil {
-		out.APIURL = *in.APIURL
-	}
-
-	if in.RoutingKey == nil || *in.RoutingKey == "" {
+	if in.RoutingKey == "" {
 		return nil, errors.New("missing Routing key in VictorOps config")
-	}
-	out.RoutingKey = *in.RoutingKey
-
-	if in.MessageType != nil {
-		out.MessageType = *in.MessageType
-	}
-	if in.EntityDisplayName != nil {
-		out.EntityDisplayName = *in.EntityDisplayName
-	}
-	if in.StateMessage != nil {
-		out.StateMessage = *in.StateMessage
-	}
-	if in.MonitoringTool != nil {
-		out.MonitoringTool = *in.MonitoringTool
 	}
 
 	var customFields map[string]string
@@ -823,6 +661,12 @@ func (cg *configGenerator) convertVictorOpsConfig(ctx context.Context, in monito
 func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitoringv1alpha1.PushoverConfig, crKey types.NamespacedName) (*pushoverConfig, error) {
 	out := &pushoverConfig{
 		VSendResolved: in.SendResolved,
+		Title:         in.Title,
+		Message:       in.Message,
+		URL:           in.URL,
+		URLTitle:      in.URLTitle,
+		Priority:      in.Priority,
+		HTML:          in.HTML,
 	}
 
 	{
@@ -853,41 +697,22 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 		out.Token = token
 	}
 
-	if in.Title != nil {
-		out.Title = *in.Title
-	}
-	if in.Message != nil {
-		out.Message = *in.Message
-	}
-	if in.URL != nil {
-		out.URL = *in.URL
-	}
-	if in.URLTitle != nil {
-		out.URLTitle = *in.URLTitle
-	}
-	if in.Sound != nil {
-		out.Sound = *in.Sound
-	}
-	if in.Priority != nil {
-		out.Priority = *in.Priority
-	}
-	if in.Retry != nil {
-		retry, err := time.ParseDuration(*in.Retry)
+	if in.Retry != "" {
+		retry, err := time.ParseDuration(in.Retry)
 		if err != nil {
 			return nil, errors.Errorf("failed to parse Retry duration: %s", err)
 		}
 		out.Retry = duration(retry)
 	}
-	if in.Expire != nil {
-		expire, err := time.ParseDuration(*in.Expire)
+
+	if in.Expire != "" {
+		expire, err := time.ParseDuration(in.Expire)
 		if err != nil {
 			return nil, errors.Errorf("failed to parse Expire duration: %s", err)
 		}
 		out.Expire = duration(expire)
 	}
-	if in.HTML != nil {
-		out.HTML = *in.HTML
-	}
+
 	if in.HTTPConfig != nil {
 		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
 		if err != nil {
@@ -895,6 +720,7 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 		}
 		out.HTTPConfig = httpConfig
 	}
+
 	return out, nil
 }
 
@@ -957,10 +783,8 @@ func prefixReceiverName(receiverName string, crKey types.NamespacedName) string 
 }
 
 func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
-	out := &httpClientConfig{}
-
-	if in.ProxyURL != nil {
-		out.ProxyURL = *in.ProxyURL
+	out := &httpClientConfig{
+		ProxyURL: in.ProxyURL,
 	}
 
 	if in.BasicAuth != nil {

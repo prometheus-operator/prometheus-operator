@@ -922,7 +922,7 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 		return err
 	}
 
-	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames)
+	return checkAlertmanagerRoutes(&amc.Spec.Route, receiverNames)
 }
 
 func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
@@ -1074,10 +1074,10 @@ func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChat
 	for i, config := range configs {
 		wechatConfigKey := fmt.Sprintf("%s/wechat/%d", key, i)
 
-		if config.APIURL != nil {
-			_, err := url.Parse(*config.APIURL)
+		if len(config.APIURL) > 0 {
+			_, err := url.Parse(config.APIURL)
 			if err != nil {
-				return errors.New("api url not valid")
+				return errors.New("API URL not valid")
 			}
 		}
 
@@ -1098,12 +1098,12 @@ func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChat
 func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailConfig, namespace string, key string, store *assets.Store) error {
 	for _, config := range configs {
 
-		if config.To == nil || *config.To == "" {
+		if config.To == "" {
 			return errors.New("missing to address in email config")
 		}
 
-		if config.Smarthost != nil {
-			_, _, err := net.SplitHostPort(*config.Smarthost)
+		if config.Smarthost != "" {
+			_, _, err := net.SplitHostPort(config.Smarthost)
 			if err != nil {
 				return errors.New("invalid email field SMARTHOST")
 			}
@@ -1167,7 +1167,7 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 			}
 		}
 
-		if config.RoutingKey == nil || *config.RoutingKey == "" {
+		if config.RoutingKey == "" {
 			return errors.New("missing Routing key in VictorOps config")
 		}
 
@@ -1205,14 +1205,14 @@ func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.Push
 			return err
 		}
 
-		if config.Retry != nil {
-			_, err := time.ParseDuration(*config.Retry)
+		if config.Retry != "" {
+			_, err := time.ParseDuration(config.Retry)
 			if err != nil {
 				return errors.New("invalid retry duration")
 			}
 		}
-		if config.Expire != nil {
-			_, err := time.ParseDuration(*config.Expire)
+		if config.Expire != "" {
+			_, err := time.ParseDuration(config.Expire)
 			if err != nil {
 				return errors.New("invalid expire duration")
 			}

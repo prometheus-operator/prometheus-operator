@@ -779,7 +779,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Namespace: ns,
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-			Route: &monitoringv1alpha1.Route{
+			Route: monitoringv1alpha1.Route{
 				Receiver: "e2e",
 				Matchers: []monitoringv1alpha1.Matcher{},
 				Continue: true,
@@ -838,17 +838,13 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
-					CorpID: func(str string) *string {
-						return &str
-					}("testingCorpID"),
+					CorpID: "testingCorpID",
 				}},
 				EmailConfigs: []monitoringv1alpha1.EmailConfig{{
 					SendResolved: func(b bool) *bool {
 						return &b
 					}(true),
-					To: func(str string) *string {
-						return &str
-					}("test@example.com"),
+					To: "test@example.com",
 					AuthPassword: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,
@@ -869,9 +865,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
-					RoutingKey: func(str string) *string {
-						return &str
-					}("abc"),
+					RoutingKey: "abc",
 				}},
 				PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
 					UserKey: &v1.SecretKeySelector{
@@ -902,7 +896,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Namespace: ns,
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-			Route: &monitoringv1alpha1.Route{
+			Route: monitoringv1alpha1.Route{
 				Receiver: "e2e",
 				Matchers: []monitoringv1alpha1.Matcher{
 					{Name: "service", Value: "webapp"},
@@ -966,7 +960,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Namespace: ns,
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-			Route: &monitoringv1alpha1.Route{
+			Route: monitoringv1alpha1.Route{
 				Receiver: "e2e",
 				Matchers: []monitoringv1alpha1.Matcher{},
 			},
@@ -996,7 +990,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Namespace: ns,
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-			Route: &monitoringv1alpha1.Route{
+			Route: monitoringv1alpha1.Route{
 				Receiver: "e2e",
 				Matchers: []monitoringv1alpha1.Matcher{},
 				Routes: []apiextensionsv1.JSON{
