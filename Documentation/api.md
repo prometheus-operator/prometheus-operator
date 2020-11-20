@@ -72,16 +72,16 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [InhibitRule](#inhibitrule)
 * [KeyValue](#keyvalue)
 * [Matcher](#matcher)
-* [OpsGenieConfig](#opsgenieconfig)
-* [OpsGenieConfigResponder](#opsgenieconfigresponder)
-* [PagerDutyConfig](#pagerdutyconfig)
+* [OpsgenieConfig](#opsgenieconfig)
+* [OpsgenieConfigResponder](#opsgenieconfigresponder)
+* [PagerdutyConfig](#pagerdutyconfig)
 * [Receiver](#receiver)
 * [Route](#route)
 * [SlackAction](#slackaction)
 * [SlackConfig](#slackconfig)
 * [SlackConfirmationField](#slackconfirmationfield)
 * [SlackField](#slackfield)
-* [WeChatConfig](#wechatconfig)
+* [WechatConfig](#wechatconfig)
 * [WebhookConfig](#webhookconfig)
 
 ## APIServerConfig
@@ -1040,15 +1040,15 @@ Matcher defines how to match on alert's labels.
 
 [Back to TOC](#table-of-contents)
 
-## OpsGenieConfig
+## OpsgenieConfig
 
-OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config
+OpsgenieConfig configures notifications via Opsgenie. See https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| apiKey | The secret's key that contains the OpsGenie API key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| apiURL | The URL to send OpsGenie API requests to. | *string | false |
+| apiKey | The secret's key that contains the Opsgenie API key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| apiURL | The URL to send Opsgenie API requests to. | *string | false |
 | message | Alert text limited to 130 characters. | *string | false |
 | description | Description of the incident. | *string | false |
 | source | Backlink to the sender of the notification. | *string | false |
@@ -1056,14 +1056,14 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 | note | Additional alert note. | *string | false |
 | priority | Priority level of alert. Possible values are P1, P2, P3, P4, and P5. | *string | false |
 | details | A set of arbitrary key/value pairs that provide further detail about the incident. | [][KeyValue](#keyvalue) | false |
-| responders | List of responders responsible for notifications. | [][OpsGenieConfigResponder](#opsgenieconfigresponder) | false |
+| responders | List of responders responsible for notifications. | [][OpsgenieConfigResponder](#opsgenieconfigresponder) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
-## OpsGenieConfigResponder
+## OpsgenieConfigResponder
 
-OpsGenieConfigResponder defines a responder to an incident. One of id, name or username has to be defined.
+OpsgenieConfigResponder defines a responder to an incident. One of id, name or username has to be defined.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1074,9 +1074,9 @@ OpsGenieConfigResponder defines a responder to an incident. One of id, name or u
 
 [Back to TOC](#table-of-contents)
 
-## PagerDutyConfig
+## PagerdutyConfig
 
-PagerDutyConfig configures notifications via PagerDuty. See https://prometheus.io/docs/alerting/latest/configuration/#pagerduty_config
+PagerdutyConfig configures notifications via PagerDuty. See https://prometheus.io/docs/alerting/latest/configuration/#pagerduty_config
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -1103,11 +1103,11 @@ Receiver defines one or more notification integrations.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | name | Name of the receiver. Must be unique across all items from the list. | string | true |
-| opsgenieConfigs | List of OpsGenie configurations. | [][OpsGenieConfig](#opsgenieconfig) | false |
-| pagerDutyConfigs | List of PagerDuty configurations. | [][PagerDutyConfig](#pagerdutyconfig) | false |
+| opsgenieConfigs | List of Opsgenie configurations. | [][OpsgenieConfig](#opsgenieconfig) | false |
+| pagerdutyConfigs | List of PagerDuty configurations. | [][PagerdutyConfig](#pagerdutyconfig) | false |
 | slackConfigs | List of Slack configurations. | [][SlackConfig](#slackconfig) | false |
 | webhookConfigs | List of webhook configurations. | [][WebhookConfig](#webhookconfig) | false |
-| weChatConfigs | List of WeChat configurations. | [][WeChatConfig](#wechatconfig) | false |
+| wechatConfigs | List of WeChat configurations. | [][WechatConfig](#wechatconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1200,9 +1200,9 @@ SlackField configures a single Slack field that is sent with each notification. 
 
 [Back to TOC](#table-of-contents)
 
-## WeChatConfig
+## WechatConfig
 
-WeChatConfig configures notifications via WeChat. See https://prometheus.io/docs/alerting/latest/configuration/#wechat_config
+WechatConfig configures notifications via WeChat. See https://prometheus.io/docs/alerting/latest/configuration/#wechat_config
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |

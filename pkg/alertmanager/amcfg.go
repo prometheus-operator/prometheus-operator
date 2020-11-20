@@ -173,12 +173,12 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1alpha1.Receiver, crKey types.NamespacedName) (*receiver, error) {
 	var pagerdutyConfigs []*pagerdutyConfig
 
-	if l := len(in.PagerDutyConfigs); l > 0 {
+	if l := len(in.PagerdutyConfigs); l > 0 {
 		pagerdutyConfigs = make([]*pagerdutyConfig, l)
-		for i := range in.PagerDutyConfigs {
-			receiver, err := cg.convertPagerdutyConfig(ctx, in.PagerDutyConfigs[i], crKey)
+		for i := range in.PagerdutyConfigs {
+			receiver, err := cg.convertPagerdutyConfig(ctx, in.PagerdutyConfigs[i], crKey)
 			if err != nil {
-				return nil, errors.Wrapf(err, "PagerDutyConfig[%d]", i)
+				return nil, errors.Wrapf(err, "PagerdutyConfig[%d]", i)
 			}
 			pagerdutyConfigs[i] = receiver
 		}
@@ -209,26 +209,26 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 	}
 
 	var opsgenieConfigs []*opsgenieConfig
-	if l := len(in.OpsGenieConfigs); l > 0 {
+	if l := len(in.OpsgenieConfigs); l > 0 {
 		opsgenieConfigs = make([]*opsgenieConfig, l)
-		for i := range in.OpsGenieConfigs {
-			receiver, err := cg.convertOpsgenieConfig(ctx, in.OpsGenieConfigs[i], crKey)
+		for i := range in.OpsgenieConfigs {
+			receiver, err := cg.convertOpsgenieConfig(ctx, in.OpsgenieConfigs[i], crKey)
 			if err != nil {
-				return nil, errors.Wrapf(err, "OpsGenieConfigs[%d]", i)
+				return nil, errors.Wrapf(err, "OpsgenieConfigs[%d]", i)
 			}
 			opsgenieConfigs[i] = receiver
 		}
 	}
 
-	var weChatConfigs []*weChatConfig
-	if l := len(in.WeChatConfigs); l > 0 {
-		weChatConfigs = make([]*weChatConfig, l)
-		for i := range in.WeChatConfigs {
-			receiver, err := cg.convertWeChatConfig(ctx, in.WeChatConfigs[i], crKey)
+	var wechatConfigs []*wechatConfig
+	if l := len(in.WechatConfigs); l > 0 {
+		wechatConfigs = make([]*wechatConfig, l)
+		for i := range in.WechatConfigs {
+			receiver, err := cg.convertWechatConfig(ctx, in.WechatConfigs[i], crKey)
 			if err != nil {
-				return nil, errors.Wrapf(err, "WeChatConfig[%d]", i)
+				return nil, errors.Wrapf(err, "WechatConfig[%d]", i)
 			}
-			weChatConfigs[i] = receiver
+			wechatConfigs[i] = receiver
 		}
 	}
 
@@ -238,7 +238,7 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		PagerdutyConfigs: pagerdutyConfigs,
 		SlackConfigs:     slackConfigs,
 		WebhookConfigs:   webhookConfigs,
-		WeChatConfigs:    weChatConfigs,
+		WechatConfigs:    wechatConfigs,
 	}, nil
 }
 
@@ -420,7 +420,7 @@ func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoring
 	return out, nil
 }
 
-func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {
+func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerdutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {
 	out := &pagerdutyConfig{}
 
 	if in.SendResolved != nil {
@@ -495,7 +495,7 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 	return out, nil
 }
 
-func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsGenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
+func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsgenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
 	out := &opsgenieConfig{}
 
 	if in.SendResolved != nil {
@@ -573,9 +573,9 @@ func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitor
 	return out, nil
 }
 
-func (cg *configGenerator) convertWeChatConfig(ctx context.Context, in monitoringv1alpha1.WeChatConfig, crKey types.NamespacedName) (*weChatConfig, error) {
+func (cg *configGenerator) convertWechatConfig(ctx context.Context, in monitoringv1alpha1.WechatConfig, crKey types.NamespacedName) (*wechatConfig, error) {
 
-	out := &weChatConfig{}
+	out := &wechatConfig{}
 
 	if in.SendResolved != nil {
 		out.VSendResolved = *in.SendResolved

@@ -34,7 +34,7 @@ const (
 )
 
 var (
-	opsGenieTypeRe = regexp.MustCompile("^(team|user|escalation|schedule)$")
+	opsgenieTypeRe = regexp.MustCompile("^(team|user|escalation|schedule)$")
 )
 
 // AlertmanagerConfig defines a namespaced AlertmanagerConfig to be aggregated
@@ -110,21 +110,21 @@ type Route struct {
 type Receiver struct {
 	// Name of the receiver. Must be unique across all items from the list.
 	Name string `json:"name"`
-	// List of OpsGenie configurations.
-	OpsGenieConfigs []OpsGenieConfig `json:"opsgenieConfigs,omitempty"`
+	// List of Opsgenie configurations.
+	OpsgenieConfigs []OpsgenieConfig `json:"opsgenieConfigs,omitempty"`
 	// List of PagerDuty configurations.
-	PagerDutyConfigs []PagerDutyConfig `json:"pagerDutyConfigs,omitempty"`
+	PagerdutyConfigs []PagerdutyConfig `json:"pagerdutyConfigs,omitempty"`
 	// List of Slack configurations.
 	SlackConfigs []SlackConfig `json:"slackConfigs,omitempty"`
 	// List of webhook configurations.
 	WebhookConfigs []WebhookConfig `json:"webhookConfigs,omitempty"`
 	// List of WeChat configurations.
-	WeChatConfigs []WeChatConfig `json:"weChatConfigs,omitempty"`
+	WechatConfigs []WechatConfig `json:"wechatConfigs,omitempty"`
 }
 
-// PagerDutyConfig configures notifications via PagerDuty.
+// PagerdutyConfig configures notifications via PagerDuty.
 // See https://prometheus.io/docs/alerting/latest/configuration/#pagerduty_config
-type PagerDutyConfig struct {
+type PagerdutyConfig struct {
 	// Whether or not to notify about resolved alerts.
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// The secret's key that contains the PagerDuty integration key (when using
@@ -304,16 +304,16 @@ type WebhookConfig struct {
 	MaxAlerts *int32 `json:"maxAlerts,omitempty"`
 }
 
-// OpsGenieConfig configures notifications via OpsGenie.
+// OpsgenieConfig configures notifications via Opsgenie.
 // See https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config
-type OpsGenieConfig struct {
+type OpsgenieConfig struct {
 	// Whether or not to notify about resolved alerts.
 	SendResolved *bool `json:"sendResolved,omitempty"`
-	// The secret's key that contains the OpsGenie API key.
+	// The secret's key that contains the Opsgenie API key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
-	// The URL to send OpsGenie API requests to.
+	// The URL to send Opsgenie API requests to.
 	APIURL *string `json:"apiURL,omitempty"`
 	// Alert text limited to 130 characters.
 	Message *string `json:"message,omitempty"`
@@ -330,13 +330,13 @@ type OpsGenieConfig struct {
 	// A set of arbitrary key/value pairs that provide further detail about the incident.
 	Details []KeyValue `json:"details,omitempty"`
 	// List of responders responsible for notifications.
-	Responders []OpsGenieConfigResponder `json:"responders,omitempty"`
+	Responders []OpsgenieConfigResponder `json:"responders,omitempty"`
 	// HTTP client configuration.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
-// Validate ensures OpsGenieConfig is valid
-func (o *OpsGenieConfig) Validate() error {
+// Validate ensures OpsgenieConfig is valid
+func (o *OpsgenieConfig) Validate() error {
 	for _, responder := range o.Responders {
 		if err := responder.Validate(); err != nil {
 			return err
@@ -345,9 +345,9 @@ func (o *OpsGenieConfig) Validate() error {
 	return nil
 }
 
-// OpsGenieConfigResponder defines a responder to an incident.
+// OpsgenieConfigResponder defines a responder to an incident.
 // One of id, name or username has to be defined.
-type OpsGenieConfigResponder struct {
+type OpsgenieConfigResponder struct {
 	// ID of the responder.
 	ID string `json:"id,omitempty"`
 	// Name of the responder.
@@ -358,13 +358,13 @@ type OpsGenieConfigResponder struct {
 	Type string `json:"type,omitempty"`
 }
 
-// Validate ensures OpsGenieConfigResponder is valid
-func (r *OpsGenieConfigResponder) Validate() error {
+// Validate ensures OpsgenieConfigResponder is valid
+func (r *OpsgenieConfigResponder) Validate() error {
 	if r.ID == "" && r.Name == "" && r.Username == "" {
 		return errors.New("responder must have at least an ID, a Name or an Username defined")
 	}
 
-	if !opsGenieTypeRe.MatchString(r.Type) {
+	if !opsgenieTypeRe.MatchString(r.Type) {
 		return errors.New("responder type should match team, user, escalation or schedule")
 	}
 
@@ -387,9 +387,9 @@ type HTTPConfig struct {
 	ProxyURL *string `json:"proxyURL,omitempty"`
 }
 
-// WeChatConfig configures notifications via WeChat.
+// WechatConfig configures notifications via WeChat.
 // See https://prometheus.io/docs/alerting/latest/configuration/#wechat_config
-type WeChatConfig struct {
+type WechatConfig struct {
 	// Whether or not to notify about resolved alerts.
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// The secret's key that contains the WeChat API key.

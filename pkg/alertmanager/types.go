@@ -55,11 +55,11 @@ type globalConfig struct {
 	PagerdutyURL     *config.URL     `yaml:"pagerduty_url,omitempty" json:"pagerduty_url,omitempty"`
 	HipchatAPIURL    *config.URL     `yaml:"hipchat_api_url,omitempty" json:"hipchat_api_url,omitempty"`
 	HipchatAuthToken string          `yaml:"hipchat_auth_token,omitempty" json:"hipchat_auth_token,omitempty"`
-	OpsGenieAPIURL   *config.URL     `yaml:"opsgenie_api_url,omitempty" json:"opsgenie_api_url,omitempty"`
-	OpsGenieAPIKey   string          `yaml:"opsgenie_api_key,omitempty" json:"opsgenie_api_key,omitempty"`
-	WeChatAPIURL     *config.URL     `yaml:"wechat_api_url,omitempty" json:"wechat_api_url,omitempty"`
-	WeChatAPISecret  string          `yaml:"wechat_api_secret,omitempty" json:"wechat_api_secret,omitempty"`
-	WeChatAPICorpID  string          `yaml:"wechat_api_corp_id,omitempty" json:"wechat_api_corp_id,omitempty"`
+	OpsgenieAPIURL   *config.URL     `yaml:"opsgenie_api_url,omitempty" json:"opsgenie_api_url,omitempty"`
+	OpsgenieAPIKey   string          `yaml:"opsgenie_api_key,omitempty" json:"opsgenie_api_key,omitempty"`
+	WechatAPIURL     *config.URL     `yaml:"wechat_api_url,omitempty" json:"wechat_api_url,omitempty"`
+	WechatAPISecret  string          `yaml:"wechat_api_secret,omitempty" json:"wechat_api_secret,omitempty"`
+	WechatAPICorpID  string          `yaml:"wechat_api_corp_id,omitempty" json:"wechat_api_corp_id,omitempty"`
 	VictorOpsAPIURL  *config.URL     `yaml:"victorops_api_url,omitempty" json:"victorops_api_url,omitempty"`
 	VictorOpsAPIKey  string          `yaml:"victorops_api_key,omitempty" json:"victorops_api_key,omitempty"`
 }
@@ -90,7 +90,7 @@ type receiver struct {
 	PagerdutyConfigs []*pagerdutyConfig `yaml:"pagerduty_configs,omitempty" json:"pagerduty_configs,omitempty"`
 	SlackConfigs     []*slackConfig     `yaml:"slack_configs,omitempty" json:"slack_configs,omitempty"`
 	WebhookConfigs   []*webhookConfig   `yaml:"webhook_configs,omitempty" json:"webhook_configs,omitempty"`
-	WeChatConfigs    []*weChatConfig    `yaml:"wechat_configs,omitempty" json:"wechat_config,omitempty"`
+	WechatConfigs    []*wechatConfig    `yaml:"wechat_configs,omitempty" json:"wechat_config,omitempty"`
 	// TODO(simonpasquier): support the following receivers with AlertmanagerConfig.
 	EmailConfigs     []*emailConfig     `yaml:"email_configs,omitempty" json:"email_configs,omitempty"`
 	PushoverConfigs  []*pushoverConfig  `yaml:"pushover_configs,omitempty" json:"pushover_configs,omitempty"`
@@ -137,7 +137,7 @@ type opsgenieConfig struct {
 	Priority      string              `yaml:"priority,omitempty" json:"priority,omitempty"`
 }
 
-type weChatConfig struct {
+type wechatConfig struct {
 	VSendResolved bool              `yaml:"send_resolved" json:"send_resolved"`
 	APISecret     string            `yaml:"api_secret,omitempty" json:"api_secret,omitempty"`
 	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`

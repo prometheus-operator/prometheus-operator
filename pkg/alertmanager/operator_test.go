@@ -129,7 +129,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
-						PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+						PagerdutyConfigs: []monitoringv1alpha1.PagerdutyConfig{{
 							ServiceKey: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 								Key:                  "not-existing",
@@ -152,7 +152,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
-						PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+						PagerdutyConfigs: []monitoringv1alpha1.PagerdutyConfig{{
 							ServiceKey: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 								Key:                  "key1",
@@ -175,7 +175,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
-						PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+						PagerdutyConfigs: []monitoringv1alpha1.PagerdutyConfig{{
 							RoutingKey: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 								Key:                  "not-existing",
@@ -198,7 +198,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
-						PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+						PagerdutyConfigs: []monitoringv1alpha1.PagerdutyConfig{{
 							RoutingKey: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 								Key:                  "key1",
@@ -313,7 +313,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
-						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
+						WechatConfigs: []monitoringv1alpha1.WechatConfig{
 							{
 								CorpID: strPtr("testingCorpID"),
 							},
@@ -335,7 +335,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
-						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
+						WechatConfigs: []monitoringv1alpha1.WechatConfig{
 							{
 								CorpID: strPtr("testingCorpID"),
 								APIURL: strPtr("http://::invalid-url"),
@@ -358,7 +358,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
-						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
+						WechatConfigs: []monitoringv1alpha1.WechatConfig{
 							{
 								CorpID: strPtr("testingCorpID"),
 								APISecret: &v1.SecretKeySelector{
@@ -384,7 +384,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
-						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
+						WechatConfigs: []monitoringv1alpha1.WechatConfig{
 							{
 								CorpID: strPtr("testingCorpID"),
 								APISecret: &v1.SecretKeySelector{

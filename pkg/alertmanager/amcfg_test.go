@@ -208,7 +208,7 @@ templates: []
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test-pd",
-							PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+							PagerdutyConfigs: []monitoringv1alpha1.PagerdutyConfig{{
 								RoutingKey: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "am-pd-test-receiver",
@@ -313,7 +313,7 @@ templates: []
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test",
-							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+							OpsgenieConfigs: []monitoringv1alpha1.OpsgenieConfig{{
 								APIKey: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "am-og-test-receiver",
@@ -372,7 +372,7 @@ templates: []
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test",
-							WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
+							WechatConfigs: []monitoringv1alpha1.WechatConfig{{
 								APISecret: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "am-wechat-test-receiver",

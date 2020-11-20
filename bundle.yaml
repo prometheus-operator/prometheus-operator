@@ -109,13 +109,13 @@ spec:
                         items from the list.
                       type: string
                     opsgenieConfigs:
-                      description: List of OpsGenie configurations.
+                      description: List of Opsgenie configurations.
                       items:
-                        description: OpsGenieConfig configures notifications via OpsGenie.
+                        description: OpsgenieConfig configures notifications via Opsgenie.
                           See https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config
                         properties:
                           apiKey:
-                            description: The secret's key that contains the OpsGenie
+                            description: The secret's key that contains the Opsgenie
                               API key. The secret needs to be in the same namespace
                               as the AlertmanagerConfig object and accessible by the
                               Prometheus Operator.
@@ -137,7 +137,7 @@ spec:
                             - key
                             type: object
                           apiURL:
-                            description: The URL to send OpsGenie API requests to.
+                            description: The URL to send Opsgenie API requests to.
                             type: string
                           description:
                             description: Description of the incident.
@@ -375,7 +375,7 @@ spec:
                           responders:
                             description: List of responders responsible for notifications.
                             items:
-                              description: OpsGenieConfigResponder defines a responder
+                              description: OpsgenieConfigResponder defines a responder
                                 to an incident. One of id, name or username has to
                                 be defined.
                               properties:
@@ -405,10 +405,10 @@ spec:
                             type: string
                         type: object
                       type: array
-                    pagerDutyConfigs:
+                    pagerdutyConfigs:
                       description: List of PagerDuty configurations.
                       items:
-                        description: PagerDutyConfig configures notifications via
+                        description: PagerdutyConfig configures notifications via
                           PagerDuty. See https://prometheus.io/docs/alerting/latest/configuration/#pagerduty_config
                         properties:
                           class:
@@ -1049,10 +1049,258 @@ spec:
                             type: string
                         type: object
                       type: array
-                    weChatConfigs:
+                    webhookConfigs:
+                      description: List of webhook configurations.
+                      items:
+                        description: WebhookConfig configures notifications via a
+                          generic receiver supporting the webhook payload. See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
+                        properties:
+                          httpConfig:
+                            description: HTTP client configuration.
+                            properties:
+                              basicAuth:
+                                description: BasicAuth for the client.
+                                properties:
+                                  password:
+                                    description: The secret in the service monitor
+                                      namespace that contains the password for authentication.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  username:
+                                    description: The secret in the service monitor
+                                      namespace that contains the username for authentication.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                type: object
+                              bearerTokenSecret:
+                                description: The secret's key that contains the bearer
+                                  token to be used by the client for authentication.
+                                  The secret needs to be in the same namespace as
+                                  the AlertmanagerConfig object and accessible by
+                                  the Prometheus Operator.
+                                properties:
+                                  key:
+                                    description: The key of the secret to select from.  Must
+                                      be a valid secret key.
+                                    type: string
+                                  name:
+                                    description: 'Name of the referent. More info:
+                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      TODO: Add other useful fields. apiVersion, kind,
+                                      uid?'
+                                    type: string
+                                  optional:
+                                    description: Specify whether the Secret or its
+                                      key must be defined
+                                    type: boolean
+                                required:
+                                - key
+                                type: object
+                              proxyURL:
+                                description: Optional proxy URL.
+                                type: string
+                              tlsConfig:
+                                description: TLS configuration for the client.
+                                properties:
+                                  ca:
+                                    description: Struct containing the CA cert to
+                                      use for the targets.
+                                    properties:
+                                      configMap:
+                                        description: ConfigMap containing data to
+                                          use for the targets.
+                                        properties:
+                                          key:
+                                            description: The key to select.
+                                            type: string
+                                          name:
+                                            description: 'Name of the referent. More
+                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                              TODO: Add other useful fields. apiVersion,
+                                              kind, uid?'
+                                            type: string
+                                          optional:
+                                            description: Specify whether the ConfigMap
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                      secret:
+                                        description: Secret containing data to use
+                                          for the targets.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            description: 'Name of the referent. More
+                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                              TODO: Add other useful fields. apiVersion,
+                                              kind, uid?'
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                    type: object
+                                  cert:
+                                    description: Struct containing the client cert
+                                      file for the targets.
+                                    properties:
+                                      configMap:
+                                        description: ConfigMap containing data to
+                                          use for the targets.
+                                        properties:
+                                          key:
+                                            description: The key to select.
+                                            type: string
+                                          name:
+                                            description: 'Name of the referent. More
+                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                              TODO: Add other useful fields. apiVersion,
+                                              kind, uid?'
+                                            type: string
+                                          optional:
+                                            description: Specify whether the ConfigMap
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                      secret:
+                                        description: Secret containing data to use
+                                          for the targets.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            description: 'Name of the referent. More
+                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                              TODO: Add other useful fields. apiVersion,
+                                              kind, uid?'
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                    type: object
+                                  insecureSkipVerify:
+                                    description: Disable target certificate validation.
+                                    type: boolean
+                                  keySecret:
+                                    description: Secret containing the client key
+                                      file for the targets.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  serverName:
+                                    description: Used to verify the hostname for the
+                                      targets.
+                                    type: string
+                                type: object
+                            type: object
+                          maxAlerts:
+                            description: Maximum number of alerts to be sent per webhook
+                              message.
+                            format: int32
+                            type: integer
+                          sendResolved:
+                            description: Whether or not to notify about resolved alerts.
+                            type: boolean
+                          url:
+                            description: The URL to send HTTP POST requests to. `urlSecret`
+                              takes precedence over `url`. One of `urlSecret` and
+                              `url` should be defined.
+                            type: string
+                          urlSecret:
+                            description: The secret's key that contains the webhook
+                              URL to send HTTP requests to. `urlSecret` takes precedence
+                              over `url`. One of `urlSecret` and `url` should be defined.
+                              The secret needs to be in the same namespace as the
+                              AlertmanagerConfig object and accessible by the Prometheus
+                              Operator.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  TODO: Add other useful fields. apiVersion, kind,
+                                  uid?'
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                        type: object
+                      type: array
+                    wechatConfigs:
                       description: List of WeChat configurations.
                       items:
-                        description: WeChatConfig configures notifications via WeChat.
+                        description: WechatConfig configures notifications via WeChat.
                           See https://prometheus.io/docs/alerting/latest/configuration/#wechat_config
                         properties:
                           agentID:
@@ -1303,254 +1551,6 @@ spec:
                             type: string
                           toUser:
                             type: string
-                        type: object
-                      type: array
-                    webhookConfigs:
-                      description: List of webhook configurations.
-                      items:
-                        description: WebhookConfig configures notifications via a
-                          generic receiver supporting the webhook payload. See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
-                        properties:
-                          httpConfig:
-                            description: HTTP client configuration.
-                            properties:
-                              basicAuth:
-                                description: BasicAuth for the client.
-                                properties:
-                                  password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
-                                    properties:
-                                      key:
-                                        description: The key of the secret to select
-                                          from.  Must be a valid secret key.
-                                        type: string
-                                      name:
-                                        description: 'Name of the referent. More info:
-                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                          TODO: Add other useful fields. apiVersion,
-                                          kind, uid?'
-                                        type: string
-                                      optional:
-                                        description: Specify whether the Secret or
-                                          its key must be defined
-                                        type: boolean
-                                    required:
-                                    - key
-                                    type: object
-                                  username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
-                                    properties:
-                                      key:
-                                        description: The key of the secret to select
-                                          from.  Must be a valid secret key.
-                                        type: string
-                                      name:
-                                        description: 'Name of the referent. More info:
-                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                          TODO: Add other useful fields. apiVersion,
-                                          kind, uid?'
-                                        type: string
-                                      optional:
-                                        description: Specify whether the Secret or
-                                          its key must be defined
-                                        type: boolean
-                                    required:
-                                    - key
-                                    type: object
-                                type: object
-                              bearerTokenSecret:
-                                description: The secret's key that contains the bearer
-                                  token to be used by the client for authentication.
-                                  The secret needs to be in the same namespace as
-                                  the AlertmanagerConfig object and accessible by
-                                  the Prometheus Operator.
-                                properties:
-                                  key:
-                                    description: The key of the secret to select from.  Must
-                                      be a valid secret key.
-                                    type: string
-                                  name:
-                                    description: 'Name of the referent. More info:
-                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                      TODO: Add other useful fields. apiVersion, kind,
-                                      uid?'
-                                    type: string
-                                  optional:
-                                    description: Specify whether the Secret or its
-                                      key must be defined
-                                    type: boolean
-                                required:
-                                - key
-                                type: object
-                              proxyURL:
-                                description: Optional proxy URL.
-                                type: string
-                              tlsConfig:
-                                description: TLS configuration for the client.
-                                properties:
-                                  ca:
-                                    description: Struct containing the CA cert to
-                                      use for the targets.
-                                    properties:
-                                      configMap:
-                                        description: ConfigMap containing data to
-                                          use for the targets.
-                                        properties:
-                                          key:
-                                            description: The key to select.
-                                            type: string
-                                          name:
-                                            description: 'Name of the referent. More
-                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                              TODO: Add other useful fields. apiVersion,
-                                              kind, uid?'
-                                            type: string
-                                          optional:
-                                            description: Specify whether the ConfigMap
-                                              or its key must be defined
-                                            type: boolean
-                                        required:
-                                        - key
-                                        type: object
-                                      secret:
-                                        description: Secret containing data to use
-                                          for the targets.
-                                        properties:
-                                          key:
-                                            description: The key of the secret to
-                                              select from.  Must be a valid secret
-                                              key.
-                                            type: string
-                                          name:
-                                            description: 'Name of the referent. More
-                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                              TODO: Add other useful fields. apiVersion,
-                                              kind, uid?'
-                                            type: string
-                                          optional:
-                                            description: Specify whether the Secret
-                                              or its key must be defined
-                                            type: boolean
-                                        required:
-                                        - key
-                                        type: object
-                                    type: object
-                                  cert:
-                                    description: Struct containing the client cert
-                                      file for the targets.
-                                    properties:
-                                      configMap:
-                                        description: ConfigMap containing data to
-                                          use for the targets.
-                                        properties:
-                                          key:
-                                            description: The key to select.
-                                            type: string
-                                          name:
-                                            description: 'Name of the referent. More
-                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                              TODO: Add other useful fields. apiVersion,
-                                              kind, uid?'
-                                            type: string
-                                          optional:
-                                            description: Specify whether the ConfigMap
-                                              or its key must be defined
-                                            type: boolean
-                                        required:
-                                        - key
-                                        type: object
-                                      secret:
-                                        description: Secret containing data to use
-                                          for the targets.
-                                        properties:
-                                          key:
-                                            description: The key of the secret to
-                                              select from.  Must be a valid secret
-                                              key.
-                                            type: string
-                                          name:
-                                            description: 'Name of the referent. More
-                                              info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                              TODO: Add other useful fields. apiVersion,
-                                              kind, uid?'
-                                            type: string
-                                          optional:
-                                            description: Specify whether the Secret
-                                              or its key must be defined
-                                            type: boolean
-                                        required:
-                                        - key
-                                        type: object
-                                    type: object
-                                  insecureSkipVerify:
-                                    description: Disable target certificate validation.
-                                    type: boolean
-                                  keySecret:
-                                    description: Secret containing the client key
-                                      file for the targets.
-                                    properties:
-                                      key:
-                                        description: The key of the secret to select
-                                          from.  Must be a valid secret key.
-                                        type: string
-                                      name:
-                                        description: 'Name of the referent. More info:
-                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                          TODO: Add other useful fields. apiVersion,
-                                          kind, uid?'
-                                        type: string
-                                      optional:
-                                        description: Specify whether the Secret or
-                                          its key must be defined
-                                        type: boolean
-                                    required:
-                                    - key
-                                    type: object
-                                  serverName:
-                                    description: Used to verify the hostname for the
-                                      targets.
-                                    type: string
-                                type: object
-                            type: object
-                          maxAlerts:
-                            description: Maximum number of alerts to be sent per webhook
-                              message.
-                            format: int32
-                            type: integer
-                          sendResolved:
-                            description: Whether or not to notify about resolved alerts.
-                            type: boolean
-                          url:
-                            description: The URL to send HTTP POST requests to. `urlSecret`
-                              takes precedence over `url`. One of `urlSecret` and
-                              `url` should be defined.
-                            type: string
-                          urlSecret:
-                            description: The secret's key that contains the webhook
-                              URL to send HTTP requests to. `urlSecret` takes precedence
-                              over `url`. One of `urlSecret` and `url` should be defined.
-                              The secret needs to be in the same namespace as the
-                              AlertmanagerConfig object and accessible by the Prometheus
-                              Operator.
-                            properties:
-                              key:
-                                description: The key of the secret to select from.  Must
-                                  be a valid secret key.
-                                type: string
-                              name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
-                                type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
-                            required:
-                            - key
-                            type: object
                         type: object
                       type: array
                   required:

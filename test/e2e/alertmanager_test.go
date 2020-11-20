@@ -784,7 +784,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			},
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
-				OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+				OpsgenieConfigs: []monitoringv1alpha1.OpsgenieConfig{{
 					APIKey: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "og-receiver-api-key",
@@ -792,7 +792,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						Key: "api-key",
 					},
 				}},
-				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+				PagerdutyConfigs: []monitoringv1alpha1.PagerdutyConfig{{
 					RoutingKey: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,
@@ -829,7 +829,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						return &s
 					}("http://test.url"),
 				}},
-				WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
+				WechatConfigs: []monitoringv1alpha1.WechatConfig{{
 					APISecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,
@@ -862,7 +862,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			},
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
-				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+				PagerdutyConfigs: []monitoringv1alpha1.PagerdutyConfig{{
 					RoutingKey: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,

@@ -940,12 +940,12 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 
 		amcKey := fmt.Sprintf("alertmanagerConfig/%s/%s/%d", amc.GetNamespace(), amc.GetName(), i)
 
-		err = checkPagerDutyConfigs(ctx, receiver.PagerDutyConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkPagerdutyConfigs(ctx, receiver.PagerdutyConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
 			return nil, err
 		}
 
-		err = checkOpsGenieConfigs(ctx, receiver.OpsGenieConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkOpsgenieConfigs(ctx, receiver.OpsgenieConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
 			return nil, err
 		}
@@ -959,7 +959,7 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 			return nil, err
 		}
 
-		err = checkWechatConfigs(ctx, receiver.WeChatConfigs, amc.GetNamespace(), amcKey, store)
+		err = checkWechatConfigs(ctx, receiver.WechatConfigs, amc.GetNamespace(), amcKey, store)
 		if err != nil {
 			return nil, err
 		}
@@ -968,9 +968,9 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 	return receiverNames, nil
 }
 
-func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.PagerDutyConfig, namespace string, key string, store *assets.Store) error {
+func checkPagerdutyConfigs(ctx context.Context, configs []monitoringv1alpha1.PagerdutyConfig, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
-		pagerDutyConfigKey := fmt.Sprintf("%s/pagerduty/%d", key, i)
+		pagerdutyConfigKey := fmt.Sprintf("%s/pagerduty/%d", key, i)
 
 		if config.RoutingKey != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.RoutingKey); err != nil {
@@ -984,7 +984,7 @@ func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.Pag
 			}
 		}
 
-		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, pagerDutyConfigKey, store); err != nil {
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, pagerdutyConfigKey, store); err != nil {
 			return err
 		}
 	}
@@ -992,7 +992,7 @@ func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.Pag
 	return nil
 }
 
-func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsGenieConfig, namespace string, key string, store *assets.Store) error {
+func checkOpsgenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsgenieConfig, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		opsgenieConfigKey := fmt.Sprintf("%s/opsgenie/%d", key, i)
 
@@ -1058,7 +1058,7 @@ func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.Webho
 	return nil
 }
 
-func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChatConfig, namespace string, key string, store *assets.Store) error {
+func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WechatConfig, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		wechatConfigKey := fmt.Sprintf("%s/wechat/%d", key, i)
 
