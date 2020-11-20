@@ -81,8 +81,8 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [SlackConfig](#slackconfig)
 * [SlackConfirmationField](#slackconfirmationfield)
 * [SlackField](#slackfield)
-* [WechatConfig](#wechatconfig)
 * [WebhookConfig](#webhookconfig)
+* [WechatConfig](#wechatconfig)
 
 ## APIServerConfig
 
@@ -1200,6 +1200,20 @@ SlackField configures a single Slack field that is sent with each notification. 
 
 [Back to TOC](#table-of-contents)
 
+## WebhookConfig
+
+WebhookConfig configures notifications via a generic receiver supporting the webhook payload. See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
+| url | The URL to send HTTP POST requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. | *string | false |
+| urlSecret | The secret's key that contains the webhook URL to send HTTP requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
+| maxAlerts | Maximum number of alerts to be sent per webhook message. | *int32 | false |
+
+[Back to TOC](#table-of-contents)
+
 ## WechatConfig
 
 WechatConfig configures notifications via WeChat. See https://prometheus.io/docs/alerting/latest/configuration/#wechat_config
@@ -1217,19 +1231,5 @@ WechatConfig configures notifications via WeChat. See https://prometheus.io/docs
 | message | API request data as defined by the WeChat API. | *string | false |
 | messageType |  | *string | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
-
-[Back to TOC](#table-of-contents)
-
-## WebhookConfig
-
-WebhookConfig configures notifications via a generic receiver supporting the webhook payload. See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| url | The URL to send HTTP POST requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. | *string | false |
-| urlSecret | The secret's key that contains the webhook URL to send HTTP requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
-| maxAlerts | Maximum number of alerts to be sent per webhook message. | *int32 | false |
 
 [Back to TOC](#table-of-contents)
