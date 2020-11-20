@@ -279,14 +279,14 @@ func (d duration) MarshalText() ([]byte, error) {
 }
 
 type victorOpsConfig struct {
-	VSendResolved     bool                        `yaml:"send_resolved" json:"send_resolved"`
-	HTTPConfig        *commoncfg.HTTPClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
-	APIKey            string                      `yaml:"api_key" json:"api_key"`
-	APIURL            *config.URL                 `yaml:"api_url" json:"api_url"`
-	RoutingKey        string                      `yaml:"routing_key" json:"routing_key"`
-	MessageType       string                      `yaml:"message_type" json:"message_type"`
-	StateMessage      string                      `yaml:"state_message" json:"state_message"`
-	EntityDisplayName string                      `yaml:"entity_display_name" json:"entity_display_name"`
-	MonitoringTool    string                      `yaml:"monitoring_tool" json:"monitoring_tool"`
-	CustomFields      map[string]string           `yaml:"custom_fields,omitempty" json:"custom_fields,omitempty"`
+	VSendResolved     bool              `yaml:"send_resolved" json:"send_resolved"`
+	HTTPConfig        *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	APIKey            string            `yaml:"api_key,omitempty" json:"api_key,omitempty"`
+	APIURL            string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	RoutingKey        string            `yaml:"routing_key,omitempty" json:"routing_key,omitempty"`
+	MessageType       string            `yaml:"message_type,omitempty" json:"message_type,omitempty"`
+	StateMessage      string            `yaml:"state_message,omitempty" json:"state_message,omitempty"`
+	EntityDisplayName string            `yaml:"entity_display_name,omitempty" json:"entity_display_name,omitempty"`
+	MonitoringTool    string            `yaml:"monitoring_tool,omitempty" json:"monitoring_tool,omitempty"`
+	CustomFields      map[string]string `yaml:"custom_fields,omitempty" json:"custom_fields,omitempty"`
 }

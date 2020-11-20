@@ -969,6 +969,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return nil, err
 		}
+
+		err = checkVictorOpsConfigs(ctx, receiver.VictorOpsConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return receiverNames, nil
@@ -1126,6 +1131,35 @@ func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailCo
 		}
 
 		if err := store.AddSafeTLSConfig(ctx, namespace, config.TLSConfig); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.VictorOpsConfig, namespace string, key string, store *assets.Store) error {
+	for i, config := range configs {
+
+		if config.APIKey != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey); err != nil {
+				return err
+			}
+		}
+
+		if config.APIURL != nil {
+			_, err := url.Parse(*config.APIURL)
+			if err != nil {
+				return errors.New("api url is not valid")
+			}
+		}
+
+		if config.RoutingKey == nil || *config.RoutingKey == "" {
+			return errors.New("missing Routing key in VictorOps config")
+		}
+
+		victoropsConfigKey := fmt.Sprintf("%s/victorops/%d", key, i)
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, victoropsConfigKey, store); err != nil {
 			return err
 		}
 	}

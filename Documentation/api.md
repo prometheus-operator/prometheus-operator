@@ -82,6 +82,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [SlackConfig](#slackconfig)
 * [SlackConfirmationField](#slackconfirmationfield)
 * [SlackField](#slackfield)
+* [VictorOpsConfig](#victoropsconfig)
 * [WeChatConfig](#wechatconfig)
 * [WebhookConfig](#webhookconfig)
 
@@ -1133,6 +1134,7 @@ Receiver defines one or more notification integrations.
 | webhookConfigs | List of webhook configurations. | [][WebhookConfig](#webhookconfig) | false |
 | wechatConfigs | List of WeChat configurations. | [][WeChatConfig](#wechatconfig) | false |
 | emailConfigs | List of Email configurations. | [][EmailConfig](#emailconfig) | false |
+| victoropsConfigs | List of VictorOps configurations. | [][VictorOpsConfig](#victoropsconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1222,6 +1224,24 @@ SlackField configures a single Slack field that is sent with each notification. 
 | title |  | string | true |
 | value |  | string | true |
 | short |  | *bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## VictorOpsConfig
+
+VictorOpsConfig configures notifications via VictorOps. See https://prometheus.io/docs/alerting/latest/configuration/#victorops_config
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
+| apiKey | The API key to use when talking to the VictorOps API. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| apiUrl | The VictorOps API URL. | *string | false |
+| routingKey | A key used to map the alert to a team. | *string | true |
+| messageType | Describes the behavior of the alert (CRITICAL, WARNING, INFO). | *string | false |
+| entityDisplayName | Contains summary of the alerted problem. | *string | false |
+| stateMessage | Contains long explanation of the alerted problem. | *string | false |
+| monitoringTool | The monitoring tool the state message is from. | *string | false |
+| httpConfig | The HTTP client's configuration. | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
