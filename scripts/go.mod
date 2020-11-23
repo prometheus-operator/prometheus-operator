@@ -8,7 +8,7 @@ require (
 	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
 	github.com/campoy/embedmd v1.0.0
 	github.com/google/go-cmp v0.4.0 // indirect
-	github.com/google/go-jsonnet v0.15.1-0.20200415122941-8a0084e64395
+	github.com/google/go-jsonnet v0.17.0
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/jsonnet-bundler/jsonnet-bundler v0.3.1
 	github.com/pkg/errors v0.9.1
