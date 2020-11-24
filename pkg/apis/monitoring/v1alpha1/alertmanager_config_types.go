@@ -465,6 +465,8 @@ type VictorOpsConfig struct {
 	StateMessage *string `json:"stateMessage,omitempty"`
 	// The monitoring tool the state message is from.
 	MonitoringTool *string `json:"monitoringTool,omitempty"`
+	// Additional custom fields for notification.
+	CustomFields []KeyValue `json:"customFields,omitempty"`
 	// The HTTP client's configuration.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }

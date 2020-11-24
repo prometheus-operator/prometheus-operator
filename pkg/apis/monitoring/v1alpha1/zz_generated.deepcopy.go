@@ -791,6 +791,11 @@ func (in *VictorOpsConfig) DeepCopyInto(out *VictorOpsConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.CustomFields != nil {
+		in, out := &in.CustomFields, &out.CustomFields
+		*out = make([]KeyValue, len(*in))
+		copy(*out, *in)
+	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)

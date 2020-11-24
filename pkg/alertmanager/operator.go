@@ -1147,10 +1147,22 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 			}
 		}
 
-		if config.APIURL != nil {
-			_, err := url.Parse(*config.APIURL)
-			if err != nil {
-				return errors.New("api url is not valid")
+		// from https://github.com/prometheus/alertmanager/blob/a7f9fdadbecbb7e692d2cd8d3334e3d6de1602e1/config/notifiers.go#L497
+		reservedFields := map[string]struct{}{
+			"routing_key":         {},
+			"message_type":        {},
+			"state_message":       {},
+			"entity_display_name": {},
+			"monitoring_tool":     {},
+			"entity_id":           {},
+			"entity_state":        {},
+		}
+
+		if len(config.CustomFields) > 0 {
+			for _, v := range config.CustomFields {
+				if _, ok := reservedFields[v.Key]; ok {
+					return fmt.Errorf("usage of reserved word %q is not allowed in custom fields", v.Key)
+				}
 			}
 		}
 

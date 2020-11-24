@@ -1241,6 +1241,7 @@ VictorOpsConfig configures notifications via VictorOps. See https://prometheus.i
 | entityDisplayName | Contains summary of the alerted problem. | *string | false |
 | stateMessage | Contains long explanation of the alerted problem. | *string | false |
 | monitoringTool | The monitoring tool the state message is from. | *string | false |
+| customFields | Additional custom fields for notification. | [][KeyValue](#keyvalue) | false |
 | httpConfig | The HTTP client's configuration. | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)

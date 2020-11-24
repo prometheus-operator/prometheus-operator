@@ -1294,6 +1294,22 @@ spec:
                           apiUrl:
                             description: The VictorOps API URL.
                             type: string
+                          customFields:
+                            description: Additional custom fields for notification.
+                            items:
+                              description: KeyValue defines a (key, value) tuple.
+                              properties:
+                                key:
+                                  description: Key of the tuple.
+                                  type: string
+                                value:
+                                  description: Value of the tuple.
+                                  type: string
+                              required:
+                              - key
+                              - value
+                              type: object
+                            type: array
                           entityDisplayName:
                             description: Contains summary of the alerted problem.
                             type: string

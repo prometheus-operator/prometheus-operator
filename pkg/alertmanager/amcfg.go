@@ -780,6 +780,29 @@ func (cg *configGenerator) convertVictorOpsConfig(ctx context.Context, in monito
 	if in.MonitoringTool != nil {
 		out.MonitoringTool = *in.MonitoringTool
 	}
+
+	var customFields map[string]string
+	if l := len(in.CustomFields); l > 0 {
+		// from https://github.com/prometheus/alertmanager/blob/a7f9fdadbecbb7e692d2cd8d3334e3d6de1602e1/config/notifiers.go#L497
+		reservedFields := map[string]struct{}{
+			"routing_key":         {},
+			"message_type":        {},
+			"state_message":       {},
+			"entity_display_name": {},
+			"monitoring_tool":     {},
+			"entity_id":           {},
+			"entity_state":        {},
+		}
+		customFields = make(map[string]string, l)
+		for _, d := range in.CustomFields {
+			if _, ok := reservedFields[d.Key]; ok {
+				return nil, errors.Errorf("VictorOps config contains custom field %s which cannot be used as it conflicts with the fixed/static fields", d.Key)
+			}
+			customFields[d.Key] = d.Value
+		}
+	}
+	out.CustomFields = customFields
+
 	if in.HTTPConfig != nil {
 		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
 		if err != nil {
