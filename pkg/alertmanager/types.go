@@ -98,14 +98,14 @@ type receiver struct {
 }
 
 type webhookConfig struct {
-	VSendResolved bool              `yaml:"send_resolved" json:"send_resolved"`
+	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	URL           string            `yaml:"url,omitempty" json:"url,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	MaxAlerts     int32             `yaml:"max_alerts,omitempty" json:"max_alerts,omitempty"`
 }
 
 type pagerdutyConfig struct {
-	VSendResolved bool              `yaml:"send_resolved" json:"send_resolved"`
+	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	ServiceKey    string            `yaml:"service_key,omitempty" json:"service_key,omitempty"`
 	RoutingKey    string            `yaml:"routing_key,omitempty" json:"routing_key,omitempty"`
@@ -123,7 +123,7 @@ type pagerdutyConfig struct {
 }
 
 type opsgenieConfig struct {
-	VSendResolved bool                `yaml:"send_resolved" json:"send_resolved"`
+	VSendResolved *bool               `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig   `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	APIKey        string              `yaml:"api_key,omitempty" json:"api_key,omitempty"`
 	APIURL        string              `yaml:"api_url,omitempty" json:"api_url,omitempty"`
@@ -138,7 +138,7 @@ type opsgenieConfig struct {
 }
 
 type weChatConfig struct {
-	VSendResolved bool              `yaml:"send_resolved" json:"send_resolved"`
+	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	APISecret     string            `yaml:"api_secret,omitempty" json:"api_secret,omitempty"`
 	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
 	CorpID        string            `yaml:"corp_id,omitempty" json:"corp_id,omitempty"`
@@ -152,7 +152,7 @@ type weChatConfig struct {
 }
 
 type slackConfig struct {
-	VSendResolved bool              `yaml:"send_resolved" json:"send_resolved"`
+	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
 	Channel       string            `yaml:"channel,omitempty" json:"channel,omitempty"`
@@ -232,7 +232,7 @@ type slackConfirmationField struct {
 }
 
 type emailConfig struct {
-	VSendResolved bool                `yaml:"send_resolved" json:"send_resolved"`
+	VSendResolved *bool               `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	To            string              `yaml:"to,omitempty" json:"to,omitempty"`
 	From          string              `yaml:"from,omitempty" json:"from,omitempty"`
 	Hello         string              `yaml:"hello,omitempty" json:"hello,omitempty"`
@@ -249,7 +249,7 @@ type emailConfig struct {
 }
 
 type pushoverConfig struct {
-	VSendResolved bool              `yaml:"send_resolved" json:"send_resolved"`
+	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	UserKey       string            `yaml:"user_key,omitempty" json:"user_key,omitempty"`
 	Token         string            `yaml:"token,omitempty" json:"token,omitempty"`
@@ -279,7 +279,7 @@ func (d duration) MarshalText() ([]byte, error) {
 }
 
 type victorOpsConfig struct {
-	VSendResolved     bool              `yaml:"send_resolved" json:"send_resolved"`
+	VSendResolved     *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig        *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 	APIKey            string            `yaml:"api_key,omitempty" json:"api_key,omitempty"`
 	APIURL            string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`

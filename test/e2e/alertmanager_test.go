@@ -843,6 +843,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					}("testingCorpID"),
 				}},
 				EmailConfigs: []monitoringv1alpha1.EmailConfig{{
+					SendResolved: func(b bool) *bool {
+						return &b
+					}(true),
 					To: func(str string) *string {
 						return &str
 					}("test@example.com"),
@@ -1075,14 +1078,11 @@ receivers:
 - name: "null"
 - name: %v-e2e-test-amconfig-many-receivers-e2e
   opsgenie_configs:
-  - send_resolved: false
-    api_key: 1234abc
+  - api_key: 1234abc
   pagerduty_configs:
-  - send_resolved: false
-    routing_key: 1234abc
+  - routing_key: 1234abc
   slack_configs:
-  - send_resolved: false
-    api_url: http://slack.example.com
+  - api_url: http://slack.example.com
     fields:
     - title: title
       value: value
@@ -1093,29 +1093,24 @@ receivers:
       confirm:
         text: text
   webhook_configs:
-  - send_resolved: false
-    url: http://test.url
+  - url: http://test.url
   wechat_configs:
-  - send_resolved: false
-    api_secret: 1234abc
+  - api_secret: 1234abc
     corp_id: testingCorpID
   email_configs:
-  - send_resolved: false
+  - send_resolved: true
     to: test@example.com
     auth_password: 1234abc
     auth_secret: 1234abc
   pushover_configs:
-  - send_resolved: false
-    user_key: 1234abc
+  - user_key: 1234abc
     token: 1234abc
   victorops_configs:
-  - send_resolved: false
-    api_key: 1234abc
+  - api_key: 1234abc
     routing_key: abc
 - name: %s-e2e-test-amconfig-sub-routes-e2e
   webhook_configs:
-  - send_resolved: false
-    url: http://test.url
+  - url: http://test.url
 templates: []
 `, ns, ns, ns, ns, ns, ns, ns, ns, ns)
 
