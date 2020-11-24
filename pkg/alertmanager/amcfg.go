@@ -833,20 +833,35 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 	if in.SendResolved != nil {
 		out.VSendResolved = *in.SendResolved
 	}
-	if in.UserKey != nil {
+
+	{
+		if in.UserKey == nil {
+			return nil, errors.Errorf("mandatory field %q is empty", "userKey")
+		}
 		userKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
 		if err != nil {
 			return nil, errors.Errorf("failed to get secret %q", in.UserKey)
 		}
+		if userKey == "" {
+			return nil, errors.Errorf("mandatory field %q is empty", "userKey")
+		}
 		out.UserKey = userKey
 	}
-	if in.Token != nil {
+
+	{
+		if in.Token == nil {
+			return nil, errors.Errorf("mandatory field %q is empty", "token")
+		}
 		token, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
 		if err != nil {
 			return nil, errors.Errorf("failed to get secret %q", in.Token)
 		}
+		if token == "" {
+			return nil, errors.Errorf("mandatory field %q is empty", "token")
+		}
 		out.Token = token
 	}
+
 	if in.Title != nil {
 		out.Title = *in.Title
 	}

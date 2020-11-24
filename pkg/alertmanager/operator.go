@@ -1185,25 +1185,30 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 }
 
 func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.PushoverConfig, namespace string, key string, store *assets.Store) error {
+
+	checkSecret := func(secret *v1.SecretKeySelector, name string) error {
+		if secret == nil {
+			return errors.Errorf("mandatory field %s is empty", name)
+		}
+		s, err := store.GetSecretKey(ctx, namespace, *secret)
+		if err != nil {
+			return err
+		}
+		if s == "" {
+			return errors.New("mandatory field userKey is empty")
+		}
+		return nil
+	}
+
 	for i, config := range configs {
 
-		if config.UserKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.UserKey); err != nil {
-				return err
-			}
+		if err := checkSecret(config.UserKey, "userKey"); err != nil {
+			return err
 		}
-		if config.Token != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.UserKey); err != nil {
-				return err
-			}
+		if err := checkSecret(config.Token, "token"); err != nil {
+			return err
 		}
 
-		if config.URL != nil {
-			_, err := url.Parse(*config.URL)
-			if err != nil {
-				return errors.New("url is not valid")
-			}
-		}
 		if config.Retry != nil {
 			_, err := time.ParseDuration(*config.Retry)
 			if err != nil {
