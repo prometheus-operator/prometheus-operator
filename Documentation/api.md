@@ -1104,10 +1104,10 @@ Receiver defines one or more notification integrations.
 | ----- | ----------- | ------ | -------- |
 | name | Name of the receiver. Must be unique across all items from the list. | string | true |
 | opsgenieConfigs | List of OpsGenie configurations. | [][OpsGenieConfig](#opsgenieconfig) | false |
-| pagerDutyConfigs | List of PagerDuty configurations. | [][PagerDutyConfig](#pagerdutyconfig) | false |
+| pagerdutyConfigs | List of PagerDuty configurations. | [][PagerDutyConfig](#pagerdutyconfig) | false |
 | slackConfigs | List of Slack configurations. | [][SlackConfig](#slackconfig) | false |
 | webhookConfigs | List of webhook configurations. | [][WebhookConfig](#webhookconfig) | false |
-| weChatConfigs | List of WeChat configurations. | [][WeChatConfig](#wechatconfig) | false |
+| wechatConfigs | List of WeChat configurations. | [][WeChatConfig](#wechatconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
