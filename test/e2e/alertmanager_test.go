@@ -985,14 +985,14 @@ receivers:
     to: test@example.com
     auth_password: 1234abc
     auth_secret: 1234abc
-  victorops_configs:
-  - send_resolved: false
-    api_key: 1234abc
-    routing_key: abc
   pushover_configs:
   - send_resolved: false
     user_key: 1234abc
     token: 1234abc
+  victorops_configs:
+  - send_resolved: false
+    api_key: 1234abc
+    routing_key: abc
 templates: []
 `, ns, ns, ns)
 
