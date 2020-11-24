@@ -858,6 +858,17 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						Key: testingSecretKey,
 					},
 				}},
+				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
+					APIKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: testingSecret,
+						},
+						Key: testingSecretKey,
+					},
+					RoutingKey: func(str string) *string {
+						return &str
+					}("abc"),
+				}},
 			}},
 		},
 	}
@@ -960,6 +971,10 @@ receivers:
     to: test@example.com
     auth_password: 1234abc
     auth_secret: 1234abc
+  victorops_configs:
+  - send_resolved: false
+    api_key: 1234abc
+    routing_key: abc
 templates: []
 `, ns, ns, ns)
 

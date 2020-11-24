@@ -246,6 +246,18 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	var victorOpsConfigs []*victorOpsConfig
+	if l := len(in.VictorOpsConfigs); l > 0 {
+		victorOpsConfigs = make([]*victorOpsConfig, l)
+		for i := range in.VictorOpsConfigs {
+			receiver, err := cg.convertVictorOpsConfig(ctx, in.VictorOpsConfigs[i], crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "VictorOpsConfig[%d]", i)
+			}
+			victorOpsConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             prefixReceiverName(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -254,6 +266,7 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 		WebhookConfigs:   webhookConfigs,
 		WeChatConfigs:    weChatConfigs,
 		EmailConfigs:     emailConfigs,
+		VictorOpsConfigs: victorOpsConfigs,
 	}, nil
 }
 
@@ -730,6 +743,73 @@ func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoring
 		out.TLSConfig = cg.convertTLSConfig(ctx, in.TLSConfig, crKey)
 	}
 
+	return out, nil
+}
+
+func (cg *configGenerator) convertVictorOpsConfig(ctx context.Context, in monitoringv1alpha1.VictorOpsConfig, crKey types.NamespacedName) (*victorOpsConfig, error) {
+	out := &victorOpsConfig{}
+
+	if in.SendResolved != nil {
+		out.VSendResolved = *in.SendResolved
+	}
+	if in.APIKey != nil {
+		apiKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APIKey)
+		if err != nil {
+			return nil, errors.Errorf("failed to get secret %q", in.APIKey)
+		}
+		out.APIKey = apiKey
+	}
+	if in.APIURL != nil {
+		out.APIURL = *in.APIURL
+	}
+
+	if in.RoutingKey == nil || *in.RoutingKey == "" {
+		return nil, errors.New("missing Routing key in VictorOps config")
+	}
+	out.RoutingKey = *in.RoutingKey
+
+	if in.MessageType != nil {
+		out.MessageType = *in.MessageType
+	}
+	if in.EntityDisplayName != nil {
+		out.EntityDisplayName = *in.EntityDisplayName
+	}
+	if in.StateMessage != nil {
+		out.StateMessage = *in.StateMessage
+	}
+	if in.MonitoringTool != nil {
+		out.MonitoringTool = *in.MonitoringTool
+	}
+
+	var customFields map[string]string
+	if l := len(in.CustomFields); l > 0 {
+		// from https://github.com/prometheus/alertmanager/blob/a7f9fdadbecbb7e692d2cd8d3334e3d6de1602e1/config/notifiers.go#L497
+		reservedFields := map[string]struct{}{
+			"routing_key":         {},
+			"message_type":        {},
+			"state_message":       {},
+			"entity_display_name": {},
+			"monitoring_tool":     {},
+			"entity_id":           {},
+			"entity_state":        {},
+		}
+		customFields = make(map[string]string, l)
+		for _, d := range in.CustomFields {
+			if _, ok := reservedFields[d.Key]; ok {
+				return nil, errors.Errorf("VictorOps config contains custom field %s which cannot be used as it conflicts with the fixed/static fields", d.Key)
+			}
+			customFields[d.Key] = d.Value
+		}
+	}
+	out.CustomFields = customFields
+
+	if in.HTTPConfig != nil {
+		httpConfig, err := cg.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
+		out.HTTPConfig = httpConfig
+	}
 	return out, nil
 }
 

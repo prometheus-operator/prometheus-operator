@@ -57,7 +57,7 @@ spec:
     receiver: 'wechat-example'
   receivers:
   - name: 'wechat-example'
-    weChatConfigs:
+    wechatConfigs:
     - apiURL: 'http://wechatserver:8080/'
       corpID: 'wechat-corpid'
       apiSecret:

@@ -969,6 +969,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return nil, err
 		}
+
+		err = checkVictorOpsConfigs(ctx, receiver.VictorOpsConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return receiverNames, nil
@@ -1126,6 +1131,47 @@ func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailCo
 		}
 
 		if err := store.AddSafeTLSConfig(ctx, namespace, config.TLSConfig); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.VictorOpsConfig, namespace string, key string, store *assets.Store) error {
+	for i, config := range configs {
+
+		if config.APIKey != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey); err != nil {
+				return err
+			}
+		}
+
+		// from https://github.com/prometheus/alertmanager/blob/a7f9fdadbecbb7e692d2cd8d3334e3d6de1602e1/config/notifiers.go#L497
+		reservedFields := map[string]struct{}{
+			"routing_key":         {},
+			"message_type":        {},
+			"state_message":       {},
+			"entity_display_name": {},
+			"monitoring_tool":     {},
+			"entity_id":           {},
+			"entity_state":        {},
+		}
+
+		if len(config.CustomFields) > 0 {
+			for _, v := range config.CustomFields {
+				if _, ok := reservedFields[v.Key]; ok {
+					return fmt.Errorf("usage of reserved word %q is not allowed in custom fields", v.Key)
+				}
+			}
+		}
+
+		if config.RoutingKey == nil || *config.RoutingKey == "" {
+			return errors.New("missing Routing key in VictorOps config")
+		}
+
+		victoropsConfigKey := fmt.Sprintf("%s/victorops/%d", key, i)
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, victoropsConfigKey, store); err != nil {
 			return err
 		}
 	}
