@@ -68,6 +68,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerConfig](#alertmanagerconfig)
 * [AlertmanagerConfigList](#alertmanagerconfiglist)
 * [AlertmanagerConfigSpec](#alertmanagerconfigspec)
+* [EmailConfig](#emailconfig)
 * [HTTPConfig](#httpconfig)
 * [InhibitRule](#inhibitrule)
 * [KeyValue](#keyvalue)
@@ -992,6 +993,29 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 
 [Back to TOC](#table-of-contents)
 
+## EmailConfig
+
+EmailConfig configures notifications via Email.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
+| to | The email address to send notifications to. | *string | false |
+| from | The sender address. | *string | false |
+| hello | The hostname to identify to the SMTP server. | *string | false |
+| smarthost | The SMTP host through which emails are sent. | *string | false |
+| authUsername | SMTP authentication information. | *string | false |
+| authPassword |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| authSecret |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| authIdentity |  | *string | false |
+| headers | Further headers email header key/value pairs. Overrides any headers previously set by the notification implementation. | [][KeyValue](#keyvalue) | false |
+| html | The HTML body of the email notification. | *string | false |
+| text | The text body of the email notification. | *string | false |
+| requireTLS | The SMTP TLS requirement. Note that Go does not support unencrypted connections to remote SMTP endpoints. | *bool | false |
+| tlsConfig | TLS configuration | *monitoringv1.SafeTLSConfig | false |
+
+[Back to TOC](#table-of-contents)
+
 ## HTTPConfig
 
 HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/alerting/latest/configuration/#http_config
@@ -1108,6 +1132,7 @@ Receiver defines one or more notification integrations.
 | slackConfigs | List of Slack configurations. | [][SlackConfig](#slackconfig) | false |
 | webhookConfigs | List of webhook configurations. | [][WebhookConfig](#webhookconfig) | false |
 | wechatConfigs | List of WeChat configurations. | [][WeChatConfig](#wechatconfig) | false |
+| emailConfigs | List of Email configurations. | [][EmailConfig](#emailconfig) | false |
 
 [Back to TOC](#table-of-contents)
 

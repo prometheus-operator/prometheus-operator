@@ -17,6 +17,7 @@ package alertmanager
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
 	"reflect"
 	"strings"
@@ -963,6 +964,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return nil, err
 		}
+
+		err = checkEmailConfigs(ctx, receiver.EmailConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return receiverNames, nil
@@ -1076,6 +1082,50 @@ func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChat
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, wechatConfigKey, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailConfig, namespace string, key string, store *assets.Store) error {
+	for _, config := range configs {
+
+		if config.To == nil || *config.To == "" {
+			return errors.New("missing to address in email config")
+		}
+
+		if config.Smarthost != nil {
+			_, _, err := net.SplitHostPort(*config.Smarthost)
+			if err != nil {
+				return errors.New("invalid email field SMARTHOST")
+			}
+		}
+		if config.AuthPassword != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.AuthPassword); err != nil {
+				return err
+			}
+		}
+		if config.AuthSecret != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.AuthSecret); err != nil {
+				return err
+			}
+		}
+
+		if config.Headers != nil {
+			// Header names are case-insensitive, check for collisions.
+			normalizedHeaders := map[string]struct{}{}
+			for _, v := range config.Headers {
+				normalized := strings.Title(v.Key)
+				if _, ok := normalizedHeaders[normalized]; ok {
+					return fmt.Errorf("duplicate header %q in email config", normalized)
+				}
+				normalizedHeaders[normalized] = struct{}{}
+			}
+		}
+
+		if err := store.AddSafeTLSConfig(ctx, namespace, config.TLSConfig); err != nil {
 			return err
 		}
 	}

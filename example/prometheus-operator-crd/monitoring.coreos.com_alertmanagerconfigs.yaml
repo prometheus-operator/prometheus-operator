@@ -104,6 +104,222 @@ spec:
                 items:
                   description: Receiver defines one or more notification integrations.
                   properties:
+                    emailConfigs:
+                      description: List of Email configurations.
+                      items:
+                        description: EmailConfig configures notifications via Email.
+                        properties:
+                          authIdentity:
+                            type: string
+                          authPassword:
+                            description: SecretKeySelector selects a key of a Secret.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  TODO: Add other useful fields. apiVersion, kind,
+                                  uid?'
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                          authSecret:
+                            description: SecretKeySelector selects a key of a Secret.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  TODO: Add other useful fields. apiVersion, kind,
+                                  uid?'
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                          authUsername:
+                            description: SMTP authentication information.
+                            type: string
+                          from:
+                            description: The sender address.
+                            type: string
+                          headers:
+                            description: Further headers email header key/value pairs.
+                              Overrides any headers previously set by the notification
+                              implementation.
+                            items:
+                              description: KeyValue defines a (key, value) tuple.
+                              properties:
+                                key:
+                                  description: Key of the tuple.
+                                  type: string
+                                value:
+                                  description: Value of the tuple.
+                                  type: string
+                              required:
+                              - key
+                              - value
+                              type: object
+                            type: array
+                          hello:
+                            description: The hostname to identify to the SMTP server.
+                            type: string
+                          html:
+                            description: The HTML body of the email notification.
+                            type: string
+                          requireTLS:
+                            description: The SMTP TLS requirement. Note that Go does
+                              not support unencrypted connections to remote SMTP endpoints.
+                            type: boolean
+                          sendResolved:
+                            description: Whether or not to notify about resolved alerts.
+                            type: boolean
+                          smarthost:
+                            description: The SMTP host through which emails are sent.
+                            type: string
+                          text:
+                            description: The text body of the email notification.
+                            type: string
+                          tlsConfig:
+                            description: TLS configuration
+                            properties:
+                              ca:
+                                description: Struct containing the CA cert to use
+                                  for the targets.
+                                properties:
+                                  configMap:
+                                    description: ConfigMap containing data to use
+                                      for the targets.
+                                    properties:
+                                      key:
+                                        description: The key to select.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the ConfigMap
+                                          or its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  secret:
+                                    description: Secret containing data to use for
+                                      the targets.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                type: object
+                              cert:
+                                description: Struct containing the client cert file
+                                  for the targets.
+                                properties:
+                                  configMap:
+                                    description: ConfigMap containing data to use
+                                      for the targets.
+                                    properties:
+                                      key:
+                                        description: The key to select.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the ConfigMap
+                                          or its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                  secret:
+                                    description: Secret containing data to use for
+                                      the targets.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        description: 'Name of the referent. More info:
+                                          https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          TODO: Add other useful fields. apiVersion,
+                                          kind, uid?'
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                type: object
+                              insecureSkipVerify:
+                                description: Disable target certificate validation.
+                                type: boolean
+                              keySecret:
+                                description: Secret containing the client key file
+                                  for the targets.
+                                properties:
+                                  key:
+                                    description: The key of the secret to select from.  Must
+                                      be a valid secret key.
+                                    type: string
+                                  name:
+                                    description: 'Name of the referent. More info:
+                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      TODO: Add other useful fields. apiVersion, kind,
+                                      uid?'
+                                    type: string
+                                  optional:
+                                    description: Specify whether the Secret or its
+                                      key must be defined
+                                    type: boolean
+                                required:
+                                - key
+                                type: object
+                              serverName:
+                                description: Used to verify the hostname for the targets.
+                                type: string
+                            type: object
+                          to:
+                            description: The email address to send notifications to.
+                            type: string
+                        type: object
+                      type: array
                     name:
                       description: Name of the receiver. Must be unique across all
                         items from the list.
