@@ -74,8 +74,4 @@ spec:
 
 See the ServiceMonitor Documentation:
 
-> While `ServiceMonitors` must live in the same namespace as the Prometheus
-resource, discovered targets may come from any namespace. This allows
-cross-namespace monitoring use cases, for example, for meta-monitoring. Use the
-`namespaceSelector` of the `ServiceMonitorSpec` to restrict the
-namespaces from which Endpoints objects may be discovered.
+> By default and **before the version v0.19.0**, `ServiceMonitors` must be installed in the same namespace as the Prometheus resource. With the Prometheus Operator **v0.19.0 and above**, `ServiceMonitors` can be selected outside the Prometheus namespace via the `serviceMonitorNamespaceSelector` field of the Prometheus resource. The discovered targets may come from any namespace. This allows cross-namespace monitoring use cases, for example, for meta-monitoring.

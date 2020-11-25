@@ -88,6 +88,20 @@
             },
             'for': '5m',
           },
+          {
+            alert: 'PrometheusOperatorRejectedResources',
+            expr: |||
+              min_over_time(prometheus_operator_managed_resources{state="rejected",%(prometheusOperatorSelector)s}[5m]) > 0
+            ||| % $._config,
+            labels: {
+              severity: 'warning',
+            },
+            annotations: {
+              description: 'Prometheus operator in {{ $labels.namespace }} namespace rejected {{ printf "%0.0f" $value }} {{ $labels.controller }}/{{ $labels.resource }} resources.',
+              summary: 'Resources rejected by Prometheus operator',
+            },
+            'for': '5m',
+          },
         ],
       },
     ],

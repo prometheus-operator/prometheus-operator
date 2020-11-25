@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	jsonpatch "github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"io/ioutil"
 	v1 "k8s.io/api/admission/v1"
 	"net/http"
@@ -170,8 +170,8 @@ func api() *Admission {
 	})
 	a := &Admission{
 		logger:                     log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)),
-		validationErrorsCounter:    &validationErrors,
-		validationTriggeredCounter: &validationTriggered}
+		validationErrorsCounter:    validationErrors,
+		validationTriggeredCounter: validationTriggered}
 	a.logger = level.NewFilter(a.logger, level.AllowNone())
 	return a
 }

@@ -18,6 +18,8 @@ VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/thanos_types.go
 
+TYPES_V1ALPHA1_TARGET := pkg/apis/monitoring/v1alpha1/alertmanager_config_types.go
+
 TOOLS_BIN_DIR ?= $(shell pwd)/tmp/bin
 export PATH := $(TOOLS_BIN_DIR):$(PATH)
 
@@ -29,7 +31,8 @@ GOJSONTOYAML_BINARY=$(TOOLS_BIN_DIR)/gojsontoyaml
 JSONNET_BINARY=$(TOOLS_BIN_DIR)/jsonnet
 JSONNETFMT_BINARY=$(TOOLS_BIN_DIR)/jsonnetfmt
 SHELLCHECK_BINARY=$(TOOLS_BIN_DIR)/shellcheck
-TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(EMBEDMD_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY)
+PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
+TOOLING=$(PO_DOCGEN_BINARY) $(CONTROLLER_GEN_BINARY) $(EMBEDMD_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY)
 
 K8S_GEN_VERSION:=release-1.14
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen
@@ -37,10 +40,29 @@ K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
 
 K8S_GEN_DEPS:=.header
 K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
+K8S_GEN_DEPS+=$(TYPES_V1ALPHA1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(TOOLS_BIN_DIR)/$(bin))
 
-GO_BUILD_RECIPE=GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -ldflags="-s -X $(GO_PKG)/pkg/version.Version=$(VERSION)"
+# The Prometheus common library import path
+# https://github.com/prometheus/common
+PROMETHEUS_COMMON_PKG=github.com/prometheus/common
+
+# The ldflags for the go build process to set the version related data.
+# The environments variables are in sync with GitHub Action specification.
+# When changing the CI system remember to update env variables respectively.
+#
+# source: https://docs.github.com/en/free-pro-team@latest/actions/reference/environment-variables#default-environment-variables
+GO_BUILD_VERSION_LDFLAGS=\
+	-X $(PROMETHEUS_COMMON_PKG)/version.Revision=$(GITHUB_SHA)  \
+	-X $(PROMETHEUS_COMMON_PKG)/version.BuildUser=$(GITHUB_ACTOR)  \
+	-X $(PROMETHEUS_COMMON_PKG)/version.BuildDate=$(shell date +"%Y%m%d-%T") \
+	-X $(PROMETHEUS_COMMON_PKG)/version.Branch=$(GITHUB_REF:refs/heads/%=%) \
+	-X $(PROMETHEUS_COMMON_PKG)/version.Version=$(VERSION)
+
+GO_BUILD_RECIPE=GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -ldflags="-s $(GO_BUILD_VERSION_LDFLAGS)"
+
 pkgs = $(shell go list ./... | grep -v /test/ | grep -v /contrib/)
+pkgs += $(shell go list $(GO_PKG)/pkg/apis/monitoring...)
 
 .PHONY: all
 all: format generate build test
@@ -69,9 +91,11 @@ prometheus-config-reloader:
 po-lint:
 	$(GO_BUILD_RECIPE) -o po-lint cmd/po-lint/main.go
 
-DEEPCOPY_TARGET := pkg/apis/monitoring/v1/zz_generated.deepcopy.go
-$(DEEPCOPY_TARGET): $(CONTROLLER_GEN_BINARY)
+DEEPCOPY_TARGETS := pkg/apis/monitoring/v1/zz_generated.deepcopy.go pkg/apis/monitoring/v1alpha1/zz_generated.deepcopy.go
+$(DEEPCOPY_TARGETS): $(CONTROLLER_GEN_BINARY)
 	cd ./pkg/apis/monitoring/v1 && $(CONTROLLER_GEN_BINARY) object:headerFile=$(CURDIR)/.header \
+		paths=.
+	cd ./pkg/apis/monitoring/v1alpha1 && $(CONTROLLER_GEN_BINARY) object:headerFile=$(CURDIR)/.header \
 		paths=.
 
 CLIENT_TARGET := pkg/client/versioned/clientset.go
@@ -80,31 +104,31 @@ $(CLIENT_TARGET): $(K8S_GEN_DEPS)
 	$(K8S_GEN_ARGS) \
 	--input-base     "" \
 	--clientset-name "versioned" \
-	--input	         "$(GO_PKG)/pkg/apis/monitoring/v1" \
+	--input	         "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1" \
 	--output-package "$(GO_PKG)/pkg/client"
 
-LISTER_TARGET := pkg/client/listers/monitoring/v1/prometheus.go
-$(LISTER_TARGET): $(K8S_GEN_DEPS)
+LISTER_TARGETS := pkg/client/listers/monitoring/v1/prometheus.go pkg/client/listers/monitoring/v1alpha1/prometheus.go
+$(LISTER_TARGETS): $(K8S_GEN_DEPS)
 	$(LISTER_GEN_BINARY) \
 	$(K8S_GEN_ARGS) \
-	--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1" \
+	--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1" \
 	--output-package "$(GO_PKG)/pkg/client/listers"
 
-INFORMER_TARGET := pkg/client/informers/externalversions/monitoring/v1/prometheus.go
-$(INFORMER_TARGET): $(K8S_GEN_DEPS) $(LISTER_TARGET) $(CLIENT_TARGET)
+INFORMER_TARGETS := pkg/client/informers/externalversions/monitoring/v1/prometheus.go pkg/client/informers/externalversions/monitoring/v1alpha1/prometheus.go
+$(INFORMER_TARGETS): $(K8S_GEN_DEPS) $(LISTER_TARGETS) $(CLIENT_TARGET)
 	$(INFORMER_GEN_BINARY) \
 	$(K8S_GEN_ARGS) \
 	--versioned-clientset-package "$(GO_PKG)/pkg/client/versioned" \
 	--listers-package "$(GO_PKG)/pkg/client/listers" \
-	--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1" \
+	--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1" \
 	--output-package  "$(GO_PKG)/pkg/client/informers"
 
 .PHONY: k8s-gen
 k8s-gen: \
-	$(DEEPCOPY_TARGET) \
+	$(DEEPCOPY_TARGETS) \
 	$(CLIENT_TARGET) \
-	$(LISTER_TARGET) \
-	$(INFORMER_TARGET) \
+	$(LISTER_TARGETS) \
+	$(INFORMER_TARGETS) \
 	$(OPENAPI_TARGET)
 
 .PHONY: image
@@ -135,53 +159,16 @@ tidy:
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGET) generate-crds bundle.yaml example/mixin/alerts.yaml $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml $(shell find Documentation -type f)
 
 .PHONY: generate-crds
-generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET)
+generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
 	GOOS=$(OS) GOARCH=$(ARCH) go run -v ./scripts/generate-crds.go --controller-gen=$(CONTROLLER_GEN_BINARY) --gojsontoyaml=$(GOJSONTOYAML_BINARY)
 
 .PHONY: generate-remote-write-certs
 generate-remote-write-certs:
 	mkdir -p test/e2e/remote_write_certs && \
-	openssl req -newkey rsa:4096 \
-		-new -nodes -x509 -sha256 \
-		-days 3650 \
-		-out test/e2e/remote_write_certs/ca.crt \
-		-keyout test/e2e/remote_write_certs/ca.key \
-		-subj "/CN=caandserver.com"
-	openssl req -new -newkey rsa:4096 \
-		-keyout test/e2e/remote_write_certs/client.key \
-		-out test/e2e/remote_write_certs/client.csr \
-		-nodes \
-		-subj "/CN=PrometheusRemoteWriteClient"
-	openssl x509 -req -sha256 \
-		-days 3650 \
-		-in test/e2e/remote_write_certs/client.csr \
-		-CA test/e2e/remote_write_certs/ca.crt \
-		-CAkey test/e2e/remote_write_certs/ca.key \
-		-set_serial 02 \
-		-out test/e2e/remote_write_certs/client.crt
-	rm test/e2e/remote_write_certs/client.csr
-	openssl req -newkey rsa:4096 \
-		-new -nodes -x509 -sha256 \
-		-days 3650 \
-		-out test/e2e/remote_write_certs/bad_ca.crt \
-		-keyout test/e2e/remote_write_certs/bad_ca.key \
-		-subj "/CN=badcaandserver.com"
-	openssl req -new -newkey rsa:4096 \
-		-keyout test/e2e/remote_write_certs/bad_client.key \
-		-out test/e2e/remote_write_certs/bad_client.csr \
-		-nodes \
-		-subj "/CN=BadPrometheusRemoteWriteClient"
-	openssl x509 -req -sha256 \
-		-days 3650 \
-		-in test/e2e/remote_write_certs/bad_client.csr \
-		-CA test/e2e/remote_write_certs/bad_ca.crt \
-		-CAkey test/e2e/remote_write_certs/bad_ca.key \
-		-set_serial 02 \
-		-out test/e2e/remote_write_certs/bad_client.crt
-	rm test/e2e/remote_write_certs/bad_client.csr
+	(cd scripts && GOOS=$(OS) GOARCH=$(ARCH) go run -v ./certs/.)
 
 bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f)
 	scripts/generate-bundle.sh
@@ -210,8 +197,8 @@ jsonnet/prometheus-operator/prometheus-operator.libsonnet: VERSION
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
 
-Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET)
-	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) > $@
+Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
+	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) > $@
 
 Documentation/compatibility.md: $(PO_DOCGEN_BINARY) pkg/prometheus/statefulset.go
 	$(PO_DOCGEN_BINARY) compatibility > $@
@@ -243,6 +230,10 @@ check-license:
 .PHONY: shellcheck
 shellcheck: $(SHELLCHECK_BINARY)
 	$(SHELLCHECK_BINARY) $(shell find . -type f -name "*.sh" -not -path "*/vendor/*")
+
+.PHONY: check-metrics
+check-metrics: $(PROMLINTER_BINARY)
+	$(PROMLINTER_BINARY) .
 
 ###########
 # Testing #

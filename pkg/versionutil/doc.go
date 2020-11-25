@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package version
-
-// Version represents the software version of the Prometheus Operator
-var Version string
+// Extends the https://github.com/prometheus/common/blob/master/version/info.go package by
+// adding common CLI support and test coverage.
+package versionutil

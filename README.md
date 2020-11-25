@@ -9,28 +9,27 @@ Note: Project was previously known as coreos/prometheus-operator.
 
 ## Overview
 
-The Prometheus Operator provides [Kubernetes](https://kubernetes.io/) native deployment and management of 
-[Prometheus](https://prometheus.io/) and related monitoring components.  The purpose of this project is to 
+The Prometheus Operator provides [Kubernetes](https://kubernetes.io/) native deployment and management of
+[Prometheus](https://prometheus.io/) and related monitoring components.  The purpose of this project is to
 simplify and automate the configuration of a Prometheus based monitoring stack for Kubernetes clusters.
 
 The Prometheus operator includes, but is not limited to, the following features:
 
-* **Kubernetes Custom Resources**: Use Kubernetes custom resources to deploy and manage Prometheus, Alertmanager, 
+* **Kubernetes Custom Resources**: Use Kubernetes custom resources to deploy and manage Prometheus, Alertmanager,
   and related components.
 
-* **Simplified Deployment Configuration**: Configure the fundamentals of Prometheus like versions, persistence, 
+* **Simplified Deployment Configuration**: Configure the fundamentals of Prometheus like versions, persistence,
   retention policies, and replicas from a native Kubernetes resource.
 
 * **Prometheus Target Configuration**: Automatically generate monitoring target configurations based
   on familiar Kubernetes label queries; no need to learn a Prometheus specific configuration language.
 
-For an introduction to the Prometheus Operator, see the initial [blog
-post](https://coreos.com/blog/the-prometheus-operator.html).
+For an introduction to the Prometheus Operator, see the [getting started](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/getting-started.md) guide.
 
 ## Prometheus Operator vs. kube-prometheus vs. community helm chart
 
 ### Prometheus Operator
-The Prometheus Operator uses Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) to simplifiy the deployment and configuration of Prometheus, Alertmanager, and related monitoring components.
+The Prometheus Operator uses Kubernetes [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) to simplify the deployment and configuration of Prometheus, Alertmanager, and related monitoring components.
 
 ### kube-prometheus
 [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) provides example configurations for a complete cluster monitoring
@@ -64,7 +63,7 @@ The Operator acts on the following [custom resource definitions (CRDs)](https://
 
 * **`ThanosRuler`**, which defines a desired Thanos Ruler deployment.
 
-* **`ServiceMonitor`**, which declaratively specifies how groups of Kubernetes services should be monitored. 
+* **`ServiceMonitor`**, which declaratively specifies how groups of Kubernetes services should be monitored.
   The Operator automatically generates Prometheus scrape configuration based on the current state of the objects in the API server.
 
 * **`PodMonitor`**, which declaratively specifies how group of pods should be monitored.
@@ -76,6 +75,9 @@ The Operator acts on the following [custom resource definitions (CRDs)](https://
 
 * **`PrometheusRule`**, which defines a desired set of Prometheus alerting and/or recording rules.
   The Operator generates a rule file, which can be used by Prometheus instances.
+
+* **`AlertmanagerConfig`**, which declaratively specifies subsections of the Alertmanager configuration, allowing
+  routing of alerts to custom receivers, and setting inhibit rules.
 
 The Prometheus operator automatically detects changes in the Kubernetes API server to any of the above objects, and ensures that
 matching deployments and configurations are kept in sync.
@@ -176,11 +178,11 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 #### Running *end-to-end* tests on local kind cluster:
 
-1. `kind create cluster --image=kindest/node:<latest>`. e.g `v1.16.2` version. 
+1. `kind create cluster --image=kindest/node:<latest>`. e.g `v1.16.2` version.
 2. `export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"`
 3. `make image` - build Prometheus Operator  docker image locally.
-4. `for n in "operator" "config-reloader"; do kind load docker-image "quay.io/prometheus-operator/prometheus-$n:$(git rev-parse --short HEAD)"; done` - publish 
-built locally images to be accessible inside kind. 
+4. `for n in "operator" "config-reloader"; do kind load docker-image "quay.io/prometheus-operator/prometheus-$n:$(git rev-parse --short HEAD)"; done` - publish
+built locally images to be accessible inside kind.
 5. `make test-e2e`
 
 ## Contributing

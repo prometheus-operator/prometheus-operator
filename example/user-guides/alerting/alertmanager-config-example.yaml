@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: config-example
+  labels:
+    alertmanagerConfig: example
+spec:
+  route:
+    groupBy: ['job']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 12h
+    receiver: 'wechat-example'
+  receivers:
+  - name: 'wechat-example'
+    wechatConfigs:
+    - apiURL: 'http://wechatserver:8080/'
+      corpID: 'wechat-corpid'
+      apiSecret:
+        name: 'wechat-config'
+        key: 'apiSecret'
+
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: wechat-config
+data:
+  apiSecret: d2VjaGF0LXNlY3JldAo=

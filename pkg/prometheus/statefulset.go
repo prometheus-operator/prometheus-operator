@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -51,6 +51,7 @@ const (
 )
 
 var (
+	minShards                   int32 = 1
 	minReplicas                 int32 = 1
 	defaultMaxConcurrency       int32 = 20
 	managedByOperatorLabel            = "managed-by"
@@ -58,14 +59,42 @@ var (
 	managedByOperatorLabels           = map[string]string{
 		managedByOperatorLabel: managedByOperatorLabelValue,
 	}
-	probeTimeoutSeconds int32 = 3
+	shardLabelName                = "operator.prometheus.io/shard"
+	prometheusNameLabelName       = "operator.prometheus.io/name"
+	probeTimeoutSeconds     int32 = 3
 )
 
+func expectedStatefulSetShardNames(
+	p *monitoringv1.Prometheus,
+) []string {
+	res := []string{}
+	shards := minShards
+	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
+		shards = *p.Spec.Shards
+	}
+
+	for i := int32(0); i < shards; i++ {
+		res = append(res, prometheusNameByShard(p.Name, i))
+	}
+
+	return res
+}
+
+func prometheusNameByShard(name string, shard int32) string {
+	base := prefixedName(name)
+	if shard == 0 {
+		return base
+	}
+	return fmt.Sprintf("%s-shard-%d", base, shard)
+}
+
 func makeStatefulSet(
+	name string,
 	p monitoringv1.Prometheus,
 	config *operator.Config,
 	ruleConfigMapNames []string,
 	inputHash string,
+	shard int32,
 ) (*appsv1.StatefulSet, error) {
 	// p is passed in by value, not by reference. But p contains references like
 	// to annotation map, that do not get copied on function invocation. Ensure to
@@ -112,7 +141,7 @@ func makeStatefulSet(
 		}
 	}
 
-	spec, err := makeStatefulSetSpec(p, config, ruleConfigMapNames, parsedVersion)
+	spec, err := makeStatefulSetSpec(p, config, shard, ruleConfigMapNames, parsedVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "make StatefulSet spec")
 	}
@@ -126,10 +155,17 @@ func makeStatefulSet(
 			annotations[key] = value
 		}
 	}
+	labels := make(map[string]string)
+	for key, value := range p.ObjectMeta.Labels {
+		labels[key] = value
+	}
+	labels[shardLabelName] = fmt.Sprintf("%d", shard)
+	labels[prometheusNameLabelName] = p.Name
+
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        prefixedName(p.Name),
-			Labels:      config.Labels.Merge(p.ObjectMeta.Labels),
+			Name:        name,
+			Labels:      config.Labels.Merge(labels),
 			Annotations: annotations,
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -275,17 +311,19 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 	return svc
 }
 
-func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConfigMapNames []string,
+func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard int32, ruleConfigMapNames []string,
 	version semver.Version) (*appsv1.StatefulSetSpec, error) {
 	// Prometheus may take quite long to shut down to checkpoint existing data.
 	// Allow up to 10 minutes for clean termination.
 	terminationGracePeriod := int64(600)
 
-	baseImage := operator.StringValOrDefault(p.Spec.BaseImage, operator.DefaultPrometheusBaseImage)
-	if p.Spec.Image != nil && strings.TrimSpace(*p.Spec.Image) != "" {
-		baseImage = *p.Spec.Image
-	}
-	prometheusImagePath, err := operator.BuildImagePath(baseImage, p.Spec.Version, p.Spec.Tag, p.Spec.SHA)
+	prometheusImagePath, err := operator.BuildImagePath(
+		operator.StringPtrValOrDefault(p.Spec.Image, ""),
+		operator.StringValOrDefault(p.Spec.BaseImage, c.PrometheusDefaultBaseImage),
+		p.Spec.Version,
+		p.Spec.Tag,
+		p.Spec.SHA,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -619,8 +657,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	podSelectorLabels := map[string]string{
-		"app":        "prometheus",
-		"prometheus": p.Name,
+		"app":                   "prometheus",
+		"prometheus":            p.Name,
+		shardLabelName:          fmt.Sprintf("%d", shard),
+		prometheusNameLabelName: p.Name,
 	}
 	if p.Spec.PodMetadata != nil {
 		if p.Spec.PodMetadata.Labels != nil {
@@ -646,17 +686,15 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 
 	disableCompaction := p.Spec.DisableCompaction
 	if p.Spec.Thanos != nil {
-		thBaseImage := operator.StringPtrValOrDefault(p.Spec.Thanos.BaseImage, operator.DefaultThanosBaseImage)
-		thVersion := operator.StringPtrValOrDefault(p.Spec.Thanos.Version, operator.DefaultThanosVersion)
-		thTag := operator.StringPtrValOrDefault(p.Spec.Thanos.Tag, "")
-		thSHA := operator.StringPtrValOrDefault(p.Spec.Thanos.SHA, "")
-		thanosImage, err := operator.BuildImagePath(thBaseImage, thVersion, thTag, thSHA)
+		thanosImage, err := operator.BuildImagePath(
+			operator.StringPtrValOrDefault(p.Spec.Thanos.Image, ""),
+			operator.StringPtrValOrDefault(p.Spec.Thanos.BaseImage, c.ThanosDefaultBaseImage),
+			operator.StringPtrValOrDefault(p.Spec.Thanos.Version, operator.DefaultThanosVersion),
+			operator.StringPtrValOrDefault(p.Spec.Thanos.Tag, ""),
+			operator.StringPtrValOrDefault(p.Spec.Thanos.SHA, ""),
+		)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to build image path")
-		}
-		// If the image path is set in the custom resource, override other image settings.
-		if p.Spec.Thanos.Image != nil && strings.TrimSpace(*p.Spec.Thanos.Image) != "" {
-			thanosImage = *p.Spec.Thanos.Image
 		}
 
 		bindAddress := "[$(POD_IP)]"
@@ -711,14 +749,20 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 			Resources: p.Spec.Thanos.Resources,
 		}
 
-		if p.Spec.Thanos.ObjectStorageConfig != nil {
-			container.Args = append(container.Args, "--objstore.config=$(OBJSTORE_CONFIG)")
-			container.Env = append(container.Env, v1.EnvVar{
-				Name: "OBJSTORE_CONFIG",
-				ValueFrom: &v1.EnvVarSource{
-					SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
-				},
-			})
+		if p.Spec.Thanos.ObjectStorageConfig != nil || p.Spec.Thanos.ObjectStorageConfigFile != nil {
+			if p.Spec.Thanos.ObjectStorageConfig != nil {
+				container.Args = append(container.Args, "--objstore.config=$(OBJSTORE_CONFIG)")
+				container.Env = append(container.Env, v1.EnvVar{
+					Name: "OBJSTORE_CONFIG",
+					ValueFrom: &v1.EnvVarSource{
+						SecretKeyRef: p.Spec.Thanos.ObjectStorageConfig,
+					},
+				})
+			}
+
+			if p.Spec.Thanos.ObjectStorageConfigFile != nil {
+				container.Args = append(container.Args, "--objstore.config-file="+*p.Spec.Thanos.ObjectStorageConfigFile)
+			}
 
 			container.Args = append(container.Args, fmt.Sprintf("--tsdb.path=%s", storageDir))
 			container.VolumeMounts = append(
@@ -814,6 +858,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 			p.Spec.LogLevel,
 			configReloaderArgs,
 			configReloaderVolumeMounts,
+			shard,
 		),
 	}, additionalContainers...)
 
@@ -849,6 +894,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, ruleConf
 				Volumes:                       volumes,
 				Tolerations:                   p.Spec.Tolerations,
 				Affinity:                      p.Spec.Affinity,
+				TopologySpreadConstraints:     p.Spec.TopologySpreadConstraints,
 			},
 		},
 	}, nil

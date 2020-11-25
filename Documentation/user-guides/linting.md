@@ -17,8 +17,7 @@ Here is an example script to lint a `src` sub-directory full of Prometheus Opera
 ```sh
 #!/bin/sh
 
-LINTER="quay.io/coreos/prometheus-operator-lint"
-SCRIPT=$(basename "$0")
+LINTER="quay.io/coreos/po-tooling"
 
 lint_files() {
   if [ -x "$(command -v po-lint)" ]; then
@@ -35,17 +34,13 @@ lint_files() {
     exit ${had_errors}
   elif [ -x "$(command -v docker)" ]; then
     echo "Using Dockerized linter."
-    docker run \
-           --rm \
-           --volume "$(pwd):/data:ro" \
-           --entrypoint "/data/${SCRIPT}" \
-           --workdir /data \
-           "${LINTER}" "${1}" "${2}"
+    docker run --rm --volume "$PWD:/data:ro" --workdir /data ${LINTER} \
+    /bin/bash -c "/go/bin/po-lint $1/$2"
   else
     echo "Linter executable not found."
     exit 1
   fi
 }
 
-lint_files "src" "*.yaml"
+lint_files "./src" "*.yaml"
 ```

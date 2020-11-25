@@ -22,6 +22,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/kylelemons/godebug/pretty"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	yaml "gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
@@ -204,8 +205,8 @@ alerting:
 			map[string]*monitoringv1.ServiceMonitor{},
 			nil,
 			nil,
-			map[string]BasicAuthCredentials{},
-			map[string]BearerToken{},
+			map[string]assets.BasicAuthCredentials{},
+			map[string]assets.BearerToken{},
 			nil,
 			nil,
 			nil,
@@ -424,7 +425,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 				},
 			},
 		},
-		map[string]BasicAuthCredentials{},
+		map[string]assets.BasicAuthCredentials{},
 		nil,
 		nil,
 		nil,
@@ -528,7 +529,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 			},
 		},
-		map[string]BasicAuthCredentials{},
+		map[string]assets.BasicAuthCredentials{},
 		nil,
 		nil,
 		nil,
@@ -634,7 +635,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 				},
 			},
 		},
-		map[string]BasicAuthCredentials{},
+		map[string]assets.BasicAuthCredentials{},
 		nil,
 		nil,
 		nil,
@@ -747,7 +748,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 				},
 			},
 		},
-		map[string]BasicAuthCredentials{},
+		map[string]assets.BasicAuthCredentials{},
 		nil,
 		nil,
 		nil,
@@ -874,7 +875,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 			},
 		},
-		map[string]BasicAuthCredentials{},
+		map[string]assets.BasicAuthCredentials{},
 		nil,
 		nil,
 		nil,
@@ -966,7 +967,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 
 	testcases := []struct {
 		apiserverConfig  *monitoringv1.APIServerConfig
-		basicAuthSecrets map[string]BasicAuthCredentials
+		basicAuthSecrets map[string]assets.BasicAuthCredentials
 		expected         string
 	}{
 		{
@@ -987,7 +988,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 				BearerTokenFile: "bearer_token_file",
 				TLSConfig:       nil,
 			},
-			map[string]BasicAuthCredentials{
+			map[string]assets.BasicAuthCredentials{
 				"apiserver": {
 					"foo",
 					"bar",
@@ -1051,8 +1052,8 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1130,8 +1131,8 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1210,8 +1211,8 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1288,8 +1289,8 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		[]byte(`- action: drop
   source_labels: [__meta_kubernetes_node_name]
@@ -1401,8 +1402,8 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1478,6 +1479,15 @@ scrape_configs:
   - target_label: job
     replacement: crio
     action: replace
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs:
   - source_labels:
     - __name__
@@ -1546,8 +1556,8 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1608,6 +1618,15 @@ scrape_configs:
     action: replace
   - target_label: ns-key
     replacement: pod-monitor-ns
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs:
   - source_labels:
     - pod_name
@@ -1679,8 +1698,8 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1754,6 +1773,15 @@ scrape_configs:
     action: replace
   - target_label: ns-key
     replacement: default
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   metric_relabel_configs: []
 alerting:
   alert_relabel_configs:
@@ -1792,8 +1820,8 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		[]byte(`- static_configs:
@@ -1888,8 +1916,8 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -1963,6 +1991,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2018,8 +2055,8 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2074,6 +2111,15 @@ scrape_configs:
     replacement: default/testpodmonitor1
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2130,8 +2176,8 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2205,6 +2251,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2259,8 +2314,8 @@ func TestSettingHonorLabels(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2333,6 +2388,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2388,8 +2452,8 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2462,6 +2526,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2516,8 +2589,8 @@ func TestTargetLabels(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2590,6 +2663,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2643,8 +2725,8 @@ func TestPodTargetLabels(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2717,6 +2799,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2770,8 +2861,8 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 			},
 		},
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2825,6 +2916,15 @@ scrape_configs:
     replacement: default/testpodmonitor1
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -2870,8 +2970,8 @@ func TestEmptyEndointPorts(t *testing.T) {
 		},
 		nil,
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -2934,6 +3034,15 @@ scrape_configs:
     - __meta_kubernetes_service_name
     target_label: job
     replacement: ${1}
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -3004,8 +3113,8 @@ func generateTestConfig(version string) ([]byte, error) {
 		makeServiceMonitors(),
 		makePodMonitors(),
 		nil,
-		map[string]BasicAuthCredentials{},
-		map[string]BearerToken{},
+		map[string]assets.BasicAuthCredentials{},
+		map[string]assets.BearerToken{},
 		nil,
 		nil,
 		nil,
@@ -3464,6 +3573,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -3524,6 +3642,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   sample_limit: %d
 alerting:
   alert_relabel_configs:
@@ -3608,8 +3735,8 @@ alerting:
 				},
 				nil,
 				nil,
-				map[string]BasicAuthCredentials{},
-				map[string]BearerToken{},
+				map[string]assets.BasicAuthCredentials{},
+				map[string]assets.BearerToken{},
 				nil,
 				nil,
 				nil,
@@ -3682,6 +3809,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
 alerting:
   alert_relabel_configs:
   - action: labeldrop
@@ -3742,6 +3878,15 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __address__
+    target_label: __tmp_hash
+    modulus: 1
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    regex: $(SHARD)
+    action: keep
   target_limit: %d
 alerting:
   alert_relabel_configs:
@@ -3855,8 +4000,8 @@ alerting:
 				},
 				nil,
 				nil,
-				map[string]BasicAuthCredentials{},
-				map[string]BearerToken{},
+				map[string]assets.BasicAuthCredentials{},
+				map[string]assets.BearerToken{},
 				nil,
 				nil,
 				nil,

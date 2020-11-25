@@ -20,10 +20,12 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -87,21 +89,6 @@ type Operator struct {
 
 	configGenerator *configGenerator
 }
-
-// BasicAuthCredentials represents a username password pair to be used with
-// basic http authentication, see https://tools.ietf.org/html/rfc7617.
-type BasicAuthCredentials struct {
-	username string
-	password string
-}
-
-// BearerToken represents a bearer token, see
-// https://tools.ietf.org/html/rfc6750.
-type BearerToken string
-
-// TLSAsset represents any TLS related opaque string, e.g. CA files, client
-// certificates.
-type TLSAsset string
 
 // New creates a new controller.
 func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometheus.Registerer) (*Operator, error) {
@@ -312,7 +299,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		}
 		nsInf := cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(
-				listwatch.NewUnprivilegedNamespaceListWatchFromClient(o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
 			),
 			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
 		)
@@ -347,7 +334,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForCacheSync(ctx, log.With(c.logger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", infs.name), inf.Informer()) {
 				ok = false
 			}
 		}
@@ -360,7 +347,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"PromNamespace", c.nsPromInf},
 		{"MonNamespace", c.nsMonInf},
 	} {
-		if !operator.WaitForCacheSync(ctx, log.With(c.logger, "informer", inf.name), inf.informer) {
+		if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", inf.name), inf.informer) {
 			ok = false
 		}
 	}
@@ -678,7 +665,7 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 	return nil
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleSmonAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -689,7 +676,7 @@ func (c *Operator) handleSmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.ServiceMonitor).ResourceVersion == cur.(*monitoringv1.ServiceMonitor).ResourceVersion {
 		return
@@ -704,7 +691,7 @@ func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleSmonDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -715,7 +702,7 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handlePmonAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -725,7 +712,7 @@ func (c *Operator) handlePmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PodMonitor).ResourceVersion == cur.(*monitoringv1.PodMonitor).ResourceVersion {
 		return
@@ -740,7 +727,7 @@ func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handlePmonDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -751,7 +738,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleBmonAdd(obj interface{}) {
 	if o, ok := c.getObject(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe added")
@@ -760,7 +747,7 @@ func (c *Operator) handleBmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.Probe).ResourceVersion == cur.(*monitoringv1.Probe).ResourceVersion {
 		return
@@ -773,7 +760,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleBmonDelete(obj interface{}) {
 	if o, ok := c.getObject(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe delete")
@@ -782,7 +769,7 @@ func (c *Operator) handleBmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleRuleAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -793,7 +780,7 @@ func (c *Operator) handleRuleAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PrometheusRule).ResourceVersion == cur.(*monitoringv1.PrometheusRule).ResourceVersion {
 		return
@@ -808,7 +795,7 @@ func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (c *Operator) handleRuleDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -819,7 +806,7 @@ func (c *Operator) handleRuleDelete(obj interface{}) {
 	}
 }
 
-// TODO: Do we need to enque secrets just for the namespace or in general?
+// TODO: Do we need to enqueue secrets just for the namespace or in general?
 func (c *Operator) handleSecretDelete(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -854,7 +841,7 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 	}
 }
 
-// TODO: Do we need to enque configmaps just for the namespace or in general?
+// TODO: Do we need to enqueue configmaps just for the namespace or in general?
 func (c *Operator) handleConfigMapAdd(obj interface{}) {
 	o, ok := c.getObject(obj)
 	if ok {
@@ -948,16 +935,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	objs, err := c.promInfs.List(labels.Everything())
-	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "listing all Prometheus instances from cache failed",
-			"err", err,
-		)
-		return
-	}
-
-	for _, obj := range objs {
+	err = c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for Prometheus instances in the namespace.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
@@ -1026,7 +1004,14 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			c.enqueue(p)
 			return
 		}
+	})
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "listing all Prometheus instances from cache failed",
+			"err", err,
+		)
 	}
+
 }
 
 // worker runs a worker thread that just dequeues items, processes them, and
@@ -1065,7 +1050,11 @@ func (c *Operator) prometheusForStatefulSet(sset interface{}) *monitoringv1.Prom
 		return nil
 	}
 
-	promKey := statefulSetKeyToPrometheusKey(key)
+	match, promKey := statefulSetKeyToPrometheusKey(key)
+	if !match {
+		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus key format", "key", key)
+		return nil
+	}
 
 	p, err := c.promInfs.Get(promKey)
 	if apierrors.IsNotFound(err) {
@@ -1084,18 +1073,35 @@ func prometheusNameFromStatefulSetName(name string) string {
 	return strings.TrimPrefix(name, "prometheus-")
 }
 
-func statefulSetNameFromPrometheusName(name string) string {
-	return "prometheus-" + name
+func statefulSetNameFromPrometheusName(name string, shard int) string {
+	if shard == 0 {
+		return fmt.Sprintf("prometheus-%s", name)
+	}
+	return fmt.Sprintf("prometheus-%s-shard-%d", name, shard)
 }
 
-func statefulSetKeyToPrometheusKey(key string) string {
-	keyParts := strings.Split(key, "/")
-	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "prometheus-")
+var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
+var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
+
+func statefulSetKeyToPrometheusKey(key string) (bool, string) {
+	r := prometheusKeyInStatefulSet
+	if prometheusKeyInShardStatefulSet.MatchString(key) {
+		r = prometheusKeyInShardStatefulSet
+	}
+
+	matches := r.FindAllStringSubmatch(key, 2)
+	if len(matches) != 1 {
+		return false, ""
+	}
+	if len(matches[0]) != 3 {
+		return false, ""
+	}
+	return true, matches[0][1] + "/" + matches[0][2]
 }
 
-func prometheusKeyToStatefulSetKey(key string) string {
+func prometheusKeyToStatefulSetKey(key string, shard int) string {
 	keyParts := strings.Split(key, "/")
-	return keyParts[0] + "/prometheus-" + keyParts[1]
+	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(keyParts[1], shard))
 }
 
 func (c *Operator) handleStatefulSetDelete(obj interface{}) {
@@ -1164,7 +1170,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	assetStore := newAssetStore(c.kclient.CoreV1(), c.kclient.CoreV1())
+	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
 
 	if err := c.createOrUpdateConfigurationSecret(ctx, p, ruleConfigMapNames, assetStore); err != nil {
 		return errors.Wrap(err, "creating config failed")
@@ -1181,64 +1187,88 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
-	// Ensure we have a StatefulSet running Prometheus deployed.
-	obj, err := c.ssetInfs.Get(prometheusKeyToStatefulSetKey(key))
 
-	if err != nil && !apierrors.IsNotFound(err) {
-		return errors.Wrap(err, "retrieving statefulset failed")
-	}
+	// Ensure we have a StatefulSet running Prometheus deployed and that StatefulSet names are created correctly.
+	expected := expectedStatefulSetShardNames(p)
+	for shard, ssetName := range expected {
+		level.Debug(c.logger).Log("msg", "reconciling statefulset", "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 
-	exists := !apierrors.IsNotFound(err)
-
-	spec := appsv1.StatefulSetSpec{}
-	if obj != nil {
-		ss := obj.(*appsv1.StatefulSet)
-		spec = ss.Spec
-	}
-	newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, spec)
-	if err != nil {
-		return err
-	}
-
-	sset, err := makeStatefulSet(*p, &c.config, ruleConfigMapNames, newSSetInputHash)
-	if err != nil {
-		return errors.Wrap(err, "making statefulset failed")
-	}
-	operator.SanitizeSTS(sset)
-
-	if !exists {
-		level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
-		level.Debug(c.logger).Log("msg", "creating Prometheus statefulset")
-		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
-			return errors.Wrap(err, "creating statefulset failed")
+		obj, err := c.ssetInfs.Get(prometheusKeyToStatefulSetKey(key, shard))
+		exists := !apierrors.IsNotFound(err)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return errors.Wrap(err, "retrieving statefulset failed")
 		}
-		return nil
+
+		spec := appsv1.StatefulSetSpec{}
+		if obj != nil {
+			ss := obj.(*appsv1.StatefulSet)
+			spec = ss.Spec
+		}
+		newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, spec)
+		if err != nil {
+			return err
+		}
+
+		sset, err := makeStatefulSet(ssetName, *p, &c.config, ruleConfigMapNames, newSSetInputHash, int32(shard))
+		if err != nil {
+			return errors.Wrap(err, "making statefulset failed")
+		}
+		operator.SanitizeSTS(sset)
+
+		if !exists {
+			level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
+			level.Debug(c.logger).Log("msg", "creating Prometheus statefulset")
+			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
+				return errors.Wrap(err, "creating statefulset failed")
+			}
+			return nil
+		}
+
+		oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
+		if newSSetInputHash == oldSSetInputHash {
+			level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+			return nil
+		}
+
+		level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
+
+		_, err = ssetClient.Update(ctx, sset, metav1.UpdateOptions{})
+		sErr, ok := err.(*apierrors.StatusError)
+
+		if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
+			c.metrics.StsDeleteCreateCounter().Inc()
+			level.Info(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet", "details", sErr.ErrStatus.Details)
+			propagationPolicy := metav1.DeletePropagationForeground
+			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
+			}
+			return nil
+		}
+
+		if err != nil {
+			return errors.Wrap(err, "updating StatefulSet failed")
+		}
 	}
 
-	oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
-	if newSSetInputHash == oldSSetInputHash {
-		level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
-		return nil
+	ssets := map[string]struct{}{}
+	for _, ssetName := range expected {
+		ssets[ssetName] = struct{}{}
 	}
 
-	level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
+	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prometheusNameLabelName: p.Name}), func(obj interface{}) {
+		s := obj.(*appsv1.StatefulSet)
 
-	_, err = ssetClient.Update(ctx, sset, metav1.UpdateOptions{})
-	sErr, ok := err.(*apierrors.StatusError)
+		if _, ok := ssets[s.Name]; ok {
+			// Do not delete statefulsets that we still expect to exist. This
+			// is to cleanup StatefulSets when shards are reduced.
+			return
+		}
 
-	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
-		c.metrics.StsDeleteCreateCounter().Inc()
-		level.Info(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet", "details", sErr.ErrStatus.Details)
 		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
+		if err := ssetClient.Delete(context.TODO(), s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+			level.Error(c.logger).Log("failed to delete StatefulSet to cleanup")
 		}
-		return nil
-	}
-
-	if err != nil {
-		return errors.Wrap(err, "updating StatefulSet failed")
-	}
+	})
 
 	return nil
 }
@@ -1311,31 +1341,33 @@ func PrometheusStatus(ctx context.Context, kclient kubernetes.Interface, p *moni
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "retrieving pods of failed")
 	}
-	sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, statefulSetNameFromPrometheusName(p.Name), metav1.GetOptions{})
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
-	}
-
-	res.Replicas = int32(len(pods.Items))
 
 	var oldPods []v1.Pod
-	for _, pod := range pods.Items {
-		ready, err := k8sutil.PodRunningAndReady(pod)
+	expected := expectedStatefulSetShardNames(p)
+	for _, ssetName := range expected {
+		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(context.TODO(), ssetName, metav1.GetOptions{})
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "cannot determine pod ready state")
+			return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 		}
-		if ready {
-			res.AvailableReplicas++
-			// TODO(fabxc): detect other fields of the pod template
-			// that are mutable.
-			if needsUpdate(&pod, sset.Spec.Template) {
-				oldPods = append(oldPods, pod)
-			} else {
-				res.UpdatedReplicas++
+
+		res.Replicas = int32(len(pods.Items))
+
+		for _, pod := range pods.Items {
+			ready, err := k8sutil.PodRunningAndReady(pod)
+			if err != nil {
+				return nil, nil, errors.Wrap(err, "cannot determine pod ready state")
 			}
-			continue
+			if ready {
+				res.AvailableReplicas++
+				if needsUpdate(&pod, sset.Spec.Template) {
+					oldPods = append(oldPods, pod)
+				} else {
+					res.UpdatedReplicas++
+				}
+				continue
+			}
+			res.UnavailableReplicas++
 		}
-		res.UnavailableReplicas++
 	}
 
 	return res, oldPods, nil
@@ -1385,7 +1417,7 @@ func gzipConfig(buf *bytes.Buffer, conf []byte) error {
 	return nil
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, ruleConfigMapNames []string, store *assetStore) error {
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1.Prometheus, ruleConfigMapNames []string, store *assets.Store) error {
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
@@ -1433,19 +1465,22 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	for i, remote := range p.Spec.RemoteRead {
-		if err := store.addBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
+		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote read %d", i)
 		}
 	}
 
 	for i, remote := range p.Spec.RemoteWrite {
-		if err := store.addBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
+		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
 	}
 
 	if p.Spec.APIServerConfig != nil {
-		if err := store.addBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
+		if err := store.AddBasicAuth(ctx, p.GetNamespace(), p.Spec.APIServerConfig.BasicAuth, "apiserver"); err != nil {
 			return errors.Wrap(err, "apiserver config")
 		}
 	}
@@ -1469,8 +1504,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		smons,
 		pmons,
 		bmons,
-		store.basicAuthAssets,
-		store.bearerTokenAssets,
+		store.BasicAuthAssets,
+		store.BearerTokenAssets,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
 		additionalAlertManagerConfigs,
@@ -1488,7 +1523,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// Compress config to avoid 1mb secret limit for a while
 	var buf bytes.Buffer
 	if err = gzipConfig(&buf, conf); err != nil {
-		return errors.Wrap(err, "couldnt gzip config")
+		return errors.Wrap(err, "couldn't gzip config")
 	}
 	s.Data[configFilename] = buf.Bytes()
 
@@ -1518,7 +1553,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	return err
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assetStore) error {
+func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) error {
 	boolTrue := true
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 
@@ -1540,15 +1575,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		Data: map[string][]byte{},
 	}
 
-	for i, rw := range p.Spec.RemoteWrite {
-		if rw.TLSConfig != nil {
-			if err := store.addSafeTLSConfig(ctx, p.GetNamespace(), rw.TLSConfig.SafeTLSConfig); err != nil {
-				return errors.Wrapf(err, "remote write %d", i)
-			}
-		}
-	}
-
-	for key, asset := range store.tlsAssets {
+	for key, asset := range store.TLSAssets {
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
 
@@ -1577,7 +1604,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 	return nil
 }
 
-func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assetStore) (map[string]*monitoringv1.ServiceMonitor, error) {
+func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.ServiceMonitor, error) {
 	namespaces := []string{}
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	serviceMonitors := make(map[string]*monitoringv1.ServiceMonitor)
@@ -1629,16 +1656,16 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 
 			smKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
 
-			if err = store.addBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
+			if err = store.AddBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
 				break
 			}
 
-			if err = store.addBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth, smKey); err != nil {
+			if err = store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth, smKey); err != nil {
 				break
 			}
 
 			if endpoint.TLSConfig != nil {
-				if err = store.addSafeTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig.SafeTLSConfig); err != nil {
+				if err = store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
 					break
 				}
 			}
@@ -1673,7 +1700,7 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 	return res, nil
 }
 
-func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assetStore) (map[string]*monitoringv1.PodMonitor, error) {
+func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.PodMonitor, error) {
 	namespaces := []string{}
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	podMonitors := make(map[string]*monitoringv1.PodMonitor)
@@ -1717,16 +1744,16 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
 			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
 
-			if err = store.addBearerToken(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret, pmKey); err != nil {
+			if err = store.AddBearerToken(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret, pmKey); err != nil {
 				break
 			}
 
-			if err = store.addBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth, pmKey); err != nil {
+			if err = store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth, pmKey); err != nil {
 				break
 			}
 
 			if endpoint.TLSConfig != nil {
-				if err = store.addSafeTLSConfig(ctx, pm.GetNamespace(), endpoint.TLSConfig.SafeTLSConfig); err != nil {
+				if err = store.AddSafeTLSConfig(ctx, pm.GetNamespace(), &endpoint.TLSConfig.SafeTLSConfig); err != nil {
 					break
 				}
 			}
@@ -1764,7 +1791,7 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 func (c *Operator) selectProbes(p *monitoringv1.Prometheus) (map[string]*monitoringv1.Probe, error) {
 	namespaces := []string{}
 	// Selectors might overlap. Deduplicate them along the keyFunc.
-	res := make(map[string]*monitoringv1.Probe)
+	probes := make(map[string]*monitoringv1.Probe)
 
 	bMonSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeSelector)
 	if err != nil {
@@ -1788,21 +1815,41 @@ func (c *Operator) selectProbes(p *monitoringv1.Prometheus) (map[string]*monitor
 
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select Probes from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
-	probes := make([]string, 0)
 	for _, ns := range namespaces {
 		c.probeInfs.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
 			if k, ok := c.keyFunc(obj); ok {
-				res[k] = obj.(*monitoringv1.Probe)
-				probes = append(probes, k)
+				probes[k] = obj.(*monitoringv1.Probe)
 			}
 		})
 	}
 
-	level.Debug(c.logger).Log("msg", "selected Probes", "probes", strings.Join(probes, ","), "namespace", p.Namespace, "prometheus", p.Name)
+	var rejected int
+	res := make(map[string]*monitoringv1.Probe, len(probes))
+	for probeName, probe := range probes {
+		if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
+			rejected++
+			level.Warn(c.logger).Log(
+				"msg", "skipping probe",
+				"error", "Probe needs at least one target of type staticConfig or ingress",
+				"probe", probeName,
+				"namespace", p.Namespace,
+				"prometheus", p.Name,
+			)
+			continue
+		}
+
+		res[probeName] = probe
+	}
+
+	probeKeys := make([]string, 0)
+	for k := range res {
+		probeKeys = append(probeKeys, k)
+	}
+	level.Debug(c.logger).Log("msg", "selected Probes", "probes", strings.Join(probeKeys, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	if pKey, ok := c.keyFunc(p); ok {
 		c.metrics.SetSelectedResources(pKey, monitoringv1.ProbesKind, len(res))
-		c.metrics.SetRejectedResources(pKey, monitoringv1.ProbesKind, 0)
+		c.metrics.SetRejectedResources(pKey, monitoringv1.ProbesKind, rejected)
 	}
 
 	return res, nil
@@ -1816,10 +1863,6 @@ func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
 	tlsConf := e.TLSConfig
 	if tlsConf == nil {
 		return nil
-	}
-
-	if err := e.TLSConfig.Validate(); err != nil {
-		return err
 	}
 
 	if tlsConf.CAFile != "" || tlsConf.CertFile != "" || tlsConf.KeyFile != "" {

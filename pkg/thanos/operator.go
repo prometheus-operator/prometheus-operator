@@ -205,7 +205,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		}
 		nsInf := cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(
-				listwatch.NewUnprivilegedNamespaceListWatchFromClient(o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
+				listwatch.NewUnprivilegedNamespaceListWatchFromClient(ctx, o.logger, o.kclient.CoreV1().RESTClient(), allowList, o.config.Namespaces.DenyList, fields.Everything()),
 			),
 			&v1.Namespace{}, nsResyncPeriod, cache.Indexers{},
 		)
@@ -236,7 +236,7 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 		{"StatefulSet", o.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForCacheSync(ctx, log.With(o.logger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "thanos", log.With(o.logger, "informer", infs.name), inf.Informer()) {
 				ok = false
 			}
 		}
@@ -249,7 +249,7 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 		{"ThanosRulerNamespace", o.nsThanosRulerInf},
 		{"RuleNamespace", o.nsRuleInf},
 	} {
-		if !operator.WaitForCacheSync(ctx, log.With(o.logger, "informer", inf.name), inf.informer) {
+		if !operator.WaitForNamedCacheSync(ctx, "thanos", log.With(o.logger, "informer", inf.name), inf.informer) {
 			ok = false
 		}
 	}
@@ -377,7 +377,7 @@ func (o *Operator) handleThanosRulerUpdate(old, cur interface{}) {
 	o.enqueue(key)
 }
 
-// TODO: Do we need to enque configmaps just for the namespace or in general?
+// TODO: Do we need to enqueue configmaps just for the namespace or in general?
 func (o *Operator) handleConfigMapAdd(obj interface{}) {
 	meta, ok := o.getObjectMeta(obj)
 	if ok {
@@ -412,7 +412,7 @@ func (o *Operator) handleConfigMapUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (o *Operator) handleRuleAdd(obj interface{}) {
 	meta, ok := o.getObjectMeta(obj)
 	if ok {
@@ -423,7 +423,7 @@ func (o *Operator) handleRuleAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PrometheusRule).ResourceVersion == cur.(*monitoringv1.PrometheusRule).ResourceVersion {
 		return
@@ -438,7 +438,7 @@ func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enque just for the namespace
+// TODO: Don't enqueue just for the namespace
 func (o *Operator) handleRuleDelete(obj interface{}) {
 	meta, ok := o.getObjectMeta(obj)
 	if ok {
@@ -797,9 +797,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	objs, err := o.thanosRulerInfs.List(labels.Everything())
-
-	for _, obj := range objs {
+	err = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
 		// Check for ThanosRuler instances in the namespace.
 		tr := obj.(*monitoringv1.ThanosRuler)
 		if tr.Namespace == nsName {
@@ -822,7 +820,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			o.enqueue(tr)
 			return
 		}
-	}
+	})
 	if err != nil {
 		level.Error(o.logger).Log(
 			"msg", "listing all ThanosRuler instances from cache failed",

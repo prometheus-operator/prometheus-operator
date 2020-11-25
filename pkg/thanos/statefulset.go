@@ -152,13 +152,15 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
 
-	trBaseImage := operator.StringValOrDefault(config.ThanosDefaultBaseImage, operator.DefaultThanosBaseImage)
-	trImagePath, err := operator.BuildImagePath(trBaseImage, operator.DefaultThanosVersion, "", "")
+	trImagePath, err := operator.BuildImagePath(
+		tr.Spec.Image,
+		operator.StringValOrDefault(config.ThanosDefaultBaseImage, operator.DefaultThanosBaseImage),
+		operator.DefaultThanosVersion,
+		"",
+		"",
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build image path")
-	}
-	if strings.TrimSpace(tr.Spec.Image) != "" {
-		trImagePath = tr.Spec.Image
 	}
 
 	if tr.Spec.EvaluationInterval == "" {
@@ -262,6 +264,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
+	if tr.Spec.ObjectStorageConfigFile != nil {
+		trCLIArgs = append(trCLIArgs, "--objstore.config-file="+*tr.Spec.ObjectStorageConfigFile)
+	}
+
 	if tr.Spec.TracingConfig != nil {
 		trCLIArgs = append(trCLIArgs, "--tracing.config=$(TRACING_CONFIG)")
 		trEnvVars = append(trEnvVars, v1.EnvVar{
@@ -328,6 +334,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				tr.Spec.LogLevel,
 				configReloaderArgs,
 				configReloaderVolumeMounts,
+				-1,
 			),
 		)
 	}
@@ -428,6 +435,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				SecurityContext:               tr.Spec.SecurityContext,
 				Tolerations:                   tr.Spec.Tolerations,
 				Affinity:                      tr.Spec.Affinity,
+				TopologySpreadConstraints:     tr.Spec.TopologySpreadConstraints,
 			},
 		},
 	}, nil

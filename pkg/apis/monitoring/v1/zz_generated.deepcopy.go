@@ -216,6 +216,13 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.TopologySpreadConstraints != nil {
+		in, out := &in.TopologySpreadConstraints, &out.TopologySpreadConstraints
+		*out = make([]corev1.TopologySpreadConstraint, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.SecurityContext != nil {
 		in, out := &in.SecurityContext, &out.SecurityContext
 		*out = new(corev1.PodSecurityContext)
@@ -239,6 +246,16 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		in, out := &in.AdditionalPeers, &out.AdditionalPeers
 		*out = make([]string, len(*in))
 		copy(*out, *in)
+	}
+	if in.AlertmanagerConfigSelector != nil {
+		in, out := &in.AlertmanagerConfigSelector, &out.AlertmanagerConfigSelector
+		*out = new(metav1.LabelSelector)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.AlertmanagerConfigNamespaceSelector != nil {
+		in, out := &in.AlertmanagerConfigNamespaceSelector, &out.AlertmanagerConfigNamespaceSelector
+		*out = new(metav1.LabelSelector)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
@@ -959,6 +976,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.Shards != nil {
+		in, out := &in.Shards, &out.Shards
+		*out = new(int32)
+		**out = **in
+	}
 	if in.ReplicaExternalLabelName != nil {
 		in, out := &in.ReplicaExternalLabelName, &out.ReplicaExternalLabelName
 		*out = new(string)
@@ -1052,6 +1074,13 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 	if in.Tolerations != nil {
 		in, out := &in.Tolerations, &out.Tolerations
 		*out = make([]corev1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.TopologySpreadConstraints != nil {
+		in, out := &in.TopologySpreadConstraints, &out.TopologySpreadConstraints
+		*out = make([]corev1.TopologySpreadConstraint, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -1662,6 +1691,13 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.TopologySpreadConstraints != nil {
+		in, out := &in.TopologySpreadConstraints, &out.TopologySpreadConstraints
+		*out = make([]corev1.TopologySpreadConstraint, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.SecurityContext != nil {
 		in, out := &in.SecurityContext, &out.SecurityContext
 		*out = new(corev1.PodSecurityContext)
@@ -1683,6 +1719,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 		in, out := &in.ObjectStorageConfig, &out.ObjectStorageConfig
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.ObjectStorageConfigFile != nil {
+		in, out := &in.ObjectStorageConfigFile, &out.ObjectStorageConfigFile
+		*out = new(string)
+		**out = **in
 	}
 	if in.QueryEndpoints != nil {
 		in, out := &in.QueryEndpoints, &out.QueryEndpoints
@@ -1815,6 +1856,11 @@ func (in *ThanosSpec) DeepCopyInto(out *ThanosSpec) {
 		in, out := &in.ObjectStorageConfig, &out.ObjectStorageConfig
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.ObjectStorageConfigFile != nil {
+		in, out := &in.ObjectStorageConfigFile, &out.ObjectStorageConfigFile
+		*out = new(string)
+		**out = **in
 	}
 	if in.TracingConfig != nil {
 		in, out := &in.TracingConfig, &out.TracingConfig

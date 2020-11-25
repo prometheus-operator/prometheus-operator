@@ -331,7 +331,7 @@ func SanitizeSTS(sts *appsv1.StatefulSet) {
 // than 1 minute, it means that something is stuck and the message will
 // indicate to the admin which informer is the culprit.
 // See https://github.com/prometheus-operator/prometheus-operator/issues/3347.
-func WaitForCacheSync(ctx context.Context, logger log.Logger, inf cache.SharedIndexInformer) bool {
+func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger log.Logger, inf cache.SharedIndexInformer) bool {
 	ctx, cancel := context.WithCancel(ctx)
 
 	done := make(chan struct{})
@@ -347,7 +347,7 @@ func WaitForCacheSync(ctx context.Context, logger log.Logger, inf cache.SharedIn
 		}
 	}()
 
-	ok := cache.WaitForCacheSync(ctx.Done(), inf.HasSynced)
+	ok := cache.WaitForNamedCacheSync(controllerName, ctx.Done(), inf.HasSynced)
 	if !ok {
 		level.Error(logger).Log("msg", "failed to sync cache")
 	} else {
