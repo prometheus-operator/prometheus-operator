@@ -249,19 +249,19 @@ type emailConfig struct {
 }
 
 type pushoverConfig struct {
-	VSendResolved bool                        `yaml:"send_resolved" json:"send_resolved"`
-	HTTPConfig    *commoncfg.HTTPClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
-	UserKey       string                      `yaml:"user_key,omitempty" json:"user_key,omitempty"`
-	Token         string                      `yaml:"token,omitempty" json:"token,omitempty"`
-	Title         string                      `yaml:"title,omitempty" json:"title,omitempty"`
-	Message       string                      `yaml:"message,omitempty" json:"message,omitempty"`
-	URL           string                      `yaml:"url,omitempty" json:"url,omitempty"`
-	URLTitle      string                      `yaml:"url_title,omitempty" json:"url_title,omitempty"`
-	Sound         string                      `yaml:"sound,omitempty" json:"sound,omitempty"`
-	Priority      string                      `yaml:"priority,omitempty" json:"priority,omitempty"`
-	Retry         duration                    `yaml:"retry,omitempty" json:"retry,omitempty"`
-	Expire        duration                    `yaml:"expire,omitempty" json:"expire,omitempty"`
-	HTML          bool                        `yaml:"html,omitempty" json:"html,omitempty"`
+	VSendResolved bool              `yaml:"send_resolved" json:"send_resolved"`
+	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	UserKey       string            `yaml:"user_key,omitempty" json:"user_key,omitempty"`
+	Token         string            `yaml:"token,omitempty" json:"token,omitempty"`
+	Title         string            `yaml:"title,omitempty" json:"title,omitempty"`
+	Message       string            `yaml:"message,omitempty" json:"message,omitempty"`
+	URL           string            `yaml:"url,omitempty" json:"url,omitempty"`
+	URLTitle      string            `yaml:"url_title,omitempty" json:"url_title,omitempty"`
+	Sound         string            `yaml:"sound,omitempty" json:"sound,omitempty"`
+	Priority      string            `yaml:"priority,omitempty" json:"priority,omitempty"`
+	Retry         duration          `yaml:"retry,omitempty" json:"retry,omitempty"`
+	Expire        duration          `yaml:"expire,omitempty" json:"expire,omitempty"`
+	HTML          bool              `yaml:"html,omitempty" json:"html,omitempty"`
 }
 
 type duration time.Duration

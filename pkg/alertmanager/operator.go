@@ -974,6 +974,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return nil, err
 		}
+
+		err = checkPushoverConfigs(ctx, receiver.PushoverConfigs, amc.GetNamespace(), amcKey, store)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return receiverNames, nil
@@ -1172,6 +1177,53 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 
 		victoropsConfigKey := fmt.Sprintf("%s/victorops/%d", key, i)
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, victoropsConfigKey, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.PushoverConfig, namespace string, key string, store *assets.Store) error {
+
+	checkSecret := func(secret *v1.SecretKeySelector, name string) error {
+		if secret == nil {
+			return errors.Errorf("mandatory field %s is empty", name)
+		}
+		s, err := store.GetSecretKey(ctx, namespace, *secret)
+		if err != nil {
+			return err
+		}
+		if s == "" {
+			return errors.New("mandatory field userKey is empty")
+		}
+		return nil
+	}
+
+	for i, config := range configs {
+
+		if err := checkSecret(config.UserKey, "userKey"); err != nil {
+			return err
+		}
+		if err := checkSecret(config.Token, "token"); err != nil {
+			return err
+		}
+
+		if config.Retry != nil {
+			_, err := time.ParseDuration(*config.Retry)
+			if err != nil {
+				return errors.New("invalid retry duration")
+			}
+		}
+		if config.Expire != nil {
+			_, err := time.ParseDuration(*config.Expire)
+			if err != nil {
+				return errors.New("invalid expire duration")
+			}
+		}
+
+		pushoverConfigKey := fmt.Sprintf("%s/pushover/%d", key, i)
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, pushoverConfigKey, store); err != nil {
 			return err
 		}
 	}

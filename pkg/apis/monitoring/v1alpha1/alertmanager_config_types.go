@@ -124,6 +124,8 @@ type Receiver struct {
 	EmailConfigs []EmailConfig `json:"emailConfigs,omitempty"`
 	// List of VictorOps configurations.
 	VictorOpsConfigs []VictorOpsConfig `json:"victoropsConfigs,omitempty"`
+	// List of Pushover configurations.
+	PushoverConfigs []PushoverConfig `json:"pushoverConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -468,6 +470,39 @@ type VictorOpsConfig struct {
 	// Additional custom fields for notification.
 	CustomFields []KeyValue `json:"customFields,omitempty"`
 	// The HTTP client's configuration.
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// PushoverConfig configures notifications via Pushover.
+// See https://prometheus.io/docs/alerting/latest/configuration/#pushover_config
+type PushoverConfig struct {
+	// Whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// The recipient user’s user key.
+	UserKey *v1.SecretKeySelector `json:"userKey,omitempty"`
+	// Your registered application’s API token, see https://pushover.net/apps
+	Token *v1.SecretKeySelector `json:"token,omitempty"`
+	// Notification title.
+	Title *string `json:"title,omitempty"`
+	// Notification message.
+	Message *string `json:"message,omitempty"`
+	// A supplementary URL shown alongside the message.
+	URL *string `json:"url,omitempty"`
+	// A title for supplementary URL, otherwise just the URL is shown
+	URLTitle *string `json:"urlTitle,omitempty"`
+	// The name of one of the sounds supported by device clients to override the user's default sound choice
+	Sound *string `json:"sound,omitempty"`
+	// Priority, see https://pushover.net/api#priority
+	Priority *string `json:"priority,omitempty"`
+	// How often the Pushover servers will send the same notification to the user.
+	// Must be at least 30 seconds.
+	Retry *string `json:"retry,omitempty"`
+	// How long your notification will continue to be retried for, unless the user
+	// acknowledges the notification.
+	Expire *string `json:"expire,omitempty"`
+	// Whether notification message is HTML or plain text.
+	HTML *bool `json:"html,omitempty"`
+	// HTTP client configuration.
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
