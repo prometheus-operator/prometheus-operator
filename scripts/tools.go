@@ -29,4 +29,5 @@ import (
 	_ "k8s.io/code-generator/cmd/lister-gen"
 	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
 	_ "github.com/yeya24/promlinter/cmd/promlinter"
+	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 )
