@@ -1,0 +1,7 @@
+run:
+  modules-download-mode: vendor
+  deadline: 10m
+
+linters:
+  enable:
+    - unused
