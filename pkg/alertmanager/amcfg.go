@@ -119,8 +119,7 @@ func (cg *configGenerator) generateConfig(
 }
 
 func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
-
-	// Enforce continue to be true for main Route in a CR
+	// Enforce "continue" to be true for the top-level route.
 	cont := in.Continue
 	if firstLevelRoute {
 		cont = true
@@ -141,20 +140,27 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 		delete(matchRE, "namespace")
 	}
 
-	// Set to nil if empty so that it doesn't show up in resulting yaml
+	// Set to nil if empty so that it doesn't show up in the resulting yaml.
 	if len(match) == 0 {
 		match = nil
 	}
-	// Set to nil if empty so that it doesn't show up in resulting yaml
+	// Set to nil if empty so that it doesn't show up in the resulting yaml.
 	if len(matchRE) == 0 {
 		matchRE = nil
 	}
 
 	var routes []*route
 	if len(in.Routes) > 0 {
-		routes := make([]*route, len(in.Routes))
-		for i := range in.Routes {
-			routes[i] = convertRoute(&in.Routes[i], crKey, false)
+		routes = make([]*route, len(in.Routes))
+		children, err := in.ChildRoutes()
+		if err != nil {
+			// The controller should already have checked that ChildRoutes()
+			// doesn't return an error when selecting AlertmanagerConfig CRDs.
+			// If there's an error here, we have a serious bug in the code
+			panic(err)
+		}
+		for i := range children {
+			routes[i] = convertRoute(&children[i], crKey, false)
 		}
 	}
 

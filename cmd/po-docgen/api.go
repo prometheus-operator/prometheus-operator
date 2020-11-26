@@ -48,6 +48,7 @@ var (
 		"v1.SecretKeySelector":     "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core",
 		"v1.PersistentVolumeClaim": "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#persistentvolumeclaim-v1-core",
 		"v1.EmptyDirVolumeSource":  "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#emptydirvolumesource-v1-core",
+		"apiextensionsv1.JSON":     "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#json-v1-apiextensions-k8s-io",
 	}
 
 	selfLinks = map[string]string{}

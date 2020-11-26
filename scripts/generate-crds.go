@@ -75,23 +75,6 @@ var (
 			CRDNames: []crdName{
 				{"alertmanagerconfig", "alertmanagerconfigs"},
 			},
-			CustomizeYAML: func(generator crdGenerator) error {
-				// Set missing spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.route.properties.routes.items.type
-				alertmanagerconfigManifest := fmt.Sprintf("%s/%s_%s.yaml", generator.YAMLDir, generator.CRDAPIGroup, "alertmanagerconfigs")
-				data, err := ioutil.ReadFile(alertmanagerconfigManifest)
-				if err != nil {
-					return errors.Wrapf(err, "reading %s", alertmanagerconfigManifest)
-				}
-				data = bytes.ReplaceAll(data,
-					[]byte("routes:\n                    items: {}"),
-					[]byte("routes:\n                    items:\n                      type: object"),
-				)
-				err = ioutil.WriteFile(alertmanagerconfigManifest, data, 0644)
-				if err != nil {
-					return errors.Wrapf(err, "generating %s", alertmanagerconfigManifest)
-				}
-				return nil
-			},
 		},
 	}
 )
@@ -113,6 +96,10 @@ func (generator crdGenerator) generateYAMLManifests() error {
 	err = cmd.Run()
 	if err != nil {
 		return errors.Wrapf(err, "running %s", cmd)
+	}
+
+	if generator.CustomizeYAML == nil {
+		return nil
 	}
 
 	err = generator.CustomizeYAML(generator)

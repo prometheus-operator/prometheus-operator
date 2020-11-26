@@ -15,12 +15,15 @@
 package v1alpha1
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	v1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -102,8 +105,29 @@ type Route struct {
 	// Boolean indicating whether an alert should continue matching subsequent
 	// sibling nodes. It will always be overridden to true for the first-level
 	// route by the Prometheus operator.
-	Continue bool    `json:"continue,omitempty"`
-	Routes   []Route `json:"routes,omitempty"`
+	Continue bool `json:"continue,omitempty"`
+	// Child routes.
+	Routes []apiextensionsv1.JSON `json:"routes,omitempty"`
+	// Note: this comment applies to the field definition above but appears
+	// below otherwise it gets included in the generated manifest.
+	// CRD schema doesn't support self referential types for now (see
+	// https://github.com/kubernetes/kubernetes/issues/62872). We have to use
+	// an alternative type to circumvent the limitation. The downside is that
+	// the Kube API can't validate the data beyond the fact that it is a valid
+	// JSON representation.
+}
+
+// ChildRoutes extracts the child routes.
+func (r *Route) ChildRoutes() ([]Route, error) {
+	out := make([]Route, len(r.Routes))
+
+	for i, v := range r.Routes {
+		if err := json.Unmarshal(v.Raw, &out[i]); err != nil {
+			return nil, fmt.Errorf("route[%d]: %w", i, err)
+		}
+	}
+
+	return out, nil
 }
 
 // Receiver defines one or more notification integrations.

@@ -21,6 +21,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
@@ -85,9 +86,9 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "recv1",
-						Routes: []monitoringv1alpha1.Route{{
-							Receiver: "recv2",
-						}},
+						Routes: []apiextensionsv1.JSON{
+							{Raw: []byte(`{"receiver": "recv2"}`)},
+						},
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",

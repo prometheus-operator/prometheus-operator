@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -771,10 +772,10 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// A valid AlertmanagerConfig resource.
+	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "e2e-test-amconfig",
+			Name:      "e2e-test-amconfig-many-receivers",
 			Namespace: ns,
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -891,11 +892,74 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Another AlertmanagerConfig object with nested routes.
+	configCR = &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "e2e-test-amconfig-sub-routes",
+			Namespace: ns,
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "e2e",
+				Matchers: []monitoringv1alpha1.Matcher{
+					{Name: "service", Value: "webapp"},
+				},
+				Routes: []apiextensionsv1.JSON{
+					{Raw: []byte(`
+{
+  "receiver": "e2e",
+  "groupBy": ["env", "instance"],
+  "matchers": [
+    {
+      "name": "job",
+      "value": "db"
+    }
+  ],
+  "routes": [
+    {
+      "receiver": "e2e",
+      "matchers": [
+        {
+          "name": "alertname",
+          "value": "TargetDown"
+        }
+      ]
+    },
+    {
+      "receiver": "e2e",
+      "matchers": [
+        {
+          "name": "severity",
+          "value": "critical|warning",
+          "regex": true
+        }
+      ]
+    }
+  ]
+}
+					`)},
+				},
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+					URL: func(s string) *string {
+						return &s
+					}("http://test.url"),
+				}},
+			}},
+		},
+	}
+
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
 	// An AlertmanagerConfig resource that references a missing secret key, it
 	// should be rejected by the operator.
 	configCR = &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "e2e-test-amconfig-2",
+			Name:      "e2e-test-amconfig-missing-secret",
 			Namespace: ns,
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -921,10 +985,45 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// An AlertmanagerConfig resource that contains an invalid sub-route.
+	// It should be rejected by the operator.
+	configCR = &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "e2e-test-amconfig-invalid-route",
+			Namespace: ns,
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "e2e",
+				Matchers: []monitoringv1alpha1.Matcher{},
+				Routes: []apiextensionsv1.JSON{
+					{Raw: []byte(`"invalid"`)},
+				},
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+					RoutingKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: testingSecret,
+						},
+						Key: "non-existing-key",
+					},
+				}},
+			}},
+		},
+	}
+
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
 	// Wait for the change above to take effect.
+	var lastErr error
 	err := wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), "alertmanager-amconfig-crd-generated", metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
+			lastErr = errors.New("Generated configuration secret not found")
 			return false, nil
 		}
 		if err != nil {
@@ -932,6 +1031,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		}
 
 		if cfgSecret.Data["alertmanager.yaml"] == nil {
+			lastErr = errors.New("'alertmanager.yaml' key is missing")
 			return false, nil
 		}
 
@@ -942,10 +1042,29 @@ route:
   group_by:
   - job
   routes:
-  - receiver: %v-e2e-test-amconfig-e2e
+  - receiver: %s-e2e-test-amconfig-many-receivers-e2e
     match:
-      namespace: %v
+      namespace: %s
     continue: true
+  - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+    match:
+      namespace: %s
+      service: webapp
+    continue: true
+    routes:
+    - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+      group_by:
+      - env
+      - instance
+      match:
+        job: db
+      routes:
+      - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+        match:
+          alertname: TargetDown
+      - receiver: %s-e2e-test-amconfig-sub-routes-e2e
+        match_re:
+          severity: critical|warning
   - receiver: "null"
     match:
       alertname: DeadMansSwitch
@@ -954,7 +1073,7 @@ route:
   repeat_interval: 12h
 receivers:
 - name: "null"
-- name: %v-e2e-test-amconfig-e2e
+- name: %v-e2e-test-amconfig-many-receivers-e2e
   opsgenie_configs:
   - send_resolved: false
     api_key: 1234abc
@@ -993,12 +1112,12 @@ receivers:
   - send_resolved: false
     api_key: 1234abc
     routing_key: abc
+- name: %s-e2e-test-amconfig-sub-routes-e2e
+  webhook_configs:
+  - send_resolved: false
+    url: http://test.url
 templates: []
-`, ns, ns, ns)
-
-		// replace tabs that could be added to expected by mistake depending on editor setting
-		// with double whitespace because they will fail got vs expected comparison
-		expected = strings.ReplaceAll(expected, "\t", "  ")
+`, ns, ns, ns, ns, ns, ns, ns, ns, ns)
 
 		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), expected); diff != "" {
 			t.Log("got(-), want(+):\n" + diff)
@@ -1008,7 +1127,7 @@ templates: []
 		return true, nil
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%v: %v", err, lastErr)
 	}
 }
 
