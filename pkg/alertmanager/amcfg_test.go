@@ -16,20 +16,18 @@ package alertmanager
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"testing"
 
-	"github.com/kylelemons/godebug/pretty"
-
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus/alertmanager/config"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
+
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
 func TestGenerateConfig(t *testing.T) {
@@ -231,8 +229,7 @@ receivers:
 - name: "null"
 - name: mynamespace-myamc-test-pd
   pagerduty_configs:
-  - send_resolved: false
-    routing_key: 1234abc
+  - routing_key: 1234abc
 templates: []
 `,
 		},
@@ -277,8 +274,7 @@ receivers:
 - name: "null"
 - name: mynamespace-myamc-test
   webhook_configs:
-  - send_resolved: false
-    url: http://test.url
+  - url: http://test.url
 templates: []
 `,
 		},
@@ -336,8 +332,7 @@ receivers:
 - name: "null"
 - name: mynamespace-myamc-test
   opsgenie_configs:
-  - send_resolved: false
-    api_key: 1234abc
+  - api_key: 1234abc
 templates: []
 `,
 		},
@@ -396,8 +391,7 @@ receivers:
 - name: "null"
 - name: mynamespace-myamc-test
   wechat_configs:
-  - send_resolved: false
-    api_secret: wechatsecret
+  - api_secret: wechatsecret
     corp_id: wechatcorpid
 templates: []
 `,
@@ -463,8 +457,7 @@ receivers:
 - name: "null"
 - name: mynamespace-myamc-test
   slack_configs:
-  - send_resolved: false
-    fields:
+  - fields:
     - title: title
       value: value
     actions:
@@ -479,25 +472,26 @@ templates: []
 	}
 
 	for _, tc := range testCases {
-		store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
-		cg := newConfigGenerator(nil, store)
-		cfgBytes, err := cg.generateConfig(context.TODO(), tc.baseConfig, tc.amConfigs)
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
+			cg := newConfigGenerator(nil, store)
+			cfgBytes, err := cg.generateConfig(context.TODO(), tc.baseConfig, tc.amConfigs)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		result := string(cfgBytes)
+			result := string(cfgBytes)
 
-		// Verify the generated yaml is as expected
-		if result != tc.expected {
-			fmt.Println(pretty.Compare(result, tc.expected))
-			t.Fatal("generated Alertmanager config does not match expected")
-		}
+			// Verify the generated yaml is as expected
+			if diff := cmp.Diff(tc.expected, result); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
 
-		// Verify the generated config is something that Alertmanager will be happy with
-		_, err = config.Load(result)
-		if err != nil {
-			t.Fatal(err)
-		}
+			// Verify the generated config is something that Alertmanager will be happy with
+			_, err = config.Load(result)
+			if err != nil {
+				t.Fatal(err)
+			}
+		})
 	}
 }

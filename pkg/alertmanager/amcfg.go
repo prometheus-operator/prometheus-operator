@@ -291,10 +291,8 @@ func (cg *configGenerator) convertReceiver(ctx context.Context, in *monitoringv1
 }
 
 func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitoringv1alpha1.WebhookConfig, crKey types.NamespacedName) (*webhookConfig, error) {
-	out := &webhookConfig{}
-
-	if in.SendResolved != nil {
-		out.VSendResolved = *in.SendResolved
+	out := &webhookConfig{
+		VSendResolved: in.SendResolved,
 	}
 
 	if in.URLSecret != nil {
@@ -323,10 +321,8 @@ func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitori
 }
 
 func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoringv1alpha1.SlackConfig, crKey types.NamespacedName) (*slackConfig, error) {
-	out := &slackConfig{}
-
-	if in.SendResolved != nil {
-		out.VSendResolved = *in.SendResolved
+	out := &slackConfig{
+		VSendResolved: in.SendResolved,
 	}
 
 	if in.APIURL != nil {
@@ -469,10 +465,8 @@ func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoring
 }
 
 func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {
-	out := &pagerdutyConfig{}
-
-	if in.SendResolved != nil {
-		out.VSendResolved = *in.SendResolved
+	out := &pagerdutyConfig{
+		VSendResolved: in.SendResolved,
 	}
 
 	if in.RoutingKey != nil {
@@ -544,10 +538,8 @@ func (cg *configGenerator) convertPagerdutyConfig(ctx context.Context, in monito
 }
 
 func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsGenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
-	out := &opsgenieConfig{}
-
-	if in.SendResolved != nil {
-		out.VSendResolved = *in.SendResolved
+	out := &opsgenieConfig{
+		VSendResolved: in.SendResolved,
 	}
 
 	if in.APIKey != nil {
@@ -623,10 +615,8 @@ func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitor
 
 func (cg *configGenerator) convertWeChatConfig(ctx context.Context, in monitoringv1alpha1.WeChatConfig, crKey types.NamespacedName) (*weChatConfig, error) {
 
-	out := &weChatConfig{}
-
-	if in.SendResolved != nil {
-		out.VSendResolved = *in.SendResolved
+	out := &weChatConfig{
+		VSendResolved: in.SendResolved,
 	}
 
 	if in.APISecret != nil {
@@ -681,10 +671,8 @@ func (cg *configGenerator) convertWeChatConfig(ctx context.Context, in monitorin
 }
 
 func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
-	out := &emailConfig{}
-
-	if in.SendResolved != nil {
-		out.VSendResolved = *in.SendResolved
+	out := &emailConfig{
+		VSendResolved: in.SendResolved,
 	}
 
 	if in.To == nil || *in.To == "" {
@@ -767,11 +755,10 @@ func (cg *configGenerator) convertEmailConfig(ctx context.Context, in monitoring
 }
 
 func (cg *configGenerator) convertVictorOpsConfig(ctx context.Context, in monitoringv1alpha1.VictorOpsConfig, crKey types.NamespacedName) (*victorOpsConfig, error) {
-	out := &victorOpsConfig{}
-
-	if in.SendResolved != nil {
-		out.VSendResolved = *in.SendResolved
+	out := &victorOpsConfig{
+		VSendResolved: in.SendResolved,
 	}
+
 	if in.APIKey != nil {
 		apiKey, err := cg.store.GetSecretKey(ctx, crKey.Namespace, *in.APIKey)
 		if err != nil {
@@ -834,10 +821,8 @@ func (cg *configGenerator) convertVictorOpsConfig(ctx context.Context, in monito
 }
 
 func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitoringv1alpha1.PushoverConfig, crKey types.NamespacedName) (*pushoverConfig, error) {
-	out := &pushoverConfig{}
-
-	if in.SendResolved != nil {
-		out.VSendResolved = *in.SendResolved
+	out := &pushoverConfig{
+		VSendResolved: in.SendResolved,
 	}
 
 	{
