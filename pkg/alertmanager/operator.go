@@ -558,10 +558,6 @@ func (c *Operator) alertmanagerForStatefulSet(sset interface{}) *monitoringv1.Al
 	return a.(*monitoringv1.Alertmanager)
 }
 
-func alertmanagerNameFromStatefulSetName(name string) string {
-	return strings.TrimPrefix(name, "alertmanager-")
-}
-
 func statefulSetNameFromAlertmanagerName(name string) string {
 	return "alertmanager-" + name
 }

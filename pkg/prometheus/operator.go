@@ -1069,10 +1069,6 @@ func (c *Operator) prometheusForStatefulSet(sset interface{}) *monitoringv1.Prom
 	return p.(*monitoringv1.Prometheus)
 }
 
-func prometheusNameFromStatefulSetName(name string) string {
-	return strings.TrimPrefix(name, "prometheus-")
-}
-
 func statefulSetNameFromPrometheusName(name string, shard int) string {
 	if shard == 0 {
 		return fmt.Sprintf("prometheus-%s", name)

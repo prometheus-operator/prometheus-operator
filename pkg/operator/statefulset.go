@@ -107,29 +107,3 @@ func CreateConfigReloader(
 		Resources:    resources,
 	}
 }
-
-func envVars(shard int32) []v1.EnvVar {
-	if shard == -1 {
-		return []v1.EnvVar{
-			{
-				Name: "POD_NAME",
-				ValueFrom: &v1.EnvVarSource{
-					FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
-				},
-			},
-		}
-	}
-
-	return []v1.EnvVar{
-		{
-			Name: "POD_NAME",
-			ValueFrom: &v1.EnvVarSource{
-				FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
-			},
-		},
-		{
-			Name:  "SHARD",
-			Value: fmt.Sprint(shard),
-		},
-	}
-}
