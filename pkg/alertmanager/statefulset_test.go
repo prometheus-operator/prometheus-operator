@@ -604,16 +604,6 @@ func TestAdditionalConfigMap(t *testing.T) {
 	}
 }
 
-func sliceContains(slice []string, match string) bool {
-	contains := false
-	for _, s := range slice {
-		if strings.Contains(s, match) {
-			contains = true
-		}
-	}
-	return contains
-}
-
 func TestSidecarsNoCPULimits(t *testing.T) {
 	testConfig := Config{
 		ReloaderConfig: operator.ReloaderConfig{

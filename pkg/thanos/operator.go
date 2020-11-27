@@ -469,10 +469,6 @@ func (o *Operator) thanosForStatefulSet(sset interface{}) *monitoringv1.ThanosRu
 	return tr.(*monitoringv1.ThanosRuler)
 }
 
-func thanosNameFromStatefulSetName(name string) string {
-	return strings.TrimPrefix(name, "thanos-ruler-")
-}
-
 func statefulSetNameFromThanosName(name string) string {
 	return "thanos-ruler-" + name
 }

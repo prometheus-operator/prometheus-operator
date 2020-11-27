@@ -210,10 +210,6 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ns, name string) error {
 	return f.KubeClient.CoreV1().Secrets(ns).Delete(context.TODO(), fmt.Sprintf("alertmanager-%s", name), metav1.DeleteOptions{})
 }
 
-func amImage(version string) string {
-	return fmt.Sprintf("quay.io/prometheus/alertmanager:%s", version)
-}
-
 func (f *Framework) WaitForAlertmanagerInitialized(ns, name string, amountPeers int, forceEnableClusterMode bool) error {
 	var pollError error
 	err := wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
