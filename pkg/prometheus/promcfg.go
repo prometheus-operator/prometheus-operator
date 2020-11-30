@@ -1441,8 +1441,6 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, p *v
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		// TODO: If we want to support secret refs for remote read tls
-		// config as well, make sure to path the right namespace here.
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
