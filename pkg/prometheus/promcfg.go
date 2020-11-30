@@ -383,7 +383,7 @@ func (cg *configGenerator) generateConfig(
 	}
 
 	if len(p.Spec.RemoteRead) > 0 && version.Major >= 2 {
-		cfg = append(cfg, cg.generateRemoteReadConfig(version, p.Spec.RemoteRead, basicAuthSecrets))
+		cfg = append(cfg, cg.generateRemoteReadConfig(version, p, basicAuthSecrets))
 	}
 
 	return yaml.Marshal(cfg)
@@ -1395,11 +1395,11 @@ func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am
 	return cfg
 }
 
-func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, specs []v1.RemoteReadSpec, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
+func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
-	for i, spec := range specs {
+	for i, spec := range p.Spec.RemoteRead {
 		//defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
@@ -1443,7 +1443,7 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, spec
 
 		// TODO: If we want to support secret refs for remote read tls
 		// config as well, make sure to path the right namespace here.
-		cfg = addTLStoYaml(cfg, "", spec.TLSConfig)
+		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
