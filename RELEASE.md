@@ -12,7 +12,8 @@ Release cadence of first pre-releases being cut is 6 weeks.
 | v0.42   | 2020-09-09                                 | Matthias Loibl (GitHub: @metalmatze)        |
 | v0.43   | 2020-10-21                                 | Simon Pasquier (GitHub: @simonpasquier)     |
 | v0.44   | 2020-12-02                                 | Pawel Krupa (GitHub: @paulfantom)           |
-| v0.45   | 2021-01-13                                 | **searching for volunteer**                 |
+| v0.45   | 2021-01-13                                 | Lili Cosic (GitHub: @lilic)                 |
+| v0.46   | 2021-02-24                                 | **searching for volunteer**                 |
 
 # How to cut a new release
 
