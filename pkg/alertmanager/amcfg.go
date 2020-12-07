@@ -589,7 +589,7 @@ func (cg *configGenerator) convertOpsgenieConfig(ctx context.Context, in monitor
 
 	var responders []opsgenieResponder
 	if l := len(in.Responders); l > 0 {
-		responders = make([]opsgenieResponder, l)
+		responders = []opsgenieResponder{}
 		for _, r := range in.Responders {
 			var responder opsgenieResponder = opsgenieResponder{
 				ID:       r.ID,
