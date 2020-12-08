@@ -30,8 +30,8 @@ rules:
   - alertmanagers
   - alertmanagers/finalizers
   - alertmanagerconfigs
-  - prometheuses
-  - prometheuses/finalizers
+  - prometheis
+  - prometheis/finalizers
   - thanosrulers
   - thanosrulers/finalizers
   - servicemonitors
@@ -103,7 +103,7 @@ As the Prometheus Operator works extensively with its `customresourcedefinitions
 * `alertmanagers`
 * `podmonitors`
 * `probes`
-* `prometheuses`
+* `prometheis`
 * `prometheusrules`
 * `servicemonitors`
 * `thanosrulers`

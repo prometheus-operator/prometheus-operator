@@ -914,7 +914,7 @@ func testPromResourceUpdate(t *testing.T) {
 			v1.ResourceMemory: resource.MustParse("200Mi"),
 		},
 	}
-	p, err = framework.MonClientV1.Prometheuses(ns).Update(context.TODO(), p, metav1.UpdateOptions{})
+	p, err = framework.MonClientV1.Prometheis(ns).Update(context.TODO(), p, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1046,7 +1046,7 @@ func testPromStorageUpdate(t *testing.T) {
 			},
 		},
 	}
-	p, err = framework.MonClientV1.Prometheuses(ns).Update(context.TODO(), p, metav1.UpdateOptions{})
+	p, err = framework.MonClientV1.Prometheis(ns).Update(context.TODO(), p, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1644,7 +1644,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 			Getter: func(prometheusName string) (versionedResource, error) {
 				return framework.
 					MonClientV1.
-					Prometheuses(ns).
+					Prometheis(ns).
 					Get(context.TODO(), prometheusName, metav1.GetOptions{})
 			},
 			MaxExpectedChanges: 1,

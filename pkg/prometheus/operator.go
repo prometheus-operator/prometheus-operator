@@ -475,7 +475,7 @@ func (c *Operator) handlePrometheusAdd(obj interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Prometheus added", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "add").Inc()
+	c.metrics.TriggerByCounter(monitoringv1.PrometheisKind, "add").Inc()
 	checkPrometheusSpecDeprecation(key, obj.(*monitoringv1.Prometheus), c.logger)
 	c.enqueue(key)
 }
@@ -487,7 +487,7 @@ func (c *Operator) handlePrometheusDelete(obj interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Prometheus deleted", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "delete").Inc()
+	c.metrics.TriggerByCounter(monitoringv1.PrometheisKind, "delete").Inc()
 	c.enqueue(key)
 }
 
@@ -502,7 +502,7 @@ func (c *Operator) handlePrometheusUpdate(old, cur interface{}) {
 	}
 
 	level.Debug(c.logger).Log("msg", "Prometheus updated", "key", key)
-	c.metrics.TriggerByCounter(monitoringv1.PrometheusesKind, "update").Inc()
+	c.metrics.TriggerByCounter(monitoringv1.PrometheisKind, "update").Inc()
 	checkPrometheusSpecDeprecation(key, cur.(*monitoringv1.Prometheus), c.logger)
 	c.enqueue(key)
 }
@@ -1154,7 +1154,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	p := pobj.(*monitoringv1.Prometheus)
 	p = p.DeepCopy()
 	p.APIVersion = monitoringv1.SchemeGroupVersion.String()
-	p.Kind = monitoringv1.PrometheusesKind
+	p.Kind = monitoringv1.PrometheisKind
 
 	if p.Spec.Paused {
 		return nil

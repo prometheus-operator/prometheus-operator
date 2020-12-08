@@ -6,13 +6,13 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: prometheuses.monitoring.coreos.com
+  name: prometheis.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
   names:
     kind: Prometheus
     listKind: PrometheusList
-    plural: prometheuses
+    plural: prometheis
     singular: prometheus
   scope: Namespaced
   versions:
@@ -21,7 +21,7 @@ spec:
       jsonPath: .spec.version
       name: Version
       type: string
-    - description: The desired replicas number of Prometheuses
+    - description: The desired replicas number of Prometheis
       jsonPath: .spec.replicas
       name: Replicas
       type: integer

@@ -40,7 +40,7 @@ func testPrometheusInstanceNamespaces_AllNs(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(nonInstanceNs, "non-instance", "non-instance", 1)
-	_, err = framework.MonClientV1.Prometheuses(nonInstanceNs).Create(context.TODO(), p, metav1.CreateOptions{})
+	_, err = framework.MonClientV1.Prometheis(nonInstanceNs).Create(context.TODO(), p, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -102,7 +102,7 @@ func testPrometheusInstanceNamespaces_DenyList(t *testing.T) {
 		// create Prometheus custom resources in "denied" namespaces.
 		// This must NOT be reconciled as the prometheus-instance-namespaces option points to somewhere else.
 		p := framework.MakeBasicPrometheus(deniedNs, "denied", "denied", 1)
-		_, err = framework.MonClientV1.Prometheuses(deniedNs).Create(context.TODO(), p, metav1.CreateOptions{})
+		_, err = framework.MonClientV1.Prometheis(deniedNs).Create(context.TODO(), p, metav1.CreateOptions{})
 		if err != nil {
 			t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 		}
@@ -224,7 +224,7 @@ func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
 	// create Prometheus custom resources in "allowed" namespaces.
 	// This must NOT be reconciled as the prometheus-instance-namespaces option points to somewhere else.
 	p := framework.MakeBasicPrometheus(allowedNs, "allowed", "allowed", 1)
-	_, err = framework.MonClientV1.Prometheuses(allowedNs).Create(context.TODO(), p, metav1.CreateOptions{})
+	_, err = framework.MonClientV1.Prometheis(allowedNs).Create(context.TODO(), p, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}

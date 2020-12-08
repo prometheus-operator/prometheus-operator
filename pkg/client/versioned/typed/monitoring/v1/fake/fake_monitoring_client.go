@@ -38,8 +38,8 @@ func (c *FakeMonitoringV1) Probes(namespace string) v1.ProbeInterface {
 	return &FakeProbes{c, namespace}
 }
 
-func (c *FakeMonitoringV1) Prometheuses(namespace string) v1.PrometheusInterface {
-	return &FakePrometheuses{c, namespace}
+func (c *FakeMonitoringV1) Prometheis(namespace string) v1.PrometheusInterface {
+	return &FakePrometheis{c, namespace}
 }
 
 func (c *FakeMonitoringV1) PrometheusRules(namespace string) v1.PrometheusRuleInterface {

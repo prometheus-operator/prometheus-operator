@@ -37,7 +37,7 @@ var (
 			"alertmanagers.monitoring.coreos.com",
 			"podmonitors.monitoring.coreos.com",
 			"probes.monitoring.coreos.com",
-			"prometheuses.monitoring.coreos.com",
+			"prometheis.monitoring.coreos.com",
 			"prometheusrules.monitoring.coreos.com",
 			"servicemonitors.monitoring.coreos.com",
 			"thanosrulers.monitoring.coreos.com",

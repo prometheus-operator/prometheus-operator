@@ -469,12 +469,12 @@ Prometheus defines a Prometheus deployment.
 
 ## PrometheusList
 
-PrometheusList is a list of Prometheuses.
+PrometheusList is a list of Prometheis.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | metadata | Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#listmeta-v1-meta) | false |
-| items | List of Prometheuses | []*[Prometheus](#prometheus) | true |
+| items | List of Prometheis | []*[Prometheus](#prometheus) | true |
 
 [Back to TOC](#table-of-contents)
 
@@ -894,7 +894,7 @@ ThanosRulerList is a list of ThanosRulers.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | metadata | Standard list metadata More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#listmeta-v1-meta) | false |
-| items | List of Prometheuses | []*[ThanosRuler](#thanosruler) | true |
+| items | List of Prometheis | []*[ThanosRuler](#thanosruler) | true |
 
 [Back to TOC](#table-of-contents)
 

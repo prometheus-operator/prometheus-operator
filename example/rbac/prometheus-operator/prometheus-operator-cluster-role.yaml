@@ -13,8 +13,8 @@ rules:
   - alertmanagers
   - alertmanagers/finalizers
   - alertmanagerconfigs
-  - prometheuses
-  - prometheuses/finalizers
+  - prometheis
+  - prometheis/finalizers
   - thanosrulers
   - thanosrulers/finalizers
   - servicemonitors
