@@ -89,14 +89,14 @@ type PrometheusSpec struct {
 	// neither this nor podMonitorSelector are specified, configuration is
 	// unmanaged.
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
-	// Namespaces to be selected for ServiceMonitor discovery. If nil, only
+	// Namespace's labels to match for ServiceMonitor discovery. If nil, only
 	// check own namespace.
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 	// *Experimental* PodMonitors to be selected for target discovery.
 	// *Deprecated:* if neither this nor serviceMonitorSelector are specified,
 	// configuration is unmanaged.
 	PodMonitorSelector *metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
-	// Namespaces to be selected for PodMonitor discovery. If nil, only
+	// Namespace's labels to match for PodMonitor discovery. If nil, only
 	// check own namespace.
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 	// *Experimental* Probes to be selected for target discovery.

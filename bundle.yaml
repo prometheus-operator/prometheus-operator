@@ -7852,7 +7852,7 @@ spec:
                     type: string
                 type: object
               podMonitorNamespaceSelector:
-                description: Namespaces to be selected for PodMonitor discovery. If nil, only check own namespace.
+                description: Namespace's labels to match for PodMonitor discovery. If nil, only check own namespace.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
@@ -8613,7 +8613,7 @@ spec:
                 description: ServiceAccountName is the name of the ServiceAccount to use to run the Prometheus Pods.
                 type: string
               serviceMonitorNamespaceSelector:
-                description: Namespaces to be selected for ServiceMonitor discovery. If nil, only check own namespace.
+                description: Namespace's labels to match for ServiceMonitor discovery. If nil, only check own namespace.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
