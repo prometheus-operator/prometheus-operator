@@ -182,7 +182,8 @@ func main() {
 			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
 			http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
 			return http.ListenAndServe(*listenAddress, nil)
-		}, func(error) {
+		}, func(err error) {
+			level.Error(logger).Log("err", err)
 		})
 	}
 
