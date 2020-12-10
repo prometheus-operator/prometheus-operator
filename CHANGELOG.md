@@ -1,3 +1,7 @@
+## 0.44.1 / 2020-12-09
+
+* [BUGFIX] Fix Alertmanager configuration for OpsGenie receiver. #3728
+
 ## 0.44.0 / 2020-12-02
 
 * [CHANGE] Fix child routes support in AlertmanagerConfig. #3703
