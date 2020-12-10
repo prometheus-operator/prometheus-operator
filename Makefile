@@ -64,6 +64,7 @@ GO_BUILD_RECIPE=GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -ldflags="-
 
 pkgs = $(shell go list ./... | grep -v /test/ | grep -v /contrib/)
 pkgs += $(shell go list $(GO_PKG)/pkg/apis/monitoring...)
+pkgs += $(shell go list $(GO_PKG)/pkg/client...)
 
 .PHONY: all
 all: format generate build test
@@ -157,6 +158,8 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image
 .PHONY: tidy
 tidy:
 	go mod tidy -v
+	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod
+	cd pkg/client && go mod tidy -v -modfile=go.mod
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
