@@ -128,8 +128,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
-					},
+					Route: &monitoringv1alpha1.Route{},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
 					}},
