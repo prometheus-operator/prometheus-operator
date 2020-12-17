@@ -1233,7 +1233,7 @@ func checkAlertmanagerRoutes(r *monitoringv1alpha1.Route, receivers map[string]s
 		return nil
 	}
 
-	if _, found := receivers[r.Receiver]; !found {
+	if _, found := receivers[r.Receiver]; r.Receiver != "" && !found {
 		return errors.Errorf("receiver %q not found", r.Receiver)
 	}
 
