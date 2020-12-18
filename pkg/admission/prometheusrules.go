@@ -36,7 +36,7 @@ func (a *Admission) mutatePrometheusRules(ar v1.AdmissionReview) *v1.AdmissionRe
 		return toAdmissionResponseFailure(errUnmarshalAdmission, []error{err})
 	}
 
-	patches, err := generatePatchesForNonStringLabelsAnnotations(rule.Spec.Raw)
+	patches, err := genRulePatchesForNonStringLabelsAnnotations(rule.Spec.Raw)
 	if err != nil {
 		level.Info(a.logger).Log("msg", errUnmarshalRules, "err", err)
 		return toAdmissionResponseFailure(errUnmarshalRules, []error{err})
@@ -95,7 +95,7 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 	return &v1.AdmissionResponse{Allowed: true}
 }
 
-func generatePatchesForNonStringLabelsAnnotations(content []byte) ([]string, error) {
+func genRulePatchesForNonStringLabelsAnnotations(content []byte) ([]string, error) {
 	groups := &RuleGroups{}
 	if err := json.Unmarshal(content, groups); err != nil {
 		return nil, errors.Wrap(err, "cannot unmarshal RuleGroups")
@@ -105,10 +105,10 @@ func generatePatchesForNonStringLabelsAnnotations(content []byte) ([]string, err
 	for gi := range groups.Groups {
 		for ri, rule := range groups.Groups[gi].Rules {
 			for key, val := range rule.Annotations {
-				patchIfNotString(patches, gi, ri, "annotations", key, val)
+				patchRuleIfNotString(patches, gi, ri, "annotations", key, val)
 			}
 			for key, val := range rule.Labels {
-				patchIfNotString(patches, gi, ri, "labels", key, val)
+				patchRuleIfNotString(patches, gi, ri, "labels", key, val)
 			}
 		}
 	}
@@ -116,7 +116,7 @@ func generatePatchesForNonStringLabelsAnnotations(content []byte) ([]string, err
 	return *patches, nil
 }
 
-func patchIfNotString(patches *[]string, gi, ri int, typ, key string, val interface{}) {
+func patchRuleIfNotString(patches *[]string, gi, ri int, typ, key string, val interface{}) {
 	if _, ok := val.(string); ok || val == nil {
 		// Kubernetes does not let nil values get this far.
 		// Keeping it here for the sake of clarity of behavior.
