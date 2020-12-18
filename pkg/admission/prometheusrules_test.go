@@ -18,18 +18,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	jsonpatch "github.com/evanphx/json-patch/v5"
+	"io"
 	"io/ioutil"
-	v1 "k8s.io/api/admission/v1"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
 
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
+	v1 "k8s.io/api/admission/v1"
 	"k8s.io/api/admission/v1beta1"
 )
 
@@ -37,7 +38,7 @@ func TestMutateRule(t *testing.T) {
 	ts := server(api().servePrometheusRulesMutate)
 	defer ts.Close()
 
-	resp := send(t, ts, goodRulesWithAnnotations)
+	resp := send(t, ts, bytes.NewReader(goodRulesWithAnnotations))
 
 	if len(resp.Response.Patch) == 0 {
 		t.Errorf("Expected a patch to be applied but found none")
@@ -48,7 +49,7 @@ func TestMutateRuleNoAnnotations(t *testing.T) {
 	ts := server(api().servePrometheusRulesMutate)
 	defer ts.Close()
 
-	resp := send(t, ts, badRulesNoAnnotations)
+	resp := send(t, ts, bytes.NewReader(badRulesNoAnnotations))
 
 	if len(resp.Response.Patch) == 0 {
 		t.Errorf("Expected a patch to be applied but found none")
@@ -59,7 +60,7 @@ func TestAdmitGoodRule(t *testing.T) {
 	ts := server(api().servePrometheusRulesValidate)
 	defer ts.Close()
 
-	resp := send(t, ts, goodRulesWithAnnotations)
+	resp := send(t, ts, bytes.NewReader(goodRulesWithAnnotations))
 
 	if !resp.Response.Allowed {
 		t.Errorf("Expected admission to be allowed but it was not")
@@ -70,7 +71,7 @@ func TestAdmitGoodRuleExternalLabels(t *testing.T) {
 	ts := server(api().servePrometheusRulesValidate)
 	defer ts.Close()
 
-	resp := send(t, ts, goodRulesWithExternalLabelsInAnnotations)
+	resp := send(t, ts, bytes.NewReader(goodRulesWithExternalLabelsInAnnotations))
 
 	if !resp.Response.Allowed {
 		t.Errorf("Expected admission to be allowed but it was not")
@@ -81,7 +82,7 @@ func TestAdmitBadRule(t *testing.T) {
 	ts := server(api().servePrometheusRulesValidate)
 	defer ts.Close()
 
-	resp := send(t, ts, badRulesNoAnnotations)
+	resp := send(t, ts, bytes.NewReader(badRulesNoAnnotations))
 
 	if resp.Response.Allowed {
 		t.Errorf("Expected admission to not be allowed but it was")
@@ -112,7 +113,7 @@ func TestAdmitBadRuleWithBooleanInAnnotations(t *testing.T) {
 	ts := server(api().servePrometheusRulesValidate)
 	defer ts.Close()
 
-	resp := send(t, ts, badRulesWithBooleanInAnnotations)
+	resp := send(t, ts, bytes.NewReader(badRulesWithBooleanInAnnotations))
 
 	if resp.Response.Allowed {
 		t.Errorf("Expected admission to not be allowed but it was")
@@ -128,7 +129,7 @@ func TestAdmitBadRuleWithBooleanInAnnotations(t *testing.T) {
 func TestMutateNonStringsToStrings(t *testing.T) {
 	request := nonStringsInLabelsAnnotations
 	ts := server(api().servePrometheusRulesMutate)
-	resp := send(t, ts, request)
+	resp := send(t, ts, bytes.NewReader(request))
 	if len(resp.Response.Patch) == 0 {
 		t.Errorf("Expected a patch to be applied but found none")
 	}
@@ -152,7 +153,7 @@ func TestMutateNonStringsToStrings(t *testing.T) {
 	ts = server(api().servePrometheusRulesValidate)
 	defer ts.Close()
 
-	resp = send(t, ts, request)
+	resp = send(t, ts, bytes.NewReader(request))
 	if !resp.Response.Allowed {
 		t.Errorf("Expected admission to be allowed but it was not")
 	}
@@ -182,8 +183,8 @@ func server(s serveFunc) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(s))
 }
 
-func send(t *testing.T, ts *httptest.Server, rules []byte) *v1beta1.AdmissionReview {
-	resp, err := http.Post(ts.URL, "application/json", bytes.NewReader(rules))
+func send(t *testing.T, ts *httptest.Server, r io.Reader) *v1beta1.AdmissionReview {
+	resp, err := http.Post(ts.URL, "application/json", r)
 	if err != nil {
 		t.Errorf("Publish() returned an error: %s", err)
 	}
