@@ -37,11 +37,6 @@ const (
 
 var (
 	deserializer = scheme.Codecs.UniversalDeserializer()
-	ruleResource = metav1.GroupVersionResource{
-		Group:    "monitoring.coreos.com",
-		Version:  "v1",
-		Resource: "prometheusrules",
-	}
 )
 
 // Admission is a validating and mutating webhook that ensures PrometheusRules pushed into the cluster will be
@@ -68,7 +63,7 @@ func (a *Admission) RegisterMetrics(validationTriggeredCounter, validationErrors
 
 type admitFunc func(ar v1.AdmissionReview) *v1.AdmissionResponse
 
-func toAdmissionResponseFailure(message string, errors []error) *v1.AdmissionResponse {
+func toAdmissionResponseFailure(message string, resource string, errors []error) *v1.AdmissionResponse {
 	r := &v1.AdmissionResponse{
 		Result: &metav1.Status{
 			Details: &metav1.StatusDetails{
@@ -80,14 +75,15 @@ func toAdmissionResponseFailure(message string, errors []error) *v1.AdmissionRes
 	r.Result.Message = message
 
 	for _, err := range errors {
-		r.Result.Details.Name = "prometheusrules"
+		r.Result.Details.Name = resource
 		r.Result.Details.Causes = append(r.Result.Details.Causes, metav1.StatusCause{Message: err.Error()})
 	}
 
 	return r
 }
 
-func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit admitFunc) {
+func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit admitFunc, res string) {
+
 	var body []byte
 	if r.Body != nil {
 		if data, err := ioutil.ReadAll(r.Body); err == nil {
@@ -115,7 +111,7 @@ func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit
 
 	if _, _, err := deserializer.Decode(body, nil, &requestedAdmissionReview); err != nil {
 		level.Warn(a.logger).Log("msg", "Unable to deserialize request", "err", err)
-		responseAdmissionReview.Response = toAdmissionResponseFailure("Unable to deserialize request", []error{err})
+		responseAdmissionReview.Response = toAdmissionResponseFailure("Unable to deserialize request", res, []error{err})
 	} else {
 		responseAdmissionReview.Response = admit(requestedAdmissionReview)
 	}
