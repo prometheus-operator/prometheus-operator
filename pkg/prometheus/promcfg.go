@@ -726,10 +726,16 @@ func (cg *configGenerator) generateProbeConfig(
 		}
 
 		if m.Spec.Targets.StaticConfig.Labels != nil {
-			staticConfig = append(staticConfig, yaml.MapSlice{
-				{Key: "labels", Value: m.Spec.Targets.StaticConfig.Labels},
-			}...)
+			if _, ok := m.Spec.Targets.StaticConfig.Labels["namespace"]; !ok {
+				m.Spec.Targets.StaticConfig.Labels["namespace"] = m.Namespace
+			}
+		} else {
+			m.Spec.Targets.StaticConfig.Labels = map[string]string{"namespace": m.Namespace}
 		}
+
+		staticConfig = append(staticConfig, yaml.MapSlice{
+			{Key: "labels", Value: m.Spec.Targets.StaticConfig.Labels},
+		}...)
 
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "static_configs",
