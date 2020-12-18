@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-kit/kit/log/level"
+	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	v1 "k8s.io/api/admission/v1"
@@ -92,4 +93,37 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 	}
 
 	return &v1.AdmissionResponse{Allowed: true}
+}
+
+func generatePatchesForNonStringLabelsAnnotations(content []byte) ([]string, error) {
+	groups := &RuleGroups{}
+	if err := json.Unmarshal(content, groups); err != nil {
+		return nil, errors.Wrap(err, "cannot unmarshal RuleGroups")
+	}
+
+	patches := new([]string)
+	for gi := range groups.Groups {
+		for ri, rule := range groups.Groups[gi].Rules {
+			for key, val := range rule.Annotations {
+				patchIfNotString(patches, gi, ri, "annotations", key, val)
+			}
+			for key, val := range rule.Labels {
+				patchIfNotString(patches, gi, ri, "labels", key, val)
+			}
+		}
+	}
+
+	return *patches, nil
+}
+
+func patchIfNotString(patches *[]string, gi, ri int, typ, key string, val interface{}) {
+	if _, ok := val.(string); ok || val == nil {
+		// Kubernetes does not let nil values get this far.
+		// Keeping it here for the sake of clarity of behavior.
+		return
+	}
+	*patches = append(*patches,
+		fmt.Sprintf(`{"op": "replace","path": "/spec/groups/%d/rules/%d/%s/%s","value": "%v"}`,
+			gi, ri, typ, key, val))
+
 }
