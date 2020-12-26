@@ -807,6 +807,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	}
 	if disableCompaction {
 		promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
+		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h")
 	}
 
 	configReloaderArgs := []string{
