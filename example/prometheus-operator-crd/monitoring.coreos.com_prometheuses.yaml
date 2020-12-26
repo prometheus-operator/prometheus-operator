@@ -3455,6 +3455,9 @@ spec:
                     required:
                     - key
                     type: object
+                  tracingConfigFile:
+                    description: TracingConfig specifies the path of the tracing configuration file. When used alongside with TracingConfig, TracingConfigFile takes precedence.
+                    type: string
                   version:
                     description: Version describes the version of Thanos to use.
                     type: string

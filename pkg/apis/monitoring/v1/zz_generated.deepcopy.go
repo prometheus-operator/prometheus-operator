@@ -1867,6 +1867,11 @@ func (in *ThanosSpec) DeepCopyInto(out *ThanosSpec) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.TracingConfigFile != nil {
+		in, out := &in.TracingConfigFile, &out.TracingConfigFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.GRPCServerTLSConfig != nil {
 		in, out := &in.GRPCServerTLSConfig, &out.GRPCServerTLSConfig
 		*out = new(TLSConfig)
