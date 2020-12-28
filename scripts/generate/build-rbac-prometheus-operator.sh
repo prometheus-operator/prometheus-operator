@@ -11,3 +11,9 @@ echo "$PO" | jq -r 'keys[]' | while read -r file
 do
     echo "$PO" | jq -r ".[\"${file}\"]" | gojsontoyaml > "example/rbac/prometheus-operator/${file}"
 done
+
+PO=$(jsonnet -J scripts/generate/vendor jsonnet/thanos/thanos.jsonnet)
+echo "$PO" | jq -r 'keys[]' | while read -r file
+do
+    echo "$PO" | jq -r ".[\"${file}\"]" | gojsontoyaml > "example/demo/${file}"
+done
