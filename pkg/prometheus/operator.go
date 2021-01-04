@@ -582,7 +582,8 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
 			Labels: c.config.Labels.Merge(map[string]string{
-				"k8s-app": "kubelet",
+				"k8s-app":                "kubelet",
+				"app.kubernetes.io/name": "kubelet",
 			}),
 		},
 		Subsets: []v1.EndpointSubset{
@@ -627,7 +628,8 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
 			Labels: c.config.Labels.Merge(map[string]string{
-				"k8s-app": "kubelet",
+				"k8s-app":                "kubelet",
+				"app.kubernetes.io/name": "kubelet",
 			}),
 		},
 		Spec: v1.ServiceSpec{
