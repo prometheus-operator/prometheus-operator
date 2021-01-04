@@ -610,7 +610,7 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 		return errors.Wrap(err, "listing nodes failed")
 	}
 
-	level.Debug(logger).Log("Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes.Items))
+	level.Debug(logger).Log("msg", "Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes.Items))
 
 	addresses, errs := getNodeAddresses(nodes)
 	if len(errs) > 0 {
@@ -619,7 +619,7 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 		}
 		c.nodeAddressLookupErrors.Add(float64(len(errs)))
 	}
-	level.Debug(logger).Log("Nodes converted to endpoint addresses", "num_addresses", len(addresses))
+	level.Debug(logger).Log("msg", "Nodes converted to endpoint addresses", "num_addresses", len(addresses))
 
 	eps.Subsets[0].Addresses = addresses
 
