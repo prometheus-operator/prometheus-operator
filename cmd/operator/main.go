@@ -20,6 +20,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	stdlog "log"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -104,7 +105,7 @@ func (n namespaces) asSlice() []string {
 
 func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		logger.Log("msg", "Starting insecure server on "+listener.Addr().String())
+		level.Info(logger).Log("msg", "Starting insecure server on "+listener.Addr().String())
 		if err := srv.Serve(listener); err != http.ErrServerClosed {
 			return err
 		}
@@ -114,7 +115,7 @@ func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() er
 
 func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		logger.Log("msg", "Starting secure server on "+listener.Addr().String())
+		level.Info(logger).Log("msg", "Starting secure server on "+listener.Addr().String())
 		if err := srv.ServeTLS(listener, "", ""); err != http.ErrServerClosed {
 			return err
 		}
@@ -397,6 +398,7 @@ func Main() int {
 	srv := &http.Server{
 		Handler:   mux,
 		TLSConfig: tlsConfig,
+		ErrorLog:  stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.LstdFlags),
 	}
 	if srv.TLSConfig == nil {
 		wg.Go(serve(srv, l, logger))
@@ -409,17 +411,17 @@ func Main() int {
 
 	select {
 	case <-term:
-		logger.Log("msg", "Received SIGTERM, exiting gracefully...")
+		level.Info(logger).Log("msg", "Received SIGTERM, exiting gracefully...")
 	case <-ctx.Done():
 	}
 
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Log("msg", "Server shutdown error", "err", err)
+		level.Warn(logger).Log("msg", "Server shutdown error", "err", err)
 	}
 
 	cancel()
 	if err := wg.Wait(); err != nil {
-		logger.Log("msg", "Unhandled error received. Exiting...", "err", err)
+		level.Warn(logger).Log("msg", "Unhandled error received. Exiting...", "err", err)
 		return 1
 	}
 
