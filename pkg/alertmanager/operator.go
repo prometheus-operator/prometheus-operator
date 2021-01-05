@@ -141,6 +141,10 @@ func New(ctx context.Context, c operator.Config, logger log.Logger, r prometheus
 func (c *Operator) bootstrap(ctx context.Context) error {
 	var err error
 
+	if _, err := labels.Parse(c.config.AlertManagerSelector); err != nil {
+		return errors.Wrap(err, "can not parse alertmanager selector value")
+	}
+
 	c.alrtInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			c.config.Namespaces.AlertmanagerAllowList,
@@ -163,9 +167,7 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 			c.config.Namespaces.DenyList,
 			c.mclient,
 			resyncPeriod,
-			func(options *metav1.ListOptions) {
-				options.LabelSelector = c.config.AlertManagerSelector
-			},
+			nil,
 		),
 		monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.AlertmanagerConfigName),
 	)

@@ -111,10 +111,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "can not parse prometheus selector value")
 	}
 
-	if _, err := labels.Parse(conf.AlertManagerSelector); err != nil {
-		return nil, errors.Wrap(err, "can not parse alertmanager selector value")
-	}
-
 	secretListWatchSelector, err := fields.ParseSelector(conf.SecretListWatchSelector)
 	if err != nil {
 		return nil, errors.Wrap(err, "can not parse secrets selector value")
