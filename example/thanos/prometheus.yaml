@@ -6,7 +6,7 @@ metadata:
   name: self
   namespace: default
 spec:
-  replicas: "2"
+  replicas: 2
   ruleSelector:
     matchLabels:
       prometheus: k8s
