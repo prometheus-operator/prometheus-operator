@@ -190,6 +190,9 @@ example/mixin/alerts.yaml: $(JSONNET_BINARY) $(GOJSONTOYAML_BINARY)
 RBAC_MANIFESTS = example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml example/rbac/prometheus-operator/prometheus-operator-service-account.yaml example/rbac/prometheus-operator/prometheus-operator-deployment.yaml
 $(RBAC_MANIFESTS): scripts/generate/vendor scripts/generate/prometheus-operator-rbac.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-rbac-prometheus-operator.sh
+THANOS_MANIFESTS = example/thanos/prometheus.yaml
+$(THANOS_MANIFESTS): scripts/generate/vendor jsonnet/thanos/thanos.jsonnet $(shell find jsonnet -type f)
+	scripts/generate/build-thanos-example.sh
 
 jsonnet/prometheus-operator/prometheus-operator.libsonnet: VERSION
 	# note: use temporary file to preserve compatibility with darwin
