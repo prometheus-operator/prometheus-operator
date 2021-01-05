@@ -46,7 +46,7 @@ func testDenyPrometheus(t *testing.T) {
 	for _, denied := range deniedNamespaces {
 		ctx.SetupPrometheusRBAC(t, denied, framework.KubeClient)
 		p := framework.MakeBasicPrometheus(denied, "denied", "denied", 1)
-		_, err = framework.MonClientV1.Prometheuses(denied).Create(context.TODO(), p, metav1.CreateOptions{})
+		_, err = framework.MonClientV1.Prometheis(denied).Create(context.TODO(), p, metav1.CreateOptions{})
 		if err != nil {
 			t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 		}

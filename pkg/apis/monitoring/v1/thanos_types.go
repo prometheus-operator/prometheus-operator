@@ -49,7 +49,7 @@ type ThanosRulerList struct {
 	// Standard list metadata
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
-	// List of Prometheuses
+	// List of Prometheis
 	Items []*ThanosRuler `json:"items"`
 }
 

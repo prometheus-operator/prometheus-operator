@@ -28,10 +28,10 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// PrometheusesGetter has a method to return a PrometheusInterface.
+// PrometheisGetter has a method to return a PrometheusInterface.
 // A group's client should implement this interface.
-type PrometheusesGetter interface {
-	Prometheuses(namespace string) PrometheusInterface
+type PrometheisGetter interface {
+	Prometheis(namespace string) PrometheusInterface
 }
 
 // PrometheusInterface has methods to work with Prometheus resources.
@@ -48,26 +48,26 @@ type PrometheusInterface interface {
 	PrometheusExpansion
 }
 
-// prometheuses implements PrometheusInterface
-type prometheuses struct {
+// prometheis implements PrometheusInterface
+type prometheis struct {
 	client rest.Interface
 	ns     string
 }
 
-// newPrometheuses returns a Prometheuses
-func newPrometheuses(c *MonitoringV1Client, namespace string) *prometheuses {
-	return &prometheuses{
+// newPrometheis returns a Prometheis
+func newPrometheis(c *MonitoringV1Client, namespace string) *prometheis {
+	return &prometheis{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
 // Get takes name of the prometheus, and returns the corresponding prometheus object, and an error if there is any.
-func (c *prometheuses) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.Prometheus, err error) {
+func (c *prometheis) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.Prometheus, err error) {
 	result = &v1.Prometheus{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("prometheuses").
+		Resource("prometheis").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do(ctx).
@@ -75,8 +75,8 @@ func (c *prometheuses) Get(ctx context.Context, name string, options metav1.GetO
 	return
 }
 
-// List takes label and field selectors, and returns the list of Prometheuses that match those selectors.
-func (c *prometheuses) List(ctx context.Context, opts metav1.ListOptions) (result *v1.PrometheusList, err error) {
+// List takes label and field selectors, and returns the list of Prometheis that match those selectors.
+func (c *prometheis) List(ctx context.Context, opts metav1.ListOptions) (result *v1.PrometheusList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -84,7 +84,7 @@ func (c *prometheuses) List(ctx context.Context, opts metav1.ListOptions) (resul
 	result = &v1.PrometheusList{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("prometheuses").
+		Resource("prometheis").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Do(ctx).
@@ -92,8 +92,8 @@ func (c *prometheuses) List(ctx context.Context, opts metav1.ListOptions) (resul
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested prometheuses.
-func (c *prometheuses) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested prometheis.
+func (c *prometheis) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -101,18 +101,18 @@ func (c *prometheuses) Watch(ctx context.Context, opts metav1.ListOptions) (watc
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
-		Resource("prometheuses").
+		Resource("prometheis").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Watch(ctx)
 }
 
 // Create takes the representation of a prometheus and creates it.  Returns the server's representation of the prometheus, and an error, if there is any.
-func (c *prometheuses) Create(ctx context.Context, prometheus *v1.Prometheus, opts metav1.CreateOptions) (result *v1.Prometheus, err error) {
+func (c *prometheis) Create(ctx context.Context, prometheus *v1.Prometheus, opts metav1.CreateOptions) (result *v1.Prometheus, err error) {
 	result = &v1.Prometheus{}
 	err = c.client.Post().
 		Namespace(c.ns).
-		Resource("prometheuses").
+		Resource("prometheis").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(prometheus).
 		Do(ctx).
@@ -121,11 +121,11 @@ func (c *prometheuses) Create(ctx context.Context, prometheus *v1.Prometheus, op
 }
 
 // Update takes the representation of a prometheus and updates it. Returns the server's representation of the prometheus, and an error, if there is any.
-func (c *prometheuses) Update(ctx context.Context, prometheus *v1.Prometheus, opts metav1.UpdateOptions) (result *v1.Prometheus, err error) {
+func (c *prometheis) Update(ctx context.Context, prometheus *v1.Prometheus, opts metav1.UpdateOptions) (result *v1.Prometheus, err error) {
 	result = &v1.Prometheus{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("prometheuses").
+		Resource("prometheis").
 		Name(prometheus.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(prometheus).
@@ -136,11 +136,11 @@ func (c *prometheuses) Update(ctx context.Context, prometheus *v1.Prometheus, op
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *prometheuses) UpdateStatus(ctx context.Context, prometheus *v1.Prometheus, opts metav1.UpdateOptions) (result *v1.Prometheus, err error) {
+func (c *prometheis) UpdateStatus(ctx context.Context, prometheus *v1.Prometheus, opts metav1.UpdateOptions) (result *v1.Prometheus, err error) {
 	result = &v1.Prometheus{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("prometheuses").
+		Resource("prometheis").
 		Name(prometheus.Name).
 		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
@@ -151,10 +151,10 @@ func (c *prometheuses) UpdateStatus(ctx context.Context, prometheus *v1.Promethe
 }
 
 // Delete takes name of the prometheus and deletes it. Returns an error if one occurs.
-func (c *prometheuses) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
+func (c *prometheis) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("prometheuses").
+		Resource("prometheis").
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -162,14 +162,14 @@ func (c *prometheuses) Delete(ctx context.Context, name string, opts metav1.Dele
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *prometheuses) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
+func (c *prometheis) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
 	var timeout time.Duration
 	if listOpts.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("prometheuses").
+		Resource("prometheis").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
@@ -178,11 +178,11 @@ func (c *prometheuses) DeleteCollection(ctx context.Context, opts metav1.DeleteO
 }
 
 // Patch applies the patch and returns the patched prometheus.
-func (c *prometheuses) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Prometheus, err error) {
+func (c *prometheis) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Prometheus, err error) {
 	result = &v1.Prometheus{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
-		Resource("prometheuses").
+		Resource("prometheis").
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).

@@ -1,3 +1,7 @@
+## 0.45.0 / 2020-12-25
+
+* [BUGFIX] Fix plural of Titan god of fire. Happy Holidays!
+
 ## 0.44.1 / 2020-12-09
 
 * [BUGFIX] Fix Alertmanager configuration for OpsGenie receiver. #3728

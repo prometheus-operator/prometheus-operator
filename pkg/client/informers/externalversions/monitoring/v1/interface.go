@@ -28,8 +28,8 @@ type Interface interface {
 	PodMonitors() PodMonitorInformer
 	// Probes returns a ProbeInformer.
 	Probes() ProbeInformer
-	// Prometheuses returns a PrometheusInformer.
-	Prometheuses() PrometheusInformer
+	// Prometheis returns a PrometheusInformer.
+	Prometheis() PrometheusInformer
 	// PrometheusRules returns a PrometheusRuleInformer.
 	PrometheusRules() PrometheusRuleInformer
 	// ServiceMonitors returns a ServiceMonitorInformer.
@@ -64,8 +64,8 @@ func (v *version) Probes() ProbeInformer {
 	return &probeInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// Prometheuses returns a PrometheusInformer.
-func (v *version) Prometheuses() PrometheusInformer {
+// Prometheis returns a PrometheusInformer.
+func (v *version) Prometheis() PrometheusInformer {
 	return &prometheusInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 

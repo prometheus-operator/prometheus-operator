@@ -270,7 +270,7 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 }
 
 func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
-	result, err := f.MonClientV1.Prometheuses(ns).Create(context.TODO(), p, metav1.CreateOptions{})
+	result, err := f.MonClientV1.Prometheis(ns).Create(context.TODO(), p, metav1.CreateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -283,7 +283,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1
 }
 
 func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
-	result, err := f.MonClientV1.Prometheuses(ns).Update(context.TODO(), p, metav1.UpdateOptions{})
+	result, err := f.MonClientV1.Prometheis(ns).Update(context.TODO(), p, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -319,12 +319,12 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClientV1.Prometheuses(ns).Get(context.TODO(), name, metav1.GetOptions{})
+	_, err := f.MonClientV1.Prometheis(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting Prometheus custom resource %v failed", name))
 	}
 
-	if err := f.MonClientV1.Prometheuses(ns).Delete(context.TODO(), name, metav1.DeleteOptions{}); err != nil {
+	if err := f.MonClientV1.Prometheis(ns).Delete(context.TODO(), name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting Prometheus custom resource %v failed", name))
 	}
 

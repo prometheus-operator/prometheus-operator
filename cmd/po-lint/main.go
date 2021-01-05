@@ -65,7 +65,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("alertmanager is invalid: %v", err)
 			}
-		case v1.PrometheusesKind:
+		case v1.PrometheisKind:
 			j, err := yaml.YAMLToJSON(content)
 			if err != nil {
 				log.Fatalf("unable to convert YAML to JSON: %v", err)

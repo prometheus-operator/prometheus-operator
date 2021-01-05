@@ -57,7 +57,7 @@ var (
 				{"alertmanager", "alertmanagers"},
 				{"podmonitor", "podmonitors"},
 				{"probe", "probes"},
-				{"prometheus", "prometheuses"},
+				{"prometheus", "prometheis"},
 				{"prometheusrule", "prometheusrules"},
 				{"servicemonitor", "servicemonitors"},
 				{"thanosruler", "thanosrulers"},

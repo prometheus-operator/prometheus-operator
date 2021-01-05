@@ -23,12 +23,12 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// PrometheusLister helps list Prometheuses.
+// PrometheusLister helps list Prometheis.
 type PrometheusLister interface {
-	// List lists all Prometheuses in the indexer.
+	// List lists all Prometheis in the indexer.
 	List(selector labels.Selector) (ret []*v1.Prometheus, err error)
-	// Prometheuses returns an object that can list and get Prometheuses.
-	Prometheuses(namespace string) PrometheusNamespaceLister
+	// Prometheis returns an object that can list and get Prometheis.
+	Prometheis(namespace string) PrometheusNamespaceLister
 	PrometheusListerExpansion
 }
 
@@ -42,7 +42,7 @@ func NewPrometheusLister(indexer cache.Indexer) PrometheusLister {
 	return &prometheusLister{indexer: indexer}
 }
 
-// List lists all Prometheuses in the indexer.
+// List lists all Prometheis in the indexer.
 func (s *prometheusLister) List(selector labels.Selector) (ret []*v1.Prometheus, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
 		ret = append(ret, m.(*v1.Prometheus))
@@ -50,14 +50,14 @@ func (s *prometheusLister) List(selector labels.Selector) (ret []*v1.Prometheus,
 	return ret, err
 }
 
-// Prometheuses returns an object that can list and get Prometheuses.
-func (s *prometheusLister) Prometheuses(namespace string) PrometheusNamespaceLister {
+// Prometheis returns an object that can list and get Prometheis.
+func (s *prometheusLister) Prometheis(namespace string) PrometheusNamespaceLister {
 	return prometheusNamespaceLister{indexer: s.indexer, namespace: namespace}
 }
 
-// PrometheusNamespaceLister helps list and get Prometheuses.
+// PrometheusNamespaceLister helps list and get Prometheis.
 type PrometheusNamespaceLister interface {
-	// List lists all Prometheuses in the indexer for a given namespace.
+	// List lists all Prometheis in the indexer for a given namespace.
 	List(selector labels.Selector) (ret []*v1.Prometheus, err error)
 	// Get retrieves the Prometheus from the indexer for a given namespace and name.
 	Get(name string) (*v1.Prometheus, error)
@@ -71,7 +71,7 @@ type prometheusNamespaceLister struct {
 	namespace string
 }
 
-// List lists all Prometheuses in the indexer for a given namespace.
+// List lists all Prometheis in the indexer for a given namespace.
 func (s prometheusNamespaceLister) List(selector labels.Selector) (ret []*v1.Prometheus, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
 		ret = append(ret, m.(*v1.Prometheus))

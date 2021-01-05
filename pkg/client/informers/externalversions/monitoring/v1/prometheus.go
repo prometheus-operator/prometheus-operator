@@ -31,7 +31,7 @@ import (
 )
 
 // PrometheusInformer provides access to a shared informer and lister for
-// Prometheuses.
+// Prometheis.
 type PrometheusInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() v1.PrometheusLister
@@ -60,13 +60,13 @@ func NewFilteredPrometheusInformer(client versioned.Interface, namespace string,
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MonitoringV1().Prometheuses(namespace).List(context.TODO(), options)
+				return client.MonitoringV1().Prometheis(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MonitoringV1().Prometheuses(namespace).Watch(context.TODO(), options)
+				return client.MonitoringV1().Prometheis(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&monitoringv1.Prometheus{},

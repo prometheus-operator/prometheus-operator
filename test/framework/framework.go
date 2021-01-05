@@ -245,7 +245,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 	}
 
 	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PrometheusName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(context.TODO(), opts)
+		return f.MonClientV1.Prometheis(v1.NamespaceAll).List(context.TODO(), opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize Prometheus CRD")

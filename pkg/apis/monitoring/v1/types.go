@@ -24,8 +24,8 @@ import (
 const (
 	Version = "v1"
 
-	PrometheusesKind  = "Prometheus"
-	PrometheusName    = "prometheuses"
+	PrometheisKind  = "Prometheus"
+	PrometheusName    = "prometheis"
 	PrometheusKindKey = "prometheus"
 
 	AlertmanagersKind   = "Alertmanager"
@@ -53,7 +53,7 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version",description="The version of Prometheus"
-// +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=".spec.replicas",description="The desired replicas number of Prometheuses"
+// +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=".spec.replicas",description="The desired replicas number of Prometheis"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type Prometheus struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -68,14 +68,14 @@ type Prometheus struct {
 	Status *PrometheusStatus `json:"status,omitempty"`
 }
 
-// PrometheusList is a list of Prometheuses.
+// PrometheusList is a list of Prometheis.
 // +k8s:openapi-gen=true
 type PrometheusList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
-	// List of Prometheuses
+	// List of Prometheis
 	Items []*Prometheus `json:"items"`
 }
 

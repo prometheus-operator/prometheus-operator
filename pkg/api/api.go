@@ -61,7 +61,7 @@ func New(conf operator.Config, l log.Logger) (*API, error) {
 }
 
 var (
-	prometheusRoute = regexp.MustCompile("/apis/monitoring.coreos.com/" + v1.Version + "/namespaces/(.*)/prometheuses/(.*)/status")
+	prometheusRoute = regexp.MustCompile("/apis/monitoring.coreos.com/" + v1.Version + "/namespaces/(.*)/prometheis/(.*)/status")
 )
 
 func (api *API) Register(mux *http.ServeMux) {
@@ -100,7 +100,7 @@ func parsePrometheusStatusUrl(path string) objectReference {
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 	or := parsePrometheusStatusUrl(req.URL.Path)
 
-	p, err := api.mclient.MonitoringV1().Prometheuses(or.namespace).Get(req.Context(), or.name, metav1.GetOptions{})
+	p, err := api.mclient.MonitoringV1().Prometheis(or.namespace).Get(req.Context(), or.name, metav1.GetOptions{})
 	if err != nil {
 		if k8sutil.IsResourceNotFoundError(err) {
 			w.WriteHeader(404)
