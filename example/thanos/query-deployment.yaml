@@ -30,10 +30,3 @@ spec:
           name: http
         - containerPort: 10901
           name: grpc
-        resources:
-          limits:
-            cpu: 200m
-            memory: 200Mi
-          requests:
-            cpu: 100m
-            memory: 100Mi

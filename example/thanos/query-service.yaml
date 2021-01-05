@@ -8,7 +8,7 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 9090
+    port: 10902
     targetPort: http
   selector:
     app: thanos-query

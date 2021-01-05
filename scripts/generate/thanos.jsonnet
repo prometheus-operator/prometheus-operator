@@ -1,4 +1,4 @@
-local po = (import 'config.libsonnet').thanos;
+local po = (import 'thanos/config.libsonnet').thanos;
 
 {
   'prometheus.yaml': po.prometheus,

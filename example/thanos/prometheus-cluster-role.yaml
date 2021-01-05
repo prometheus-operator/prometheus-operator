@@ -23,3 +23,5 @@ rules:
   - get
 - nonResourceURLs:
   - /metrics
+  verbs:
+  - get

@@ -6,7 +6,7 @@ set -o pipefail
 # error on unset variables
 set -u
 
-PO=$(jsonnet -J scripts/generate/vendor jsonnet/thanos/thanos.jsonnet)
+PO=$(jsonnet -J scripts/generate/vendor scripts/generate/thanos.jsonnet)
 echo "$PO" | jq -r 'keys[]' | while read -r file
 do
     echo "$PO" | jq -r ".[\"${file}\"]" | gojsontoyaml > "example/thanos/${file}"
