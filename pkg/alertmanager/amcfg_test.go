@@ -87,23 +87,6 @@ templates: []
 `,
 		},
 		{
-			name:    "skeleton base, empty CR",
-			kclient: fake.NewSimpleClientset(),
-			baseConfig: alertmanagerConfig{
-				Route:     &route{Receiver: "null"},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {},
-			},
-			expected: `route:
-  receiver: "null"
-receivers:
-- name: "null"
-templates: []
-`,
-		},
-		{
 			name:    "skeleton base, simple CR",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
@@ -117,7 +100,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
+						Route: monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
@@ -154,7 +137,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
+						Route: monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
@@ -201,7 +184,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
+						Route: monitoringv1alpha1.Route{
 							Receiver: "test-pd",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
@@ -249,7 +232,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
+						Route: monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
@@ -304,7 +287,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
+						Route: monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
@@ -362,7 +345,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
+						Route: monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
@@ -427,7 +410,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
+						Route: monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
@@ -439,7 +422,7 @@ templates: []
 									},
 									Key: "apiSecret",
 								},
-								CorpID: strPtr("wechatcorpid"),
+								CorpID: "wechatcorpid",
 							}},
 						}},
 					},
@@ -481,7 +464,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
+						Route: monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
