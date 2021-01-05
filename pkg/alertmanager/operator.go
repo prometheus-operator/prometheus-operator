@@ -776,7 +776,7 @@ receivers:
 		return nil
 	}
 
-	amConfigs, err := c.selectAlertManagerConfigs(ctx, am, store)
+	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store)
 	if err != nil {
 		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
 	}
@@ -846,8 +846,30 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
 	namespaces := []string{}
+
+	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
+	if am.Spec.AlertmanagerConfigNamespaceSelector == nil {
+		namespaces = append(namespaces, am.Namespace)
+
+		level.Debug(c.logger).Log("msg", "selecting AlertmanagerConfigs from alertmanager's namespace", "namespace", am.Namespace, "alertmanager", am.Name)
+	} else {
+		amConfigNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
+		if err != nil {
+			return nil, err
+		}
+
+		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj interface{}) {
+			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to list namespaces")
+		}
+
+		level.Debug(c.logger).Log("msg", "filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
+	}
+
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	amConfigs := make(map[string]*monitoringv1alpha1.AlertmanagerConfig)
 
@@ -855,23 +877,6 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 	if err != nil {
 		return nil, err
 	}
-
-	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
-	if am.Spec.AlertmanagerConfigNamespaceSelector == nil {
-		namespaces = append(namespaces, am.Namespace)
-	} else {
-		amConfigNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
-		if err != nil {
-			return nil, err
-		}
-
-		namespaces, err = c.listMatchingNamespaces(amConfigNSSelector)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	level.Debug(c.logger).Log("msg", "filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
 
 	for _, ns := range namespaces {
 		c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
@@ -904,7 +909,7 @@ func (c *Operator) selectAlertManagerConfigs(ctx context.Context, am *monitoring
 	for k := range res {
 		amcKeys = append(amcKeys, k)
 	}
-	level.Debug(c.logger).Log("msg", "selected AlertmanagerConfigs", "aletmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
+	level.Debug(c.logger).Log("msg", "selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
 
 	if amKey, ok := c.keyFunc(am); ok {
 		c.metrics.SetSelectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, len(res))
@@ -1272,19 +1277,6 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 		return err
 	}
 	return nil
-}
-
-// listMatchingNamespaces lists all the namespaces that match the provided
-// selector.
-func (c *Operator) listMatchingNamespaces(selector labels.Selector) ([]string, error) {
-	var ns []string
-	err := cache.ListAll(c.nsAlrtInf.GetStore(), selector, func(obj interface{}) {
-		ns = append(ns, obj.(*v1.Namespace).Name)
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to list namespaces")
-	}
-	return ns, nil
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
