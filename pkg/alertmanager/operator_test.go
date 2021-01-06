@@ -61,7 +61,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 			},
-			ok: true,
+			ok: false,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -70,7 +70,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "not-existing",
 					},
 				},
@@ -84,7 +84,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 						Routes: []apiextensionsv1.JSON{
 							{Raw: []byte(`{"receiver": "recv2"}`)},
@@ -106,7 +106,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -125,7 +125,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -148,7 +148,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -171,7 +171,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -194,7 +194,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -217,7 +217,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -237,7 +237,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -259,7 +259,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -284,7 +284,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -309,14 +309,14 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: strPtr("testingCorpID"),
+								CorpID: "testingCorpID",
 							},
 						},
 					}},
@@ -331,15 +331,15 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: strPtr("testingCorpID"),
-								APIURL: strPtr("http://::invalid-url"),
+								CorpID: "testingCorpID",
+								APIURL: "http://::invalid-url",
 							},
 						},
 					}},
@@ -354,14 +354,14 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: strPtr("testingCorpID"),
+								CorpID: "testingCorpID",
 								APISecret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 									Key:                  "not-existing",
@@ -380,14 +380,14 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: strPtr("testingCorpID"),
+								CorpID: "testingCorpID",
 								APISecret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 									Key:                  "key1",
@@ -406,7 +406,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -426,7 +426,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -452,7 +452,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -479,7 +479,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -506,7 +506,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -534,7 +534,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -562,7 +562,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -593,7 +593,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -623,7 +623,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -649,7 +649,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -676,7 +676,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
@@ -703,7 +703,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route: &monitoringv1alpha1.Route{
+					Route: monitoringv1alpha1.Route{
 						Receiver: "recv1",
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{

@@ -256,8 +256,9 @@ func TestPromInstanceNs(t *testing.T) {
 func TestAlertmanagerInstanceNs(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":  testAlertmanagerInstanceNamespaces_AllNs,
-		"DenyNs": testAlertmanagerInstanceNamespaces_DenyNs,
+		"AllNs":     testAlertmanagerInstanceNamespaces_AllNs,
+		"AllowList": testAlertmanagerInstanceNamespaces_AllowList,
+		"DenyNs":    testAlertmanagerInstanceNamespaces_DenyNs,
 	}
 
 	for name, f := range testFuncs {

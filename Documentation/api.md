@@ -546,7 +546,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | replicaExternalLabelName | Name of Prometheus external label used to denote replica name. Defaults to the value of `prometheus_replica`. External label will _not_ be added when value is set to empty string (`\"\"`). | *string | false |
 | prometheusExternalLabelName | Name of Prometheus external label used to denote Prometheus instance name. Defaults to the value of `prometheus`. External label will _not_ be added when value is set to empty string (`\"\"`). | *string | false |
 | retention | Time duration Prometheus shall retain data for. Default is '24h', and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | string | false |
-| retentionSize | Maximum amount of disk space used by blocks. | string | false |
+| retentionSize | Maximum amount of disk space used by blocks. Supported units: B, KB, MB, GB, TB, PB, EB. Ex: `512MB`. | string | false |
 | disableCompaction | Disable prometheus compaction. | bool | false |
 | walCompression | Enable compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0. | *bool | false |
 | logLevel | Log level for Prometheus to be configured with. | string | false |
@@ -990,8 +990,8 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| route | The Alertmanager route definition for alerts matching the resource’s namespace. It will be added to the generated Alertmanager configuration as a first-level route. | *[Route](#route) | false |
-| receivers | List of receivers. | [][Receiver](#receiver) | false |
+| route | The Alertmanager route definition for alerts matching the resource’s namespace. It will be added to the generated Alertmanager configuration as a first-level route. | [Route](#route) | true |
+| receivers | List of receivers. | [][Receiver](#receiver) | true |
 | inhibitRules | List of inhibition rules. The rules will only apply to alerts matching the resource’s namespace. | [][InhibitRule](#inhibitrule) | false |
 
 [Back to TOC](#table-of-contents)
@@ -1003,17 +1003,17 @@ EmailConfig configures notifications via Email.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| to | The email address to send notifications to. | *string | false |
-| from | The sender address. | *string | false |
-| hello | The hostname to identify to the SMTP server. | *string | false |
-| smarthost | The SMTP host through which emails are sent. | *string | false |
-| authUsername | SMTP authentication information. | *string | false |
-| authPassword |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| authSecret |  | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| authIdentity |  | *string | false |
+| to | The email address to send notifications to. | string | false |
+| from | The sender address. | string | false |
+| hello | The hostname to identify to the SMTP server. | string | false |
+| smarthost | The SMTP host through which emails are sent. | string | false |
+| authUsername | The username to use for authentication. | string | false |
+| authPassword | The secret's key that contains the password to use for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| authSecret | The secret's key that contains the CRAM-MD5 secret. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| authIdentity | The identity to use for authentication. | string | false |
 | headers | Further headers email header key/value pairs. Overrides any headers previously set by the notification implementation. | [][KeyValue](#keyvalue) | false |
-| html | The HTML body of the email notification. | *string | false |
-| text | The text body of the email notification. | *string | false |
+| html | The HTML body of the email notification. | string | false |
+| text | The text body of the email notification. | string | false |
 | requireTLS | The SMTP TLS requirement. Note that Go does not support unencrypted connections to remote SMTP endpoints. | *bool | false |
 | tlsConfig | TLS configuration | *monitoringv1.SafeTLSConfig | false |
 
@@ -1028,7 +1028,7 @@ HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/a
 | basicAuth | BasicAuth for the client. | *monitoringv1.BasicAuth | false |
 | bearerTokenSecret | The secret's key that contains the bearer token to be used by the client for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | tlsConfig | TLS configuration for the client. | *monitoringv1.SafeTLSConfig | false |
-| proxyURL | Optional proxy URL. | *string | false |
+| proxyURL | Optional proxy URL. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1075,13 +1075,13 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
 | apiKey | The secret's key that contains the OpsGenie API key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| apiURL | The URL to send OpsGenie API requests to. | *string | false |
-| message | Alert text limited to 130 characters. | *string | false |
-| description | Description of the incident. | *string | false |
-| source | Backlink to the sender of the notification. | *string | false |
-| tags | Comma separated list of tags attached to the notifications. | *string | false |
-| note | Additional alert note. | *string | false |
-| priority | Priority level of alert. Possible values are P1, P2, P3, P4, and P5. | *string | false |
+| apiURL | The URL to send OpsGenie API requests to. | string | false |
+| message | Alert text limited to 130 characters. | string | false |
+| description | Description of the incident. | string | false |
+| source | Backlink to the sender of the notification. | string | false |
+| tags | Comma separated list of tags attached to the notifications. | string | false |
+| note | Additional alert note. | string | false |
+| priority | Priority level of alert. Possible values are P1, P2, P3, P4, and P5. | string | false |
 | details | A set of arbitrary key/value pairs that provide further detail about the incident. | [][KeyValue](#keyvalue) | false |
 | responders | List of responders responsible for notifications. | [][OpsGenieConfigResponder](#opsgenieconfigresponder) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
@@ -1090,14 +1090,14 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 
 ## OpsGenieConfigResponder
 
-OpsGenieConfigResponder defines a responder to an incident. One of id, name or username has to be defined.
+OpsGenieConfigResponder defines a responder to an incident. One of `id`, `name` or `username` has to be defined.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | id | ID of the responder. | string | false |
 | name | Name of the responder. | string | false |
 | username | Username of the responder. | string | false |
-| type | Type of responder. | string | false |
+| type | Type of responder. | string | true |
 
 [Back to TOC](#table-of-contents)
 
@@ -1110,14 +1110,14 @@ PagerDutyConfig configures notifications via PagerDuty. See https://prometheus.i
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
 | routingKey | The secret's key that contains the PagerDuty integration key (when using Events API v2). Either this field or `serviceKey` needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | serviceKey | The secret's key that contains the PagerDuty service key (when using integration type \"Prometheus\"). Either this field or `routingKey` needs to be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| url | The URL to send requests to. | *string | false |
-| client | Client identification. | *string | false |
-| clientURL | Backlink to the sender of notification. | *string | false |
-| description | Description of the incident. | *string | false |
-| severity | Severity of the incident. | *string | false |
-| class | The class/type of the event. | *string | false |
-| group | A cluster or grouping of sources. | *string | false |
-| component | The part or component of the affected system that is broken. | *string | false |
+| url | The URL to send requests to. | string | false |
+| client | Client identification. | string | false |
+| clientURL | Backlink to the sender of notification. | string | false |
+| description | Description of the incident. | string | false |
+| severity | Severity of the incident. | string | false |
+| class | The class/type of the event. | string | false |
+| group | A cluster or grouping of sources. | string | false |
+| component | The part or component of the affected system that is broken. | string | false |
 | details | Arbitrary key/value pairs that provide further detail about the incident. | [][KeyValue](#keyvalue) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 
@@ -1130,17 +1130,17 @@ PushoverConfig configures notifications via Pushover. See https://prometheus.io/
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| userKey | The recipient user’s user key. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| token | Your registered application’s API token, see https://pushover.net/apps | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| title | Notification title. | *string | false |
-| message | Notification message. | *string | false |
-| url | A supplementary URL shown alongside the message. | *string | false |
-| urlTitle | A title for supplementary URL, otherwise just the URL is shown | *string | false |
-| sound | The name of one of the sounds supported by device clients to override the user's default sound choice | *string | false |
-| priority | Priority, see https://pushover.net/api#priority | *string | false |
-| retry | How often the Pushover servers will send the same notification to the user. Must be at least 30 seconds. | *string | false |
-| expire | How long your notification will continue to be retried for, unless the user acknowledges the notification. | *string | false |
-| html | Whether notification message is HTML or plain text. | *bool | false |
+| userKey | The secret's key that contains the recipient user’s user key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| token | The secret's key that contains the registered application’s API token, see https://pushover.net/apps. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| title | Notification title. | string | false |
+| message | Notification message. | string | false |
+| url | A supplementary URL shown alongside the message. | string | false |
+| urlTitle | A title for supplementary URL, otherwise just the URL is shown | string | false |
+| sound | The name of one of the sounds supported by device clients to override the user's default sound choice | string | false |
+| priority | Priority, see https://pushover.net/api#priority | string | false |
+| retry | How often the Pushover servers will send the same notification to the user. Must be at least 30 seconds. | string | false |
+| expire | How long your notification will continue to be retried for, unless the user acknowledges the notification. | string | false |
+| html | Whether notification message is HTML or plain text. | bool | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
@@ -1169,7 +1169,7 @@ Route defines a node in the routing tree.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| receiver | Name of the receiver for this route. If present, it should be listed in the `receivers` field. The field can be omitted only for nested routes otherwise it is mandatory. | string | false |
+| receiver | Name of the receiver for this route. If not empty, it should be listed in the `receivers` field. | string | true |
 | groupBy | List of labels to group by. | []string | false |
 | groupWait | How long to wait before sending the initial notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |
 | groupInterval | How long to wait before sending an updated notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |
@@ -1204,23 +1204,23 @@ SlackConfig configures notifications via Slack. See https://prometheus.io/docs/a
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
 | apiURL | The secret's key that contains the Slack webhook URL. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| channel | The channel or user to send notifications to. | *string | false |
-| username |  | *string | false |
-| color |  | *string | false |
-| title |  | *string | false |
-| titleLink |  | *string | false |
-| pretext |  | *string | false |
-| text |  | *string | false |
+| channel | The channel or user to send notifications to. | string | false |
+| username |  | string | false |
+| color |  | string | false |
+| title |  | string | false |
+| titleLink |  | string | false |
+| pretext |  | string | false |
+| text |  | string | false |
 | fields | A list of Slack fields that are sent with each notification. | [][SlackField](#slackfield) | false |
-| shortFields |  | *bool | false |
-| footer |  | *string | false |
-| fallback |  | *string | false |
-| callbackId |  | *string | false |
-| iconEmoji |  | *string | false |
-| iconURL |  | *string | false |
-| imageURL |  | *string | false |
-| thumbURL |  | *string | false |
-| linkNames |  | *bool | false |
+| shortFields |  | bool | false |
+| footer |  | string | false |
+| fallback |  | string | false |
+| callbackId |  | string | false |
+| iconEmoji |  | string | false |
+| iconURL |  | string | false |
+| imageURL |  | string | false |
+| thumbURL |  | string | false |
+| linkNames |  | bool | false |
 | mrkdwnIn |  | []string | false |
 | actions | A list of Slack actions that are sent with each notification. | [][SlackAction](#slackaction) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
@@ -1234,9 +1234,9 @@ SlackConfirmationField protect users from destructive actions or particularly di
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | text |  | string | true |
-| title |  | *string | false |
-| okText |  | *string | false |
-| dismissText |  | *string | false |
+| title |  | string | false |
+| okText |  | string | false |
+| dismissText |  | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1259,13 +1259,13 @@ VictorOpsConfig configures notifications via VictorOps. See https://prometheus.i
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
-| apiKey | The API key to use when talking to the VictorOps API. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| apiUrl | The VictorOps API URL. | *string | false |
-| routingKey | A key used to map the alert to a team. | *string | true |
-| messageType | Describes the behavior of the alert (CRITICAL, WARNING, INFO). | *string | false |
-| entityDisplayName | Contains summary of the alerted problem. | *string | false |
-| stateMessage | Contains long explanation of the alerted problem. | *string | false |
-| monitoringTool | The monitoring tool the state message is from. | *string | false |
+| apiKey | The secret's key that contains the API key to use when talking to the VictorOps API. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| apiUrl | The VictorOps API URL. | string | false |
+| routingKey | A key used to map the alert to a team. | string | true |
+| messageType | Describes the behavior of the alert (CRITICAL, WARNING, INFO). | string | false |
+| entityDisplayName | Contains summary of the alerted problem. | string | false |
+| stateMessage | Contains long explanation of the alerted problem. | string | false |
+| monitoringTool | The monitoring tool the state message is from. | string | false |
 | customFields | Additional custom fields for notification. | [][KeyValue](#keyvalue) | false |
 | httpConfig | The HTTP client's configuration. | *[HTTPConfig](#httpconfig) | false |
 
@@ -1279,14 +1279,14 @@ WeChatConfig configures notifications via WeChat. See https://prometheus.io/docs
 | ----- | ----------- | ------ | -------- |
 | sendResolved | Whether or not to notify about resolved alerts. | *bool | false |
 | apiSecret | The secret's key that contains the WeChat API key. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| apiURL | The WeChat API URL. | *string | false |
-| corpID | The corp id for authentication. | *string | false |
-| agentID |  | *string | false |
-| toUser |  | *string | false |
-| toParty |  | *string | false |
-| toTag |  | *string | false |
-| message | API request data as defined by the WeChat API. | *string | false |
-| messageType |  | *string | false |
+| apiURL | The WeChat API URL. | string | false |
+| corpID | The corp id for authentication. | string | false |
+| agentID |  | string | false |
+| toUser |  | string | false |
+| toParty |  | string | false |
+| toTag |  | string | false |
+| message | API request data as defined by the WeChat API. | string | false |
+| messageType |  | string | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
 
 [Back to TOC](#table-of-contents)
@@ -1301,6 +1301,6 @@ WebhookConfig configures notifications via a generic receiver supporting the web
 | url | The URL to send HTTP POST requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. | *string | false |
 | urlSecret | The secret's key that contains the webhook URL to send HTTP requests to. `urlSecret` takes precedence over `url`. One of `urlSecret` and `url` should be defined. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
-| maxAlerts | Maximum number of alerts to be sent per webhook message. | *int32 | false |
+| maxAlerts | Maximum number of alerts to be sent per webhook message. When 0, all alerts are included. | int32 | false |
 
 [Back to TOC](#table-of-contents)

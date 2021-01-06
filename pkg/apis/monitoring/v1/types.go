@@ -155,7 +155,7 @@ type PrometheusSpec struct {
 	// Time duration Prometheus shall retain data for. Default is '24h',
 	// and must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds seconds minutes hours days weeks years).
 	Retention string `json:"retention,omitempty"`
-	// Maximum amount of disk space used by blocks.
+	// Maximum amount of disk space used by blocks. Supported units: B, KB, MB, GB, TB, PB, EB. Ex: `512MB`.
 	RetentionSize string `json:"retentionSize,omitempty"`
 	// Disable prometheus compaction.
 	DisableCompaction bool `json:"disableCompaction,omitempty"`

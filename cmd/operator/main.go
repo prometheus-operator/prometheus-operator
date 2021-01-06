@@ -20,6 +20,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	stdlog "log"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -104,7 +105,7 @@ func (n namespaces) asSlice() []string {
 
 func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		logger.Log("msg", "Starting insecure server on "+listener.Addr().String())
+		level.Info(logger).Log("msg", "Starting insecure server on "+listener.Addr().String())
 		if err := srv.Serve(listener); err != http.ErrServerClosed {
 			return err
 		}
@@ -114,7 +115,7 @@ func serve(srv *http.Server, listener net.Listener, logger log.Logger) func() er
 
 func serveTLS(srv *http.Server, listener net.Listener, logger log.Logger) func() error {
 	return func() error {
-		logger.Log("msg", "Starting secure server on "+listener.Addr().String())
+		level.Info(logger).Log("msg", "Starting secure server on "+listener.Addr().String())
 		if err := srv.ServeTLS(listener, "", ""); err != http.ErrServerClosed {
 			return err
 		}
@@ -135,8 +136,7 @@ var (
 		logFormatLogfmt,
 		logFormatJson,
 	}
-	cfg                           = operator.Config{}
-	deprecatedConfigReloaderImage string
+	cfg = operator.Config{}
 
 	rawTLSCipherSuites string
 	serverTLS          bool
@@ -170,8 +170,6 @@ func init() {
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
 	flagset.StringVar(&cfg.ReloaderConfig.Image, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
-	// TODO(simonpasquier): remove the '--config-reloader-image' flag before releasing v0.45.
-	flagset.StringVar(&deprecatedConfigReloaderImage, "config-reloader-image", "", "Reload image. Deprecated, it will be removed in v0.45.0.")
 	flagset.StringVar(&cfg.ReloaderConfig.CPU, "config-reloader-cpu", "100m", "Config Reloader CPU request & limit. Value \"0\" disables it and causes no request/limit to be configured.")
 	flagset.StringVar(&cfg.ReloaderConfig.Memory, "config-reloader-memory", "50Mi", "Config Reloader Memory request & limit. Value \"0\" disables it and causes no request/limit to be configured.")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
@@ -234,14 +232,6 @@ func Main() int {
 
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
-
-	if deprecatedConfigReloaderImage != "" {
-		level.Warn(logger).Log(
-			"msg", "'--config-reloader-image' flag is ignored, only '--prometheus-config-reloader' is used",
-			"config-reloader-image", deprecatedConfigReloaderImage,
-			"prometheus-config-reloader", cfg.ReloaderConfig.Image,
-		)
-	}
 
 	if len(ns) > 0 && len(deniedNs) > 0 {
 		fmt.Fprint(os.Stderr, "--namespaces and --deny-namespaces are mutually exclusive. Please provide only one of them.\n")
@@ -397,6 +387,7 @@ func Main() int {
 	srv := &http.Server{
 		Handler:   mux,
 		TLSConfig: tlsConfig,
+		ErrorLog:  stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.LstdFlags),
 	}
 	if srv.TLSConfig == nil {
 		wg.Go(serve(srv, l, logger))
@@ -409,17 +400,17 @@ func Main() int {
 
 	select {
 	case <-term:
-		logger.Log("msg", "Received SIGTERM, exiting gracefully...")
+		level.Info(logger).Log("msg", "Received SIGTERM, exiting gracefully...")
 	case <-ctx.Done():
 	}
 
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Log("msg", "Server shutdown error", "err", err)
+		level.Warn(logger).Log("msg", "Server shutdown error", "err", err)
 	}
 
 	cancel()
 	if err := wg.Wait(); err != nil {
-		logger.Log("msg", "Unhandled error received. Exiting...", "err", err)
+		level.Warn(logger).Log("msg", "Unhandled error received. Exiting...", "err", err)
 		return 1
 	}
 
