@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.44.1
+    app.kubernetes.io/version: 0.44.1
   name: prometheus-operator
   namespace: default
 spec:
@@ -18,7 +18,7 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: v0.44.1
+        app.kubernetes.io/version: 0.44.1
     spec:
       containers:
       - args:
@@ -39,7 +39,7 @@ spec:
         securityContext:
           allowPrivilegeEscalation: false
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
