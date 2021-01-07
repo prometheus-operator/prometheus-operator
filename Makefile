@@ -194,12 +194,12 @@ $(RBAC_MANIFESTS): scripts/generate/vendor scripts/generate/prometheus-operator-
 example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-thanos-example.sh
 
-jsonnet/prometheus-operator/prometheus-operator.libsonnet: VERSION
+scripts/generate/config.jsonnet: VERSION
 	# note: use temporary file to preserve compatibility with darwin
 	sed -i.bak \
-		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(VERSION)',/" \
-		jsonnet/prometheus-operator/prometheus-operator.libsonnet;
-	rm jsonnet/prometheus-operator/prometheus-operator.libsonnet.bak
+	    "s/[0-9]\+\.[0-9]\+\.[0-9]\+',/$(VERSION)',/g" \
+		scripts/generate/config.jsonnet;
+	rm scripts/generate/config.jsonnet.bak
 
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
