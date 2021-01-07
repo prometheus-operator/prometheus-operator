@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: thanos-query
-  namespace: default
   labels:
     app: thanos-query
+  name: thanos-query
+  namespace: default
 spec:
-  selector:
-    app: thanos-query
   ports:
   - name: http
-    port: 9090
+    port: 10902
     targetPort: http
+  selector:
+    app: thanos-query

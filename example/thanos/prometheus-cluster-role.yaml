@@ -15,9 +15,13 @@ rules:
   - get
   - list
   - watch
-- apiGroups: [""]
+- apiGroups:
+  - ""
   resources:
   - configmaps
-  verbs: ["get"]
-- nonResourceURLs: ["/metrics"]
-  verbs: ["get"]
+  verbs:
+  - get
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get

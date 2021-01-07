@@ -8,6 +8,14 @@
         }
       },
       "version": "."
+    },
+    {
+      "source": {
+        "local": {
+          "directory": "../../jsonnet/thanos"
+        }
+      },
+      "version": "."
     }
   ],
   "legacyImports": true
