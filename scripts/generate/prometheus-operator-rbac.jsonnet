@@ -1,4 +1,7 @@
-local po = (import 'prometheus-operator/prometheus-operator.libsonnet').prometheusOperator;
+local prometheusOperator = (import 'prometheus-operator/prometheus-operator.libsonnet');
+local config = (import 'config.jsonnet');
+
+local po = prometheusOperator(config);
 
 {
   'prometheus-operator-cluster-role-binding.yaml': po.clusterRoleBinding,
