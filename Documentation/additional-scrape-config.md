@@ -32,19 +32,6 @@ Then you will need to make a secret out of this configuration.
 kubectl create secret generic additional-scrape-configs --from-file=prometheus-additional.yaml --dry-run -oyaml > additional-scrape-configs.yaml
 ```
 
-Next, create a new secret using the base64 encoded output as the value for
-`prometheus-additional.yaml` in the secret.
-
-```
-apiVersion: v1
-data:
-  prometheus-additional.yaml: LSBqb2JfbmFtZTogInByb21ldGhldXMiCiAgc3RhdGljX2NvbmZpZ3M6CiAgLSB0YXJnZXRzOiBbImxvY2FsaG9zdDo5MDkwIl0K
-kind: Secret
-metadata:
-  creationTimestamp: null
-  name: additional-scrape-configs
-```
-
 Finally, reference this additional configuration in your `prometheus.yaml` CRD.
 
 ```
