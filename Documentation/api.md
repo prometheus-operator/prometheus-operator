@@ -858,7 +858,7 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | objectStorageConfigFile | ObjectStorageConfigFile specifies the path of the object storage configuration file. When used alongside with ObjectStorageConfig, ObjectStorageConfigFile takes precedence. | *string | false |
 | listenLocal | ListenLocal makes the Thanos sidecar listen on loopback, so that it does not bind against the Pod IP. | bool | false |
 | tracingConfig | TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
-| tracingConfigFile | TracingConfig specifies the path of the tracing configuration file. When used alongside with TracingConfig, TracingConfigFile takes precedence. | *string | false |
+| tracingConfigFile | TracingConfig specifies the path of the tracing configuration file. When used alongside with TracingConfig, TracingConfigFile takes precedence. | string | false |
 | grpcServerTlsConfig | GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads recorded rule data. Note: Currently only the CAFile, CertFile, and KeyFile fields are supported. Maps to the '--grpc-server-tls-*' CLI args. | *[TLSConfig](#tlsconfig) | false |
 | logLevel | LogLevel for Thanos sidecar to be configured with. | string | false |
 | logFormat | LogFormat for Thanos sidecar to be configured with. | string | false |
