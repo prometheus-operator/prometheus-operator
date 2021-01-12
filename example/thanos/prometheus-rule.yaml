@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  creationTimestamp: null
+  labels:
+    prometheus: example-alert
+    role: thanos-example
+  name: prometheus-example-alerts
+  namespace: default
+spec:
+  groups:
+  - name: ./example-alert.rules
+    rules:
+    - alert: ExampleAlert
+      expr: vector(1)

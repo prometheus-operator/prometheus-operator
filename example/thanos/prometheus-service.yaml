@@ -10,7 +10,6 @@ spec:
   ports:
   - name: web
     port: 9090
-    protocol: TCP
     targetPort: web
   selector:
     prometheus: self

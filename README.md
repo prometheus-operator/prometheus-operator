@@ -155,7 +155,7 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 - golang environment
 - docker (used for creating container images, etc.)
-- minikube (optional)
+- kind (optional)
 
 ### Testing
 
@@ -168,14 +168,6 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 `make test-unit`
 
-#### Running *end-to-end* tests on local minikube cluster:
-
-1. `minikube start --kubernetes-version=v1.10.0 --memory=4096
-    --extra-config=apiserver.authorization-mode=RBAC`
-2. `eval $(minikube docker-env) && make image` - build Prometheus Operator
-    docker image on minikube's docker
-3. `make test-e2e`
-
 #### Running *end-to-end* tests on local kind cluster:
 
 1. `kind create cluster --image=kindest/node:<latest>`. e.g `v1.16.2` version.
@@ -184,6 +176,14 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 4. `for n in "operator" "config-reloader"; do kind load docker-image "quay.io/prometheus-operator/prometheus-$n:$(git rev-parse --short HEAD)"; done` - publish
 built locally images to be accessible inside kind.
 5. `make test-e2e`
+
+#### Running *end-to-end* tests on local minikube cluster:
+
+1. `minikube start --kubernetes-version=v1.10.0 --memory=4096
+   --extra-config=apiserver.authorization-mode=RBAC`
+2. `eval $(minikube docker-env) && make image` - build Prometheus Operator
+   docker image on minikube's docker
+3. `make test-e2e`
 
 ## Contributing
 

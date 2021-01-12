@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/go-openapi/swag"
+	"github.com/google/go-cmp/cmp"
 	"github.com/kylelemons/godebug/pretty"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -457,6 +458,7 @@ scrape_configs:
     - prometheus.io
     - promcon.io
     labels:
+      namespace: default
       static: label
   relabel_configs:
   - source_labels:
@@ -475,8 +477,8 @@ alerting:
 `
 
 	result := string(cfg)
-	if expected != result {
-		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
 	}
 }
 
@@ -522,7 +524,8 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 								"promcon.io",
 							},
 							Labels: map[string]string{
-								"static": "label",
+								"namespace": "custom",
+								"static":    "label",
 							},
 						},
 					},
@@ -561,6 +564,7 @@ scrape_configs:
     - prometheus.io
     - promcon.io
     labels:
+      namespace: custom
       static: label
   relabel_configs:
   - source_labels:
@@ -581,8 +585,8 @@ alerting:
 `
 
 	result := string(cfg)
-	if expected != result {
-		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
 	}
 }
 
@@ -627,9 +631,6 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 								"prometheus.io",
 								"promcon.io",
 							},
-							Labels: map[string]string{
-								"static": "label",
-							},
 						},
 					},
 				},
@@ -667,7 +668,7 @@ scrape_configs:
     - prometheus.io
     - promcon.io
     labels:
-      static: label
+      namespace: default
   relabel_configs:
   - target_label: job
     replacement: blackbox
@@ -687,8 +688,8 @@ alerting:
 `
 
 	result := string(cfg)
-	if expected != result {
-		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
 	}
 }
 

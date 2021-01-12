@@ -1,6 +1,14 @@
-local po = (import 'prometheus-operator/prometheus-operator.libsonnet').prometheusOperator;
-local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
-local deployment = k.apps.v1.deployment;
+local prometheusOperator = (import 'prometheus-operator/prometheus-operator.libsonnet');
+local config = (import 'config.jsonnet');
 
-po.deployment +
-deployment.mixin.spec.template.spec.withServiceAccountName('')
+local po = prometheusOperator(config);
+
+po.deployment {
+  spec+: {
+    template+: {
+      spec+: {
+        serviceAccountName: '',
+      },
+    },
+  },
+}

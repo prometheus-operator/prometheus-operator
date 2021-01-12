@@ -134,6 +134,7 @@ k8s-gen: \
 	$(OPENAPI_TARGET)
 
 .PHONY: image
+image: GOOS := linux # Overriding GOOS value for docker image build
 image: .hack-operator-image .hack-prometheus-config-reloader-image
 
 .hack-operator-image: Dockerfile operator
@@ -163,7 +164,7 @@ tidy:
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
-generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml $(shell find Documentation -type f)
+generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml $(shell find Documentation -type f)
 
 .PHONY: generate-crds
 generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
@@ -191,12 +192,15 @@ RBAC_MANIFESTS = example/rbac/prometheus-operator/prometheus-operator-cluster-ro
 $(RBAC_MANIFESTS): scripts/generate/vendor scripts/generate/prometheus-operator-rbac.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-rbac-prometheus-operator.sh
 
-jsonnet/prometheus-operator/prometheus-operator.libsonnet: VERSION
+example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.jsonnet $(shell find jsonnet -type f)
+	scripts/generate/build-thanos-example.sh
+
+scripts/generate/config.jsonnet: VERSION
 	# note: use temporary file to preserve compatibility with darwin
 	sed -i.bak \
-		"s/prometheusOperator: 'v.*',/prometheusOperator: 'v$(VERSION)',/" \
-		jsonnet/prometheus-operator/prometheus-operator.libsonnet;
-	rm jsonnet/prometheus-operator/prometheus-operator.libsonnet.bak
+	    "s/[0-9]\+\.[0-9]\+\.[0-9]\+',/$(VERSION)',/g" \
+		scripts/generate/config.jsonnet;
+	rm scripts/generate/config.jsonnet.bak
 
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
