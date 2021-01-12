@@ -134,6 +134,7 @@ k8s-gen: \
 	$(OPENAPI_TARGET)
 
 .PHONY: image
+image: GOOS := linux # Overriding GOOS value for docker image build
 image: .hack-operator-image .hack-prometheus-config-reloader-image
 
 .hack-operator-image: Dockerfile operator
