@@ -67,10 +67,10 @@ type AlertmanagerConfigList struct {
 // the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
 type AlertmanagerConfigSpec struct {
 	// The Alertmanager route definition for alerts matching the resource’s
-	// namespace. It will be added to the generated Alertmanager configuration
-	// as a first-level route.
-	// +kubebuilder:validation:Required
-	Route Route `json:"route"`
+	// namespace. If present, it will be added to the generated Alertmanager
+	// configuration as a first-level route.
+	// +optional
+	Route *Route `json:"route"`
 	// List of receivers.
 	// +optional
 	Receivers []Receiver `json:"receivers"`

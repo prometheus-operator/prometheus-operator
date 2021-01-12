@@ -1805,7 +1805,7 @@ spec:
                   type: object
                 type: array
               route:
-                description: The Alertmanager route definition for alerts matching the resource’s namespace. It will be added to the generated Alertmanager configuration as a first-level route.
+                description: The Alertmanager route definition for alerts matching the resource’s namespace. If present, it will be added to the generated Alertmanager configuration as a first-level route.
                 properties:
                   continue:
                     description: Boolean indicating whether an alert should continue matching subsequent sibling nodes. It will always be overridden to true for the first-level route by the Prometheus operator.
@@ -1852,8 +1852,6 @@ spec:
                       x-kubernetes-preserve-unknown-fields: true
                     type: array
                 type: object
-            required:
-            - route
             type: object
         required:
         - spec

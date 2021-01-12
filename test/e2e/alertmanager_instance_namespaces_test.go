@@ -179,7 +179,7 @@ func testAlertmanagerInstanceNamespaces_AllowList(t *testing.T) {
 			},
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-			Route: monitoringv1alpha1.Route{
+			Route: &monitoringv1alpha1.Route{
 				Receiver: "void",
 			},
 			Receivers: []monitoringv1alpha1.Receiver{{

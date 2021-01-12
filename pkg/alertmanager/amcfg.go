@@ -75,7 +75,7 @@ func (cg *configGenerator) generateConfig(
 ) ([]byte, error) {
 	// amConfigIdentifiers is a sorted slice of keys from
 	// amConfigs map, used to always generate the config in the
-	// same order
+	// same order.
 	amConfigIdentifiers := make([]string, len(amConfigs))
 	i := 0
 	for k := range amConfigs {
@@ -84,17 +84,25 @@ func (cg *configGenerator) generateConfig(
 	}
 	sort.Strings(amConfigIdentifiers)
 
-	subRoutes := []*route{}
+	subRoutes := make([]*route, 0, len(amConfigs))
 	for _, amConfigIdentifier := range amConfigIdentifiers {
 		crKey := types.NamespacedName{
 			Name:      amConfigs[amConfigIdentifier].Name,
 			Namespace: amConfigs[amConfigIdentifier].Namespace,
 		}
 
-		// add routes to subRoutes
-		subRoutes = append(subRoutes, convertRoute(&amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
+		// Add inhibitRules to baseConfig.InhibitRules.
+		for _, inhibitRule := range amConfigs[amConfigIdentifier].Spec.InhibitRules {
+			baseConfig.InhibitRules = append(baseConfig.InhibitRules, convertInhibitRule(&inhibitRule, crKey))
+		}
 
-		// add receivers to baseConfig.Receivers
+		// Skip early if there's no route definition.
+		if amConfigs[amConfigIdentifier].Spec.Route == nil {
+			continue
+		}
+
+		subRoutes = append(subRoutes, convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
+
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
 			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
 			if err != nil {
@@ -102,16 +110,13 @@ func (cg *configGenerator) generateConfig(
 			}
 			baseConfig.Receivers = append(baseConfig.Receivers, receivers)
 		}
-
-		// add inhibitRules to baseConfig.InhibitRules
-		for _, inhibitRule := range amConfigs[amConfigIdentifier].Spec.InhibitRules {
-			baseConfig.InhibitRules = append(baseConfig.InhibitRules, convertInhibitRule(&inhibitRule, crKey))
-		}
 	}
 
-	// Append subroutes from base to the end, then replace with the new slice
-	subRoutes = append(subRoutes, baseConfig.Route.Routes...)
-	baseConfig.Route.Routes = subRoutes
+	// For alerts to be processed by the AlertmanagerConfig routes, they need
+	// to appear before the routes defined in the main configuration.
+	// Because all first-level AlertmanagerConfig routes have "continue: true",
+	// alerts will fallthrough.
+	baseConfig.Route.Routes = append(subRoutes, baseConfig.Route.Routes...)
 
 	return yaml.Marshal(baseConfig)
 }
@@ -154,7 +159,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 		if err != nil {
 			// The controller should already have checked that ChildRoutes()
 			// doesn't return an error when selecting AlertmanagerConfig CRDs.
-			// If there's an error here, we have a serious bug in the code
+			// If there's an error here, we have a serious bug in the code.
 			panic(err)
 		}
 		for i := range children {

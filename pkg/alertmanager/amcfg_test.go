@@ -100,7 +100,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: monitoringv1alpha1.Route{
+						Route: &monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
@@ -121,6 +121,56 @@ templates: []
 `,
 		},
 		{
+			name:    "skeleton base, CR with inhibition rules only",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						InhibitRules: []monitoringv1alpha1.InhibitRule{
+							{
+								SourceMatch: []monitoringv1alpha1.Matcher{
+									{
+										Name:  "alertname",
+										Value: "NodeNotReady",
+									},
+								},
+								TargetMatch: []monitoringv1alpha1.Matcher{
+									{
+										Name:  "alertname",
+										Value: "TargetDown",
+									},
+								},
+								Equal: []string{"node"},
+							},
+						},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+inhibit_rules:
+- target_match:
+    alertname: TargetDown
+    namespace: mynamespace
+  source_match:
+    alertname: NodeNotReady
+    namespace: mynamespace
+  equal:
+  - node
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+		{
 			name:    "base with subroute, simple CR",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
@@ -137,7 +187,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: monitoringv1alpha1.Route{
+						Route: &monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
@@ -184,7 +234,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: monitoringv1alpha1.Route{
+						Route: &monitoringv1alpha1.Route{
 							Receiver: "test-pd",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
@@ -232,7 +282,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: monitoringv1alpha1.Route{
+						Route: &monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
@@ -287,7 +337,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: monitoringv1alpha1.Route{
+						Route: &monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
@@ -345,7 +395,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: monitoringv1alpha1.Route{
+						Route: &monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
@@ -410,7 +460,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: monitoringv1alpha1.Route{
+						Route: &monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
@@ -464,7 +514,7 @@ templates: []
 						Namespace: "mynamespace",
 					},
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: monitoringv1alpha1.Route{
+						Route: &monitoringv1alpha1.Route{
 							Receiver: "test",
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{
