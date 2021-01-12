@@ -776,9 +776,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			disableCompaction = true
 		}
 
-		if p.Spec.Thanos.TracingConfig != nil || p.Spec.Thanos.TracingConfigFile != nil {
-			if p.Spec.Thanos.TracingConfigFile != nil {
-				container.Args = append(container.Args, "--tracing.config-file="+*p.Spec.Thanos.TracingConfigFile)
+		if p.Spec.Thanos.TracingConfig != nil || len(p.Spec.Thanos.TracingConfigFile) > 0 {
+			if len(p.Spec.Thanos.TracingConfigFile) > 0 {
+				container.Args = append(container.Args, "--tracing.config-file="+p.Spec.Thanos.TracingConfigFile)
 			} else {
 				container.Args = append(container.Args, "--tracing.config=$(TRACING_CONFIG)")
 				container.Env = append(container.Env, v1.EnvVar{
