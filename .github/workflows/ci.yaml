@@ -4,8 +4,8 @@ on:
   - pull_request
 env:
   golang-version: '1.15'
-  kind-version: 'v0.8.1'
-  kind-image: 'kindest/node:v1.18.8'  # Image defines which k8s version is used
+  kind-version: 'v0.9.0'
+  kind-image: 'kindest/node:v1.20.0'  # Image defines which k8s version is used
 jobs:
   generate:
     runs-on: ${{ matrix.os }}
