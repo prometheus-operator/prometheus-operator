@@ -929,7 +929,7 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 		return err
 	}
 
-	return checkAlertmanagerRoutes(&amc.Spec.Route, receiverNames)
+	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames)
 }
 
 func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {

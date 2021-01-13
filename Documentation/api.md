@@ -990,7 +990,7 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| route | The Alertmanager route definition for alerts matching the resource’s namespace. It will be added to the generated Alertmanager configuration as a first-level route. | [Route](#route) | true |
+| route | The Alertmanager route definition for alerts matching the resource’s namespace. If present, it will be added to the generated Alertmanager configuration as a first-level route. | *[Route](#route) | true |
 | receivers | List of receivers. | [][Receiver](#receiver) | true |
 | inhibitRules | List of inhibition rules. The rules will only apply to alerts matching the resource’s namespace. | [][InhibitRule](#inhibitrule) | false |
 

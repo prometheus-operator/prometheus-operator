@@ -779,7 +779,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Namespace: ns,
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-			Route: monitoringv1alpha1.Route{
+			Route: &monitoringv1alpha1.Route{
 				Receiver: "e2e",
 				Matchers: []monitoringv1alpha1.Matcher{},
 				Continue: true,
@@ -896,7 +896,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Namespace: ns,
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-			Route: monitoringv1alpha1.Route{
+			Route: &monitoringv1alpha1.Route{
 				Receiver: "e2e",
 				Matchers: []monitoringv1alpha1.Matcher{
 					{Name: "service", Value: "webapp"},
@@ -960,7 +960,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Namespace: ns,
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-			Route: monitoringv1alpha1.Route{
+			Route: &monitoringv1alpha1.Route{
 				Receiver: "e2e",
 				Matchers: []monitoringv1alpha1.Matcher{},
 			},
@@ -990,7 +990,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Namespace: ns,
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-			Route: monitoringv1alpha1.Route{
+			Route: &monitoringv1alpha1.Route{
 				Receiver: "e2e",
 				Matchers: []monitoringv1alpha1.Matcher{},
 				Routes: []apiextensionsv1.JSON{
