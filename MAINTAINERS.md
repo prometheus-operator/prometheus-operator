@@ -3,7 +3,7 @@
 | Name                  | Email                       | Kubernetes Slack         | GitHub                                            | Company           |
 |-----------------------|-----------------------------|--------------------------|---------------------------------------------------|-------------------|
 | Frederic Branczyk     | fbranczyk@gmail.com         | `@brancz`                | [@brancz](https://github.com/brancz)              | Polar Signals     |
-| Lili Cosic            | coscilili@gmail.com         | `@lili`                  | [@lilic](https://github.com/lilic)                | Red Hat           |
+| Lili Cosic            | cosiclili@gmail.com         | `@lili`                  | [@lilic](https://github.com/lilic)                | Red Hat           |
 | Matthias Loibl        | mail@matthiasloibl.com      | `@metalmatze`            | [@metalmatze](https://github.com/metalmatze)      | Red Hat           |
 | Paweł Krupa           | paulfantom@gmail.com        | `@paulfantom`            | [@paulfantom](https://github.com/paulfantom)      | Red Hat           |
 | Paul Gier             | pgier@redhat.com            | ``                       | [@pgier](https://github.com/pgier)                | Red Hat           |
