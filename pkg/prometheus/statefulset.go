@@ -750,7 +750,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 
 		if p.Spec.Thanos.ObjectStorageConfig != nil || p.Spec.Thanos.ObjectStorageConfigFile != nil {
-			if p.Spec.Thanos.ObjectStorageConfig != nil {
+			if p.Spec.Thanos.ObjectStorageConfigFile != nil {
+				container.Args = append(container.Args, "--objstore.config-file="+*p.Spec.Thanos.ObjectStorageConfigFile)
+			} else {
 				container.Args = append(container.Args, "--objstore.config=$(OBJSTORE_CONFIG)")
 				container.Env = append(container.Env, v1.EnvVar{
 					Name: "OBJSTORE_CONFIG",
@@ -759,11 +761,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 					},
 				})
 			}
-
-			if p.Spec.Thanos.ObjectStorageConfigFile != nil {
-				container.Args = append(container.Args, "--objstore.config-file="+*p.Spec.Thanos.ObjectStorageConfigFile)
-			}
-
 			container.Args = append(container.Args, fmt.Sprintf("--tsdb.path=%s", storageDir))
 			container.VolumeMounts = append(
 				container.VolumeMounts,
@@ -779,14 +776,18 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			disableCompaction = true
 		}
 
-		if p.Spec.Thanos.TracingConfig != nil {
-			container.Args = append(container.Args, "--tracing.config=$(TRACING_CONFIG)")
-			container.Env = append(container.Env, v1.EnvVar{
-				Name: "TRACING_CONFIG",
-				ValueFrom: &v1.EnvVarSource{
-					SecretKeyRef: p.Spec.Thanos.TracingConfig,
-				},
-			})
+		if p.Spec.Thanos.TracingConfig != nil || len(p.Spec.Thanos.TracingConfigFile) > 0 {
+			if len(p.Spec.Thanos.TracingConfigFile) > 0 {
+				container.Args = append(container.Args, "--tracing.config-file="+p.Spec.Thanos.TracingConfigFile)
+			} else {
+				container.Args = append(container.Args, "--tracing.config=$(TRACING_CONFIG)")
+				container.Env = append(container.Env, v1.EnvVar{
+					Name: "TRACING_CONFIG",
+					ValueFrom: &v1.EnvVarSource{
+						SecretKeyRef: p.Spec.Thanos.TracingConfig,
+					},
+				})
+			}
 		}
 
 		if p.Spec.Thanos.LogLevel != "" {
@@ -807,6 +808,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	}
 	if disableCompaction {
 		promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
+		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h")
 	}
 
 	configReloaderArgs := []string{

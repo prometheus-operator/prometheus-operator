@@ -537,6 +537,9 @@ type ThanosSpec struct {
 	ListenLocal bool `json:"listenLocal,omitempty"`
 	// TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.
 	TracingConfig *v1.SecretKeySelector `json:"tracingConfig,omitempty"`
+	// TracingConfig specifies the path of the tracing configuration file.
+	// When used alongside with TracingConfig, TracingConfigFile takes precedence.
+	TracingConfigFile string `json:"tracingConfigFile,omitempty"`
 	// GRPCServerTLSConfig configures the gRPC server from which Thanos Querier reads
 	// recorded rule data.
 	// Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
