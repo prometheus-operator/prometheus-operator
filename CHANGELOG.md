@@ -1,3 +1,14 @@
+## 0.45.0 / 2021-01-13
+
+* [CHANGE] Add schema validations to AlertmanagerConfig CRD. #3742
+* [CHANGE] Refactored jsonnet library to remove ksonnet and align with kube-prometheus #3781
+* [ENHANCEMENT] Add `app.kubernetes.io/name` label to Kubelet Service/Endpoints object. #3768
+* [ENHANCEMENT] Improve HTTP server's logging #3772
+* [ENHANCEMENT] Add namespace label to static probe metrics #3752
+* [ENHANCEMENT] Add `TracingConfigFile` field into thanos configuration. #3762
+* [BUGFIX] Fix log messages when syncing node endpoints. #3758
+* [BUGFIX] fix discovery of `AlertmanagerConfig` resources when `--alertmanager-instance-namespaces` is defined. #3759
+
 ## 0.44.1 / 2020-12-09
 
 * [BUGFIX] Fix Alertmanager configuration for OpsGenie receiver. #3728
