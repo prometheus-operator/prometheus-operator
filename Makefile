@@ -181,7 +181,7 @@ bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml 
 scripts/generate/vendor: $(JB_BINARY) $(shell find jsonnet/prometheus-operator -type f)
 	cd scripts/generate; $(JB_BINARY) install;
 
-example/non-rbac/prometheus-operator.yaml: scripts/generate/vendor scripts/generate/prometheus-operator-non-rbac.jsonnet $(shell find jsonnet -type f)
+example/non-rbac/prometheus-operator.yaml: scripts/generate/vendor VERSION $(shell find jsonnet -type f)
 	scripts/generate/build-non-rbac-prometheus-operator.sh
 
 example/mixin/alerts.yaml: $(JSONNET_BINARY) $(GOJSONTOYAML_BINARY)
@@ -189,18 +189,11 @@ example/mixin/alerts.yaml: $(JSONNET_BINARY) $(GOJSONTOYAML_BINARY)
 	$(JSONNET_BINARY) jsonnet/mixin/alerts.jsonnet | $(GOJSONTOYAML_BINARY) > $@
 
 RBAC_MANIFESTS = example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml example/rbac/prometheus-operator/prometheus-operator-service-account.yaml example/rbac/prometheus-operator/prometheus-operator-deployment.yaml
-$(RBAC_MANIFESTS): scripts/generate/vendor scripts/generate/prometheus-operator-rbac.jsonnet $(shell find jsonnet -type f)
+$(RBAC_MANIFESTS): scripts/generate/vendor VERSION $(shell find jsonnet -type f)
 	scripts/generate/build-rbac-prometheus-operator.sh
 
 example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-thanos-example.sh
-
-scripts/generate/config.jsonnet: VERSION
-	# note: use temporary file to preserve compatibility with darwin
-	sed -i.bak \
-	    "s/[0-9]\+\.[0-9]\+\.[0-9]\+',/$(VERSION)',/g" \
-		scripts/generate/config.jsonnet;
-	rm scripts/generate/config.jsonnet.bak
 
 FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
