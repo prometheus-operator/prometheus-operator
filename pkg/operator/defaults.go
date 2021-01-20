@@ -29,20 +29,6 @@ var (
 	DefaultPrometheusConfigReloaderImage = "quay.io/prometheus-operator/prometheus-config-reloader:v" + version.Version
 
 	PrometheusCompatibilityMatrix = []string{
-		"v1.4.0",
-		"v1.4.1",
-		"v1.5.0",
-		"v1.5.1",
-		"v1.5.2",
-		"v1.5.3",
-		"v1.6.0",
-		"v1.6.1",
-		"v1.6.2",
-		"v1.6.3",
-		"v1.7.0",
-		"v1.7.1",
-		"v1.7.2",
-		"v1.8.0",
 		"v2.0.0",
 		"v2.2.1",
 		"v2.3.1",
@@ -80,6 +66,7 @@ var (
 		"v2.22.2",
 		"v2.23.0",
 		"v2.24.0",
+		"v2.24.1",
 	}
 	DefaultPrometheusVersion   = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
 	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"

@@ -327,90 +327,57 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	if err != nil {
 		return nil, err
 	}
+
+	if version.Major != 2 {
+		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
+	}
+
 	promArgs := []string{
 		"-web.console.templates=/etc/prometheus/consoles",
 		"-web.console.libraries=/etc/prometheus/console_libraries",
 	}
 
-	switch version.Major {
-	case 1:
+	retentionTimeFlag := "-storage.tsdb.retention="
+	if version.Minor >= 7 {
+		retentionTimeFlag = "-storage.tsdb.retention.time="
+		if p.Spec.RetentionSize != "" {
+			promArgs = append(promArgs,
+				fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
+			)
+		}
+	}
+	promArgs = append(promArgs,
+		fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
+		fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
+		retentionTimeFlag+p.Spec.Retention,
+		"-web.enable-lifecycle",
+		"-storage.tsdb.no-lockfile",
+	)
+
+	if p.Spec.Query != nil && p.Spec.Query.LookbackDelta != nil {
 		promArgs = append(promArgs,
-			"-storage.local.retention="+p.Spec.Retention,
-			"-storage.local.num-fingerprint-mutexes=4096",
-			fmt.Sprintf("-storage.local.path=%s", storageDir),
-			"-storage.local.chunk-encoding-version=2",
-			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
+			fmt.Sprintf("-query.lookback-delta=%s", *p.Spec.Query.LookbackDelta),
 		)
-		// We attempt to specify decent storage tuning flags based on how much the
-		// requested memory can fit. The user has to specify an appropriate buffering
-		// in memory limits to catch increased memory usage during query bursts.
-		// More info: https://prometheus.io/docs/operating/storage/.
-		reqMem := p.Spec.Resources.Requests[v1.ResourceMemory]
+	}
 
-		if version.Minor < 6 {
-			// 1024 byte is the fixed chunk size. With increasing number of chunks actually
-			// in memory, overhead owed to their management, higher ingestion buffers, etc.
-			// increases.
-			// We are conservative for now an assume this to be 80% as the Kubernetes environment
-			// generally has a very high time series churn.
-			memChunks := reqMem.Value() / 1024 / 5
+	if version.Minor >= 4 {
+		if p.Spec.Rules.Alert.ForOutageTolerance != "" {
+			promArgs = append(promArgs, "-rules.alert.for-outage-tolerance="+p.Spec.Rules.Alert.ForOutageTolerance)
+		}
+		if p.Spec.Rules.Alert.ForGracePeriod != "" {
+			promArgs = append(promArgs, "-rules.alert.for-grace-period="+p.Spec.Rules.Alert.ForGracePeriod)
+		}
+		if p.Spec.Rules.Alert.ResendDelay != "" {
+			promArgs = append(promArgs, "-rules.alert.resend-delay="+p.Spec.Rules.Alert.ResendDelay)
+		}
+	}
 
+	if version.Minor >= 5 {
+		if p.Spec.Query != nil && p.Spec.Query.MaxSamples != nil {
 			promArgs = append(promArgs,
-				"-storage.local.memory-chunks="+fmt.Sprintf("%d", memChunks),
-				"-storage.local.max-chunks-to-persist="+fmt.Sprintf("%d", memChunks/2),
-			)
-		} else {
-			// Leave 1/3 head room for other overhead.
-			promArgs = append(promArgs,
-				"-storage.local.target-heap-size="+fmt.Sprintf("%d", reqMem.Value()/3*2),
+				fmt.Sprintf("-query.max-samples=%d", *p.Spec.Query.MaxSamples),
 			)
 		}
-	case 2:
-		retentionTimeFlag := "-storage.tsdb.retention="
-		if version.Minor >= 7 {
-			retentionTimeFlag = "-storage.tsdb.retention.time="
-			if p.Spec.RetentionSize != "" {
-				promArgs = append(promArgs,
-					fmt.Sprintf("-storage.tsdb.retention.size=%s", p.Spec.RetentionSize),
-				)
-			}
-		}
-		promArgs = append(promArgs,
-			fmt.Sprintf("-config.file=%s", path.Join(confOutDir, configEnvsubstFilename)),
-			fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
-			retentionTimeFlag+p.Spec.Retention,
-			"-web.enable-lifecycle",
-			"-storage.tsdb.no-lockfile",
-		)
-
-		if p.Spec.Query != nil && p.Spec.Query.LookbackDelta != nil {
-			promArgs = append(promArgs,
-				fmt.Sprintf("-query.lookback-delta=%s", *p.Spec.Query.LookbackDelta),
-			)
-		}
-
-		if version.Minor >= 4 {
-			if p.Spec.Rules.Alert.ForOutageTolerance != "" {
-				promArgs = append(promArgs, "-rules.alert.for-outage-tolerance="+p.Spec.Rules.Alert.ForOutageTolerance)
-			}
-			if p.Spec.Rules.Alert.ForGracePeriod != "" {
-				promArgs = append(promArgs, "-rules.alert.for-grace-period="+p.Spec.Rules.Alert.ForGracePeriod)
-			}
-			if p.Spec.Rules.Alert.ResendDelay != "" {
-				promArgs = append(promArgs, "-rules.alert.resend-delay="+p.Spec.Rules.Alert.ResendDelay)
-			}
-		}
-
-		if version.Minor >= 5 {
-			if p.Spec.Query != nil && p.Spec.Query.MaxSamples != nil {
-				promArgs = append(promArgs,
-					fmt.Sprintf("-query.max-samples=%d", *p.Spec.Query.MaxSamples),
-				)
-			}
-		}
-
-	default:
-		return nil, errors.Errorf("unsupported Prometheus major version %s", version)
 	}
 
 	if p.Spec.Query != nil {
@@ -483,10 +450,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 	}
 
-	if version.Major == 2 {
-		for i, a := range promArgs {
-			promArgs[i] = "-" + a
-		}
+	for i, a := range promArgs {
+		promArgs[i] = "-" + a
 	}
 
 	volumes := []v1.Volume{
@@ -597,51 +562,41 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	const localProbe = `if [ -x "$(command -v curl)" ]; then exec curl %s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %s; else exit 1; fi`
 
 	var readinessProbeHandler v1.Handler
-	if (version.Major == 1 && version.Minor >= 8) || version.Major == 2 {
-		{
-			healthyPath := path.Clean(webRoutePrefix + "/-/healthy")
-			if p.Spec.ListenLocal {
-				localHealthyPath := fmt.Sprintf("http://localhost:9090%s", healthyPath)
-				readinessProbeHandler.Exec = &v1.ExecAction{
-					Command: []string{
-						"sh",
-						"-c",
-						fmt.Sprintf(localProbe, localHealthyPath, localHealthyPath),
-					},
-				}
-			} else {
-				readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
-					Path: healthyPath,
-					Port: intstr.FromString(p.Spec.PortName),
-				}
+	{
+		healthyPath := path.Clean(webRoutePrefix + "/-/healthy")
+		if p.Spec.ListenLocal {
+			localHealthyPath := fmt.Sprintf("http://localhost:9090%s", healthyPath)
+			readinessProbeHandler.Exec = &v1.ExecAction{
+				Command: []string{
+					"sh",
+					"-c",
+					fmt.Sprintf(localProbe, localHealthyPath, localHealthyPath),
+				},
 			}
-		}
-		{
-			readyPath := path.Clean(webRoutePrefix + "/-/ready")
-			if p.Spec.ListenLocal {
-				localReadyPath := fmt.Sprintf("http://localhost:9090%s", readyPath)
-				readinessProbeHandler.Exec = &v1.ExecAction{
-					Command: []string{
-						"sh",
-						"-c",
-						fmt.Sprintf(localProbe, localReadyPath, localReadyPath),
-					},
-				}
-
-			} else {
-				readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
-					Path: readyPath,
-					Port: intstr.FromString(p.Spec.PortName),
-				}
-			}
-		}
-
-	} else {
-		readinessProbeHandler = v1.Handler{
-			HTTPGet: &v1.HTTPGetAction{
-				Path: path.Clean(webRoutePrefix + "/status"),
+		} else {
+			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
+				Path: healthyPath,
 				Port: intstr.FromString(p.Spec.PortName),
-			},
+			}
+		}
+	}
+	{
+		readyPath := path.Clean(webRoutePrefix + "/-/ready")
+		if p.Spec.ListenLocal {
+			localReadyPath := fmt.Sprintf("http://localhost:9090%s", readyPath)
+			readinessProbeHandler.Exec = &v1.ExecAction{
+				Command: []string{
+					"sh",
+					"-c",
+					fmt.Sprintf(localProbe, localReadyPath, localReadyPath),
+				},
+			}
+
+		} else {
+			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
+				Path: readyPath,
+				Port: intstr.FromString(p.Spec.PortName),
+			}
 		}
 	}
 
