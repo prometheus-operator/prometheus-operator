@@ -204,6 +204,11 @@ the maintainers of the project found in the [MAINTAINERS.md](MAINTAINERS.md) fil
 
 [operator-vs-kube]: https://github.com/prometheus-operator/prometheus-operator/issues/2510#issuecomment-476692399
 
+## Troubleshooting
+
+Check the [troubleshooting documentation](Documentation/troubleshooting.md) for 
+common issues and frequently asked questions (FAQ).
+
 ## Acknowledgements
 
 prometheus-operator organization logo was created and contributed by [Bianca Cheng Costanzo](https://github.com/bia).
