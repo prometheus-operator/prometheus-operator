@@ -333,33 +333,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 
 }
 
-func TestMemoryRequestNotAdjustedWhenLimitLarger2Gi(t *testing.T) {
-	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
-		Spec: monitoringv1.PrometheusSpec{
-			Version: "v1.8.2",
-			Resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("3Gi"),
-				},
-			},
-		},
-	}, defaultTestConfig, nil, "", 0)
-	if err != nil {
-		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-	}
-
-	resourceRequest := sset.Spec.Template.Spec.Containers[0].Resources.Requests[v1.ResourceMemory]
-	requestString := resourceRequest.String()
-	resourceLimit := sset.Spec.Template.Spec.Containers[0].Resources.Limits[v1.ResourceMemory]
-	limitString := resourceLimit.String()
-	if requestString != "2Gi" {
-		t.Fatalf("Resource request is expected to be 1Gi, instead found %s", requestString)
-	}
-	if limitString != "3Gi" {
-		t.Fatalf("Resource limit is expected to be 1Gi, instead found %s", limitString)
-	}
-}
-
 func TestAdditionalConfigMap(t *testing.T) {
 	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
@@ -388,33 +361,6 @@ func TestAdditionalConfigMap(t *testing.T) {
 	}
 	if !cmMounted {
 		t.Fatal("ConfigMap volume not mounted")
-	}
-}
-
-func TestMemoryRequestAdjustedWhenOnlyLimitGiven(t *testing.T) {
-	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
-		Spec: monitoringv1.PrometheusSpec{
-			Version: "v1.8.2",
-			Resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
-					v1.ResourceMemory: resource.MustParse("1Gi"),
-				},
-			},
-		},
-	}, defaultTestConfig, nil, "", 0)
-	if err != nil {
-		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-	}
-
-	resourceRequest := sset.Spec.Template.Spec.Containers[0].Resources.Requests[v1.ResourceMemory]
-	requestString := resourceRequest.String()
-	resourceLimit := sset.Spec.Template.Spec.Containers[0].Resources.Limits[v1.ResourceMemory]
-	limitString := resourceLimit.String()
-	if requestString != "1Gi" {
-		t.Fatalf("Resource request is expected to be 1Gi, instead found %s", requestString)
-	}
-	if limitString != "1Gi" {
-		t.Fatalf("Resource limit is expected to be 1Gi, instead found %s", limitString)
 	}
 }
 
@@ -1108,8 +1054,6 @@ func TestRetentionSize(t *testing.T) {
 		expectedRetentionArg string
 		shouldContain        bool
 	}{
-		{"v1.8.2", "2M", "--storage.tsdb.retention.size=2M", false},
-		{"v1.8.2", "1Gi", "--storage.tsdb.retention.size=1Gi", false},
 		{"v2.5.0", "2M", "--storage.tsdb.retention.size=2M", false},
 		{"v2.5.0", "1Gi", "--storage.tsdb.retention.size=1Gi", false},
 		{"v2.7.0", "2M", "--storage.tsdb.retention.size=2M", true},
@@ -1152,8 +1096,6 @@ func TestRetention(t *testing.T) {
 		specRetention        string
 		expectedRetentionArg string
 	}{
-		{"v1.8.2", "", "-storage.local.retention=24h"},
-		{"v1.8.2", "1d", "-storage.local.retention=1d"},
 		{"v2.5.0", "", "--storage.tsdb.retention=24h"},
 		{"v2.5.0", "1d", "--storage.tsdb.retention=1d"},
 		{"v2.7.0", "", "--storage.tsdb.retention.time=24h"},
@@ -1351,10 +1293,6 @@ func TestWALCompression(t *testing.T) {
 		shouldContain bool
 	}{
 		// Nil should not have either flag.
-		{"v1.8.2", nil, "-no-storage.tsdb.wal-compression", false},
-		{"v1.8.2", nil, "-storage.tsdb.wal-compression", false},
-		{"v1.8.2", &fa, "-no-storage.tsdb.wal-compression", false},
-		{"v1.8.2", &tr, "-storage.tsdb.wal-compression", false},
 		{"v2.10.0", nil, "--no-storage.tsdb.wal-compression", false},
 		{"v2.10.0", nil, "--storage.tsdb.wal-compression", false},
 		{"v2.10.0", &fa, "--no-storage.tsdb.wal-compression", false},
