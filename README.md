@@ -53,7 +53,7 @@ we recommend upgrading Kubernetes first and then the Prometheus Operator.
 
 ## CustomResourceDefinitions
 
-A core feature of the Prometheus Operator~ is to monitor the Kubernetes API server for changes
+A core feature of the Prometheus Operator is to monitor the Kubernetes API server for changes
 to specific objects and ensure that the current Prometheus deployments match these objects.
 The Operator acts on the following [custom resource definitions (CRDs)](https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/):
 
