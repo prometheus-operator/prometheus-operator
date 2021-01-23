@@ -175,6 +175,23 @@ func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 	return nil
 }
 
+// UpdateSecret merges metadata of existing Secret with new one and updates it.
+func UpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, secret *v1.Secret) error {
+	existingSecret, err := secretClient.Get(ctx, secret.Name, metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrap(err, "getting secret object failed")
+	}
+
+	mergeMetadata(&secret.ObjectMeta, existingSecret.ObjectMeta)
+
+	_, err = secretClient.Update(ctx, secret, metav1.UpdateOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetMinorVersion returns the minor version as an integer
 func GetMinorVersion(dclient discovery.DiscoveryInterface) (int, error) {
 	v, err := dclient.ServerVersion()

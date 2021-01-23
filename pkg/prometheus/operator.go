@@ -1546,8 +1546,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
-	_, err = sClient.Update(ctx, s, metav1.UpdateOptions{})
-	return err
+	return k8sutil.UpdateSecret(ctx, sClient, s)
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) error {
@@ -1590,7 +1589,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 
 	} else {
-		_, err = sClient.Update(ctx, tlsAssetsSecret, metav1.UpdateOptions{})
+		err = k8sutil.UpdateSecret(ctx, sClient, tlsAssetsSecret)
 		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 	}
 

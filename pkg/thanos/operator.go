@@ -649,7 +649,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	_, err = ssetClient.Update(ctx, sset, metav1.UpdateOptions{})
+	err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
 	sErr, ok := err.(*apierrors.StatusError)
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
