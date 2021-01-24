@@ -8030,6 +8030,10 @@ spec:
               queryLogFile:
                 description: QueryLogFile specifies the file to which PromQL queries are logged. Note that this location must be writable, and can be persisted using an attached volume. Alternatively, the location can be set to a stdout location such as `/dev/stdout` to log querie information to the default Prometheus log stream. This is only available in versions of Prometheus >= 2.16.0. For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/)
                 type: string
+              readinessProbeFailureThreshold:
+                description: Number of readiness probe failure threshold,50 times by default.
+                format: int32
+                type: integer
               remoteRead:
                 description: If specified, the remote_read spec. This is an experimental feature, it may change in any upcoming release in a breaking way.
                 items:

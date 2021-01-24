@@ -366,6 +366,8 @@ type PrometheusSpec struct {
 	// the desired limit.
 	// Note that if TargetLimit is higher that value will be taken instead.
 	EnforcedTargetLimit *uint64 `json:"enforcedTargetLimit,omitempty"`
+	// Number of readiness probe failure threshold,50 times by default.
+	ReadinessProbeFailureThreshold *int32 `json:"readinessProbeFailureThreshold,omitempty"`
 }
 
 // PrometheusRuleExcludeConfig enables users to configure excluded PrometheusRule names and their namespaces

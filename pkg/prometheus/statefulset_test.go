@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"k8s.io/utils/pointer"
 	"reflect"
 	"strings"
 	"testing"
@@ -1422,5 +1423,22 @@ func TestExpectedStatefulSetShardNames(t *testing.T) {
 		if res[i] != name {
 			t.Fatal("Unexpected StatefulSet shard name")
 		}
+	}
+}
+
+func TestReadinessProbeThreshold(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{Spec: monitoringv1.PrometheusSpec{ReadinessProbeFailureThreshold: pointer.Int32Ptr(10)}}, defaultTestConfig, nil, "", 0)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "prometheus" {
+			if c.ReadinessProbe.FailureThreshold != 10 {
+				t.Fatalf("Unexpected ReadinessProbeFailureThreshold. Got %v", c.ReadinessProbe.FailureThreshold)
+
+			}
+		}
+
 	}
 }
