@@ -260,4 +260,50 @@ func TestMergeMetadata(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("UpdateSecret", func(t *testing.T) {
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				secret := &corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:        "prometheus-tls-assets",
+						Namespace:   namespace,
+						Labels:      map[string]string{"app.kubernetes.io/name": "kube-state-metrics"},
+						Annotations: map[string]string{"app.kubernetes.io/name": "kube-state-metrics"},
+					},
+				}
+
+				sClient := fake.NewSimpleClientset(secret).CoreV1().Secrets(namespace)
+
+				modifiedSecret := secret.DeepCopy()
+				for l, v := range tc.modifiedLabels {
+					modifiedSecret.Labels[l] = v
+				}
+				for a, v := range tc.modifiedAnnotations {
+					modifiedSecret.Annotations[a] = v
+				}
+				_, err := sClient.Update(context.TODO(), modifiedSecret, metav1.UpdateOptions{})
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				err = UpdateSecret(context.TODO(), sClient, secret)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				updatedSecret, err := sClient.Get(context.TODO(), "prometheus-tls-assets", metav1.GetOptions{})
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if !reflect.DeepEqual(tc.expectedAnnotations, updatedSecret.Annotations) {
+					t.Errorf("expected annotations %q, got %q", tc.expectedAnnotations, updatedSecret.Annotations)
+				}
+				if !reflect.DeepEqual(tc.expectedLabels, updatedSecret.Labels) {
+					t.Errorf("expected labels %q, got %q", tc.expectedLabels, updatedSecret.Labels)
+				}
+			})
+		}
+	})
 }

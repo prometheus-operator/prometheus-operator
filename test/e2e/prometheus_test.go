@@ -30,6 +30,8 @@ import (
 	"testing"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
+
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -1807,6 +1809,217 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 				len(resource.Versions),
 			)
 		}
+	}
+}
+
+func testPromPreserveUserAddedMetadata(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "test"
+
+	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
+	prometheusCRD.Namespace = ns
+
+	prometheusCRD, err := framework.CreatePrometheusAndWaitUntilReady(ns, prometheusCRD)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	updatedLabels := map[string]string{
+		"user-defined-label": "custom-label-value",
+	}
+	updatedAnnotations := map[string]string{
+		"user-defined-annotation": "custom-annotation-val",
+	}
+
+	svcClient := framework.KubeClient.CoreV1().Services(ns)
+	endpointsClient := framework.KubeClient.CoreV1().Endpoints(ns)
+	ssetClient := framework.KubeClient.AppsV1().StatefulSets(ns)
+	secretClient := framework.KubeClient.CoreV1().Secrets(ns)
+
+	resourceConfigs := []struct {
+		name   string
+		get    func() (metav1.Object, error)
+		update func(object metav1.Object) (metav1.Object, error)
+	}{
+		{
+			name: "prometheus-operated service",
+			get: func() (metav1.Object, error) {
+				return svcClient.Get(context.TODO(), "prometheus-operated", metav1.GetOptions{})
+			},
+			update: func(object metav1.Object) (metav1.Object, error) {
+				return svcClient.Update(context.TODO(), asService(t, object), metav1.UpdateOptions{})
+			},
+		},
+		{
+			name: "prometheus stateful set",
+			get: func() (metav1.Object, error) {
+				return ssetClient.Get(context.TODO(), "prometheus-test", metav1.GetOptions{})
+			},
+			update: func(object metav1.Object) (metav1.Object, error) {
+				return ssetClient.Update(context.TODO(), asStatefulSet(t, object), metav1.UpdateOptions{})
+			},
+		},
+		{
+			name: "prometheus-operated endpoints",
+			get: func() (metav1.Object, error) {
+				return endpointsClient.Get(context.TODO(), "prometheus-operated", metav1.GetOptions{})
+			},
+			update: func(object metav1.Object) (metav1.Object, error) {
+				return endpointsClient.Update(context.TODO(), asEndpoints(t, object), metav1.UpdateOptions{})
+			},
+		},
+		{
+			name: "prometheus secret",
+			get: func() (metav1.Object, error) {
+				return secretClient.Get(context.TODO(), "prometheus-test", metav1.GetOptions{})
+			},
+			update: func(object metav1.Object) (metav1.Object, error) {
+				return secretClient.Update(context.TODO(), asSecret(t, object), metav1.UpdateOptions{})
+			},
+		},
+	}
+
+	for _, rConf := range resourceConfigs {
+		res, err := rConf.get()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		updateObjectLabels(res, updatedLabels)
+		updateObjectAnnotations(res, updatedAnnotations)
+
+		_, err = rConf.update(res)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Trigger reconcile
+	s := framework.MakeBasicServiceMonitor(name)
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	pSVC := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, pSVC); err != nil {
+		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	err = framework.WaitForDiscoveryWorking(ns, pSVC.Name, prometheusCRD.Name)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
+	}
+
+	// Assert labels preserved
+	for _, rConf := range resourceConfigs {
+		res, err := rConf.get()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		labels := res.GetLabels()
+		if !containsValues(labels, updatedLabels) {
+			t.Errorf("%s: labels do not contain updated labels, found: %q, should contain: %q", rConf.name, labels, updatedLabels)
+		}
+
+		annotations := res.GetAnnotations()
+		if !containsValues(annotations, updatedAnnotations) {
+			t.Fatalf("%s: annotations do not contain updated annotations, found: %q, should contain: %q", rConf.name, annotations, updatedAnnotations)
+		}
+	}
+
+	// Cleanup
+	if err := framework.DeletePrometheusAndWaitUntilGone(ns, name); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func asService(t *testing.T, object metav1.Object) *v1.Service {
+	svc, ok := object.(*v1.Service)
+	if !ok {
+		t.Fatalf("expected service got %T", object)
+	}
+	return svc
+}
+
+func asEndpoints(t *testing.T, object metav1.Object) *v1.Endpoints {
+	endpoints, ok := object.(*v1.Endpoints)
+	if !ok {
+		t.Fatalf("expected endpoints got %T", object)
+	}
+	return endpoints
+}
+
+func asStatefulSet(t *testing.T, object metav1.Object) *appsv1.StatefulSet {
+	sset, ok := object.(*appsv1.StatefulSet)
+	if !ok {
+		t.Fatalf("expected stateful set got %T", object)
+	}
+	return sset
+}
+
+func asSecret(t *testing.T, object metav1.Object) *v1.Secret {
+	sec, ok := object.(*v1.Secret)
+	if !ok {
+		t.Fatalf("expected secret set got %T", object)
+	}
+	return sec
+}
+
+func containsValues(collection, contains map[string]string) bool {
+	for k, v := range contains {
+		if collection[k] != v {
+			return false
+		}
+	}
+	return true
+}
+
+func updateLabels(metadata *metav1.ObjectMeta, labels map[string]string) {
+	if metadata.Labels == nil {
+		metadata.Labels = map[string]string{}
+	}
+	for k, v := range labels {
+		metadata.Labels[k] = v
+	}
+}
+
+func updateObjectLabels(object metav1.Object, labels map[string]string) {
+	current := object.GetLabels()
+	current = mergeMap(current, labels)
+	object.SetLabels(current)
+}
+
+func updateObjectAnnotations(object metav1.Object, annotations map[string]string) {
+	current := object.GetAnnotations()
+	current = mergeMap(current, annotations)
+	object.SetAnnotations(current)
+}
+
+func mergeMap(a, b map[string]string) map[string]string {
+	if a == nil {
+		a = map[string]string{}
+	}
+	for k, v := range b {
+		a[k] = v
+	}
+	return a
+}
+
+func updateAnnotations(metadata *metav1.ObjectMeta, annotations map[string]string) {
+	if metadata.Annotations == nil {
+		metadata.Annotations = map[string]string{}
+	}
+	for k, v := range annotations {
+		metadata.Annotations[k] = v
 	}
 }
 
