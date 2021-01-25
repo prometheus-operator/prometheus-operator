@@ -598,7 +598,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | enforcedSampleLimit | EnforcedSampleLimit defines global limit on number of scraped samples that will be accepted. This overrides any SampleLimit set per ServiceMonitor or/and PodMonitor. It is meant to be used by admins to enforce the SampleLimit to keep overall number of samples/series under the desired limit. Note that if SampleLimit is lower that value will be taken instead. | *uint64 | false |
 | allowOverlappingBlocks | AllowOverlappingBlocks enables vertical compaction and vertical query merge in Prometheus. This is still experimental in Prometheus so it may change in any upcoming release. | bool | false |
 | enforcedTargetLimit | EnforcedTargetLimit defines a global limit on the number of scraped targets. This overrides any TargetLimit set per ServiceMonitor or/and PodMonitor. It is meant to be used by admins to enforce the TargetLimit to keep overall number of targets under the desired limit. Note that if TargetLimit is higher that value will be taken instead. | *uint64 | false |
-
+| readinessProbeFailureThreshold | Number of readiness probe failure threshold,50 times by default. | *int32 | false |
 [Back to TOC](#table-of-contents)
 
 ## PrometheusStatus
