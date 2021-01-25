@@ -929,7 +929,7 @@ func checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.Alertm
 		return err
 	}
 
-	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames)
+	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames, true)
 }
 
 func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
@@ -1235,12 +1235,12 @@ func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.Push
 }
 
 // checkAlertmanagerRoutes verifies that the given route and all its children are semantically valid.
-func checkAlertmanagerRoutes(r *monitoringv1alpha1.Route, receivers map[string]struct{}) error {
+func checkAlertmanagerRoutes(r *monitoringv1alpha1.Route, receivers map[string]struct{}, topLevelRoute bool) error {
 	if r == nil {
 		return nil
 	}
 
-	if _, found := receivers[r.Receiver]; !found {
+	if _, found := receivers[r.Receiver]; !found && (r.Receiver != "" || topLevelRoute) {
 		return errors.Errorf("receiver %q not found", r.Receiver)
 	}
 
@@ -1250,7 +1250,7 @@ func checkAlertmanagerRoutes(r *monitoringv1alpha1.Route, receivers map[string]s
 	}
 
 	for i := range children {
-		if err := checkAlertmanagerRoutes(&children[i], receivers); err != nil {
+		if err := checkAlertmanagerRoutes(&children[i], receivers, false); err != nil {
 			return errors.Wrapf(err, "route[%d]", i)
 		}
 	}

@@ -130,6 +130,43 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "nested-routes-without-receiver",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+						Routes: []apiextensionsv1.JSON{
+							{Raw: []byte(`{"routes": [{"receiver": "recv2"}]}`)},
+						},
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}, {
+						Name: "recv2",
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "top-level-route-without-receiver",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "duplicate-receivers",
 					Namespace: "ns1",
 				},
