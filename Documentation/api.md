@@ -429,6 +429,7 @@ ProbeTargetStaticConfig defines the set of static targets considered for probing
 | ----- | ----------- | ------ | -------- |
 | static | Targets is a list of URLs to probe using the configured prober. | []string | false |
 | labels | Labels assigned to all metrics scraped from the targets. | map[string]string | false |
+| relabelingConfigs | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 
 [Back to TOC](#table-of-contents)
 

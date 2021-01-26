@@ -747,6 +747,13 @@ func (cg *configGenerator) generateProbeConfig(
 			},
 		}...)
 
+		// Add configured relabelings.
+		if m.Spec.Targets.StaticConfig.RelabelConfigs != nil {
+			for _, r := range m.Spec.Targets.StaticConfig.RelabelConfigs {
+				relabelings = append(relabelings, generateRelabelConfig(r))
+			}
+		}
+
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)})
 	}
 
