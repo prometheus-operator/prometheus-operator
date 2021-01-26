@@ -4,7 +4,7 @@ This document describes the rules and governance of the project. It is a slightl
 
 It is meant to be followed by all the developers of the Prometheus Operator project and the Prometheus Operator community. Common terminology used in this governance document are listed below:
 
-* **Maintainers Team**: A core Prometheus Operator team that have owner access to http://github.com/prometheus-operator organization and all projects within it. Current list is available [here][maintainers-doc].
+* **Maintainers Team**: A core Prometheus Operator team that have owner access to https://github.com/prometheus-operator organization and all projects within it. Current list is available [here][maintainers-doc].
 
 * **Triage Team**: Contributors who does not belong to Maintainer's team, but has `Triage` GitHub role on [Prometheus Operator](https://github.com/prometheus-operator) repository allowing to change GitHub issues and PRs statuses and labels.
 They are listed [here](https://github.com/prometheus-operator/prometheus-operator/blob/master/MAINTAINERS.md#triage).
@@ -24,7 +24,7 @@ Furthermore, the Prometheus Operator community strives for kindness, giving feed
 ### Maintainers Team
 
 Team member status may be given to those who have made ongoing contributions to the Prometheus Operator project for at least 3 months.
-This is usually in the form of code improvements and/or notable work on documentation, but organizing events or user support could also be taken into account.
+This is usually in the form of code improvements, pull-request reviews, issue triaging or notable work on documentation, but organizing events or user support could also be taken into account.
 
 New members may be proposed by any existing Maintainer by email to [prometheus-operator-team][team]. It is highly desirable to reach consensus about acceptance of a new member.
 However, the proposal is ultimately voted on by a formal [supermajority vote](#supermajority-vote) of Team Maintainers.
