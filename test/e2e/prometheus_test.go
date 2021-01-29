@@ -1900,8 +1900,8 @@ func testPromPreserveUserAddedMetadata(t *testing.T) {
 		}
 	}
 
-	// Set label on CR to trigger reconcile
-	prometheusCRD.SetLabels(mergeMap(prometheusCRD.GetLabels(), map[string]string{"test": "reconcile"}))
+	// Ensure resource reconciles
+	prometheusCRD.Spec.Replicas = proto.Int32(2)
 	prometheusCRD, err = framework.UpdatePrometheusAndWaitUntilReady(ns, prometheusCRD)
 	if err != nil {
 		t.Fatal(err)
@@ -1963,9 +1963,9 @@ func asSecret(t *testing.T, object metav1.Object) *v1.Secret {
 	return sec
 }
 
-func containsValues(collection, contains map[string]string) bool {
-	for k, v := range contains {
-		if collection[k] != v {
+func containsValues(got, expected map[string]string) bool {
+	for k, v := range expected {
+		if got[k] != v {
 			return false
 		}
 	}

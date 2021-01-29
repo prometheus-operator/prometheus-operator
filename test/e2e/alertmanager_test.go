@@ -1264,8 +1264,8 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 		}
 	}
 
-	// Set label on CR to trigger reconcile
-	alertManager.SetLabels(mergeMap(alertManager.GetLabels(), map[string]string{"test": "reconcile"}))
+	// Ensure resource reconciles
+	alertManager.Spec.Replicas = proto.Int32(2)
 	alertManager, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, alertManager)
 	if err != nil {
 		t.Fatal(err)

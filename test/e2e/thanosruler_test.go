@@ -15,9 +15,12 @@
 package e2e
 
 import (
+	"github.com/golang/protobuf/proto"
+
 	"context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func testTRCreateDeleteCluster(t *testing.T) {
@@ -104,8 +107,8 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 		}
 	}
 
-	// Set label on CR to trigger reconcile
-	thanosRuler.SetLabels(mergeMap(thanosRuler.GetLabels(), map[string]string{"test": "reconcile"}))
+	// Ensure resource reconciles
+	thanosRuler.Spec.Replicas = proto.Int32(2)
 	thanosRuler, err = framework.UpdateThanosRulerAndWaitUntilReady(ns, thanosRuler)
 	if err != nil {
 		t.Fatal(err)
