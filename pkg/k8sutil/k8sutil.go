@@ -237,6 +237,9 @@ func mergeMetadata(new *metav1.ObjectMeta, old metav1.ObjectMeta) {
 }
 
 func mergeMaps(new map[string]string, old map[string]string) map[string]string {
+	if old == nil {
+		old = make(map[string]string, len(new))
+	}
 	for k, v := range new {
 		old[k] = v
 	}

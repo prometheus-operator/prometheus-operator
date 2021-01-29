@@ -1900,22 +1900,11 @@ func testPromPreserveUserAddedMetadata(t *testing.T) {
 		}
 	}
 
-	// Trigger reconcile
-	s := framework.MakeBasicServiceMonitor(name)
-	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
-		t.Fatal("Creating ServiceMonitor failed: ", err)
-	}
-
-	pSVC := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
-	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, pSVC); err != nil {
-		t.Fatal(errors.Wrap(err, "creating Prometheus service failed"))
-	} else {
-		ctx.AddFinalizerFn(finalizerFn)
-	}
-
-	err = framework.WaitForDiscoveryWorking(ns, pSVC.Name, prometheusCRD.Name)
+	// Set label on CR to trigger reconcile
+	prometheusCRD.SetLabels(mergeMap(prometheusCRD.GetLabels(), map[string]string{"test": "reconcile"}))
+	prometheusCRD, err = framework.UpdatePrometheusAndWaitUntilReady(ns, prometheusCRD)
 	if err != nil {
-		t.Fatal(errors.Wrap(err, "validating Prometheus target discovery failed"))
+		t.Fatal(err)
 	}
 
 	// Assert labels preserved
@@ -1983,15 +1972,6 @@ func containsValues(collection, contains map[string]string) bool {
 	return true
 }
 
-func updateLabels(metadata *metav1.ObjectMeta, labels map[string]string) {
-	if metadata.Labels == nil {
-		metadata.Labels = map[string]string{}
-	}
-	for k, v := range labels {
-		metadata.Labels[k] = v
-	}
-}
-
 func updateObjectLabels(object metav1.Object, labels map[string]string) {
 	current := object.GetLabels()
 	current = mergeMap(current, labels)
@@ -2006,21 +1986,12 @@ func updateObjectAnnotations(object metav1.Object, annotations map[string]string
 
 func mergeMap(a, b map[string]string) map[string]string {
 	if a == nil {
-		a = map[string]string{}
+		a = make(map[string]string, len(b))
 	}
 	for k, v := range b {
 		a[k] = v
 	}
 	return a
-}
-
-func updateAnnotations(metadata *metav1.ObjectMeta, annotations map[string]string) {
-	if metadata.Annotations == nil {
-		metadata.Annotations = map[string]string{}
-	}
-	for k, v := range annotations {
-		metadata.Annotations[k] = v
-	}
 }
 
 func testPromWhenDeleteCRDCleanUpViaOwnerRef(t *testing.T) {

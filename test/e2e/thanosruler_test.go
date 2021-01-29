@@ -15,6 +15,8 @@
 package e2e
 
 import (
+	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
 
@@ -29,6 +31,102 @@ func testTRCreateDeleteCluster(t *testing.T) {
 
 	if _, err := framework.CreateThanosRulerAndWaitUntilReady(ns, framework.MakeBasicThanosRuler(name, 1)); err != nil {
 		t.Fatal(err)
+	}
+
+	if err := framework.DeleteThanosRulerAndWaitUntilGone(ns, name); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func testTRPreserveUserAddedMetadata(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	name := "test"
+
+	thanosRuler := framework.MakeBasicThanosRuler(name, 1)
+	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(ns, thanosRuler)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	updatedLabels := map[string]string{
+		"user-defined-label": "custom-label-value",
+	}
+	updatedAnnotations := map[string]string{
+		"user-defined-annotation": "custom-annotation-val",
+	}
+
+	svcClient := framework.KubeClient.CoreV1().Services(ns)
+	ssetClient := framework.KubeClient.AppsV1().StatefulSets(ns)
+
+	resourceConfigs := []struct {
+		name   string
+		get    func() (metav1.Object, error)
+		update func(object metav1.Object) (metav1.Object, error)
+	}{
+		{
+			name: "thanos-ruler-operated service",
+			get: func() (metav1.Object, error) {
+				return svcClient.Get(context.TODO(), "thanos-ruler-operated", metav1.GetOptions{})
+			},
+			update: func(object metav1.Object) (metav1.Object, error) {
+				return svcClient.Update(context.TODO(), asService(t, object), metav1.UpdateOptions{})
+			},
+		},
+		{
+			name: "thanos-ruler stateful set",
+			get: func() (metav1.Object, error) {
+				return ssetClient.Get(context.TODO(), "thanos-ruler-test", metav1.GetOptions{})
+			},
+			update: func(object metav1.Object) (metav1.Object, error) {
+				return ssetClient.Update(context.TODO(), asStatefulSet(t, object), metav1.UpdateOptions{})
+			},
+		},
+	}
+
+	for _, rConf := range resourceConfigs {
+		res, err := rConf.get()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		updateObjectLabels(res, updatedLabels)
+		updateObjectAnnotations(res, updatedAnnotations)
+
+		_, err = rConf.update(res)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Set label on CR to trigger reconcile
+	thanosRuler.SetLabels(mergeMap(thanosRuler.GetLabels(), map[string]string{"test": "reconcile"}))
+	thanosRuler, err = framework.UpdateThanosRulerAndWaitUntilReady(ns, thanosRuler)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Assert labels preserved
+	for _, rConf := range resourceConfigs {
+		res, err := rConf.get()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		labels := res.GetLabels()
+		if !containsValues(labels, updatedLabels) {
+			t.Errorf("%s: labels do not contain updated labels, found: %q, should contain: %q", rConf.name, labels, updatedLabels)
+		}
+
+		annotations := res.GetAnnotations()
+		if !containsValues(annotations, updatedAnnotations) {
+			t.Fatalf("%s: annotations do not contain updated annotations, found: %q, should contain: %q", rConf.name, annotations, updatedAnnotations)
+		}
 	}
 
 	if err := framework.DeleteThanosRulerAndWaitUntilGone(ns, name); err != nil {
