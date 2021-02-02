@@ -87,6 +87,36 @@ templates: []
 `,
 		},
 		{
+			name:    "skeleton base, CR with receiver, no routes",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{
+					{Name: "null"},
+				},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+receivers:
+- name: "null"
+- name: mynamespace-myamc-test
+templates: []
+`,
+		},
+		{
 			name:    "skeleton base, simple CR",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{

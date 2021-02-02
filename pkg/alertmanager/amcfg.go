@@ -96,6 +96,11 @@ func (cg *configGenerator) generateConfig(
 			baseConfig.InhibitRules = append(baseConfig.InhibitRules, convertInhibitRule(&inhibitRule, crKey))
 		}
 
+		// Add routes / subroutes if there are route definition.
+		if amConfigs[amConfigIdentifier].Spec.Route != nil {
+			subRoutes = append(subRoutes, convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
+		}
+
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
 			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
 			if err != nil {
@@ -103,13 +108,6 @@ func (cg *configGenerator) generateConfig(
 			}
 			baseConfig.Receivers = append(baseConfig.Receivers, receivers)
 		}
-
-		// Skip early if there's no route definition.
-		if amConfigs[amConfigIdentifier].Spec.Route == nil {
-			continue
-		}
-
-		subRoutes = append(subRoutes, convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
 	}
 
 	// For alerts to be processed by the AlertmanagerConfig routes, they need
