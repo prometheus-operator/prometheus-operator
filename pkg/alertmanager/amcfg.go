@@ -138,7 +138,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 			match[matcher.Name] = matcher.Value
 		}
 	}
-	if firstLevelRoute {
+	if firstLevelRoute && !in.GlobalConfig {
 		match["namespace"] = crKey.Namespace
 		delete(matchRE, "namespace")
 	}

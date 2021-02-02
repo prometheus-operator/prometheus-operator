@@ -1810,6 +1810,9 @@ spec:
                   continue:
                     description: Boolean indicating whether an alert should continue matching subsequent sibling nodes. It will always be overridden to true for the first-level route by the Prometheus operator.
                     type: boolean
+                  globalConfig:
+                    description: Boolean indicating whether the alert manager configuration is global or namespaced. This decides whether the first level route configuration namespace matcher is added by the Prometheus operator.
+                    type: boolean
                   groupBy:
                     description: List of labels to group by.
                     items:
@@ -1822,7 +1825,7 @@ spec:
                     description: How long to wait before sending the initial notification. Must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes hours).
                     type: string
                   matchers:
-                    description: 'List of matchers that the alert’s labels should match. For the first level route, the operator removes any existing equality and regexp matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher.'
+                    description: 'List of matchers that the alert’s labels should match. For the first level route, if the globalConfig flag is false, the operator removes any existing equality and regexp matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher.'
                     items:
                       description: Matcher defines how to match on alert's labels.
                       properties:
