@@ -151,6 +151,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMZeroDowntimeRollingDeployment": testAMZeroDowntimeRollingDeployment,
 		"AMAlertmanagerConfigCRD":         testAlertmanagerConfigCRD,
 		"AMUserDefinedAlertmanagerConfig": testUserDefinedAlertmanagerConfig,
+		"AMPreserveUserAddedMetadata":     testAMPreserveUserAddedMetadata,
 	}
 
 	for name, f := range testFuncs {
@@ -194,6 +195,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromStaticProbe":                        testPromStaticProbe,
 		"PromSecurePodMonitor":                   testPromSecurePodMonitor,
 		"PromSharedResourcesReconciliation":      testPromSharedResourcesReconciliation,
+		"PromPreserveUserAddedMetadata":          testPromPreserveUserAddedMetadata,
 	}
 
 	for name, f := range testFuncs {
@@ -204,7 +206,8 @@ func testAllNSPrometheus(t *testing.T) {
 func testAllNSThanosRuler(t *testing.T) {
 	skipThanosRulerTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"ThanosRulerCreateDeleteCluster": testTRCreateDeleteCluster,
+		"ThanosRulerCreateDeleteCluster":       testTRCreateDeleteCluster,
+		"ThanosRulerPreserveUserAddedMetadata": testTRPreserveUserAddedMetadata,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
