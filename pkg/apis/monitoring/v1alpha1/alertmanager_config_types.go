@@ -105,9 +105,9 @@ type Route struct {
 	// +optional
 	RepeatInterval string `json:"repeatInterval,omitempty"`
 	// List of matchers that the alert’s labels should match. For the first
-	// level route, the operator removes any existing equality and regexp
-	// matcher on the `namespace` label and adds a `namespace: <object
-	// namespace>` matcher.
+	// level route, if the globalConfig flag is false, the operator
+	// removes any existing equality and regexp matcher on the `namespace`
+	// label and adds a `namespace: <object namespace>` matcher.
 	// +optional
 	Matchers []Matcher `json:"matchers,omitempty"`
 	// Boolean indicating whether an alert should continue matching subsequent
@@ -115,6 +115,13 @@ type Route struct {
 	// route by the Prometheus operator.
 	// +optional
 	Continue bool `json:"continue,omitempty"`
+	// Boolean indicating whether the alert manager configuration is global or
+	// namespaced. This decides whether the first level route configuration
+	// namespace matcher is added by the Prometheus operator. If the value is
+	// set to true, the namespace label match won't be added to the first level
+	// route in the generated alertmanager configuration.
+	// +optional
+	GlobalConfig bool `json:"globalConfig,omitempty"`
 	// Child routes.
 	Routes []apiextensionsv1.JSON `json:"routes,omitempty"`
 	// Note: this comment applies to the field definition above but appears

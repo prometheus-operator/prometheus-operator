@@ -1174,8 +1174,9 @@ Route defines a node in the routing tree.
 | groupWait | How long to wait before sending the initial notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |
 | groupInterval | How long to wait before sending an updated notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |
 | repeatInterval | How long to wait before repeating the last notification. Must match the regular expression `[0-9]+(ms\|s\|m\|h)` (milliseconds seconds minutes hours). | string | false |
-| matchers | List of matchers that the alert’s labels should match. For the first level route, the operator removes any existing equality and regexp matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher. | [][Matcher](#matcher) | false |
+| matchers | List of matchers that the alert’s labels should match. For the first level route, if the globalConfig flag is false, the operator removes any existing equality and regexp matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher. | [][Matcher](#matcher) | false |
 | continue | Boolean indicating whether an alert should continue matching subsequent sibling nodes. It will always be overridden to true for the first-level route by the Prometheus operator. | bool | false |
+| globalConfig | Boolean indicating whether the alert manager configuration is global or namespaced. This decides whether the first level route configuration namespace matcher is added by the Prometheus operator. If the value is set to true, the namespace label match won't be added to the first level route in the generated alertmanager configuration. | bool | false |
 | routes | Child routes. | [][apiextensionsv1.JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#json-v1-apiextensions-k8s-io) | false |
 
 [Back to TOC](#table-of-contents)
