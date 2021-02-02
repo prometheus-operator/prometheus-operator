@@ -1,3 +1,7 @@
+## 0.45.1 / 2021-02-01
+
+* [BUGFIX] Generate receivers from alertmanagerconfig even if routes are empty. #3819
+
 ## 0.45.0 / 2021-01-13
 
 * [CHANGE] Add schema validations to AlertmanagerConfig CRD. #3742
