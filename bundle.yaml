@@ -1811,7 +1811,7 @@ spec:
                     description: Boolean indicating whether an alert should continue matching subsequent sibling nodes. It will always be overridden to true for the first-level route by the Prometheus operator.
                     type: boolean
                   globalConfig:
-                    description: Boolean indicating whether the alert manager configuration is global or namespaced. This decides whether the first level route configuration namespace matcher is added by the Prometheus operator.
+                    description: Boolean indicating whether the alert manager configuration is global or namespaced. This decides whether the first level route configuration namespace matcher is added by the Prometheus operator. If the value is set to true, the namespace label match won't be added to the first level route in the generated alertmanager configuration.
                     type: boolean
                   groupBy:
                     description: List of labels to group by.

@@ -33,6 +33,8 @@ spec:
 
 The Alertmanager instances will not be able to start up, unless a valid configuration is given. An config file Secret will be composed by taking an optional base config file Secret specified through the `configSecret` field in the Alertmanager resource Spec, and merging that with any AlertmanagerConfig resources that get matched by using the `alertmanagerConfigSelector` and `alertmanagerConfigNamespaceSelector` selectors from the `Alertmanager` resource.
 
+AlertmanagerConfig resource can be created in one namespace as a global resource and can avoid automatic namespace matching at the first level route by using the GlobalConfig flag that is available in the Route definition. The operator would not add the namespace label match to the generated alertmanager configuration yaml, if the GlobalConfig flag is set to true.
+
 For more information on configuring Alertmanager, see the Prometheus [Alerting Configuration document][alerting-config].
 
 ## AlertmanagerConfig Resource
