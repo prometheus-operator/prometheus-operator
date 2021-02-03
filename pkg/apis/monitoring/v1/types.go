@@ -551,6 +551,8 @@ type ThanosSpec struct {
 	LogFormat string `json:"logFormat,omitempty"`
 	// MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y.
 	MinTime string `json:"minTime,omitempty"`
+	// List of additional environment variables to set in the thanos container.
+	Env []*v1.EnvVar `json:"env,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.

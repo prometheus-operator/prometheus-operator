@@ -1047,6 +1047,43 @@ func TestThanosTracing(t *testing.T) {
 	}
 }
 
+func TestThanosEnv(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				Env: []*v1.EnvVar{{
+					Name:  "ADDITIONAL",
+					Value: "VARIABLE",
+				}},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	if sset.Spec.Template.Spec.Containers[0].Name != "prometheus" {
+		t.Fatalf("expected 1st containers to be prometheus, got %s", sset.Spec.Template.Spec.Containers[0].Name)
+	}
+
+	if sset.Spec.Template.Spec.Containers[2].Name != "thanos-sidecar" {
+		t.Fatalf("expected 3rd containers to be thanos-sidecar, got %s", sset.Spec.Template.Spec.Containers[2].Name)
+	}
+
+	var containsEnvVar bool
+	for _, env := range sset.Spec.Template.Spec.Containers[2].Env {
+		if env.Name == "ADDITIONAL" {
+			if env.Value == "VARIABLE" {
+				containsEnvVar = true
+				break
+			}
+		}
+	}
+	if !containsEnvVar {
+		t.Fatalf("Thanos sidecar is missing expected ADDITIONAL env var with correct value")
+	}
+}
+
 func TestRetentionSize(t *testing.T) {
 	tests := []struct {
 		version              string

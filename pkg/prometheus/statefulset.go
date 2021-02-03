@@ -676,21 +676,29 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			}
 		}
 
+		thanosEnv := []v1.EnvVar{
+			{
+				Name: "POD_IP",
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{
+						FieldPath: "status.podIP",
+					},
+				},
+			},
+		}
+
+		if p.Spec.Thanos.Env != nil {
+			for _, env := range p.Spec.Thanos.Env {
+				thanosEnv = append(thanosEnv, *env)
+			}
+		}
+
 		container := v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			Args:                     thanosArgs,
-			Env: []v1.EnvVar{
-				{
-					Name: "POD_IP",
-					ValueFrom: &v1.EnvVarSource{
-						FieldRef: &v1.ObjectFieldSelector{
-							FieldPath: "status.podIP",
-						},
-					},
-				},
-			},
+			Env:                      thanosEnv,
 			Ports: []v1.ContainerPort{
 				{
 					Name:          "http",
