@@ -468,6 +468,8 @@ scrape_configs:
       namespace: default
       static: label
   relabel_configs:
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testprobe1
   - source_labels:
     - __address__
     target_label: __param_target
@@ -577,6 +579,8 @@ scrape_configs:
       namespace: custom
       static: label
   relabel_configs:
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testprobe1
   - source_labels:
     - __address__
     target_label: __param_target
@@ -682,6 +686,8 @@ scrape_configs:
   relabel_configs:
   - target_label: job
     replacement: blackbox
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testprobe1
   - source_labels:
     - __address__
     target_label: __param_target
@@ -789,6 +795,8 @@ scrape_configs:
   kubernetes_sd_configs:
   - role: ingress
   relabel_configs:
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testprobe1
   - action: keep
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
@@ -916,6 +924,8 @@ scrape_configs:
   kubernetes_sd_configs:
   - role: ingress
   relabel_configs:
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testprobe1
   - action: keep
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
@@ -1475,6 +1485,8 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - target_label: __meta_prometheus_job_name
+    replacement: default/test/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -1618,6 +1630,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
+  - target_label: __meta_prometheus_job_name
+    replacement: pod-monitor-ns/testpodmonitor1/0
   - target_label: job
     replacement: pod-monitor-ns/testpodmonitor1
   - target_label: endpoint
@@ -1771,6 +1785,8 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - target_label: __meta_prometheus_job_name
+    replacement: default/test/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -1996,6 +2012,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testservicemonitor1/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2118,6 +2136,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testpodmonitor1/0
   - target_label: job
     replacement: default/testpodmonitor1
   - target_label: endpoint
@@ -2256,6 +2276,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testservicemonitor1/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2393,6 +2415,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testservicemonitor1/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2531,6 +2555,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testservicemonitor1/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2668,6 +2694,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testservicemonitor1/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2804,6 +2832,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testservicemonitor1/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -2923,6 +2953,8 @@ scrape_configs:
     target_label: env
     regex: (.+)
     replacement: ${1}
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testpodmonitor1/0
   - target_label: job
     replacement: default/testpodmonitor1
   - target_label: endpoint
@@ -3041,6 +3073,8 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - target_label: __meta_prometheus_job_name
+    replacement: default/test/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -3578,6 +3612,8 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testservicemonitor1/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -3647,6 +3683,8 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testservicemonitor1/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -3814,6 +3852,8 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testservicemonitor1/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
@@ -3883,6 +3923,8 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_container_name
     target_label: container
+  - target_label: __meta_prometheus_job_name
+    replacement: default/testservicemonitor1/0
   - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
