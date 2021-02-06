@@ -433,10 +433,11 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	shards int32,
 ) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
+	jobName := fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+			Value: jobName,
 		},
 		{
 			Key:   "honor_labels",
@@ -590,6 +591,12 @@ func (cg *configGenerator) generatePodMonitorConfig(
 		})
 	}
 
+	// Relabel job_name into a meta label
+	relabelings = append(relabelings, yaml.MapSlice{
+		{Key: "target_label", Value: "__meta_prometheus_job_name"},
+		{Key: "replacement", Value: jobName},
+	})
+
 	// By default, generate a safe job name from the PodMonitor. We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
 	// value for it. A single pod may potentially have multiple metrics
@@ -708,6 +715,11 @@ func (cg *configGenerator) generateProbeConfig(
 			},
 		}...)
 	}
+	// Relabel job_name into a meta label
+	relabelings = append(relabelings, yaml.MapSlice{
+		{Key: "target_label", Value: "__meta_prometheus_job_name"},
+		{Key: "replacement", Value: jobName},
+	})
 	// Generate static_config section.
 	if m.Spec.Targets.StaticConfig != nil {
 		staticConfig := yaml.MapSlice{
@@ -874,10 +886,11 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	shards int32,
 ) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
+	jobName := fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+			Value: jobName,
 		},
 		{
 			Key:   "honor_labels",
@@ -1057,6 +1070,12 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 			{Key: "replacement", Value: "${1}"},
 		})
 	}
+
+	// Relabel job_name into a meta label
+	relabelings = append(relabelings, yaml.MapSlice{
+		{Key: "target_label", Value: "__meta_prometheus_job_name"},
+		{Key: "replacement", Value: jobName},
+	})
 
 	// By default, generate a safe job name from the service name.  We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
