@@ -170,14 +170,14 @@ func init() {
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
 	flagset.StringVar(&cfg.ReloaderConfig.Image, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
-	// TODO(JJJJJones): remove the '--config-reloader-cpu' flag before releasing v0.49.
+	// TODO(JJJJJones): remove the '--config-reloader-cpu' flag before releasing v0.48.
 	var rcCPU string
-	flagset.StringVar(&rcCPU, "config-reloader-cpu", "100m", "Config Reloader CPU request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.49.0.")
+	flagset.StringVar(&rcCPU, "config-reloader-cpu", "100m", "Config Reloader CPU request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.48.0.")
 	flagset.StringVar(&cfg.ReloaderConfig.CPURequest, "config-reloader-cpu-request", "", "Config Reloader CPU request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-cpu` value for the CPU request")
 	flagset.StringVar(&cfg.ReloaderConfig.CPULimit, "confiig-reloader-cpu-limit", "", "Config Reloader CPU limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-cpu` for the CPU limit")
-	// TODO(JJJJJones): remove the '--config-reloader-memory' flag before releasing v0.49.
+	// TODO(JJJJJones): remove the '--config-reloader-memory' flag before releasing v0.48.
 	var rcMemory string
-	flagset.StringVar(&rcMemory, "config-reloader-memory", "50Mi", "Config Reloader Memory request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.49.0.")
+	flagset.StringVar(&rcMemory, "config-reloader-memory", "50Mi", "Config Reloader Memory request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.48.0.")
 	flagset.StringVar(&cfg.ReloaderConfig.MemoryRequest, "config-reloader-memory-request", "", "Config Reloader Memory request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-memory` for the memory request")
 	flagset.StringVar(&cfg.ReloaderConfig.MemoryLimit, "config-reloader-memory-limit", "", "Config Reloader Memory limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-memory` for the memory limit")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
