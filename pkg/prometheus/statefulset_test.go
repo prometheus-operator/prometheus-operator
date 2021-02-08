@@ -34,9 +34,11 @@ import (
 var (
 	defaultTestConfig = &operator.Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			CPU:    "100m",
-			Memory: "25Mi",
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "25Mi",
+			MemoryLimit:   "25Mi",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 		},
 		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "quay.io/thanos/thanos",
@@ -600,9 +602,11 @@ func TestTagAndShaAndVersion(t *testing.T) {
 func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 	prometheusBaseImageConfig := &operator.Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			CPU:    "100m",
-			Memory: "25Mi",
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "25Mi",
+			MemoryLimit:   "25Mi",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 		},
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
@@ -633,9 +637,11 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 func TestThanosDefaultBaseImageFlag(t *testing.T) {
 	thanosBaseImageConfig := &operator.Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			CPU:    "100m",
-			Memory: "25Mi",
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "25Mi",
+			MemoryLimit:   "25Mi",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 		},
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
@@ -1131,9 +1137,11 @@ func TestRetention(t *testing.T) {
 func TestSidecarsNoCPULimits(t *testing.T) {
 	testConfig := &operator.Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			CPU:    "0",
-			Memory: "50Mi",
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "0",
+			CPULimit:      "0",
+			MemoryRequest: "50Mi",
+			MemoryLimit:   "50Mi",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 		},
 		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "quay.io/thanos/thanos:v0.7.0",
@@ -1163,9 +1171,11 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 func TestReplicasConfigurationWithSharding(t *testing.T) {
 	testConfig := &operator.Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			CPU:    "0",
-			Memory: "50Mi",
-			Image:  "quay.io/coreos/prometheus-config-reloader:latest",
+			CPURequest:    "0",
+			CPULimit:      "0",
+			MemoryRequest: "50Mi",
+			MemoryLimit:   "50Mi",
+			Image:         "quay.io/coreos/prometheus-config-reloader:latest",
 		},
 		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "quay.io/thanos/thanos:v0.7.0",
@@ -1204,9 +1214,11 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 func TestSidecarsNoMemoryLimits(t *testing.T) {
 	testConfig := &operator.Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			CPU:    "100m",
-			Memory: "0",
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "50Mi",
+			MemoryLimit:   "0",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 		},
 		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "quay.io/thanos/thanos:v0.7.0",

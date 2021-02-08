@@ -34,9 +34,11 @@ import (
 var (
 	defaultTestConfig = Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-			CPU:    "100m",
-			Memory: "25Mi",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "25Mi",
+			MemoryLimit:   "25Mi",
 		},
 		ThanosDefaultBaseImage: "quay.io/thanos/thanos",
 	}
@@ -111,9 +113,11 @@ func TestPodLabelsAnnotations(t *testing.T) {
 func TestThanosDefaultBaseImageFlag(t *testing.T) {
 	thanosBaseImageConfig := Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-			CPU:    "100m",
-			Memory: "25Mi",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "25Mi",
+			MemoryLimit:   "25Mi",
 		},
 		ThanosDefaultBaseImage: "nondefaultuseflag/quay.io/thanos/thanos",
 	}

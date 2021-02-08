@@ -33,9 +33,11 @@ import (
 var (
 	defaultTestConfig = Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-			CPU:    "100m",
-			Memory: "25Mi",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "25Mi",
+			MemoryLimit:   "25Mi",
 		},
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
@@ -450,9 +452,11 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
 	alertManagerBaseImageConfig := Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-			CPU:    "100m",
-			Memory: "25Mi",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "25Mi",
+			MemoryLimit:   "25Mi",
 		},
 		AlertmanagerDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/alertmanager",
 	}
@@ -607,9 +611,11 @@ func TestAdditionalConfigMap(t *testing.T) {
 func TestSidecarsNoCPULimits(t *testing.T) {
 	testConfig := Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-			CPU:    "0",
-			Memory: "25Mi",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "0",
+			CPULimit:      "0",
+			MemoryRequest: "25Mi",
+			MemoryLimit:   "25Mi",
 		},
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
@@ -638,9 +644,11 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 func TestSidecarsNoMemoryLimits(t *testing.T) {
 	testConfig := Config{
 		ReloaderConfig: operator.ReloaderConfig{
-			Image:  "quay.io/prometheus-operator/prometheus-config-reloader:latest",
-			CPU:    "100m",
-			Memory: "0",
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "0",
+			MemoryLimit:   "0",
 		},
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
