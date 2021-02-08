@@ -76,26 +76,6 @@ func CreateConfigReloader(
 		Requests: v1.ResourceList{},
 	}
 
-	// Prioritize specific flags over generic ones
-	// If config.CPU has been set but not config.CPURequest/config.CPULimit, default "" to config.CPU
-	// If config.Memory has been set but not config.MemoryRequest or config.MemoryLimit, default "" to config.Memory
-	if config.CPU != "" {
-		if config.CPURequest == "" {
-			config.CPURequest = config.CPU
-		}
-		if config.CPULimit == "" {
-			config.CPULimit = config.CPU
-		}
-	}
-	if config.Memory != "" {
-		if config.MemoryRequest == "" {
-			config.MemoryRequest = config.Memory
-		}
-		if config.MemoryLimit == "" {
-			config.MemoryLimit = config.Memory
-		}
-	}
-
 	if config.CPURequest != "0" {
 		resources.Requests[v1.ResourceCPU] = resource.MustParse(config.CPURequest)
 	}

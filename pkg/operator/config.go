@@ -45,10 +45,8 @@ type Config struct {
 }
 
 type ReloaderConfig struct {
-	CPU           string
 	CPURequest    string
 	CPULimit      string
-	Memory        string
 	MemoryRequest string
 	MemoryLimit   string
 	Image         string
