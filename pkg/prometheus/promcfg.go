@@ -593,7 +593,7 @@ func (cg *configGenerator) generatePodMonitorConfig(
 
 	// Relabel job_name into a meta label
 	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "target_label", Value: "__meta_prometheus_job_name"},
+		{Key: "target_label", Value: "__tmp_prometheus_job_name"},
 		{Key: "replacement", Value: jobName},
 	})
 
@@ -717,7 +717,7 @@ func (cg *configGenerator) generateProbeConfig(
 	}
 	// Relabel job_name into a meta label
 	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "target_label", Value: "__meta_prometheus_job_name"},
+		{Key: "target_label", Value: "__tmp_prometheus_job_name"},
 		{Key: "replacement", Value: jobName},
 	})
 	// Generate static_config section.
@@ -1073,7 +1073,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 
 	// Relabel job_name into a meta label
 	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "target_label", Value: "__meta_prometheus_job_name"},
+		{Key: "target_label", Value: "__tmp_prometheus_job_name"},
 		{Key: "replacement", Value: jobName},
 	})
 
