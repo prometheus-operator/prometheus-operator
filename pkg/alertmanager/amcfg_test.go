@@ -61,6 +61,27 @@ templates: []
 `,
 		},
 		{
+			name:    "skeleton base with global smtp_require_tls, no CRs",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPRequireTLS: false,
+				},
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `global:
+  resolve_timeout: 0s
+  smtp_require_tls: false
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+		{
 			name:    "base with sub route, no CRs",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
