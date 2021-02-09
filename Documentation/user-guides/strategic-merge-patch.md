@@ -5,12 +5,12 @@ This document describes how to overwrite the container configuration generated b
 
 ## How the "strategic merge patch" works
 	
-Operator support `containers` field in `PrometheusSpec` and `AlertmanagerSpec` configuration.
+The operator supports `containers` field in `PrometheusSpec`, `AlertmanagerSpec` and `ThanosRulerSpec` configuration.
 This field allows injecting additional containers, and the existing configuration can be overwritten by sharing the same container name.
 
-### Merge patch Prometheus example
+### Merge patch example of Prometheus
 
-The following is an example on how to overwrite Prometheus container `readinessProbe`  `FailureThreshold` configuration.
+The following manifest overwrites the `failureThreshold` value of the readiness probe for the Prometheus container.
 
 ```
 apiVersion: monitoring.coreos.com/v1
@@ -23,13 +23,13 @@ metadata:
 spec:
   containers:
   - name: prometheus
-    readinessProbe
+    readinessProbe:
       failureThreshold: 500
 ```
 
-### Merge patch alertmanager example
+### Merge patch example for Alertmanager
 
-Overwrite alertmanager container readinessProbe  `FailureThreshold` configuration.
+The following manifest overwrites the `failureThreshold` values of the readiness and liveness probes for the Alertmanager container.
 
 ```
 apiVersion: monitoring.coreos.com/v1
@@ -44,6 +44,6 @@ spec:
   - name: alertmanager
     livenessProbe:
       failureThreshold: 5
-    readinessProbe
+    readinessProbe:
       failureThreshold: 5
 ```
