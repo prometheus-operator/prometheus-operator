@@ -36,8 +36,8 @@ var (
 			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 			CPURequest:    "100m",
 			CPULimit:      "100m",
-			MemoryRequest: "25Mi",
-			MemoryLimit:   "25Mi",
+			MemoryRequest: "50Mi",
+			MemoryLimit:   "50Mi",
 		},
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
@@ -455,8 +455,8 @@ func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
 			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 			CPURequest:    "100m",
 			CPULimit:      "100m",
-			MemoryRequest: "25Mi",
-			MemoryLimit:   "25Mi",
+			MemoryRequest: "50Mi",
+			MemoryLimit:   "50Mi",
 		},
 		AlertmanagerDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/alertmanager",
 	}
@@ -608,14 +608,43 @@ func TestAdditionalConfigMap(t *testing.T) {
 	}
 }
 
-func TestSidecarsNoCPULimits(t *testing.T) {
+func TestSidecarsNoResources(t *testing.T) {
 	testConfig := Config{
 		ReloaderConfig: operator.ReloaderConfig{
 			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 			CPURequest:    "0",
 			CPULimit:      "0",
-			MemoryRequest: "25Mi",
-			MemoryLimit:   "25Mi",
+			MemoryRequest: "0",
+			MemoryLimit:   "0",
+		},
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits:   v1.ResourceList{},
+		Requests: v1.ResourceList{},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
+		}
+	}
+}
+
+func TestSidecarsNoRequests(t *testing.T) {
+	testConfig := Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "0",
+			CPULimit:      "100m",
+			MemoryRequest: "0",
+			MemoryLimit:   "50Mi",
 		},
 		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
 	}
@@ -628,10 +657,41 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 
 	expectedResources := v1.ResourceRequirements{
 		Limits: v1.ResourceList{
-			v1.ResourceMemory: resource.MustParse("25Mi"),
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("50Mi"),
 		},
+		Requests: v1.ResourceList{},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
+		}
+	}
+}
+
+func TestSidecarsNoLimits(t *testing.T) {
+	testConfig := Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "0",
+			MemoryRequest: "50Mi",
+			MemoryLimit:   "0",
+		},
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{},
 		Requests: v1.ResourceList{
-			v1.ResourceMemory: resource.MustParse("25Mi"),
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("50Mi"),
 		},
 	}
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -641,7 +701,108 @@ func TestSidecarsNoCPULimits(t *testing.T) {
 	}
 }
 
-func TestSidecarsNoMemoryLimits(t *testing.T) {
+func TestSidecarsNoCPUResources(t *testing.T) {
+	testConfig := Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "0",
+			CPULimit:      "0",
+			MemoryRequest: "50Mi",
+			MemoryLimit:   "50Mi",
+		},
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
+		}
+	}
+}
+
+func TestSidecarsNoCPURequests(t *testing.T) {
+	testConfig := Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "0",
+			CPULimit:      "100m",
+			MemoryRequest: "50Mi",
+			MemoryLimit:   "50Mi",
+		},
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
+		}
+	}
+}
+
+func TestSidecarsNoCPULimits(t *testing.T) {
+	testConfig := Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "0",
+			MemoryRequest: "50Mi",
+			MemoryLimit:   "50Mi",
+		},
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
+		}
+	}
+}
+
+func TestSidecarsNoMemoryResources(t *testing.T) {
 	testConfig := Config{
 		ReloaderConfig: operator.ReloaderConfig{
 			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
@@ -665,6 +826,74 @@ func TestSidecarsNoMemoryLimits(t *testing.T) {
 		},
 		Requests: v1.ResourceList{
 			v1.ResourceCPU: resource.MustParse("100m"),
+		},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
+		}
+	}
+}
+
+func TestSidecarsNoMemoryRequests(t *testing.T) {
+	testConfig := Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "0",
+			MemoryLimit:   "50Mi",
+		},
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("50Mi"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU: resource.MustParse("100m"),
+		},
+	}
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" && !reflect.DeepEqual(c.Resources, expectedResources) {
+			t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", expectedResources.String(), c.Resources.String())
+		}
+	}
+}
+
+func TestSidecarsNoMemoryLimits(t *testing.T) {
+	testConfig := Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			Image:         "quay.io/prometheus-operator/prometheus-config-reloader:latest",
+			CPURequest:    "100m",
+			CPULimit:      "100m",
+			MemoryRequest: "50Mi",
+			MemoryLimit:   "0",
+		},
+		AlertmanagerDefaultBaseImage: "quay.io/prometheus/alertmanager",
+	}
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, nil, testConfig)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedResources := v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU: resource.MustParse("100m"),
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("50Mi"),
 		},
 	}
 	for _, c := range sset.Spec.Template.Spec.Containers {
