@@ -981,6 +981,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.ShardingLabels != nil {
+		in, out := &in.ShardingLabels, &out.ShardingLabels
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.ReplicaExternalLabelName != nil {
 		in, out := &in.ReplicaExternalLabelName, &out.ReplicaExternalLabelName
 		*out = new(string)

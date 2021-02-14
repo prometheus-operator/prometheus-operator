@@ -141,9 +141,11 @@ type PrometheusSpec struct {
 	// it must be manually moved. Increasing shards will not reshard data
 	// either but it will continue to be available from the same instances. To
 	// query globally use Thanos sidecar and Thanos querier or remote write
-	// data to a central location. Sharding is done on the content of the
-	// `__address__` target meta-label.
+	// data to a central location.
 	Shards *int32 `json:"shards,omitempty"`
+	// EXPERIMENTAL: The labels to use as the sharding key(s). By default sharding
+	// is done on the content of the `__address__` target meta-label.
+	ShardingLabels []string `json:"shardingLabels,omitempty"`
 	// Name of Prometheus external label used to denote replica name.
 	// Defaults to the value of `prometheus_replica`. External label will
 	// _not_ be added when value is set to empty string (`""`).

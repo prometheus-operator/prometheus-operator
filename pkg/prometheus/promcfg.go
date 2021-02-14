@@ -251,6 +251,10 @@ func (cg *configGenerator) generateConfig(
 	if p.Spec.Shards != nil && *p.Spec.Shards > 1 {
 		shards = *p.Spec.Shards
 	}
+	shardingLabels := []string{"__address__"}
+	if p.Spec.ShardingLabels != nil && len(p.Spec.ShardingLabels) > 0 {
+		shardingLabels = p.Spec.ShardingLabels
+	}
 
 	var scrapeConfigs []yaml.MapSlice
 	for _, identifier := range sMonIdentifiers {
@@ -270,6 +274,7 @@ func (cg *configGenerator) generateConfig(
 					p.Spec.EnforcedSampleLimit,
 					p.Spec.EnforcedTargetLimit,
 					shards,
+					shardingLabels,
 				),
 			)
 		}
@@ -290,6 +295,7 @@ func (cg *configGenerator) generateConfig(
 					p.Spec.EnforcedSampleLimit,
 					p.Spec.EnforcedTargetLimit,
 					shards,
+					shardingLabels,
 				),
 			)
 		}
@@ -421,7 +427,8 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	version semver.Version,
 	m *v1.PodMonitor,
 	ep v1.PodMetricsEndpoint,
-	i int, apiserverConfig *v1.APIServerConfig,
+	i int,
+	apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]assets.BasicAuthCredentials,
 	bearerTokens map[string]assets.BearerToken,
 	ignoreHonorLabels bool,
@@ -431,6 +438,7 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	enforcedSampleLimit *uint64,
 	enforcedTargetLimit *uint64,
 	shards int32,
+	shardingLabels []string,
 ) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
 	cfg := yaml.MapSlice{
@@ -630,7 +638,7 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
 	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+	relabelings = generateAddressShardingRelabelingRules(relabelings, shards, shardingLabels)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
@@ -865,6 +873,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	enforcedSampleLimit *uint64,
 	enforcedTargetLimit *uint64,
 	shards int32,
+	shardingLabels []string,
 ) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
 	cfg := yaml.MapSlice{
@@ -1092,7 +1101,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	// relabel_configs as the last relabeling, to ensure it overrides any other relabelings.
 	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+	relabelings = generateAddressShardingRelabelingRules(relabelings, shards, shardingLabels)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.SampleLimit > 0 || enforcedSampleLimit != nil {
@@ -1130,9 +1139,13 @@ func getLimit(user uint64, enforced *uint64) uint64 {
 	return user
 }
 
-func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+func generateAddressShardingRelabelingRules(
+	relabelings []yaml.MapSlice,
+	shards int32,
+	shardingLabels []string,
+) []yaml.MapSlice {
 	return append(relabelings, yaml.MapSlice{
-		{Key: "source_labels", Value: []string{"__address__"}},
+		{Key: "source_labels", Value: shardingLabels},
 		{Key: "target_label", Value: "__tmp_hash"},
 		{Key: "modulus", Value: shards},
 		{Key: "action", Value: "hashmod"},

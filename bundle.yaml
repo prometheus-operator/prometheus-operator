@@ -8688,8 +8688,13 @@ spec:
               sha:
                 description: 'SHA of Prometheus container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. Deprecated: use ''image'' instead.  The image digest can be specified as part of the image URL.'
                 type: string
+              shardingLabels:
+                description: 'EXPERIMENTAL: The labels to use as the sharding key(s). By default sharding is done on the content of the `__address__` target meta-label.'
+                items:
+                  type: string
+                type: array
               shards:
-                description: 'EXPERIMENTAL: Number of shards to distribute targets onto. Number of replicas multiplied by shards is the total number of Pods created. Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances. To query globally use Thanos sidecar and Thanos querier or remote write data to a central location. Sharding is done on the content of the `__address__` target meta-label.'
+                description: 'EXPERIMENTAL: Number of shards to distribute targets onto. Number of replicas multiplied by shards is the total number of Pods created. Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances. To query globally use Thanos sidecar and Thanos querier or remote write data to a central location.'
                 format: int32
                 type: integer
               storage:
