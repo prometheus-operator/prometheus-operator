@@ -10,6 +10,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: AlertmanagerConfig
     listKind: AlertmanagerConfigList
     plural: alertmanagerconfigs
@@ -1877,6 +1879,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: Alertmanager
     listKind: AlertmanagerList
     plural: alertmanagers
@@ -5093,6 +5097,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: PodMonitor
     listKind: PodMonitorList
     plural: podmonitors
@@ -5449,6 +5455,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: Probe
     listKind: ProbeList
     plural: probes
@@ -5649,6 +5657,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: Prometheus
     listKind: PrometheusList
     plural: prometheuses
@@ -10164,6 +10174,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: ServiceMonitor
     listKind: ServiceMonitorList
     plural: servicemonitors
@@ -10537,6 +10549,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: ThanosRuler
     listKind: ThanosRulerList
     plural: thanosrulers

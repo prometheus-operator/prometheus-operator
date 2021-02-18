@@ -29,6 +29,7 @@ const (
 // ThanosRuler defines a ThanosRuler deployment.
 // +genclient
 // +k8s:openapi-gen=true
+// +kubebuilder:resource:categories="prometheus-operator"
 type ThanosRuler struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
