@@ -252,6 +252,14 @@ func Main() int {
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
+	// logger setup happens after flag parsing!
+	if cfg.ReloaderConfig.CPULimit != "100m" {
+		level.Warn(logger).Log("The --config-reloader-cpu flag has been deprecated! Please use --config-reloader-cpu-limit and --config-reloader-cpu-request according to your use-case.")
+	}
+	if cfg.ReloaderConfig.MemoryLimit != "50Mi" {
+		level.Warn(logger).Log("The --config-reloader-memory flag has been deprecated! Please use --config-reloader-memory-limit and --config-reloader-memory-request according to your use-case.")
+	}
+
 	// Above level 6, the k8s client would log bearer tokens in clear-text.
 	klog.ClampLevel(6)
 	klog.SetLogger(log.With(logger, "component", "k8s_client_runtime"))
