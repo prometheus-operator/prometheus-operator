@@ -857,6 +857,10 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
+					Headers: []monitoringv1alpha1.KeyValue{
+						{Key: "Subject", Value: "subject"},
+						{Key: "Comment", Value: "comment"},
+					},
 				}},
 				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
 					APIKey: &v1.SecretKeySelector{
@@ -1096,6 +1100,9 @@ receivers:
     to: test@example.com
     auth_password: 1234abc
     auth_secret: 1234abc
+    headers:
+      Comment: comment
+      Subject: subject
   pushover_configs:
   - user_key: 1234abc
     token: 1234abc
