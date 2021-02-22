@@ -86,7 +86,7 @@ type PrometheusList struct {
 type PrometheusSpec struct {
 	// PodMetadata configures Labels and Annotations which are propagated to the prometheus pods.
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
-	// ServiceMonitors to be selected for target discovery. *Deprecated:* if
+	// ServiceMonitors to be selected for target discovery. *Warning:* if
 	// neither this nor podMonitorSelector are specified, configuration is
 	// unmanaged.
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
@@ -94,7 +94,7 @@ type PrometheusSpec struct {
 	// check own namespace.
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 	// *Experimental* PodMonitors to be selected for target discovery.
-	// *Deprecated:* if neither this nor serviceMonitorSelector are specified,
+	// *Warning:* if neither this nor serviceMonitorSelector are specified,
 	// configuration is unmanaged.
 	PodMonitorSelector *metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
 	// Namespace's labels to match for PodMonitor discovery. If nil, only
