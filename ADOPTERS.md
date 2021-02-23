@@ -52,6 +52,19 @@ Details (optional):
 - HA Pair of Prometheus
 - 108161 samples/s
 - 2.3M active series
+## Giant Swarm
+
+https://www.giantswarm.io/
+
+Environments: AWS, Azure, Bare Metal
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes (with additional tight Giant Swarm integrations)
+
+Details:
+- One prometheus operator per management cluster and one prometheus instance per workload cluster
+- Customers can also install kube-prometheus for their workload using our App Platform
+- 760000 samples/s
+- 35M active series
 
 ## <Insert Company/Organization Name>
 
