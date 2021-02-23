@@ -40,15 +40,15 @@ Details (optional):
 - 25000 samples/s
 - 1.2M active series
 
-## <Insert Company/Organization Name>
+## Veepee
 
-https://our-link.com/
+https://www.veepee.com
 
-Environments: AWS, Azure, Google Cloud, Bare Metal, etc
+Environments: Bare Metal
 
-Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes | No
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
 
 Details (optional):
 - HA Pair of Prometheus
-- 1000 samples/s (query: `rate(prometheus_tsdb_head_samples_appended_total[5m])`)
-- 10k active series (query: `prometheus_tsdb_head_series`)
+- 108161 samples/s
+- 2.3M active series
