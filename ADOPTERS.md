@@ -27,6 +27,19 @@ Details:
 - 4000 samples/s
 - 100k active series
 
+## Skyscanner
+
+https://skyscanner.net/
+
+Environment: AWS
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details (optional):
+- HA Pairs of Prometheus
+- 25000 samples/s
+- 1.2M active series
+
 ## <Insert Company/Organization Name>
 
 https://our-link.com/
