@@ -40,6 +40,18 @@ Details (optional):
 - 25000 samples/s
 - 1.2M active series
 
+## Veepee
+
+https://www.veepee.com
+
+Environments: Bare Metal
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details (optional):
+- HA Pair of Prometheus
+- 108161 samples/s
+- 2.3M active series
 ## Giant Swarm
 
 https://www.giantswarm.io/
