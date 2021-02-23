@@ -6,7 +6,7 @@ This document tracks people and use cases for the Prometheus Operator in product
 
 https://www.openshift.com/
 
-Environments: AWS, Azure, Google Cloud, Bare Metal, etc
+Environments: AWS, Azure, Google Cloud, Bare Metal
 
 Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes (with additional tight OpenShift integrations)
 
@@ -26,3 +26,16 @@ Details:
 - HA Pair of Prometheus
 - 4000 samples/s
 - 100k active series
+
+## <Insert Company/Organization Name>
+
+https://our-link.com/
+
+Environments: AWS, Azure, Google Cloud, Bare Metal, etc
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes | No
+
+Details (optional):
+- HA Pair of Prometheus
+- 1000 samples/s (query: `rate(prometheus_tsdb_head_samples_appended_total[5m])`)
+- 10k active series (query: `prometheus_tsdb_head_series`)
