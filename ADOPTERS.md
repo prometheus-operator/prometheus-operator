@@ -52,3 +52,16 @@ Details (optional):
 - HA Pair of Prometheus
 - 108161 samples/s
 - 2.3M active series
+
+## <Insert Company/Organization Name>
+
+https://our-link.com/
+
+Environments: AWS, Azure, Google Cloud, Bare Metal, etc
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes | No
+
+Details (optional):
+- HA Pair of Prometheus
+- 1000 samples/s (query: `rate(prometheus_tsdb_head_samples_appended_total[5m])`)
+- 10k active series (query: `prometheus_tsdb_head_series`)
