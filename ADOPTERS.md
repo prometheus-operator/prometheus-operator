@@ -66,6 +66,19 @@ Details:
 - 760000 samples/s
 - 35M active series
 
+## Lunar
+
+https://lunar.app/
+
+Environments: AWS
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- One prometheus operator in our platform cluster and one prometheus instance per workload cluster
+- 17k samples/s
+- 841k active series
+
 ## <Insert Company/Organization Name>
 
 https://our-link.com/
