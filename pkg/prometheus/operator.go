@@ -400,6 +400,15 @@ func (c *Operator) addHandlers() {
 		DeleteFunc: c.handleStatefulSetDelete,
 		UpdateFunc: c.handleStatefulSetUpdate,
 	})
+
+	// The controller needs to watch the namespaces in which the service/pod
+	// monitors and rules live because a label change on a namespace may
+	// trigger a configuration change.
+	// It doesn't need to watch on addition/deletion though because it's
+	// already covered by the event handlers on service/pod monitors and rules.
+	c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: c.handleMonitorNamespaceUpdate,
+	})
 }
 
 // Run the controller.
@@ -1136,6 +1145,58 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 		c.metrics.TriggerByCounter("StatefulSet", "update").Inc()
 
 		c.enqueue(ps)
+	}
+}
+
+func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
+	old := oldo.(*v1.Namespace)
+	cur := curo.(*v1.Namespace)
+
+	level.Debug(c.logger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+
+	// Periodic resync may resend the Namespace without changes
+	// in-between.
+	if old.ResourceVersion == cur.ResourceVersion {
+		return
+	}
+
+	level.Debug(c.logger).Log("msg", "Monitor namespace updated", "namespace", cur.GetName())
+	c.metrics.TriggerByCounter("Namespace", "update").Inc()
+
+	// Check for Prometheus instances selecting ServiceMonitors, PodMonitors,
+	// Probes and PrometheusRules in the namespace.
+	err := c.promInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		p := obj.(*monitoringv1.Prometheus)
+
+		for name, selector := range map[string]*metav1.LabelSelector{
+			"PodMonitors":     p.Spec.PodMonitorNamespaceSelector,
+			"Probes":          p.Spec.ProbeNamespaceSelector,
+			"PrometheusRules": p.Spec.RuleNamespaceSelector,
+			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
+		} {
+
+			sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
+			if err != nil {
+				level.Error(c.logger).Log(
+					"err", err,
+					"name", p.Name,
+					"namespace", p.Namespace,
+					"subresource", name,
+				)
+				return
+			}
+
+			if sync {
+				c.enqueue(p)
+				return
+			}
+		}
+	})
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "listing all Prometheus instances from cache failed",
+			"err", err,
+		)
 	}
 }
 

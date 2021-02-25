@@ -308,6 +308,15 @@ func (c *Operator) addHandlers() {
 		DeleteFunc: c.handleStatefulSetDelete,
 		UpdateFunc: c.handleStatefulSetUpdate,
 	})
+
+	// The controller needs to watch the namespaces in which the
+	// alertmanagerconfigs live because a label change on a namespace may
+	// trigger a configuration change.
+	// It doesn't need to watch on addition/deletion though because it's
+	// already covered by the event handlers on alertmanagerconfigs.
+	c.nsAlrtCfgInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: c.handleNamespaceUpdate,
+	})
 }
 
 func (c *Operator) handleAlertmanagerConfigAdd(obj interface{}) {
@@ -646,6 +655,47 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 	// Wake up Alertmanager resource the deployment belongs to.
 	if a := c.alertmanagerForStatefulSet(cur); a != nil {
 		c.enqueue(a)
+	}
+}
+
+func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
+	old := oldo.(*v1.Namespace)
+	cur := curo.(*v1.Namespace)
+
+	level.Debug(c.logger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+
+	// Periodic resync may resend the Namespace without changes
+	// in-between.
+	if old.ResourceVersion == cur.ResourceVersion {
+		return
+	}
+
+	level.Debug(c.logger).Log("msg", "Namespace updated", "namespace", cur.GetName())
+	c.metrics.TriggerByCounter("Namespace", "update").Inc()
+
+	// Check for Alertmanager instances selecting AlertmanagerConfigs in the namespace.
+	err := c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		a := obj.(*monitoringv1.Alertmanager)
+
+		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, a.Spec.AlertmanagerConfigNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"err", err,
+				"name", a.Name,
+				"namespace", a.Namespace,
+			)
+			return
+		}
+
+		if sync {
+			c.enqueue(a)
+		}
+	})
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "listing all Alertmanager instances from cache failed",
+			"err", err,
+		)
 	}
 }
 
