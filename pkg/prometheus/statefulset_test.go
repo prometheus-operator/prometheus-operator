@@ -1373,6 +1373,53 @@ func TestTerminationPolicy(t *testing.T) {
 	}
 }
 
+func TestEnableFeaturesWithOneFeature(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			EnableFeatures: []string{"exemplar-storage"},
+		},
+	}, defaultTestConfig, nil, "", 0)
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		t.Log(flag)
+		if flag == "--enable-feature=exemplar-storage" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus enabled feature is not correctly set.")
+	}
+}
+
+func TestEnableFeaturesWithMultipleFeature(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			EnableFeatures: []string{"exemplar-storage1", "exemplar-storage2"},
+		},
+	}, defaultTestConfig, nil, "", 0)
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+		if flag == "--enable-feature=exemplar-storage1,exemplar-storage2" {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Fatal("Prometheus enabled features are not correctly set.")
+	}
+}
+
 func TestWebPageTitle(t *testing.T) {
 	var pageTitle string = "my-page-title"
 	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
