@@ -52,6 +52,7 @@ Details (optional):
 - HA Pair of Prometheus
 - 108161 samples/s
 - 2.3M active series
+
 ## Giant Swarm
 
 https://www.giantswarm.io/
@@ -77,6 +78,19 @@ Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): 
 Details (optional):
 - A huge fleet of OpenShift and Kubernetes clusters, each using Prometheus Operator
 - All managed by [Project Syn](https://syn.tools/), leveraging Commodore Components like [component-rancher-monitoring](https://github.com/projectsyn/component-rancher-monitoring) which re-uses Prometheus Operator
+
+## Lunar
+
+https://lunar.app/
+
+Environments: AWS
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- One prometheus operator in our platform cluster and one prometheus instance per workload cluster
+- 17k samples/s
+- 841k active series
 
 ## <Insert Company/Organization Name>
 
