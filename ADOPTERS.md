@@ -52,6 +52,7 @@ Details (optional):
 - HA Pair of Prometheus
 - 108161 samples/s
 - 2.3M active series
+
 ## Giant Swarm
 
 https://www.giantswarm.io/
@@ -65,6 +66,18 @@ Details:
 - Customers can also install kube-prometheus for their workload using our App Platform
 - 760000 samples/s
 - 35M active series
+
+## VSHN AG
+
+https://www.vshn.ch/
+
+Environments: AWS, Azure, Google Cloud, cloudscale.ch, Exoscale, Swisscom
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details (optional):
+- A huge fleet of OpenShift and Kubernetes clusters, each using Prometheus Operator
+- All managed by [Project Syn](https://syn.tools/), leveraging Commodore Components like [component-rancher-monitoring](https://github.com/projectsyn/component-rancher-monitoring) which re-uses Prometheus Operator
 
 ## Lunar
 
