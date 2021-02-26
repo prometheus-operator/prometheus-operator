@@ -406,7 +406,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		promArgs = append(promArgs, "-web.enable-admin-api")
 	}
 
-	if p.Spec.EnableFeatures != nil && len(p.Spec.EnableFeatures) > 0 {
+	if len(p.Spec.EnableFeatures) > 0 {
 		promArgs = append(promArgs, "-enable-feature="+strings.Join(p.Spec.EnableFeatures[:], ","))
 	}
 
