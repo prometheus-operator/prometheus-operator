@@ -1386,7 +1386,6 @@ func TestEnableFeaturesWithOneFeature(t *testing.T) {
 
 	found := false
 	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
-		t.Log(flag)
 		if flag == "--enable-feature=exemplar-storage" {
 			found = true
 		}
