@@ -167,11 +167,11 @@ type PrometheusSpec struct {
 	LogLevel string `json:"logLevel,omitempty"`
 	// Log format for Prometheus to be configured with.
 	LogFormat string `json:"logFormat,omitempty"`
-	// Interval between consecutive scrapes.
+	// Interval between consecutive scrapes. Default: `1m`
 	ScrapeInterval string `json:"scrapeInterval,omitempty"`
 	// Number of seconds to wait for target to respond before erroring.
 	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
-	// Interval between consecutive evaluations.
+	// Interval between consecutive evaluations. Default: `1m`
 	EvaluationInterval string `json:"evaluationInterval,omitempty"`
 	// /--rules.*/ command-line arguments.
 	Rules Rules `json:"rules,omitempty"`
@@ -341,9 +341,15 @@ type PrometheusSpec struct {
 	// the podmonitor and servicemonitor configs, and they will only discover endpoints
 	// within their current namespace.  Defaults to false.
 	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
-	// EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert
-	// and metric that is user created. The label value will always be the namespace of the object that is
-	// being created.
+	// EnforcedNamespaceLabel If set, a label will be added to
+	//
+	// 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `ProbeConfig` object) and
+	// 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to
+	//    * alerting & recording rules and
+	//    * the metrics used in their expressions (`expr`).
+	//
+	// Label name is this field's value.
+	// Label value is the namespace of the created object (mentioned above).
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
 	// PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing
 	// of adding namespace labels. Works only if enforcedNamespaceLabel set to true.
@@ -725,17 +731,21 @@ type ServiceMonitor struct {
 // ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 // +k8s:openapi-gen=true
 type ServiceMonitorSpec struct {
-	// The label to use to retrieve the job name from.
+	// Chooses the label of the Kubernetes `Endpoints`.
+	// Its value will be used for the `job`-label's value of the created metrics.
+	//
+	// Default & fallback value: the name of the respective Kubernetes `Endpoint`.
 	JobLabel string `json:"jobLabel,omitempty"`
-	// TargetLabels transfers labels on the Kubernetes Service onto the target.
+	// TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics.
+	// All labels set in `selector.matchLabels` are automatically transferred.
 	TargetLabels []string `json:"targetLabels,omitempty"`
-	// PodTargetLabels transfers labels on the Kubernetes Pod onto the target.
+	// PodTargetLabels transfers labels on the Kubernetes `Pod` onto the created metrics.
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 	// A list of endpoints allowed as part of this ServiceMonitor.
 	Endpoints []Endpoint `json:"endpoints"`
 	// Selector to select Endpoints objects.
 	Selector metav1.LabelSelector `json:"selector"`
-	// Selector to select which namespaces the Endpoints objects are discovered from.
+	// Selector to select which namespaces the Kubernetes Endpoints objects are discovered from.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
 	SampleLimit uint64 `json:"sampleLimit,omitempty"`
@@ -1155,7 +1165,8 @@ type RuleGroup struct {
 	PartialResponseStrategy string `json:"partial_response_strategy,omitempty"`
 }
 
-// Rule describes an alerting or recording rule.
+// Rule describes an alerting or recording rule
+// See Prometheus documentation: [alerting](https://www.prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) or [recording](https://www.prometheus.io/docs/prometheus/latest/configuration/recording_rules/#recording-rules) rule
 // +k8s:openapi-gen=true
 type Rule struct {
 	Record      string             `json:"record,omitempty"`
