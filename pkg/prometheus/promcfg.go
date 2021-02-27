@@ -433,11 +433,10 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	shards int32,
 ) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, ignoreHonorLabels)
-	jobName := fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: jobName,
+			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
 		},
 		{
 			Key:   "honor_labels",
@@ -491,10 +490,15 @@ func (cg *configGenerator) generatePodMonitorConfig(
 		}
 	}
 
-	var (
-		relabelings []yaml.MapSlice
-		labelKeys   []string
-	)
+	// Relabel prometheus job name into a meta label
+	relabelings := []yaml.MapSlice{
+		{
+			{Key: "source_labels", Value: []string{"job"}},
+			{Key: "target_label", Value: "__tmp_prometheus_job_name"},
+		},
+	}
+
+	var labelKeys []string
 	// Filter targets by pods selected by the monitor.
 	// Exact label matches.
 	for k := range m.Spec.Selector.MatchLabels {
@@ -590,12 +594,6 @@ func (cg *configGenerator) generatePodMonitorConfig(
 			{Key: "replacement", Value: "${1}"},
 		})
 	}
-
-	// Relabel job_name into a meta label
-	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "target_label", Value: "__tmp_prometheus_job_name"},
-		{Key: "replacement", Value: jobName},
-	})
 
 	// By default, generate a safe job name from the PodMonitor. We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
@@ -706,7 +704,14 @@ func (cg *configGenerator) generateProbeConfig(
 		{Key: "module", Value: []string{m.Spec.Module}},
 	}})
 
-	var relabelings []yaml.MapSlice
+	// Relabel prometheus job name into a meta label
+	relabelings := []yaml.MapSlice{
+		{
+			{Key: "source_labels", Value: []string{"job"}},
+			{Key: "target_label", Value: "__tmp_prometheus_job_name"},
+		},
+	}
+
 	if m.Spec.JobName != "" {
 		relabelings = append(relabelings, []yaml.MapSlice{
 			{
@@ -715,11 +720,6 @@ func (cg *configGenerator) generateProbeConfig(
 			},
 		}...)
 	}
-	// Relabel job_name into a meta label
-	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "target_label", Value: "__tmp_prometheus_job_name"},
-		{Key: "replacement", Value: jobName},
-	})
 	// Generate static_config section.
 	if m.Spec.Targets.StaticConfig != nil {
 		staticConfig := yaml.MapSlice{
@@ -886,11 +886,10 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	shards int32,
 ) yaml.MapSlice {
 	hl := honorLabels(ep.HonorLabels, overrideHonorLabels)
-	jobName := fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: jobName,
+			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
 		},
 		{
 			Key:   "honor_labels",
@@ -946,7 +945,13 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	var relabelings []yaml.MapSlice
+	// Relabel prometheus job name into a meta label
+	relabelings := []yaml.MapSlice{
+		{
+			{Key: "source_labels", Value: []string{"job"}},
+			{Key: "target_label", Value: "__tmp_prometheus_job_name"},
+		},
+	}
 
 	// Filter targets by services selected by the monitor.
 
@@ -1070,12 +1075,6 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 			{Key: "replacement", Value: "${1}"},
 		})
 	}
-
-	// Relabel job_name into a meta label
-	relabelings = append(relabelings, yaml.MapSlice{
-		{Key: "target_label", Value: "__tmp_prometheus_job_name"},
-		{Key: "replacement", Value: jobName},
-	})
 
 	// By default, generate a safe job name from the service name.  We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
