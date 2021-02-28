@@ -406,6 +406,23 @@ ProbeSpec contains specification parameters for a Probe.
 | targets | Targets defines a set of static and/or dynamically discovered targets to be probed using the prober. | [ProbeTargets](#probetargets) | false |
 | interval | Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used. | string | false |
 | scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. | string | false |
+| tlsConfig | TLS configuration to use when scraping the endpoint. | *[ProbeTLSConfig](#probetlsconfig) | false |
+| bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the pod monitor and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
+
+[Back to TOC](#table-of-contents)
+
+## ProbeTLSConfig
+
+ProbeTLSConfig specifies TLS configuration parameters.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| ca | Struct containing the CA cert to use for the targets. | SecretOrConfigMap | false |
+| cert | Struct containing the client cert file for the targets. | SecretOrConfigMap | false |
+| keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| serverName | Used to verify the hostname for the targets. | string | false |
+| insecureSkipVerify | Disable target certificate validation. | bool | false |
 
 [Back to TOC](#table-of-contents)
 
