@@ -876,7 +876,7 @@ type ProbeSpec struct {
 	// Timeout for scraping metrics from the Prometheus exporter.
 	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
-	TLSConfig *PodMetricsEndpointTLSConfig `json:"tlsConfig,omitempty"`
+	TLSConfig *ProbeTLSConfig `json:"tlsConfig,omitempty"`
 	// Secret to mount to read bearer token for scraping targets. The secret
 	// needs to be in the same namespace as the pod monitor and accessible by
 	// the Prometheus Operator.
@@ -1442,4 +1442,10 @@ func (f *PrometheusRule) DeepCopyObject() runtime.Object {
 // DeepCopyObject implements the runtime.Object interface.
 func (l *PrometheusRuleList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+// ProbeTLSConfig specifies TLS configuration parameters.
+// +k8s:openapi-gen=true
+type ProbeTLSConfig struct {
+	SafeTLSConfig `json:",inline"`
 }

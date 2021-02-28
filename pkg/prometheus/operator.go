@@ -1834,8 +1834,12 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 			)
 			continue
 		}
-		pnKey := fmt.Sprintf("probe/%s/%s/%d", probe.GetNamespace(), probe.GetName())
+		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
 		if err = store.AddBearerToken(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret, pnKey); err != nil {
+			break
+		}
+
+		if err = store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth, pnKey); err != nil {
 			break
 		}
 

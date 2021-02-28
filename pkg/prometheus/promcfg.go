@@ -854,14 +854,14 @@ func (cg *configGenerator) generateProbeConfig(
 	}
 
 	if m.Spec.BearerTokenSecret.Name != "" {
-		pnKey := fmt.Sprintf("probe/%s/%s/%d", m.GetNamespace(), m.GetName())
+		pnKey := fmt.Sprintf("probe/%s/%s", m.GetNamespace(), m.GetName())
 		if s, ok := bearerTokens[pnKey]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
 		}
 	}
 
 	if m.Spec.BasicAuth != nil {
-		if s, ok := basicAuthSecrets[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
+		if s, ok := basicAuthSecrets[fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)]; ok {
 			cfg = append(cfg, yaml.MapItem{
 				Key: "basic_auth", Value: yaml.MapSlice{
 					{Key: "username", Value: s.Username},
