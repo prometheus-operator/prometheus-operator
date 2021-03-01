@@ -17,8 +17,9 @@ package k8sutil
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 

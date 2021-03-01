@@ -1,3 +1,14 @@
+## 0.46.0 / 2021-02-24
+
+* [CHANGE] Drop support for Prometheus 1.x #2822
+* [FEATURE] Add relabelingConfigs to ProbeTargetStaticConfig #3817
+* [ENHANCEMENT] Add custom HTTP headers in remoteWrite-config #3851
+* [ENHANCEMENT] CRDs are now part of prometheus-operator group allowing `kubectl get prometheus-operator` operation #3843
+* [ENHANCEMENT] Support app.kubernetes.io/managed-by label to kubelet service and endpoint objects. #3834
+* [BUGFIX] Fix the loss of the `headers` key in AlertmanagerConfig. #3856
+* [BUGFIX] Preserve user-added labels and annotations on Service, Endpoint and StatefulSet resources managed by the operator. #3810
+* [BUGFIX] Do not require child routes in AlertmanagerConfig to have a receiver. #3749
+
 ## 0.45.0 / 2021-01-13
 
 * [CHANGE] Add schema validations to AlertmanagerConfig CRD. #3742

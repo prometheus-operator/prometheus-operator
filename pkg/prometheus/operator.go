@@ -578,8 +578,9 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
 			Labels: c.config.Labels.Merge(map[string]string{
-				"k8s-app":                "kubelet",
-				"app.kubernetes.io/name": "kubelet",
+				"k8s-app":                   "kubelet",
+				"app.kubernetes.io/name":    "kubelet",
+				"app.kubernetes.io/part-of": "prometheus-operator",
 			}),
 		},
 		Subsets: []v1.EndpointSubset{
@@ -624,8 +625,9 @@ func (c *Operator) syncNodeEndpoints(ctx context.Context) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: c.kubeletObjectName,
 			Labels: c.config.Labels.Merge(map[string]string{
-				"k8s-app":                "kubelet",
-				"app.kubernetes.io/name": "kubelet",
+				"k8s-app":                      "kubelet",
+				"app.kubernetes.io/name":       "kubelet",
+				"app.kubernetes.io/managed-by": "prometheus-operator",
 			}),
 		},
 		Spec: v1.ServiceSpec{
@@ -1226,7 +1228,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 		level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
 
-		_, err = ssetClient.Update(ctx, sset, metav1.UpdateOptions{})
+		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
 		sErr, ok := err.(*apierrors.StatusError)
 
 		if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
@@ -1546,8 +1548,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
-	_, err = sClient.Update(ctx, s, metav1.UpdateOptions{})
-	return err
+	return k8sutil.UpdateSecret(ctx, sClient, s)
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) error {
@@ -1590,7 +1591,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 
 	} else {
-		_, err = sClient.Update(ctx, tlsAssetsSecret, metav1.UpdateOptions{})
+		err = k8sutil.UpdateSecret(ctx, sClient, tlsAssetsSecret)
 		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 	}
 

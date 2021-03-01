@@ -10,7 +10,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-kit/kit v0.10.0
 	github.com/go-openapi/swag v0.19.12
-	github.com/gogo/protobuf v1.3.1
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.4
 	github.com/hashicorp/go-version v1.2.1
@@ -19,8 +19,8 @@ require (
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/prom-label-proxy v0.2.0
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.45.0
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.45.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.46.0
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.46.0
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
 	github.com/prometheus/client_golang v1.9.0
 	github.com/prometheus/common v0.15.0

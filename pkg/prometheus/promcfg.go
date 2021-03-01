@@ -749,6 +749,13 @@ func (cg *configGenerator) generateProbeConfig(
 			},
 		}...)
 
+		// Add configured relabelings.
+		if m.Spec.Targets.StaticConfig.RelabelConfigs != nil {
+			for _, r := range m.Spec.Targets.StaticConfig.RelabelConfigs {
+				relabelings = append(relabelings, generateRelabelConfig(r))
+			}
+		}
+
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)})
 	}
 
@@ -1416,6 +1423,10 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *
 		cfg := yaml.MapSlice{
 			{Key: "url", Value: spec.URL},
 			{Key: "remote_timeout", Value: spec.RemoteTimeout},
+		}
+
+		if len(spec.Headers) > 0 && version.GTE(semver.MustParse("2.25.0")) {
+			cfg = append(cfg, yaml.MapItem{Key: "headers", Value: stringMapToMapSlice(spec.Headers)})
 		}
 
 		if spec.Name != "" && version.GTE(semver.MustParse("2.15.0")) {

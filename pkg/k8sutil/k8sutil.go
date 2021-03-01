@@ -23,6 +23,8 @@ import (
 	"regexp"
 	"strings"
 
+	appsv1 "k8s.io/api/apps/v1"
+
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -30,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/discovery"
+	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -120,6 +123,8 @@ func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterfac
 		svc.ResourceVersion = service.ResourceVersion
 		svc.Spec.IPFamilies = service.Spec.IPFamilies
 		svc.SetOwnerReferences(mergeOwnerReferences(service.GetOwnerReferences(), svc.GetOwnerReferences()))
+		mergeMetadata(&svc.ObjectMeta, service.ObjectMeta)
+
 		_, err := sclient.Update(ctx, svc, metav1.UpdateOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return errors.Wrap(err, "updating service object failed")
@@ -142,10 +147,46 @@ func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInte
 		}
 	} else {
 		eps.ResourceVersion = endpoints.ResourceVersion
+		mergeMetadata(&eps.ObjectMeta, endpoints.ObjectMeta)
+
 		_, err = eclient.Update(ctx, eps, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrap(err, "updating kubelet endpoints object failed")
 		}
+	}
+
+	return nil
+}
+
+// UpdateStatefulSet merges metadata of existing StatefulSet with new one and updates it.
+func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetInterface, sset *appsv1.StatefulSet) error {
+	existingSset, err := sstClient.Get(ctx, sset.Name, metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrap(err, "getting stateful set object failed")
+	}
+
+	mergeMetadata(&sset.ObjectMeta, existingSset.ObjectMeta)
+
+	_, err = sstClient.Update(ctx, sset, metav1.UpdateOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateSecret merges metadata of existing Secret with new one and updates it.
+func UpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, secret *v1.Secret) error {
+	existingSecret, err := secretClient.Get(ctx, secret.Name, metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrap(err, "getting secret object failed")
+	}
+
+	mergeMetadata(&secret.ObjectMeta, existingSecret.ObjectMeta)
+
+	_, err = secretClient.Update(ctx, secret, metav1.UpdateOptions{})
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -186,6 +227,21 @@ func mergeOwnerReferences(old []metav1.OwnerReference, new []metav1.OwnerReferen
 		if _, ok := existing[ownerRef]; !ok {
 			old = append(old, ownerRef)
 		}
+	}
+	return old
+}
+
+func mergeMetadata(new *metav1.ObjectMeta, old metav1.ObjectMeta) {
+	new.SetLabels(mergeMaps(new.Labels, old.Labels))
+	new.SetAnnotations(mergeMaps(new.Annotations, old.Annotations))
+}
+
+func mergeMaps(new map[string]string, old map[string]string) map[string]string {
+	if old == nil {
+		old = make(map[string]string, len(new))
+	}
+	for k, v := range new {
+		old[k] = v
 	}
 	return old
 }

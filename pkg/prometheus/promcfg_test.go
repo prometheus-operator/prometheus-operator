@@ -421,6 +421,13 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 							Labels: map[string]string{
 								"static": "label",
 							},
+							RelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									TargetLabel: "foo",
+									Replacement: "bar",
+									Action:      "replace",
+								},
+							},
 						},
 					},
 				},
@@ -469,6 +476,9 @@ scrape_configs:
     target_label: instance
   - target_label: __address__
     replacement: blackbox.exporter.io
+  - target_label: foo
+    replacement: bar
+    action: replace
 alerting:
   alert_relabel_configs:
   - action: labeldrop

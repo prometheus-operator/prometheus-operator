@@ -54,7 +54,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	}
 	// kubectl annotations must not be on the statefulset so kubectl does
 	// not manage the generated object
-	expectedStatufulSetAnnotations := map[string]string{
+	expectedStatefulSetAnnotations := map[string]string{
 		"prometheus-operator-input-hash": "",
 		"testannotation":                 "testannotationvalue",
 	}
@@ -86,8 +86,8 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		t.Fatal("Labels are not properly being propagated to the StatefulSet")
 	}
 
-	if !reflect.DeepEqual(expectedStatufulSetAnnotations, sset.Annotations) {
-		t.Log(pretty.Compare(expectedStatufulSetAnnotations, sset.Annotations))
+	if !reflect.DeepEqual(expectedStatefulSetAnnotations, sset.Annotations) {
+		t.Log(pretty.Compare(expectedStatefulSetAnnotations, sset.Annotations))
 		t.Fatal("Annotations are not properly being propagated to the StatefulSet")
 	}
 
