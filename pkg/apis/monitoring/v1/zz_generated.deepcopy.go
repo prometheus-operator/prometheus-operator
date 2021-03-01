@@ -1015,6 +1015,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.EnableFeatures != nil {
+		in, out := &in.EnableFeatures, &out.EnableFeatures
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Query != nil {
 		in, out := &in.Query, &out.Query
 		*out = new(QuerySpec)
