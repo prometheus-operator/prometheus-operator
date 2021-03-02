@@ -10,6 +10,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: AlertmanagerConfig
     listKind: AlertmanagerConfigList
     plural: alertmanagerconfigs
@@ -1877,6 +1879,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: Alertmanager
     listKind: AlertmanagerList
     plural: alertmanagers
@@ -5093,6 +5097,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: PodMonitor
     listKind: PodMonitorList
     plural: podmonitors
@@ -5449,6 +5455,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: Probe
     listKind: ProbeList
     plural: probes
@@ -5649,6 +5657,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: Prometheus
     listKind: PrometheusList
     plural: prometheuses
@@ -7103,6 +7113,11 @@ spec:
               enableAdminAPI:
                 description: 'Enable access to prometheus web admin API. Defaults to the value of `false`. WARNING: Enabling the admin APIs enables mutating endpoints, to delete data, shutdown Prometheus, and more. Enabling this should be done with care and the user is advised to add additional authentication authorization via a proxy to ensure only clients authorized to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis'
                 type: boolean
+              enableFeatures:
+                description: Enable access to Prometheus disabled features. By default, no features are enabled. Enabling disabled features is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. For more information see https://prometheus.io/docs/prometheus/latest/disabled_features/
+                items:
+                  type: string
+                type: array
               enforcedNamespaceLabel:
                 description: EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert and metric that is user created. The label value will always be the namespace of the object that is being created.
                 type: string
@@ -8277,6 +8292,11 @@ spec:
                     bearerTokenFile:
                       description: File to read bearer token for remote write.
                       type: string
+                    headers:
+                      additionalProperties:
+                        type: string
+                      description: Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer.
+                      type: object
                     name:
                       description: The name of the remote write queue, must be unique if specified. The name is used in metrics and logging in order to differentiate queues. Only valid in Prometheus versions 2.15.0 and newer.
                       type: string
@@ -10164,6 +10184,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: ServiceMonitor
     listKind: ServiceMonitorList
     plural: servicemonitors
@@ -10537,6 +10559,8 @@ metadata:
 spec:
   group: monitoring.coreos.com
   names:
+    categories:
+    - prometheus-operator
     kind: ThanosRuler
     listKind: ThanosRulerList
     plural: thanosrulers
@@ -13871,7 +13895,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.45.0
+    app.kubernetes.io/version: 0.46.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -13888,7 +13912,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.45.0
+    app.kubernetes.io/version: 0.46.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -13968,7 +13992,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.45.0
+    app.kubernetes.io/version: 0.46.0
   name: prometheus-operator
   namespace: default
 spec:
@@ -13982,13 +14006,13 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.45.0
+        app.kubernetes.io/version: 0.46.0
     spec:
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.45.0
-        image: quay.io/prometheus-operator/prometheus-operator:v0.45.0
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.46.0
+        image: quay.io/prometheus-operator/prometheus-operator:v0.46.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -14015,7 +14039,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.45.0
+    app.kubernetes.io/version: 0.46.0
   name: prometheus-operator
   namespace: default
 ---
@@ -14025,7 +14049,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.45.0
+    app.kubernetes.io/version: 0.46.0
   name: prometheus-operator
   namespace: default
 spec:
