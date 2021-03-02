@@ -1843,6 +1843,11 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 		if err = store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth, pnKey); err != nil {
 			break
 		}
+		if probe.Spec.TLSConfig != nil {
+			if err = store.AddSafeTLSConfig(ctx, probe.GetNamespace(), &probe.Spec.TLSConfig.SafeTLSConfig); err != nil {
+				break
+			}
+		}
 
 		res[probeName] = probe
 	}
