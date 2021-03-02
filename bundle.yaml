@@ -7119,7 +7119,7 @@ spec:
                   type: string
                 type: array
               enforcedNamespaceLabel:
-                description: EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert and metric that is user created. The label value will always be the namespace of the object that is being created.
+                description: "EnforcedNamespaceLabel If set, a label will be added to \n 1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `ProbeConfig` object) and 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to    * alerting & recording rules and    * the metrics used in their expressions (`expr`). \n Label name is this field's value. Label value is the namespace of the created object (mentioned above)."
                 type: string
               enforcedSampleLimit:
                 description: EnforcedSampleLimit defines global limit on number of scraped samples that will be accepted. This overrides any SampleLimit set per ServiceMonitor or/and PodMonitor. It is meant to be used by admins to enforce the SampleLimit to keep overall number of samples/series under the desired limit. Note that if SampleLimit is lower that value will be taken instead.
@@ -7130,7 +7130,7 @@ spec:
                 format: int64
                 type: integer
               evaluationInterval:
-                description: Interval between consecutive evaluations.
+                description: 'Interval between consecutive evaluations. Default: `1m`'
                 type: string
               externalLabels:
                 additionalProperties:
@@ -8590,7 +8590,7 @@ spec:
                     type: object
                 type: object
               scrapeInterval:
-                description: Interval between consecutive scrapes.
+                description: 'Interval between consecutive scrapes. Default: `1m`'
                 type: string
               scrapeTimeout:
                 description: Number of seconds to wait for target to respond before erroring.
@@ -10129,7 +10129,7 @@ spec:
                       type: string
                     rules:
                       items:
-                        description: Rule describes an alerting or recording rule.
+                        description: 'Rule describes an alerting or recording rule See Prometheus documentation: [alerting](https://www.prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) or [recording](https://www.prometheus.io/docs/prometheus/latest/configuration/recording_rules/#recording-rules) rule'
                         properties:
                           alert:
                             type: string
@@ -10469,10 +10469,10 @@ spec:
                   type: object
                 type: array
               jobLabel:
-                description: The label to use to retrieve the job name from.
+                description: "Chooses the label of the Kubernetes `Endpoints`. Its value will be used for the `job`-label's value of the created metrics. \n Default & fallback value: the name of the respective Kubernetes `Endpoint`."
                 type: string
               namespaceSelector:
-                description: Selector to select which namespaces the Endpoints objects are discovered from.
+                description: Selector to select which namespaces the Kubernetes Endpoints objects are discovered from.
                 properties:
                   any:
                     description: Boolean describing whether all namespaces are selected in contrast to a list restricting them.
@@ -10484,7 +10484,7 @@ spec:
                     type: array
                 type: object
               podTargetLabels:
-                description: PodTargetLabels transfers labels on the Kubernetes Pod onto the target.
+                description: PodTargetLabels transfers labels on the Kubernetes `Pod` onto the created metrics.
                 items:
                   type: string
                 type: array
@@ -10523,7 +10523,7 @@ spec:
                     type: object
                 type: object
               targetLabels:
-                description: TargetLabels transfers labels on the Kubernetes Service onto the target.
+                description: TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics. All labels set in `selector.matchLabels` are automatically transferred.
                 items:
                   type: string
                 type: array
