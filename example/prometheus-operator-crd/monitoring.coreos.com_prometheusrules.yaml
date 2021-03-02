@@ -45,7 +45,7 @@ spec:
                       type: string
                     rules:
                       items:
-                        description: Rule describes an alerting or recording rule.
+                        description: 'Rule describes an alerting or recording rule See Prometheus documentation: [alerting](https://www.prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) or [recording](https://www.prometheus.io/docs/prometheus/latest/configuration/recording_rules/#recording-rules) rule'
                         properties:
                           alert:
                             type: string
