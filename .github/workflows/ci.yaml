@@ -3,8 +3,8 @@ on:
   - push
   - pull_request
 env:
-  golang-version: '1.15'
-  kind-version: 'v0.9.0'
+  golang-version: '1.16'
+  kind-version: 'v0.10.0'
   kind-image: 'kindest/node:v1.20.0'  # Image defines which k8s version is used
 jobs:
   generate:
