@@ -31,6 +31,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [Probe](#probe)
 * [ProbeList](#probelist)
 * [ProbeSpec](#probespec)
+* [ProbeTLSConfig](#probetlsconfig)
 * [ProbeTargetIngress](#probetargetingress)
 * [ProbeTargetStaticConfig](#probetargetstaticconfig)
 * [ProbeTargets](#probetargets)
