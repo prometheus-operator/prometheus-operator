@@ -1687,7 +1687,6 @@ func (c *Operator) loadTLSAssets(p *monitoringv1.Prometheus) (map[string]TLSAsse
 	promAssets := map[string]TLSAsset{}
 	assets := map[string]TLSAsset{}
 
-	smEndpoingTLSConfig := []*monitoringv1.TLSConfig{}
 	promRwTLSConfig := []*monitoringv1.TLSConfig{}
 
 	mons, err := c.selectServiceMonitors(p)
@@ -1696,12 +1695,16 @@ func (c *Operator) loadTLSAssets(p *monitoringv1.Prometheus) (map[string]TLSAsse
 	}
 
 	for _, mon := range mons {
+		smEndpoingTLSConfig := []*monitoringv1.TLSConfig{}
 		for _, ep := range mon.Spec.Endpoints {
 			smEndpoingTLSConfig = append(smEndpoingTLSConfig, ep.TLSConfig)
 		}
-		smAssets, err = c.loadTLSAssetsFromTLSConfigList(mon.Namespace, smEndpoingTLSConfig)
+		smAsset, err := c.loadTLSAssetsFromTLSConfigList(mon.Namespace, smEndpoingTLSConfig)
 		if err != nil {
 			return nil, err
+		}
+		for k, v := range smAsset {
+			smAssets[k] = v
 		}
 	}
 
