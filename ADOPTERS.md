@@ -92,6 +92,19 @@ Details (optional):
 - A huge fleet of OpenShift and Kubernetes clusters, each using Prometheus Operator
 - All managed by [Project Syn](https://syn.tools/), leveraging Commodore Components like [component-rancher-monitoring](https://github.com/projectsyn/component-rancher-monitoring) which re-uses Prometheus Operator
 
+## Innovaccer ##
+
+https://innovaccer.com/
+
+Environments: AWS, Azure
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details (optional):
+- multiple remote K8s cluster in which we have prometheus deployed through prom-operator.
+- these remote prometheus instances push cluster metrics to central Thanos receiver which is connected to S3 storage.
+- on top of Thanos we have Grafana for dashboarding and visualisation.
+
 ## <Insert Company/Organization Name>
 
 https://our-link.com/
