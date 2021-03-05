@@ -998,7 +998,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			},
 			Spec: v1.PodSpec{
 				Containers:                    containers,
-				InitContainers:                initContainers,
+				InitContainers:                p.Spec.InitContainers,
+				DNSConfig:                     p.Spec.DNSConfig,
 				SecurityContext:               p.Spec.SecurityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				AutomountServiceAccountToken:  &boolTrue,

@@ -657,6 +657,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			Name: "registry-secret",
 		},
 	}
+         dnsConfig := v1.PodDNSConfig{}
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
@@ -670,6 +671,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ServiceAccountName: serviceAccountName,
 			HostAliases:        hostAliases,
 			ImagePullSecrets:   imagePullSecrets,
+			DNSConfig:          &dnsConfig,
 		},
 	}, defaultTestConfig, nil, "")
 	if err != nil {
@@ -700,6 +702,9 @@ func TestPodTemplateConfig(t *testing.T) {
 	if !reflect.DeepEqual(sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets) {
 		t.Fatalf("expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
 	}
+         if !reflect.DeepEqual(*sset.Spec.Template.Spec.DNSConfig, dnsConfig) {
+		t.Fatalf("expected dns configuration to match, want %v, got %v", dnsConfig, *sset.Spec.Template.Spec.DNSConfig)
+	} 
 }
 
 func TestExternalQueryURL(t *testing.T) {
