@@ -1304,6 +1304,8 @@ type AlertmanagerSpec struct {
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.
 	AdditionalPeers []string `json:"additionalPeers,omitempty"`
+	// ClusterListenLocal makes the Alertmanager server listen on loopback for gossip communication
+	ClusterListenLocal bool `json:"clusterListenLocal,omitempty"`
 	// ClusterAdvertiseAddress is the explicit address to advertise in cluster.
 	// Needs to be provided for non RFC1918 [1] (public) addresses.
 	// [1] RFC1918: https://tools.ietf.org/html/rfc1918

@@ -923,7 +923,7 @@ func TestClusterListenAddress(t *testing.T) {
 	type testcase struct {
 		Name                   string
 		Replicas               int32
-		ListenLocal            bool
+		ClusterListenLocal     bool
 		ForceEnableClusterMode bool
 		ExpectedResult         string
 	}
@@ -933,49 +933,49 @@ func TestClusterListenAddress(t *testing.T) {
 			Name:                   "ClusterListenAddressForSingleReplica",
 			Replicas:               1,
 			ForceEnableClusterMode: false,
-			ListenLocal:            false,
+			ClusterListenLocal:     false,
 			ExpectedResult:         "--cluster.listen-address=",
 		},
 		testcase{
 			Name:                   "ClusterListenAddressForSingleReplicaWithForceEnableClusterMode",
 			Replicas:               1,
 			ForceEnableClusterMode: true,
-			ListenLocal:            false,
+			ClusterListenLocal:     false,
 			ExpectedResult:         "--cluster.listen-address=[$(POD_IP)]:9094",
 		},
 		testcase{
-			Name:                   "ClusterListenAddressForSingleReplicaWithListenLocal",
+			Name:                   "ClusterListenAddressForSingleReplicaWithClusterListenLocal",
 			Replicas:               1,
 			ForceEnableClusterMode: false,
-			ListenLocal:            true,
+			ClusterListenLocal:     true,
 			ExpectedResult:         "--cluster.listen-address=127.0.0.1:9094",
 		},
 		testcase{
 			Name:                   "ClusterListenAddressForMultipleReplicas",
 			Replicas:               3,
 			ForceEnableClusterMode: false,
-			ListenLocal:            false,
+			ClusterListenLocal:     false,
 			ExpectedResult:         "--cluster.listen-address=[$(POD_IP)]:9094",
 		},
 		testcase{
 			Name:                   "ClusterListenAddressForMultipleReplicaWithForceEnableClusterMode",
 			Replicas:               3,
 			ForceEnableClusterMode: true,
-			ListenLocal:            false,
+			ClusterListenLocal:     false,
 			ExpectedResult:         "--cluster.listen-address=[$(POD_IP)]:9094",
 		},
 		testcase{
-			Name:                   "ClusterListenAddressForMultipleReplicasWithListenLocal",
+			Name:                   "ClusterListenAddressForMultipleReplicasWithClusterListenLocal",
 			Replicas:               3,
 			ForceEnableClusterMode: false,
-			ListenLocal:            true,
+			ClusterListenLocal:     true,
 			ExpectedResult:         "--cluster.listen-address=127.0.0.1:9094",
 		},
 		testcase{
-			Name:                   "ClusterListenAddressForMultipleReplicasWithForceEnableClusterModeAndListenLocal",
+			Name:                   "ClusterListenAddressForMultipleReplicasWithForceEnableClusterModeAndClusterListenLocal",
 			Replicas:               3,
 			ForceEnableClusterMode: true,
-			ListenLocal:            true,
+			ClusterListenLocal:     true,
 			ExpectedResult:         "--cluster.listen-address=127.0.0.1:9094",
 		},
 	}
@@ -986,7 +986,7 @@ func TestClusterListenAddress(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
 			a.Spec.Replicas = &tc.Replicas
 			a.Spec.ForceEnableClusterMode = tc.ForceEnableClusterMode
-			a.Spec.ListenLocal = tc.ListenLocal
+			a.Spec.ClusterListenLocal = tc.ClusterListenLocal
 			a.Spec.Version = operator.DefaultAlertmanagerVersion
 
 			statefulSet, err := makeStatefulSetSpec(&a, defaultTestConfig)

@@ -234,13 +234,13 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	}
 
 	if *a.Spec.Replicas == 1 && !a.Spec.ForceEnableClusterMode {
-		if a.Spec.ListenLocal {
+		if a.Spec.ClusterListenLocal {
 			amArgs = append(amArgs, "--cluster.listen-address=127.0.0.1:9094")
 		} else {
 			amArgs = append(amArgs, "--cluster.listen-address=")
 		}
 	} else {
-		if a.Spec.ListenLocal {
+		if a.Spec.ClusterListenLocal {
 			amArgs = append(amArgs, "--cluster.listen-address=127.0.0.1:9094")
 		} else {
 			amArgs = append(amArgs, "--cluster.listen-address=[$(POD_IP)]:9094")
