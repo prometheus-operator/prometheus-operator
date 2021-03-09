@@ -616,10 +616,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	podSelectorLabels := map[string]string{
-		"app":                   "prometheus",
-		"prometheus":            p.Name,
-		shardLabelName:          fmt.Sprintf("%d", shard),
-		prometheusNameLabelName: p.Name,
+		"app":                          "prometheus",
+		"app.kubernetes.io/name":       "prometheus",
+		"app.kubernetes.io/version":    version.String(),
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   p.Name,
+		"prometheus":                   p.Name,
+		shardLabelName:                 fmt.Sprintf("%d", shard),
+		prometheusNameLabelName:        p.Name,
 	}
 	if p.Spec.PodMetadata != nil {
 		if p.Spec.PodMetadata.Labels != nil {
