@@ -354,6 +354,9 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		}
 	}
 	podLabels["app"] = thanosRulerLabel
+	podLabels["app.kubernetes.io/name"] = thanosRulerLabel
+	podLabels["app.kubernetes.io/managed-by"] = "prometheus-operator"
+	podLabels["app.kubernetes.io/instance"] = tr.Name
 	podLabels[thanosRulerLabel] = tr.Name
 	finalLabels := config.Labels.Merge(podLabels)
 
