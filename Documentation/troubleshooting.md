@@ -1,9 +1,17 @@
-<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
-</div>
-
-# FAQ / Troubleshooting
+---
+title: "Troubleshooting"
+description: "Guide on troubleshooting the Prometheus Operator."
+lead: ""
+date: 2021-03-08T08:49:31+00:00
+lastmod: 2021-03-08T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 600
+toc: true
+---
 
 ### RBAC on Google Container Engine (GKE)
 
@@ -43,7 +51,7 @@ When creating/deleting/modifying `ServiceMonitor` objects it is sometimes not as
 
 A common problem related to `ServiceMonitor` identification by Prometheus is related to an incorrect tagging, that does not match the `Prometheus` custom resource definition scope, or lack of permission for the Prometheus `ServiceAccount` to *get, list, watch* `Services` and `Endpoints` from the target application being monitored. As a general guideline consider the diagram below, giving an example of a `Deployment` and `Service` called `my-app`, being monitored by Prometheus based on a `ServiceMonitor` named `my-service-monitor`:
 
-![flow diagram](custom-metrics-elements.png)
+![flow diagram](../custom-metrics-elements.png)
 
 Note: The `ServiceMonitor` references a `Service` (not a `Deployment`, or a `Pod`), by labels *and* by the port name in the `Service`. This *port name* is optional in Kubernetes, but must be specified for the `ServiceMonitor` to work. It is not the same as the port name on the `Pod` or container, although it can be.
 

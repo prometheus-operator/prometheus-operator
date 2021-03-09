@@ -1,10 +1,14 @@
-# Adopters
+---
+title: "Adopters"
+date: 2021-03-08T23:50:39+01:00
+draft: false
+---
 
 This document tracks people and use cases for the Prometheus Operator in production. By creating a list of production use cases we hope to build a community of advisors that we can reach out to with experience using various the Prometheus Operator applications, operation environments, and cluster sizes. The Prometheus Operator development team may reach out periodically to check-in on how the Prometheus Operator is working in the field and update this list.
 
 ## Giant Swarm
 
-https://www.giantswarm.io/
+[giantswarm.io](https://www.giantswarm.io/)
 
 Environments: AWS, Azure, Bare Metal
 
@@ -18,7 +22,7 @@ Details:
 
 ## Lunar
 
-https://lunar.app/
+[lunar.app](https://lunar.app/)
 
 Environments: AWS
 
@@ -31,7 +35,7 @@ Details:
 
 ## OpenShift
 
-https://www.openshift.com/
+[openshift.com](https://www.openshift.com/)
 
 Environments: AWS, Azure, Google Cloud, Bare Metal
 
@@ -43,7 +47,7 @@ All OpenShift clusters use the Prometheus Operator to manage the cluster monitor
 
 ## Polar Signals
 
-https://polarsignals.com/
+[polarsignals.com](https://polarsignals.com/)
 
 Environment: Google Cloud
 
@@ -56,7 +60,7 @@ Details:
 
 ## Skyscanner
 
-https://skyscanner.net/
+[skyscanner.net](https://skyscanner.net/)
 
 Environment: AWS
 
@@ -69,7 +73,7 @@ Details (optional):
 
 ## Veepee
 
-https://www.veepee.com
+[veepee.com](https://www.veepee.com)
 
 Environments: Bare Metal
 
@@ -82,7 +86,7 @@ Details (optional):
 
 ## VSHN AG
 
-https://www.vshn.ch/
+[vshn.ch](https://www.vshn.ch/)
 
 Environments: AWS, Azure, Google Cloud, cloudscale.ch, Exoscale, Swisscom
 
@@ -91,6 +95,8 @@ Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): 
 Details (optional):
 - A huge fleet of OpenShift and Kubernetes clusters, each using Prometheus Operator
 - All managed by [Project Syn](https://syn.tools/), leveraging Commodore Components like [component-rancher-monitoring](https://github.com/projectsyn/component-rancher-monitoring) which re-uses Prometheus Operator
+
+---
 
 ## <Insert Company/Organization Name>
 
