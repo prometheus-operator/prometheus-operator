@@ -565,12 +565,12 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 	const localProbe = `if [ -x "$(command -v curl)" ]; then exec curl %s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %s; else exit 1; fi`
 
-	var readinessProbeHandler v1.Handler
+	var livenessProbeHandler v1.Handler
 	{
 		healthyPath := path.Clean(webRoutePrefix + "/-/healthy")
 		if p.Spec.ListenLocal {
 			localHealthyPath := fmt.Sprintf("http://localhost:9090%s", healthyPath)
-			readinessProbeHandler.Exec = &v1.ExecAction{
+			livenessProbeHandler.Exec = &v1.ExecAction{
 				Command: []string{
 					"sh",
 					"-c",
@@ -578,12 +578,20 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				},
 			}
 		} else {
-			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
+			livenessProbeHandler.HTTPGet = &v1.HTTPGetAction{
 				Path: healthyPath,
 				Port: intstr.FromString(p.Spec.PortName),
 			}
 		}
 	}
+	livenessProbe := &v1.Probe{
+		Handler:          livenessProbeHandler,
+		TimeoutSeconds:   probeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+
+	var readinessProbeHandler v1.Handler
 	{
 		readyPath := path.Clean(webRoutePrefix + "/-/ready")
 		if p.Spec.ListenLocal {
@@ -603,9 +611,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			}
 		}
 	}
-
-	// TODO(paulfantom): Re-add livenessProbe and add startupProbe when kubernetes 1.21 is available.
-	// This would be a follow-up to https://github.com/prometheus-operator/prometheus-operator/pull/3502
 	readinessProbe := &v1.Probe{
 		Handler:          readinessProbeHandler,
 		TimeoutSeconds:   probeTimeoutSeconds,
@@ -802,6 +807,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Ports:                    ports,
 			Args:                     promArgs,
 			VolumeMounts:             promVolumeMounts,
+			LivenessProbe:            livenessProbe,
 			ReadinessProbe:           readinessProbe,
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
