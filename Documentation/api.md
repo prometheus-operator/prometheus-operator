@@ -408,7 +408,7 @@ ProbeSpec contains specification parameters for a Probe.
 | interval | Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used. | string | false |
 | scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. | string | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint. | *[ProbeTLSConfig](#probetlsconfig) | false |
-| bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the pod monitor and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the probe and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
 
 [Back to TOC](#table-of-contents)
