@@ -567,24 +567,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 	var readinessProbeHandler v1.Handler
 	{
-		healthyPath := path.Clean(webRoutePrefix + "/-/healthy")
-		if p.Spec.ListenLocal {
-			localHealthyPath := fmt.Sprintf("http://localhost:9090%s", healthyPath)
-			readinessProbeHandler.Exec = &v1.ExecAction{
-				Command: []string{
-					"sh",
-					"-c",
-					fmt.Sprintf(localProbe, localHealthyPath, localHealthyPath),
-				},
-			}
-		} else {
-			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
-				Path: healthyPath,
-				Port: intstr.FromString(p.Spec.PortName),
-			}
-		}
-	}
-	{
 		readyPath := path.Clean(webRoutePrefix + "/-/ready")
 		if p.Spec.ListenLocal {
 			localReadyPath := fmt.Sprintf("http://localhost:9090%s", readyPath)
