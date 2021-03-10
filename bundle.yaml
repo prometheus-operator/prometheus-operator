@@ -5176,7 +5176,7 @@ spec:
                           type: object
                       type: object
                     bearerTokenSecret:
-                      description: Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the probe and accessible by the Prometheus Operator.
+                      description: Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the pod monitor and accessible by the Prometheus Operator.
                       properties:
                         key:
                           description: The key of the secret to select from.  Must be a valid secret key.
