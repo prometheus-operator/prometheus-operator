@@ -886,7 +886,7 @@ type ProbeSpec struct {
 	// TLS configuration to use when scraping the endpoint.
 	TLSConfig *ProbeTLSConfig `json:"tlsConfig,omitempty"`
 	// Secret to mount to read bearer token for scraping targets. The secret
-	// needs to be in the same namespace as the pod monitor and accessible by
+	// needs to be in the same namespace as the probe and accessible by
 	// the Prometheus Operator.
 	BearerTokenSecret v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 	// BasicAuth allow an endpoint to authenticate over basic authentication.
