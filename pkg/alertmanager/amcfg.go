@@ -122,11 +122,6 @@ func (cg *configGenerator) generateConfig(
 }
 
 func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
-	// Enforce "continue" to be true for the top-level route.
-	cont := in.Continue
-	if firstLevelRoute {
-		cont = true
-	}
 
 	match := map[string]string{}
 	matchRE := map[string]string{}
@@ -175,7 +170,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 		GroupWait:      in.GroupWait,
 		GroupInterval:  in.GroupInterval,
 		RepeatInterval: in.RepeatInterval,
-		Continue:       cont,
+		Continue:       in.Continue,
 		Match:          match,
 		MatchRE:        matchRE,
 		Routes:         routes,

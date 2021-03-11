@@ -87,6 +87,34 @@ templates: []
 `,
 		},
 		{
+			name:    "base with explicitly set continue, no CRs",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+					Routes: []*route{{
+						Receiver: "custom",
+						Continue: true,
+					}},
+				},
+				Receivers: []*receiver{
+					{Name: "null"},
+					{Name: "custom"},
+				},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: custom
+    continue: true
+receivers:
+- name: "null"
+- name: custom
+templates: []
+`,
+		},
+		{
 			name:    "skeleton base, simple CR",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
@@ -113,7 +141,6 @@ templates: []
   - receiver: mynamespace-myamc-test
     match:
       namespace: mynamespace
-    continue: true
 receivers:
 - name: "null"
 - name: mynamespace-myamc-test
@@ -200,7 +227,6 @@ templates: []
   - receiver: mynamespace-myamc-test
     match:
       namespace: mynamespace
-    continue: true
   - receiver: "null"
 receivers:
 - name: "null"
@@ -257,7 +283,6 @@ templates: []
   - receiver: mynamespace-myamc-test-pd
     match:
       namespace: mynamespace
-    continue: true
 receivers:
 - name: "null"
 - name: mynamespace-myamc-test-pd
@@ -302,7 +327,6 @@ templates: []
   - receiver: mynamespace-myamc-test
     match:
       namespace: mynamespace
-    continue: true
 receivers:
 - name: "null"
 - name: mynamespace-myamc-test
@@ -360,7 +384,6 @@ templates: []
   - receiver: mynamespace-myamc-test
     match:
       namespace: mynamespace
-    continue: true
 receivers:
 - name: "null"
 - name: mynamespace-myamc-test
@@ -422,7 +445,6 @@ templates: []
   - receiver: mynamespace-myamc-test
     match:
       namespace: mynamespace
-    continue: true
 receivers:
 - name: "null"
 - name: mynamespace-myamc-test
@@ -484,7 +506,6 @@ templates: []
   - receiver: mynamespace-myamc-test
     match:
       namespace: mynamespace
-    continue: true
 receivers:
 - name: "null"
 - name: mynamespace-myamc-test
@@ -550,7 +571,6 @@ route:
   - receiver: mynamespace-myamc-test
     match:
       namespace: mynamespace
-    continue: true
 receivers:
 - name: "null"
 - name: mynamespace-myamc-test
