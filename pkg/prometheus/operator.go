@@ -1449,7 +1449,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return errors.Wrap(err, "selecting PodMonitors failed")
 	}
 
-	bmons, err := c.selectProbes(p)
+	bmons, err := c.selectProbes(ctx, p, store)
 	if err != nil {
 		return errors.Wrap(err, "selecting Probes failed")
 	}
@@ -1786,7 +1786,7 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 	return res, nil
 }
 
-func (c *Operator) selectProbes(p *monitoringv1.Prometheus) (map[string]*monitoringv1.Probe, error) {
+func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.Probe, error) {
 	namespaces := []string{}
 	// Selectors might overlap. Deduplicate them along the keyFunc.
 	probes := make(map[string]*monitoringv1.Probe)
@@ -1834,6 +1834,19 @@ func (c *Operator) selectProbes(p *monitoringv1.Prometheus) (map[string]*monitor
 				"prometheus", p.Name,
 			)
 			continue
+		}
+		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
+		if err = store.AddBearerToken(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret, pnKey); err != nil {
+			break
+		}
+
+		if err = store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth, pnKey); err != nil {
+			break
+		}
+		if probe.Spec.TLSConfig != nil {
+			if err = store.AddSafeTLSConfig(ctx, probe.GetNamespace(), &probe.Spec.TLSConfig.SafeTLSConfig); err != nil {
+				break
+			}
 		}
 
 		res[probeName] = probe

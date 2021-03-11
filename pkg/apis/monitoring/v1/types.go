@@ -889,6 +889,15 @@ type ProbeSpec struct {
 	Interval string `json:"interval,omitempty"`
 	// Timeout for scraping metrics from the Prometheus exporter.
 	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
+	// TLS configuration to use when scraping the endpoint.
+	TLSConfig *ProbeTLSConfig `json:"tlsConfig,omitempty"`
+	// Secret to mount to read bearer token for scraping targets. The secret
+	// needs to be in the same namespace as the probe and accessible by
+	// the Prometheus Operator.
+	BearerTokenSecret v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
+	// BasicAuth allow an endpoint to authenticate over basic authentication.
+	// More info: https://prometheus.io/docs/operating/configuration/#endpoint
+	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 }
 
 // ProbeTargets defines a set of static and dynamically discovered targets for the prober.
@@ -1451,4 +1460,10 @@ func (f *PrometheusRule) DeepCopyObject() runtime.Object {
 // DeepCopyObject implements the runtime.Object interface.
 func (l *PrometheusRuleList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+// ProbeTLSConfig specifies TLS configuration parameters.
+// +k8s:openapi-gen=true
+type ProbeTLSConfig struct {
+	SafeTLSConfig `json:",inline"`
 }
