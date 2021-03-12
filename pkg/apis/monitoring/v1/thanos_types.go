@@ -86,6 +86,8 @@ type ThanosRulerSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// DNS custom configuration to use for a Thanos Ruler pod.
 	DNSConfig *v1.PodDNSConfig `json:"dnsConfig,omitempty"`
+	// DNS custom policy to use for a Thanos Ruler pod.
+	DNSPolicy v1.DNSPolicy `json:"dnsPolicy,omitempty"`
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to the default PodSecurityContext.
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`

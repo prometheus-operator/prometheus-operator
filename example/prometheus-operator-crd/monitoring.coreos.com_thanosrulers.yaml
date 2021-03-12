@@ -2189,6 +2189,9 @@ spec:
                       type: string
                     type: array
                 type: object
+              dnsPolicy:
+                description: DNS custom policy to use for a Thanos Ruler pod.
+                type: string
               enforcedNamespaceLabel:
                 description: EnforcedNamespaceLabel enforces adding a namespace label
                   of origin for each alert and metric that is user created. The label

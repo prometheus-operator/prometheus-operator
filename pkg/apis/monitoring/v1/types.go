@@ -112,6 +112,8 @@ type CommonPrometheusFields struct {
 	BaseImage string `json:"baseImage,omitempty"`
 	// DNS custom configuration to use for a Prometheus pod.
 	DNSConfig *v1.PodDNSConfig `json:"dnsConfig,omitempty"`
+	// DNS custom policy to use for an Prometheus pod.
+	DNSPolicy v1.DNSPolicy `json:"dnsPolicy,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
@@ -129,6 +131,7 @@ type CommonPrometheusFields struct {
 	// data to a central location. Sharding is done on the content of the
 	// `__address__` target meta-label.
 	Shards *int32 `json:"shards,omitempty"`
+	// Name of Prometheus external label used to denote replica name.
 	// Defaults to the value of `prometheus_replica`. External label will
 	// _not_ be added when value is set to empty string (`""`).
 	ReplicaExternalLabelName *string `json:"replicaExternalLabelName,omitempty"`
@@ -1735,6 +1738,8 @@ type AlertmanagerSpec struct {
 	BaseImage string `json:"baseImage,omitempty"`
 	// DNS custom configuration to use for an Alertmanager pod.
 	DNSConfig *v1.PodDNSConfig `json:"dnsConfig,omitempty"`
+	// DNS custom policy to use for an Alertmanager pod.
+	DNSPolicy v1.DNSPolicy `json:"dnsPolicy,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod

@@ -2671,6 +2671,9 @@ spec:
                       type: string
                     type: array
                 type: object
+              dnsPolicy:
+                description: DNS custom policy to use for an Prometheus pod.
+                type: string
               enableAdminAPI:
                 description: 'Enable access to prometheus web admin API. Defaults
                   to the value of `false`. WARNING: Enabling the admin APIs enables

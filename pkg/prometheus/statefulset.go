@@ -1000,6 +1000,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				Containers:                    containers,
 				InitContainers:                p.Spec.InitContainers,
 				DNSConfig:                     p.Spec.DNSConfig,
+				DNSPolicy:                     p.Spec.DNSPolicy,
 				SecurityContext:               p.Spec.SecurityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				AutomountServiceAccountToken:  &boolTrue,

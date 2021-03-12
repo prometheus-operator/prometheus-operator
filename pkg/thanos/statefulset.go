@@ -487,6 +487,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				InitContainers:                tr.Spec.InitContainers,
 				Volumes:                       trVolumes,
 				DNSConfig:                     tr.Spec.DNSConfig,
+				DNSPolicy:                     tr.Spec.DNSPolicy,
 				SecurityContext:               tr.Spec.SecurityContext,
 				Tolerations:                   tr.Spec.Tolerations,
 				Affinity:                      tr.Spec.Affinity,
