@@ -8429,7 +8429,7 @@ spec:
                           type: object
                       type: object
                     bearerToken:
-                      description: File to read bearer token for remote write.
+                      description: bearer token for remote write.
                       type: string
                     bearerTokenFile:
                       description: File to read bearer token for remote write.
