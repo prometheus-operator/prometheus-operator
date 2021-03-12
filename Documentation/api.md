@@ -693,7 +693,7 @@ RemoteReadSpec defines the remote_read configuration for prometheus.
 | remoteTimeout | Timeout for requests to the remote read endpoint. | string | false |
 | readRecent | Whether reads should be made for queries for time ranges that the local storage should have complete data for. | bool | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
-| bearerToken | bearer token for remote read. | string | false |
+| bearerToken | Bearer token for remote read. | string | false |
 | bearerTokenFile | File to read bearer token for remote read. | string | false |
 | tlsConfig | TLS Config to use for remote read. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
@@ -712,7 +712,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | headers | Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer. | map[string]string | false |
 | writeRelabelConfigs | The list of remote write relabel configurations. | [][RelabelConfig](#relabelconfig) | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
-| bearerToken | bearer token for remote write. | string | false |
+| bearerToken | Bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |

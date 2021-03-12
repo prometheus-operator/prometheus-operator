@@ -579,7 +579,7 @@ type RemoteWriteSpec struct {
 	WriteRelabelConfigs []RelabelConfig `json:"writeRelabelConfigs,omitempty"`
 	//BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// bearer token for remote write.
+	// Bearer token for remote write.
 	BearerToken string `json:"bearerToken,omitempty"`
 	// File to read bearer token for remote write.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
@@ -632,7 +632,7 @@ type RemoteReadSpec struct {
 	ReadRecent bool `json:"readRecent,omitempty"`
 	// BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// bearer token for remote read.
+	// Bearer token for remote read.
 	BearerToken string `json:"bearerToken,omitempty"`
 	// File to read bearer token for remote read.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
