@@ -1051,7 +1051,6 @@ route:
     match:
       namespace: %s
       service: webapp
-    continue: true
     routes:
     - receiver: %s-e2e-test-amconfig-sub-routes-e2e
       group_by:
