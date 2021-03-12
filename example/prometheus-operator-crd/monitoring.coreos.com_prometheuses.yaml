@@ -2469,7 +2469,7 @@ spec:
                           type: object
                       type: object
                     bearerToken:
-                      description: bearer token for remote read.
+                      description: Bearer token for remote read.
                       type: string
                     bearerTokenFile:
                       description: File to read bearer token for remote read.
@@ -2640,7 +2640,7 @@ spec:
                           type: object
                       type: object
                     bearerToken:
-                      description: File to read bearer token for remote write.
+                      description: Bearer token for remote write.
                       type: string
                     bearerTokenFile:
                       description: File to read bearer token for remote write.
