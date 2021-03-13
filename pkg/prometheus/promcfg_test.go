@@ -453,7 +453,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testprobe1
+- job_name: probe/default/testprobe1
   honor_timestamps: true
   metrics_path: /probe
   scheme: http
@@ -562,7 +562,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testprobe1
+- job_name: probe/default/testprobe1
   honor_timestamps: true
   metrics_path: /probe
   scheme: http
@@ -666,7 +666,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testprobe1
+- job_name: probe/default/testprobe1
   honor_timestamps: true
   metrics_path: /probe
   scheme: http
@@ -779,7 +779,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testprobe1
+- job_name: probe/default/testprobe1
   honor_timestamps: true
   metrics_path: /probe
   scheme: http
@@ -906,7 +906,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testprobe1
+- job_name: probe/default/testprobe1
   honor_timestamps: true
   metrics_path: /probe
   scheme: http
@@ -1432,7 +1432,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/test/0
+- job_name: serviceMonitor/default/test/0
   honor_labels: true
   kubernetes_sd_configs:
   - role: endpoints
@@ -1586,7 +1586,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: pod-monitor-ns/testpodmonitor1/0
+- job_name: podMonitor/pod-monitor-ns/testpodmonitor1/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: pod
@@ -1728,7 +1728,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/test/0
+- job_name: serviceMonitor/default/test/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: endpoints
@@ -1946,7 +1946,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testservicemonitor1/0
+- job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false
   honor_timestamps: false
   kubernetes_sd_configs:
@@ -2085,7 +2085,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testpodmonitor1/0
+- job_name: podMonitor/default/testpodmonitor1/0
   honor_labels: false
   honor_timestamps: false
   kubernetes_sd_configs:
@@ -2206,7 +2206,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testservicemonitor1/0
+- job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false
   honor_timestamps: false
   kubernetes_sd_configs:
@@ -2344,7 +2344,7 @@ func TestSettingHonorLabels(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testservicemonitor1/0
+- job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: true
   kubernetes_sd_configs:
   - role: endpoints
@@ -2482,7 +2482,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testservicemonitor1/0
+- job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: endpoints
@@ -2619,7 +2619,7 @@ func TestTargetLabels(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testservicemonitor1/0
+- job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: endpoints
@@ -2755,7 +2755,7 @@ func TestPodTargetLabels(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testservicemonitor1/0
+- job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: endpoints
@@ -2891,7 +2891,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testpodmonitor1/0
+- job_name: podMonitor/default/testpodmonitor1/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: pod
@@ -3003,7 +3003,7 @@ func TestEmptyEndointPorts(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/test/0
+- job_name: serviceMonitor/default/test/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: endpoints
@@ -3539,7 +3539,7 @@ func TestSampleLimits(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testservicemonitor1/0
+- job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: endpoints
@@ -3608,7 +3608,7 @@ alerting:
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testservicemonitor1/0
+- job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: endpoints
@@ -3775,7 +3775,7 @@ func TestTargetLimits(t *testing.T) {
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testservicemonitor1/0
+- job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: endpoints
@@ -3844,7 +3844,7 @@ alerting:
     prometheus_replica: $(POD_NAME)
 rule_files: []
 scrape_configs:
-- job_name: default/testservicemonitor1/0
+- job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: endpoints
