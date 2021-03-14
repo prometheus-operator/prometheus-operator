@@ -620,6 +620,7 @@ func subPathForStorage(s *monitoringv1.StorageSpec) string {
 		return ""
 	}
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if s.DisableMountSubPath {
 		return ""
 	}

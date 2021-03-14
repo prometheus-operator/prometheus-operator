@@ -75,8 +75,8 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, time.Now().String())
-	fmt.Fprintf(w, "\nAppVersion:"+os.Getenv("VERSION"))
+	fmt.Fprint(w, time.Now().String())
+	fmt.Fprint(w, "\nAppVersion:"+os.Getenv("VERSION"))
 }
 
 func checkBasicAuth(w http.ResponseWriter, r *http.Request) bool {

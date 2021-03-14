@@ -55,7 +55,7 @@ func testDenyPrometheus(t *testing.T) {
 	for _, allowed := range allowedNamespaces {
 		ctx.SetupPrometheusRBAC(t, allowed, framework.KubeClient)
 		p := framework.MakeBasicPrometheus(allowed, "allowed", "allowed", 1)
-		p, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
+		_, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -150,7 +150,7 @@ func testDenyServiceMonitor(t *testing.T) {
 	for _, allowed := range allowedNamespaces {
 		ctx.SetupPrometheusRBAC(t, allowed, framework.KubeClient)
 		p := framework.MakeBasicPrometheus(allowed, "allowed", "allowed", 1)
-		p, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
+		_, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
 		if err != nil {
 			t.Fatal(err)
 		}

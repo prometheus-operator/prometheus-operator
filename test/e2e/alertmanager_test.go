@@ -24,6 +24,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -34,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -114,7 +114,7 @@ func testAMVersionMigration(t *testing.T) {
 	}
 
 	am.Spec.Version = "v0.16.2"
-	am, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am)
+	_, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func testAMStorageUpdate(t *testing.T) {
 		},
 	}
 
-	am, err = framework.MonClientV1.Alertmanagers(ns).Update(context.TODO(), am, metav1.UpdateOptions{})
+	_, err = framework.MonClientV1.Alertmanagers(ns).Update(context.TODO(), am, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1273,7 +1273,7 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 
 	// Ensure resource reconciles
 	alertManager.Spec.Replicas = proto.Int32(2)
-	alertManager, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, alertManager)
+	_, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, alertManager)
 	if err != nil {
 		t.Fatal(err)
 	}

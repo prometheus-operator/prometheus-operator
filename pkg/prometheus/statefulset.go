@@ -864,6 +864,7 @@ func prefixedName(name string) string {
 }
 
 func subPathForStorage(s *monitoringv1.StorageSpec) string {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if s == nil || s.DisableMountSubPath {
 		return ""
 	}

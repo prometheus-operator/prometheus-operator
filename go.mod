@@ -11,8 +11,7 @@ require (
 	github.com/go-kit/kit v0.10.0
 	github.com/go-openapi/swag v0.19.12
 	github.com/gogo/protobuf v1.3.2
-	github.com/golang/protobuf v1.4.3
-	github.com/google/go-cmp v0.5.4
+	github.com/google/go-cmp v0.5.5
 	github.com/hashicorp/go-version v1.2.1
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/hashstructure v1.0.1-0.20200508175121-8fdbea448aa6
@@ -28,6 +27,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/thanos-io/thanos v0.17.2
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.20.1
