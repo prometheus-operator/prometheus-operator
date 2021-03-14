@@ -71,7 +71,7 @@ func main() {
 
 	fmt.Printf("listening for metric requests on '%v' protected via basic auth or bearer token\n", address)
 
-	http.ListenAndServe(address, nil)
+	_ = http.ListenAndServe(address, nil)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {

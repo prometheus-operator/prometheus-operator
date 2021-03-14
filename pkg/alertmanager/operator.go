@@ -887,12 +887,15 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	}
 
 	for _, ns := range namespaces {
-		c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
+		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
 				amConfigs[k] = obj.(*monitoringv1alpha1.AlertmanagerConfig)
 			}
 		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list alertmanager configs in namespace %s", ns)
+		}
 	}
 
 	var rejected int

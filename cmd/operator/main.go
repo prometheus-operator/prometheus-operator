@@ -206,7 +206,8 @@ func init() {
 
 func Main() int {
 	versionutil.RegisterFlags()
-	flagset.Parse(os.Args[1:])
+	// No need to check for errors because Parse would exit on error.
+	_ = flagset.Parse(os.Args[1:])
 
 	if versionutil.ShouldPrintVersion() {
 		versionutil.Print(os.Stdout, "prometheus-operator")
