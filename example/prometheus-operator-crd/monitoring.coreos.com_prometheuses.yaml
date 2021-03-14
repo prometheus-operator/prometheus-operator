@@ -2645,6 +2645,16 @@ spec:
                         type: string
                       description: Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer.
                       type: object
+                    metadataConfig:
+                      description: MetadataConfig configures the sending of series metadata to remote storage.
+                      properties:
+                        send:
+                          description: Whether metric metadata is sent to remote storage or not.
+                          type: boolean
+                        sendInterval:
+                          description: How frequently metric metadata is sent to remote storage.
+                          type: string
+                      type: object
                     name:
                       description: The name of the remote write queue, must be unique if specified. The name is used in metrics and logging in order to differentiate queues. Only valid in Prometheus versions 2.15.0 and newer.
                       type: string
