@@ -1526,7 +1526,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 				Namespace: "ns-value",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				EnforcedNamespaceLabel: "ns-key",
+				EnforcedNamespaceLabel: "nskey",
 			},
 		},
 		nil,
@@ -1559,6 +1559,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 									Regex:        "(.*)",
 									Replacement:  "$1",
 									SourceLabels: []string{"__meta_kubernetes_pod_ready"},
+									TargetLabel:  "pod_ready",
 								},
 							},
 						},
@@ -1624,10 +1625,11 @@ scrape_configs:
     replacement: web
   - source_labels:
     - __meta_kubernetes_pod_ready
+    target_label: pod_ready
     regex: (.*)
     replacement: $1
     action: replace
-  - target_label: ns-key
+  - target_label: nskey
     replacement: pod-monitor-ns
   - source_labels:
     - __address__
@@ -1667,7 +1669,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 				Namespace: "ns-value",
 			},
 			Spec: monitoringv1.PrometheusSpec{
-				EnforcedNamespaceLabel: "ns-key",
+				EnforcedNamespaceLabel: "nskey",
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
@@ -1691,7 +1693,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
 									SourceLabels: []string{"pod_name"},
-									TargetLabel:  "ns-key",
+									TargetLabel:  "nskey",
 								},
 							},
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
@@ -1700,6 +1702,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 									Regex:        "(.*)",
 									Replacement:  "$1",
 									SourceLabels: []string{"__meta_kubernetes_pod_ready"},
+									TargetLabel:  "pod_ready",
 								},
 							},
 						},
@@ -1779,10 +1782,11 @@ scrape_configs:
     replacement: web
   - source_labels:
     - __meta_kubernetes_pod_ready
+    target_label: pod_ready
     regex: (.*)
     replacement: $1
     action: replace
-  - target_label: ns-key
+  - target_label: nskey
     replacement: default
   - source_labels:
     - __address__
@@ -3247,7 +3251,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 
 	res["servicemonitor5"] = &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "testservicemonitor4",
+			Name:      "testservicemonitor5",
 			Namespace: "default",
 			Labels: map[string]string{
 				"group": "group8",
@@ -3402,7 +3406,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 
 	res["podmonitor5"] = &monitoringv1.PodMonitor{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "testpodmonitor4",
+			Name:      "testpodmonitor5",
 			Namespace: "default",
 			Labels: map[string]string{
 				"group": "group8",

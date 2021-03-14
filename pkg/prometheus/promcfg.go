@@ -25,6 +25,8 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
+	"github.com/prometheus/prometheus/config"
+	_ "github.com/prometheus/prometheus/discovery/install"
 	yaml "gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -387,7 +389,19 @@ func (cg *configGenerator) generateConfig(
 		cfg = append(cfg, cg.generateRemoteReadConfig(version, p, basicAuthSecrets))
 	}
 
-	return yaml.Marshal(cfg)
+	conf, err := yaml.Marshal(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load the config file to validate the fields that were generated -- toss the output
+	// as we will need to zip this up later from bytes.
+	_, err = config.Load(string(conf))
+	if err != nil {
+		return nil, err
+	}
+
+	return conf, err
 }
 
 // honorLabels determines the value of honor_labels.
