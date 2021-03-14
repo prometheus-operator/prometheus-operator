@@ -1001,8 +1001,8 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			},
 			map[string]assets.BasicAuthCredentials{
 				"apiserver": {
-					"foo",
-					"bar",
+					Username: "foo",
+					Password: "bar",
 				},
 			},
 			`kubernetes_sd_configs:

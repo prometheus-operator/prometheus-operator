@@ -4,4 +4,5 @@ run:
 linters:
   disable-all: true
   enable:
-    - unused
+  - govet
+  - unused
