@@ -3338,10 +3338,10 @@ func testPromStaticProbe(t *testing.T) {
 	group := "probe-test"
 	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
 
-	proberUrl := blackboxExporterName + ":9115"
+	proberURL := blackboxExporterName + ":9115"
 	targets := []string{svc.Name + ":9090"}
 
-	probe := framework.MakeBasicStaticProbe(group, proberUrl, targets)
+	probe := framework.MakeBasicStaticProbe(group, proberURL, targets)
 	if _, err := framework.MonClientV1.Probes(ns).Create(context.TODO(), probe, metav1.CreateOptions{}); err != nil {
 		t.Fatal("Creating Probe failed: ", err)
 	}
@@ -3362,7 +3362,7 @@ func testPromStaticProbe(t *testing.T) {
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	expectedURL := url.URL{Host: proberUrl, Scheme: "http", Path: "/probe"}
+	expectedURL := url.URL{Host: proberURL, Scheme: "http", Path: "/probe"}
 	q := expectedURL.Query()
 	q.Set("module", "http_2xx")
 	q.Set("target", targets[0])

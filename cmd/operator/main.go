@@ -63,7 +63,7 @@ const (
 
 const (
 	logFormatLogfmt = "logfmt"
-	logFormatJson   = "json"
+	logFormatJSON   = "json"
 )
 
 const (
@@ -140,7 +140,7 @@ var (
 	}
 	availableLogFormats = []string{
 		logFormatLogfmt,
-		logFormatJson,
+		logFormatJSON,
 	}
 	cfg             = operator.Config{}
 	rcCPU, rcMemory string
@@ -214,7 +214,7 @@ func Main() int {
 	}
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
-	if cfg.LogFormat == logFormatJson {
+	if cfg.LogFormat == logFormatJSON {
 		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
 	}
 	switch cfg.LogLevel {

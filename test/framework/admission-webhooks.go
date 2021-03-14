@@ -24,7 +24,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func CreateMutatingHook(kubeClient kubernetes.Interface, certBytes []byte, namespace, yamlPath string) (finalizerFn, error) {
+func createMutatingHook(kubeClient kubernetes.Interface, certBytes []byte, namespace, yamlPath string) (FinalizerFn, error) {
 	h, err := parseMutatingHookYaml(yamlPath)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("Failed parsing mutating webhook"))
@@ -38,12 +38,12 @@ func CreateMutatingHook(kubeClient kubernetes.Interface, certBytes []byte, names
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to create mutating webhook %s", h.Name))
 	}
 
-	finalizerFn := func() error { return DeleteMutatingWebhook(kubeClient, h.Name) }
+	finalizerFn := func() error { return deleteMutatingWebhook(kubeClient, h.Name) }
 
 	return finalizerFn, nil
 }
 
-func CreateValidatingHook(kubeClient kubernetes.Interface, certBytes []byte, namespace, yamlPath string) (finalizerFn, error) {
+func createValidatingHook(kubeClient kubernetes.Interface, certBytes []byte, namespace, yamlPath string) (FinalizerFn, error) {
 	h, err := parseValidatingHookYaml(yamlPath)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("Failed parsing mutating webhook"))
@@ -57,16 +57,16 @@ func CreateValidatingHook(kubeClient kubernetes.Interface, certBytes []byte, nam
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to create validating webhook %s", h.Name))
 	}
 
-	finalizerFn := func() error { return DeleteValidatingWebhook(kubeClient, h.Name) }
+	finalizerFn := func() error { return deleteValidatingWebhook(kubeClient, h.Name) }
 
 	return finalizerFn, nil
 }
 
-func DeleteMutatingWebhook(kubeClient kubernetes.Interface, name string) error {
+func deleteMutatingWebhook(kubeClient kubernetes.Interface, name string) error {
 	return kubeClient.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
 
-func DeleteValidatingWebhook(kubeClient kubernetes.Interface, name string) error {
+func deleteValidatingWebhook(kubeClient kubernetes.Interface, name string) error {
 	return kubeClient.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations().Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
 

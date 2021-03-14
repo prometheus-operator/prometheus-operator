@@ -177,7 +177,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	for _, informer := range c.promInfs.GetInformers() {
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
-	c.metrics.MustRegister(NewPrometheusCollectorForStores(promStores...))
+	c.metrics.MustRegister(newPrometheusCollectorForStores(promStores...))
 
 	c.smonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -1327,10 +1327,10 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-// PrometheusStatus evaluates the current status of a Prometheus deployment with
-// respect to its specified resource object. It return the status and a list of
+// Status evaluates the current status of a Prometheus deployment with
+// respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
-func PrometheusStatus(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
+func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
 	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
 	pods, err := kclient.CoreV1().Pods(p.Namespace).List(ctx, ListOptions(p.Name))

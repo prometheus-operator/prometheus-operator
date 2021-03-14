@@ -4,5 +4,6 @@ run:
 linters:
   disable-all: true
   enable:
+  - golint
   - govet
   - unused
