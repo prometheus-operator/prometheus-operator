@@ -437,7 +437,7 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+			Value: fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
 		{
 			Key:   "honor_labels",
@@ -670,7 +670,7 @@ func (cg *configGenerator) generateProbeConfig(
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string) yaml.MapSlice {
 
-	jobName := fmt.Sprintf("%s/%s", m.Namespace, m.Name)
+	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -901,7 +901,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+			Value: fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
 		{
 			Key:   "honor_labels",
