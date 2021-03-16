@@ -2,7 +2,34 @@
 
 This document tracks people and use cases for the Prometheus Operator in production. By creating a list of production use cases we hope to build a community of advisors that we can reach out to with experience using various the Prometheus Operator applications, operation environments, and cluster sizes. The Prometheus Operator development team may reach out periodically to check-in on how the Prometheus Operator is working in the field and update this list.
 
-## All OpenShift Users
+## Giant Swarm
+
+https://www.giantswarm.io/
+
+Environments: AWS, Azure, Bare Metal
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes (with additional tight Giant Swarm integrations)
+
+Details:
+- One prometheus operator per management cluster and one prometheus instance per workload cluster
+- Customers can also install kube-prometheus for their workload using our App Platform
+- 760000 samples/s
+- 35M active series
+
+## Lunar
+
+https://lunar.app/
+
+Environments: AWS
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- One prometheus operator in our platform cluster and one prometheus instance per workload cluster
+- 17k samples/s
+- 841k active series
+
+## OpenShift
 
 https://www.openshift.com/
 
@@ -50,22 +77,8 @@ Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): 
 
 Details (optional):
 - HA Pair of Prometheus
-- 108161 samples/s
-- 2.3M active series
-
-## Giant Swarm
-
-https://www.giantswarm.io/
-
-Environments: AWS, Azure, Bare Metal
-
-Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes (with additional tight Giant Swarm integrations)
-
-Details:
-- One prometheus operator per management cluster and one prometheus instance per workload cluster
-- Customers can also install kube-prometheus for their workload using our App Platform
-- 760000 samples/s
-- 35M active series
+- 517000 samples/s
+- 10.7M active series
 
 ## VSHN AG
 
@@ -78,19 +91,6 @@ Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): 
 Details (optional):
 - A huge fleet of OpenShift and Kubernetes clusters, each using Prometheus Operator
 - All managed by [Project Syn](https://syn.tools/), leveraging Commodore Components like [component-rancher-monitoring](https://github.com/projectsyn/component-rancher-monitoring) which re-uses Prometheus Operator
-
-## Lunar
-
-https://lunar.app/
-
-Environments: AWS
-
-Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
-
-Details:
-- One prometheus operator in our platform cluster and one prometheus instance per workload cluster
-- 17k samples/s
-- 841k active series
 
 ## <Insert Company/Organization Name>
 

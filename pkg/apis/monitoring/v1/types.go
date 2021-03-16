@@ -185,6 +185,12 @@ type PrometheusSpec struct {
 	// ensure only clients authorized to perform these actions can do so.
 	// For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
 	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
+	// Enable access to Prometheus disabled features. By default, no features are enabled.
+	// Enabling disabled features is entirely outside the scope of what the maintainers will
+	// support and by doing so, you accept that this behaviour may break at any
+	// time without notice.
+	// For more information see https://prometheus.io/docs/prometheus/latest/disabled_features/
+	EnableFeatures []string `json:"enableFeatures,omitempty"`
 	// The external URL the Prometheus instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Prometheus is not
 	// served from root of a DNS name.
@@ -573,7 +579,7 @@ type RemoteWriteSpec struct {
 	WriteRelabelConfigs []RelabelConfig `json:"writeRelabelConfigs,omitempty"`
 	//BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// File to read bearer token for remote write.
+	// Bearer token for remote write.
 	BearerToken string `json:"bearerToken,omitempty"`
 	// File to read bearer token for remote write.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
@@ -628,7 +634,7 @@ type RemoteReadSpec struct {
 	ReadRecent bool `json:"readRecent,omitempty"`
 	// BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
-	// bearer token for remote read.
+	// Bearer token for remote read.
 	BearerToken string `json:"bearerToken,omitempty"`
 	// File to read bearer token for remote read.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
@@ -885,6 +891,15 @@ type ProbeSpec struct {
 	Interval string `json:"interval,omitempty"`
 	// Timeout for scraping metrics from the Prometheus exporter.
 	ScrapeTimeout string `json:"scrapeTimeout,omitempty"`
+	// TLS configuration to use when scraping the endpoint.
+	TLSConfig *ProbeTLSConfig `json:"tlsConfig,omitempty"`
+	// Secret to mount to read bearer token for scraping targets. The secret
+	// needs to be in the same namespace as the probe and accessible by
+	// the Prometheus Operator.
+	BearerTokenSecret v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
+	// BasicAuth allow an endpoint to authenticate over basic authentication.
+	// More info: https://prometheus.io/docs/operating/configuration/#endpoint
+	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 }
 
 // ProbeTargets defines a set of static and dynamically discovered targets for the prober.
@@ -1456,4 +1471,10 @@ func (f *PrometheusRule) DeepCopyObject() runtime.Object {
 // DeepCopyObject implements the runtime.Object interface.
 func (l *PrometheusRuleList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
+}
+
+// ProbeTLSConfig specifies TLS configuration parameters.
+// +k8s:openapi-gen=true
+type ProbeTLSConfig struct {
+	SafeTLSConfig `json:",inline"`
 }

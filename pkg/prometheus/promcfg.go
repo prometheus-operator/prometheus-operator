@@ -302,6 +302,7 @@ func (cg *configGenerator) generateConfig(
 				probes[identifier],
 				apiserverConfig,
 				basicAuthSecrets,
+				bearerTokens,
 				p.Spec.OverrideHonorLabels,
 				p.Spec.OverrideHonorTimestamps,
 				p.Spec.IgnoreNamespaceSelectors,
@@ -436,7 +437,7 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+			Value: fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
 		{
 			Key:   "honor_labels",
@@ -663,12 +664,13 @@ func (cg *configGenerator) generateProbeConfig(
 	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
 	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	bearerTokens map[string]assets.BearerToken,
 	ignoreHonorLabels bool,
 	overrideHonorTimestamps bool,
 	ignoreNamespaceSelectors bool,
 	enforcedNamespaceLabel string) yaml.MapSlice {
 
-	jobName := fmt.Sprintf("%s/%s", m.Namespace, m.Name)
+	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -854,6 +856,28 @@ func (cg *configGenerator) generateProbeConfig(
 
 	}
 
+	if m.Spec.TLSConfig != nil {
+		cfg = addSafeTLStoYaml(cfg, m.Namespace, m.Spec.TLSConfig.SafeTLSConfig)
+	}
+
+	if m.Spec.BearerTokenSecret.Name != "" {
+		pnKey := fmt.Sprintf("probe/%s/%s", m.GetNamespace(), m.GetName())
+		if s, ok := bearerTokens[pnKey]; ok {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
+		}
+	}
+
+	if m.Spec.BasicAuth != nil {
+		if s, ok := basicAuthSecrets[fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)]; ok {
+			cfg = append(cfg, yaml.MapItem{
+				Key: "basic_auth", Value: yaml.MapSlice{
+					{Key: "username", Value: s.Username},
+					{Key: "password", Value: s.Password},
+				},
+			})
+		}
+	}
+
 	return cfg
 }
 
@@ -877,7 +901,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
-			Value: fmt.Sprintf("%s/%s/%d", m.Namespace, m.Name, i),
+			Value: fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i),
 		},
 		{
 			Key:   "honor_labels",

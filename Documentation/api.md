@@ -31,6 +31,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [Probe](#probe)
 * [ProbeList](#probelist)
 * [ProbeSpec](#probespec)
+* [ProbeTLSConfig](#probetlsconfig)
 * [ProbeTargetIngress](#probetargetingress)
 * [ProbeTargetStaticConfig](#probetargetstaticconfig)
 * [ProbeTargets](#probetargets)
@@ -406,6 +407,23 @@ ProbeSpec contains specification parameters for a Probe.
 | targets | Targets defines a set of static and/or dynamically discovered targets to be probed using the prober. | [ProbeTargets](#probetargets) | false |
 | interval | Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used. | string | false |
 | scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. | string | false |
+| tlsConfig | TLS configuration to use when scraping the endpoint. | *[ProbeTLSConfig](#probetlsconfig) | false |
+| bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the probe and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
+
+[Back to TOC](#table-of-contents)
+
+## ProbeTLSConfig
+
+ProbeTLSConfig specifies TLS configuration parameters.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| ca | Struct containing the CA cert to use for the targets. | SecretOrConfigMap | false |
+| cert | Struct containing the client cert file for the targets. | SecretOrConfigMap | false |
+| keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| serverName | Used to verify the hostname for the targets. | string | false |
+| insecureSkipVerify | Disable target certificate validation. | bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -558,6 +576,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | rules | /--rules.*/ command-line arguments. | [Rules](#rules) | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
 | enableAdminAPI | Enable access to prometheus web admin API. Defaults to the value of `false`. WARNING: Enabling the admin APIs enables mutating endpoints, to delete data, shutdown Prometheus, and more. Enabling this should be done with care and the user is advised to add additional authentication authorization via a proxy to ensure only clients authorized to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis | bool | false |
+| enableFeatures | Enable access to Prometheus disabled features. By default, no features are enabled. Enabling disabled features is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. For more information see https://prometheus.io/docs/prometheus/latest/disabled_features/ | []string | false |
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
 | query | QuerySpec defines the query command line flags when starting Prometheus. | *[QuerySpec](#queryspec) | false |
@@ -674,7 +693,7 @@ RemoteReadSpec defines the remote_read configuration for prometheus.
 | remoteTimeout | Timeout for requests to the remote read endpoint. | string | false |
 | readRecent | Whether reads should be made for queries for time ranges that the local storage should have complete data for. | bool | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
-| bearerToken | bearer token for remote read. | string | false |
+| bearerToken | Bearer token for remote read. | string | false |
 | bearerTokenFile | File to read bearer token for remote read. | string | false |
 | tlsConfig | TLS Config to use for remote read. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
@@ -693,7 +712,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | headers | Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer. | map[string]string | false |
 | writeRelabelConfigs | The list of remote write relabel configurations. | [][RelabelConfig](#relabelconfig) | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
-| bearerToken | File to read bearer token for remote write. | string | false |
+| bearerToken | Bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
