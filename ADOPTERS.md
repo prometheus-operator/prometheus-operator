@@ -16,6 +16,18 @@ Details:
 - 760000 samples/s
 - 35M active series
 
+## Kinvolk Lokomotive Kubernetes
+
+https://kinvolk.io/lokomotive-kubernetes/
+
+Environments: AKS, AWS, Bare Metal, Equinix Metal
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- Lokomotive is self-hosted, security-centric and composable Kubernetes distribution for bare-metal and cloud platforms
+- Deployed by Kinvolk for its own hosted infrastructure, as well as by Kinvolk customers and community users
+
 ## Lunar
 
 https://lunar.app/
