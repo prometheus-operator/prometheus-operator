@@ -729,6 +729,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
 | queueConfig | QueueConfig allows tuning of the remote write queue parameters. | *[QueueConfig](#queueconfig) | false |
+| metadataConfig | MetadataConfig configures the sending of series metadata to remote storage. | *[MetadataConfig](#metadataconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
