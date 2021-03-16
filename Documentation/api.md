@@ -22,6 +22,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
+* [MetadataConfig](#metadataconfig)
 * [NamespaceSelector](#namespaceselector)
 * [PodMetricsEndpoint](#podmetricsendpoint)
 * [PodMetricsEndpointTLSConfig](#podmetricsendpointtlsconfig)
@@ -283,6 +284,17 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 | relabelings | RelabelConfigs to apply to samples before scraping. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
+
+[Back to TOC](#table-of-contents)
+
+## MetadataConfig
+
+Configures the sending of series metadata to remote storage.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| send | Whether metric metadata is sent to remote storage or not. | bool | false |
+| sendInterval | How frequently metric metadata is sent to remote storage. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -717,6 +729,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
 | queueConfig | QueueConfig allows tuning of the remote write queue parameters. | *[QueueConfig](#queueconfig) | false |
+| metadataConfig | MetadataConfig configures the sending of series metadata to remote storage. | *[MetadataConfig](#metadataconfig) | false |
 
 [Back to TOC](#table-of-contents)
 

@@ -589,6 +589,8 @@ type RemoteWriteSpec struct {
 	ProxyURL string `json:"proxyUrl,omitempty"`
 	// QueueConfig allows tuning of the remote write queue parameters.
 	QueueConfig *QueueConfig `json:"queueConfig,omitempty"`
+	// MetadataConfig configures the sending of series metadata to remote storage.
+	MetadataConfig *MetadataConfig `json:"metadataConfig,omitempty"`
 }
 
 // QueueConfig allows the tuning of remote_write queue_config parameters. This object
@@ -1345,6 +1347,15 @@ type AlertmanagerList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Alertmanagers
 	Items []Alertmanager `json:"items"`
+}
+
+// Configures the sending of series metadata to remote storage.
+// +k8s:openapi-gen=true
+type MetadataConfig struct {
+	// Whether metric metadata is sent to remote storage or not.
+	Send bool `json:"send,omitempty"`
+	// How frequently metric metadata is sent to remote storage.
+	SendInterval string `json:"sendInterval,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only. Not
