@@ -26,12 +26,20 @@ import (
 )
 
 const (
-	firstParagraph = `<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
-</div>
-
-# API Docs
+	firstParagraph = `---
+title: "API"
+description: "Generated API docs for the Prometheus Operator"
+lead: ""
+date: 2021-03-08T08:49:31+00:00
+lastmod: 2021-03-08T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 1000
+toc: true
+---
 
 This Document documents the types introduced by the Prometheus Operator to be consumed by users.
 
