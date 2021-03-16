@@ -3,7 +3,6 @@ title: "Thanos"
 description: "Thanos and the Prometheus Operator."
 lead: "Thanos and the Prometheus Operator."
 date: 2021-03-08T08:49:31+00:00
-lastmod: 2021-03-08T08:49:31+00:00
 draft: false
 images: []
 menu:

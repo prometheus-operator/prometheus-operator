@@ -3,7 +3,6 @@ title: "Design"
 description: "This document describes the design and interaction between the custom resource definitions that the Prometheus Operator introduces."
 lead: ""
 date: 2021-03-08T08:49:31+00:00
-lastmod: 2021-03-08T08:49:31+00:00
 draft: false
 images: []
 menu:

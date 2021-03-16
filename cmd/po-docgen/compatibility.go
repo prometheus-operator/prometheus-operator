@@ -26,7 +26,6 @@ title: "Compatibility"
 description: "The Prometheus Operator supports a number of Kubernetes and Prometheus releases."
 lead: ""
 date: 2021-03-08T08:49:31+00:00
-lastmod: 2021-03-08T08:49:31+00:00
 draft: false
 images: []
 menu:
