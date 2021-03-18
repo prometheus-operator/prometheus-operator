@@ -45,6 +45,16 @@ This is a meta user; please feel free to document specific OpenShift users!
 
 All OpenShift clusters use the Prometheus Operator to manage the cluster monitoring stack as well as user workload monitoring. This means the Prometheus Operator's users include all OpenShift customers.
 
+## Opstrace
+
+[https://opstrace.com](https://opstrace.com)
+
+Environments: AWS, Google Cloud
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): No
+
+Opstrace installations use the Prometheus Operator internally to collect metrics and to alert. Opstrace users also often use the Prometheus Operator to scrape their own aplications and remote_write those metrics to Opstrace.
+
 ## Polar Signals
 
 [polarsignals.com](https://polarsignals.com/)
