@@ -306,6 +306,9 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 
 	// assert that no prometheus target points to the "instance" namespace
 	targets, err := framework.GetActiveTargets(instanceNs, "prometheus-instance")
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, target := range targets {
 		for k, v := range target.Labels {
 			if k == "namespace" && v == instanceNs {

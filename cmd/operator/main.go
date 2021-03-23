@@ -455,7 +455,7 @@ func Main() int {
 		wg.Go(serveTLS(srv, l, logger))
 	}
 
-	term := make(chan os.Signal)
+	term := make(chan os.Signal, 1)
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
 
 	select {

@@ -1262,9 +1262,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(context.TODO(), s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			level.Error(c.logger).Log("failed to delete StatefulSet to cleanup")
+			level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 		}
 	})
+	if err != nil {
+		return errors.Wrap(err, "listing StatefulSet resources failed")
+	}
 
 	return nil
 }

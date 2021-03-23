@@ -6,4 +6,5 @@ linters:
   enable:
   - golint
   - govet
+  - staticcheck
   - unused
