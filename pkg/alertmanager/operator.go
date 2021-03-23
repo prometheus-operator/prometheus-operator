@@ -161,6 +161,12 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		return errors.Wrap(err, "error creating alertmanager informers")
 	}
 
+	var alertmanagerStores []cache.Store
+	for _, informer := range c.alrtInfs.GetInformers() {
+		alertmanagerStores = append(alertmanagerStores, informer.Informer().GetStore())
+	}
+	c.metrics.MustRegister(newAlertmanagerCollectorForStores(alertmanagerStores...))
+
 	c.alrtCfgInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			c.config.Namespaces.AllowList,
@@ -1355,7 +1361,7 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-func AlertmanagerStatus(ctx context.Context, kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
+func Status(ctx context.Context, kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
 	res := &monitoringv1.AlertmanagerStatus{Paused: a.Spec.Paused}
 
 	pods, err := kclient.CoreV1().Pods(a.Namespace).List(ctx, ListOptions(a.Name))

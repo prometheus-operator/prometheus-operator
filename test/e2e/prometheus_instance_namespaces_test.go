@@ -25,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func testPrometheusInstanceNamespaces_AllNs(t *testing.T) {
+func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 
@@ -58,7 +58,7 @@ func testPrometheusInstanceNamespaces_AllNs(t *testing.T) {
 	}
 }
 
-func testPrometheusInstanceNamespaces_DenyList(t *testing.T) {
+func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 
@@ -182,7 +182,7 @@ func testPrometheusInstanceNamespaces_DenyList(t *testing.T) {
 	}
 }
 
-func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
+func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 
@@ -315,11 +315,11 @@ func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
 	}
 }
 
-// testPrometheusInstanceNamespaces_NamespaceNotFound verifies that the
+// testPrometheusInstanceNamespacesNamespaceNotFound verifies that the
 // operator can reconcile Prometheus and associated resources even when
 // it's configured to watch namespaces that don't exist.
 // See https://github.com/prometheus-operator/prometheus-operator/issues/3347
-func testPrometheusInstanceNamespaces_NamespaceNotFound(t *testing.T) {
+func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 

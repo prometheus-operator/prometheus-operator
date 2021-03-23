@@ -315,7 +315,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 		}
 	}
 
-	silId, err := framework.CreateSilence(ns, "alertmanager-test-0")
+	silID, err := framework.CreateSilence(ns, "alertmanager-test-0")
 	if err != nil {
 		t.Fatalf("failed to create silence: %v", err)
 	}
@@ -331,8 +331,8 @@ func testAMClusterGossipSilences(t *testing.T) {
 				return false, nil
 			}
 
-			if *silences[0].ID != silId {
-				return false, errors.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silId, *silences[0].ID)
+			if *silences[0].ID != silID {
+				return false, errors.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
 			}
 			return true, nil
 		})
@@ -760,7 +760,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	slackApiURLSecret := &v1.Secret{
+	slackAPIURLSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "s-receiver-api-url",
 		},
@@ -768,7 +768,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			"api-url": []byte("http://slack.example.com"),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), slackApiURLSecret, metav1.CreateOptions{}); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), slackAPIURLSecret, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
