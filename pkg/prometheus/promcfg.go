@@ -1538,13 +1538,15 @@ func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *
 			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
 		}
 
-		if spec.MetadataConfig != nil {
+		if spec.MetadataConfig != nil && version.GTE(semver.MustParse("2.23.0")) {
 			metadataConfig := yaml.MapSlice{}
 			metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
 			if spec.MetadataConfig.SendInterval != "" {
 				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
 			}
+			cfg = append(cfg, yaml.MapItem{Key: "metadata_config", Value: metadataConfig})
 		}
+
 		cfgs = append(cfgs, cfg)
 	}
 
