@@ -21,12 +21,19 @@ import (
 )
 
 func printCompatMatrixDocs() {
-	fmt.Println(`<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
-</div>
-
-# Compatibility
+	fmt.Println(`---
+title: "Compatibility"
+description: "The Prometheus Operator supports a number of Kubernetes and Prometheus releases."
+lead: ""
+date: 2021-03-08T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 200
+toc: true
+---
 
 The Prometheus Operator supports a number of Kubernetes and Prometheus releases.
 

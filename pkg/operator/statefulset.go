@@ -75,13 +75,18 @@ func CreateConfigReloader(
 		Limits:   v1.ResourceList{},
 		Requests: v1.ResourceList{},
 	}
-	if config.CPU != "0" {
-		resources.Limits[v1.ResourceCPU] = resource.MustParse(config.CPU)
-		resources.Requests[v1.ResourceCPU] = resource.MustParse(config.CPU)
+
+	if config.CPURequest != "0" {
+		resources.Requests[v1.ResourceCPU] = resource.MustParse(config.CPURequest)
 	}
-	if config.Memory != "0" {
-		resources.Limits[v1.ResourceMemory] = resource.MustParse(config.Memory)
-		resources.Requests[v1.ResourceMemory] = resource.MustParse(config.Memory)
+	if config.CPULimit != "0" {
+		resources.Limits[v1.ResourceCPU] = resource.MustParse(config.CPULimit)
+	}
+	if config.MemoryRequest != "0" {
+		resources.Requests[v1.ResourceMemory] = resource.MustParse(config.MemoryRequest)
+	}
+	if config.MemoryLimit != "0" {
+		resources.Limits[v1.ResourceMemory] = resource.MustParse(config.MemoryLimit)
 	}
 
 	return v1.Container{

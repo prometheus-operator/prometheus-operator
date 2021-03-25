@@ -69,7 +69,7 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 	if kubeconfigFile != "" {
 		cfg, err = clientcmd.BuildConfigFromFlags("", kubeconfigFile)
 		if err != nil {
-			return nil, fmt.Errorf("Error creating config from specified file: %s %v\n", kubeconfigFile, err)
+			return nil, fmt.Errorf("error creating config from %s: %w", kubeconfigFile, err)
 		}
 	} else {
 		if len(host) == 0 {
@@ -82,7 +82,7 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 			}
 			hostURL, err := url.Parse(host)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing host url %s : %v", host, err)
+				return nil, fmt.Errorf("error parsing host url %s: %w", host, err)
 			}
 			if hostURL.Scheme == "https" {
 				cfg.TLSClientConfig = *tlsConfig

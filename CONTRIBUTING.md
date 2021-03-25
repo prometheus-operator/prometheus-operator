@@ -1,4 +1,17 @@
-# How to Contribute
+---
+title: "Contributing"
+description: "How can I contribute to the Prometheus Operator and kube-prometheus?"
+lead: ""
+date: 2021-03-08T08:48:57+00:00
+lastmod: 2021-03-08T08:48:57+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "prologue"
+weight: 200
+toc: true
+---
 
 This project is licensed under the [Apache 2.0 license](LICENSE) and accept
 contributions via GitHub pull requests.  This document outlines some of the

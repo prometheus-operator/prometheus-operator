@@ -4,4 +4,7 @@ run:
 linters:
   disable-all: true
   enable:
-    - unused
+  - golint
+  - govet
+  - staticcheck
+  - unused

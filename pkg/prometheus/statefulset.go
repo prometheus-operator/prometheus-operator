@@ -406,6 +406,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		promArgs = append(promArgs, "-web.enable-admin-api")
 	}
 
+	if len(p.Spec.EnableFeatures) > 0 {
+		promArgs = append(promArgs, "-enable-feature="+strings.Join(p.Spec.EnableFeatures[:], ","))
+	}
+
 	if p.Spec.ExternalURL != "" {
 		promArgs = append(promArgs, "-web.external-url="+p.Spec.ExternalURL)
 	}
@@ -563,24 +567,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 	var readinessProbeHandler v1.Handler
 	{
-		healthyPath := path.Clean(webRoutePrefix + "/-/healthy")
-		if p.Spec.ListenLocal {
-			localHealthyPath := fmt.Sprintf("http://localhost:9090%s", healthyPath)
-			readinessProbeHandler.Exec = &v1.ExecAction{
-				Command: []string{
-					"sh",
-					"-c",
-					fmt.Sprintf(localProbe, localHealthyPath, localHealthyPath),
-				},
-			}
-		} else {
-			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
-				Path: healthyPath,
-				Port: intstr.FromString(p.Spec.PortName),
-			}
-		}
-	}
-	{
 		readyPath := path.Clean(webRoutePrefix + "/-/ready")
 		if p.Spec.ListenLocal {
 			localReadyPath := fmt.Sprintf("http://localhost:9090%s", readyPath)
@@ -612,10 +598,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	podSelectorLabels := map[string]string{
-		"app":                   "prometheus",
-		"prometheus":            p.Name,
-		shardLabelName:          fmt.Sprintf("%d", shard),
-		prometheusNameLabelName: p.Name,
+		"app":                          "prometheus",
+		"app.kubernetes.io/name":       "prometheus",
+		"app.kubernetes.io/version":    version.String(),
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   p.Name,
+		"prometheus":                   p.Name,
+		shardLabelName:                 fmt.Sprintf("%d", shard),
+		prometheusNameLabelName:        p.Name,
 	}
 	if p.Spec.PodMetadata != nil {
 		if p.Spec.PodMetadata.Labels != nil {
@@ -874,6 +864,7 @@ func prefixedName(name string) string {
 }
 
 func subPathForStorage(s *monitoringv1.StorageSpec) string {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if s == nil || s.DisableMountSubPath {
 		return ""
 	}
