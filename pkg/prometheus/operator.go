@@ -1577,7 +1577,7 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
 
-	_, err := sClient.Get(ctx, tlsAssetsSecret.Name, metav1.GetOptions{})
+	secret, err := sClient.Get(ctx, tlsAssetsSecret.Name, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(
@@ -1591,8 +1591,12 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 
 	} else {
-		err = k8sutil.UpdateSecret(ctx, sClient, tlsAssetsSecret)
-		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
+		eq := reflect.DeepEqual(secret.Data, tlsAssetsSecret.Data)
+		if !eq {
+			err = k8sutil.UpdateSecret(ctx, sClient, tlsAssetsSecret)
+			level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
+		}
+
 	}
 
 	if err != nil {
