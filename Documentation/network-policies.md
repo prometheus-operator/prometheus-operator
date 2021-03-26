@@ -114,7 +114,7 @@ spec:
       protocol: TCP
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: grafana
+      app: grafana
 ```
 
 #### Prometheus
@@ -166,7 +166,7 @@ spec:
       protocol: TCP
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: node-exporter
+      app: node-exporter
 ```
 
 #### Kube-state-metrics
@@ -197,5 +197,5 @@ spec:
       protocol: TCP
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: kube-state-metrics
+      app: kube-state-metrics
 ```
