@@ -26,6 +26,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerStatus](#alertmanagerstatus)
 * [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig)
 * [BasicAuth](#basicauth)
+* [DynamicProbeTargetConfig](#dynamicprobetargetconfig)
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
@@ -40,7 +41,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ProbeList](#probelist)
 * [ProbeSpec](#probespec)
 * [ProbeTLSConfig](#probetlsconfig)
-* [ProbeTargetIngress](#probetargetingress)
+* [ProbeTargetDynamicConfig](#probetargetdynamicconfig)
 * [ProbeTargetStaticConfig](#probetargetstaticconfig)
 * [ProbeTargets](#probetargets)
 * [ProberSpec](#proberspec)
@@ -245,6 +246,18 @@ BasicAuth allow an endpoint to authenticate over basic authentication More info:
 
 [Back to TOC](#table-of-contents)
 
+## DynamicProbeTargetConfig
+
+DynamicProbeTargetConfig defines the set of Ingress objects considered for probing.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| selector | Select objects by labels. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
+| namespaceSelector | Select objects by namespace. | [NamespaceSelector](#namespaceselector) | false |
+| relabelingConfigs | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+
+[Back to TOC](#table-of-contents)
+
 ## EmbeddedObjectMetadata
 
 EmbeddedObjectMetadata contains a subset of the fields included in k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta Only fields which are relevant to embedded resources are included.
@@ -446,15 +459,14 @@ ProbeTLSConfig specifies TLS configuration parameters.
 
 [Back to TOC](#table-of-contents)
 
-## ProbeTargetIngress
+## ProbeTargetDynamicConfig
 
-ProbeTargetIngress defines the set of Ingress objects considered for probing.
+ProbeTargetDynamicConfig defines the set of dynamic targets considered for probing.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| selector | Select Ingress objects by labels. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
-| namespaceSelector | Select Ingress objects by namespace. | [NamespaceSelector](#namespaceselector) | false |
-| relabelingConfigs | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+| kubernetesSDRole |  | string | false |
+| dynamicProbeTargetConfig |  | *[DynamicProbeTargetConfig](#dynamicprobetargetconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -477,7 +489,7 @@ ProbeTargets defines a set of static and dynamically discovered targets for the 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | staticConfig | StaticConfig defines static targets which are considers for probing. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config. | *[ProbeTargetStaticConfig](#probetargetstaticconfig) | false |
-| ingress | Ingress defines the set of dynamically discovered ingress objects which hosts are considered for probing. | *[ProbeTargetIngress](#probetargetingress) | false |
+| dynamicConfig | DynamicConfig defines the set of dynamically discovered objects which hosts are considered for probing. | *[ProbeTargetDynamicConfig](#probetargetdynamicconfig) | false |
 
 [Back to TOC](#table-of-contents)
 

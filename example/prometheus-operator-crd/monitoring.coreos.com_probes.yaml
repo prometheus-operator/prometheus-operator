@@ -113,20 +113,57 @@ spec:
               targets:
                 description: Targets defines a set of static and/or dynamically discovered targets to be probed using the prober.
                 properties:
-                  ingress:
-                    description: Ingress defines the set of dynamically discovered ingress objects which hosts are considered for probing.
+                  dynamicConfig:
+                    description: DynamicConfig defines the set of dynamically discovered objects which hosts are considered for probing.
                     properties:
-                      namespaceSelector:
-                        description: Select Ingress objects by namespace.
+                      kubernetesSDConfig:
+                        description: KubernetesSDConfig is the configuration for Kubernetes service discovery.
                         properties:
-                          any:
-                            description: Boolean describing whether all namespaces are selected in contrast to a list restricting them.
-                            type: boolean
-                          matchNames:
-                            description: List of namespace names.
-                            items:
-                              type: string
-                            type: array
+                          namespaceSelector:
+                            description: Select objects by namespace.
+                            properties:
+                              any:
+                                description: Boolean describing whether all namespaces are selected in contrast to a list restricting them.
+                                type: boolean
+                              matchNames:
+                                description: List of namespace names.
+                                items:
+                                  type: string
+                                type: array
+                            type: object
+                          role:
+                            description: Role is role of the service in Kubernetes.
+                            type: string
+                          selector:
+                            description: Select objects by labels.
+                            properties:
+                              matchExpressions:
+                                description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
+                                items:
+                                  description: A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.
+                                  properties:
+                                    key:
+                                      description: key is the label key that the selector applies to.
+                                      type: string
+                                    operator:
+                                      description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+                                      type: string
+                                    values:
+                                      description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+                                      items:
+                                        type: string
+                                      type: array
+                                  required:
+                                  - key
+                                  - operator
+                                  type: object
+                                type: array
+                              matchLabels:
+                                additionalProperties:
+                                  type: string
+                                description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                type: object
+                            type: object
                         type: object
                       relabelingConfigs:
                         description: 'RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
@@ -159,36 +196,6 @@ spec:
                               type: string
                           type: object
                         type: array
-                      selector:
-                        description: Select Ingress objects by labels.
-                        properties:
-                          matchExpressions:
-                            description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
-                            items:
-                              description: A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.
-                              properties:
-                                key:
-                                  description: key is the label key that the selector applies to.
-                                  type: string
-                                operator:
-                                  description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
-                                  type: string
-                                values:
-                                  description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
-                                  items:
-                                    type: string
-                                  type: array
-                              required:
-                              - key
-                              - operator
-                              type: object
-                            type: array
-                          matchLabels:
-                            additionalProperties:
-                              type: string
-                            description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
-                            type: object
-                        type: object
                     type: object
                   staticConfig:
                     description: 'StaticConfig defines static targets which are considers for probing. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.'

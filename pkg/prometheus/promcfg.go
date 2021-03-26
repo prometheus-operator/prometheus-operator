@@ -37,6 +37,7 @@ const (
 	kubernetesSDRoleEndpoint = "endpoints"
 	kubernetesSDRolePod      = "pod"
 	kubernetesSDRoleIngress  = "ingress"
+	kubernetesSDRoleService  = "service"
 )
 
 var (
@@ -760,101 +761,16 @@ func (cg *configGenerator) generateProbeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)})
 	}
 
-	// Generate kubernetes_sd_config section for ingress resources.
+	// Generate kubernetes_sd_config section.
 	if m.Spec.Targets.StaticConfig == nil {
-		labelKeys := make([]string, 0, len(m.Spec.Targets.Ingress.Selector.MatchLabels))
-
-		// Filter targets by ingresses selected by the monitor.
-		// Exact label matches.
-		for k := range m.Spec.Targets.Ingress.Selector.MatchLabels {
-			labelKeys = append(labelKeys, k)
+		switch m.Spec.Targets.DynamicConfig.KubernetesSDConfig.Role {
+		case kubernetesSDRoleIngress:
+			ingressCfg := cg.generateIngressProbeConfig(m, apiserverConfig, basicAuthSecrets, ignoreNamespaceSelectors, enforcedNamespaceLabel)
+			cfg = append(cfg, ingressCfg...)
+		case kubernetesSDRoleService:
+			ingressCfg := cg.generateServiceProbeConfig(m, apiserverConfig, basicAuthSecrets, ignoreNamespaceSelectors, enforcedNamespaceLabel)
+			cfg = append(cfg, ingressCfg...)
 		}
-		sort.Strings(labelKeys)
-
-		for _, k := range labelKeys {
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(k)}},
-				{Key: "regex", Value: m.Spec.Targets.Ingress.Selector.MatchLabels[k]},
-			})
-		}
-
-		// Set based label matching. We have to map the valid relations
-		// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
-		for _, exp := range m.Spec.Targets.Ingress.Selector.MatchExpressions {
-			switch exp.Operator {
-			case metav1.LabelSelectorOpIn:
-				relabelings = append(relabelings, yaml.MapSlice{
-					{Key: "action", Value: "keep"},
-					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key)}},
-					{Key: "regex", Value: strings.Join(exp.Values, "|")},
-				})
-			case metav1.LabelSelectorOpNotIn:
-				relabelings = append(relabelings, yaml.MapSlice{
-					{Key: "action", Value: "drop"},
-					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key)}},
-					{Key: "regex", Value: strings.Join(exp.Values, "|")},
-				})
-			case metav1.LabelSelectorOpExists:
-				relabelings = append(relabelings, yaml.MapSlice{
-					{Key: "action", Value: "keep"},
-					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(exp.Key)}},
-					{Key: "regex", Value: "true"},
-				})
-			case metav1.LabelSelectorOpDoesNotExist:
-				relabelings = append(relabelings, yaml.MapSlice{
-					{Key: "action", Value: "drop"},
-					{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(exp.Key)}},
-					{Key: "regex", Value: "true"},
-				})
-			}
-		}
-
-		selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
-		cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, basicAuthSecrets, kubernetesSDRoleIngress))
-
-		// Relabelings for ingress SD.
-		relabelings = append(relabelings, []yaml.MapSlice{
-			{
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_scheme", "__address__", "__meta_kubernetes_ingress_path"}},
-				{Key: "separator", Value: ";"},
-				{Key: "regex", Value: "(.+);(.+);(.+)"},
-				{Key: "target_label", Value: "__param_target"},
-				{Key: "replacement", Value: "${1}://${2}${3}"},
-				{Key: "action", Value: "replace"},
-			},
-			{
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
-				{Key: "target_label", Value: "namespace"},
-			},
-			{
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_name"}},
-				{Key: "target_label", Value: "ingress"},
-			},
-		}...)
-
-		// Relabelings for prober.
-		relabelings = append(relabelings, []yaml.MapSlice{
-			{
-				{Key: "source_labels", Value: []string{"__param_target"}},
-				{Key: "target_label", Value: "instance"},
-			},
-			{
-				{Key: "target_label", Value: "__address__"},
-				{Key: "replacement", Value: m.Spec.ProberSpec.URL},
-			},
-		}...)
-
-		// Add configured relabelings.
-		if m.Spec.Targets.Ingress.RelabelConfigs != nil {
-			for _, r := range m.Spec.Targets.Ingress.RelabelConfigs {
-				relabelings = append(relabelings, generateRelabelConfig(r))
-			}
-		}
-
-		relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
-		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-
 	}
 
 	if m.Spec.TLSConfig != nil {
@@ -879,6 +795,222 @@ func (cg *configGenerator) generateProbeConfig(
 		}
 	}
 
+	return cfg
+}
+
+func (cg *configGenerator) generateIngressProbeConfig(
+	m *v1.Probe,
+	apiserverConfig *v1.APIServerConfig,
+	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	ignoreNamespaceSelectors bool,
+	enforcedNamespaceLabel string,
+) yaml.MapSlice {
+	cfg := yaml.MapSlice{}
+	var relabelings []yaml.MapSlice
+	labelKeys := make([]string, 0, len(m.Spec.Targets.DynamicConfig.KubernetesSDConfig.Selector.MatchLabels))
+
+	// Filter targets by selected by the monitor.
+	// Exact label matches.
+	for k := range m.Spec.Targets.DynamicConfig.KubernetesSDConfig.Selector.MatchLabels {
+		labelKeys = append(labelKeys, k)
+	}
+	sort.Strings(labelKeys)
+	for _, k := range labelKeys {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(k)}},
+			{Key: "regex", Value: m.Spec.Targets.DynamicConfig.KubernetesSDConfig.Selector.MatchLabels[k]},
+		})
+	}
+	// Set based label matching. We have to map the valid relations
+	// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
+	for _, exp := range m.Spec.Targets.DynamicConfig.KubernetesSDConfig.Selector.MatchExpressions {
+		switch exp.Operator {
+		case metav1.LabelSelectorOpIn:
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: strings.Join(exp.Values, "|")},
+			})
+		case metav1.LabelSelectorOpNotIn:
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "drop"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: strings.Join(exp.Values, "|")},
+			})
+		case metav1.LabelSelectorOpExists:
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: "true"},
+			})
+		case metav1.LabelSelectorOpDoesNotExist:
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "drop"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: "true"},
+			})
+		}
+	}
+
+	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.Targets.DynamicConfig.KubernetesSDConfig.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
+	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, basicAuthSecrets, kubernetesSDRoleIngress))
+
+	// Relabelings for ingress SD.
+	relabelings = append(relabelings, []yaml.MapSlice{
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_scheme", "__address__", "__meta_kubernetes_ingress_path"}},
+			{Key: "separator", Value: ";"},
+			{Key: "regex", Value: "(.+);(.+);(.+)"},
+			{Key: "target_label", Value: "__param_target"},
+			{Key: "replacement", Value: "${1}://${2}${3}"},
+			{Key: "action", Value: "replace"},
+		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
+			{Key: "target_label", Value: "namespace"},
+		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_name"}},
+			{Key: "target_label", Value: "ingress"},
+		},
+	}...)
+
+	// Relabelings for prober.
+	relabelings = append(relabelings, []yaml.MapSlice{
+		{
+			{Key: "source_labels", Value: []string{"__param_target"}},
+			{Key: "target_label", Value: "instance"},
+		},
+		{
+			{Key: "target_label", Value: "__address__"},
+			{Key: "replacement", Value: m.Spec.ProberSpec.URL},
+		},
+	}...)
+
+	// Add configured relabelings.
+	if m.Spec.Targets.DynamicConfig.RelabelConfigs != nil {
+		for _, r := range m.Spec.Targets.DynamicConfig.RelabelConfigs {
+			relabelings = append(relabelings, generateRelabelConfig(r))
+		}
+	}
+
+	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
+	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
+	return cfg
+}
+
+func (cg *configGenerator) generateServiceProbeConfig(
+	m *v1.Probe,
+	apiserverConfig *v1.APIServerConfig,
+	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	ignoreNamespaceSelectors bool,
+	enforcedNamespaceLabel string,
+) yaml.MapSlice {
+	cfg := yaml.MapSlice{}
+	var relabelings []yaml.MapSlice
+	labelKeys := make([]string, 0, len(m.Spec.Targets.DynamicConfig.KubernetesSDConfig.Selector.MatchLabels))
+
+	// Filter targets by selected by the monitor.
+	// Exact label matches.
+	for k := range m.Spec.Targets.DynamicConfig.KubernetesSDConfig.Selector.MatchLabels {
+		labelKeys = append(labelKeys, k)
+	}
+	sort.Strings(labelKeys)
+	for _, k := range labelKeys {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k)}},
+			{Key: "regex", Value: m.Spec.Targets.DynamicConfig.KubernetesSDConfig.Selector.MatchLabels[k]},
+		})
+	}
+	// Set based label matching. We have to map the valid relations
+	// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
+	for _, exp := range m.Spec.Targets.DynamicConfig.KubernetesSDConfig.Selector.MatchExpressions {
+		switch exp.Operator {
+		case metav1.LabelSelectorOpIn:
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: strings.Join(exp.Values, "|")},
+			})
+		case metav1.LabelSelectorOpNotIn:
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "drop"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: strings.Join(exp.Values, "|")},
+			})
+		case metav1.LabelSelectorOpExists:
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: "true"},
+			})
+		case metav1.LabelSelectorOpDoesNotExist:
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "drop"},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+				{Key: "regex", Value: "true"},
+			})
+		}
+	}
+
+	selectedNamespaces := getNamespacesFromNamespaceSelector(&m.Spec.Targets.DynamicConfig.KubernetesSDConfig.NamespaceSelector, m.Namespace, ignoreNamespaceSelectors)
+	cfg = append(cfg, cg.generateK8SSDConfig(selectedNamespaces, apiserverConfig, basicAuthSecrets, kubernetesSDRoleService))
+
+	// Relabelings for ingress SD.
+	relabelings = append(relabelings, []yaml.MapSlice{
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_namespace"}},
+			{Key: "target_label", Value: "namespace"},
+		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
+			{Key: "target_label", Value: "service"},
+		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_cluster_ip"}},
+			{Key: "target_label", Value: "cluster_ip"},
+		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_external_name"}},
+			{Key: "target_label", Value: "external_name"},
+		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_port_name"}},
+			{Key: "target_label", Value: "port_name"},
+		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_port_protocol"}},
+			{Key: "target_label", Value: "port_protocol"},
+		},
+		{
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_type"}},
+			{Key: "target_label", Value: "type"},
+		},
+	}...)
+
+	// Relabelings for prober.
+	relabelings = append(relabelings, []yaml.MapSlice{
+		{
+			{Key: "source_labels", Value: []string{"__param_target"}},
+			{Key: "target_label", Value: "instance"},
+		},
+		{
+			{Key: "target_label", Value: "__address__"},
+			{Key: "replacement", Value: m.Spec.ProberSpec.URL},
+		},
+	}...)
+
+	// Add configured relabelings.
+	if m.Spec.Targets.DynamicConfig.RelabelConfigs != nil {
+		for _, r := range m.Spec.Targets.DynamicConfig.RelabelConfigs {
+			relabelings = append(relabelings, generateRelabelConfig(r))
+		}
+	}
+
+	relabelings = enforceNamespaceLabel(relabelings, m.Namespace, enforcedNamespaceLabel)
+	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 	return cfg
 }
 

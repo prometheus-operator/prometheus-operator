@@ -738,14 +738,17 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 					},
 					Module: "http_2xx",
 					Targets: monitoringv1.ProbeTargets{
-						Ingress: &monitoringv1.ProbeTargetIngress{
-							Selector: metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"prometheus.io/probe": "true",
+						DynamicConfig: &monitoringv1.ProbeTargetDynamicConfig{
+							KubernetesSDConfig: &monitoringv1.KubernetesSDConfig{
+								Role: "ingress",
+								Selector: metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"prometheus.io/probe": "true",
+									},
 								},
-							},
-							NamespaceSelector: monitoringv1.NamespaceSelector{
-								Any: true,
+								NamespaceSelector: monitoringv1.NamespaceSelector{
+									Any: true,
+								},
 							},
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
@@ -865,14 +868,17 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 					},
 					Module: "http_2xx",
 					Targets: monitoringv1.ProbeTargets{
-						Ingress: &monitoringv1.ProbeTargetIngress{
-							Selector: metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"prometheus.io/probe": "true",
+						DynamicConfig: &monitoringv1.ProbeTargetDynamicConfig{
+							KubernetesSDConfig: &monitoringv1.KubernetesSDConfig{
+								Role: "ingress",
+								Selector: metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"prometheus.io/probe": "true",
+									},
 								},
-							},
-							NamespaceSelector: monitoringv1.NamespaceSelector{
-								Any: true,
+								NamespaceSelector: monitoringv1.NamespaceSelector{
+									Any: true,
+								},
 							},
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
@@ -935,6 +941,279 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_ingress_name
     target_label: ingress
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+  - target_label: foo
+    replacement: bar
+    action: replace
+  - target_label: namespace
+    replacement: default
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	result := string(cfg)
+	if expected != result {
+		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	}
+}
+
+func TestProbeServiceSDConfigGeneration(t *testing.T) {
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		map[string]*monitoringv1.Probe{
+			"probe1": &monitoringv1.Probe{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testprobe1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ProbeSpec{
+					ProberSpec: monitoringv1.ProberSpec{
+						Scheme: "http",
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+					},
+					Module: "http_2xx",
+					Targets: monitoringv1.ProbeTargets{
+						DynamicConfig: &monitoringv1.ProbeTargetDynamicConfig{
+							KubernetesSDConfig: &monitoringv1.KubernetesSDConfig{
+								Role: "service",
+								Selector: metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"prometheus.io/probe": "true",
+									},
+								},
+								NamespaceSelector: monitoringv1.NamespaceSelector{
+									Any: true,
+								},
+							},
+							RelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									TargetLabel: "foo",
+									Replacement: "bar",
+									Action:      "replace",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		map[string]assets.BasicAuthCredentials{},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: probe/default/testprobe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  params:
+    module:
+    - http_2xx
+  kubernetes_sd_configs:
+  - role: service
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_service_label_prometheus_io_probe
+    regex: "true"
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_service_cluster_ip
+    target_label: cluster_ip
+  - source_labels:
+    - __meta_kubernetes_service_external_name
+    target_label: external_name
+  - source_labels:
+    - __meta_kubernetes_service_port_name
+    target_label: port_name
+  - source_labels:
+    - __meta_kubernetes_service_port_protocol
+    target_label: port_protocol
+  - source_labels:
+    - __meta_kubernetes_service_type
+    target_label: type
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+  - target_label: foo
+    replacement: bar
+    action: replace
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	result := string(cfg)
+	if expected != result {
+		t.Fatalf("Unexpected result.\n\nGot:\n\n%s\n\nExpected:\n\n%s\n\n", result, expected)
+	}
+}
+
+func TestProbeServiceSDConfigGenerationWithLabelEnforce(t *testing.T) {
+	cg := &configGenerator{}
+	cfg, err := cg.generateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				EnforcedNamespaceLabel: "namespace",
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		map[string]*monitoringv1.Probe{
+			"probe1": &monitoringv1.Probe{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testprobe1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ProbeSpec{
+					ProberSpec: monitoringv1.ProberSpec{
+						Scheme: "http",
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+					},
+					Module: "http_2xx",
+					Targets: monitoringv1.ProbeTargets{
+						DynamicConfig: &monitoringv1.ProbeTargetDynamicConfig{
+							KubernetesSDConfig: &monitoringv1.KubernetesSDConfig{
+								Role: "service",
+								Selector: metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"prometheus.io/probe": "true",
+									},
+								},
+								NamespaceSelector: monitoringv1.NamespaceSelector{
+									Any: true,
+								},
+							},
+							RelabelConfigs: []*monitoringv1.RelabelConfig{
+								{
+									TargetLabel: "foo",
+									Replacement: "bar",
+									Action:      "replace",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		map[string]assets.BasicAuthCredentials{},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: probe/default/testprobe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  params:
+    module:
+    - http_2xx
+  kubernetes_sd_configs:
+  - role: service
+  relabel_configs:
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_service_label_prometheus_io_probe
+    regex: "true"
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_service_name
+    target_label: service
+  - source_labels:
+    - __meta_kubernetes_service_cluster_ip
+    target_label: cluster_ip
+  - source_labels:
+    - __meta_kubernetes_service_external_name
+    target_label: external_name
+  - source_labels:
+    - __meta_kubernetes_service_port_name
+    target_label: port_name
+  - source_labels:
+    - __meta_kubernetes_service_port_protocol
+    target_label: port_protocol
+  - source_labels:
+    - __meta_kubernetes_service_type
+    target_label: type
   - source_labels:
     - __param_target
     target_label: instance

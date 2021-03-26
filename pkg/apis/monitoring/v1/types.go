@@ -908,8 +908,8 @@ type ProbeTargets struct {
 	// StaticConfig defines static targets which are considers for probing.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.
 	StaticConfig *ProbeTargetStaticConfig `json:"staticConfig,omitempty"`
-	// Ingress defines the set of dynamically discovered ingress objects which hosts are considered for probing.
-	Ingress *ProbeTargetIngress `json:"ingress,omitempty"`
+	// DynamicConfig defines the set of dynamically discovered objects which hosts are considered for probing.
+	DynamicConfig *ProbeTargetDynamicConfig `json:"dynamicConfig,omitempty"`
 }
 
 // ProbeTargetStaticConfig defines the set of static targets considered for probing.
@@ -924,16 +924,25 @@ type ProbeTargetStaticConfig struct {
 	RelabelConfigs []*RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
-// ProbeTargetIngress defines the set of Ingress objects considered for probing.
+// ProbeTargetDynamicConfig defines the set of dynamic targets considered for probing.
 // +k8s:openapi-gen=true
-type ProbeTargetIngress struct {
-	// Select Ingress objects by labels.
-	Selector metav1.LabelSelector `json:"selector,omitempty"`
-	// Select Ingress objects by namespace.
-	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
+type ProbeTargetDynamicConfig struct {
+	// KubernetesSDConfig is the configuration for Kubernetes service discovery.
+	KubernetesSDConfig *KubernetesSDConfig `json:"kubernetesSDConfig,omitempty"`
 	// RelabelConfigs to apply to samples before ingestion.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	RelabelConfigs []*RelabelConfig `json:"relabelingConfigs,omitempty"`
+}
+
+// KubernetesSDConfig is the configuration for Kubernetes service discovery.
+// +k8s:openapi-gen=true
+type KubernetesSDConfig struct {
+	// Role is role of the service in Kubernetes.
+	Role string `json:"role,omitempty"`
+	// Select objects by labels.
+	Selector metav1.LabelSelector `json:"selector,omitempty"`
+	// Select objects by namespace.
+	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 }
 
 // ProberSpec contains specification parameters for the Prober used for probing.

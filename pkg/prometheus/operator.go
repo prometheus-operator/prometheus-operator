@@ -1827,16 +1827,33 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 	var rejected int
 	res := make(map[string]*monitoringv1.Probe, len(probes))
 	for probeName, probe := range probes {
-		if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.Ingress == nil {
+		if probe.Spec.Targets.StaticConfig == nil && probe.Spec.Targets.DynamicConfig == nil {
 			rejected++
 			level.Warn(c.logger).Log(
 				"msg", "skipping probe",
-				"error", "Probe needs at least one target of type staticConfig or ingress",
+				"error", "Probe needs at least one target of type staticConfig or dynamicConfig",
 				"probe", probeName,
 				"namespace", p.Namespace,
 				"prometheus", p.Name,
 			)
 			continue
+		}
+
+		if probe.Spec.Targets.DynamicConfig != nil {
+			switch probe.Spec.Targets.DynamicConfig.KubernetesSDConfig.Role {
+			case kubernetesSDRoleService, kubernetesSDRoleIngress:
+				// do nothing
+			default:
+				rejected++
+				level.Warn(c.logger).Log(
+					"msg", "skipping probe",
+					"error", "DynamicConfig only support ingress and service",
+					"probe", probeName,
+					"namespace", p.Namespace,
+					"prometheus", p.Name,
+				)
+				continue
+			}
 		}
 		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
 		if err = store.AddBearerToken(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret, pnKey); err != nil {
