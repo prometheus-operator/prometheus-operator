@@ -66,7 +66,7 @@ spec:
   podSelector:
     matchLabels:
       alertmanager: main
-      app: alertmanager
+      app.kubernetes.io/name: alertmanager
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -93,7 +93,7 @@ spec:
   podSelector:
     matchLabels:
       alertmanager: main
-      app: alertmanager
+      app.kubernetes.io/name: alertmanager
 
 ```
 
@@ -114,7 +114,7 @@ spec:
       protocol: TCP
   podSelector:
     matchLabels:
-      app: grafana
+      app.kubernetes.io/name: grafana
 ```
 
 #### Prometheus
@@ -134,7 +134,7 @@ spec:
       protocol: TCP
   podSelector:
     matchLabels:
-      app: prometheus
+      app.kubernetes.io/name: prometheus
       prometheus: k8s
 ```
 
@@ -166,7 +166,7 @@ spec:
       protocol: TCP
   podSelector:
     matchLabels:
-      app: node-exporter
+      app.kubernetes.io/name: node-exporter
 ```
 
 #### Kube-state-metrics
@@ -197,5 +197,5 @@ spec:
       protocol: TCP
   podSelector:
     matchLabels:
-      app: kube-state-metrics
+      app.kubernetes.io/name: kube-state-metrics
 ```
