@@ -513,13 +513,13 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 			Replicas: &whReplicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "alertmanager-webhook",
+					"app.kubernetes.io/name": "alertmanager-webhook",
 				},
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "alertmanager-webhook",
+						"app.kubernetes.io/name": "alertmanager-webhook",
 					},
 				},
 				Spec: v1.PodSpec{
@@ -553,7 +553,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 				},
 			},
 			Selector: map[string]string{
-				"app": "alertmanager-webhook",
+				"app.kubernetes.io/name": "alertmanager-webhook",
 			},
 		},
 	}
@@ -566,7 +566,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 	err := testFramework.WaitForPodsReady(framework.KubeClient, ns, time.Minute*5, 1,
 		metav1.ListOptions{
 			LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-				"app": "alertmanager-webhook",
+				"app.kubernetes.io/name": "alertmanager-webhook",
 			})).String(),
 		},
 	)
@@ -669,7 +669,7 @@ inhibit_rules:
 
 	opts := metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app": "alertmanager-webhook",
+			"app.kubernetes.io/name": "alertmanager-webhook",
 		})).String(),
 	}
 	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.TODO(), opts)

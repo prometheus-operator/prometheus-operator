@@ -1324,8 +1324,8 @@ func createSSetInputHash(p monitoringv1.Prometheus, c operator.Config, ruleConfi
 func ListOptions(name string) metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app":        "prometheus",
-			"prometheus": name,
+			"app.kubernetes.io/name": "prometheus",
+			"prometheus":             name,
 		})).String(),
 	}
 }

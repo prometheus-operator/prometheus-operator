@@ -711,8 +711,8 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 func ListOptions(name string) metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app":            thanosRulerLabel,
-			thanosRulerLabel: name,
+			"app.kubernetes.io/name": thanosRulerLabel,
+			thanosRulerLabel:         name,
 		})).String(),
 	}
 }
