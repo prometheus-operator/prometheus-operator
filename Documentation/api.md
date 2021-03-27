@@ -26,10 +26,10 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerStatus](#alertmanagerstatus)
 * [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig)
 * [BasicAuth](#basicauth)
-* [DynamicProbeTargetConfig](#dynamicprobetargetconfig)
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
+* [KubernetesSDConfig](#kubernetessdconfig)
 * [MetadataConfig](#metadataconfig)
 * [NamespaceSelector](#namespaceselector)
 * [PodMetricsEndpoint](#podmetricsendpoint)
@@ -246,18 +246,6 @@ BasicAuth allow an endpoint to authenticate over basic authentication More info:
 
 [Back to TOC](#table-of-contents)
 
-## DynamicProbeTargetConfig
-
-DynamicProbeTargetConfig defines the set of Ingress objects considered for probing.
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| selector | Select objects by labels. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
-| namespaceSelector | Select objects by namespace. | [NamespaceSelector](#namespaceselector) | false |
-| relabelingConfigs | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
-
-[Back to TOC](#table-of-contents)
-
 ## EmbeddedObjectMetadata
 
 EmbeddedObjectMetadata contains a subset of the fields included in k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta Only fields which are relevant to embedded resources are included.
@@ -304,6 +292,18 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
 | relabelings | RelabelConfigs to apply to samples before scraping. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
+
+[Back to TOC](#table-of-contents)
+
+## KubernetesSDConfig
+
+KubernetesSDConfig is the configuration for Kubernetes service discovery.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| role | Role is role of the service in Kubernetes. | string | false |
+| selector | Select objects by labels. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
+| namespaceSelector | Select objects by namespace. | [NamespaceSelector](#namespaceselector) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -465,8 +465,8 @@ ProbeTargetDynamicConfig defines the set of dynamic targets considered for probi
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| kubernetesSDRole |  | string | false |
-| dynamicProbeTargetConfig |  | *[DynamicProbeTargetConfig](#dynamicprobetargetconfig) | false |
+| kubernetesSDConfig | KubernetesSDConfig is the configuration for Kubernetes service discovery. | *[KubernetesSDConfig](#kubernetessdconfig) | false |
+| relabelingConfigs | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
