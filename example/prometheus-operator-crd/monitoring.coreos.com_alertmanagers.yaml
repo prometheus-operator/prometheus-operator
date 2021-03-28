@@ -2248,7 +2248,7 @@ spec:
                   type: object
                 type: array
               dnsConfig:
-                description: DNS custom configuration to use for an Alertmanager pod.
+                description: Custom DNS configuration to use for the Alertmanager pods.
                 properties:
                   nameservers:
                     description: A list of DNS name server IP addresses. This will be appended to the base nameservers generated from DNSPolicy. Duplicated nameservers will be removed.
@@ -2274,7 +2274,7 @@ spec:
                     type: array
                 type: object
               dnsPolicy:
-                description: DNS custom policy to use for an Alertmanager pod.
+                description: Custom DNS policy to use for the Alertmanager pods.
                 type: string
               externalUrl:
                 description: The external URL the Alertmanager instances will be available

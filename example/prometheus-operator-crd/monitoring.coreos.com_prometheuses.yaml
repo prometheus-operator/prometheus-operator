@@ -2646,7 +2646,7 @@ spec:
                 description: Disable prometheus compaction.
                 type: boolean
               dnsConfig:
-                description: DNS custom configuration to use for a Prometheus pod.
+                description: Custom DNS configuration to use for the Prometheus pods.
                 properties:
                   nameservers:
                     description: A list of DNS name server IP addresses. This will be appended to the base nameservers generated from DNSPolicy. Duplicated nameservers will be removed.
@@ -2672,7 +2672,7 @@ spec:
                     type: array
                 type: object
               dnsPolicy:
-                description: DNS custom policy to use for an Prometheus pod.
+                description: Custom DNS policy to use for an Prometheus pod.
                 type: string
               enableAdminAPI:
                 description: 'Enable access to prometheus web admin API. Defaults

@@ -50,7 +50,7 @@ For more information, please see the [chart's readme](https://github.com/prometh
 
 Version `>=0.39.0` of the Prometheus Operator requires a Kubernetes
 cluster of version `>=1.16.0`. If you are just starting out with the
-Prometheus Operator, it is highly recommended to use the latest version.
+Prometheus Operator, it is highly recommended using the latest version.
 
 If you have an older version of Kubernetes and the Prometheus Operator running,
 we recommend upgrading Kubernetes first and then the Prometheus Operator.

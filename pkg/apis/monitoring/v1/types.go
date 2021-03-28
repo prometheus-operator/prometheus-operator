@@ -112,7 +112,7 @@ type CommonPrometheusFields struct {
 	BaseImage string `json:"baseImage,omitempty"`
 	// Custom DNS configuration to use for the Prometheus pods.
 	DNSConfig *v1.PodDNSConfig `json:"dnsConfig,omitempty"`
-	// DNS custom policy to use for an Prometheus pod.
+	// Custom DNS policy to use for an Prometheus pod.
 	DNSPolicy v1.DNSPolicy `json:"dnsPolicy,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries

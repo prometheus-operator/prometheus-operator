@@ -2164,7 +2164,7 @@ spec:
                   type: object
                 type: array
               dnsConfig:
-                description: DNS custom configuration to use for a Thanos Ruler pod.
+                description: Custom DNS configuration to use for the Thanos Ruler pods.
                 properties:
                   nameservers:
                     description: A list of DNS name server IP addresses. This will be appended to the base nameservers generated from DNSPolicy. Duplicated nameservers will be removed.
@@ -2190,7 +2190,7 @@ spec:
                     type: array
                 type: object
               dnsPolicy:
-                description: DNS custom policy to use for a Thanos Ruler pod.
+                description: Custom DNS policy to use for the Thanos Ruler pods.
                 type: string
               enforcedNamespaceLabel:
                 description: EnforcedNamespaceLabel enforces adding a namespace label

@@ -221,8 +221,8 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | tag | Tag of Alertmanager container image to be deployed. Defaults to the value of `version`. Version is ignored if Tag is set. Deprecated: use 'image' instead.  The image tag can be specified as part of the image URL. | string | false |
 | sha | SHA of Alertmanager container image to be deployed. Defaults to the value of `version`. Similar to a tag, but the SHA explicitly deploys an immutable container image. Version and Tag are ignored if SHA is set. Deprecated: use 'image' instead.  The image digest can be specified as part of the image URL. | string | false |
 | baseImage | Base image that is used to deploy pods, without tag. Deprecated: use 'image' instead | string | false |
-| dnsConfig | DNS custom configuration to use for an Alertmanager pod. | *v1.PodDNSConfig | false |
-| dnsPolicy | DNS custom policy to use for an Alertmanager pod. | v1.DNSPolicy | false |
+| dnsConfig | Custom DNS configuration to use for the Alertmanager pods. | *v1.PodDNSConfig | false |
+| dnsPolicy | Custom DNS policy to use for the Alertmanager pods. | v1.DNSPolicy | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core) | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Alertmanager object, which shall be mounted into the Alertmanager Pods. The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>. | []string | false |
 | configMaps | ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager object, which shall be mounted into the Alertmanager Pods. The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name>. | []string | false |
@@ -814,8 +814,8 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | paused | When a Prometheus deployment is paused, no actions except for deletion will be performed on the underlying objects. | bool | false |
 | image | Image if specified has precedence over baseImage, tag and sha combinations. Specifying the version is still necessary to ensure the Prometheus Operator knows what version of Prometheus is being configured. | *string | false |
 | baseImage | Base image to use for a Prometheus deployment. Deprecated: use 'image' instead | string | false |
-| dnsConfig | DNS custom configuration to use for a Prometheus pod. | *v1.PodDNSConfig | false |
-| dnsPolicy | DNS custom policy to use for an Prometheus pod. | v1.DNSPolicy | false |
+| dnsConfig | Custom DNS configuration to use for the Prometheus pods. | *v1.PodDNSConfig | false |
+| dnsPolicy | Custom DNS policy to use for an Prometheus pod. | v1.DNSPolicy | false |
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core) | false |
 | replicas | Number of replicas of each shard to deploy for a Prometheus deployment. Number of replicas multiplied by shards is the total number of Pods created. | *int32 | false |
 | shards | EXPERIMENTAL: Number of shards to distribute targets onto. Number of replicas multiplied by shards is the total number of Pods created. Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances. To query globally use Thanos sidecar and Thanos querier or remote write data to a central location. Sharding is done on the content of the `__address__` target meta-label. | *int32 | false |
@@ -1331,8 +1331,8 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | affinity | If specified, the pod's scheduling constraints. | *v1.Affinity | false |
 | tolerations | If specified, the pod's tolerations. | []v1.Toleration | false |
 | topologySpreadConstraints | If specified, the pod's topology spread constraints. | []v1.TopologySpreadConstraint | false |
-| dnsConfig | DNS custom configuration to use for a Thanos Ruler pod. | *v1.PodDNSConfig | false |
-| dnsPolicy | DNS custom policy to use for a Thanos Ruler pod. | v1.DNSPolicy | false |
+| dnsConfig | Custom DNS configuration to use for the Thanos Ruler pods. | *v1.PodDNSConfig | false |
+| dnsPolicy | Custom DNS policy to use for the Thanos Ruler pods. | v1.DNSPolicy | false |
 | securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext. | *v1.PodSecurityContext | false |
 | priorityClassName | Priority class assigned to the Pods | string | false |
 | serviceAccountName | ServiceAccountName is the name of the ServiceAccount to use to run the Thanos Ruler Pods. | string | false |
