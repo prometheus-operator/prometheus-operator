@@ -1736,7 +1736,7 @@ type AlertmanagerSpec struct {
 	// Base image that is used to deploy pods, without tag.
 	// Deprecated: use 'image' instead
 	BaseImage string `json:"baseImage,omitempty"`
-	// DNS custom configuration to use for an Alertmanager pod.
+	// Custom DNS configuration to use for the Alertmanager pods.
 	DNSConfig *v1.PodDNSConfig `json:"dnsConfig,omitempty"`
 	// DNS custom policy to use for an Alertmanager pod.
 	DNSPolicy v1.DNSPolicy `json:"dnsPolicy,omitempty"`
