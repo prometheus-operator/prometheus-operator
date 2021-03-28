@@ -1594,12 +1594,11 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 
 	} else {
-		eq := reflect.DeepEqual(secret.Data, tlsAssetsSecret.Data)
-		if !eq {
-			err = k8sutil.UpdateSecret(ctx, sClient, tlsAssetsSecret)
-			level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
+		if reflect.DeepEqual(secret.Data, tlsAssetsSecret.Data) {
+			return nil
 		}
-
+		err = k8sutil.UpdateSecret(ctx, sClient, tlsAssetsSecret)
+		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
 	}
 
 	if err != nil {
