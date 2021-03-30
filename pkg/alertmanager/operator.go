@@ -607,7 +607,7 @@ func (c *Operator) handleAlertmanagerUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.Alertmanager).ResourceVersion == cur.(*monitoringv1.Alertmanager).ResourceVersion {
 		return
 	}
-	
+
 	key, ok := c.keyFunc(cur)
 	if !ok {
 		return
