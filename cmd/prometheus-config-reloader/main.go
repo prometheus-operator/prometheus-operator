@@ -104,6 +104,7 @@ func main() {
 	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
 		Default("http://127.0.0.1:9090/-/reload").URL()
 
+	oneOff := app.Flag("one-off", "Runs the processing once, instead of watching").Default("false").Bool()
 	versionutil.RegisterIntoKingpinFlags(app)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
@@ -163,6 +164,7 @@ func main() {
 				ReloadURL:     *reloadURL,
 				CfgFile:       *cfgFile,
 				CfgOutputFile: *cfgSubstFile,
+				OneOff:        *oneOff,
 				WatchedDirs:   *watchedDir,
 				DelayInterval: *delayInterval,
 				WatchInterval: *watchInterval,
@@ -177,7 +179,7 @@ func main() {
 		})
 	}
 
-	if *listenAddress != "" {
+	if *listenAddress != "" && !*oneOff {
 		g.Add(func() error {
 			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
 			http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
