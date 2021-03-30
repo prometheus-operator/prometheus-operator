@@ -1336,6 +1336,9 @@ type AlertmanagerSpec struct {
 	// Namespaces to be selected for AlertmanagerConfig discovery. If nil, only
 	// check own namespace.
 	AlertmanagerConfigNamespaceSelector *metav1.LabelSelector `json:"alertmanagerConfigNamespaceSelector,omitempty"`
+	// HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the
+	// pod's hosts file.
+	AlertmanagerHostAliases []v1.HostAlias `json:"hostAliases,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.

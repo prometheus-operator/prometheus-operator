@@ -207,6 +207,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | forceEnableClusterMode | ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica. Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each. | bool | false |
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | alertmanagerConfigNamespaceSelector | Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
+| hostAliases| optional list of hosts and IPs that will be injected into the pod's hosts file, if specified. This is only valid for non-hostNetwork pods. | [[]v1.HostAlias](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#hostalias-v1-core) | false |
 
 [Back to TOC](#table-of-contents)
 

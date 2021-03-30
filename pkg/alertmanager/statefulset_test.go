@@ -996,3 +996,38 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 		t.Fatal("expected stateful set to contain arg '--cluster.listen-address=[$(POD_IP)]:9094'")
 	}
 }
+
+func TestHostAliases(t *testing.T) {
+	hostAlias := []v1.HostAlias{
+		{
+			IP: "10.0.0.1",
+			Hostnames: []string{
+				"host.local",
+				"host.local.corp",
+			},
+		},
+		{
+			IP: "10.0.0.2",
+			Hostnames: []string{
+				"newhost.local",
+				"newhost.local.corp",
+			},
+		},
+	}
+
+	statefulsetSpec, err := makeStatefulSetSpec(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{
+			Version: operator.DefaultAlertmanagerVersion,
+			Replicas: &minReplicas,
+			AlertmanagerHostAliases: hostAlias,
+		},
+	}, defaultTestConfig)
+	
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(hostAlias, statefulsetSpec.Template.Spec.HostAliases) {
+		t.Fatal("hostAlias config was not correctly transposed to pod spec")
+	}
+}
