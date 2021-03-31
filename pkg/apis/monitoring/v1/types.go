@@ -642,6 +642,12 @@ type ThanosSpec struct {
 	MinTime string `json:"minTime,omitempty"`
 	// ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m
 	ReadyTimeout string `json:"readyTimeout,omitempty"`
+	// Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
+	// be appended to other volumes.
+	Volumes []v1.Volume `json:"volumes,omitempty"`
+	// VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+	// VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container,
+	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.

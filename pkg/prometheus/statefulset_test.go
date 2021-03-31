@@ -1116,6 +1116,58 @@ func TestThanosTracing(t *testing.T) {
 	}
 }
 
+func TestThanosSideCarVolumes(t *testing.T) {
+	testVolume := "test-volume"
+	testVolumeMountPath := "/prometheus/thanos-sidecar"
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				Volumes: []v1.Volume{
+					v1.Volume{
+						Name: testVolume,
+						VolumeSource: v1.VolumeSource{
+							EmptyDir: &v1.EmptyDirVolumeSource{},
+						},
+					},
+				},
+				VolumeMounts: []v1.VolumeMount{
+					v1.VolumeMount{
+						Name:      testVolume,
+						MountPath: testVolumeMountPath,
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0)
+
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	var containsVolume bool
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == testVolume {
+			containsVolume = true
+			break
+		}
+	}
+	if !containsVolume {
+		t.Fatalf("Thanos sidecar volume is missing expected volume: %s", testVolume)
+	}
+
+	var containsVolumeMount bool
+	for _, volumeMount := range sset.Spec.Template.Spec.Containers[2].VolumeMounts {
+		if volumeMount.Name == testVolume && volumeMount.MountPath == testVolumeMountPath {
+			containsVolumeMount = true
+			break
+		}
+	}
+
+	if !containsVolumeMount {
+		t.Fatal("expected thanos sidecar volume mounts to match")
+	}
+}
+
 func TestRetentionSize(t *testing.T) {
 	tests := []struct {
 		version              string
