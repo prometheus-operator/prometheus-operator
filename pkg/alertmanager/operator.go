@@ -621,12 +621,18 @@ func (c *Operator) handleAlertmanagerUpdate(old, cur interface{}) {
 
 func (c *Operator) handleStatefulSetDelete(obj interface{}) {
 	if a := c.alertmanagerForStatefulSet(obj); a != nil {
+		level.Debug(c.logger).Log("msg", "StatefulSet delete")
+		c.metrics.TriggerByCounter("StatefulSet", "delete").Inc()
+
 		c.enqueue(a)
 	}
 }
 
 func (c *Operator) handleStatefulSetAdd(obj interface{}) {
 	if a := c.alertmanagerForStatefulSet(obj); a != nil {
+		level.Debug(c.logger).Log("msg", "StatefulSet added")
+		c.metrics.TriggerByCounter("StatefulSet", "add").Inc()
+
 		c.enqueue(a)
 	}
 }
@@ -645,6 +651,9 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 
 	// Wake up Alertmanager resource the deployment belongs to.
 	if a := c.alertmanagerForStatefulSet(cur); a != nil {
+		level.Debug(c.logger).Log("msg", "StatefulSet updated")
+		c.metrics.TriggerByCounter("StatefulSet", "update").Inc()
+
 		c.enqueue(a)
 	}
 }
