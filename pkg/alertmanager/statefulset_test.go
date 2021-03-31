@@ -1017,12 +1017,12 @@ func TestHostAliases(t *testing.T) {
 
 	statefulsetSpec, err := makeStatefulSetSpec(&monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
-			Version: operator.DefaultAlertmanagerVersion,
-			Replicas: &minReplicas,
+			Version:                 operator.DefaultAlertmanagerVersion,
+			Replicas:                &minReplicas,
 			AlertmanagerHostAliases: hostAlias,
 		},
 	}, defaultTestConfig)
-	
+
 	if err != nil {
 		t.Fatal(err)
 	}
