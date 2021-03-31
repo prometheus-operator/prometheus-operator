@@ -558,6 +558,12 @@ type ThanosSpec struct {
 	LogFormat string `json:"logFormat,omitempty"`
 	// MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y.
 	MinTime string `json:"minTime,omitempty"`
+	// Volumes allows configuration of additional volumes on the output StatefulSet definition. Volumes specified will
+	// be appended to other volumes.
+	Volumes []v1.Volume `json:"volumes,omitempty"`
+	// VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
+	// VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container,
+	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.
