@@ -191,7 +191,6 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 		_, err = secretClient.Create(ctx, desired, metav1.CreateOptions{})
 		return err
 	}
-	// If secret exist,
 	mutated := existingSecret.DeepCopyObject().(*v1.Secret)
 
 	mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
