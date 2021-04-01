@@ -177,25 +177,28 @@ func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 }
 
 // CreateOrUpdateSecret merges metadata of existing Secret with new one and updates it.
-func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, secret *v1.Secret) error {
-	existingSecret, err := secretClient.Get(ctx, secret.Name, metav1.GetOptions{})
+func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, desired *v1.Secret) error {
+	existingSecret, err := secretClient.Get(ctx, desired.Name, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(
 				err,
 				"failed to check whether tls assets secret already exists for Prometheus %v in namespace %v",
-				secret.Name,
-				secret.Namespace,
+				desired.Name,
+				desired.Namespace,
 			)
 		}
-		_, err = secretClient.Create(ctx, secret, metav1.CreateOptions{})
+		_, err = secretClient.Create(ctx, desired, metav1.CreateOptions{})
+		return err
 	}
-	// if secret exist
-	mutated := existingSecret.DeepCopyObject()
-	mergeMetadata(&secret.ObjectMeta, existingSecret.ObjectMeta)
+	// If secret exist,
+	mutated := existingSecret.DeepCopyObject().(*v1.Secret)
+
+	mergeMetadata(&mutated.ObjectMeta, desired.ObjectMeta)
+	mutated.Data = desired.Data
 	// diff and whether update
 	if !apiequality.Semantic.DeepEqual(existingSecret, mutated) {
-		_, err = secretClient.Update(ctx, secret, metav1.UpdateOptions{})
+		_, err = secretClient.Update(ctx, mutated, metav1.UpdateOptions{})
 		if err != nil {
 			return err
 		}
