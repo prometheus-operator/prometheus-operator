@@ -42,6 +42,7 @@ const (
 	alertmanagerConfigDir  = "/etc/alertmanager/config"
 	alertmanagerConfigFile = "alertmanager.yaml"
 	alertmanagerStorageDir = "/alertmanager"
+	sSetInputHashName      = "prometheus-operator-input-hash"
 	defaultPortName        = "web"
 )
 
@@ -50,7 +51,7 @@ var (
 	probeTimeoutSeconds int32 = 3
 )
 
-func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, config Config) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash string) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -84,6 +85,7 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 	// do not transfer kubectl annotations to the statefulset so it is not
 	// pruned by kubectl
 	annotations := make(map[string]string)
+	annotations[sSetInputHashName] = inputHash
 	for key, value := range am.ObjectMeta.Annotations {
 		if !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
 			annotations[key] = value
@@ -141,10 +143,6 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, old *appsv1.StatefulSet, con
 		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
 		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
 		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
-	}
-
-	if old != nil {
-		statefulset.Annotations = old.Annotations
 	}
 
 	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, am.Spec.Volumes...)

@@ -20,6 +20,7 @@ import (
 	"net"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -34,6 +35,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/mitchellh/hashstructure"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -552,7 +554,12 @@ func (c *Operator) alertmanagerForStatefulSet(sset interface{}) *monitoringv1.Al
 		return nil
 	}
 
-	aKey := statefulSetKeyToAlertmanagerKey(key)
+	match, aKey := statefulSetKeyToAlertmanagerKey(key)
+	if !match {
+		level.Debug(c.logger).Log("msg", "StatefulSet key did not match an Alertmanager key format", "key", key)
+		return nil
+	}
+
 	a, err := c.alrtInfs.Get(aKey)
 	if apierrors.IsNotFound(err) {
 		return nil
@@ -570,9 +577,17 @@ func statefulSetNameFromAlertmanagerName(name string) string {
 	return "alertmanager-" + name
 }
 
-func statefulSetKeyToAlertmanagerKey(key string) string {
-	keyParts := strings.Split(key, "/")
-	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "alertmanager-")
+func statefulSetKeyToAlertmanagerKey(key string) (bool, string) {
+	r := regexp.MustCompile("^(.+)/alertmanager-(.+)$")
+
+	matches := r.FindAllStringSubmatch(key, 2)
+	if len(matches) != 1 {
+		return false, ""
+	}
+	if len(matches[0]) != 3 {
+		return false, ""
+	}
+	return true, matches[0][1] + "/" + matches[0][2]
 }
 
 func alertmanagerKeyToStatefulSetKey(key string) string {
@@ -705,8 +720,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "retrieving statefulset failed")
 	}
 
+	newSSetInputHash, err := createSSetInputHash(*am, c.config)
+	if err != nil {
+		return err
+	}
+
 	if apierrors.IsNotFound(err) {
-		sset, err := makeStatefulSet(am, nil, c.config)
+		sset, err := makeStatefulSet(am, c.config, newSSetInputHash)
 		if err != nil {
 			return errors.Wrap(err, "making the statefulset, to create, failed")
 		}
@@ -717,7 +737,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	sset, err := makeStatefulSet(am, obj.(*appsv1.StatefulSet), c.config)
+	oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
+	if newSSetInputHash == oldSSetInputHash {
+		level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+		return nil
+	}
+	sset, err := makeStatefulSet(am, c.config, newSSetInputHash)
 	if err != nil {
 		return errors.Wrap(err, "making the statefulset, to update, failed")
 	}
@@ -741,6 +766,23 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+func createSSetInputHash(a monitoringv1.Alertmanager, c Config) (string, error) {
+	hash, err := hashstructure.Hash(struct {
+		A monitoringv1.Alertmanager
+		C Config
+	}{a, c},
+		nil,
+	)
+	if err != nil {
+		return "", errors.Wrap(
+			err,
+			"failed to calculate combined hash of Alertmanager CRD and config",
+		)
+	}
+
+	return fmt.Sprintf("%d", hash), nil
 }
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
