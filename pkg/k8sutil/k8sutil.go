@@ -194,7 +194,7 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 	// If secret exist,
 	mutated := existingSecret.DeepCopyObject().(*v1.Secret)
 
-	mergeMetadata(&mutated.ObjectMeta, desired.ObjectMeta)
+	mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
 	mutated.Data = desired.Data
 	// diff and whether update
 	if !apiequality.Semantic.DeepEqual(existingSecret, mutated) {

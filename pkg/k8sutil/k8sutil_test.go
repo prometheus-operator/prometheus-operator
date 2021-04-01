@@ -77,32 +77,6 @@ func TestMergeMetadata(t *testing.T) {
 		modifiedAnnotations map[string]string
 	}{
 		{
-			name: "no change",
-			expectedLabels: map[string]string{
-				"app.kubernetes.io/name": "kube-state-metrics",
-			},
-			expectedAnnotations: map[string]string{
-				"app.kubernetes.io/name": "kube-state-metrics",
-			},
-		},
-		{
-			name: "added label and annotation",
-			expectedLabels: map[string]string{
-				"app.kubernetes.io/name": "kube-state-metrics",
-				"label":                  "value",
-			},
-			modifiedLabels: map[string]string{
-				"label": "value",
-			},
-			expectedAnnotations: map[string]string{
-				"app.kubernetes.io/name": "kube-state-metrics",
-				"annotation":             "value",
-			},
-			modifiedAnnotations: map[string]string{
-				"annotation": "value",
-			},
-		},
-		{
 			name: "overridden label amd annotation",
 			expectedLabels: map[string]string{
 				"app.kubernetes.io/name": "kube-state-metrics",
