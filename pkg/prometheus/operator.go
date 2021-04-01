@@ -1529,6 +1529,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 	s.Data[configFilename] = buf.Bytes()
 
+        level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
