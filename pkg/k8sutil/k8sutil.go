@@ -183,7 +183,7 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(
 				err,
-				"failed to check whether tls assets secret already exists for Prometheus %v in namespace %v",
+				"failed to check whether secret %q in namespace %q already exists",
 				desired.Name,
 				desired.Namespace,
 			)
