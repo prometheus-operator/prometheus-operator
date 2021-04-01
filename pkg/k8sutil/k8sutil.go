@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -175,20 +176,30 @@ func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 	return nil
 }
 
-// UpdateSecret merges metadata of existing Secret with new one and updates it.
-func UpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, secret *v1.Secret) error {
+// CreateOrUpdateSecret merges metadata of existing Secret with new one and updates it.
+func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, secret *v1.Secret) error {
 	existingSecret, err := secretClient.Get(ctx, secret.Name, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrap(err, "getting secret object failed")
+		if !apierrors.IsNotFound(err) {
+			return errors.Wrapf(
+				err,
+				"failed to check whether tls assets secret already exists for Prometheus %v in namespace %v",
+				secret.Name,
+				secret.Namespace,
+			)
+		}
+		_, err = secretClient.Create(ctx, secret, metav1.CreateOptions{})
 	}
-
+	// if secret exist
+	mutated := existingSecret.DeepCopyObject()
 	mergeMetadata(&secret.ObjectMeta, existingSecret.ObjectMeta)
-
-	_, err = secretClient.Update(ctx, secret, metav1.UpdateOptions{})
-	if err != nil {
-		return err
+	// 5. check if the copy is actually mutated
+	if !apiequality.Semantic.DeepEqual(existingSecret, mutated) {
+		_, err = secretClient.Update(ctx, secret, metav1.UpdateOptions{})
+		if err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
 

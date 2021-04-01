@@ -261,7 +261,7 @@ func TestMergeMetadata(t *testing.T) {
 		}
 	})
 
-	t.Run("UpdateSecret", func(t *testing.T) {
+	t.Run("CreateOrUpdateSecret", func(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				secret := &corev1.Secret{
@@ -287,7 +287,7 @@ func TestMergeMetadata(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				err = UpdateSecret(context.TODO(), sClient, secret)
+				err = CreateOrUpdateSecret(context.TODO(), sClient, secret)
 				if err != nil {
 					t.Fatal(err)
 				}
