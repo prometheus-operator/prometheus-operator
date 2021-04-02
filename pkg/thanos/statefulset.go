@@ -479,7 +479,7 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 				},
 			},
 			Selector: map[string]string{
-				"app.kubernetes.io/name": "thanos-ruler",
+				"app.kubernetes.io/name": thanosRulerLabel,
 			},
 		},
 	}
