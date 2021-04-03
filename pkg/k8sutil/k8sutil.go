@@ -196,7 +196,6 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 	if apiequality.Semantic.DeepEqual(existingSecret, desired) {
 		return nil
 	}
-
 	if _, err = secretClient.Update(ctx, desired, metav1.UpdateOptions{}); err != nil {
 		return errors.Wrapf(
 			err,
