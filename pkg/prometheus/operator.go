@@ -1559,9 +1559,9 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
 
-	if err := k8sutil.CreateOrUpdateSecret(ctx, sClient, tlsAssetsSecret); err != nil {
+	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, tlsAssetsSecret)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create TLS assets secret for Prometheus %v in namespace %v", p.Name, p.Namespace)
+		return errors.Wrap(err, "failed to create TLS assets secret for Prometheus")
 	}
 
 	return nil
