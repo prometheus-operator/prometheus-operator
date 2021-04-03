@@ -189,7 +189,7 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 			)
 		}
 		_, err = secretClient.Create(ctx, desired, metav1.CreateOptions{})
-		return err
+		return errors.Wrapf(err, "failed to create secret %q in namespace %q", desired.Name, desired.Namespace)
 	}
 	mutated := existingSecret.DeepCopyObject().(*v1.Secret)
 	mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
