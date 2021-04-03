@@ -1595,12 +1595,15 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select ServiceMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	for _, ns := range namespaces {
-		c.smonInfs.ListAllByNamespace(ns, servMonSelector, func(obj interface{}) {
+		err := c.smonInfs.ListAllByNamespace(ns, servMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
 				serviceMonitors[k] = obj.(*monitoringv1.ServiceMonitor)
 			}
 		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list service monitors in namespace %s", ns)
+		}
 	}
 
 	var rejected int
@@ -1691,12 +1694,15 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select PodMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	for _, ns := range namespaces {
-		c.pmonInfs.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
+		err := c.pmonInfs.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
 				podMonitors[k] = obj.(*monitoringv1.PodMonitor)
 			}
 		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list pod monitors in namespace %s", ns)
+		}
 	}
 
 	var rejected int
@@ -1779,11 +1785,14 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select Probes from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	for _, ns := range namespaces {
-		c.probeInfs.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
+		err := c.probeInfs.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
 			if k, ok := c.keyFunc(obj); ok {
 				probes[k] = obj.(*monitoringv1.Probe)
 			}
 		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list probes in namespace %s", ns)
+		}
 	}
 
 	var rejected int
