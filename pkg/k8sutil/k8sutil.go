@@ -194,9 +194,9 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 	mutated := existingSecret.DeepCopyObject().(*v1.Secret)
 	mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
 	if apiequality.Semantic.DeepEqual(existingSecret, desired) {
-                return nil
-        }
-	
+		return nil
+	}
+
 	if _, err = secretClient.Update(ctx, desired, metav1.UpdateOptions{}); err != nil {
 		return errors.Wrapf(
 			err,
@@ -205,8 +205,6 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 			desired.Namespace,
 		)
 	}
-	
-	return nil
 	return nil
 }
 
