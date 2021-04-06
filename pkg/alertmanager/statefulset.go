@@ -542,6 +542,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
 		operator.CreateConfigReloader(
+			"config-reloader",
 			config.ReloaderConfig,
 			url.URL{
 				Scheme: "http",

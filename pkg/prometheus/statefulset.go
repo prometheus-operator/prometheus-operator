@@ -780,6 +780,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	}
 
 	operatorInitContainers = append(operatorInitContainers, operator.CreateConfigReloader(
+		"init-config-reloader",
 		c.ReloaderConfig,
 		url.URL{
 			Scheme: "http",
@@ -812,6 +813,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
 		operator.CreateConfigReloader(
+			"config-reloader",
 			c.ReloaderConfig,
 			url.URL{
 				Scheme: "http",

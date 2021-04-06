@@ -320,6 +320,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		additionalContainers = append(
 			additionalContainers,
 			operator.CreateConfigReloader(
+				"config-reloader",
 				config.ReloaderConfig,
 				url.URL{
 					Scheme: "http",

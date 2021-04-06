@@ -28,6 +28,7 @@ const configReloaderPort = 8080
 // container. No shard environment variable will be passed to the reloader
 // container if `-1` is passed to the shards parameter.
 func CreateConfigReloader(
+	name string,
 	config ReloaderConfig,
 	reloadURL url.URL,
 	listenLocal bool,
@@ -90,7 +91,7 @@ func CreateConfigReloader(
 	}
 
 	return v1.Container{
-		Name:                     "config-reloader",
+		Name:                     name,
 		Image:                    config.Image,
 		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		Env: []v1.EnvVar{
