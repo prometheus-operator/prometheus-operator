@@ -625,7 +625,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
 
-	var additionalContainers []v1.Container
+	var additionalContainers, operatorInitContainers []v1.Container
 
 	disableCompaction := p.Spec.DisableCompaction
 	if p.Spec.Thanos != nil {
@@ -779,6 +779,27 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 	}
 
+	operatorInitContainers = append(operatorInitContainers, operator.CreateConfigReloader(
+		c.ReloaderConfig,
+		url.URL{
+			Scheme: "http",
+			Host:   c.LocalHost + ":9090",
+			Path:   path.Clean(webRoutePrefix + "/-/reload"),
+		},
+		p.Spec.ListenLocal,
+		c.LocalHost,
+		p.Spec.LogFormat,
+		p.Spec.LogLevel,
+		append(configReloaderArgs, fmt.Sprintf("--watch-interval=%d", 0)),
+		configReloaderVolumeMounts,
+		shard,
+	))
+
+	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, p.Spec.InitContainers)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to merge containers spec")
+	}
+
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
@@ -830,7 +851,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			},
 			Spec: v1.PodSpec{
 				Containers:                    containers,
-				InitContainers:                p.Spec.InitContainers,
+				InitContainers:                initContainers,
 				SecurityContext:               p.Spec.SecurityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
