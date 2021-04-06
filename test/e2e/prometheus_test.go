@@ -3632,7 +3632,7 @@ func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) fu
 		}
 		expectedAlertmanagerTargets := []string{}
 		for _, p := range pods.Items {
-			expectedAlertmanagerTargets = append(expectedAlertmanagerTargets, fmt.Sprintf("http://%s:9093/api/v1/alerts", p.Status.PodIP))
+			expectedAlertmanagerTargets = append(expectedAlertmanagerTargets, fmt.Sprintf("http://%s:9093/api/v2/alerts", p.Status.PodIP))
 		}
 
 		response, err := framework.PrometheusSVCGetRequest(ns, promSVCName, "/api/v1/alertmanagers", map[string]string{})
