@@ -85,12 +85,12 @@ func makeStatefulSet(am *monitoringv1.Alertmanager, config Config, inputHash str
 	// do not transfer kubectl annotations to the statefulset so it is not
 	// pruned by kubectl
 	annotations := make(map[string]string)
-	annotations[sSetInputHashName] = inputHash
 	for key, value := range am.ObjectMeta.Annotations {
 		if !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
 			annotations[key] = value
 		}
 	}
+	annotations[sSetInputHashName] = inputHash
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        prefixedName(am.Name),
