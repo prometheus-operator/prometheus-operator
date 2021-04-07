@@ -177,7 +177,7 @@ func main() {
 		})
 	}
 
-	if *listenAddress != "" {
+	if *listenAddress != "" && *watchInterval != 0 {
 		g.Add(func() error {
 			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
 			http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
