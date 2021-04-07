@@ -39,7 +39,7 @@ type alertmanagerConfig struct {
 type globalConfig struct {
 	// ResolveTimeout is the time after which an alert is declared resolved
 	// if it has not been updated.
-	ResolveTimeout model.Duration `yaml:"resolve_timeout" json:"resolve_timeout"`
+	ResolveTimeout *model.Duration `yaml:"resolve_timeout,omitempty" json:"resolve_timeout,omitempty"`
 
 	HTTPConfig *commoncfg.HTTPClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 

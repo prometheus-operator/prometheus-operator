@@ -18,10 +18,12 @@ import (
 	"context"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus/alertmanager/config"
+	"github.com/prometheus/common/model"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -61,6 +63,26 @@ templates: []
 `,
 		},
 		{
+			name:    "skeleton base with global send_revolved, no CRs",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(time.Minute)),
+				},
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `global:
+  resolve_timeout: 1m
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+		{
 			name:    "skeleton base with global smtp_require_tls set to false, no CRs",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
@@ -72,7 +94,6 @@ templates: []
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `global:
-  resolve_timeout: 0s
   smtp_require_tls: false
 route:
   receiver: "null"
@@ -93,7 +114,6 @@ templates: []
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `global:
-  resolve_timeout: 0s
   smtp_require_tls: true
 route:
   receiver: "null"
@@ -584,7 +604,6 @@ templates: []
 				},
 			},
 			expected: `global:
-  resolve_timeout: 0s
   slack_api_url: http://slack.example.com
 route:
   receiver: "null"
