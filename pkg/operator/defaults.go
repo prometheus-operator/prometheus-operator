@@ -20,7 +20,7 @@ const (
 	DefaultAlertmanagerVersion   = "v0.21.0"
 	DefaultAlertmanagerBaseImage = "quay.io/prometheus/alertmanager"
 	DefaultAlertmanagerImage     = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
-	DefaultThanosVersion         = "v0.17.2"
+	DefaultThanosVersion         = "v0.18.0"
 	DefaultThanosBaseImage       = "quay.io/thanos/thanos"
 	DefaultThanosImage           = DefaultThanosBaseImage + ":" + DefaultThanosVersion
 )
@@ -67,6 +67,10 @@ var (
 		"v2.23.0",
 		"v2.24.0",
 		"v2.24.1",
+		"v2.25.0",
+		"v2.25.1",
+		"v2.25.2",
+		"v2.26.0",
 	}
 	DefaultPrometheusVersion   = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
 	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"
