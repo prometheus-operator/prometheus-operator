@@ -20,7 +20,7 @@ const (
 	DefaultAlertmanagerVersion   = "v0.21.0"
 	DefaultAlertmanagerBaseImage = "quay.io/prometheus/alertmanager"
 	DefaultAlertmanagerImage     = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
-	DefaultThanosVersion         = "v0.18.0"
+	DefaultThanosVersion         = "v0.19.0"
 	DefaultThanosBaseImage       = "quay.io/thanos/thanos"
 	DefaultThanosImage           = DefaultThanosBaseImage + ":" + DefaultThanosVersion
 )
