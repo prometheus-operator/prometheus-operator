@@ -43,7 +43,7 @@ require (
 replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => ./pkg/apis/monitoring
 	github.com/prometheus-operator/prometheus-operator/pkg/client => ./pkg/client
-	// github.com/thanos-io/thanos => ../../thanos-io/thanos
+	github.com/thanos-io/thanos => github.com/thanos-io/thanos v0.13.1-0.20210226132712-0d866978365a
 	// A replace directive is needed for k8s.io/client-go because Cortex (which
 	// is an indirect dependency through Thanos) has a requirement on v12.0.0.
 	k8s.io/client-go => k8s.io/client-go v0.20.1
