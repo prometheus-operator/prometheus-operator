@@ -20,10 +20,10 @@ require (
 	github.com/prometheus-community/prom-label-proxy v0.2.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.46.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.46.0
-	github.com/prometheus/alertmanager v0.21.1-0.20201106142418-c39b78780054
+	github.com/prometheus/alertmanager v0.21.1-0.20210310093010-0f9cab6991e6
 	github.com/prometheus/client_golang v1.10.0
 	github.com/prometheus/common v0.20.0
-	github.com/prometheus/prometheus v1.8.2-0.20210215121130-6f488061dfb4
+	github.com/prometheus/prometheus v1.8.2-0.20210315220929-1cba1741828b
 	github.com/stretchr/testify v1.7.0
 	github.com/thanos-io/thanos v0.19.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
@@ -43,7 +43,7 @@ require (
 replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => ./pkg/apis/monitoring
 	github.com/prometheus-operator/prometheus-operator/pkg/client => ./pkg/client
-	github.com/thanos-io/thanos => github.com/thanos-io/thanos v0.13.1-0.20210226132712-0d866978365a
+	github.com/thanos-io/thanos => github.com/thanos-io/thanos v0.13.1-0.20210408211158-67f906e663bf
 	// A replace directive is needed for k8s.io/client-go because Cortex (which
 	// is an indirect dependency through Thanos) has a requirement on v12.0.0.
 	k8s.io/client-go => k8s.io/client-go v0.20.1
