@@ -418,6 +418,16 @@ func honorTimestamps(cfg yaml.MapSlice, userHonorTimestamps *bool, overrideHonor
 	return append(cfg, yaml.MapItem{Key: "honor_timestamps", Value: honor && !overrideHonorTimestamps})
 }
 
+func initRelabelings() []yaml.MapSlice {
+	// Relabel prometheus job name into a meta label
+	return []yaml.MapSlice{
+		{
+			{Key: "source_labels", Value: []string{"job"}},
+			{Key: "target_label", Value: "__tmp_prometheus_job_name"},
+		},
+	}
+}
+
 func (cg *configGenerator) generatePodMonitorConfig(
 	version semver.Version,
 	m *v1.PodMonitor,
@@ -491,10 +501,9 @@ func (cg *configGenerator) generatePodMonitorConfig(
 		}
 	}
 
-	var (
-		relabelings []yaml.MapSlice
-		labelKeys   []string
-	)
+	relabelings := initRelabelings()
+
+	var labelKeys []string
 	// Filter targets by pods selected by the monitor.
 	// Exact label matches.
 	for k := range m.Spec.Selector.MatchLabels {
@@ -702,7 +711,8 @@ func (cg *configGenerator) generateProbeConfig(
 		{Key: "module", Value: []string{m.Spec.Module}},
 	}})
 
-	var relabelings []yaml.MapSlice
+	relabelings := initRelabelings()
+
 	if m.Spec.JobName != "" {
 		relabelings = append(relabelings, []yaml.MapSlice{
 			{
@@ -958,7 +968,7 @@ func (cg *configGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	var relabelings []yaml.MapSlice
+	relabelings := initRelabelings()
 
 	// Filter targets by services selected by the monitor.
 

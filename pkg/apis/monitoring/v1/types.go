@@ -780,6 +780,8 @@ type Endpoint struct {
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
 	// RelabelConfigs to apply to samples before scraping.
+	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields
+	// and replaces original scrape job name with __tmp_prometheus_job_name.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
@@ -848,7 +850,9 @@ type PodMetricsEndpoint struct {
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
-	// RelabelConfigs to apply to samples before ingestion.
+	// RelabelConfigs to apply to samples before scraping.
+	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields
+	// and replaces original scrape job name with __tmp_prometheus_job_name.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
 	// ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
