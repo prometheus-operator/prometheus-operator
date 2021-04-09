@@ -2331,7 +2331,7 @@ spec:
                 description: Interval between gossip attempts.
                 type: string
               clusterListenLocal:
-                description: ClusterListenLocal makes the Alertmanager server listen on loopback for gossip communication
+                description: ClusterListenLocal makes the Alertmanager server listen on loopback for cluster communication
                 type: boolean
               clusterPeerTimeout:
                 description: Timeout for cluster peering.
