@@ -712,28 +712,29 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "synchronizing governing service failed")
 	}
 
-	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
-	// Ensure we have a StatefulSet running Alertmanager deployed.
-	obj, err := c.ssetInfs.Get(alertmanagerKeyToStatefulSetKey(key))
-
-	if err != nil && !apierrors.IsNotFound(err) {
-		return errors.Wrap(err, "retrieving statefulset failed")
-	}
-
 	newSSetInputHash, err := createSSetInputHash(*am, c.config)
 	if err != nil {
 		return err
 	}
 
-	if apierrors.IsNotFound(err) {
-		sset, err := makeStatefulSet(am, c.config, newSSetInputHash)
-		if err != nil {
-			return errors.Wrap(err, "making the statefulset, to create, failed")
+	sset, err := makeStatefulSet(am, c.config, newSSetInputHash)
+	if err != nil {
+		return errors.Wrap(err, "failed to make statefulset")
+	}
+	operator.SanitizeSTS(sset)
+
+	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
+
+	obj, err := c.ssetInfs.Get(alertmanagerKeyToStatefulSetKey(key))
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			return errors.Wrap(err, "failed to retrieve statefulset")
 		}
-		operator.SanitizeSTS(sset)
+
 		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
-			return errors.Wrap(err, "creating statefulset failed")
+			return errors.Wrap(err, "failed to create statefulset")
 		}
+
 		return nil
 	}
 
@@ -742,12 +743,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
-	sset, err := makeStatefulSet(am, c.config, newSSetInputHash)
-	if err != nil {
-		return errors.Wrap(err, "making the statefulset, to update, failed")
-	}
 
-	operator.SanitizeSTS(sset)
 	err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
 	sErr, ok := err.(*apierrors.StatusError)
 
