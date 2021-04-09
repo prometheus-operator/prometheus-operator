@@ -779,26 +779,36 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 	}
 
-	operatorInitContainers = append(operatorInitContainers, operator.CreateConfigReloader(
-		"init-config-reloader",
-		c.ReloaderConfig,
-		url.URL{
-			Scheme: "http",
-			Host:   c.LocalHost + ":9090",
-			Path:   path.Clean(webRoutePrefix + "/-/reload"),
-		},
-		p.Spec.ListenLocal,
-		c.LocalHost,
-		p.Spec.LogFormat,
-		p.Spec.LogLevel,
-		append(configReloaderArgs, fmt.Sprintf("--watch-interval=%d", 0)),
-		configReloaderVolumeMounts,
-		shard,
-	))
+	// operatorInitContainers = append(operatorInitContainers, operator.CreateConfigReloader(
+	// 	"init-config-reloader",
+	// 	c.ReloaderConfig,
+	// 	url.URL{
+	// 		Scheme: "http",
+	// 		Host:   c.LocalHost + ":9090",
+	// 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
+	// 	},
+	// 	p.Spec.ListenLocal,
+	// 	c.LocalHost,
+	// 	p.Spec.LogFormat,
+	// 	p.Spec.LogLevel,
+	// 	append(configReloaderArgs, fmt.Sprintf("--watch-interval=%d", 0)),
+	// 	configReloaderVolumeMounts,
+	// 	shard,
+	// ))
+	operatorInitContainers = append(operatorInitContainers,
+		operator.CreateConfigReloaderV2(
+			"init-config-reloader",
+			operator.ReloaderResources(c.ReloaderConfig),
+			operator.ReloaderRunOnce(),
+			operator.LogFormat(p.Spec.LogFormat),
+			operator.LogLevel(p.Spec.LogLevel),
+			operator.VolumeMount(configReloaderVolumeMounts),
+			operator.Shard(shard),
+		))
 
 	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, p.Spec.InitContainers)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to merge containers spec")
+		return nil, errors.Wrap(err, "failed to merge init containers spec")
 	}
 
 	operatorContainers := append([]v1.Container{
@@ -812,21 +822,22 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
-		operator.CreateConfigReloader(
+		operator.CreateConfigReloaderV2(
 			"config-reloader",
-			c.ReloaderConfig,
-			url.URL{
+			operator.ReloaderResources(c.ReloaderConfig),
+			operator.ReloaderURL(url.URL{
 				Scheme: "http",
 				Host:   c.LocalHost + ":9090",
 				Path:   path.Clean(webRoutePrefix + "/-/reload"),
-			},
-			p.Spec.ListenLocal,
-			c.LocalHost,
-			p.Spec.LogFormat,
-			p.Spec.LogLevel,
-			configReloaderArgs,
-			configReloaderVolumeMounts,
-			shard,
+			}),
+			operator.ListenLocal(p.Spec.ListenLocal),
+			operator.LocalHost(c.LocalHost),
+			operator.LogFormat(p.Spec.LogFormat),
+			operator.LogLevel(p.Spec.LogLevel),
+			operator.VolumeMount(configReloaderVolumeMounts),
+			operator.Shard(shard),
+			operator.ListenAddress(),
+			operator.ReloadURL(),
 		),
 	}, additionalContainers...)
 
