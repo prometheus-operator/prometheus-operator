@@ -26,6 +26,7 @@ Note: This repository is about prometheus-operator itself, if you have questions
 
     `Insert image tag or Git SHA here`
     <!-- Try kubectl -n monitoring describe deployment prometheus-operator -->
+    <!-- Note: please provide operator version and not kube-prometheus/helm chart version -->
 
 * Kubernetes version information:
 
