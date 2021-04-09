@@ -87,7 +87,7 @@ type Operator struct {
 	kubeletSyncEnabled     bool
 	config                 operator.Config
 
-	configGenerator *configGenerator
+	configGenerator *ConfigGenerator
 }
 
 // New creates a new controller.
@@ -140,7 +140,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		kubeletObjectNamespace: kubeletObjectNamespace,
 		kubeletSyncEnabled:     kubeletSyncEnabled,
 		config:                 conf,
-		configGenerator:        newConfigGenerator(logger),
+		configGenerator:        NewConfigGenerator(logger),
 		metrics:                operator.NewMetrics("prometheus", r),
 		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_node_address_lookup_errors_total",
@@ -1501,7 +1501,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	// Update secret based on the most recent configuration.
-	conf, err := c.configGenerator.generateConfig(
+	conf, err := c.configGenerator.GenerateConfig(
 		p,
 		smons,
 		pmons,
