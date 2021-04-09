@@ -929,49 +929,49 @@ func TestClusterListenAddress(t *testing.T) {
 	}
 
 	testcases := []testcase{
-		testcase{
+		{
 			Name:                   "ClusterListenAddressForSingleReplica",
 			Replicas:               1,
 			ForceEnableClusterMode: false,
 			ClusterListenLocal:     false,
 			ExpectedResult:         "--cluster.listen-address=",
 		},
-		testcase{
+		{
 			Name:                   "ClusterListenAddressForSingleReplicaWithForceEnableClusterMode",
 			Replicas:               1,
 			ForceEnableClusterMode: true,
 			ClusterListenLocal:     false,
 			ExpectedResult:         "--cluster.listen-address=[$(POD_IP)]:9094",
 		},
-		testcase{
+		{
 			Name:                   "ClusterListenAddressForSingleReplicaWithClusterListenLocal",
 			Replicas:               1,
 			ForceEnableClusterMode: false,
 			ClusterListenLocal:     true,
-			ExpectedResult:         "--cluster.listen-address=127.0.0.1:9094",
+			ExpectedResult:         "--cluster.listen-address=",
 		},
-		testcase{
+		{
 			Name:                   "ClusterListenAddressForMultipleReplicas",
 			Replicas:               3,
 			ForceEnableClusterMode: false,
 			ClusterListenLocal:     false,
 			ExpectedResult:         "--cluster.listen-address=[$(POD_IP)]:9094",
 		},
-		testcase{
+		{
 			Name:                   "ClusterListenAddressForMultipleReplicaWithForceEnableClusterMode",
 			Replicas:               3,
 			ForceEnableClusterMode: true,
 			ClusterListenLocal:     false,
 			ExpectedResult:         "--cluster.listen-address=[$(POD_IP)]:9094",
 		},
-		testcase{
+		{
 			Name:                   "ClusterListenAddressForMultipleReplicasWithClusterListenLocal",
 			Replicas:               3,
 			ForceEnableClusterMode: false,
 			ClusterListenLocal:     true,
 			ExpectedResult:         "--cluster.listen-address=127.0.0.1:9094",
 		},
-		testcase{
+		{
 			Name:                   "ClusterListenAddressForMultipleReplicasWithForceEnableClusterModeAndClusterListenLocal",
 			Replicas:               3,
 			ForceEnableClusterMode: true,
