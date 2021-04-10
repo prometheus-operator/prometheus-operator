@@ -37,7 +37,7 @@ type ConfigReloader struct {
 	shard          int32
 }
 
-type option func(*ConfigReloader)
+type option = func(*ConfigReloader)
 
 func ReloaderRunOnce() option {
 	return func(c *ConfigReloader) {

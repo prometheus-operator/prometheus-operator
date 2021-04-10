@@ -834,6 +834,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			operator.LocalHost(c.LocalHost),
 			operator.LogFormat(p.Spec.LogFormat),
 			operator.LogLevel(p.Spec.LogLevel),
+			operator.AdditionalArgs(configReloaderArgs),
 			operator.VolumeMount(configReloaderVolumeMounts),
 			operator.Shard(shard),
 			operator.ListenAddress(),
