@@ -803,6 +803,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			operator.LogFormat(p.Spec.LogFormat),
 			operator.LogLevel(p.Spec.LogLevel),
 			operator.VolumeMount(configReloaderVolumeMounts),
+			operator.AdditionalArgs(configReloaderArgs),
 			operator.Shard(shard),
 		))
 

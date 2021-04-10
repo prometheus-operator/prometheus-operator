@@ -99,7 +99,7 @@ func LogLevel(logLevel string) option {
 
 func AdditionalArgs(args []string) option {
 	return func(c *ConfigReloader) {
-		c.additionalArgs = args
+		c.additionalArgs = append(c.additionalArgs, args...)
 	}
 }
 
