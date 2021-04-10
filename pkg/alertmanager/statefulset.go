@@ -541,23 +541,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			},
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
-		// operator.CreateConfigReloader(
-		// 	"config-reloader",
-		// 	config.ReloaderConfig,
-		// 	url.URL{
-		// 		Scheme: "http",
-		// 		Host:   config.LocalHost + ":9093",
-		// 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
-		// 	},
-		// 	a.Spec.ListenLocal,
-		// 	config.LocalHost,
-		// 	a.Spec.LogFormat,
-		// 	a.Spec.LogLevel,
-		// 	configReloaderArgs,
-		// 	configReloaderVolumeMounts,
-		// 	-1,
-		// ),
-		operator.CreateConfigReloaderV2(
+		operator.CreateConfigReloader(
 			"config-reloader",
 			operator.ReloaderResources(config.ReloaderConfig),
 			operator.ReloaderURL(url.URL{

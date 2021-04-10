@@ -779,24 +779,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 	}
 
-	// operatorInitContainers = append(operatorInitContainers, operator.CreateConfigReloader(
-	// 	"init-config-reloader",
-	// 	c.ReloaderConfig,
-	// 	url.URL{
-	// 		Scheme: "http",
-	// 		Host:   c.LocalHost + ":9090",
-	// 		Path:   path.Clean(webRoutePrefix + "/-/reload"),
-	// 	},
-	// 	p.Spec.ListenLocal,
-	// 	c.LocalHost,
-	// 	p.Spec.LogFormat,
-	// 	p.Spec.LogLevel,
-	// 	append(configReloaderArgs, fmt.Sprintf("--watch-interval=%d", 0)),
-	// 	configReloaderVolumeMounts,
-	// 	shard,
-	// ))
 	operatorInitContainers = append(operatorInitContainers,
-		operator.CreateConfigReloaderV2(
+		operator.CreateConfigReloader(
 			"init-config-reloader",
 			operator.ReloaderResources(c.ReloaderConfig),
 			operator.ReloaderRunOnce(),
@@ -823,7 +807,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Resources:                p.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
-		operator.CreateConfigReloaderV2(
+		operator.CreateConfigReloader(
 			"config-reloader",
 			operator.ReloaderResources(c.ReloaderConfig),
 			operator.ReloaderURL(url.URL{

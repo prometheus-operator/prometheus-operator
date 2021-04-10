@@ -319,23 +319,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 
 		additionalContainers = append(
 			additionalContainers,
-			// operator.CreateConfigReloader(
-			// 	"config-reloader",
-			// 	config.ReloaderConfig,
-			// 	url.URL{
-			// 		Scheme: "http",
-			// 		Host:   config.LocalHost + ":10902",
-			// 		Path:   path.Clean(tr.Spec.RoutePrefix + "/-/reload"),
-			// 	},
-			// 	tr.Spec.ListenLocal,
-			// 	config.LocalHost,
-			// 	tr.Spec.LogFormat,
-			// 	tr.Spec.LogLevel,
-			// 	configReloaderArgs,
-			// 	configReloaderVolumeMounts,
-			// 	-1,
-			// ),
-			operator.CreateConfigReloaderV2(
+			operator.CreateConfigReloader(
 				"config-reloader",
 				operator.ReloaderResources(config.ReloaderConfig),
 				operator.ReloaderURL(url.URL{
