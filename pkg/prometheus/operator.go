@@ -1186,6 +1186,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Ensure we have a StatefulSet running Prometheus deployed and that StatefulSet names are created correctly.
 	expected := expectedStatefulSetShardNames(p)
+	level.Debug(c.logger).Log("msg", "about to reconcile shards", "shardnames", strings.Join(expected, ", "))
 	for shard, ssetName := range expected {
 		level.Debug(c.logger).Log("msg", "reconciling statefulset", "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 
@@ -1217,7 +1218,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 				return errors.Wrap(err, "creating statefulset failed")
 			}
-			return nil
+			level.Debug(c.logger).Log("msg", "created Prometheus statefulset", "statefulset", ssetName)
+			continue
 		}
 
 		oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
