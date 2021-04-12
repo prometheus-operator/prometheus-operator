@@ -1,9 +1,16 @@
-<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
-</div>
-
-# API Docs
+---
+title: "API"
+description: "Generated API docs for the Prometheus Operator"
+lead: ""
+date: 2021-03-08T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 1000
+toc: true
+---
 
 This Document documents the types introduced by the Prometheus Operator to be consumed by users.
 
@@ -22,6 +29,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
+* [MetadataConfig](#metadataconfig)
 * [NamespaceSelector](#namespaceselector)
 * [PodMetricsEndpoint](#podmetricsendpoint)
 * [PodMetricsEndpointTLSConfig](#podmetricsendpointtlsconfig)
@@ -281,8 +289,19 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | honorTimestamps | HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data. | *bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
-| relabelings | RelabelConfigs to apply to samples before scraping. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+| relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
+
+[Back to TOC](#table-of-contents)
+
+## MetadataConfig
+
+Configures the sending of series metadata to remote storage.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| send | Whether metric metadata is sent to remote storage or not. | bool | false |
+| sendInterval | How frequently metric metadata is sent to remote storage. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -316,7 +335,7 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | honorTimestamps | HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data. | *bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
-| relabelings | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+| relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
 
 [Back to TOC](#table-of-contents)
@@ -717,6 +736,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
 | queueConfig | QueueConfig allows tuning of the remote write queue parameters. | *[QueueConfig](#queueconfig) | false |
+| metadataConfig | MetadataConfig configures the sending of series metadata to remote storage. | *[MetadataConfig](#metadataconfig) | false |
 
 [Back to TOC](#table-of-contents)
 

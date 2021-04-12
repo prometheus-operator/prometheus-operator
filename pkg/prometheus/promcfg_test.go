@@ -469,6 +469,9 @@ scrape_configs:
       static: label
   relabel_configs:
   - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - source_labels:
     - __address__
     target_label: __param_target
   - source_labels:
@@ -578,6 +581,9 @@ scrape_configs:
       static: label
   relabel_configs:
   - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - source_labels:
     - __address__
     target_label: __param_target
   - source_labels:
@@ -680,6 +686,9 @@ scrape_configs:
     labels:
       namespace: default
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - target_label: job
     replacement: blackbox
   - source_labels:
@@ -789,6 +798,9 @@ scrape_configs:
   kubernetes_sd_configs:
   - role: ingress
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
@@ -916,6 +928,9 @@ scrape_configs:
   kubernetes_sd_configs:
   - role: ingress
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_ingress_label_prometheus_io_probe
@@ -1001,8 +1016,8 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			},
 			map[string]assets.BasicAuthCredentials{
 				"apiserver": {
-					"foo",
-					"bar",
+					Username: "foo",
+					Password: "bar",
 				},
 			},
 			`kubernetes_sd_configs:
@@ -1441,6 +1456,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_service_label_foo
@@ -1595,6 +1613,9 @@ scrape_configs:
       - pod-monitor-ns
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -1737,6 +1758,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_service_label_foo
@@ -1956,6 +1980,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -2095,6 +2122,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -2216,6 +2246,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -2353,6 +2386,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -2491,6 +2527,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -2628,6 +2667,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -2764,6 +2806,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -2900,6 +2945,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_pod_container_port_name
@@ -3011,6 +3059,9 @@ scrape_configs:
       names:
       - default
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_service_label_foo
@@ -3548,6 +3599,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -3617,6 +3671,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -3784,6 +3841,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -3853,6 +3913,9 @@ scrape_configs:
       - default
   scrape_interval: 30s
   relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
     - __meta_kubernetes_endpoint_port_name
@@ -4009,6 +4072,153 @@ alerting:
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
+				nil,
+				nil,
+				map[string]assets.BasicAuthCredentials{},
+				map[string]assets.BearerToken{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			result := string(cfg)
+			if tc.expected != result {
+				t.Logf("\n%s", pretty.Compare(tc.expected, result))
+				t.Fatal("expected Prometheus configuration and actual configuration do not match")
+			}
+		})
+	}
+}
+
+func TestRemoteWriteConfig(t *testing.T) {
+	for _, tc := range []struct {
+		version     string
+		remoteWrite monitoringv1.RemoteWriteSpec
+
+		expected string
+	}{
+		{
+			version: "v2.22.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
+				},
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         false,
+					SendInterval: "1m",
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 30s
+  queue_config:
+    capacity: 1000
+    min_shards: 1
+    max_shards: 10
+    max_samples_per_send: 100
+    batch_send_deadline: 20s
+    max_retries: 3
+    min_backoff: 1s
+    max_backoff: 10s
+`,
+		},
+		{
+			version: "v2.23.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
+				},
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         false,
+					SendInterval: "1m",
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 30s
+  queue_config:
+    capacity: 1000
+    min_shards: 1
+    max_shards: 10
+    max_samples_per_send: 100
+    batch_send_deadline: 20s
+    max_retries: 3
+    min_backoff: 1s
+    max_backoff: 10s
+  metadata_config:
+    send: false
+    send_interval: 1m
+`,
+		},
+	} {
+		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
+			cg := &configGenerator{}
+
+			prometheus := monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Version: tc.version,
+					ServiceMonitorSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					RemoteWrite: []monitoringv1.RemoteWriteSpec{tc.remoteWrite},
+				},
+			}
+
+			cfg, err := cg.generateConfig(
+				&prometheus,
+				nil,
 				nil,
 				nil,
 				map[string]assets.BasicAuthCredentials{},

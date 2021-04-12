@@ -5247,7 +5247,7 @@ spec:
                       description: ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
                       type: string
                     relabelings:
-                      description: 'RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
+                      description: 'RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
                       items:
                         description: 'RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                         properties:
@@ -8439,6 +8439,16 @@ spec:
                         type: string
                       description: Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer.
                       type: object
+                    metadataConfig:
+                      description: MetadataConfig configures the sending of series metadata to remote storage.
+                      properties:
+                        send:
+                          description: Whether metric metadata is sent to remote storage or not.
+                          type: boolean
+                        sendInterval:
+                          description: How frequently metric metadata is sent to remote storage.
+                          type: string
+                      type: object
                     name:
                       description: The name of the remote write queue, must be unique if specified. The name is used in metrics and logging in order to differentiate queues. Only valid in Prometheus versions 2.15.0 and newer.
                       type: string
@@ -10464,7 +10474,7 @@ spec:
                       description: ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint.
                       type: string
                     relabelings:
-                      description: 'RelabelConfigs to apply to samples before scraping. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
+                      description: 'RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
                       items:
                         description: 'RelabelConfig allows dynamic rewriting of the label set, being applied to samples before ingestion. It defines `<metric_relabel_configs>`-section of Prometheus configuration. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs'
                         properties:

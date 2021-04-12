@@ -223,9 +223,7 @@ func makeStatefulSet(
 		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 	}
 
-	for _, volume := range p.Spec.Volumes {
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, volume)
-	}
+	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, p.Spec.Volumes...)
 
 	return statefulset, nil
 }
@@ -864,6 +862,7 @@ func prefixedName(name string) string {
 }
 
 func subPathForStorage(s *monitoringv1.StorageSpec) string {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if s == nil || s.DisableMountSubPath {
 		return ""
 	}

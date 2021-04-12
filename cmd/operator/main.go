@@ -63,7 +63,7 @@ const (
 
 const (
 	logFormatLogfmt = "logfmt"
-	logFormatJson   = "json"
+	logFormatJSON   = "json"
 )
 
 const (
@@ -140,7 +140,7 @@ var (
 	}
 	availableLogFormats = []string{
 		logFormatLogfmt,
-		logFormatJson,
+		logFormatJSON,
 	}
 	cfg             = operator.Config{}
 	rcCPU, rcMemory string
@@ -206,7 +206,8 @@ func init() {
 
 func Main() int {
 	versionutil.RegisterFlags()
-	flagset.Parse(os.Args[1:])
+	// No need to check for errors because Parse would exit on error.
+	_ = flagset.Parse(os.Args[1:])
 
 	if versionutil.ShouldPrintVersion() {
 		versionutil.Print(os.Stdout, "prometheus-operator")
@@ -214,7 +215,7 @@ func Main() int {
 	}
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
-	if cfg.LogFormat == logFormatJson {
+	if cfg.LogFormat == logFormatJSON {
 		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
 	}
 	switch cfg.LogLevel {
@@ -455,7 +456,7 @@ func Main() int {
 		wg.Go(serveTLS(srv, l, logger))
 	}
 
-	term := make(chan os.Signal)
+	term := make(chan os.Signal, 1)
 	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
 
 	select {

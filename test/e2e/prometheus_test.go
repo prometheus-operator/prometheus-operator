@@ -32,6 +32,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 
+	"google.golang.org/protobuf/proto"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -46,7 +47,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/pkg/errors"
 )
@@ -826,7 +826,7 @@ func testPromScaleUpDownCluster(t *testing.T) {
 	}
 
 	p.Spec.Replicas = proto.Int32(2)
-	p, err = framework.UpdatePrometheusAndWaitUntilReady(ns, p)
+	_, err = framework.UpdatePrometheusAndWaitUntilReady(ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1048,7 +1048,7 @@ func testPromStorageUpdate(t *testing.T) {
 			},
 		},
 	}
-	p, err = framework.MonClientV1.Prometheuses(ns).Update(context.TODO(), p, metav1.UpdateOptions{})
+	_, err = framework.MonClientV1.Prometheuses(ns).Update(context.TODO(), p, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1356,7 +1356,7 @@ func testPromReloadRules(t *testing.T) {
 			},
 		},
 	}
-	ruleFile, err = framework.UpdateRule(ns, ruleFile)
+	_, err = framework.UpdateRule(ns, ruleFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1728,6 +1728,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 		resourceDefinitions[i].Versions = map[string]interface{}{}
 	}
 
+	errc := make(chan error, 1)
 	go func() {
 		for {
 			select {
@@ -1743,7 +1744,8 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					}
 					if err != nil {
 						cancel()
-						t.Fatal(err)
+						errc <- err
+						return
 					}
 
 					resourceDefinitions[i].Versions[resource.GetResourceVersion()] = resource
@@ -1789,6 +1791,12 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 	}
 
 	cancel()
+
+	select {
+	case err := <-errc:
+		t.Fatal(err)
+	default:
+	}
 
 	for _, resource := range resourceDefinitions {
 		if len(resource.Versions) > resource.MaxExpectedChanges || len(resource.Versions) < 1 {
@@ -1902,7 +1910,7 @@ func testPromPreserveUserAddedMetadata(t *testing.T) {
 
 	// Ensure resource reconciles
 	prometheusCRD.Spec.Replicas = proto.Int32(2)
-	prometheusCRD, err = framework.UpdatePrometheusAndWaitUntilReady(ns, prometheusCRD)
+	_, err = framework.UpdatePrometheusAndWaitUntilReady(ns, prometheusCRD)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2047,7 +2055,7 @@ func testPromDiscovery(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	_, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2085,7 +2093,7 @@ func testPromSharedResourcesReconciliation(t *testing.T) {
 	// Create 2 Prometheus different Prometheus instances that watch the service monitor created above.
 	for _, prometheusName := range []string{"test", "test2"} {
 		p := framework.MakeBasicPrometheus(ns, prometheusName, "reconcile-test", 1)
-		p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+		_, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -2142,7 +2150,7 @@ func testShardingProvisioning(t *testing.T) {
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
 	shards := int32(2)
 	p.Spec.Shards = &shards
-	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	_, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2283,7 +2291,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
 	framework.AddAlertingToPrometheus(p, ns, alertmanagerName)
-	p, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
+	_, err := framework.CreatePrometheusAndWaitUntilReady(ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3338,10 +3346,10 @@ func testPromStaticProbe(t *testing.T) {
 	group := "probe-test"
 	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
 
-	proberUrl := blackboxExporterName + ":9115"
+	proberURL := blackboxExporterName + ":9115"
 	targets := []string{svc.Name + ":9090"}
 
-	probe := framework.MakeBasicStaticProbe(group, proberUrl, targets)
+	probe := framework.MakeBasicStaticProbe(group, proberURL, targets)
 	if _, err := framework.MonClientV1.Probes(ns).Create(context.TODO(), probe, metav1.CreateOptions{}); err != nil {
 		t.Fatal("Creating Probe failed: ", err)
 	}
@@ -3362,7 +3370,7 @@ func testPromStaticProbe(t *testing.T) {
 		ctx.AddFinalizerFn(finalizerFn)
 	}
 
-	expectedURL := url.URL{Host: proberUrl, Scheme: "http", Path: "/probe"}
+	expectedURL := url.URL{Host: proberURL, Scheme: "http", Path: "/probe"}
 	q := expectedURL.Query()
 	q.Set("module", "http_2xx")
 	q.Set("target", targets[0])
@@ -3632,7 +3640,7 @@ func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) fu
 		}
 		expectedAlertmanagerTargets := []string{}
 		for _, p := range pods.Items {
-			expectedAlertmanagerTargets = append(expectedAlertmanagerTargets, fmt.Sprintf("http://%s:9093/api/v1/alerts", p.Status.PodIP))
+			expectedAlertmanagerTargets = append(expectedAlertmanagerTargets, fmt.Sprintf("http://%s:9093/api/v2/alerts", p.Status.PodIP))
 		}
 
 		response, err := framework.PrometheusSVCGetRequest(ns, promSVCName, "/api/v1/alertmanagers", map[string]string{})

@@ -182,7 +182,7 @@ func validateRules(content []byte) error {
 	rule := &admission.PrometheusRules{}
 	err := yaml.Unmarshal(content, rule)
 	if err != nil {
-		return errors.New(fmt.Sprintf("unable load prometheus rule %v", err))
+		return fmt.Errorf("unable load prometheus rule: %w", err)
 	}
 	rules, errorsArray := rulefmt.Parse(rule.Spec.Raw)
 	if len(errorsArray) != 0 {
@@ -196,7 +196,7 @@ func validateRules(content []byte) error {
 	}
 	for _, group := range rules.Groups {
 		if len(group.Rules) == 0 {
-			return errors.New(fmt.Sprintf("no rules found in group: %s ", group.Name))
+			return fmt.Errorf("no rules found in group: %s: %w", group.Name, err)
 		}
 	}
 	return nil

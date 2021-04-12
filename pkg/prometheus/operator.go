@@ -177,7 +177,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 	for _, informer := range c.promInfs.GetInformers() {
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
-	c.metrics.MustRegister(NewPrometheusCollectorForStores(promStores...))
+	c.metrics.MustRegister(newPrometheusCollectorForStores(promStores...))
 
 	c.smonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -1262,9 +1262,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(context.TODO(), s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			level.Error(c.logger).Log("failed to delete StatefulSet to cleanup")
+			level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 		}
 	})
+	if err != nil {
+		return errors.Wrap(err, "listing StatefulSet resources failed")
+	}
 
 	return nil
 }
@@ -1327,10 +1330,10 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-// PrometheusStatus evaluates the current status of a Prometheus deployment with
-// respect to its specified resource object. It return the status and a list of
+// Status evaluates the current status of a Prometheus deployment with
+// respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
-func PrometheusStatus(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
+func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.Prometheus) (*monitoringv1.PrometheusStatus, []v1.Pod, error) {
 	res := &monitoringv1.PrometheusStatus{Paused: p.Spec.Paused}
 
 	pods, err := kclient.CoreV1().Pods(p.Namespace).List(ctx, ListOptions(p.Name))
@@ -1526,29 +1529,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 	s.Data[configFilename] = buf.Bytes()
 
-	curSecret, err := sClient.Get(ctx, s.Name, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
-		level.Debug(c.logger).Log("msg", "creating configuration")
-		_, err = sClient.Create(ctx, s, metav1.CreateOptions{})
-		return err
-	}
-
-	var (
-		generatedConf             = s.Data[configFilename]
-		curConfig, curConfigFound = curSecret.Data[configFilename]
-	)
-	if curConfigFound {
-		if bytes.Equal(curConfig, generatedConf) {
-			level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret skipped, no configuration change")
-			return nil
-		}
-		level.Debug(c.logger).Log("msg", "current Prometheus configuration has changed")
-	} else {
-		level.Debug(c.logger).Log("msg", "no current Prometheus configuration secret found", "currentConfigFound", curConfigFound)
-	}
-
 	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
-	return k8sutil.UpdateSecret(ctx, sClient, s)
+	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) error {
@@ -1577,26 +1559,9 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
 
-	_, err := sClient.Get(ctx, tlsAssetsSecret.Name, metav1.GetOptions{})
+	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, tlsAssetsSecret)
 	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			return errors.Wrapf(
-				err,
-				"failed to check whether tls assets secret already exists for Prometheus %v in namespace %v",
-				p.Name,
-				p.Namespace,
-			)
-		}
-		_, err = sClient.Create(ctx, tlsAssetsSecret, metav1.CreateOptions{})
-		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
-
-	} else {
-		err = k8sutil.UpdateSecret(ctx, sClient, tlsAssetsSecret)
-		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
-	}
-
-	if err != nil {
-		return errors.Wrapf(err, "failed to create TLS assets secret for Prometheus %v in namespace %v", p.Name, p.Namespace)
+		return errors.Wrap(err, "failed to create TLS assets secret for Prometheus")
 	}
 
 	return nil
@@ -1630,12 +1595,15 @@ func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Pr
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select ServiceMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	for _, ns := range namespaces {
-		c.smonInfs.ListAllByNamespace(ns, servMonSelector, func(obj interface{}) {
+		err := c.smonInfs.ListAllByNamespace(ns, servMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
 				serviceMonitors[k] = obj.(*monitoringv1.ServiceMonitor)
 			}
 		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list service monitors in namespace %s", ns)
+		}
 	}
 
 	var rejected int
@@ -1726,12 +1694,15 @@ func (c *Operator) selectPodMonitors(ctx context.Context, p *monitoringv1.Promet
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select PodMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	for _, ns := range namespaces {
-		c.pmonInfs.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
+		err := c.pmonInfs.ListAllByNamespace(ns, podMonSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
 				podMonitors[k] = obj.(*monitoringv1.PodMonitor)
 			}
 		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list pod monitors in namespace %s", ns)
+		}
 	}
 
 	var rejected int
@@ -1814,11 +1785,14 @@ func (c *Operator) selectProbes(ctx context.Context, p *monitoringv1.Prometheus,
 	level.Debug(c.logger).Log("msg", "filtering namespaces to select Probes from", "namespaces", strings.Join(namespaces, ","), "namespace", p.Namespace, "prometheus", p.Name)
 
 	for _, ns := range namespaces {
-		c.probeInfs.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
+		err := c.probeInfs.ListAllByNamespace(ns, bMonSelector, func(obj interface{}) {
 			if k, ok := c.keyFunc(obj); ok {
 				probes[k] = obj.(*monitoringv1.Probe)
 			}
 		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list probes in namespace %s", ns)
+		}
 	}
 
 	var rejected int

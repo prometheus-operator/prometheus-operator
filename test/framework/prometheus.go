@@ -298,7 +298,7 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 	var pollErr error
 
 	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
-		st, _, pollErr := prometheus.PrometheusStatus(context.Background(), f.KubeClient, p)
+		st, _, pollErr := prometheus.Status(context.Background(), f.KubeClient, p)
 
 		if pollErr != nil {
 			return false, nil
