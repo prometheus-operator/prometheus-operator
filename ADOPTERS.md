@@ -20,6 +20,19 @@ Details:
 - 760000 samples/s
 - 35M active series
 
+## Gitpod
+
+[gitpod.io](https://www.gitpod.io/)
+
+Environments: Google Cloud
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes (with additional Gitpod mixins)
+
+Details:
+- One prometheus instance per cluster (8 so far)
+- 20000 samples/s
+- 1M active series
+
 ## Lunar
 
 [lunar.app](https://lunar.app/)
