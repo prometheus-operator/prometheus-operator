@@ -1223,7 +1223,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
 		if newSSetInputHash == oldSSetInputHash {
 			level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
-			return nil
+			continue
 		}
 
 		level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
