@@ -1041,7 +1041,6 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			}
 
 			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-
 			err = o.provisionAlertmanagerConfiguration(context.Background(), tc.am, store)
 
 			if !tc.ok {
