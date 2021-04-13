@@ -1529,8 +1529,29 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 	s.Data[configFilename] = buf.Bytes()
 
+	curSecret, err := sClient.Get(ctx, s.Name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		level.Debug(c.logger).Log("msg", "creating configuration")
+		_, err = sClient.Create(ctx, s, metav1.CreateOptions{})
+		return err
+	}
+
+	var (
+		generatedConf             = s.Data[configFilename]
+		curConfig, curConfigFound = curSecret.Data[configFilename]
+	)
+	if curConfigFound {
+		if bytes.Equal(curConfig, generatedConf) {
+			level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret skipped, no configuration change")
+			return nil
+		}
+		level.Debug(c.logger).Log("msg", "current Prometheus configuration has changed")
+	} else {
+		level.Debug(c.logger).Log("msg", "no current Prometheus configuration secret found", "currentConfigFound", curConfigFound)
+	}
+
 	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
-	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
+	return k8sutil.UpdateSecret(ctx, sClient, s)
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) error {
@@ -1559,9 +1580,26 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
 
-	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, tlsAssetsSecret)
+	_, err := sClient.Get(ctx, tlsAssetsSecret.Name, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrap(err, "failed to create TLS assets secret for Prometheus")
+		if !apierrors.IsNotFound(err) {
+			return errors.Wrapf(
+				err,
+				"failed to check whether tls assets secret already exists for Prometheus %v in namespace %v",
+				p.Name,
+				p.Namespace,
+			)
+		}
+		_, err = sClient.Create(ctx, tlsAssetsSecret, metav1.CreateOptions{})
+		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
+
+	} else {
+		err = k8sutil.UpdateSecret(ctx, sClient, tlsAssetsSecret)
+		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
+	}
+
+	if err != nil {
+		return errors.Wrapf(err, "failed to create TLS assets secret for Prometheus %v in namespace %v", p.Name, p.Namespace)
 	}
 
 	return nil
