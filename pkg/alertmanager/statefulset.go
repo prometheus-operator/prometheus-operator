@@ -337,6 +337,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 		podLabels[k] = v
 	}
 
+	podAnnotations["kubectl.kubernetes.io/default-container"] = "alertmanager"
+
 	var clusterPeerDomain string
 	if config.ClusterDomain != "" {
 		clusterPeerDomain = fmt.Sprintf("%s.%s.svc.%s.", governingServiceName, a.Namespace, config.ClusterDomain)
