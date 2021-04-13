@@ -622,6 +622,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		podLabels[k] = v
 	}
 
+	podAnnotations["kubectl.kubernetes.io/default-container"] = "prometheus"
+
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
 

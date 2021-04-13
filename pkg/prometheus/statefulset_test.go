@@ -120,11 +120,11 @@ func TestPodLabelsAnnotations(t *testing.T) {
 		},
 	}, defaultTestConfig, nil, "", 0)
 	require.NoError(t, err)
-	if _, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok {
-		t.Fatal("Pod labes are not properly propagated")
+	if val, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok || val != "testvalue" {
+		t.Fatal("Pod labels are not properly propagated")
 	}
-	if !reflect.DeepEqual(annotations, sset.Spec.Template.ObjectMeta.Annotations) {
-		t.Fatal("Pod annotaitons are not properly propagated")
+	if val, ok := sset.Spec.Template.ObjectMeta.Annotations["testannotation"]; !ok || val != "testvalue" {
+		t.Fatal("Pod annotations are not properly propagated")
 	}
 }
 func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
