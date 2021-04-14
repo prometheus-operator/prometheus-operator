@@ -51,8 +51,7 @@ func TestCreateConfigReloader(t *testing.T) {
 			Host:   "localhost:9093",
 			Path:   "/-/reload",
 		}),
-		ListenAddress(),
-		ReloadURL(),
+		ListenLocal(true),
 	)
 	if container.Name != "config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", containerName, container.Name)

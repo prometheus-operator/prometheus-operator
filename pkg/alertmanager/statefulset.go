@@ -550,14 +550,10 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				Path:   path.Clean(webRoutePrefix + "/-/reload"),
 			}),
 			operator.ListenLocal(a.Spec.ListenLocal),
-			operator.LocalHost(config.LocalHost),
 			operator.LogFormat(a.Spec.LogFormat),
 			operator.LogLevel(a.Spec.LogLevel),
 			operator.AdditionalArgs(configReloaderArgs),
-			operator.VolumeMount(configReloaderVolumeMounts),
-			operator.Shard(-1),
-			operator.ListenAddress(),
-			operator.ReloadURL(),
+			operator.VolumeMounts(configReloaderVolumeMounts),
 		),
 	}
 

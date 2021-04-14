@@ -786,7 +786,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			operator.ReloaderRunOnce(),
 			operator.LogFormat(p.Spec.LogFormat),
 			operator.LogLevel(p.Spec.LogLevel),
-			operator.VolumeMount(configReloaderVolumeMounts),
+			operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.AdditionalArgs(configReloaderArgs),
 			operator.Shard(shard),
 		))
@@ -816,14 +816,11 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				Path:   path.Clean(webRoutePrefix + "/-/reload"),
 			}),
 			operator.ListenLocal(p.Spec.ListenLocal),
-			operator.LocalHost(c.LocalHost),
 			operator.LogFormat(p.Spec.LogFormat),
 			operator.LogLevel(p.Spec.LogLevel),
 			operator.AdditionalArgs(configReloaderArgs),
-			operator.VolumeMount(configReloaderVolumeMounts),
+			operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.Shard(shard),
-			operator.ListenAddress(),
-			operator.ReloadURL(),
 		),
 	}, additionalContainers...)
 

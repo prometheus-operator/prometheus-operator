@@ -1,4 +1,4 @@
-// Copyright 2021 The prometheus-operator Authors
+// Copyright 2020 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package operator
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -25,100 +26,77 @@ import (
 const configReloaderPort = 8080
 
 type ConfigReloader struct {
-	name           string
-	config         ReloaderConfig
-	reloadURL      url.URL
-	listenLocal    bool
-	localHost      string
+	name        string
+	config      ReloaderConfig
+	reloadURL   url.URL
+	listenLocal bool
+	// localHost      string
 	logFormat      string
 	logLevel       string
 	additionalArgs []string
 	volumeMounts   []v1.VolumeMount
-	shard          int32
+	shard          *int32
 }
 
-type option = func(*ConfigReloader)
+type ReloaderOption = func(*ConfigReloader)
 
-func ReloaderRunOnce() option {
+func ReloaderRunOnce() ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.additionalArgs = append(c.additionalArgs, fmt.Sprintf("--watch-interval=%d", 0))
 	}
 }
 
-func ListenAddress() option {
-	return func(c *ConfigReloader) {
-		var listenAddress string
-		if c.listenLocal {
-			listenAddress = c.localHost
-		}
-		c.additionalArgs = append(c.additionalArgs, fmt.Sprintf("--listen-address=%s:%d", listenAddress, configReloaderPort))
-	}
-}
-
-func ReloadURL() option {
-	return func(c *ConfigReloader) {
-		c.additionalArgs = append(c.additionalArgs, fmt.Sprintf("--reload-url=%s", c.reloadURL.String()))
-	}
-}
-
-func ReloaderResources(rc ReloaderConfig) option {
+func ReloaderResources(rc ReloaderConfig) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.config = rc
 	}
 }
 
-func ReloaderURL(reloadURL url.URL) option {
+func ReloaderURL(reloadURL url.URL) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.reloadURL = reloadURL
 	}
 }
 
-func ListenLocal(listenLocal bool) option {
+func ListenLocal(listenLocal bool) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.listenLocal = listenLocal
 	}
 }
 
-func LocalHost(localHost string) option {
-	return func(c *ConfigReloader) {
-		c.localHost = localHost
-	}
-}
-
-func LogFormat(logFormat string) option {
+func LogFormat(logFormat string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.logFormat = logFormat
 	}
 }
 
-func LogLevel(logLevel string) option {
+func LogLevel(logLevel string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.logLevel = logLevel
 	}
 }
 
-func AdditionalArgs(args []string) option {
+func AdditionalArgs(args []string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.additionalArgs = append(c.additionalArgs, args...)
 	}
 }
 
-func VolumeMount(mounts []v1.VolumeMount) option {
+func VolumeMounts(mounts []v1.VolumeMount) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.volumeMounts = mounts
 	}
 }
 
-func Shard(shard int32) option {
+func Shard(shard int32) ReloaderOption {
 	return func(c *ConfigReloader) {
-		c.shard = shard
+		c.shard = &shard
 	}
 }
 
 // CreateConfigReloader returns the definition of the config-reloader
-// container. No shard environment variable will be passed to the reloader
-// container if `-1` is passed to the shards parameter.
-func CreateConfigReloader(name string, options ...option) v1.Container {
+// container.
+func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	configReloader := ConfigReloader{name: name}
 
 	for _, option := range options {
@@ -126,18 +104,24 @@ func CreateConfigReloader(name string, options ...option) v1.Container {
 	}
 
 	var (
-		ports []v1.ContainerPort
-		args  = make([]string, 0)
+		args    = make([]string, 0)
+		envVars = []v1.EnvVar{
+			{
+				Name: "POD_NAME",
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
+				},
+			},
+		}
 	)
 
-	ports = append(
-		ports,
-		v1.ContainerPort{
-			Name:          "reloader-web",
-			ContainerPort: configReloaderPort,
-			Protocol:      v1.ProtocolTCP,
-		},
-	)
+	if configReloader.listenLocal {
+		args = append(args, fmt.Sprintf("--listen-address=:%d", configReloaderPort))
+	}
+
+	if len(configReloader.reloadURL.String()) > 0 {
+		args = append(args, fmt.Sprintf("--reload-url=%s", configReloader.reloadURL.String()))
+	}
 
 	if configReloader.logLevel != "" && configReloader.logLevel != "info" {
 		args = append(args, fmt.Sprintf("--log-level=%s", configReloader.logLevel))
@@ -169,26 +153,21 @@ func CreateConfigReloader(name string, options ...option) v1.Container {
 		resources.Limits[v1.ResourceMemory] = resource.MustParse(configReloader.config.MemoryLimit)
 	}
 
+	if configReloader.shard != nil {
+		envVars = append(envVars, v1.EnvVar{
+			Name:  "SHARD",
+			Value: strconv.Itoa(int(*configReloader.shard)),
+		})
+	}
+
 	return v1.Container{
 		Name:                     name,
 		Image:                    configReloader.config.Image,
 		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-		Env: []v1.EnvVar{
-			{
-				Name: "POD_NAME",
-				ValueFrom: &v1.EnvVarSource{
-					FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
-				},
-			},
-			{
-				Name:  "SHARD",
-				Value: fmt.Sprint(configReloader.shard),
-			},
-		},
-		Command:      []string{"/bin/prometheus-config-reloader"},
-		Args:         args,
-		Ports:        ports,
-		VolumeMounts: configReloader.volumeMounts,
-		Resources:    resources,
+		Env:                      envVars,
+		Command:                  []string{"/bin/prometheus-config-reloader"},
+		Args:                     args,
+		VolumeMounts:             configReloader.volumeMounts,
+		Resources:                resources,
 	}
 }

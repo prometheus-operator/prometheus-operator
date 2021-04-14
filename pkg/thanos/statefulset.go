@@ -328,14 +328,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 					Path:   path.Clean(tr.Spec.RoutePrefix + "/-/reload"),
 				}),
 				operator.ListenLocal(tr.Spec.ListenLocal),
-				operator.LocalHost(config.LocalHost),
 				operator.LogFormat(tr.Spec.LogFormat),
 				operator.LogLevel(tr.Spec.LogLevel),
 				operator.AdditionalArgs(configReloaderArgs),
-				operator.VolumeMount(configReloaderVolumeMounts),
-				operator.Shard(-1),
-				operator.ListenAddress(),
-				operator.ReloadURL(),
+				operator.VolumeMounts(configReloaderVolumeMounts),
 			),
 		)
 	}
