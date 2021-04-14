@@ -100,6 +100,10 @@ Go to  https://github.com/prometheus-operator/prometheus-operator/releases/new, 
 
 For patch releases, submit a pull request to merge back the release branch into the `master` branch.
 
+## Update website
+
+Bump the operator's version in the [website](https://github.com/prometheus-operator/website/blob/main/data/prometheusOperator.json) repository.
+
 ## Update kube-prometheus
 
 Bump the versions of `github.com/prometheus-operator/prometheus-operator` in [prometheus-operator/kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) (see this [pull request](https://github.com/prometheus-operator/kube-prometheus/pull/674) for example).
