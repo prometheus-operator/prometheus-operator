@@ -132,6 +132,18 @@ Details (optional):
 - A huge fleet of OpenShift and Kubernetes clusters, each using Prometheus Operator
 - All managed by [Project Syn](https://syn.tools/), leveraging Commodore Components like [component-rancher-monitoring](https://github.com/projectsyn/component-rancher-monitoring) which re-uses Prometheus Operator
 
+## Nozzle
+
+[nozzle.io](https://nozzle.io)
+
+Environment: Google Cloud
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- 100k samples/s
+- 1M active series
+
 ---
 
 ## <Insert Company/Organization Name>
