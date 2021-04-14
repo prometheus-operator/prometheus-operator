@@ -448,7 +448,10 @@ func Main() int {
 	srv := &http.Server{
 		Handler:   mux,
 		TLSConfig: tlsConfig,
-		ErrorLog:  stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.LstdFlags),
+		// use flags on standard logger to align with base logger and get consistent parsed fields form adapter:
+		// use shortfile flag to get proper 'caller' field (avoid being wrongly parsed/extracted from message)
+		// and no datetime related flag to keep 'ts' field from base logger (with controlled format)
+		ErrorLog: stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.Lshortfile),
 	}
 	if srv.TLSConfig == nil {
 		wg.Go(serve(srv, l, logger))
