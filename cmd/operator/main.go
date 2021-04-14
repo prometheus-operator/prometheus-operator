@@ -177,12 +177,12 @@ func init() {
 	// the Prometheus Operator version if no Prometheus config reloader image is
 	// specified.
 	flagset.StringVar(&cfg.ReloaderConfig.Image, "prometheus-config-reloader", operator.DefaultPrometheusConfigReloaderImage, "Prometheus config reloader image")
-	// TODO(JJJJJones): remove the '--config-reloader-cpu' flag before releasing v0.48.
-	flagset.StringVar(&rcCPU, "config-reloader-cpu", defaultReloaderCPU, "Config Reloader CPU request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.48.0.")
+	// TODO(JJJJJones): remove the '--config-reloader-cpu' flag before releasing v0.49.
+	flagset.StringVar(&rcCPU, "config-reloader-cpu", defaultReloaderCPU, "Config Reloader CPU request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.49.0.")
 	flagset.StringVar(&cfg.ReloaderConfig.CPURequest, "config-reloader-cpu-request", "", "Config Reloader CPU request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-cpu` value for the CPU request")
 	flagset.StringVar(&cfg.ReloaderConfig.CPULimit, "config-reloader-cpu-limit", "", "Config Reloader CPU limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-cpu` for the CPU limit")
-	// TODO(JJJJJones): remove the '--config-reloader-memory' flag before releasing v0.48.
-	flagset.StringVar(&rcMemory, "config-reloader-memory", defaultReloaderMemory, "Config Reloader Memory request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.48.0.")
+	// TODO(JJJJJones): remove the '--config-reloader-memory' flag before releasing v0.49.
+	flagset.StringVar(&rcMemory, "config-reloader-memory", defaultReloaderMemory, "Config Reloader Memory request & limit. Value \"0\" disables it and causes no request/limit to be configured. Deprecated, it will be removed in v0.49.0.")
 	flagset.StringVar(&cfg.ReloaderConfig.MemoryRequest, "config-reloader-memory-request", "", "Config Reloader Memory request. Value \"0\" disables it and causes no request to be configured. Flag overrides `--config-reloader-memory` for the memory request")
 	flagset.StringVar(&cfg.ReloaderConfig.MemoryLimit, "config-reloader-memory-limit", "", "Config Reloader Memory limit. Value \"0\" disables it and causes no limit to be configured. Flag overrides `--config-reloader-memory` for the memory limit")
 	flagset.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
@@ -448,7 +448,10 @@ func Main() int {
 	srv := &http.Server{
 		Handler:   mux,
 		TLSConfig: tlsConfig,
-		ErrorLog:  stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.LstdFlags),
+		// use flags on standard logger to align with base logger and get consistent parsed fields form adapter:
+		// use shortfile flag to get proper 'caller' field (avoid being wrongly parsed/extracted from message)
+		// and no datetime related flag to keep 'ts' field from base logger (with controlled format)
+		ErrorLog: stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.Lshortfile),
 	}
 	if srv.TLSConfig == nil {
 		wg.Go(serve(srv, l, logger))

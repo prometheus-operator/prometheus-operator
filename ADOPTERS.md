@@ -20,6 +20,32 @@ Details:
 - 760000 samples/s
 - 35M active series
 
+## Gitpod
+
+[gitpod.io](https://www.gitpod.io/)
+
+Environments: Google Cloud
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes (with additional Gitpod mixins)
+
+Details:
+- One prometheus instance per cluster (8 so far)
+- 20000 samples/s
+- 1M active series
+
+## Kinvolk Lokomotive Kubernetes
+
+https://kinvolk.io/lokomotive-kubernetes/
+
+Environments: AKS, AWS, Bare Metal, Equinix Metal
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- Self-hosted (control plane runs as pods inside the cluster)
+- Deploys full K8s stack (as a distro) or managed Kubernetes (currently only AKS supported)
+- Deployed by Kinvolk for its own hosted infrastructure (including Flatcar Container Linux update server), as well as by Kinvolk customers and community users
+
 ## Lunar
 
 [lunar.app](https://lunar.app/)

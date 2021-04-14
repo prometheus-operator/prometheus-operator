@@ -43,12 +43,14 @@ var (
 	invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 )
 
-type configGenerator struct {
+// ConfigGenerator is used to create Prometheus configurations from operator resources.
+type ConfigGenerator struct {
 	logger log.Logger
 }
 
-func newConfigGenerator(logger log.Logger) *configGenerator {
-	cg := &configGenerator{
+// NewConfigGenerator creates a ConfigGenerator instance using the provided Logger.
+func NewConfigGenerator(logger log.Logger) *ConfigGenerator {
+	cg := &ConfigGenerator{
 		logger: logger,
 	}
 	return cg
@@ -153,7 +155,8 @@ func buildExternalLabels(p *v1.Prometheus) yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-func (cg *configGenerator) generateConfig(
+// GenerateConfig creates a serialized YAML representation of a Prometheus configuration using the provided resources.
+func (cg *ConfigGenerator) GenerateConfig(
 	p *v1.Prometheus,
 	sMons map[string]*v1.ServiceMonitor,
 	pMons map[string]*v1.PodMonitor,
@@ -428,7 +431,7 @@ func initRelabelings() []yaml.MapSlice {
 	}
 }
 
-func (cg *configGenerator) generatePodMonitorConfig(
+func (cg *ConfigGenerator) generatePodMonitorConfig(
 	version semver.Version,
 	m *v1.PodMonitor,
 	ep v1.PodMetricsEndpoint,
@@ -669,7 +672,7 @@ func (cg *configGenerator) generatePodMonitorConfig(
 	return cfg
 }
 
-func (cg *configGenerator) generateProbeConfig(
+func (cg *ConfigGenerator) generateProbeConfig(
 	version semver.Version,
 	m *v1.Probe,
 	apiserverConfig *v1.APIServerConfig,
@@ -892,7 +895,7 @@ func (cg *configGenerator) generateProbeConfig(
 	return cfg
 }
 
-func (cg *configGenerator) generateServiceMonitorConfig(
+func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	version semver.Version,
 	m *v1.ServiceMonitor,
 	ep v1.Endpoint,
@@ -1241,7 +1244,7 @@ func getNamespacesFromNamespaceSelector(nsel *v1.NamespaceSelector, namespace st
 	return nsel.MatchNames
 }
 
-func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]assets.BasicAuthCredentials, role string) yaml.MapItem {
+func (cg *ConfigGenerator) generateK8SSDConfig(namespaces []string, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]assets.BasicAuthCredentials, role string) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
 			Key:   "role",
@@ -1298,7 +1301,7 @@ func (cg *configGenerator) generateK8SSDConfig(namespaces []string, apiserverCon
 	}
 }
 
-func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoints, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapSlice {
+func (cg *ConfigGenerator) generateAlertmanagerConfig(version semver.Version, am v1.AlertmanagerEndpoints, apiserverConfig *v1.APIServerConfig, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapSlice {
 	if am.Scheme == "" {
 		am.Scheme = "http"
 	}
@@ -1359,7 +1362,7 @@ func (cg *configGenerator) generateAlertmanagerConfig(version semver.Version, am
 	return cfg
 }
 
-func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
+func (cg *ConfigGenerator) generateRemoteReadConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
@@ -1421,7 +1424,7 @@ func (cg *configGenerator) generateRemoteReadConfig(version semver.Version, p *v
 	}
 }
 
-func (cg *configGenerator) generateRemoteWriteConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
+func (cg *ConfigGenerator) generateRemoteWriteConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
