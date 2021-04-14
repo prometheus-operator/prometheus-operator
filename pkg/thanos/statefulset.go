@@ -358,6 +358,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	podLabels[thanosRulerLabel] = tr.Name
 	finalLabels := config.Labels.Merge(podLabels)
 
+	podAnnotations["kubectl.kubernetes.io/default-container"] = "thanos-ruler"
+
 	storageVolName := volumeName(tr.Name)
 	if tr.Spec.Storage != nil {
 		if tr.Spec.Storage.VolumeClaimTemplate.Name != "" {
