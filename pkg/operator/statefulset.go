@@ -26,11 +26,10 @@ import (
 const configReloaderPort = 8080
 
 type ConfigReloader struct {
-	name        string
-	config      ReloaderConfig
-	reloadURL   url.URL
-	listenLocal bool
-	// localHost      string
+	name           string
+	config         ReloaderConfig
+	reloadURL      url.URL
+	listenLocal    bool
 	logFormat      string
 	logLevel       string
 	additionalArgs []string
