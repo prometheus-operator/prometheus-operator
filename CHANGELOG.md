@@ -1,4 +1,4 @@
-## 0.47.0 / 2021-04-1"
+## 0.47.0 / 2021-04-13
 
 The `--config-reloader-cpu` and `--config-reloader-memory` flags are deprecated
 and will be removed in v0.49.0. They are replaced respectively by the
