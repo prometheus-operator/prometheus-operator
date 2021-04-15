@@ -196,7 +196,7 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 				},
 			},
 			Selector: map[string]string{
-				"app": "alertmanager",
+				"app.kubernetes.io/name": "alertmanager",
 			},
 		},
 	}
@@ -314,7 +314,6 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	podSelectorLabels := map[string]string{
-		"app":                          "alertmanager",
 		"app.kubernetes.io/name":       "alertmanager",
 		"app.kubernetes.io/version":    amVersion,
 		"app.kubernetes.io/managed-by": "prometheus-operator",

@@ -1362,8 +1362,8 @@ func checkAlertmanagerSpecDeprecation(key string, a *monitoringv1.Alertmanager, 
 func ListOptions(name string) metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app":          "alertmanager",
-			"alertmanager": name,
+			"app.kubernetes.io/name": "alertmanager",
+			"alertmanager":           name,
 		})).String(),
 	}
 }

@@ -74,7 +74,7 @@ spec:
       spec:
         selector:
           matchLabels:
-            app: my-example-prometheus
+            app.kubernetes.io/name: my-example-prometheus
         resources:
           requests:
             storage: 50Gi

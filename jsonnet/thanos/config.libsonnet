@@ -32,11 +32,11 @@ local service(name, namespace, labels, selector, ports) = {
       },
       commonLabels: {
         prometheus: 'self',
-        app: 'prometheus',
+        'app.kubernetes.io/name': 'prometheus',
       },
-      queryLabels: { app: 'thanos-query' },
-      sidecarLabels: { app: 'thanos-sidecar' },
-      rulerLabels: { app: 'thanos-ruler' },
+      queryLabels: { 'app.kubernetes.io/name': 'thanos-query' },
+      sidecarLabels: { 'app.kubernetes.io/name': 'thanos-sidecar' },
+      rulerLabels: { 'app.kubernetes.io/name': 'thanos-ruler' },
     },
 
   },
@@ -66,7 +66,7 @@ local service(name, namespace, labels, selector, ports) = {
         replicas: 2,
         serviceMonitorSelector: {
           matchLabels: {
-            app: 'prometheus',
+            'app.kubernetes.io/name': 'prometheus',
           },
         },
         ruleSelector: {
@@ -145,7 +145,7 @@ local service(name, namespace, labels, selector, ports) = {
           ],
           selector: {
             matchLabels: {
-              app: 'prometheus',
+              'app.kubernetes.io/name': 'prometheus',
             },
           },
         },

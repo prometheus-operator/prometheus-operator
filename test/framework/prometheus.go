@@ -262,7 +262,7 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 				},
 			},
 			Selector: map[string]string{
-				"app": "thanos-query",
+				"app.kubernetes.io/name": "thanos-query",
 			},
 		},
 	}
