@@ -59,6 +59,18 @@ Details:
 - 17k samples/s
 - 841k active series
 
+## Nozzle
+
+[nozzle.io](https://nozzle.io)
+
+Environment: Google Cloud
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- 100k samples/s
+- 1M active series
+- 
 ## OpenShift
 
 [openshift.com](https://www.openshift.com/)
