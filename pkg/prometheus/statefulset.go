@@ -723,8 +723,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Resources: p.Spec.Thanos.Resources,
 		}
 
-		volumes = append(volumes, p.Spec.Thanos.Volumes...)
-
 		for _, thanosSideCarVM := range p.Spec.Thanos.VolumeMounts {
 			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
 				Name:      thanosSideCarVM.Name,
