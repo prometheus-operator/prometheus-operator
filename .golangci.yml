@@ -2,6 +2,15 @@ run:
   deadline: 10m
 
 linters:
-  disable-all: true
   enable:
-    - unused
+  - golint
+
+issues:
+  exclude-rules:
+  - path: _test.go
+    linters:
+    - errcheck
+
+linters-settings:
+  errcheck:
+    exclude: scripts/errcheck_excludes.txt

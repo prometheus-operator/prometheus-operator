@@ -819,8 +819,8 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 func TestListOptions(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		o := ListOptions("test")
-		if o.LabelSelector != "app=alertmanager,alertmanager=test" && o.LabelSelector != "alertmanager=test,app=alertmanager" {
-			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app=alertmanager,alertmanager=test\"\n\nGot:      %#+v", o.LabelSelector)
+		if o.LabelSelector != "app.kubernetes.io/name=alertmanager,alertmanager=test" && o.LabelSelector != "alertmanager=test,app.kubernetes.io/name=alertmanager" {
+			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=alertmanager,alertmanager=test\"\n\nGot:      %#+v", o.LabelSelector)
 		}
 	}
 }

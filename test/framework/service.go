@@ -40,7 +40,7 @@ func MakeService(pathToYaml string) (*v1.Service, error) {
 	return &resource, nil
 }
 
-func CreateServiceAndWaitUntilReady(kubeClient kubernetes.Interface, namespace string, service *v1.Service) (finalizerFn, error) {
+func CreateServiceAndWaitUntilReady(kubeClient kubernetes.Interface, namespace string, service *v1.Service) (FinalizerFn, error) {
 	finalizerFn := func() error { return DeleteServiceAndWaitUntilGone(kubeClient, namespace, service.Name) }
 
 	if _, err := kubeClient.CoreV1().Services(namespace).Create(context.TODO(), service, metav1.CreateOptions{}); err != nil {

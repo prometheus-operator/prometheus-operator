@@ -1,4 +1,16 @@
-# Thanos and the Prometheus Operator
+---
+title: "Thanos"
+description: "Thanos and the Prometheus Operator."
+lead: "Thanos and the Prometheus Operator."
+date: 2021-03-08T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 500
+toc: true
+---
 
 _Note: This guide is valid for Prometheus Operator v0.28+ and Thanos v0.2+ and above._
 
@@ -7,7 +19,7 @@ multi Prometheus metric system with potentially unlimited storage capacity, if y
 
 Before continuing with Prometheus Operator Thanos integration, it is recommended to read more about Thanos in the [documentation](https://thanos.io/tip/thanos/getting-started.md/).
 
-## What Prometheus Operator helps with?
+## What does the Prometheus Operator help with?
 
 Prometheus Operator operates `Prometheus` and optionally `ThanosRuler` components.
 Other Thanos components, such as the querier and store gateway, must be configured
@@ -27,7 +39,7 @@ Pod. To enable the sidecar, reference the following examples.
 This is the simplest configuration change that needs to be made to your
 Prometheus Custom Resource, after creating the secret.
 
-```
+```yaml
 ...
 spec:
   ...
@@ -69,7 +81,7 @@ kubectl -n monitoring create secret generic thanos-objstore-config --from-file=t
 
 And then you can specify this secret inside Thanos part of the Prometheus CRD we mentioned [earlier](#prometheus-custom-resource-with-thanos-sidecar):
 
-```
+```yaml
 ...
 spec:
   ...
@@ -92,7 +104,7 @@ responsible for compactions on a global, object storage level.
 The [Thanos Ruler](https://github.com/thanos-io/thanos/blob/master/docs/components/rule.md) component allows recording and alerting rules to be processed across
 multiple Prometheus instances.  A `ThanosRuler` instance requires at least one `queryEndpoint` which points to the location of Thanos Queriers or Prometheus instances.  The `queryEndpoints` are used to configure the `--query` arguments(s) of the Thanos runtime.
 
-```
+```yaml
 ...
 apiVersion: monitoring.coreos.com/v1
 kind: ThanosRuler
@@ -124,7 +136,7 @@ Additionally, when object storage backup is desired:
 - [Store](https://thanos.io/tip/components/store.md/)
 - [Compactor](https://thanos.io/tip/components/compact.md/)
 
-Again, take a look at the Thanos documentation for more details on these components: https://thanos.io/tip/thanos/quick-tutorial.md
+Again, take a look at the Thanos documentation for more details on these components: [thanos.io/tip/thanos/quick-tutorial.md](https://thanos.io/tip/thanos/quick-tutorial.md)
 
 kube-thanos project has already supported several thanos components.
 For more details, please checkout [kube-thanos](https://github.com/thanos-io/kube-thanos/).

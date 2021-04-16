@@ -23,7 +23,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func CreateRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) (finalizerFn, error) {
+func CreateRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) (FinalizerFn, error) {
 	finalizerFn := func() error { return DeleteRoleBinding(kubeClient, ns, relativePath) }
 	roleBinding, err := parseRoleBindingYaml(relativePath)
 	if err != nil {
@@ -34,7 +34,7 @@ func CreateRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath 
 	return finalizerFn, err
 }
 
-func CreateRoleBindingForSubjectNamespace(kubeClient kubernetes.Interface, ns, subjectNs string, relativePath string) (finalizerFn, error) {
+func CreateRoleBindingForSubjectNamespace(kubeClient kubernetes.Interface, ns, subjectNs string, relativePath string) (FinalizerFn, error) {
 	finalizerFn := func() error { return DeleteRoleBinding(kubeClient, ns, relativePath) }
 	roleBinding, err := parseRoleBindingYaml(relativePath)
 

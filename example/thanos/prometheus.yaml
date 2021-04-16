@@ -13,6 +13,6 @@ spec:
       role: prometheus-rulefiles
   serviceMonitorSelector:
     matchLabels:
-      app: prometheus
+      app.kubernetes.io/name: prometheus
   thanos:
     version: v0.11.2

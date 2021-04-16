@@ -43,11 +43,7 @@ type prometheusCollector struct {
 	stores []cache.Store
 }
 
-func NewPrometheusCollector(s cache.Store) *prometheusCollector {
-	return &prometheusCollector{stores: []cache.Store{s}}
-}
-
-func NewPrometheusCollectorForStores(s ...cache.Store) *prometheusCollector {
+func newPrometheusCollectorForStores(s ...cache.Store) *prometheusCollector {
 	return &prometheusCollector{stores: s}
 }
 

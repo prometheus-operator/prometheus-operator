@@ -43,6 +43,9 @@ func loadCfg(s string) (*alertmanagerConfig, error) {
 
 	cfg := &alertmanagerConfig{}
 	err = yaml.UnmarshalStrict([]byte(s), cfg)
+	if err != nil {
+		return nil, err
+	}
 
 	return cfg, nil
 }

@@ -161,6 +161,12 @@ func (c *Operator) bootstrap(ctx context.Context) error {
 		return errors.Wrap(err, "error creating alertmanager informers")
 	}
 
+	var alertmanagerStores []cache.Store
+	for _, informer := range c.alrtInfs.GetInformers() {
+		alertmanagerStores = append(alertmanagerStores, informer.Informer().GetStore())
+	}
+	c.metrics.MustRegister(newAlertmanagerCollectorForStores(alertmanagerStores...))
+
 	c.alrtCfgInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			c.config.Namespaces.AllowList,
@@ -598,6 +604,10 @@ func (c *Operator) handleAlertmanagerDelete(obj interface{}) {
 }
 
 func (c *Operator) handleAlertmanagerUpdate(old, cur interface{}) {
+	if old.(*monitoringv1.Alertmanager).ResourceVersion == cur.(*monitoringv1.Alertmanager).ResourceVersion {
+		return
+	}
+
 	key, ok := c.keyFunc(cur)
 	if !ok {
 		return
@@ -881,12 +891,15 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	}
 
 	for _, ns := range namespaces {
-		c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
+		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
 				amConfigs[k] = obj.(*monitoringv1alpha1.AlertmanagerConfig)
 			}
 		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to list alertmanager configs in namespace %s", ns)
+		}
 	}
 
 	var rejected int
@@ -1349,13 +1362,13 @@ func checkAlertmanagerSpecDeprecation(key string, a *monitoringv1.Alertmanager, 
 func ListOptions(name string) metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app":          "alertmanager",
-			"alertmanager": name,
+			"app.kubernetes.io/name": "alertmanager",
+			"alertmanager":           name,
 		})).String(),
 	}
 }
 
-func AlertmanagerStatus(ctx context.Context, kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
+func Status(ctx context.Context, kclient kubernetes.Interface, a *monitoringv1.Alertmanager) (*monitoringv1.AlertmanagerStatus, []v1.Pod, error) {
 	res := &monitoringv1.AlertmanagerStatus{Paused: a.Spec.Paused}
 
 	pods, err := kclient.CoreV1().Pods(a.Namespace).List(ctx, ListOptions(a.Name))

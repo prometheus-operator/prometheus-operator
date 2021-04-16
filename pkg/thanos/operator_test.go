@@ -21,8 +21,8 @@ import (
 func TestListOptions(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		o := ListOptions("test")
-		if o.LabelSelector != "app=thanos-ruler,thanos-ruler=test" && o.LabelSelector != "thanos-ruler=test,app=thanos-ruler" {
-			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app=thanos-ruler,thanos-ruler=test\"\n\nGot:      %#+v", o.LabelSelector)
+		if o.LabelSelector != "app.kubernetes.io/name=thanos-ruler,thanos-ruler=test" && o.LabelSelector != "thanos-ruler=test,app.kubernetes.io/name=thanos-ruler" {
+			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=thanos-ruler,thanos-ruler=test\"\n\nGot:      %#+v", o.LabelSelector)
 		}
 	}
 }

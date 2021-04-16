@@ -24,6 +24,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -34,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -114,7 +114,7 @@ func testAMVersionMigration(t *testing.T) {
 	}
 
 	am.Spec.Version = "v0.16.2"
-	am, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am)
+	_, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, am)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func testAMStorageUpdate(t *testing.T) {
 		},
 	}
 
-	am, err = framework.MonClientV1.Alertmanagers(ns).Update(context.TODO(), am, metav1.UpdateOptions{})
+	_, err = framework.MonClientV1.Alertmanagers(ns).Update(context.TODO(), am, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -315,7 +315,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 		}
 	}
 
-	silId, err := framework.CreateSilence(ns, "alertmanager-test-0")
+	silID, err := framework.CreateSilence(ns, "alertmanager-test-0")
 	if err != nil {
 		t.Fatalf("failed to create silence: %v", err)
 	}
@@ -331,8 +331,8 @@ func testAMClusterGossipSilences(t *testing.T) {
 				return false, nil
 			}
 
-			if *silences[0].ID != silId {
-				return false, errors.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silId, *silences[0].ID)
+			if *silences[0].ID != silID {
+				return false, errors.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
 			}
 			return true, nil
 		})
@@ -513,13 +513,13 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 			Replicas: &whReplicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "alertmanager-webhook",
+					"app.kubernetes.io/name": "alertmanager-webhook",
 				},
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "alertmanager-webhook",
+						"app.kubernetes.io/name": "alertmanager-webhook",
 					},
 				},
 				Spec: v1.PodSpec{
@@ -553,7 +553,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 				},
 			},
 			Selector: map[string]string{
-				"app": "alertmanager-webhook",
+				"app.kubernetes.io/name": "alertmanager-webhook",
 			},
 		},
 	}
@@ -566,7 +566,7 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 	err := testFramework.WaitForPodsReady(framework.KubeClient, ns, time.Minute*5, 1,
 		metav1.ListOptions{
 			LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-				"app": "alertmanager-webhook",
+				"app.kubernetes.io/name": "alertmanager-webhook",
 			})).String(),
 		},
 	)
@@ -669,7 +669,7 @@ inhibit_rules:
 
 	opts := metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app": "alertmanager-webhook",
+			"app.kubernetes.io/name": "alertmanager-webhook",
 		})).String(),
 	}
 	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.TODO(), opts)
@@ -760,7 +760,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	slackApiURLSecret := &v1.Secret{
+	slackAPIURLSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "s-receiver-api-url",
 		},
@@ -768,7 +768,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			"api-url": []byte("http://slack.example.com"),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), slackApiURLSecret, metav1.CreateOptions{}); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), slackAPIURLSecret, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1273,7 +1273,7 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 
 	// Ensure resource reconciles
 	alertManager.Spec.Replicas = proto.Int32(2)
-	alertManager, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, alertManager)
+	_, err = framework.UpdateAlertmanagerAndWaitUntilReady(ns, alertManager)
 	if err != nil {
 		t.Fatal(err)
 	}

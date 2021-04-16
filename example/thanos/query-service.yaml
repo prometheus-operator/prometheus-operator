@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: thanos-query
+    app.kubernetes.io/name: thanos-query
   name: thanos-query
   namespace: default
 spec:
@@ -11,4 +11,4 @@ spec:
     port: 10902
     targetPort: http
   selector:
-    app: thanos-query
+    app.kubernetes.io/name: thanos-query

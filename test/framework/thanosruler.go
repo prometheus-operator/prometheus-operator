@@ -69,7 +69,7 @@ func (f *Framework) WaitForThanosRulerReady(tr *monitoringv1.ThanosRuler, timeou
 	var pollErr error
 
 	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
-		st, _, pollErr := thanos.ThanosRulerStatus(context.Background(), f.KubeClient, tr)
+		st, _, pollErr := thanos.RulerStatus(context.Background(), f.KubeClient, tr)
 
 		if pollErr != nil {
 			return false, nil

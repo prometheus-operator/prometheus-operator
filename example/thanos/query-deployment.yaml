@@ -2,18 +2,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: thanos-query
+    app.kubernetes.io/name: thanos-query
   name: thanos-query
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: thanos-query
+      app.kubernetes.io/name: thanos-query
   template:
     metadata:
       labels:
-        app: thanos-query
+        app.kubernetes.io/name: thanos-query
     spec:
       containers:
       - args:

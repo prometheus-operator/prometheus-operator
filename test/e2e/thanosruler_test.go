@@ -15,11 +15,10 @@
 package e2e
 
 import (
-	"github.com/golang/protobuf/proto"
-
 	"context"
 	"testing"
 
+	"google.golang.org/protobuf/proto"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -109,7 +108,7 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 
 	// Ensure resource reconciles
 	thanosRuler.Spec.Replicas = proto.Int32(2)
-	thanosRuler, err = framework.UpdateThanosRulerAndWaitUntilReady(ns, thanosRuler)
+	_, err = framework.UpdateThanosRulerAndWaitUntilReady(ns, thanosRuler)
 	if err != nil {
 		t.Fatal(err)
 	}

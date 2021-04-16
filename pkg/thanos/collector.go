@@ -32,12 +32,12 @@ var (
 )
 
 type thanosRulerCollector struct {
-	store cache.Store
+	stores []cache.Store
 }
 
-// NewThanosRulerCollector creates a thanosRulerCollector initialized with the given cache store
-func NewThanosRulerCollector(s cache.Store) *thanosRulerCollector {
-	return &thanosRulerCollector{store: s}
+// newThanosRulerCollectorForStores creates a thanosRulerCollector initialized with the given cache store
+func newThanosRulerCollectorForStores(s ...cache.Store) *thanosRulerCollector {
+	return &thanosRulerCollector{stores: s}
 }
 
 // Describe implements the prometheus.Collector interface.
@@ -47,8 +47,10 @@ func (c *thanosRulerCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements the prometheus.Collector interface.
 func (c *thanosRulerCollector) Collect(ch chan<- prometheus.Metric) {
-	for _, tr := range c.store.List() {
-		c.collectThanos(ch, tr.(*v1.ThanosRuler))
+	for _, s := range c.stores {
+		for _, tr := range s.List() {
+			c.collectThanos(ch, tr.(*v1.ThanosRuler))
+		}
 	}
 }
 

@@ -38,6 +38,10 @@ Maintaining the release branches for older minor releases happens on a best effo
 
 A couple of days before the release, consider submitting a PR against the `master` branch to update the Go dependencies.
 
+```bash
+make update-go-deps
+```
+
 ## Update operand versions
 
 A couple of days before the release, update the [default versions](https://github.com/prometheus-operator/prometheus-operator/blob/f6ce472ecd6064fb6769e306b55b149dfb6af903/pkg/operator/defaults.go#L20-L31) of Prometheus, Alertmanager and Thanos if newer versions are available.
@@ -51,14 +55,14 @@ Bump the version in the `VERSION` file in the root of the repository.
 A number of files have to be re-generated, this is automated with the following make target:
 
 ```bash
-$ make clean generate
+make clean generate
 ```
 
 Bump the version of the `pkg/apis/monitoring` and `pkg/client` packages in `go.mod`:
 
 ```bash
-$ go mod edit -require "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring@v$(< VERSION)"
-$ go mod edit -require "github.com/prometheus-operator/prometheus-operator/pkg/client@v$(< VERSION)"
+go mod edit -require "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring@v$(< VERSION)"
+go mod edit -require "github.com/prometheus-operator/prometheus-operator/pkg/client@v$(< VERSION)"
 ```
 
 Now that all version information has been updated, an entry for the new version can be added to the `CHANGELOG.md` file.
@@ -81,11 +85,11 @@ From now on, all work happens on the `release-<major>.<minor>` branch.
 Tag the new release with a tag named `v<major>.<minor>.<patch>`, e.g. `v2.1.3`. Note the `v` prefix. Tag also the `github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring` module with `pkg/apis/monitoring/v<major>.<minor>.<patch>` and the `github.com/prometheus-operator/prometheus-operator/pkg/client` module with `pkg/client/v<major>.<minor>.<patch>`. You can do the tagging on the commandline:
 
 ```bash
-$ tag="v$(< VERSION)"
-$ git tag -s "${tag}" -m "${tag}"
-$ git tag -s "pkg/apis/monitoring/${tag}" -m "pkg/apis/monitoring/${tag}"
-$ git tag -s "pkg/client/${tag}" -m "pkg/client/${tag}"
-$ git push origin "${tag}" "pkg/apis/monitoring/${tag}" "pkg/client/${tag}"
+tag="v$(< VERSION)"
+git tag -s "${tag}" -m "${tag}"
+git tag -s "pkg/apis/monitoring/${tag}" -m "pkg/apis/monitoring/${tag}"
+git tag -s "pkg/client/${tag}" -m "pkg/client/${tag}"
+git push origin "${tag}" "pkg/apis/monitoring/${tag}" "pkg/client/${tag}"
 ```
 
 Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to your Github account using the following [procedure](https://help.github.com/articles/generating-a-gpg-key/), you can replace the `-s` flag by `-a` flag of the `git tag` command to only annotate the tag without signing.

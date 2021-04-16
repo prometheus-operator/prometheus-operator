@@ -16,7 +16,6 @@ package framework
 
 import (
 	"context"
-	"fmt"
 	"github.com/pkg/errors"
 	"k8s.io/api/admissionregistration/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,10 +23,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func CreateMutatingHook(kubeClient kubernetes.Interface, certBytes []byte, namespace, yamlPath string) (finalizerFn, error) {
+func createMutatingHook(kubeClient kubernetes.Interface, certBytes []byte, namespace, yamlPath string) (FinalizerFn, error) {
 	h, err := parseMutatingHookYaml(yamlPath)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("Failed parsing mutating webhook"))
+		return nil, errors.Wrap(err, "Failed parsing mutating webhook")
 	}
 
 	h.Webhooks[0].ClientConfig.Service.Namespace = namespace
@@ -35,18 +34,18 @@ func CreateMutatingHook(kubeClient kubernetes.Interface, certBytes []byte, names
 
 	_, err = kubeClient.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Create(context.TODO(), h, metav1.CreateOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to create mutating webhook %s", h.Name))
+		return nil, errors.Wrapf(err, "failed to create mutating webhook %s", h.Name)
 	}
 
-	finalizerFn := func() error { return DeleteMutatingWebhook(kubeClient, h.Name) }
+	finalizerFn := func() error { return deleteMutatingWebhook(kubeClient, h.Name) }
 
 	return finalizerFn, nil
 }
 
-func CreateValidatingHook(kubeClient kubernetes.Interface, certBytes []byte, namespace, yamlPath string) (finalizerFn, error) {
+func createValidatingHook(kubeClient kubernetes.Interface, certBytes []byte, namespace, yamlPath string) (FinalizerFn, error) {
 	h, err := parseValidatingHookYaml(yamlPath)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("Failed parsing mutating webhook"))
+		return nil, errors.Wrap(err, "Failed parsing mutating webhook")
 	}
 
 	h.Webhooks[0].ClientConfig.Service.Namespace = namespace
@@ -54,19 +53,19 @@ func CreateValidatingHook(kubeClient kubernetes.Interface, certBytes []byte, nam
 
 	_, err = kubeClient.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations().Create(context.TODO(), h, metav1.CreateOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to create validating webhook %s", h.Name))
+		return nil, errors.Wrapf(err, "failed to create validating webhook %s", h.Name)
 	}
 
-	finalizerFn := func() error { return DeleteValidatingWebhook(kubeClient, h.Name) }
+	finalizerFn := func() error { return deleteValidatingWebhook(kubeClient, h.Name) }
 
 	return finalizerFn, nil
 }
 
-func DeleteMutatingWebhook(kubeClient kubernetes.Interface, name string) error {
+func deleteMutatingWebhook(kubeClient kubernetes.Interface, name string) error {
 	return kubeClient.AdmissionregistrationV1beta1().MutatingWebhookConfigurations().Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
 
-func DeleteValidatingWebhook(kubeClient kubernetes.Interface, name string) error {
+func deleteValidatingWebhook(kubeClient kubernetes.Interface, name string) error {
 	return kubeClient.AdmissionregistrationV1beta1().ValidatingWebhookConfigurations().Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
 
@@ -78,7 +77,7 @@ func parseValidatingHookYaml(pathToYaml string) (*v1beta1.ValidatingWebhookConfi
 
 	resource := v1beta1.ValidatingWebhookConfiguration{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&resource); err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to decode file %s", pathToYaml))
+		return nil, errors.Wrapf(err, "failed to decode file %s", pathToYaml)
 	}
 
 	return &resource, nil
@@ -92,7 +91,7 @@ func parseMutatingHookYaml(pathToYaml string) (*v1beta1.MutatingWebhookConfigura
 
 	resource := v1beta1.MutatingWebhookConfiguration{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&resource); err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to decode file %s", pathToYaml))
+		return nil, errors.Wrapf(err, "failed to decode file %s", pathToYaml)
 	}
 
 	return &resource, nil
