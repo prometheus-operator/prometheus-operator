@@ -4565,6 +4565,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			version: "v2.22.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
+				Sigv4: &monitoringv1.Sigv4{},
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
 					MinShards:         1,
@@ -4596,6 +4597,7 @@ alerting:
 remote_write:
 - url: http://example.com
   remote_timeout: 30s
+  sigv4: {}
   queue_config:
     capacity: 1000
     min_shards: 1
@@ -4610,6 +4612,9 @@ remote_write:
 			version: "v2.23.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
+				Sigv4: &monitoringv1.Sigv4{
+					Profile: "arn:aws:iam::123456789012:instance-profile/Webserver",
+				},
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
 					MinShards:         1,
@@ -4641,6 +4646,8 @@ alerting:
 remote_write:
 - url: http://example.com
   remote_timeout: 30s
+  sigv4:
+    profile: arn:aws:iam::123456789012:instance-profile/Webserver
   queue_config:
     capacity: 1000
     min_shards: 1

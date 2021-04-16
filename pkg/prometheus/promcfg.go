@@ -1578,6 +1578,26 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
 		}
 
+		if spec.Sigv4 != nil {
+			signv4 := yaml.MapSlice{}
+			if spec.Sigv4.Region != "" {
+				signv4 = append(signv4, yaml.MapItem{Key: "region", Value: spec.Sigv4.Region})
+			}
+			if spec.Sigv4.AccessKey != "" {
+				signv4 = append(signv4, yaml.MapItem{Key: "access_key", Value: spec.Sigv4.AccessKey})
+			}
+			if spec.Sigv4.SecretKey != "" {
+				signv4 = append(signv4, yaml.MapItem{Key: "secret_key", Value: spec.Sigv4.SecretKey})
+			}
+			if spec.Sigv4.Profile != "" {
+				signv4 = append(signv4, yaml.MapItem{Key: "profile", Value: spec.Sigv4.Profile})
+			}
+			if spec.Sigv4.RoleArn != "" {
+				signv4 = append(signv4, yaml.MapItem{Key: "role_arn", Value: spec.Sigv4.RoleArn})
+			}
+			cfg = append(cfg, yaml.MapItem{Key: "sigv4", Value: signv4})
+		}
+
 		if spec.QueueConfig != nil {
 			queueConfig := yaml.MapSlice{}
 
