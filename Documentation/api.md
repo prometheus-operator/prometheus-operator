@@ -69,6 +69,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
+* [Sigv4](#sigv4)
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
 * [ThanosSpec](#thanosspec)
@@ -903,6 +904,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | bearerToken | Bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
 | authorization | Authorization section for remote write | *[Authorization](#authorization) | false |
+| sigv4 | Sigv4 allows to configures AWS's Signature Verification 4 | *[Sigv4](#sigv4) | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
 | queueConfig | QueueConfig allows tuning of the remote write queue parameters. | *[QueueConfig](#queueconfig) | false |
@@ -1062,6 +1064,20 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 | labelLimit | Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
 | labelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer. | uint64 | false |
+
+[Back to TOC](#table-of-contents)
+
+## Sigv4
+
+Sigv4 optionally configures AWS's Signature Verification 4 signing process to sign requests. Cannot be set at the same time as basic_auth or authorization.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| region | Region is the AWS region. If blank, the region from the default credentials chain used. | string | false |
+| accessKey | AccessKey is the AWS API key. If blank, the default AWS SDK credentials are used. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| secretKey | SecretKey is the AWS API secret. If blank, the default AWS SDK credentials are used. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| profile | Profile is the named AWS profile used to authenticate. | string | false |
+| roleArn | RoleArn is the named AWS profile used to authenticate. | string | false |
 
 [Back to TOC](#table-of-contents)
 

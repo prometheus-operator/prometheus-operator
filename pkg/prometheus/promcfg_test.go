@@ -35,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/pointer"
 )
 
@@ -397,10 +398,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 					},
 				},
 			},
-		},
-		nil,
-		nil,
-		map[string]*monitoringv1.Probe{
+		}, nil, nil, map[string]*monitoringv1.Probe{
 			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
@@ -444,7 +442,6 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -547,11 +544,11 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 								"static":    "label",
 							},
 						},
-					},
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
-						{
-							Regex:  "noisy_labels.*",
-							Action: "labeldrop",
+						MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							{
+								Regex:  "noisy_labels.*",
+								Action: "labeldrop",
+							},
 						},
 					},
 				},
@@ -1714,7 +1711,6 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	expected := `global:
   evaluation_interval: 30s
   scrape_interval: 30s
@@ -2037,7 +2033,8 @@ alerting:
 	}
 }
 
-func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
+func
+TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
 		&monitoringv1.Prometheus{
@@ -2053,8 +2050,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 					},
 				},
 			},
-		},
-		map[string]*monitoringv1.ServiceMonitor{
+		}, map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
@@ -2179,7 +2175,8 @@ alerting:
 	}
 }
 
-func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
+func
+TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
 		&monitoringv1.Prometheus{
@@ -2195,9 +2192,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 					},
 				},
 			},
-		},
-		nil,
-		map[string]*monitoringv1.PodMonitor{
+		}, nil, map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testpodmonitor1",
@@ -2302,7 +2297,8 @@ alerting:
 	}
 }
 
-func TestHonorTimestampsOverriding(t *testing.T) {
+func
+TestHonorTimestampsOverriding(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
 		&monitoringv1.Prometheus{
@@ -2445,7 +2441,8 @@ alerting:
 	}
 }
 
-func TestSettingHonorLabels(t *testing.T) {
+func
+TestSettingHonorLabels(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
 		&monitoringv1.Prometheus{
@@ -2460,8 +2457,7 @@ func TestSettingHonorLabels(t *testing.T) {
 					},
 				},
 			},
-		},
-		map[string]*monitoringv1.ServiceMonitor{
+		}, map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
@@ -2601,8 +2597,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 					},
 				},
 			},
-		},
-		map[string]*monitoringv1.ServiceMonitor{
+		}, map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
@@ -2742,8 +2737,7 @@ func TestTargetLabels(t *testing.T) {
 					},
 				},
 			},
-		},
-		map[string]*monitoringv1.ServiceMonitor{
+		}, map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
@@ -3046,21 +3040,11 @@ oauth2:
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			cg := &ConfigGenerator{}
-			cfg, err := cg.GenerateConfig(
-				tt.p,
-				tt.sMons,
-				tt.pMons,
-				tt.probes,
-				&assets.Store{
-					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
-					OAuth2Assets:    tt.oauth2Credentials,
-					TokenAssets:     map[string]assets.Token{},
-				},
-				nil,
-				nil,
-				nil,
-				nil,
-			)
+			cfg, err := cg.GenerateConfig(tt.p, tt.sMons, tt.pMons, tt.probes, &assets.Store{
+				BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
+				OAuth2Assets:    tt.oauth2Credentials,
+				TokenAssets:     map[string]assets.Token{},
+			}, nil, nil, nil, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3833,7 +3817,6 @@ func TestHonorLabels(t *testing.T) {
 		OverrideHonorLabels bool
 		Expected            bool
 	}
-
 	testCases := []testCase{
 		{
 			UserHonorLabels:     false,
@@ -3871,7 +3854,6 @@ func TestHonorTimestamps(t *testing.T) {
 		OverrideHonorTimestamps bool
 		Expected                string
 	}
-
 	testCases := []testCase{
 		{
 			UserHonorTimestamps:     nil,
@@ -4641,9 +4623,26 @@ remote_write:
 `,
 		},
 		{
-			version: "v2.23.0",
+			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
+				Sigv4: &monitoringv1.Sigv4{
+					Profile: "profilename",
+					RoleArn: "arn:aws:iam::123456789012:instance-profile/Webserver",
+					AccessKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "access-key",
+					},
+					SecretKey: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "secret-key",
+					},
+					Region: "us-central-0",
+				},
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
 					MinShards:         1,
@@ -4675,6 +4674,12 @@ alerting:
 remote_write:
 - url: http://example.com
   remote_timeout: 30s
+  sigv4:
+    region: us-central-0
+    access_key: access-key
+    secret_key: secret-key
+    profile: profilename
+    role_arn: arn:aws:iam::123456789012:instance-profile/Webserver
   queue_config:
     capacity: 1000
     min_shards: 1
@@ -4868,7 +4873,34 @@ remote_write:
 						},
 					},
 					RemoteWrite: []monitoringv1.RemoteWriteSpec{tc.remoteWrite},
+					Secrets:     []string{"sigv4-secret"},
 				},
+			}
+
+			store := &assets.Store{
+				BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
+				OAuth2Assets: map[string]assets.OAuth2Credentials{
+					"remoteWrite/0": {
+						ClientID:     "client-id",
+						ClientSecret: "client-secret",
+					},
+				},
+				TokenAssets: map[string]assets.Token{
+					"remoteWrite/auth/0": assets.Token("secret"),
+				}}
+			if tc.remoteWrite.Sigv4 != nil {
+				// Prepare a fake K8s client for secrets
+				sClient := fake.NewSimpleClientset(&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      tc.remoteWrite.Sigv4.AccessKey.Name,
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						tc.remoteWrite.Sigv4.AccessKey.Key: []byte("access-key"),
+						tc.remoteWrite.Sigv4.SecretKey.Key: []byte("secret-key"),
+					},
+				}).CoreV1()
+				store = assets.NewStore(nil, sClient)
 			}
 
 			cfg, err := cg.GenerateConfig(
@@ -4876,22 +4908,11 @@ remote_write:
 				nil,
 				nil,
 				nil,
-				&assets.Store{
-					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
-					OAuth2Assets: map[string]assets.OAuth2Credentials{
-						"remoteWrite/0": {
-							ClientID:     "client-id",
-							ClientSecret: "client-secret",
-						},
-					},
-					TokenAssets: map[string]assets.Token{
-						"remoteWrite/auth/0": assets.Token("secret"),
-					}},
+				store,
 				nil,
 				nil,
 				nil,
-				nil,
-			)
+				nil)
 			if err != nil {
 				t.Fatal(err)
 			}
