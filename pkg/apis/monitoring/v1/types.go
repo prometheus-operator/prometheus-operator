@@ -670,7 +670,7 @@ type RemoteWriteSpec struct {
 	// File to read bearer token for remote write.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 	// Sigv4 allows to configures AWS's Signature Verification 4
-	Sigv4 *Sigv4 `json:"sigv4"`
+	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 	// TLS Config to use for remote write.
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 	// Optional ProxyURL
@@ -710,13 +710,13 @@ type Sigv4 struct {
 	// Region is the AWS region. If blank, the region from the default credentials chain used.
 	Region string `json:"region,omitempty"`
 	// AccessKey is the AWS API key. If blank, the environment variable `AWS_ACCESS_KEY_ID` is used
-	AccessKey string `json: "access_key"`
+	AccessKey string `json:"accessKey,omitempty"`
 	// SecretKey is the AWS API secret. If blank, the environment variable `AWS_SECRET_ACCESS_KEY` is used
-	SecretKey string `json: "secret_key"`
+	SecretKey string `json:"secretKey,omitempty"`
 	// Profile is the named AWS profile used to authenticate.
-	Profile string `json: "profile"`
-	// Profile is the named AWS profile used to authenticate.
-	RoleArn string `json: "role_arn"`
+	Profile string `json:"profile,omitempty"`
+	// RoleArn is the named AWS profile used to authenticate.
+	RoleArn string `json:"roleArn,omitempty"`
 }
 
 // RemoteReadSpec defines the remote_read configuration for prometheus.

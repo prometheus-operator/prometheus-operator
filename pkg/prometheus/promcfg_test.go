@@ -4613,7 +4613,11 @@ remote_write:
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				Sigv4: &monitoringv1.Sigv4{
-					Profile: "arn:aws:iam::123456789012:instance-profile/Webserver",
+					Profile: "profilename",
+					RoleArn: "arn:aws:iam::123456789012:instance-profile/Webserver",
+					AccessKey: "secret",
+					SecretKey: "supersecret",
+					Region: "us-central-0",
 				},
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
@@ -4647,7 +4651,11 @@ remote_write:
 - url: http://example.com
   remote_timeout: 30s
   sigv4:
-    profile: arn:aws:iam::123456789012:instance-profile/Webserver
+    region: us-central-0
+    access_key: secret
+    secret_key: supersecret
+    profile: profilename
+    role_arn: arn:aws:iam::123456789012:instance-profile/Webserver
   queue_config:
     capacity: 1000
     min_shards: 1
