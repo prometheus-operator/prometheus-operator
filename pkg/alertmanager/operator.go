@@ -834,25 +834,9 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	}
 	generatedConfigSecret.Data[alertmanagerConfigFile] = conf
 
-	_, err := sClient.Get(ctx, generatedConfigSecret.Name, metav1.GetOptions{})
+	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, generatedConfigSecret)
 	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			return errors.Wrapf(
-				err,
-				"failed to check whether generated config secret already exists for Alertmanager %v in namespace %v",
-				am.Name,
-				am.Namespace,
-			)
-		}
-		_, err = sClient.Create(ctx, generatedConfigSecret, metav1.CreateOptions{})
-		level.Debug(c.logger).Log("msg", "created generated config secret", "secretname", generatedConfigSecret.Name)
-	} else {
-		err = k8sutil.UpdateSecret(ctx, sClient, generatedConfigSecret)
-		level.Debug(c.logger).Log("msg", "updated generated config secret", "secretname", generatedConfigSecret.Name)
-	}
-
-	if err != nil {
-		return errors.Wrapf(err, "failed to update generated config secret for Alertmanager %v in namespace %v", am.Name, am.Namespace)
+		return errors.Wrap(err, "failed to update generated config secret")
 	}
 
 	return nil
@@ -1320,26 +1304,9 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, am *monitor
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
 
-	_, err := sClient.Get(ctx, tlsAssetsSecret.Name, metav1.GetOptions{})
+	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, tlsAssetsSecret)
 	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			return errors.Wrapf(
-				err,
-				"failed to check whether tls assets secret already exists for Alertmanager %v in namespace %v",
-				am.Name,
-				am.Namespace,
-			)
-		}
-		_, err = sClient.Create(ctx, tlsAssetsSecret, metav1.CreateOptions{})
-		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
-
-	} else {
-		err = k8sutil.UpdateSecret(ctx, sClient, tlsAssetsSecret)
-		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
-	}
-
-	if err != nil {
-		return errors.Wrapf(err, "failed to create TLS assets secret for Alertmanager %v in namespace %v", am.Name, am.Namespace)
+		return errors.Wrap(err, "failed to create TLS assets secret for Alertmanager")
 	}
 
 	return nil
