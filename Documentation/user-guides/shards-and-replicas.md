@@ -40,5 +40,4 @@ prometheus-prometheus-0                2/2     Running   1          3m31s
 prometheus-prometheus-1                2/2     Running   1          3m31s
 prometheus-prometheus-shard-1-0        2/2     Running   1          3m31s
 prometheus-prometheus-shard-1-1        2/2     Running   1          3m31s
-
 ```
