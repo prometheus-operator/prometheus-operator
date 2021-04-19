@@ -30,7 +30,7 @@ spec:
 This could by verified by the following command:
   
 ```bash
-> kubectl get pods
+> kubectl get pods -n <namespace>
 ```
   
 The output is similar to this:
