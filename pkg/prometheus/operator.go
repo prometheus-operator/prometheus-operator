@@ -237,7 +237,7 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 	c.cmapInfs, err = informers.NewInformersForResource(
 		informers.NewKubeInformerFactories(
-			c.config.Namespaces.AllowList,
+			c.config.Namespaces.PrometheusAllowList,
 			c.config.Namespaces.DenyList,
 			c.kclient,
 			resyncPeriod,
