@@ -4564,7 +4564,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 		{
 			version: "v2.22.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL:   "http://example.com",
 				Sigv4: &monitoringv1.Sigv4{},
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
@@ -4613,11 +4613,11 @@ remote_write:
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				Sigv4: &monitoringv1.Sigv4{
-					Profile: "profilename",
-					RoleArn: "arn:aws:iam::123456789012:instance-profile/Webserver",
+					Profile:   "profilename",
+					RoleArn:   "arn:aws:iam::123456789012:instance-profile/Webserver",
 					AccessKey: "secret",
 					SecretKey: "supersecret",
-					Region: "us-central-0",
+					Region:    "us-central-0",
 				},
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
