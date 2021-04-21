@@ -4609,7 +4609,7 @@ remote_write:
 `,
 		},
 		{
-			version: "v2.23.0",
+			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				Sigv4: &monitoringv1.Sigv4{
