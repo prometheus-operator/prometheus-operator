@@ -196,22 +196,25 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, fmt.Sprintf("--alert.label-drop=%s", lb))
 	}
 
+	if tr.Spec.PortName == "" {
+		tr.Spec.PortName = defaultPortName
+	}
+
 	ports := []v1.ContainerPort{
+		{
+			Name:          tr.Spec.PortName,
+			ContainerPort: 10902,
+			Protocol:      v1.ProtocolTCP,
+		},
 		{
 			Name:          "grpc",
 			ContainerPort: 10901,
 			Protocol:      v1.ProtocolTCP,
 		},
 	}
+
 	if tr.Spec.ListenLocal {
 		trCLIArgs = append(trCLIArgs, "--http-address=localhost:10902")
-	} else {
-		ports = append(ports,
-			v1.ContainerPort{
-				Name:          tr.Spec.PortName,
-				ContainerPort: 10902,
-				Protocol:      v1.ProtocolTCP,
-			})
 	}
 
 	if tr.Spec.LogLevel != "" && tr.Spec.LogLevel != "info" {
