@@ -665,6 +665,14 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			}
 		}
 
+		var thanosSidecarHandler v1.Handler
+		{
+			readyPath := "/-/healthy"
+			thanosSidecarHandler.HTTPGet = &v1.HTTPGetAction{
+				Path: readyPath,
+				Port: intstr.FromInt(10902),
+			}
+		}
 		container := v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
@@ -691,6 +699,20 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				},
 			},
 			Resources: p.Spec.Thanos.Resources,
+			ReadinessProbe: &v1.Probe{
+				Handler:          thanosSidecarHandler,
+				TimeoutSeconds:   3,
+				PeriodSeconds:    5,
+				SuccessThreshold: 1,
+				FailureThreshold: 120,
+			},
+			LivenessProbe: &v1.Probe{
+				Handler:          thanosSidecarHandler,
+				FailureThreshold: 6,
+				TimeoutSeconds:   3,
+				PeriodSeconds:    5,
+				SuccessThreshold: 1,
+			},
 		}
 
 		if p.Spec.Thanos.ObjectStorageConfig != nil || p.Spec.Thanos.ObjectStorageConfigFile != nil {
