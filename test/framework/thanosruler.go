@@ -15,11 +15,15 @@
 package framework
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/pkg/errors"
@@ -27,14 +31,14 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/thanos"
 )
 
-func (f *Framework) MakeBasicThanosRuler(name string, replicas int32) *monitoringv1.ThanosRuler {
+func (f *Framework) MakeBasicThanosRuler(name string, replicas int32, queryEndpoint string) *monitoringv1.ThanosRuler {
 	return &monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 		Spec: monitoringv1.ThanosRulerSpec{
 			Replicas:       &replicas,
-			QueryEndpoints: []string{"test"},
+			QueryEndpoints: []string{queryEndpoint},
 			LogLevel:       "debug",
 		},
 	}
@@ -84,6 +88,85 @@ func (f *Framework) WaitForThanosRulerReady(tr *monitoringv1.ThanosRuler, timeou
 	return errors.Wrapf(pollErr, "waiting for ThanosRuler %v/%v: %v", tr.Namespace, tr.Name, err)
 }
 
+func (f *Framework) MakeThanosRulerService(name, group string, serviceType v1.ServiceType) *v1.Service {
+	service := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("thanos-ruler-%s", name),
+			Labels: map[string]string{
+				"group": group,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Type: serviceType,
+			Ports: []v1.ServicePort{
+				{
+					Name:       "web",
+					Port:       9090,
+					TargetPort: intstr.FromString("web"),
+				},
+			},
+			Selector: map[string]string{
+				"thanos-ruler": name,
+			},
+		},
+	}
+	return service
+}
+
+func (f *Framework) WaitForThanosFiringAlert(ns, svcName, alertName string) error {
+	var loopError error
+
+	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
+		var firing bool
+		firing, loopError = f.CheckThanosFiringAlert(ns, svcName, alertName)
+		return firing, nil
+	})
+
+	if err != nil {
+		return errors.Errorf(
+			"waiting for alert '%v' to fire: %v: %v",
+			alertName,
+			err,
+			loopError,
+		)
+	}
+	return nil
+}
+
+func (f *Framework) CheckThanosFiringAlert(ns, svcName, alertName string) (bool, error) {
+	response, err := f.ThanosSVCGetRequest(
+		ns,
+		svcName,
+		"/api/v1/alerts",
+		nil,
+	)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to get Thanos service %s/%s", ns, svcName)
+	}
+
+	apiResponse := ThanosAlertsAPIResponse{}
+	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&apiResponse); err != nil {
+		return false, errors.Wrap(err, "failed to decode alerts from Thanos ruler API")
+	}
+
+	for _, alert := range apiResponse.Data.Alerts {
+		if alert.State != "firing" {
+			continue
+		}
+		if alert.Labels["alertname"] == alertName {
+			return true, nil
+		}
+	}
+
+	return false, fmt.Errorf("failed to find %q alert in the list of %d alerts", alertName, len(apiResponse.Data.Alerts))
+}
+
+func (f *Framework) ThanosSVCGetRequest(ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
+	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
+	request := ProxyGet("", svcName, "web", endpoint, query)
+	return request.DoRaw(context.TODO())
+}
+
 func (f *Framework) DeleteThanosRulerAndWaitUntilGone(ns, name string) error {
 	_, err := f.MonClientV1.ThanosRulers(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
@@ -108,4 +191,21 @@ func (f *Framework) DeleteThanosRulerAndWaitUntilGone(ns, name string) error {
 	}
 
 	return nil
+}
+
+type ThanosAlert struct {
+	Labels      map[string]string `json:"labels"`
+	Annotations map[string]string `json:"annotations"`
+	State       string            `json:"state"`
+	ActiveAt    time.Time         `json:"activeAt"`
+	Value       string            `json:"value"`
+}
+
+type ThanosAlertsData struct {
+	Alerts []ThanosAlert `json:"alerts"`
+}
+
+type ThanosAlertsAPIResponse struct {
+	Status string            `json:"status"`
+	Data   *ThanosAlertsData `json:"data"`
 }
