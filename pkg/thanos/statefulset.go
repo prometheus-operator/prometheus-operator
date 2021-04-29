@@ -304,7 +304,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	var additionalContainers []v1.Container
 	if len(ruleConfigMapNames) != 0 {
 		var (
-			configReloaderArgs         []string
+			watchedDirectories         []string
 			configReloaderVolumeMounts []v1.VolumeMount
 		)
 
@@ -314,7 +314,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				Name:      name,
 				MountPath: mountPath,
 			})
-			configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", mountPath))
+			watchedDirectories = append(watchedDirectories, mountPath)
 		}
 
 		additionalContainers = append(
@@ -330,7 +330,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				operator.ListenLocal(tr.Spec.ListenLocal),
 				operator.LogFormat(tr.Spec.LogFormat),
 				operator.LogLevel(tr.Spec.LogLevel),
-				operator.AdditionalArgs(configReloaderArgs),
+				operator.WatchedDirectories(watchedDirectories),
 				operator.VolumeMounts(configReloaderVolumeMounts),
 			),
 		)

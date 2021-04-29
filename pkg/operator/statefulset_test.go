@@ -15,6 +15,7 @@
 package operator
 
 import (
+	"fmt"
 	"net/url"
 	"testing"
 )
@@ -43,6 +44,11 @@ func TestCreateInitConfigReloader(t *testing.T) {
 
 func TestCreateConfigReloader(t *testing.T) {
 	containerName := "config-reloader"
+	logFormat := "logFormat"
+	logLevel := "logLevel"
+	configFile := "configFile"
+	configEnvsubstFile := "configEnvsubstFile"
+	watchedDirectories := []string{"directory1", "directory2"}
 	var container = CreateConfigReloader(
 		containerName,
 		ReloaderResources(reloaderConfig),
@@ -52,6 +58,11 @@ func TestCreateConfigReloader(t *testing.T) {
 			Path:   "/-/reload",
 		}),
 		ListenLocal(true),
+		LogFormat(logFormat),
+		LogLevel(logLevel),
+		ConfigFile(configFile),
+		ConfigEnvsubstFile(configEnvsubstFile),
+		WatchedDirectories(watchedDirectories),
 	)
 	if container.Name != "config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", containerName, container.Name)
@@ -61,6 +72,23 @@ func TestCreateConfigReloader(t *testing.T) {
 	}
 	if !contains(container.Args, "--reload-url=http://localhost:9093/-/reload") {
 		t.Errorf("Expected '--reload-url=http://localhost:9093/-/reload' not found in %s", container.Args)
+	}
+	if !contains(container.Args, "--log-level=logLevel") {
+		t.Errorf("Expected '--log-level=%s' not found in %s", logLevel, container.Args)
+	}
+	if !contains(container.Args, "--log-format=logFormat") {
+		t.Errorf("Expected '--log-format=%s' not found in %s", logFormat, container.Args)
+	}
+	if !contains(container.Args, "--config-file=configFile") {
+		t.Errorf("Expected '--config-file=%s' not found in %s", configFile, container.Args)
+	}
+	if !contains(container.Args, "--config-envsubst-file=configEnvsubstFile") {
+		t.Errorf("Expected '--config-envsubst-file=%s' not found in %s", configEnvsubstFile, container.Args)
+	}
+	for _, dir := range watchedDirectories {
+		if !contains(container.Args, fmt.Sprintf("--watched-dir=%s", dir)) {
+			t.Errorf("Expected '--watched-dir=%s' not found in %s", dir, container.Args)
+		}
 	}
 }
 

@@ -26,22 +26,43 @@ import (
 const configReloaderPort = 8080
 
 type ConfigReloader struct {
-	name           string
-	config         ReloaderConfig
-	reloadURL      url.URL
-	listenLocal    bool
-	logFormat      string
-	logLevel       string
-	additionalArgs []string
-	volumeMounts   []v1.VolumeMount
-	shard          *int32
+	name               string
+	config             ReloaderConfig
+	configFile         string
+	configEnvsubstFile string
+	listenLocal        bool
+	logFormat          string
+	logLevel           string
+	reloadURL          url.URL
+	runOnce            bool
+	shard              *int32
+	volumeMounts       []v1.VolumeMount
+	watchedDirectories []string
 }
 
 type ReloaderOption = func(*ConfigReloader)
 
 func ReloaderRunOnce() ReloaderOption {
 	return func(c *ConfigReloader) {
-		c.additionalArgs = append(c.additionalArgs, fmt.Sprintf("--watch-interval=%d", 0))
+		c.runOnce = true
+	}
+}
+
+func WatchedDirectories(watchedDirectories []string) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.watchedDirectories = watchedDirectories
+	}
+}
+
+func ConfigFile(configFile string) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.configFile = configFile
+	}
+}
+
+func ConfigEnvsubstFile(configEnvsubstFile string) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.configEnvsubstFile = configEnvsubstFile
 	}
 }
 
@@ -72,12 +93,6 @@ func LogFormat(logFormat string) ReloaderOption {
 func LogLevel(logLevel string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.logLevel = logLevel
-	}
-}
-
-func AdditionalArgs(args []string) ReloaderOption {
-	return func(c *ConfigReloader) {
-		c.additionalArgs = append(c.additionalArgs, args...)
 	}
 }
 
@@ -114,6 +129,10 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		}
 	)
 
+	if configReloader.runOnce {
+		args = append(args, fmt.Sprintf("--watch-interval=%d", 0))
+	}
+
 	if configReloader.listenLocal {
 		args = append(args, fmt.Sprintf("--listen-address=:%d", configReloaderPort))
 	}
@@ -122,16 +141,26 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		args = append(args, fmt.Sprintf("--reload-url=%s", configReloader.reloadURL.String()))
 	}
 
+	if len(configReloader.configFile) > 0 {
+		args = append(args, fmt.Sprintf("--config-file=%s", configReloader.configFile))
+	}
+
+	if len(configReloader.configEnvsubstFile) > 0 {
+		args = append(args, fmt.Sprintf("--config-envsubst-file=%s", configReloader.configEnvsubstFile))
+	}
+
+	if len(configReloader.watchedDirectories) > 0 {
+		for _, directory := range configReloader.watchedDirectories {
+			args = append(args, fmt.Sprintf("--watched-dir=%s", directory))
+		}
+	}
+
 	if configReloader.logLevel != "" && configReloader.logLevel != "info" {
 		args = append(args, fmt.Sprintf("--log-level=%s", configReloader.logLevel))
 	}
 
 	if configReloader.logFormat != "" && configReloader.logFormat != "logfmt" {
 		args = append(args, fmt.Sprintf("--log-format=%s", configReloader.logFormat))
-	}
-
-	for i := range configReloader.additionalArgs {
-		args = append(args, configReloader.additionalArgs[i])
 	}
 
 	resources := v1.ResourceRequirements{

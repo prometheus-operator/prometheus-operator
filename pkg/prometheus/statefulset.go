@@ -756,10 +756,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h")
 	}
 
-	configReloaderArgs := []string{
-		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
-		fmt.Sprintf("--config-envsubst-file=%s", path.Join(confOutDir, configEnvsubstFilename)),
-	}
+	var watchedDirectories []string
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config",
@@ -777,7 +774,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				Name:      name,
 				MountPath: mountPath,
 			})
-			configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", mountPath))
+			watchedDirectories = append(watchedDirectories, mountPath)
 		}
 	}
 
@@ -789,9 +786,12 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			operator.LogFormat(p.Spec.LogFormat),
 			operator.LogLevel(p.Spec.LogLevel),
 			operator.VolumeMounts(configReloaderVolumeMounts),
-			operator.AdditionalArgs(configReloaderArgs),
+			operator.ConfigFile(path.Join(confDir, configFilename)),
+			operator.ConfigEnvsubstFile(path.Join(confOutDir, configEnvsubstFilename)),
+			operator.WatchedDirectories(watchedDirectories),
 			operator.Shard(shard),
-		))
+		),
+	)
 
 	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, p.Spec.InitContainers)
 	if err != nil {
@@ -820,8 +820,9 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			operator.ListenLocal(p.Spec.ListenLocal),
 			operator.LogFormat(p.Spec.LogFormat),
 			operator.LogLevel(p.Spec.LogLevel),
-			operator.AdditionalArgs(configReloaderArgs),
-			operator.VolumeMounts(configReloaderVolumeMounts),
+			operator.ConfigFile(path.Join(confDir, configFilename)),
+			operator.ConfigEnvsubstFile(path.Join(confOutDir, configEnvsubstFilename)),
+			operator.WatchedDirectories(watchedDirectories), operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.Shard(shard),
 		),
 	}, additionalContainers...)
