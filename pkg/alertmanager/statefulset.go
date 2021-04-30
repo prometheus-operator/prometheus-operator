@@ -314,6 +314,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	podSelectorLabels := map[string]string{
+		// TODO(paulfantom): remove `app` label after 0.50 release
+		"app":                          "alertmanager",
 		"app.kubernetes.io/name":       "alertmanager",
 		"app.kubernetes.io/version":    amVersion,
 		"app.kubernetes.io/managed-by": "prometheus-operator",
