@@ -52,10 +52,24 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 		"kubectl.kubernetes.io/last-applied-configuration": "something",
 		"kubectl.kubernetes.io/something":                  "something",
 	}
+
 	// kubectl annotations must not be on the statefulset so kubectl does
 	// not manage the generated object
-	expectedAnnotations := map[string]string{
+	expectedStatefulSetAnnotations := map[string]string{
 		"testannotation": "testannotationvalue",
+	}
+
+	expectedStatefulSetLabels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+
+	expectedPodLabels := map[string]string{
+		"alertmanager":                 "",
+		"app":                          "alertmanager",
+		"app.kubernetes.io/name":       "alertmanager",
+		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultAlertmanagerVersion, "v"),
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   "",
 	}
 
 	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
@@ -67,14 +81,19 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	require.NoError(t, err)
 
-	if !reflect.DeepEqual(labels, sset.Labels) {
-		t.Log(pretty.Compare(labels, sset.Labels))
+	if !reflect.DeepEqual(expectedStatefulSetLabels, sset.Labels) {
+		t.Log(pretty.Compare(expectedStatefulSetLabels, sset.Labels))
 		t.Fatal("Labels are not properly being propagated to the StatefulSet")
 	}
 
-	if !reflect.DeepEqual(expectedAnnotations, sset.Annotations) {
-		t.Log(pretty.Compare(expectedAnnotations, sset.Annotations))
+	if !reflect.DeepEqual(expectedStatefulSetAnnotations, sset.Annotations) {
+		t.Log(pretty.Compare(expectedStatefulSetAnnotations, sset.Annotations))
 		t.Fatal("Annotations are not properly being propagated to the StatefulSet")
+	}
+
+	if !reflect.DeepEqual(expectedPodLabels, sset.Spec.Template.ObjectMeta.Labels) {
+		t.Log(pretty.Compare(expectedPodLabels, sset.Spec.Template.ObjectMeta.Labels))
+		t.Fatal("Labels are not properly being propagated to the Pod")
 	}
 }
 
