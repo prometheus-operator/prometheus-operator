@@ -293,7 +293,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 				},
 			},
 			Selector: map[string]string{
-				"app": "prometheus",
+				"app.kubernetes.io/name": "prometheus",
 			},
 		},
 	}
@@ -596,7 +596,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	podSelectorLabels := map[string]string{
-		"app":                          "prometheus",
 		"app.kubernetes.io/name":       "prometheus",
 		"app.kubernetes.io/version":    version.String(),
 		"app.kubernetes.io/managed-by": "prometheus-operator",

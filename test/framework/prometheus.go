@@ -262,7 +262,7 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 				},
 			},
 			Selector: map[string]string{
-				"app": "thanos-query",
+				"app.kubernetes.io/name": "thanos-query",
 			},
 		},
 	}
@@ -532,7 +532,7 @@ func (f *Framework) CheckPrometheusFiringAlert(ns, svcName, alertName string) (b
 		ns,
 		svcName,
 		"/api/v1/query",
-		map[string]string{"query": fmt.Sprintf("ALERTS{alertname=\"%v\"}", alertName)},
+		map[string]string{"query": fmt.Sprintf(`ALERTS{alertname="%v",alertstate="firing"}`, alertName)},
 	)
 	if err != nil {
 		return false, err
@@ -547,12 +547,7 @@ func (f *Framework) CheckPrometheusFiringAlert(ns, svcName, alertName string) (b
 		return false, errors.Errorf("expected 1 query result but got %v", len(q.Data.Result))
 	}
 
-	alertstate, ok := q.Data.Result[0].Metric["alertstate"]
-	if !ok {
-		return false, errors.Errorf("could not retrieve 'alertstate' label from query result: %v", q.Data.Result[0])
-	}
-
-	return alertstate == "firing", nil
+	return true, nil
 }
 
 // PrintPrometheusLogs prints the logs for each Prometheus replica.
@@ -586,8 +581,8 @@ func (f *Framework) WaitForPrometheusFiringAlert(ns, svcName, alertName string) 
 		return errors.Errorf(
 			"waiting for alert '%v' to fire: %v: %v",
 			alertName,
-			err.Error(),
-			loopError.Error(),
+			err,
+			loopError,
 		)
 	}
 	return nil

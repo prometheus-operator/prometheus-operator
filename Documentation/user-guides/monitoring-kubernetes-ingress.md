@@ -135,7 +135,7 @@ spec:
   routePrefix: /prometheus
   ruleSelector:
     matchLabels:
-      app: prometheus-operator
+      app.kubernetes.io/name: prometheus-operator
   serviceAccountName: prometheus-operator
   serviceMonitorSelector:
     matchLabels:

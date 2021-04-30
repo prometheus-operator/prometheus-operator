@@ -14155,6 +14155,8 @@ spec:
       app.kubernetes.io/name: prometheus-operator
   template:
     metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: prometheus-operator
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator

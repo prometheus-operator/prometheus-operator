@@ -308,6 +308,15 @@ func (c *Operator) addHandlers() {
 		DeleteFunc: c.handleStatefulSetDelete,
 		UpdateFunc: c.handleStatefulSetUpdate,
 	})
+
+	// The controller needs to watch the namespaces in which the
+	// alertmanagerconfigs live because a label change on a namespace may
+	// trigger a configuration change.
+	// It doesn't need to watch on addition/deletion though because it's
+	// already covered by the event handlers on alertmanagerconfigs.
+	c.nsAlrtCfgInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: c.handleNamespaceUpdate,
+	})
 }
 
 func (c *Operator) handleAlertmanagerConfigAdd(obj interface{}) {
@@ -649,6 +658,47 @@ func (c *Operator) handleStatefulSetUpdate(oldo, curo interface{}) {
 	}
 }
 
+func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
+	old := oldo.(*v1.Namespace)
+	cur := curo.(*v1.Namespace)
+
+	level.Debug(c.logger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+
+	// Periodic resync may resend the Namespace without changes
+	// in-between.
+	if old.ResourceVersion == cur.ResourceVersion {
+		return
+	}
+
+	level.Debug(c.logger).Log("msg", "Namespace updated", "namespace", cur.GetName())
+	c.metrics.TriggerByCounter("Namespace", "update").Inc()
+
+	// Check for Alertmanager instances selecting AlertmanagerConfigs in the namespace.
+	err := c.alrtInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		a := obj.(*monitoringv1.Alertmanager)
+
+		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, a.Spec.AlertmanagerConfigNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"err", err,
+				"name", a.Name,
+				"namespace", a.Namespace,
+			)
+			return
+		}
+
+		if sync {
+			c.enqueue(a)
+		}
+	})
+	if err != nil {
+		level.Error(c.logger).Log(
+			"msg", "listing all Alertmanager instances from cache failed",
+			"err", err,
+		)
+	}
+}
+
 func (c *Operator) sync(ctx context.Context, key string) error {
 	aobj, err := c.alrtInfs.Get(key)
 
@@ -834,25 +884,9 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	}
 	generatedConfigSecret.Data[alertmanagerConfigFile] = conf
 
-	_, err := sClient.Get(ctx, generatedConfigSecret.Name, metav1.GetOptions{})
+	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, generatedConfigSecret)
 	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			return errors.Wrapf(
-				err,
-				"failed to check whether generated config secret already exists for Alertmanager %v in namespace %v",
-				am.Name,
-				am.Namespace,
-			)
-		}
-		_, err = sClient.Create(ctx, generatedConfigSecret, metav1.CreateOptions{})
-		level.Debug(c.logger).Log("msg", "created generated config secret", "secretname", generatedConfigSecret.Name)
-	} else {
-		err = k8sutil.UpdateSecret(ctx, sClient, generatedConfigSecret)
-		level.Debug(c.logger).Log("msg", "updated generated config secret", "secretname", generatedConfigSecret.Name)
-	}
-
-	if err != nil {
-		return errors.Wrapf(err, "failed to update generated config secret for Alertmanager %v in namespace %v", am.Name, am.Namespace)
+		return errors.Wrap(err, "failed to update generated config secret")
 	}
 
 	return nil
@@ -1320,26 +1354,9 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, am *monitor
 		tlsAssetsSecret.Data[key.String()] = []byte(asset)
 	}
 
-	_, err := sClient.Get(ctx, tlsAssetsSecret.Name, metav1.GetOptions{})
+	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, tlsAssetsSecret)
 	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			return errors.Wrapf(
-				err,
-				"failed to check whether tls assets secret already exists for Alertmanager %v in namespace %v",
-				am.Name,
-				am.Namespace,
-			)
-		}
-		_, err = sClient.Create(ctx, tlsAssetsSecret, metav1.CreateOptions{})
-		level.Debug(c.logger).Log("msg", "created tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
-
-	} else {
-		err = k8sutil.UpdateSecret(ctx, sClient, tlsAssetsSecret)
-		level.Debug(c.logger).Log("msg", "updated tlsAssetsSecret", "secretname", tlsAssetsSecret.Name)
-	}
-
-	if err != nil {
-		return errors.Wrapf(err, "failed to create TLS assets secret for Alertmanager %v in namespace %v", am.Name, am.Namespace)
+		return errors.Wrap(err, "failed to create TLS assets secret for Alertmanager")
 	}
 
 	return nil
@@ -1362,8 +1379,8 @@ func checkAlertmanagerSpecDeprecation(key string, a *monitoringv1.Alertmanager, 
 func ListOptions(name string) metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app":          "alertmanager",
-			"alertmanager": name,
+			"app.kubernetes.io/name": "alertmanager",
+			"alertmanager":           name,
 		})).String(),
 	}
 }

@@ -4,7 +4,28 @@ date: 2021-03-08T23:50:39+01:00
 draft: false
 ---
 
+<!--
+
+Insert your entry using this template keeping the list alphabetically sorted:
+
+## <Company/Organization Name>
+
+https://our-link.com/
+
+Environments: AWS, Azure, Google Cloud, Bare Metal, etc
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes | No
+
+Details (optional):
+- HA Pair of Prometheus
+- 1000 samples/s (query: `rate(prometheus_tsdb_head_samples_appended_total[5m])`)
+- 10k active series (query: `prometheus_tsdb_head_series`)
+
+-->
+
 This document tracks people and use cases for the Prometheus Operator in production. By creating a list of production use cases we hope to build a community of advisors that we can reach out to with experience using various the Prometheus Operator applications, operation environments, and cluster sizes. The Prometheus Operator development team may reach out periodically to check-in on how the Prometheus Operator is working in the field and update this list.
+
+Go ahead and [add your organization](https://github.com/prometheus-operator/prometheus-operator/edit/master/ADOPTERS.md) to the list.
 
 ## Giant Swarm
 
@@ -59,6 +80,18 @@ Details:
 - 17k samples/s
 - 841k active series
 
+## Nozzle
+
+[nozzle.io](https://nozzle.io)
+
+Environment: Google Cloud
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- 100k samples/s
+- 1M active series
+- 
 ## OpenShift
 
 [openshift.com](https://www.openshift.com/)
@@ -131,18 +164,3 @@ Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): 
 Details (optional):
 - A huge fleet of OpenShift and Kubernetes clusters, each using Prometheus Operator
 - All managed by [Project Syn](https://syn.tools/), leveraging Commodore Components like [component-rancher-monitoring](https://github.com/projectsyn/component-rancher-monitoring) which re-uses Prometheus Operator
-
----
-
-## <Insert Company/Organization Name>
-
-https://our-link.com/
-
-Environments: AWS, Azure, Google Cloud, Bare Metal, etc
-
-Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes | No
-
-Details (optional):
-- HA Pair of Prometheus
-- 1000 samples/s (query: `rate(prometheus_tsdb_head_samples_appended_total[5m])`)
-- 10k active series (query: `prometheus_tsdb_head_series`)
