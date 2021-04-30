@@ -1,3 +1,7 @@
+## 0.47.1 / 2021-04-30
+
+* [BUGFIX] Avoid reconciliations for Alertmanager statefulset on resource version changes. #3948
+
 ## 0.47.0 / 2021-04-13
 
 The `--config-reloader-cpu` and `--config-reloader-memory` flags are deprecated
@@ -11,7 +15,7 @@ and will be removed in v0.49.0. They are replaced respectively by the
 * [ENHANCEMENT] Allow CPU requests/limits and memory requests/limits of the config reloader to be set independently. #3826
 * [ENHANCEMENT] Add rules validation to `po-lint`. #3894
 * [ENHANCEMENT] Add common Kubernetes labels to statefulset objects managed by the Prometheus operator. #3841
-* [ENHANCEMENT] Avoid unneeded synchronizations on Alertmanager updates. #3943 #3948
+* [ENHANCEMENT] Avoid unneeded synchronizations on Alertmanager updates. #3943
 * [ENHANCEMENT] Retain the original job's name `__tmp_prometheus_job_name label` in the generated scrape configurations. #3828
 * [BUGFIX] Fix `app.kubernetes.io/managed-by` label on kubelet endpoint object. #3902
 * [BUGFIX] Avoid name collisions in the generated Prometheus configuration. #3913
