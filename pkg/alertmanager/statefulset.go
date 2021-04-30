@@ -515,9 +515,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	finalLabels := config.Labels.Merge(podLabels)
 
 	var watchedDirectories []string
-	for _, reloadWatchDir := range reloadWatchDirs {
-		watchedDirectories = append(watchedDirectories, reloadWatchDir)
-	}
+	watchedDirectories = append(watchedDirectories, reloadWatchDirs...)
 
 	defaultContainers := []v1.Container{
 		{
