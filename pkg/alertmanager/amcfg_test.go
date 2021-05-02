@@ -55,7 +55,9 @@ func TestGenerateConfig(t *testing.T) {
 				Receivers: []*receiver{{Name: "null"}},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `route:
+			expected: `global:
+  slack_api_url: http://slack.example.com
+route:
   receiver: "null"
 receivers:
 - name: "null"
@@ -75,6 +77,7 @@ templates: []
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `global:
   resolve_timeout: 1m
+  slack_api_url: http://slack.example.com
 route:
   receiver: "null"
 receivers:
@@ -95,6 +98,7 @@ templates: []
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `global:
   smtp_require_tls: false
+  slack_api_url: http://slack.example.com
 route:
   receiver: "null"
 receivers:
@@ -115,6 +119,7 @@ templates: []
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
 			expected: `global:
   smtp_require_tls: true
+  slack_api_url: http://slack.example.com
 route:
   receiver: "null"
 receivers:
@@ -138,7 +143,9 @@ templates: []
 				},
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			expected: `route:
+			expected: `global:
+  slack_api_url: http://slack.example.com
+route:
   receiver: "null"
   routes:
   - receiver: custom
@@ -169,7 +176,9 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
+			expected: `global:
+  slack_api_url: http://slack.example.com
+route:
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
@@ -216,7 +225,9 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
+			expected: `global:
+  slack_api_url: http://slack.example.com
+route:
   receiver: "null"
 inhibit_rules:
 - target_match:
@@ -256,7 +267,9 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
+			expected: `global:
+  slack_api_url: http://slack.example.com
+route:
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
@@ -313,7 +326,9 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
+			expected: `global:
+  slack_api_url: http://slack.example.com
+route:
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test-pd
@@ -358,7 +373,9 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
+			expected: `global:
+  slack_api_url: http://slack.example.com
+route:
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
@@ -416,7 +433,9 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
+			expected: `global:
+  slack_api_url: http://slack.example.com
+route:
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
@@ -478,7 +497,9 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
+			expected: `global:
+  slack_api_url: http://slack.example.com
+route:
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
@@ -540,7 +561,9 @@ templates: []
 					},
 				},
 			},
-			expected: `route:
+			expected: `global:
+  slack_api_url: http://slack.example.com
+route:
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test

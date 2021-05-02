@@ -127,9 +127,17 @@ func (cg *configGenerator) generateConfig(
 	if err != nil {
 		return nil, errors.Wrapf(err, "Parse slack url error")
 	}
-	baseConfig.Global = &globalConfig{
-		SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
+
+	if baseConfig.Global != nil {
+		if baseConfig.Global.SlackAPIURL == nil {
+			baseConfig.Global.SlackAPIURL = &config.URL{URL: globalSlackAPIURL}
+		}
+	} else {
+		baseConfig.Global = &globalConfig{
+			SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
+		}
 	}
+
 	return yaml.Marshal(baseConfig)
 }
 
