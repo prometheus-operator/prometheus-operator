@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/url"
 	"path"
 	"sort"
 	"strings"
@@ -121,6 +122,14 @@ func (cg *configGenerator) generateConfig(
 	// alerts will fallthrough.
 	baseConfig.Route.Routes = append(subRoutes, baseConfig.Route.Routes...)
 
+	// set default slack url
+	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
+	if err != nil {
+		return nil, errors.Wrapf(err, "Parse slack url error")
+	}
+	baseConfig.Global = &globalConfig{
+		SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
+	}
 	return yaml.Marshal(baseConfig)
 }
 
