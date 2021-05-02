@@ -702,15 +702,15 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			ReadinessProbe: &v1.Probe{
 				Handler:          thanosSidecarHandler,
 				TimeoutSeconds:   3,
-				PeriodSeconds:    5,
+				PeriodSeconds:    10,
 				SuccessThreshold: 1,
-				FailureThreshold: 120,
+				FailureThreshold: 10,
 			},
 			LivenessProbe: &v1.Probe{
 				Handler:          thanosSidecarHandler,
-				FailureThreshold: 6,
+				FailureThreshold: 10,
 				TimeoutSeconds:   3,
-				PeriodSeconds:    5,
+				PeriodSeconds:    10,
 				SuccessThreshold: 1,
 			},
 		}
