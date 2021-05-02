@@ -10,18 +10,19 @@ To query globally use Thanos sidecar and Thanos querier or remote write data to 
 
 ## Example
 
-The following manifest configure shards replicas field,it will create four pods.
+The complete yaml can see: [Shards][shards].
+The following manifest create a prometheus server with two replicas:
 ```
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
-  name: prometheus
   labels:
-    prometheus: prometheus
+    prometheus: shards
+  name: prometheus
+  namespace: default
 spec:
-  replicas: 2
-  shards: 2
   serviceAccountName: prometheus
+  replicas: 2
   serviceMonitorSelector:
     matchLabels:
       team: frontend
@@ -36,8 +37,122 @@ This could by verified by the following command:
 The output is similar to this:
   
 ```bash
-prometheus-prometheus-0                2/2     Running   1          3m31s
-prometheus-prometheus-1                2/2     Running   1          3m31s
-prometheus-prometheus-shard-1-0        2/2     Running   1          3m31s
-prometheus-prometheus-shard-1-1        2/2     Running   1          3m31s
+prometheus-prometheus-0                2/2     Running   1          10s
+prometheus-prometheus-1                1/2     Running   1          10s
 ```
+
+Deploy example application and monitor it:
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: example-app
+  template:
+    metadata:
+      labels:
+        app: example-app
+    spec:
+      containers:
+      - name: example-app
+        image: fabxc/instrumented_app:latest
+        ports:
+        - name: web
+          containerPort: 8080
+```
+
+```
+kind: Service
+apiVersion: v1
+metadata:
+  name: example-app
+  labels:
+    app: example-app
+spec:
+  selector:
+    app: example-app
+  ports:
+  - name: web
+    port: 8080
+```
+
+```
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: example-app
+  labels:
+    team: frontend
+spec:
+  selector:
+    matchLabels:
+      app: example-app
+  endpoints:
+  - port: web
+```
+
+Explore one of the monitoring prometheus instances:
+
+```bash
+> kubectl port-forward pod/prometheus-prometheus-0 9090:9090
+```
+
+We can find the prometheus server scrape three targets.
+
+### Reshard targets and Expand Prometheus
+
+Expand prometheus to two shards like below:
+```
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  labels:
+    prometheus: prometheus
+  name: prometheus
+  namespace: default
+spec:
+  serviceAccountName: prometheus
+  replicas: 2
+  shards: 2
+  serviceMonitorSelector:
+    matchLabels:
+      team: frontend
+```
+
+This could by verified by the following command:
+  
+```bash
+> kubectl get pods -n <namespace>
+```
+  
+The output is similar to this:
+  
+```bash
+prometheus-prometheus-0                2/2     Running   1          11m
+prometheus-prometheus-1                2/2     Running   1          11m
+prometheus-prometheus-shard-1-0        2/2     Running   1          12s
+prometheus-prometheus-shard-1-1        2/2     Running   1          12s
+```
+
+Explore one of expand monitoring prometheus instances:
+
+```bash
+> kubectl port-forward prometheus-prometheus-shard-1-0  9091:9090
+```
+
+We find two targets in scraping,the origin prometheus instance scrape one targets.
+
+We must use thanos sidecar to query globally,because the original data in prometheus will not be rebalanced.
+
+
+[shards]: ../../example/shards
+
+
+
+
+
