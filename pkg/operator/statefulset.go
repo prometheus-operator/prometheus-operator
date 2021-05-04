@@ -31,6 +31,7 @@ type ConfigReloader struct {
 	configFile         string
 	configEnvsubstFile string
 	listenLocal        bool
+	localHost          string
 	logFormat          string
 	logLevel           string
 	reloadURL          url.URL
@@ -84,6 +85,12 @@ func ListenLocal(listenLocal bool) ReloaderOption {
 	}
 }
 
+func LocalHost(localHost string) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.localHost = localHost
+	}
+}
+
 func LogFormat(logFormat string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.logFormat = logFormat
@@ -134,6 +141,8 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	}
 
 	if configReloader.listenLocal {
+		args = append(args, fmt.Sprintf("--listen-address=%s:%d", configReloader.localHost, configReloaderPort))
+	} else {
 		args = append(args, fmt.Sprintf("--listen-address=:%d", configReloaderPort))
 	}
 

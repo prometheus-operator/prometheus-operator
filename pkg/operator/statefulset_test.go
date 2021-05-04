@@ -17,6 +17,7 @@ package operator
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"testing"
 )
 
@@ -49,6 +50,7 @@ func TestCreateConfigReloader(t *testing.T) {
 	configFile := "configFile"
 	configEnvsubstFile := "configEnvsubstFile"
 	watchedDirectories := []string{"directory1", "directory2"}
+	shard := int32(1)
 	var container = CreateConfigReloader(
 		containerName,
 		ReloaderResources(reloaderConfig),
@@ -58,17 +60,19 @@ func TestCreateConfigReloader(t *testing.T) {
 			Path:   "/-/reload",
 		}),
 		ListenLocal(true),
+		LocalHost("localhost"),
 		LogFormat(logFormat),
 		LogLevel(logLevel),
 		ConfigFile(configFile),
 		ConfigEnvsubstFile(configEnvsubstFile),
 		WatchedDirectories(watchedDirectories),
+		Shard(shard),
 	)
 	if container.Name != "config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", containerName, container.Name)
 	}
-	if !contains(container.Args, "--listen-address=:8080") {
-		t.Errorf("Expected '--listen-address=:8080' not found in %s", container.Args)
+	if !contains(container.Args, "--listen-address=localhost:8080") {
+		t.Errorf("Expected '--listen-address=localhost:8080' not found in %s", container.Args)
 	}
 	if !contains(container.Args, "--reload-url=http://localhost:9093/-/reload") {
 		t.Errorf("Expected '--reload-url=http://localhost:9093/-/reload' not found in %s", container.Args)
@@ -89,6 +93,15 @@ func TestCreateConfigReloader(t *testing.T) {
 		if !contains(container.Args, fmt.Sprintf("--watched-dir=%s", dir)) {
 			t.Errorf("Expected '--watched-dir=%s' not found in %s", dir, container.Args)
 		}
+	}
+	flag := false
+	for _, val := range container.Env {
+		if val.Value == strconv.Itoa(int(shard)) {
+			flag = true
+		}
+	}
+	if !flag {
+		t.Errorf("Expected shard value '%d' not found in %s", shard, container.Env)
 	}
 }
 

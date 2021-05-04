@@ -817,6 +817,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				Path:   path.Clean(webRoutePrefix + "/-/reload"),
 			}),
 			operator.ListenLocal(p.Spec.ListenLocal),
+			operator.LocalHost(c.LocalHost),
 			operator.LogFormat(p.Spec.LogFormat),
 			operator.LogLevel(p.Spec.LogLevel),
 			operator.ConfigFile(path.Join(confDir, configFilename)),

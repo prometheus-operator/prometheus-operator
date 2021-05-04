@@ -328,10 +328,12 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 					Path:   path.Clean(tr.Spec.RoutePrefix + "/-/reload"),
 				}),
 				operator.ListenLocal(tr.Spec.ListenLocal),
+				operator.LocalHost(config.LocalHost),
 				operator.LogFormat(tr.Spec.LogFormat),
 				operator.LogLevel(tr.Spec.LogLevel),
 				operator.WatchedDirectories(watchedDirectories),
 				operator.VolumeMounts(configReloaderVolumeMounts),
+				operator.Shard(-1),
 			),
 		)
 	}
@@ -350,6 +352,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			}
 		}
 	}
+	// TODO(paulfantom): remove `app` label after 0.50 release
+	podLabels["app"] = thanosRulerLabel
 	podLabels["app.kubernetes.io/name"] = thanosRulerLabel
 	podLabels["app.kubernetes.io/managed-by"] = "prometheus-operator"
 	podLabels["app.kubernetes.io/instance"] = tr.Name
