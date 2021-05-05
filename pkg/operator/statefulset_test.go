@@ -94,6 +94,7 @@ func TestCreateConfigReloader(t *testing.T) {
 			t.Errorf("Expected '--watched-dir=%s' not found in %s", dir, container.Args)
 		}
 	}
+
 	flag := false
 	for _, val := range container.Env {
 		if val.Value == strconv.Itoa(int(shard)) {
