@@ -17,11 +17,10 @@ package e2e
 import (
 	"context"
 	"flag"
+	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	"log"
 	"os"
 	"testing"
-
-	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -196,6 +195,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromSecurePodMonitor":                   testPromSecurePodMonitor,
 		"PromSharedResourcesReconciliation":      testPromSharedResourcesReconciliation,
 		"PromPreserveUserAddedMetadata":          testPromPreserveUserAddedMetadata,
+		"PromWebTLS":                             testPromWebTLS,
 	}
 
 	for name, f := range testFuncs {

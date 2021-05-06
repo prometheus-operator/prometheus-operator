@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	"net/url"
 	"path"
 	"strings"
@@ -40,6 +41,7 @@ const (
 	storageDir                      = "/prometheus"
 	confDir                         = "/etc/prometheus/config"
 	confOutDir                      = "/etc/prometheus/config_out"
+	webConfigDir                    = "/etc/prometheus/web_config"
 	tlsAssetsDir                    = "/etc/prometheus/certs"
 	rulesDir                        = "/etc/prometheus/rules"
 	secretsDir                      = "/etc/prometheus/secrets/"
@@ -526,6 +528,29 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		})
 	}
 
+	// Mount web config and web TLS credentials as volumes.
+	// We always mount the web config file for versions greater than 2.24.0.
+	// With this we avoid redeploying prometheus when reconfiguring between
+	// HTTP and HTTPS and vice-versa.
+	if version.GTE(semver.MustParse("2.24.0")) {
+		var webTLSConfig *monitoringv1.WebTLSConfig
+		if p.Spec.Web != nil {
+			webTLSConfig = p.Spec.Web.TLSConfig
+		}
+
+		webConfig, err := webconfig.New(webConfigDir, WebConfigSecretName(p.Name), webTLSConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		confArg, configVol, configMount := webConfig.GetMountParameters()
+		promArgs = append(promArgs, confArg)
+		volumes = append(volumes, configVol...)
+		promVolumeMounts = append(promVolumeMounts, configMount...)
+	}
+
+	// Mount related secrets
+
 	for _, s := range p.Spec.Secrets {
 		volumes = append(volumes, v1.Volume{
 			Name: k8sutil.SanitizeVolumeName("secret-" + s),
@@ -574,11 +599,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 					fmt.Sprintf(localProbe, localReadyPath, localReadyPath),
 				},
 			}
-
 		} else {
 			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
 				Path: readyPath,
 				Port: intstr.FromString(p.Spec.PortName),
+			}
+			if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("2.24.0")) {
+				readinessProbeHandler.HTTPGet.Scheme = v1.URISchemeHTTPS
 			}
 		}
 	}
@@ -770,6 +797,15 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			MountPath: confOutDir,
 		},
 	}
+
+	if version.GTE(semver.MustParse("2.24.0")) {
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, v1.VolumeMount{
+			Name:      "web-config",
+			MountPath: webConfigDir,
+		})
+		configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", webConfigDir))
+	}
+
 	if len(ruleConfigMapNames) != 0 {
 		for _, name := range ruleConfigMapNames {
 			mountPath := rulesDir + "/" + name
@@ -853,6 +889,10 @@ func configSecretName(name string) string {
 
 func tlsAssetsSecretName(name string) string {
 	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
+}
+
+func WebConfigSecretName(name string) string {
+	return fmt.Sprintf("%s-web-config", prefixedName(name))
 }
 
 func volumeName(name string) string {

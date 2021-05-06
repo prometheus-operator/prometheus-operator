@@ -19,6 +19,7 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	"reflect"
 	"regexp"
 	"strings"
@@ -1237,6 +1238,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "creating tls asset secret failed")
 	}
 
+	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+		return errors.Wrap(err, "synchronizing web config secret failed")
+	}
+
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
@@ -1626,6 +1631,47 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 	}
 
 	return nil
+}
+
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
+	boolTrue := true
+	client := c.kclient.CoreV1().Secrets(p.Namespace)
+
+	var tlsConfig *monitoringv1.WebTLSConfig
+	if p.Spec.Web != nil {
+		tlsConfig = p.Spec.Web.TLSConfig
+	}
+
+	webConfig, err := webconfig.New(
+		webConfigDir,
+		WebConfigSecretName(p.Name),
+		tlsConfig,
+	)
+	if err != nil {
+		return err
+	}
+
+	ownerReference := metav1.OwnerReference{
+		APIVersion:         p.APIVersion,
+		BlockOwnerDeletion: &boolTrue,
+		Controller:         &boolTrue,
+		Kind:               p.Kind,
+		Name:               p.Name,
+		UID:                p.UID,
+	}
+
+	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
+	secret, err := webConfig.MakeConfigFileSecret(secretLabels, ownerReference)
+	if err != nil {
+		return err
+	}
+
+	err = k8sutil.CreateOrUpdateSecret(ctx, client, secret)
+	if err != nil {
+		return errors.Wrap(err, "failed to create web config for Prometheus")
+	}
+
+	return err
 }
 
 func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.ServiceMonitor, error) {
