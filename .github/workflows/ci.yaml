@@ -141,7 +141,7 @@ jobs:
       run: >
         EXCLUDE_ALERTMANAGER_TESTS=${{ matrix.alertmanager }}
         EXCLUDE_PROMETHEUS_TESTS=${{ matrix.prometheus }}
-        EXCLUDE_THANOS_TESTS=${{ matrix.thanosruler }}
+        EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
         make test-e2e
   publish:
     runs-on: ubuntu-latest
