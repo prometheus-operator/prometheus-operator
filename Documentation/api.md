@@ -70,6 +70,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [TLSConfig](#tlsconfig)
 * [ThanosSpec](#thanosspec)
 * [WebSpec](#webspec)
+* [WebTLSConfig](#webtlsconfig)
 * [ThanosRuler](#thanosruler)
 * [ThanosRulerList](#thanosrulerlist)
 * [ThanosRulerSpec](#thanosrulerspec)
@@ -914,6 +915,25 @@ WebSpec defines the query command line flags when starting Prometheus.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | pageTitle | The prometheus web page title | *string | false |
+| tlsConfig |  | *[WebTLSConfig](#webtlsconfig) | false |
+
+[Back to TOC](#table-of-contents)
+
+## WebTLSConfig
+
+WebTLSConfig defines the TLS parameters for HTTPS.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| keySecret | Secret containing the TLS key for the server. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | true |
+| cert | Contains the TLS certificate for the server. | [SecretOrConfigMap](#secretorconfigmap) | true |
+| clientAuthType | Server policy for client authentication. Maps to ClientAuth Policies. For more detail on clientAuth options: https://golang.org/pkg/crypto/tls/#ClientAuthType | string | false |
+| client_ca | Contains the CA certificate for client certificate authentication to the server. | [SecretOrConfigMap](#secretorconfigmap) | false |
+| minVersion | Minimum TLS version that is acceptable. Defaults to TLS12. | string | false |
+| maxVersion | Maximum TLS version that is acceptable. Defaults to TLS13. | string | false |
+| cipherSuites | List of supported cipher suites for TLS versions up to TLS 1.2. If empty, Go default cipher suites are used. Available cipher suites are documented in the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants | []string | false |
+| preferServerCipherSuites | Controls whether the server selects the client's most preferred cipher suite, or the server's most preferred cipher suite. If true then the server's preference, as expressed in the order of elements in cipherSuites, is used. | *bool | false |
+| curvePreferences | Elliptic curves that will be used in an ECDHE handshake, in preference order. Available curves are documented in the go documentation: https://golang.org/pkg/crypto/tls/#CurveID | []string | false |
 
 [Back to TOC](#table-of-contents)
 
