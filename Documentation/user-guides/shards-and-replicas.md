@@ -11,6 +11,7 @@ To query globally use Thanos sidecar and Thanos querier or remote write data to 
 ## Example
 
 The complete yaml can see: [Shards][shards].
+
 The following manifest create a prometheus server with two replicas:
 ```
 apiVersion: monitoring.coreos.com/v1
