@@ -264,7 +264,7 @@ Further reading:
 [bundle]: ../../bundle.yaml
 [design-doc]: ../design.md
 [exposing-prom]: exposing-prometheus-and-alertmanager.md
-[introducing-operators]: https://coreos.com/blog/introducing-operators.html
+[introducing-operators]: https://web.archive.org/web/20210210032403/https://coreos.com/blog/introducing-operators.html
 [prom-rbac]: ../rbac.md
 [prometheus-manifest]: ../../example/rbac/prometheus/prometheus.yaml
 [rbac-auth]: https://kubernetes.io/docs/reference/access-authn-authz/authorization/

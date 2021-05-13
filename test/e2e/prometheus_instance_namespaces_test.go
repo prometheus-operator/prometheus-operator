@@ -295,6 +295,21 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		if err := framework.WaitForActiveTargets(instanceNs, "prometheus-instance", 1); err != nil {
 			t.Fatal(err)
 		}
+
+		// FIXME(simonpasquier): the unprivileged namespace lister/watcher
+		// isn't notified of updates properly so the code below fails.
+		// Uncomment the test once the lister/watcher is fixed.
+		//
+		// Remove the selecting label on the "allowed" namespace and check that
+		// the target is removed.
+		// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
+		//if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, allowedNs, "monitored"); err != nil {
+		//	t.Fatal(err)
+		//}
+
+		//if err := framework.WaitForActiveTargets(instanceNs, "prometheus-instance", 0); err != nil {
+		//	t.Fatal(err)
+		//}
 	}
 
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.

@@ -1,7 +1,13 @@
 name: ci
 on:
-  - push
-  - pull_request
+  pull_request:
+  push:
+    branches:
+      - 'release-*'
+      - 'master'
+      - 'main'
+    tags:
+      - 'v*'
 env:
   golang-version: '1.16'
   kind-version: 'v0.10.0'
@@ -135,7 +141,7 @@ jobs:
       run: >
         EXCLUDE_ALERTMANAGER_TESTS=${{ matrix.alertmanager }}
         EXCLUDE_PROMETHEUS_TESTS=${{ matrix.prometheus }}
-        EXCLUDE_THANOS_TESTS=${{ matrix.thanosruler }}
+        EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
         make test-e2e
   publish:
     runs-on: ubuntu-latest

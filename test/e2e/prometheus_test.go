@@ -1423,7 +1423,7 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 		ns        string
 	}{{"first-alert", alertNSOne}, {"second-alert", alertNSTwo}}
 
-	ruleFilesNamespaceSelector := map[string]string{"prometheus": rootNS}
+	ruleFilesNamespaceSelector := map[string]string{"monitored": "true"}
 
 	for _, file := range ruleFiles {
 		err := testFramework.AddLabelsToNamespace(framework.KubeClient, file.ns, ruleFilesNamespaceSelector)
@@ -1460,6 +1460,28 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 		err := framework.WaitForPrometheusFiringAlert(p.Namespace, pSVC.Name, file.alertName)
 		if err != nil {
 			t.Fatal(err)
+		}
+	}
+
+	// Remove the selecting label from the namespaces holding PrometheusRules
+	// and wait until the rules are removed from Prometheus.
+	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
+	for _, file := range ruleFiles {
+		if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, file.ns, "monitored"); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, file := range ruleFiles {
+		var loopError error
+		err = wait.Poll(time.Second, 5*framework.DefaultTimeout, func() (bool, error) {
+			var firing bool
+			firing, loopError = framework.CheckPrometheusFiringAlert(file.ns, pSVC.Name, file.alertName)
+			return !firing, nil
+		})
+
+		if err != nil {
+			t.Fatalf("waiting for alert %q in namespace %s to stop firing: %v: %v", file.alertName, file.ns, err, loopError)
 		}
 	}
 }

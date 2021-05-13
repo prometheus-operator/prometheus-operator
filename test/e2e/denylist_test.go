@@ -211,7 +211,7 @@ func testDenyThanosRuler(t *testing.T) {
 	}
 
 	for _, denied := range deniedNamespaces {
-		tr := framework.MakeBasicThanosRuler("denied", 1)
+		tr := framework.MakeBasicThanosRuler("denied", 1, "http://test.example.com")
 		_, err = framework.MonClientV1.ThanosRulers(denied).Create(context.TODO(), tr, metav1.CreateOptions{})
 		if err != nil {
 			t.Fatalf("creating %v Prometheus instances failed (%v): %v", tr.Spec.Replicas, tr.Name, err)
@@ -221,7 +221,7 @@ func testDenyThanosRuler(t *testing.T) {
 	for _, allowed := range allowedNamespaces {
 		ctx.SetupPrometheusRBAC(t, allowed, framework.KubeClient)
 
-		if _, err := framework.CreateThanosRulerAndWaitUntilReady(allowed, framework.MakeBasicThanosRuler("allowed", 1)); err != nil {
+		if _, err := framework.CreateThanosRulerAndWaitUntilReady(allowed, framework.MakeBasicThanosRuler("allowed", 1, "http://test.example.com")); err != nil {
 			t.Fatal(err)
 		}
 	}

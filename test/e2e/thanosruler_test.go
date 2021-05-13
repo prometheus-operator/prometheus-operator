@@ -16,27 +16,108 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
+	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	"google.golang.org/protobuf/proto"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-func testTRCreateDeleteCluster(t *testing.T) {
-
+func testThanosRulerCreateDeleteCluster(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
+
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	name := "test"
 
-	if _, err := framework.CreateThanosRulerAndWaitUntilReady(ns, framework.MakeBasicThanosRuler(name, 1)); err != nil {
+	if _, err := framework.CreateThanosRulerAndWaitUntilReady(ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")); err != nil {
 		t.Fatal(err)
 	}
 
 	if err := framework.DeleteThanosRulerAndWaitUntilGone(ns, name); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+
+	thanosNamespace := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, thanosNamespace, framework.KubeClient)
+
+	name := "test"
+
+	// Create a Prometheus resource because Thanos ruler needs a query API.
+	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(thanosNamespace, framework.MakeBasicPrometheus(thanosNamespace, name, name, 1))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	svc := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
+	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, thanosNamespace, svc); err != nil {
+		t.Fatal(err)
+	}
+
+	thanos := framework.MakeBasicThanosRuler(name, 1, fmt.Sprintf("http://%s:%d/", svc.Name, svc.Spec.Ports[0].Port))
+	thanos.Spec.RuleSelector = &metav1.LabelSelector{}
+	thanos.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"monitored": "true",
+		},
+	}
+	thanos.Spec.EvaluationInterval = "1s"
+
+	if _, err := framework.CreateThanosRulerAndWaitUntilReady(thanosNamespace, thanos); err != nil {
+		t.Fatal(err)
+	}
+
+	ruleNamespace := ctx.CreateNamespace(t, framework.KubeClient)
+	if err := testFramework.AddLabelsToNamespace(framework.KubeClient, ruleNamespace, map[string]string{
+		"monitored": "true",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	const testAlert = "alert1"
+	_, err = framework.MakeAndCreateFiringRule(ruleNamespace, "rule1", testAlert)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	thanosService := framework.MakeThanosRulerService(thanos.Name, "not-relevant", v1.ServiceTypeClusterIP)
+	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, thanosNamespace, thanosService); err != nil {
+		t.Fatalf("creating Thanos ruler service failed: %v", err)
+	} else {
+		ctx.AddFinalizerFn(finalizerFn)
+	}
+
+	if err := framework.WaitForThanosFiringAlert(thanosNamespace, thanosService.Name, testAlert); err != nil {
+		t.Fatal(err)
+	}
+
+	// Remove the selecting label from ruleNamespace and wait until the rule is
+	// removed from the Thanos ruler.
+	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
+	if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, ruleNamespace, "monitored"); err != nil {
+		t.Fatal(err)
+	}
+
+	var loopError error
+	err = wait.Poll(time.Second, 5*framework.DefaultTimeout, func() (bool, error) {
+		var firing bool
+		firing, loopError = framework.CheckThanosFiringAlert(thanosNamespace, thanosService.Name, testAlert)
+		return !firing, nil
+	})
+
+	if err != nil {
+		t.Fatalf("waiting for alert %q to stop firing: %v: %v", testAlert, err, loopError)
 	}
 }
 
@@ -50,7 +131,7 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 
 	name := "test"
 
-	thanosRuler := framework.MakeBasicThanosRuler(name, 1)
+	thanosRuler := framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
 	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(ns, thanosRuler)
 	if err != nil {
 		t.Fatal(err)
