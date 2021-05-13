@@ -1342,13 +1342,14 @@ type AlertmanagerSpec struct {
 	AlertmanagerConfigNamespaceSelector *metav1.LabelSelector `json:"alertmanagerConfigNamespaceSelector,omitempty"`
 	// Base AlertmanagerConfig to be used to configure Alertmanager with. This will be in the same namespace
 	// as the AlertmanagerConfig CRD.
-	BaseAlertmanagerConfiguration	BaseAlertmanagerConfiguration	`json:"baseAlertmanagerConfiguration,omitempty"`
-    // TODO: add enforcedNamespaceLabel  to enable/disable enforcement of namespace matchers in routing tree.
+	BaseAlertmanagerConfiguration BaseAlertmanagerConfiguration `json:"baseAlertmanagerConfiguration,omitempty"`
+	// TODO: add enforcedNamespaceLabel  to enable/disable enforcement of namespace matchers in routing tree.
 }
 
+// BaseAlertmanagerConfiguration supports adding root alertmanagerConfig name.
 type BaseAlertmanagerConfiguration struct {
 	// AlertmanagerConfigName specifies the name of the root AlertmanagerConfig which won't have the namespace matcher.
-	AlertmanagerConfigName string	`json:"alertmanagerConfigName,omitempty"`
+	AlertmanagerConfigName string `json:"alertmanagerConfigName,omitempty"`
 	// TODO: add global and template fields.
 }
 

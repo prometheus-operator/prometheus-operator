@@ -1005,19 +1005,19 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 	var resBase *monitoringv1alpha1.AlertmanagerConfig
 	if baseAmConfig != nil {
-			if err := checkAlertmanagerConfig(ctx, baseAmConfig, store); err != nil {
-				rejected++
-				level.Warn(c.logger).Log(
-					"msg", "skipping alertmanagerconfig",
-					"error", err.Error(),
-					"alertmanagerconfig", baseAmConfigNamespaceAndName,
-					"namespace", am.Namespace,
-					"alertmanager", am.Name,
-				)
-			} else {
-				accepted++
-				resBase = baseAmConfig
-			}
+		if err := checkAlertmanagerConfig(ctx, baseAmConfig, store); err != nil {
+			rejected++
+			level.Warn(c.logger).Log(
+				"msg", "skipping alertmanagerconfig",
+				"error", err.Error(),
+				"alertmanagerconfig", baseAmConfigNamespaceAndName,
+				"namespace", am.Namespace,
+				"alertmanager", am.Name,
+			)
+		} else {
+			accepted++
+			resBase = baseAmConfig
+		}
 	}
 
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
