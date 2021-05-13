@@ -5296,7 +5296,7 @@ spec:
                     description: Version describes the version of Thanos to use.
                     type: string
                   volumeMounts:
-                    description: VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition. VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container,
+                    description: VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition. VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.
                     items:
                       description: VolumeMount describes a mounting of a Volume within a container.
                       properties:
