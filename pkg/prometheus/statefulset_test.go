@@ -1156,10 +1156,14 @@ func TestThanosSideCarVolumes(t *testing.T) {
 	}
 
 	var containsVolumeMount bool
-	for _, volumeMount := range sset.Spec.Template.Spec.Containers[2].VolumeMounts {
-		if volumeMount.Name == testVolume && volumeMount.MountPath == testVolumeMountPath {
-			containsVolumeMount = true
-			break
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "thanos-sidecar" {
+			for _, volumeMount := range container.VolumeMounts {
+				if volumeMount.Name == testVolume && volumeMount.MountPath == testVolumeMountPath {
+					containsVolumeMount = true
+					break
+				}
+			}
 		}
 	}
 
