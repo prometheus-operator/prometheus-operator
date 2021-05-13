@@ -207,6 +207,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | forceEnableClusterMode | ForceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica. Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each. | bool | false |
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
 | alertmanagerConfigNamespaceSelector | Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | false |
+| baseAlertmanagerConfiguration | Root AlertmanagerConfig to be used which skips namespace matcher. This has to be present in the same namespace as the Alertmanager CRD. | *[BaseAlertmanagerConfiguration]#BaseAlertmanagerConfiguration | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -863,6 +864,16 @@ StorageSpec defines the configured storage for a group Prometheus servers. If ne
 | disableMountSubPath | Deprecated: subPath usage will be disabled by default in a future release, this option will become unnecessary. DisableMountSubPath allows to remove any subPath usage in volume mounts. | bool | false |
 | emptyDir | EmptyDirVolumeSource to be used by the Prometheus StatefulSets. If specified, used in place of any volumeClaimTemplate. More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir | *[v1.EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#emptydirvolumesource-v1-core) | false |
 | volumeClaimTemplate | A PVC spec to be used by the Prometheus StatefulSets. | [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim) | false |
+
+[Back to TOC](#table-of-contents)
+
+## BaseAlertmanagerConfiguration
+
+BaseAlertmanagerConfiguration specifies the name of the root AlertmanagerConfig to be used. It skips the namespace matcher.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| alertmanagerConfigName | The name of the root AlertmanagerConfig which won't have the namespace matcher | string | false |
 
 [Back to TOC](#table-of-contents)
 

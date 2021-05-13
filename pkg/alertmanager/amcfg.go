@@ -74,8 +74,41 @@ func newConfigGenerator(logger log.Logger, store *assets.Store) *configGenerator
 func (cg *configGenerator) generateConfig(
 	ctx context.Context,
 	baseConfig alertmanagerConfig,
+	baseAmConfig monitoringv1alpha1.AlertmanagerConfig,
 	amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig,
 ) ([]byte, error) {
+
+	subRoutes := make([]*route, 0, len(amConfigs)+1)
+
+	// configuration using the baseAmConfig passed through the Alertmanager CRD, passing the flag value as 1
+	// in convertRoute so that the addition of namespace matcher is skipped.
+	if baseAmConfig.Name != "" {
+		crKey := types.NamespacedName{
+			Name:      baseAmConfig.Name,
+			Namespace: baseAmConfig.Namespace,
+		}
+
+		// Add inhibitRules to baseConfig.InhibitRules.
+		for _, inhibitRule := range baseAmConfig.Spec.InhibitRules {
+			baseConfig.InhibitRules = append(baseConfig.InhibitRules, convertInhibitRule(&inhibitRule, crKey))
+		}
+
+		// Skip early if there's no route definition.
+		if baseAmConfig.Spec.Route == nil {
+			return yaml.Marshal(baseConfig)
+		}
+
+		subRoutes = append(subRoutes, convertRoute(baseAmConfig.Spec.Route, crKey, true, 1))
+
+		for _, receiver := range baseAmConfig.Spec.Receivers {
+			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
+			if err != nil {
+				return nil, errors.Wrapf(err, "AlertmanagerConfig %s", crKey.String())
+			}
+			baseConfig.Receivers = append(baseConfig.Receivers, receivers)
+		}
+	}
+
 	// amConfigIdentifiers is a sorted slice of keys from
 	// amConfigs map, used to always generate the config in the
 	// same order.
@@ -87,7 +120,6 @@ func (cg *configGenerator) generateConfig(
 	}
 	sort.Strings(amConfigIdentifiers)
 
-	subRoutes := make([]*route, 0, len(amConfigs))
 	for _, amConfigIdentifier := range amConfigIdentifiers {
 		crKey := types.NamespacedName{
 			Name:      amConfigs[amConfigIdentifier].Name,
@@ -104,7 +136,7 @@ func (cg *configGenerator) generateConfig(
 			continue
 		}
 
-		subRoutes = append(subRoutes, convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
+		subRoutes = append(subRoutes, convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true, 0))
 
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
 			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
@@ -124,7 +156,7 @@ func (cg *configGenerator) generateConfig(
 	return yaml.Marshal(baseConfig)
 }
 
-func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
+func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool, flag int) *route {
 	// Enforce "continue" to be true for the top-level route.
 	cont := in.Continue
 	if firstLevelRoute {
@@ -141,7 +173,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 			match[matcher.Name] = matcher.Value
 		}
 	}
-	if firstLevelRoute {
+	if firstLevelRoute && flag==0{
 		match["namespace"] = crKey.Namespace
 		delete(matchRE, "namespace")
 	}
@@ -166,7 +198,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 			panic(err)
 		}
 		for i := range children {
-			routes[i] = convertRoute(&children[i], crKey, false)
+			routes[i] = convertRoute(&children[i], crKey, false, flag)
 		}
 	}
 

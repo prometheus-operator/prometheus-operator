@@ -452,6 +452,13 @@ spec:
                     description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                     type: object
                 type: object
+              baseAlertmanagerConfiguration:
+                description: Base AlertmanagerConfig to be used to configure Alertmanager with. This will be in the same namespace as the AlertmanagerConfig CRD.
+                properties:
+                  alertmanagerConfigName:
+                    description: AlertmanagerConfigName specifies the name of the root AlertmanagerConfig which won't have the namespace matcher.
+                    type: string
+                type: object                
               baseImage:
                 description: 'Base image that is used to deploy pods, without tag. Deprecated: use ''image'' instead'
                 type: string

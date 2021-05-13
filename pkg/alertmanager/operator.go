@@ -885,17 +885,26 @@ receivers:
 		return nil
 	}
 
-	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store)
+	baseAmConfig, amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store)
 	if err != nil {
 		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
 	}
 
 	generator := newConfigGenerator(c.logger, store)
-	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
-	if err != nil {
-		return errors.Wrap(err, "generating Alertmanager config yaml failed")
-	}
 
+	var generatedConfig []byte
+	// to handle for the case when baseAmConfig is empty, dereferencing doesnt work directly if its nil.
+	if baseAmConfig != nil {
+		generatedConfig, err = generator.generateConfig(ctx, *baseConfig, *baseAmConfig, amConfigs)
+		if err != nil {
+			return errors.Wrap(err, "generating Alertmanager config yaml failed")
+		}
+	} else {
+		generatedConfig, err = generator.generateConfig(ctx, *baseConfig, monitoringv1alpha1.AlertmanagerConfig{}, amConfigs)
+		if err != nil {
+			return errors.Wrap(err, "generating Alertmanager config yaml failed")
+		}
+	}
 	err = c.createOrUpdateGeneratedConfigSecret(ctx, am, generatedConfig, secretData)
 	if err != nil {
 		return errors.Wrap(err, "create or update generated config secret failed")
@@ -939,7 +948,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (*monitoringv1alpha1.AlertmanagerConfig, map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
@@ -950,14 +959,14 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	} else {
 		amConfigNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj interface{}) {
 			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
 		})
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to list namespaces")
+			return nil, nil, errors.Wrap(err, "failed to list namespaces")
 		}
 
 		level.Debug(c.logger).Log("msg", "filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
@@ -965,25 +974,52 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	amConfigs := make(map[string]*monitoringv1alpha1.AlertmanagerConfig)
+	// For root level AlertmanagerConfig (passed through the Alertmanager CRD).
+	var baseAmConfig *monitoringv1alpha1.AlertmanagerConfig
+	var baseAmConfigNamespaceAndName string
 
 	amConfigSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigSelector)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	for _, ns := range namespaces {
 		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
 			k, ok := c.keyFunc(obj)
 			if ok {
-				amConfigs[k] = obj.(*monitoringv1alpha1.AlertmanagerConfig)
+				if obj.(*monitoringv1alpha1.AlertmanagerConfig).Name == am.Spec.BaseAlertmanagerConfiguration.AlertmanagerConfigName &&
+					obj.(*monitoringv1alpha1.AlertmanagerConfig).Namespace == am.Namespace {
+					baseAmConfig = obj.(*monitoringv1alpha1.AlertmanagerConfig)
+					baseAmConfigNamespaceAndName = k
+				} else {
+					amConfigs[k] = obj.(*monitoringv1alpha1.AlertmanagerConfig)
+				}
 			}
 		})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to list alertmanager configs in namespace %s", ns)
+			return nil, nil, errors.Wrapf(err, "failed to list alertmanager configs in namespace %s", ns)
 		}
 	}
 
-	var rejected int
+	var rejected, accepted int
+
+	var resBase *monitoringv1alpha1.AlertmanagerConfig
+	if baseAmConfig != nil {
+			if err := checkAlertmanagerConfig(ctx, baseAmConfig, store); err != nil {
+				rejected++
+				level.Warn(c.logger).Log(
+					"msg", "skipping alertmanagerconfig",
+					"error", err.Error(),
+					"alertmanagerconfig", baseAmConfigNamespaceAndName,
+					"namespace", am.Namespace,
+					"alertmanager", am.Name,
+				)
+			} else {
+				accepted++
+				resBase = baseAmConfig
+			}
+	}
+
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
 	for namespaceAndName, amc := range amConfigs {
 		if err := checkAlertmanagerConfig(ctx, amc, store); err != nil {
@@ -997,7 +1033,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 			)
 			continue
 		}
-
+		accepted++
 		res[namespaceAndName] = amc
 	}
 
@@ -1008,11 +1044,11 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	level.Debug(c.logger).Log("msg", "selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
 
 	if amKey, ok := c.keyFunc(am); ok {
-		c.metrics.SetSelectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, len(res))
+		c.metrics.SetSelectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, accepted)
 		c.metrics.SetRejectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, rejected)
 	}
 
-	return res, nil
+	return resBase, res, nil
 }
 
 // checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
