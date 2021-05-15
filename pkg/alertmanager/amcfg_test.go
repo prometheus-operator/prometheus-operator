@@ -34,11 +34,12 @@ import (
 
 func TestGenerateConfig(t *testing.T) {
 	type testCase struct {
-		name       string
-		kclient    kubernetes.Interface
-		baseConfig alertmanagerConfig
-		amConfigs  map[string]*monitoringv1alpha1.AlertmanagerConfig
-		expected   string
+		name         string
+		kclient      kubernetes.Interface
+		baseConfig   alertmanagerConfig
+		baseAmConfig monitoringv1alpha1.AlertmanagerConfig
+		amConfigs    map[string]*monitoringv1alpha1.AlertmanagerConfig
+		expected     string
 	}
 
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
@@ -149,6 +150,36 @@ templates: []
 `,
 		},
 		{
+			name:    "skeleton base, base alertmanagerConfig CR",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			baseAmConfig: monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "baseamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace-baseamc-test
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace-baseamc-test
+templates: []
+`,
+		},
+		{
 			name:    "skeleton base, simple CR",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
@@ -178,6 +209,55 @@ templates: []
     continue: true
 receivers:
 - name: "null"
+- name: mynamespace-myamc-test
+templates: []
+`,
+		},
+		{
+			name:    "skeleton base, base alertmanagerConfig CR and a non-base CR",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			baseAmConfig: monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "baseamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+				},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace-baseamc-test
+    continue: true
+  - receiver: mynamespace-myamc-test
+    match:
+      namespace: mynamespace
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace-baseamc-test
 - name: mynamespace-myamc-test
 templates: []
 `,
@@ -634,7 +714,7 @@ templates: []
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
 			cg := newConfigGenerator(nil, store)
-			cfgBytes, err := cg.generateConfig(context.TODO(), tc.baseConfig, tc.amConfigs)
+			cfgBytes, err := cg.generateConfig(context.TODO(), tc.baseConfig, tc.baseAmConfig, tc.amConfigs)
 			if err != nil {
 				t.Fatal(err)
 			}
