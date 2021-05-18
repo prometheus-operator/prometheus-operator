@@ -173,19 +173,6 @@ receivers:
 - name: mynamespace-baseamc-test
 templates: []
 `,
-
-			/*
-							expected: `route:
-				  receiver: "null"
-				  routes:
-				  - receiver: mynamespace-baseamc-test
-				    continue: true
-				receivers:
-				- name: "null"
-				- name: mynamespace-baseamc-test
-				templates: []
-				`, */
-
 		},
 		{
 			name:    "skeleton base, simple CR",
@@ -265,21 +252,6 @@ receivers:
 - name: mynamespace-myamc-test
 templates: []
 `,
-			/* expected: `route:
-			  receiver: "null"
-			  routes:
-			  - receiver: mynamespace-baseamc-test
-			    continue: true
-			  - receiver: mynamespace-myamc-test
-			    match:
-			      namespace: mynamespace
-			    continue: true
-			receivers:
-			- name: "null"
-			- name: mynamespace-baseamc-test
-			- name: mynamespace-myamc-test
-			templates: []
-			`, */
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only",
