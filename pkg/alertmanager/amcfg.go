@@ -78,11 +78,15 @@ func (cg *configGenerator) generateConfig(
 	amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig,
 ) ([]byte, error) {
 
-	subRoutes := make([]*route, 0, len(amConfigs)+1)
+	subRoutes := make([]*route, 0, len(amConfigs))
 
 	// configuration using the baseAmConfig passed through the Alertmanager CRD, passing the flag value as 1
 	// in convertRoute so that the addition of namespace matcher is skipped.
 	if baseAmConfig.Name != "" {
+
+		// To Override the alertmanager configs defined by the base AlertmanagerConfig.
+		baseConfig.Route, baseConfig.InhibitRules, baseConfig.Receivers = nil, nil, nil
+
 		crKey := types.NamespacedName{
 			Name:      baseAmConfig.Name,
 			Namespace: baseAmConfig.Namespace,
@@ -98,7 +102,8 @@ func (cg *configGenerator) generateConfig(
 			return yaml.Marshal(baseConfig)
 		}
 
-		subRoutes = append(subRoutes, convertRoute(baseAmConfig.Spec.Route, crKey, true, 1))
+		baseRoute := convertRoute(baseAmConfig.Spec.Route, crKey, false, 1)
+		baseConfig.Route = baseRoute
 
 		for _, receiver := range baseAmConfig.Spec.Receivers {
 			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
