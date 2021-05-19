@@ -232,7 +232,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	if *a.Spec.Replicas == 1 && !a.Spec.ForceEnableClusterMode {
 		amArgs = append(amArgs, "--cluster.listen-address=")
 	} else {
-		amArgs = append(amArgs, "--cluster.listen-address=[$(POD_IP)]:9094")
+		amArgs = append(amArgs, "--cluster.listen-address=:9094")
 	}
 
 	if a.Spec.ListenLocal {
@@ -520,25 +520,14 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 
 	defaultContainers := []v1.Container{
 		{
-			Args:           amArgs,
-			Name:           "alertmanager",
-			Image:          amImagePath,
-			Ports:          ports,
-			VolumeMounts:   amVolumeMounts,
-			LivenessProbe:  livenessProbe,
-			ReadinessProbe: readinessProbe,
-			Resources:      a.Spec.Resources,
-			Env: []v1.EnvVar{
-				{
-					// Necessary for '--cluster.listen-address' flag
-					Name: "POD_IP",
-					ValueFrom: &v1.EnvVarSource{
-						FieldRef: &v1.ObjectFieldSelector{
-							FieldPath: "status.podIP",
-						},
-					},
-				},
-			},
+			Args:                     amArgs,
+			Name:                     "alertmanager",
+			Image:                    amImagePath,
+			Ports:                    ports,
+			VolumeMounts:             amVolumeMounts,
+			LivenessProbe:            livenessProbe,
+			ReadinessProbe:           readinessProbe,
+			Resources:                a.Spec.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
 		operator.CreateConfigReloader(
