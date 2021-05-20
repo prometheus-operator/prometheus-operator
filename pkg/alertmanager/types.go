@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/prometheus/alertmanager/config"
-	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 )
 
@@ -41,7 +40,7 @@ type globalConfig struct {
 	// if it has not been updated.
 	ResolveTimeout *model.Duration `yaml:"resolve_timeout,omitempty" json:"resolve_timeout,omitempty"`
 
-	HTTPConfig *commoncfg.HTTPClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	HTTPConfig *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 
 	SMTPFrom         string          `yaml:"smtp_from,omitempty" json:"smtp_from,omitempty"`
 	SMTPHello        string          `yaml:"smtp_hello,omitempty" json:"smtp_hello,omitempty"`
@@ -177,11 +176,19 @@ type slackConfig struct {
 }
 
 type httpClientConfig struct {
-	BasicAuth       *basicAuth          `yaml:"basic_auth,omitempty"`
-	BearerToken     string              `yaml:"bearer_token,omitempty"`
-	BearerTokenFile string              `yaml:"bearer_token_file,omitempty"`
-	ProxyURL        string              `yaml:"proxy_url,omitempty"`
-	TLSConfig       commoncfg.TLSConfig `yaml:"tls_config,omitempty"`
+	BasicAuth       *basicAuth `yaml:"basic_auth,omitempty"`
+	BearerToken     string     `yaml:"bearer_token,omitempty"`
+	BearerTokenFile string     `yaml:"bearer_token_file,omitempty"`
+	ProxyURL        string     `yaml:"proxy_url,omitempty"`
+	TLSConfig       tlsConfig  `yaml:"tls_config,omitempty"`
+}
+
+type tlsConfig struct {
+	CAFile             string `yaml:"ca_file,omitempty"`
+	CertFile           string `yaml:"cert_file,omitempty"`
+	KeyFile            string `yaml:"key_file,omitempty"`
+	ServerName         string `yaml:"server_name,omitempty"`
+	InsecureSkipVerify bool   `yaml:"insecure_skip_verify"`
 }
 
 type basicAuth struct {
@@ -232,20 +239,20 @@ type slackConfirmationField struct {
 }
 
 type emailConfig struct {
-	VSendResolved *bool               `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
-	To            string              `yaml:"to,omitempty" json:"to,omitempty"`
-	From          string              `yaml:"from,omitempty" json:"from,omitempty"`
-	Hello         string              `yaml:"hello,omitempty" json:"hello,omitempty"`
-	Smarthost     config.HostPort     `yaml:"smarthost,omitempty" json:"smarthost,omitempty"`
-	AuthUsername  string              `yaml:"auth_username,omitempty" json:"auth_username,omitempty"`
-	AuthPassword  string              `yaml:"auth_password,omitempty" json:"auth_password,omitempty"`
-	AuthSecret    string              `yaml:"auth_secret,omitempty" json:"auth_secret,omitempty"`
-	AuthIdentity  string              `yaml:"auth_identity,omitempty" json:"auth_identity,omitempty"`
-	Headers       map[string]string   `yaml:"headers,omitempty" json:"headers,omitempty"`
-	HTML          string              `yaml:"html,omitempty" json:"html,omitempty"`
-	Text          string              `yaml:"text,omitempty" json:"text,omitempty"`
-	RequireTLS    *bool               `yaml:"require_tls,omitempty" json:"require_tls,omitempty"`
-	TLSConfig     commoncfg.TLSConfig `yaml:"tls_config,omitempty" json:"tls_config,omitempty"`
+	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
+	To            string            `yaml:"to,omitempty" json:"to,omitempty"`
+	From          string            `yaml:"from,omitempty" json:"from,omitempty"`
+	Hello         string            `yaml:"hello,omitempty" json:"hello,omitempty"`
+	Smarthost     config.HostPort   `yaml:"smarthost,omitempty" json:"smarthost,omitempty"`
+	AuthUsername  string            `yaml:"auth_username,omitempty" json:"auth_username,omitempty"`
+	AuthPassword  string            `yaml:"auth_password,omitempty" json:"auth_password,omitempty"`
+	AuthSecret    string            `yaml:"auth_secret,omitempty" json:"auth_secret,omitempty"`
+	AuthIdentity  string            `yaml:"auth_identity,omitempty" json:"auth_identity,omitempty"`
+	Headers       map[string]string `yaml:"headers,omitempty" json:"headers,omitempty"`
+	HTML          string            `yaml:"html,omitempty" json:"html,omitempty"`
+	Text          string            `yaml:"text,omitempty" json:"text,omitempty"`
+	RequireTLS    *bool             `yaml:"require_tls,omitempty" json:"require_tls,omitempty"`
+	TLSConfig     tlsConfig         `yaml:"tls_config,omitempty" json:"tls_config,omitempty"`
 }
 
 type pushoverConfig struct {
