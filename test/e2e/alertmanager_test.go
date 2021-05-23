@@ -359,6 +359,7 @@ func testAMReloadConfig(t *testing.T) {
 	firstConfig := `
 global:
   resolve_timeout: 5m
+  http_config: {}
 route:
   group_by: ['job']
   group_wait: 30s
@@ -725,11 +726,20 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	configNs := ctx.CreateNamespace(t, framework.KubeClient)
 	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
 
 	alertmanager := framework.MakeBasicAlertmanager("amconfig-crd", 1)
 	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager); err != nil {
+	alertmanager.Spec.AlertmanagerConfigNamespaceSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{"monitored": "true"},
+	}
+	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(ns, alertmanager)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := testFramework.AddLabelsToNamespace(framework.KubeClient, configNs, map[string]string{"monitored": "true"}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -744,7 +754,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			testingSecretKey: []byte("1234abc"),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), testingKeySecret, metav1.CreateOptions{}); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.TODO(), testingKeySecret, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -756,7 +766,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			"api-key": []byte("1234abc"),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), apiKeySecret, metav1.CreateOptions{}); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.TODO(), apiKeySecret, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -768,15 +778,14 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			"api-url": []byte("http://slack.example.com"),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), slackAPIURLSecret, metav1.CreateOptions{}); err != nil {
+	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.TODO(), slackAPIURLSecret, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "e2e-test-amconfig-many-receivers",
-			Namespace: ns,
+			Name: "e2e-test-amconfig-many-receivers",
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 			Route: &monitoringv1alpha1.Route{
@@ -889,15 +898,14 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
 	// Another AlertmanagerConfig object with nested routes.
 	configCR = &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "e2e-test-amconfig-sub-routes",
-			Namespace: ns,
+			Name: "e2e-test-amconfig-sub-routes",
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 			Route: &monitoringv1alpha1.Route{
@@ -952,7 +960,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -960,8 +968,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// should be rejected by the operator.
 	configCR = &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "e2e-test-amconfig-missing-secret",
-			Namespace: ns,
+			Name: "e2e-test-amconfig-missing-secret",
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 			Route: &monitoringv1alpha1.Route{
@@ -982,7 +989,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -990,8 +997,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// It should be rejected by the operator.
 	configCR = &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "e2e-test-amconfig-invalid-route",
-			Namespace: ns,
+			Name: "e2e-test-amconfig-invalid-route",
 		},
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 			Route: &monitoringv1alpha1.Route{
@@ -1015,24 +1021,22 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
+	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.TODO(), configCR, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
 	// Wait for the change above to take effect.
 	var lastErr error
-	err := wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
-		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), "alertmanager-amconfig-crd-generated", metav1.GetOptions{})
-		if apierrors.IsNotFound(err) {
-			lastErr = errors.New("Generated configuration secret not found")
-			return false, nil
-		}
+	amConfigSecretName := fmt.Sprintf("alertmanager-%s-generated", alertmanager.Name)
+	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), amConfigSecretName, metav1.GetOptions{})
 		if err != nil {
-			return false, err
+			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
+			return false, nil
 		}
 
 		if cfgSecret.Data["alertmanager.yaml"] == nil {
-			lastErr = errors.New("'alertmanager.yaml' key is missing")
+			lastErr = errors.New("'alertmanager.yaml' key is missing in generated configuration secret")
 			return false, nil
 		}
 
@@ -1113,17 +1117,65 @@ receivers:
   webhook_configs:
   - url: http://test.url
 templates: []
-`, ns, ns, ns, ns, ns, ns, ns, ns, ns)
+`, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
 		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), expected); diff != "" {
-			t.Log("got(-), want(+):\n" + diff)
+			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
 		}
 
 		return true, nil
 	})
 	if err != nil {
-		t.Fatalf("%v: %v", err, lastErr)
+		t.Fatalf("waiting for generated alertmanager configuration: %v: %v", err, lastErr)
+	}
+
+	// Remove the selecting label from the namespace holding the
+	// AlertmanagerConfig resources and wait until the Alertmanager
+	// configuration gets regenerated.
+	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
+	if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, configNs, "monitored"); err != nil {
+		t.Fatal(err)
+	}
+
+	err = wait.Poll(5*time.Second, 2*time.Minute, func() (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), amConfigSecretName, metav1.GetOptions{})
+		if err != nil {
+			lastErr = errors.Wrap(err, "failed to get generated configuration secret")
+			return false, nil
+		}
+
+		if cfgSecret.Data["alertmanager.yaml"] == nil {
+			lastErr = errors.New("'alertmanager.yaml' key is missing in generated configuration secret")
+			return false, nil
+		}
+		expected := `global:
+  resolve_timeout: 5m
+route:
+  receiver: "null"
+  group_by:
+  - job
+  routes:
+  - receiver: "null"
+    match:
+      alertname: DeadMansSwitch
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+receivers:
+- name: "null"
+templates: []
+`
+
+		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), expected); diff != "" {
+			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		t.Fatalf("waiting for alertmanager configuration: %v: %v", err, lastErr)
 	}
 }
 
