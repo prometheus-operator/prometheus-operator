@@ -359,6 +359,7 @@ func testAMReloadConfig(t *testing.T) {
 	firstConfig := `
 global:
   resolve_timeout: 5m
+  http_config: {}
 route:
   group_by: ['job']
   group_wait: 30s

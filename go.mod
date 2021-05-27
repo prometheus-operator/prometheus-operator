@@ -20,12 +20,12 @@ require (
 	github.com/prometheus-community/prom-label-proxy v0.2.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.47.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.47.1
-	github.com/prometheus/alertmanager v0.21.1-0.20201106142418-c39b78780054
+	github.com/prometheus/alertmanager v0.21.1-0.20210422101724-8176f78a70e1
 	github.com/prometheus/client_golang v1.10.0
-	github.com/prometheus/common v0.20.0
-	github.com/prometheus/prometheus v1.8.2-0.20210215121130-6f488061dfb4
+	github.com/prometheus/common v0.21.0
+	github.com/prometheus/prometheus v1.8.2-0.20210421143221-52df5ef7a3be
 	github.com/stretchr/testify v1.7.0
-	github.com/thanos-io/thanos v0.19.0
+	github.com/thanos-io/thanos v0.20.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
