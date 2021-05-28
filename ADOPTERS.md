@@ -80,6 +80,19 @@ Details:
 - 17k samples/s
 - 841k active series
 
+## Mattermost
+
+[mattermost.com](https://mattermost.com)
+
+Environments: AWS
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details:
+- All Mattermost clusters use the Prometheus Operator with Thanos sidecar for cluster monitoring and central Thanos query component to gather all data.
+- 977k samples/s
+- 29.4M active series
+
 ## Nozzle
 
 [nozzle.io](https://nozzle.io)
@@ -91,7 +104,7 @@ Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): 
 Details:
 - 100k samples/s
 - 1M active series
-- 
+
 ## OpenShift
 
 [openshift.com](https://www.openshift.com/)
