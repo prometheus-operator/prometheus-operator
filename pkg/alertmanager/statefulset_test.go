@@ -1016,3 +1016,33 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 		t.Fatal("expected stateful set to contain arg '--cluster.listen-address=[$(POD_IP)]:9094'")
 	}
 }
+
+func TestConfigReloader(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
+		Spec: monitoringv1.AlertmanagerSpec{},
+	}, defaultTestConfig, "")
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	expectedArgs := []string{
+		"--listen-address=:8080",
+		"--reload-url=http://:9093/-/reload",
+		"--watched-dir=/etc/alertmanager/config",
+	}
+
+	expectedShardNum := "-1"
+
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgs) {
+				t.Fatalf("expectd container args are %s, but found %s", expectedArgs, c.Args)
+			}
+			for _, env := range c.Env {
+				if env.Name == "SHARD" && !reflect.DeepEqual(env.Value, expectedShardNum) {
+					t.Fatalf("expectd shard value is %s, but found %s", expectedShardNum, env.Value)
+				}
+			}
+		}
+	}
+}

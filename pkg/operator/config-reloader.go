@@ -25,6 +25,8 @@ import (
 
 const configReloaderPort = 8080
 
+// ConfigReloader contains the fields to configure
+// a config-reloader container
 type ConfigReloader struct {
 	name               string
 	config             ReloaderConfig
