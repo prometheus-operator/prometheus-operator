@@ -1,3 +1,7 @@
+## 0.48.1 / 2021-06-01
+
+* [BUGFIX] Added an `app` label on Prometheus pods. #4055
+
 ## 0.48.0 / 2021-05-19
 
 Deprecation notice:  
