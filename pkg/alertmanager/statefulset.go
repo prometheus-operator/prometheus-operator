@@ -517,6 +517,27 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	var watchedDirectories []string
 	watchedDirectories = append(watchedDirectories, reloadWatchDirs...)
 
+	var operatorInitContainers []v1.Container
+
+	operatorInitContainers = append(operatorInitContainers,
+		operator.CreateConfigReloader(
+			"init-config-reloader",
+			operator.ReloaderResources(config.ReloaderConfig),
+			operator.ReloaderRunOnce(),
+			operator.LogFormat(a.Spec.LogFormat),
+			operator.LogLevel(a.Spec.LogLevel),
+			operator.VolumeMounts(configReloaderVolumeMounts),
+			operator.ConfigFile(path.Join(alertmanagerConfigDir, alertmanagerConfigFile)),
+			operator.WatchedDirectories(watchedDirectories),
+			operator.Shard(-1),
+		),
+	)
+
+	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, a.Spec.InitContainers)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to merge init containers spec")
+	}
+
 	defaultContainers := []v1.Container{
 		{
 			Args:           amArgs,
@@ -584,7 +605,7 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				NodeSelector:                  a.Spec.NodeSelector,
 				PriorityClassName:             a.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: &terminationGracePeriod,
-				InitContainers:                a.Spec.InitContainers,
+				InitContainers:                initContainers,
 				Containers:                    containers,
 				Volumes:                       volumes,
 				ServiceAccountName:            a.Spec.ServiceAccountName,

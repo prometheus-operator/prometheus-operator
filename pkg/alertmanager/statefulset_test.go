@@ -1025,7 +1025,14 @@ func TestConfigReloader(t *testing.T) {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
 
-	expectedArgs := []string{
+	expectedInitContainerArgs := []string{
+		"--watch-interval=0",
+		"--listen-address=:8080",
+		"--config-file=/etc/alertmanager/config/alertmanager.yaml",
+		"--watched-dir=/etc/alertmanager/config",
+	}
+
+	expectedContainerArgs := []string{
 		"--listen-address=:8080",
 		"--reload-url=http://:9093/-/reload",
 		"--watched-dir=/etc/alertmanager/config",
@@ -1033,10 +1040,23 @@ func TestConfigReloader(t *testing.T) {
 
 	expectedShardNum := "-1"
 
+	for _, c := range sset.Spec.Template.Spec.InitContainers {
+		if c.Name == "init-config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedInitContainerArgs) {
+				t.Fatalf("expectd init container args are %s\n, but found %s", expectedInitContainerArgs, c.Args)
+			}
+			for _, env := range c.Env {
+				if env.Name == "SHARD" && !reflect.DeepEqual(env.Value, expectedShardNum) {
+					t.Fatalf("expectd shard value is %s, but found %s", expectedShardNum, env.Value)
+				}
+			}
+		}
+	}
+
 	for _, c := range sset.Spec.Template.Spec.Containers {
 		if c.Name == "config-reloader" {
-			if !reflect.DeepEqual(c.Args, expectedArgs) {
-				t.Fatalf("expectd container args are %s, but found %s", expectedArgs, c.Args)
+			if !reflect.DeepEqual(c.Args, expectedContainerArgs) {
+				t.Fatalf("expectd container args are %s, but found %s", expectedContainerArgs, c.Args)
 			}
 			for _, env := range c.Env {
 				if env.Name == "SHARD" && !reflect.DeepEqual(env.Value, expectedShardNum) {
