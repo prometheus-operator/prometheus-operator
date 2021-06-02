@@ -275,7 +275,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1
 		return nil, fmt.Errorf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
-	if err := f.WaitForPrometheusReady(result, 5*time.Minute); err != nil {
+	if err := f.WaitForPrometheusReady(result, 10*time.Minute); err != nil {
 		return nil, fmt.Errorf("waiting for %v Prometheus instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
@@ -287,7 +287,7 @@ func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *monitoringv1
 	if err != nil {
 		return nil, err
 	}
-	if err := f.WaitForPrometheusReady(result, 5*time.Minute); err != nil {
+	if err := f.WaitForPrometheusReady(result, 10*time.Minute); err != nil {
 		return nil, fmt.Errorf("failed to update %d Prometheus instances (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
 
