@@ -69,6 +69,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	expectedPodLabels := map[string]string{
 		"prometheus":                   "",
+		"app":                          "prometheus",
 		"app.kubernetes.io/name":       "prometheus",
 		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
 		"app.kubernetes.io/managed-by": "prometheus-operator",
