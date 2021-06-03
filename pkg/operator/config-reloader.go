@@ -25,7 +25,7 @@ import (
 
 const configReloaderPort = 8080
 
-// ConfigReloader contains the fields to configure
+// ConfigReloader contains the options to configure
 // a config-reloader container
 type ConfigReloader struct {
 	name               string
@@ -45,72 +45,84 @@ type ConfigReloader struct {
 
 type ReloaderOption = func(*ConfigReloader)
 
+// ReloaderRunOnce sets the runOnce option for the config-reloader container
 func ReloaderRunOnce() ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.runOnce = true
 	}
 }
 
+// WatchedDirectories sets the watchedDirectories option for the config-reloader container
 func WatchedDirectories(watchedDirectories []string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.watchedDirectories = watchedDirectories
 	}
 }
 
+// ConfigFile sets the configFile option for the config-reloader container
 func ConfigFile(configFile string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.configFile = configFile
 	}
 }
 
+// ConfigEnvsubstFile sets the configEnvsubstFile option for the config-reloader container
 func ConfigEnvsubstFile(configEnvsubstFile string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.configEnvsubstFile = configEnvsubstFile
 	}
 }
 
+// ReloaderResources sets the config option for the config-reloader container
 func ReloaderResources(rc ReloaderConfig) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.config = rc
 	}
 }
 
+// ReloaderURL sets the reloaderURL option for the config-reloader container
 func ReloaderURL(reloadURL url.URL) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.reloadURL = reloadURL
 	}
 }
 
+// ListenLocal sets the listenLocal option for the config-reloader container
 func ListenLocal(listenLocal bool) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.listenLocal = listenLocal
 	}
 }
 
+// LocalHost sets the localHost option for the config-reloader container
 func LocalHost(localHost string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.localHost = localHost
 	}
 }
 
+// LogFormat sets the logFormat option for the config-reloader container
 func LogFormat(logFormat string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.logFormat = logFormat
 	}
 }
 
+// LogLevel sets the logLevel option for the config-reloader container\
 func LogLevel(logLevel string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.logLevel = logLevel
 	}
 }
 
+// VolumeMounts sets the volumeMounts option for the config-reloader container
 func VolumeMounts(mounts []v1.VolumeMount) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.volumeMounts = mounts
 	}
 }
 
+// Shard sets the shard option for the config-reloader container
 func Shard(shard int32) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.shard = &shard
