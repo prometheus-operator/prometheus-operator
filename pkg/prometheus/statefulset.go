@@ -349,7 +349,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
 		retentionTimeFlag+p.Spec.Retention,
 		"-web.enable-lifecycle",
-		"-storage.tsdb.no-lockfile",
 	)
 
 	if p.Spec.Query != nil && p.Spec.Query.LookbackDelta != nil {
