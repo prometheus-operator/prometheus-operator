@@ -339,10 +339,10 @@ func (f *Framework) GetSilences(ns, n string) (models.GettableSilences, error) {
 	return getSilencesResponse, nil
 }
 
-// WaitForAlertmanagerConfigToContainString retrieves the Alertmanager
-// configuration via the Alertmanager's API and checks if it contains the given
-// string.
-func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expectedString string) error {
+// PollAlertmanagerConfiguration retrieves the Alertmanager configuration via
+// the Alertmanager's API and checks that all conditions return without error.
+// It will retry every 10 second for 5 minutes before giving up.
+func (f *Framework) PollAlertmanagerConfiguration(ns, amName string, conditions ...func(config string) error) error {
 	var pollError error
 	err := wait.Poll(10*time.Second, time.Minute*5, func() (bool, error) {
 		amStatus, err := f.GetAlertmanagerStatus(ns, "alertmanager-"+amName+"-0")
@@ -352,9 +352,11 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expecte
 			return false, nil
 		}
 
-		if !strings.Contains(*amStatus.Config.Original, expectedString) {
-			pollError = fmt.Errorf("failed to get matching config expected %q but got %q", expectedString, *amStatus.Config.Original)
-			return false, nil
+		for _, c := range conditions {
+			pollError = c(*amStatus.Config.Original)
+			if pollError != nil {
+				return false, nil
+			}
 		}
 
 		return true, nil
@@ -365,6 +367,15 @@ func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expecte
 	}
 
 	return nil
+}
+
+func (f *Framework) WaitForAlertmanagerConfigToContainString(ns, amName, expected string) error {
+	return f.PollAlertmanagerConfiguration(ns, amName, func(config string) error {
+		if !strings.Contains(config, expected) {
+			return fmt.Errorf("failed to get matching config expected %q but got %q", expected, config)
+		}
+		return nil
+	})
 }
 
 func (f *Framework) WaitForAlertmanagerConfigToBeReloaded(ns, amName string, previousReloadTimestamp time.Time) error {

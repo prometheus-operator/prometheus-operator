@@ -163,6 +163,12 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 		return nil, errors.Wrap(err, "error creating thanosruler informers")
 	}
 
+	var thanosStores []cache.Store
+	for _, informer := range o.thanosRulerInfs.GetInformers() {
+		thanosStores = append(thanosStores, informer.Informer().GetStore())
+	}
+	o.metrics.MustRegister(newThanosRulerCollectorForStores(thanosStores...))
+
 	o.ruleInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			o.config.Namespaces.AllowList,
@@ -283,6 +289,15 @@ func (o *Operator) addHandlers() {
 		AddFunc:    o.handleStatefulSetAdd,
 		DeleteFunc: o.handleStatefulSetDelete,
 		UpdateFunc: o.handleStatefulSetUpdate,
+	})
+
+	// The controller needs to watch the namespaces in which the rules live
+	// because a label change on a namespace may trigger a configuration
+	// change.
+	// It doesn't need to watch on addition/deletion though because it's
+	// already covered by the event handlers on rules.
+	o.nsRuleInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: o.handleNamespaceUpdate,
 	})
 }
 
@@ -564,10 +579,50 @@ func (o *Operator) processNextWorkItem(ctx context.Context) bool {
 	}
 
 	o.metrics.ReconcileErrorsCounter().Inc()
-	utilruntime.HandleError(errors.Wrap(err, fmt.Sprintf("Sync %q failed", key)))
+	utilruntime.HandleError(errors.Wrapf(err, "Sync %q failed", key))
 	o.queue.AddRateLimited(key)
 
 	return true
+}
+
+func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
+	old := oldo.(*v1.Namespace)
+	cur := curo.(*v1.Namespace)
+
+	level.Debug(o.logger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+
+	// Periodic resync may resend the Namespace without changes in-between.
+	if old.ResourceVersion == cur.ResourceVersion {
+		return
+	}
+
+	level.Debug(o.logger).Log("msg", "Namespace updated", "namespace", cur.GetName())
+	o.metrics.TriggerByCounter("Namespace", "update").Inc()
+
+	// Check for ThanosRuler instances selecting PrometheusRules in the namespace.
+	err := o.thanosRulerInfs.ListAll(labels.Everything(), func(obj interface{}) {
+		tr := obj.(*monitoringv1.ThanosRuler)
+
+		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, tr.Spec.RuleNamespaceSelector)
+		if err != nil {
+			level.Error(o.logger).Log(
+				"err", err,
+				"name", tr.Name,
+				"namespace", tr.Namespace,
+			)
+			return
+		}
+
+		if sync {
+			o.enqueue(tr)
+		}
+	})
+	if err != nil {
+		level.Error(o.logger).Log(
+			"msg", "listing all ThanosRuler instances from cache failed",
+			"err", err,
+		)
+	}
 }
 
 func (o *Operator) sync(ctx context.Context, key string) error {
@@ -705,16 +760,16 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 func ListOptions(name string) metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
-			"app":            thanosRulerLabel,
-			thanosRulerLabel: name,
+			"app.kubernetes.io/name": thanosRulerLabel,
+			thanosRulerLabel:         name,
 		})).String(),
 	}
 }
 
-// ThanosRulerStatus evaluates the current status of a ThanosRuler deployment with
-// respect to its specified resource object. It return the status and a list of
+// RulerStatus evaluates the current status of a ThanosRuler deployment with
+// respect to its specified resource object. It returns the status and a list of
 // pods that are not updated.
-func ThanosRulerStatus(ctx context.Context, kclient kubernetes.Interface, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRulerStatus, []v1.Pod, error) {
+func RulerStatus(ctx context.Context, kclient kubernetes.Interface, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRulerStatus, []v1.Pod, error) {
 	res := &monitoringv1.ThanosRulerStatus{Paused: tr.Spec.Paused}
 
 	pods, err := kclient.CoreV1().Pods(tr.Namespace).List(ctx, ListOptions(tr.Name))
@@ -787,7 +842,8 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 	if !exists {
 		level.Error(o.logger).Log(
-			"msg", fmt.Sprintf("get namespace to enqueue ThanosRuler instances failed: namespace %q does not exist", nsName),
+			"msg", "get namespace to enqueue ThanosRuler instances failed: namespace does not exist",
+			"namespace", nsName,
 		)
 		return
 	}
@@ -806,8 +862,10 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		ruleNSSelector, err := metav1.LabelSelectorAsSelector(tr.Spec.RuleNamespaceSelector)
 		if err != nil {
 			level.Error(o.logger).Log(
-				"msg", fmt.Sprintf("failed to convert RuleNamespaceSelector of %q to selector", tr.Name),
-				"err", err,
+				"err", errors.Wrap(err, "failed to convert RuleNamespaceSelector"),
+				"name", tr.Name,
+				"namespace", tr.Namespace,
+				"selector", tr.Spec.RuleNamespaceSelector,
 			)
 			return
 		}

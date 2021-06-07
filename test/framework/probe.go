@@ -36,7 +36,7 @@ func (f *Framework) MakeBlackBoxExporterService(ns, name string) *v1.Service {
 		Spec: v1.ServiceSpec{
 			Type: v1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				"app": "blackbox-exporter",
+				"app.kubernetes.io/name": "blackbox-exporter",
 			},
 			Ports: []v1.ServicePort{
 				{
@@ -88,13 +88,13 @@ func (f *Framework) createBlackBoxExporterDeploymentAndWaitReady(ns, name string
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "blackbox-exporter",
+					"app.kubernetes.io/name": "blackbox-exporter",
 				},
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "blackbox-exporter",
+						"app.kubernetes.io/name": "blackbox-exporter",
 					},
 				},
 				Spec: v1.PodSpec{

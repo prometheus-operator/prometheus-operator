@@ -16,15 +16,14 @@ package framework
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +35,7 @@ import (
 func (f *Framework) GetCRD(name string) (*v1.CustomResourceDefinition, error) {
 	crd, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("unable to get CRD with name %v", name))
+		return nil, errors.Wrapf(err, "unable to get CRD with name %v", name)
 	}
 	return crd, nil
 }
@@ -45,7 +44,7 @@ func (f *Framework) GetCRD(name string) (*v1.CustomResourceDefinition, error) {
 func (f *Framework) ListCRDs() (*v1.CustomResourceDefinitionList, error) {
 	crds, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("unable to list CRDs"))
+		return nil, errors.Wrap(err, "unable to list CRDs")
 	}
 	return crds, nil
 }
@@ -97,7 +96,7 @@ func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, err
 		return true, nil
 	})
 
-	return errors.Wrap(err, fmt.Sprintf("timed out waiting for Custom Resource"))
+	return errors.Wrap(err, "timed out waiting for Custom Resource")
 }
 
 // CreateCRDAndWaitUntilReady creates a Custom Resource Definition from yaml

@@ -223,9 +223,7 @@ func makeStatefulSet(
 		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 	}
 
-	for _, volume := range p.Spec.Volumes {
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, volume)
-	}
+	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, p.Spec.Volumes...)
 
 	return statefulset, nil
 }
@@ -295,7 +293,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 				},
 			},
 			Selector: map[string]string{
-				"app": "prometheus",
+				"app.kubernetes.io/name": "prometheus",
 			},
 		},
 	}
@@ -351,7 +349,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
 		retentionTimeFlag+p.Spec.Retention,
 		"-web.enable-lifecycle",
-		"-storage.tsdb.no-lockfile",
 	)
 
 	if p.Spec.Query != nil && p.Spec.Query.LookbackDelta != nil {
@@ -567,24 +564,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 	var readinessProbeHandler v1.Handler
 	{
-		healthyPath := path.Clean(webRoutePrefix + "/-/healthy")
-		if p.Spec.ListenLocal {
-			localHealthyPath := fmt.Sprintf("http://localhost:9090%s", healthyPath)
-			readinessProbeHandler.Exec = &v1.ExecAction{
-				Command: []string{
-					"sh",
-					"-c",
-					fmt.Sprintf(localProbe, localHealthyPath, localHealthyPath),
-				},
-			}
-		} else {
-			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
-				Path: healthyPath,
-				Port: intstr.FromString(p.Spec.PortName),
-			}
-		}
-	}
-	{
 		readyPath := path.Clean(webRoutePrefix + "/-/ready")
 		if p.Spec.ListenLocal {
 			localReadyPath := fmt.Sprintf("http://localhost:9090%s", readyPath)
@@ -616,10 +595,15 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	podSelectorLabels := map[string]string{
-		"app":                   "prometheus",
-		"prometheus":            p.Name,
-		shardLabelName:          fmt.Sprintf("%d", shard),
-		prometheusNameLabelName: p.Name,
+		// TODO(fpetkovski): remove `app` label after 0.50 release
+		"app":                          "prometheus",
+		"app.kubernetes.io/name":       "prometheus",
+		"app.kubernetes.io/version":    version.String(),
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   p.Name,
+		"prometheus":                   p.Name,
+		shardLabelName:                 fmt.Sprintf("%d", shard),
+		prometheusNameLabelName:        p.Name,
 	}
 	if p.Spec.PodMetadata != nil {
 		if p.Spec.PodMetadata.Labels != nil {
@@ -637,6 +621,8 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	for k, v := range podSelectorLabels {
 		podLabels[k] = v
 	}
+
+	podAnnotations["kubectl.kubernetes.io/default-container"] = "prometheus"
 
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
@@ -878,6 +864,7 @@ func prefixedName(name string) string {
 }
 
 func subPathForStorage(s *monitoringv1.StorageSpec) string {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if s == nil || s.DisableMountSubPath {
 		return ""
 	}

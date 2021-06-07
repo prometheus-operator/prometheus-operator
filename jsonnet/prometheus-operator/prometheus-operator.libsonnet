@@ -151,7 +151,12 @@ function(params) {
         replicas: 1,
         selector: { matchLabels: po.config.selectorLabels },
         template: {
-          metadata: { labels: po.config.commonLabels },
+          metadata: {
+            labels: po.config.commonLabels,
+            annotations: {
+              "kubectl.kubernetes.io/default-container": container.name,
+            }
+          },
           spec: {
             containers: [container],
             nodeSelector: {

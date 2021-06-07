@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: thanos-sidecar
+    app.kubernetes.io/name: thanos-sidecar
   name: thanos-sidecar
   namespace: default
 spec:

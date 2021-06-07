@@ -71,12 +71,12 @@ func main() {
 
 	fmt.Printf("listening for metric requests on '%v' protected via basic auth or bearer token\n", address)
 
-	http.ListenAndServe(address, nil)
+	_ = http.ListenAndServe(address, nil)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, time.Now().String())
-	fmt.Fprintf(w, "\nAppVersion:"+os.Getenv("VERSION"))
+	fmt.Fprint(w, time.Now().String())
+	fmt.Fprint(w, "\nAppVersion:"+os.Getenv("VERSION"))
 }
 
 func checkBasicAuth(w http.ResponseWriter, r *http.Request) bool {
