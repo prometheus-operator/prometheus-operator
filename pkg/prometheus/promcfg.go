@@ -710,9 +710,11 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
 	}
 
-	cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
-		{Key: "module", Value: []string{m.Spec.Module}},
-	}})
+	if m.Spec.Module != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{
+			{Key: "module", Value: []string{m.Spec.Module}},
+		}})
+	}
 
 	relabelings := initRelabelings()
 

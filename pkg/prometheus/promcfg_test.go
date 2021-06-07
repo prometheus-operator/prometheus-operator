@@ -712,6 +712,108 @@ alerting:
 	}
 }
 
+func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
+	cg := &ConfigGenerator{}
+	cfg, err := cg.GenerateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		map[string]*monitoringv1.Probe{
+			"probe1": &monitoringv1.Probe{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testprobe1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ProbeSpec{
+					JobName: "blackbox",
+					ProberSpec: monitoringv1.ProberSpec{
+						Scheme: "http",
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+					},
+					Targets: monitoringv1.ProbeTargets{
+						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+							Targets: []string{
+								"prometheus.io",
+								"promcon.io",
+							},
+						},
+					},
+				},
+			},
+		},
+		map[string]assets.BasicAuthCredentials{},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: probe/default/testprobe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  static_configs:
+  - targets:
+    - prometheus.io
+    - promcon.io
+    labels:
+      namespace: default
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - target_label: job
+    replacement: blackbox
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	result := string(cfg)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
+	}
+}
+
 func TestProbeIngressSDConfigGeneration(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
