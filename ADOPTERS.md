@@ -54,6 +54,19 @@ Details:
 - 20000 samples/s
 - 1M active series
 
+## Innovaccer ##
+
+https://innovaccer.com/
+
+Environments: AWS, Azure
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details (optional):
+- multiple remote K8s cluster in which we have prometheus deployed through prom-operator.
+- these remote prometheus instances push cluster metrics to central Thanos receiver which is connected to S3 storage.
+- on top of Thanos we have Grafana for dashboarding and visualisation.
+
 ## Kinvolk Lokomotive Kubernetes
 
 https://kinvolk.io/lokomotive-kubernetes/
@@ -177,3 +190,16 @@ Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): 
 Details (optional):
 - A huge fleet of OpenShift and Kubernetes clusters, each using Prometheus Operator
 - All managed by [Project Syn](https://syn.tools/), leveraging Commodore Components like [component-rancher-monitoring](https://github.com/projectsyn/component-rancher-monitoring) which re-uses Prometheus Operator
+
+## <Insert Company/Organization Name>
+
+https://our-link.com/
+
+Environments: AWS, Azure, Google Cloud, Bare Metal, etc
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes | No
+
+Details (optional):
+- HA Pair of Prometheus
+- 1000 samples/s (query: `rate(prometheus_tsdb_head_samples_appended_total[5m])`)
+- 10k active series (query: `prometheus_tsdb_head_series`)
