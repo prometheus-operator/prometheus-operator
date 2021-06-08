@@ -295,10 +295,10 @@ spec:
                   type: object
                 type: array
               jobLabel:
-                description: The label to use to retrieve the job name from.
+                description: "Chooses the label of the Kubernetes `Endpoints`. Its value will be used for the `job`-label's value of the created metrics. \n Default & fallback value: the name of the respective Kubernetes `Endpoint`."
                 type: string
               namespaceSelector:
-                description: Selector to select which namespaces the Endpoints objects are discovered from.
+                description: Selector to select which namespaces the Kubernetes Endpoints objects are discovered from.
                 properties:
                   any:
                     description: Boolean describing whether all namespaces are selected in contrast to a list restricting them.
@@ -310,7 +310,7 @@ spec:
                     type: array
                 type: object
               podTargetLabels:
-                description: PodTargetLabels transfers labels on the Kubernetes Pod onto the target.
+                description: PodTargetLabels transfers labels on the Kubernetes `Pod` onto the created metrics.
                 items:
                   type: string
                 type: array
@@ -349,7 +349,7 @@ spec:
                     type: object
                 type: object
               targetLabels:
-                description: TargetLabels transfers labels on the Kubernetes Service onto the target.
+                description: TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics. All labels set in `selector.matchLabels` are automatically transferred.
                 items:
                   type: string
                 type: array

@@ -589,9 +589,9 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | walCompression | Enable compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0. | *bool | false |
 | logLevel | Log level for Prometheus to be configured with. | string | false |
 | logFormat | Log format for Prometheus to be configured with. | string | false |
-| scrapeInterval | Interval between consecutive scrapes. | string | false |
+| scrapeInterval | Interval between consecutive scrapes. Default: `1m` | string | false |
 | scrapeTimeout | Number of seconds to wait for target to respond before erroring. | string | false |
-| evaluationInterval | Interval between consecutive evaluations. | string | false |
+| evaluationInterval | Interval between consecutive evaluations. Default: `1m` | string | false |
 | rules | /--rules.*/ command-line arguments. | [Rules](#rules) | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
 | enableAdminAPI | Enable access to prometheus web admin API. Defaults to the value of `false`. WARNING: Enabling the admin APIs enables mutating endpoints, to delete data, shutdown Prometheus, and more. Enabling this should be done with care and the user is advised to add additional authentication authorization via a proxy to ensure only clients authorized to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis | bool | false |
@@ -631,7 +631,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | overrideHonorLabels | OverrideHonorLabels if set to true overrides all user configured honor_labels. If HonorLabels is set in ServiceMonitor or PodMonitor to true, this overrides honor_labels to false. | bool | false |
 | overrideHonorTimestamps | OverrideHonorTimestamps allows to globally enforce honoring timestamps in all scrape configs. | bool | false |
 | ignoreNamespaceSelectors | IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from the podmonitor and servicemonitor configs, and they will only discover endpoints within their current namespace.  Defaults to false. | bool | false |
-| enforcedNamespaceLabel | EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert and metric that is user created. The label value will always be the namespace of the object that is being created. | string | false |
+| enforcedNamespaceLabel | EnforcedNamespaceLabel If set, a label will be added to\n\n1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `ProbeConfig` object) and 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to\n   * alerting & recording rules and\n   * the metrics used in their expressions (`expr`).\n\nLabel name is this field's value. Label value is the namespace of the created object (mentioned above). | string | false |
 | prometheusRulesExcludedFromEnforce | PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing of adding namespace labels. Works only if enforcedNamespaceLabel set to true. Make sure both ruleNamespace and ruleName are set for each pair | [][PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig) | false |
 | queryLogFile | QueryLogFile specifies the file to which PromQL queries are logged. Note that this location must be writable, and can be persisted using an attached volume. Alternatively, the location can be set to a stdout location such as `/dev/stdout` to log querie information to the default Prometheus log stream. This is only available in versions of Prometheus >= 2.16.0. For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/) | string | false |
 | enforcedSampleLimit | EnforcedSampleLimit defines global limit on number of scraped samples that will be accepted. This overrides any SampleLimit set per ServiceMonitor or/and PodMonitor. It is meant to be used by admins to enforce the SampleLimit to keep overall number of samples/series under the desired limit. Note that if SampleLimit is lower that value will be taken instead. | *uint64 | false |
@@ -742,7 +742,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 
 ## Rule
 
-Rule describes an alerting or recording rule.
+Rule describes an alerting or recording rule See Prometheus documentation: [alerting](https://www.prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) or [recording](https://www.prometheus.io/docs/prometheus/latest/configuration/recording_rules/#recording-rules) rule
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -843,12 +843,12 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jobLabel | The label to use to retrieve the job name from. | string | false |
-| targetLabels | TargetLabels transfers labels on the Kubernetes Service onto the target. | []string | false |
-| podTargetLabels | PodTargetLabels transfers labels on the Kubernetes Pod onto the target. | []string | false |
+| jobLabel | Chooses the label of the Kubernetes `Endpoints`. Its value will be used for the `job`-label's value of the created metrics.\n\nDefault & fallback value: the name of the respective Kubernetes `Endpoint`. | string | false |
+| targetLabels | TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics. All labels set in `selector.matchLabels` are automatically transferred. | []string | false |
+| podTargetLabels | PodTargetLabels transfers labels on the Kubernetes `Pod` onto the created metrics. | []string | false |
 | endpoints | A list of endpoints allowed as part of this ServiceMonitor. | [][Endpoint](#endpoint) | true |
 | selector | Selector to select Endpoints objects. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | true |
-| namespaceSelector | Selector to select which namespaces the Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
+| namespaceSelector | Selector to select which namespaces the Kubernetes Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
 | sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
 | targetLimit | TargetLimit defines a limit on the number of scraped targets that will be accepted. | uint64 | false |
 

@@ -1100,10 +1100,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	// By default, generate a safe job name from the service name.  We also keep
 	// this around if a jobLabel is set in case the targets don't actually have a
-	// value for it. A single service may potentially have multiple metrics
-	// endpoints, therefore the endpoints labels is filled with the ports name or
-	// as a fallback the port number.
-
+	// value for it.
 	relabelings = append(relabelings, yaml.MapSlice{
 		{Key: "source_labels", Value: []string{"__meta_kubernetes_service_name"}},
 		{Key: "target_label", Value: "job"},
@@ -1118,6 +1115,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
+	// A single service may potentially have multiple metrics
+	//	endpoints, therefore the endpoints labels is filled with the ports name or
+	//	as a fallback the port number.
 	if ep.Port != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "target_label", Value: "endpoint"},
