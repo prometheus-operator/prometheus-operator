@@ -1189,6 +1189,35 @@ spec:
                   - name
                   type: object
                 type: array
+              dnsConfig:
+                description: Custom DNS configuration to use for the Alertmanager pods.
+                properties:
+                  nameservers:
+                    description: A list of DNS name server IP addresses. This will be appended to the base nameservers generated from DNSPolicy. Duplicated nameservers will be removed.
+                    items:
+                      type: string
+                    type: array
+                  options:
+                    description: A list of DNS resolver options. This will be merged with the base options generated from DNSPolicy. Duplicated entries will be removed. Resolution options given in Options will override those that appear in the base DNSPolicy.
+                    items:
+                      description: PodDNSConfigOption defines DNS resolver options of a pod.
+                      properties:
+                        name:
+                          description: Required.
+                          type: string
+                        value:
+                          type: string
+                      type: object
+                    type: array
+                  searches:
+                    description: A list of DNS search domains for host-name lookup. This will be appended to the base search paths generated from DNSPolicy. Duplicated search paths will be removed.
+                    items:
+                      type: string
+                    type: array
+                type: object
+              dnsPolicy:
+                description: Custom DNS policy to use for the Alertmanager pods.
+                type: string
               externalUrl:
                 description: The external URL the Alertmanager instances will be available under. This is necessary to generate correct URLs. This is necessary if Alertmanager is not served from root of a DNS name.
                 type: string

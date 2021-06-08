@@ -128,6 +128,10 @@ type PrometheusSpec struct {
 	// Base image to use for a Prometheus deployment.
 	// Deprecated: use 'image' instead
 	BaseImage string `json:"baseImage,omitempty"`
+	// Custom DNS configuration to use for the Prometheus pods.
+	DNSConfig *v1.PodDNSConfig `json:"dnsConfig,omitempty"`
+	// Custom DNS policy to use for an Prometheus pod.
+	DNSPolicy v1.DNSPolicy `json:"dnsPolicy,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod
@@ -1228,6 +1232,10 @@ type AlertmanagerSpec struct {
 	// Base image that is used to deploy pods, without tag.
 	// Deprecated: use 'image' instead
 	BaseImage string `json:"baseImage,omitempty"`
+	// Custom DNS configuration to use for the Alertmanager pods.
+	DNSConfig *v1.PodDNSConfig `json:"dnsConfig,omitempty"`
+	// Custom DNS policy to use for the Alertmanager pods.
+	DNSPolicy v1.DNSPolicy `json:"dnsPolicy,omitempty"`
 	// An optional list of references to secrets in the same namespace
 	// to use for pulling prometheus and alertmanager images from registries
 	// see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod

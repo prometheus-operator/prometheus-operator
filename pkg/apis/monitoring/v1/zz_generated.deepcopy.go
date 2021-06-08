@@ -157,6 +157,11 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.DNSConfig != nil {
+		in, out := &in.DNSConfig, &out.DNSConfig
+		*out = new(corev1.PodDNSConfig)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ImagePullSecrets != nil {
 		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
 		*out = make([]corev1.LocalObjectReference, len(*in))
@@ -1019,6 +1024,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.DNSConfig != nil {
+		in, out := &in.DNSConfig, &out.DNSConfig
+		*out = new(corev1.PodDNSConfig)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ImagePullSecrets != nil {
 		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
 		*out = make([]corev1.LocalObjectReference, len(*in))
@@ -1767,6 +1777,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.DNSConfig != nil {
+		in, out := &in.DNSConfig, &out.DNSConfig
+		*out = new(corev1.PodDNSConfig)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.SecurityContext != nil {
 		in, out := &in.SecurityContext, &out.SecurityContext

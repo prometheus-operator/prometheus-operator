@@ -590,6 +590,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 				Volumes:                       volumes,
 				ServiceAccountName:            a.Spec.ServiceAccountName,
 				SecurityContext:               a.Spec.SecurityContext,
+				DNSConfig:                     a.Spec.DNSConfig,
+				DNSPolicy:                     a.Spec.DNSPolicy,
 				Tolerations:                   a.Spec.Tolerations,
 				Affinity:                      a.Spec.Affinity,
 				TopologySpreadConstraints:     a.Spec.TopologySpreadConstraints,

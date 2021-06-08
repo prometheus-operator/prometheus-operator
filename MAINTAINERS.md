@@ -25,7 +25,7 @@ Full list of triage people is displayed below:
 
 ## How to be maintainer?
 
-Any contributor that shows effort, consistentcy and willingness in maintaining this repository will be invited to join the Maintainers team.
+Any contributor that shows effort, consistency and willingness in maintaining this repository will be invited to join the Maintainers team.
 
 Open Source is all about the trust, which is the key factor in decision to add write permissions.
 
