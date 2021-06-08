@@ -1,4 +1,16 @@
-# RBAC for Prometheus Operator CRDs
+---
+title: "RBAC for CRDs"
+description: "Aggregate permissions on the Prometheus Operator CustomResourceDefinitions."
+lead: ""
+date: 2021-03-08T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 420 # nice
+toc: true
+---
 
 ## Aggregated ClusterRoles
 

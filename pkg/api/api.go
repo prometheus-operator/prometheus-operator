@@ -80,7 +80,7 @@ type objectReference struct {
 	namespace string
 }
 
-func parsePrometheusStatusUrl(path string) objectReference {
+func parsePrometheusStatusURL(path string) objectReference {
 	matches := prometheusRoute.FindAllStringSubmatch(path, -1)
 	ns := ""
 	name := ""
@@ -98,7 +98,7 @@ func parsePrometheusStatusUrl(path string) objectReference {
 }
 
 func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
-	or := parsePrometheusStatusUrl(req.URL.Path)
+	or := parsePrometheusStatusURL(req.URL.Path)
 
 	p, err := api.mclient.MonitoringV1().Prometheuses(or.namespace).Get(req.Context(), or.name, metav1.GetOptions{})
 	if err != nil {
@@ -109,7 +109,7 @@ func (api *API) prometheusStatus(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p.Status, _, err = prometheus.PrometheusStatus(req.Context(), api.kclient, p)
+	p.Status, _, err = prometheus.Status(req.Context(), api.kclient, p)
 	if err != nil {
 		api.logger.Log("error", err)
 	}

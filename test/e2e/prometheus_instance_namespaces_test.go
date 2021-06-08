@@ -25,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func testPrometheusInstanceNamespaces_AllNs(t *testing.T) {
+func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 
@@ -58,7 +58,7 @@ func testPrometheusInstanceNamespaces_AllNs(t *testing.T) {
 	}
 }
 
-func testPrometheusInstanceNamespaces_DenyList(t *testing.T) {
+func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 
@@ -182,7 +182,7 @@ func testPrometheusInstanceNamespaces_DenyList(t *testing.T) {
 	}
 }
 
-func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
+func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 
@@ -295,6 +295,21 @@ func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
 		if err := framework.WaitForActiveTargets(instanceNs, "prometheus-instance", 1); err != nil {
 			t.Fatal(err)
 		}
+
+		// FIXME(simonpasquier): the unprivileged namespace lister/watcher
+		// isn't notified of updates properly so the code below fails.
+		// Uncomment the test once the lister/watcher is fixed.
+		//
+		// Remove the selecting label on the "allowed" namespace and check that
+		// the target is removed.
+		// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
+		//if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, allowedNs, "monitored"); err != nil {
+		//	t.Fatal(err)
+		//}
+
+		//if err := framework.WaitForActiveTargets(instanceNs, "prometheus-instance", 0); err != nil {
+		//	t.Fatal(err)
+		//}
 	}
 
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
@@ -306,6 +321,9 @@ func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
 
 	// assert that no prometheus target points to the "instance" namespace
 	targets, err := framework.GetActiveTargets(instanceNs, "prometheus-instance")
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, target := range targets {
 		for k, v := range target.Labels {
 			if k == "namespace" && v == instanceNs {
@@ -315,11 +333,11 @@ func testPrometheusInstanceNamespaces_AllowList(t *testing.T) {
 	}
 }
 
-// testPrometheusInstanceNamespaces_NamespaceNotFound verifies that the
+// testPrometheusInstanceNamespacesNamespaceNotFound verifies that the
 // operator can reconcile Prometheus and associated resources even when
 // it's configured to watch namespaces that don't exist.
 // See https://github.com/prometheus-operator/prometheus-operator/issues/3347
-func testPrometheusInstanceNamespaces_NamespaceNotFound(t *testing.T) {
+func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 

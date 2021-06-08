@@ -4,12 +4,10 @@
 |-----------------------|-----------------------------|--------------------------|---------------------------------------------------|-------------------|
 | Frederic Branczyk     | fbranczyk@gmail.com         | `@brancz`                | [@brancz](https://github.com/brancz)              | Polar Signals     |
 | Lili Cosic            | cosiclili@gmail.com         | `@lili`                  | [@lilic](https://github.com/lilic)                | Red Hat           |
-| Matthias Loibl        | mail@matthiasloibl.com      | `@metalmatze`            | [@metalmatze](https://github.com/metalmatze)      | Red Hat           |
+| Matthias Loibl        | mail@matthiasloibl.com      | `@metalmatze`            | [@metalmatze](https://github.com/metalmatze)      | Polar Signals     |
 | Paweł Krupa           | paulfantom@gmail.com        | `@paulfantom`            | [@paulfantom](https://github.com/paulfantom)      | Red Hat           |
-| Paul Gier             | pgier@redhat.com            | ``                       | [@pgier](https://github.com/pgier)                | Red Hat           |
 | Sergiusz Urbaniak     | sergiusz.urbaniak@gmail.com | `@sur`                   | [@s-urbaniak](https://github.com/s-urbaniak)      | Red Hat           |
 | Simon Pasquier        | pasquier.simon@gmail.com    | `@SimonPasquier`         | [@simonpasquier](https://github.com/simonpasquier)| Red Hat           |
-| Lucas Servén Marín    | lserven@gmail.com           | `@squat`                 | [@squat](https://github.com/squat)                | Red Hat           |
 | Vasily Sliouniaev     |                             | `@vas`                   | [@vsliouniaev](https://github.com/vsliouniaev)    |                   |
 
 Please reach any of the maintainer on slack (#prometheus-operator on https://slack.k8s.io/) or email if you want to help.

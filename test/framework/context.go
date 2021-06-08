@@ -25,10 +25,10 @@ import (
 
 type TestCtx struct {
 	ID         string
-	cleanUpFns []finalizerFn
+	cleanUpFns []FinalizerFn
 }
 
-type finalizerFn func() error
+type FinalizerFn func() error
 
 func (f *Framework) NewTestCtx(t *testing.T) TestCtx {
 	// TestCtx is used among others for namespace names where '/' is forbidden
@@ -68,6 +68,6 @@ func (ctx *TestCtx) Cleanup(t *testing.T) {
 	}
 }
 
-func (ctx *TestCtx) AddFinalizerFn(fn finalizerFn) {
+func (ctx *TestCtx) AddFinalizerFn(fn FinalizerFn) {
 	ctx.cleanUpFns = append(ctx.cleanUpFns, fn)
 }

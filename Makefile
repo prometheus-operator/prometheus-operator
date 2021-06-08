@@ -151,6 +151,12 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image
 	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(REPO_PROMETHEUS_CONFIG_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
+.PHONY: update-go-deps
+update-go-deps:
+	for m in $$(go list -mod=readonly -m -f '{{ if and (not .Indirect) (not .Main)}}{{.Path}}{{end}}' all); do \
+		go get $$m; \
+	done
+	@echo "Don't forget to run 'make tidy'"
 
 ##############
 # Generating #
