@@ -183,6 +183,39 @@ templates: []
 `,
 		},
 		{
+			name:    "skeleton base, CR with noInheritNamespace=true",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+						Strategy:  &monitoringv1alpha1.Strategy{NoInheritNamespace: true},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace-myamc-test
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace-myamc-test
+templates: []
+`,
+		},
+		{
 			name:    "skeleton base, CR with inhibition rules only",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{

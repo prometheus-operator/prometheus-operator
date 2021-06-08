@@ -103,7 +103,16 @@ func (cg *configGenerator) generateConfig(
 			continue
 		}
 
-		subRoutes = append(subRoutes, convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey, true))
+		amConfigSpec := amConfigs[amConfigIdentifier].Spec
+		strategy := amConfigSpec.Strategy
+		// Default to noInheritNS=true for the first route, unless explicitly set by strategy.NoInheritNamespace
+		inheritNS := true
+		if strategy != nil {
+			inheritNS = !strategy.NoInheritNamespace
+		}
+
+		// Enforce "continue" to be true for the top-level route.
+		subRoutes = append(subRoutes, convertRoute(amConfigSpec.Route, crKey, true, inheritNS))
 
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
 			receivers, err := cg.convertReceiver(ctx, &receiver, crKey)
@@ -123,13 +132,7 @@ func (cg *configGenerator) generateConfig(
 	return yaml.Marshal(baseConfig)
 }
 
-func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
-	// Enforce "continue" to be true for the top-level route.
-	cont := in.Continue
-	if firstLevelRoute {
-		cont = true
-	}
-
+func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, routeContinue bool, inheritNS bool) *route {
 	match := map[string]string{}
 	matchRE := map[string]string{}
 
@@ -140,7 +143,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 			match[matcher.Name] = matcher.Value
 		}
 	}
-	if firstLevelRoute {
+	if inheritNS {
 		match["namespace"] = crKey.Namespace
 		delete(matchRE, "namespace")
 	}
@@ -165,7 +168,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 			panic(err)
 		}
 		for i := range children {
-			routes[i] = convertRoute(&children[i], crKey, false)
+			routes[i] = convertRoute(&children[i], crKey, children[i].Continue, false)
 		}
 	}
 
@@ -177,7 +180,7 @@ func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firs
 		GroupWait:      in.GroupWait,
 		GroupInterval:  in.GroupInterval,
 		RepeatInterval: in.RepeatInterval,
-		Continue:       cont,
+		Continue:       routeContinue,
 		Match:          match,
 		MatchRE:        matchRE,
 		Routes:         routes,

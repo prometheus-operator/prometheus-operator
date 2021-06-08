@@ -144,6 +144,65 @@ templates:
 - '*.tmpl'
 ```
 
+## Omit namespace match
+
+By default, the parent route entry will inherit the `AlertmanagerConfig` resource namespace, for example:
+
+```yaml
+spec:
+  route:
+    receiver: 'team-foo'
+    matchers:
+      - name: team
+        value: foo
+      - name: severity
+        value: critical
+```
+
+produces:
+
+```yaml
+  routes:
+  - receiver: mynamespace-myamc-team-foo
+    match:
+      namespace: mynamespace
+      team: foo
+      severity: critical
+    continue: true
+  [...]
+```
+
+For cases where you e.g. have your `AlertmanagerConfig` resources in a
+single namespace (e.g. "monitoring"), while using them to route _cluster-wide_
+alerts (e.g. many cross-namespace same-team deployments),
+above behavior can be overridden by adding below `strategy.noInheritNamespace`
+field to the main `AlertmanagerConfig`
+
+```yaml
+spec:
+  strategy:
+    noInheritNamespace: true
+  route:
+    receiver: 'team-foo'
+    matchers:
+      - name: team
+        value: foo
+      - name: severity
+        value: critical
+```
+
+which will then omit the inherited `namespace` matcher, to produce the exact same match as specified:
+
+```yaml
+  routes:
+  - receiver: mynamespace-myamc-team-foo
+    match:
+      team: foo
+      severity: critical
+    continue: true
+  [...]
+```
+
 ## Expose Alertmanager
 
 Once the operator merges the optional manually specified Secret with any selected `AlertmanagerConfig` resources, a new configuration Secret is created with the name `alertmanager-<Alertmanager name>-generated`, and is mounted into Alertmanager Pods created through the Alertmanager object.
