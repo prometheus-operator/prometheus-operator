@@ -198,6 +198,12 @@ templates: []
 					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 						Route: &monitoringv1alpha1.Route{
 							Receiver: "test",
+							Matchers: []monitoringv1alpha1.Matcher{
+								{
+									Name:  "team",
+									Value: "foo",
+								},
+							},
 						},
 						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
 						Strategy:  &monitoringv1alpha1.Strategy{NoInheritNamespace: true},
@@ -208,6 +214,8 @@ templates: []
   receiver: "null"
   routes:
   - receiver: mynamespace-myamc-test
+    match:
+      team: foo
     continue: true
 receivers:
 - name: "null"
