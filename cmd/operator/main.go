@@ -366,7 +366,7 @@ func Main() int {
 		return 1
 	}
 
-	var tlsConfig *tls.Config = nil
+	var tlsConfig *tls.Config
 	if serverTLS {
 		if rawTLSCipherSuites != "" {
 			cfg.ServerTLSConfig.CipherSuites = strings.Split(rawTLSCipherSuites, ",")
