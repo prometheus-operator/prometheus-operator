@@ -65,7 +65,8 @@ type AlertmanagerConfigList struct {
 
 // AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
 // By definition, the Alertmanager configuration only applies to alerts for which
-// the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
+// the `namespace` label is equal to the namespace of the AlertmanagerConfig resource,
+// this behavior can be optionally disabled via the `strategy` map
 type AlertmanagerConfigSpec struct {
 	// The Alertmanager route definition for alerts matching the resource’s
 	// namespace. If present, it will be added to the generated Alertmanager
@@ -79,6 +80,18 @@ type AlertmanagerConfigSpec struct {
 	// the resource’s namespace.
 	// +optional
 	InhibitRules []InhibitRule `json:"inhibitRules,omitempty"`
+
+	// Allow default Strategy to be overridden
+	// +optional
+	Strategy *Strategy `json:"strategy"`
+}
+
+// Strategy allows overriding default logic for generated alertmanager configs
+type Strategy struct {
+	// Setting noInheritNamespace to true will skip creating a `namespace` match entry
+	// the first (parent) route
+	// +optional
+	NoInheritNamespace bool `json:"noInheritNamespace,omitempty"`
 }
 
 // Route defines a node in the routing tree.
