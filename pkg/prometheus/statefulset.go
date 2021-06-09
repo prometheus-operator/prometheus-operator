@@ -16,10 +16,11 @@ package prometheus
 
 import (
 	"fmt"
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	"net/url"
 	"path"
 	"strings"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -793,14 +794,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			Name:      "config-out",
 			MountPath: confOutDir,
 		},
-	}
-
-	if version.GTE(semver.MustParse("2.24.0")) {
-		configReloaderVolumeMounts = append(configReloaderVolumeMounts, v1.VolumeMount{
-			Name:      "web-config",
-			MountPath: webConfigDir,
-		})
-		configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", webConfigDir))
 	}
 
 	if len(ruleConfigMapNames) != 0 {
