@@ -1369,10 +1369,7 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 		return err
 	}
 
-	if err = store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
-		return err
-	}
-	return nil
+	return store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig)
 }
 
 func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {

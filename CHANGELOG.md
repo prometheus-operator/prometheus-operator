@@ -1,3 +1,22 @@
+## 0.48.1 / 2021-06-01
+
+* [BUGFIX] Added an `app` label on Prometheus pods. #4055
+
+## 0.48.0 / 2021-05-19
+
+Deprecation notice:  
+app labels will be removed in v0.50.
+
+* [CHANGE] Replace app label names with app.kubernetes.io/name. #3939
+* [CHANGE] Drop ksonnet as a dependency in jsonnetfile.json. #4002
+* [ENHANCEMENT] Add default container annotation to Alertmanager pod. #3978
+* [ENHANCEMENT] Add default container annotation to Thanos ruler pod. #3981
+* [ENHANCEMENT] Optimize asset secret update logic. #3986
+* [ENHANCEMENT] jsonnet: set default container in prometheus-operator pod. #3979
+* [BUGFIX] Watch configmaps from the Prometheus allowed namespaces only. #3992
+* [BUGFIX] Reconcile resources on namespace updates when using privileged lister/watcher. #3879
+* [BUGFIX] Don't generate broken Alertmanager configuration when `http_config` is defined in the global parameters. #4041
+
 ## 0.47.1 / 2021-04-30
 
 * [BUGFIX] Avoid reconciliations for Alertmanager statefulset on resource version changes. #3948

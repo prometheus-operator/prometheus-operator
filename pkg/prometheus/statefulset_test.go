@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"reflect"
 	"strconv"
 	"strings"
@@ -70,6 +71,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	expectedPodLabels := map[string]string{
 		"prometheus":                   "",
+		"app":                          "prometheus",
 		"app.kubernetes.io/name":       "prometheus",
 		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
 		"app.kubernetes.io/managed-by": "prometheus-operator",
@@ -253,6 +255,12 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									SubPath:   "",
 								},
 								{
+									Name:      "web-config",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/web_config/web-config.yaml",
+									SubPath:   "web-config.yaml",
+								},
+								{
 									Name:      "secret-test-secret1",
 									ReadOnly:  true,
 									MountPath: "/etc/prometheus/secrets/test-secret1",
@@ -291,6 +299,14 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									LocalObjectReference: v1.LocalObjectReference{
 										Name: "rules-configmap-one",
 									},
+								},
+							},
+						},
+						{
+							Name: "web-config",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: "prometheus-volume-init-test-web-config",
 								},
 							},
 						},
@@ -336,7 +352,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		fmt.Println(pretty.Compare(expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts))
 		t.Fatal("expected volume mounts to match")
 	}
-
 }
 
 func TestAdditionalConfigMap(t *testing.T) {
@@ -412,6 +427,49 @@ func TestListenLocal(t *testing.T) {
 
 	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 0 {
 		t.Fatal("Prometheus container should have 0 ports defined")
+	}
+}
+
+func TestListenTLS(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Web: &monitoringv1.WebSpec{
+				TLSConfig: &monitoringv1.WebTLSConfig{
+					KeySecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "some-secret",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "some-configmap",
+							},
+						},
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		Handler: v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path:   "/-/ready",
+				Port:   intstr.FromString("web"),
+				Scheme: "HTTPS",
+			},
+		},
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 120,
+	}
+	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
+		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
 	}
 }
 
@@ -1672,7 +1730,7 @@ func TestEnableFeaturesWithMultipleFeature(t *testing.T) {
 }
 
 func TestWebPageTitle(t *testing.T) {
-	var pageTitle string = "my-page-title"
+	pageTitle := "my-page-title"
 	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Web: &monitoringv1.WebSpec{
