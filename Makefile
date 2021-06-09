@@ -240,7 +240,7 @@ shellcheck: $(SHELLCHECK_BINARY)
 
 .PHONY: check-metrics
 check-metrics: $(PROMLINTER_BINARY)
-	$(PROMLINTER_BINARY) .
+	$(PROMLINTER_BINARY) lint .
 
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY)
