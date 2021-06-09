@@ -18,10 +18,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	certutil "k8s.io/client-go/util/cert"
 	"log"
+	"net/http"
 	"net/url"
 	"reflect"
 	"sort"
@@ -3648,6 +3651,90 @@ func testPromSecurePodMonitor(t *testing.T) {
 				t.Fatal(err)
 			}
 		})
+	}
+}
+
+func testPromWebTLS(t *testing.T) {
+	t.Parallel()
+
+	ctx := framework.NewTestCtx(t)
+	defer ctx.Cleanup(t)
+	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+
+	host := fmt.Sprintf("%s.%s.svc", "basic-prometheus", ns)
+	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	kubeClient := framework.KubeClient
+	if err := testFramework.CreateSecretWithCert(kubeClient, certBytes, keyBytes, ns, "web-tls"); err != nil {
+		t.Fatal(err)
+	}
+
+	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
+	prom.Spec.Web = &monitoringv1.WebSpec{
+		TLSConfig: &monitoringv1.WebTLSConfig{
+			KeySecret: v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: "web-tls",
+				},
+				Key: "tls.key",
+			},
+			Cert: monitoringv1.SecretOrConfigMap{
+				Secret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "web-tls",
+					},
+					Key: "tls.crt",
+				},
+			},
+		},
+	}
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(ns, prom); err != nil {
+		t.Fatal("Creating prometheus failed: ", err)
+	}
+
+	promPods, err := kubeClient.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(promPods.Items) == 0 {
+		t.Fatalf("No prometheus pods found in namespace %s", ns)
+	}
+
+	cfg := framework.RestConfig
+	podName := promPods.Items[0].Name
+	if err := testFramework.StartPortForward(cfg, "https", podName, ns, "9090"); err != nil {
+		return
+	}
+
+	// The prometheus certificate is issued to <pod>.<namespace>.svc,
+	// but port-forwarding is done through localhost.
+	// This is why we use an http client which skips the TLS verification.
+	// In the test we will verify the TLS certificate manually to make sure
+	// the prometheus instance is configured properly.
+	httpClient := http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+	resp, err := httpClient.Get("https://localhost:9090")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	receivedCertBytes, err := certutil.EncodeCertificates(resp.TLS.PeerCertificates...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(receivedCertBytes, certBytes) {
+		t.Fatal("Certificate received from prometheus instance does not match the one which is configured")
 	}
 }
 
