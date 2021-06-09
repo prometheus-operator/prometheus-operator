@@ -154,7 +154,7 @@ type weChatConfig struct {
 type slackConfig struct {
 	VSendResolved *bool             `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
-	APIURL        string            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	APIURL        *config.URL            `yaml:"api_url,omitempty" json:"api_url,omitempty"`
 	APIURLFile    string            `yaml:"api_url_file,omitempty" json:"api_url_file,omitempty"`
 	Channel       string            `yaml:"channel,omitempty" json:"channel,omitempty"`
 	Username      string            `yaml:"username,omitempty" json:"username,omitempty"`
