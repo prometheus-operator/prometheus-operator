@@ -269,9 +269,12 @@ type PrometheusSpec struct {
 	// InitContainers allows adding initContainers to the pod definition. Those can be used to e.g.
 	// fetch secrets for injection into the Prometheus configuration from external sources. Any errors
 	// during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-	// Using initContainers for any use case other then secret fetching is entirely outside the scope
-	// of what the maintainers will support and by doing so, you accept that this behaviour may break
-	// at any time without notice.
+	// InitContainers described here modify an operator
+	// generated init containers if they share the same name and modifications are
+	// done via a strategic merge patch. The current init container name is:
+	// `init-config-reloader`. Overriding init containers is entirely outside the
+	// scope of what the maintainers will support and by doing so, you accept that
+	// this behaviour may break at any time without notice.
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 	// AdditionalScrapeConfigs allows specifying a key of a Secret containing
 	// additional Prometheus scrape configurations. Scrape configurations
