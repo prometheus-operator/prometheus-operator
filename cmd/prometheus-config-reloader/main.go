@@ -75,7 +75,7 @@ func main() {
 	cfgSubstFile := app.Flag("config-envsubst-file", "output file for environment variable substituted config file").
 		String()
 
-	watchInterval := app.Flag("watch-interval", "how often the reloader re-reads the configuration file and directories").Default(defaultWatchInterval.String()).Duration()
+	watchInterval := app.Flag("watch-interval", "how often the reloader re-reads the configuration file and directories; when set to 0, the program runs only once and exits").Default(defaultWatchInterval.String()).Duration()
 	delayInterval := app.Flag("delay-interval", "how long the reloader waits before reloading after it has detected a change").Default(defaultDelayInterval.String()).Duration()
 	retryInterval := app.Flag("retry-interval", "how long the reloader waits before retrying in case the endpoint returned an error").Default(defaultRetryInterval.String()).Duration()
 
@@ -177,7 +177,7 @@ func main() {
 		})
 	}
 
-	if *listenAddress != "" {
+	if *listenAddress != "" && *watchInterval != 0 {
 		g.Add(func() error {
 			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
 			http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))

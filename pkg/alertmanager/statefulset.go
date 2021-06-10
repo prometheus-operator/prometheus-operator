@@ -515,10 +515,8 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
 	finalLabels := config.Labels.Merge(podLabels)
 
-	var configReloaderArgs []string
-	for _, reloadWatchDir := range reloadWatchDirs {
-		configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", reloadWatchDir))
-	}
+	var watchedDirectories []string
+	watchedDirectories = append(watchedDirectories, reloadWatchDirs...)
 
 	defaultContainers := []v1.Container{
 		{
@@ -544,19 +542,20 @@ func makeStatefulSetSpec(a *monitoringv1.Alertmanager, config Config) (*appsv1.S
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
 		operator.CreateConfigReloader(
-			config.ReloaderConfig,
-			url.URL{
+			"config-reloader",
+			operator.ReloaderResources(config.ReloaderConfig),
+			operator.ReloaderURL(url.URL{
 				Scheme: "http",
 				Host:   config.LocalHost + ":9093",
 				Path:   path.Clean(webRoutePrefix + "/-/reload"),
-			},
-			a.Spec.ListenLocal,
-			config.LocalHost,
-			a.Spec.LogFormat,
-			a.Spec.LogLevel,
-			configReloaderArgs,
-			configReloaderVolumeMounts,
-			-1,
+			}),
+			operator.ListenLocal(a.Spec.ListenLocal),
+			operator.LocalHost(config.LocalHost),
+			operator.LogFormat(a.Spec.LogFormat),
+			operator.LogLevel(a.Spec.LogLevel),
+			operator.WatchedDirectories(watchedDirectories),
+			operator.VolumeMounts(configReloaderVolumeMounts),
+			operator.Shard(-1),
 		),
 	}
 

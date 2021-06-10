@@ -16,10 +16,11 @@ package prometheus
 
 import (
 	"fmt"
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	"net/url"
 	"path"
 	"strings"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -655,7 +656,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
 
-	var additionalContainers []v1.Container
+	var additionalContainers, operatorInitContainers []v1.Container
 
 	disableCompaction := p.Spec.DisableCompaction
 	if p.Spec.Thanos != nil {
@@ -784,10 +785,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h")
 	}
 
-	configReloaderArgs := []string{
-		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
-		fmt.Sprintf("--config-envsubst-file=%s", path.Join(confOutDir, configEnvsubstFilename)),
-	}
+	var watchedDirectories []string
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config",
@@ -799,14 +797,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		},
 	}
 
-	if version.GTE(semver.MustParse("2.24.0")) {
-		configReloaderVolumeMounts = append(configReloaderVolumeMounts, v1.VolumeMount{
-			Name:      "web-config",
-			MountPath: webConfigDir,
-		})
-		configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", webConfigDir))
-	}
-
 	if len(ruleConfigMapNames) != 0 {
 		for _, name := range ruleConfigMapNames {
 			mountPath := rulesDir + "/" + name
@@ -814,8 +804,28 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				Name:      name,
 				MountPath: mountPath,
 			})
-			configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", mountPath))
+			watchedDirectories = append(watchedDirectories, mountPath)
 		}
+	}
+
+	operatorInitContainers = append(operatorInitContainers,
+		operator.CreateConfigReloader(
+			"init-config-reloader",
+			operator.ReloaderResources(c.ReloaderConfig),
+			operator.ReloaderRunOnce(),
+			operator.LogFormat(p.Spec.LogFormat),
+			operator.LogLevel(p.Spec.LogLevel),
+			operator.VolumeMounts(configReloaderVolumeMounts),
+			operator.ConfigFile(path.Join(confDir, configFilename)),
+			operator.ConfigEnvsubstFile(path.Join(confOutDir, configEnvsubstFilename)),
+			operator.WatchedDirectories(watchedDirectories),
+			operator.Shard(shard),
+		),
+	)
+
+	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, p.Spec.InitContainers)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to merge init containers spec")
 	}
 
 	operatorContainers := append([]v1.Container{
@@ -830,19 +840,21 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
 		operator.CreateConfigReloader(
-			c.ReloaderConfig,
-			url.URL{
+			"config-reloader",
+			operator.ReloaderResources(c.ReloaderConfig),
+			operator.ReloaderURL(url.URL{
 				Scheme: "http",
 				Host:   c.LocalHost + ":9090",
 				Path:   path.Clean(webRoutePrefix + "/-/reload"),
-			},
-			p.Spec.ListenLocal,
-			c.LocalHost,
-			p.Spec.LogFormat,
-			p.Spec.LogLevel,
-			configReloaderArgs,
-			configReloaderVolumeMounts,
-			shard,
+			}),
+			operator.ListenLocal(p.Spec.ListenLocal),
+			operator.LocalHost(c.LocalHost),
+			operator.LogFormat(p.Spec.LogFormat),
+			operator.LogLevel(p.Spec.LogLevel),
+			operator.ConfigFile(path.Join(confDir, configFilename)),
+			operator.ConfigEnvsubstFile(path.Join(confOutDir, configEnvsubstFilename)),
+			operator.WatchedDirectories(watchedDirectories), operator.VolumeMounts(configReloaderVolumeMounts),
+			operator.Shard(shard),
 		),
 	}, additionalContainers...)
 
@@ -869,7 +881,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			},
 			Spec: v1.PodSpec{
 				Containers:                    containers,
-				InitContainers:                p.Spec.InitContainers,
+				InitContainers:                initContainers,
 				SecurityContext:               p.Spec.SecurityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
