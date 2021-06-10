@@ -201,6 +201,7 @@ Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): 
 
 Details (optional):
 - About 30 HA pairs of sharded Promethei across 10 environments, wired together with Thanos
+- Operator also helps us seamlessly manage anywhere between 600-1500 short-lived prometheus instances for our "integration" kubernetes cluster.
 - ~15mn samples/s
 - ~200mn active series
 
