@@ -491,6 +491,7 @@ ProberSpec contains specification parameters for the Prober used for probing.
 | url | Mandatory URL of the prober. | string | true |
 | scheme | HTTP scheme to use for scraping. Defaults to `http`. | string | false |
 | path | Path to collect metrics from. Defaults to `/probe`. | string | false |
+| proxyUrl | Optional ProxyURL. | string | false |
 
 [Back to TOC](#table-of-contents)
 

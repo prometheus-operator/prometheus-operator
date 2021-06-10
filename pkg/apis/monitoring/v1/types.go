@@ -1035,7 +1035,7 @@ type ProberSpec struct {
 	// Path to collect metrics from.
 	// Defaults to `/probe`.
 	Path string `json:"path,omitempty"`
-	// Optional ProxyURL
+	// Optional ProxyURL.
 	ProxyURL string `json:"proxyUrl,omitempty"`
 }
 

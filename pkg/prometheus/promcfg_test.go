@@ -407,9 +407,10 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
-						URL:    "blackbox.exporter.io",
-						Path:   "/probe",
+						Scheme:   "http",
+						URL:      "blackbox.exporter.io",
+						Path:     "/probe",
+						ProxyURL: "socks://myproxy:9095",
 					},
 					Module: "http_2xx",
 					Targets: monitoringv1.ProbeTargets{
@@ -457,6 +458,7 @@ scrape_configs:
   honor_timestamps: true
   metrics_path: /probe
   scheme: http
+  proxy_url: socks://myproxy:9095
   params:
     module:
     - http_2xx
