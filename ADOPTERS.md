@@ -191,6 +191,19 @@ Details (optional):
 - A huge fleet of OpenShift and Kubernetes clusters, each using Prometheus Operator
 - All managed by [Project Syn](https://syn.tools/), leveraging Commodore Components like [component-rancher-monitoring](https://github.com/projectsyn/component-rancher-monitoring) which re-uses Prometheus Operator
 
+## Wise
+
+[wise.com](https://wise.com)
+
+Environments: Kubernetes, AWS (via some EC2)
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): No
+
+Details (optional):
+- About 30 HA pairs of sharded Promethei across 10 environments, wired together with Thanos
+- ~15mn samples/s
+- ~200mn active series
+
 ## <Insert Company/Organization Name>
 
 https://our-link.com/
