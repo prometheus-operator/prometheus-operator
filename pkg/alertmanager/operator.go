@@ -799,7 +799,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
 		c.metrics.StsDeleteCreateCounter().Inc()
-		level.Info(c.logger).Log("msg", "resolving illegal update of Alertmanager StatefulSet", "details", sErr.ErrStatus.Details)
+		level.Info(c.logger).Log("msg", "recreating AlertManager StatefulSet because the update operation wasn't possible", "reason", sErr.ErrStatus.Details.Causes[0].Message)
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
