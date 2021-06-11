@@ -1035,6 +1035,8 @@ type ProberSpec struct {
 	// Path to collect metrics from.
 	// Defaults to `/probe`.
 	Path string `json:"path,omitempty"`
+	// Optional ProxyURL.
+	ProxyURL string `json:"proxyUrl,omitempty"`
 }
 
 // BasicAuth allow an endpoint to authenticate over basic authentication

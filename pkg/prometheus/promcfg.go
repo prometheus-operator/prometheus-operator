@@ -709,6 +709,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	if m.Spec.ProberSpec.Scheme != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: m.Spec.ProberSpec.Scheme})
 	}
+	if m.Spec.ProberSpec.ProxyURL != "" {
+		cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: m.Spec.ProberSpec.ProxyURL})
+	}
 
 	if m.Spec.Module != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: yaml.MapSlice{

@@ -7916,6 +7916,9 @@ spec:
                   path:
                     description: Path to collect metrics from. Defaults to `/probe`.
                     type: string
+                  proxyUrl:
+                    description: Optional ProxyURL.
+                    type: string
                   scheme:
                     description: HTTP scheme to use for scraping. Defaults to `http`.
                     type: string
