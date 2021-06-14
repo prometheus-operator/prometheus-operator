@@ -1254,7 +1254,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	// Ensure we have a StatefulSet running Prometheus deployed and that StatefulSet names are created correctly.
 	expected := expectedStatefulSetShardNames(p)
 	for shard, ssetName := range expected {
-		level.Debug(c.logger).Log("msg", "reconciling statefulset", "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
+		logger := log.With(c.logger, "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
+		level.Debug(logger).Log("msg", "reconciling statefulset")
 
 		obj, err := c.ssetInfs.Get(prometheusKeyToStatefulSetKey(key, shard))
 		exists := !apierrors.IsNotFound(err)
@@ -1279,8 +1280,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		operator.SanitizeSTS(sset)
 
 		if !exists {
-			level.Debug(c.logger).Log("msg", "no current Prometheus statefulset found")
-			level.Debug(c.logger).Log("msg", "creating Prometheus statefulset")
+			level.Debug(logger).Log("msg", "no current statefulset found")
+			level.Debug(logger).Log("msg", "creating statefulset")
 			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 				return errors.Wrap(err, "creating statefulset failed")
 			}
@@ -1289,11 +1290,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 		oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
 		if newSSetInputHash == oldSSetInputHash {
-			level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+			level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
 
-		level.Debug(c.logger).Log("msg", "updating current Prometheus statefulset")
+		level.Debug(logger).Log("msg", "updating current statefulset")
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
 		sErr, ok := err.(*apierrors.StatusError)
@@ -1307,7 +1308,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 				failMsg[i] = cause.Message
 			}
 
-			level.Info(c.logger).Log("msg", "recreating Prometheus StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+			level.Info(logger).Log("msg", "recreating StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 			propagationPolicy := metav1.DeletePropagationForeground
 			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
