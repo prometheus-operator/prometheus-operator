@@ -19,11 +19,12 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -1299,7 +1300,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 		if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
 			c.metrics.StsDeleteCreateCounter().Inc()
-			level.Info(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet", "details", sErr.ErrStatus.Details)
+
+			// Gather only reason for failed update
+			failMsg := make([]string, len(sErr.ErrStatus.Details.Causes))
+			for i, cause := range sErr.ErrStatus.Details.Causes {
+				failMsg[i] = cause.Message
+			}
+
+			level.Info(c.logger).Log("msg", "recreating Prometheus StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 			propagationPolicy := metav1.DeletePropagationForeground
 			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")

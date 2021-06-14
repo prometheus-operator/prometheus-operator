@@ -709,7 +709,14 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
 		o.metrics.StsDeleteCreateCounter().Inc()
-		level.Info(o.logger).Log("msg", "resolving illegal update of ThanosRuler StatefulSet", "details", sErr.ErrStatus.Details)
+
+		// Gather only reason for failed update
+		failMsg := make([]string, len(sErr.ErrStatus.Details.Causes))
+		for i, cause := range sErr.ErrStatus.Details.Causes {
+			failMsg[i] = cause.Message
+		}
+
+		level.Info(o.logger).Log("msg", "recreating ThanosRuler StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
