@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-// NewKubeInformerFactories creates factories for monitoring resources
+// NewMonitoringInformerFactories creates factories for monitoring resources
 // for the given allowed, and denied namespaces these parameters being mutually exclusive.
 // monitoringClient, defaultResync, and tweakListOptions are being passed to the underlying informer factory.
 func NewMonitoringInformerFactories(

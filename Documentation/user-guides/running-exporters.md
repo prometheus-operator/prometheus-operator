@@ -21,7 +21,7 @@ The order in which the `Service` and `ServiceMonitor` is created is not importan
 
 ### kube-state-metrics Service example
 
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -47,7 +47,7 @@ This Service targets all Pods with the label `k8s-app: kube-state-metrics`.
 
 This ServiceMonitor targets **all** Services with the label `k8s-app` (`spec.selector`) any value, in the namespaces `kube-system` and `monitoring` (`spec.namespaceSelector`).
 
-```
+```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

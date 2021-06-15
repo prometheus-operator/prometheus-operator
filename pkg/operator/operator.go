@@ -325,7 +325,7 @@ func SanitizeSTS(sts *appsv1.StatefulSet) {
 	}
 }
 
-// WaitForCacheSync synchronizes the informer's cache and will log a warning
+// WaitForNamedCacheSync synchronizes the informer's cache and will log a warning
 // every minute if the operation hasn't completed yet.
 // Under normal circumstances, the cache sync should be fast. If it takes more
 // than 1 minute, it means that something is stuck and the message will

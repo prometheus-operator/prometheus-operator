@@ -58,7 +58,7 @@ If you want sidecar to be able to upload blocks to object storage you need to te
 In this mode, sidecar assumes an existing Kubernetes Secret containing the Thanos configuration.
 Inside this secret you configure how to run Thanos with your object storage.
 
-For more information and examples about the configuration itself, take a look at the Thanos documentation:  
+For more information and examples about the configuration itself, take a look at the Thanos documentation:
 https://github.com/thanos-io/thanos/blob/master/docs/storage.md
 
 Once you have written your configuration save it to a file.
@@ -75,7 +75,7 @@ config:
 
 Let's assume you saved this file to `/tmp/thanos-config.yaml`. You can use the following command to create a secret called `thanos-objstore-config` inside your cluster in the `monitoring` namespace.
 
-```
+```sh
 kubectl -n monitoring create secret generic thanos-objstore-config --from-file=thanos.yaml=/tmp/thanos-config.yaml
 ```
 

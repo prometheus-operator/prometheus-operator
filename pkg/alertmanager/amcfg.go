@@ -305,7 +305,7 @@ func (cg *configGenerator) convertWebhookConfig(ctx context.Context, in monitori
 		if err != nil {
 			return nil, errors.Errorf("failed to get key %q from secret %q", in.URLSecret.Key, in.URLSecret.Name)
 		}
-		out.URL = url
+		out.URL = strings.TrimSpace(url)
 	} else if in.URL != nil {
 		out.URL = *in.URL
 	}
@@ -352,7 +352,7 @@ func (cg *configGenerator) convertSlackConfig(ctx context.Context, in monitoring
 		if err != nil {
 			return nil, errors.Errorf("failed to get key %q from secret %q", in.APIURL.Key, in.APIURL.Name)
 		}
-		out.APIURL = url
+		out.APIURL = strings.TrimSpace(url)
 	}
 
 	var actions []slackAction

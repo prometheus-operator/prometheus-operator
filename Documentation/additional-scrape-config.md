@@ -20,7 +20,7 @@ First, you will need to create the additional configuration.
 Below we are making a simple "prometheus" config.  Name this
 `prometheus-additional.yaml` or something similar.
 
-```
+```yaml
 - job_name: "prometheus"
   static_configs:
   - targets: ["localhost:9090"]
@@ -28,13 +28,13 @@ Below we are making a simple "prometheus" config.  Name this
 
 Then you will need to make a secret out of this configuration.
 
-```
+```sh
 kubectl create secret generic additional-scrape-configs --from-file=prometheus-additional.yaml --dry-run -oyaml > additional-scrape-configs.yaml
 ```
 
 Finally, reference this additional configuration in your `prometheus.yaml` CRD.
 
-```
+```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
@@ -50,7 +50,6 @@ spec:
   additionalScrapeConfigs:
     name: additional-scrape-configs
     key: prometheus-additional.yaml
-...
 ```
 
 NOTE: Use only one secret for ALL additional scrape configurations.

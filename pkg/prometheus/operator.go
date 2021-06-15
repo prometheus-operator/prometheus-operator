@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
@@ -1237,6 +1239,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return errors.Wrap(err, "creating tls asset secret failed")
 	}
 
+	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+		return errors.Wrap(err, "synchronizing web config secret failed")
+	}
+
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
@@ -1294,7 +1300,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 		if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
 			c.metrics.StsDeleteCreateCounter().Inc()
-			level.Info(c.logger).Log("msg", "resolving illegal update of Prometheus StatefulSet", "details", sErr.ErrStatus.Details)
+
+			// Gather only reason for failed update
+			failMsg := make([]string, len(sErr.ErrStatus.Details.Causes))
+			for i, cause := range sErr.ErrStatus.Details.Causes {
+				failMsg[i] = cause.Message
+			}
+
+			level.Info(c.logger).Log("msg", "recreating Prometheus StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 			propagationPolicy := metav1.DeletePropagationForeground
 			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 				return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
@@ -1626,6 +1639,47 @@ func (c *Operator) createOrUpdateTLSAssetSecret(ctx context.Context, p *monitori
 	}
 
 	return nil
+}
+
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
+	boolTrue := true
+	client := c.kclient.CoreV1().Secrets(p.Namespace)
+
+	var tlsConfig *monitoringv1.WebTLSConfig
+	if p.Spec.Web != nil {
+		tlsConfig = p.Spec.Web.TLSConfig
+	}
+
+	webConfig, err := webconfig.New(
+		webConfigDir,
+		WebConfigSecretName(p.Name),
+		tlsConfig,
+	)
+	if err != nil {
+		return err
+	}
+
+	ownerReference := metav1.OwnerReference{
+		APIVersion:         p.APIVersion,
+		BlockOwnerDeletion: &boolTrue,
+		Controller:         &boolTrue,
+		Kind:               p.Kind,
+		Name:               p.Name,
+		UID:                p.UID,
+	}
+
+	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
+	secret, err := webConfig.MakeConfigFileSecret(secretLabels, ownerReference)
+	if err != nil {
+		return err
+	}
+
+	err = k8sutil.CreateOrUpdateSecret(ctx, client, secret)
+	if err != nil {
+		return errors.Wrap(err, "failed to create web config for Prometheus")
+	}
+
+	return err
 }
 
 func (c *Operator) selectServiceMonitors(ctx context.Context, p *monitoringv1.Prometheus, store *assets.Store) (map[string]*monitoringv1.ServiceMonitor, error) {
