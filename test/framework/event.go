@@ -15,7 +15,6 @@
 package framework
 
 import (
-	"context"
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +22,7 @@ import (
 
 // PrintEvents prints the Kubernetes events to standard out.
 func (f *Framework) PrintEvents() error {
-	events, err := f.KubeClient.CoreV1().Events("").List(context.TODO(), metav1.ListOptions{})
+	events, err := f.KubeClient.CoreV1().Events("").List(f.Ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
