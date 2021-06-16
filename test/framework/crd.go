@@ -15,7 +15,6 @@
 package framework
 
 import (
-	"context"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -33,7 +32,7 @@ import (
 
 // GetCRD gets a custom resource definition from the apiserver.
 func (f *Framework) GetCRD(name string) (*v1.CustomResourceDefinition, error) {
-	crd, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(context.TODO(), name, metav1.GetOptions{})
+	crd, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(f.Ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to get CRD with name %v", name)
 	}
@@ -42,7 +41,7 @@ func (f *Framework) GetCRD(name string) (*v1.CustomResourceDefinition, error) {
 
 // ListCRDs gets a list of custom resource definitions from the apiserver.
 func (f *Framework) ListCRDs() (*v1.CustomResourceDefinitionList, error) {
-	crds, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().List(context.TODO(), metav1.ListOptions{})
+	crds, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().List(f.Ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list CRDs")
 	}
@@ -51,13 +50,13 @@ func (f *Framework) ListCRDs() (*v1.CustomResourceDefinitionList, error) {
 
 // CreateCRD creates a custom resource definition on the apiserver.
 func (f *Framework) CreateCRD(crd *v1.CustomResourceDefinition) error {
-	_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(context.TODO(), crd.Name, metav1.GetOptions{})
+	_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Get(f.Ctx, crd.Name, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return errors.Wrapf(err, "getting CRD: %s", crd.Spec.Names.Kind)
 	}
 
 	if apierrors.IsNotFound(err) {
-		_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Create(context.TODO(), crd, metav1.CreateOptions{})
+		_, err := f.APIServerClient.ApiextensionsV1().CustomResourceDefinitions().Create(f.Ctx, crd, metav1.CreateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "create CRD: %s", crd.Spec.Names.Kind)
 		}

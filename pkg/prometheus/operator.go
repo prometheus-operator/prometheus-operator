@@ -1335,7 +1335,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 
 		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(context.TODO(), s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 		}
 	})
@@ -1418,7 +1418,7 @@ func Status(ctx context.Context, kclient kubernetes.Interface, p *monitoringv1.P
 	var oldPods []v1.Pod
 	expected := expectedStatefulSetShardNames(p)
 	for _, ssetName := range expected {
-		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(context.TODO(), ssetName, metav1.GetOptions{})
+		sset, err := kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, ssetName, metav1.GetOptions{})
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "retrieving stateful set failed")
 		}

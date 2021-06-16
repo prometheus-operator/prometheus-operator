@@ -15,7 +15,6 @@
 package e2e
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -155,19 +154,19 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 		{
 			name: "thanos-ruler-operated service",
 			get: func() (metav1.Object, error) {
-				return svcClient.Get(context.TODO(), "thanos-ruler-operated", metav1.GetOptions{})
+				return svcClient.Get(framework.Ctx, "thanos-ruler-operated", metav1.GetOptions{})
 			},
 			update: func(object metav1.Object) (metav1.Object, error) {
-				return svcClient.Update(context.TODO(), asService(t, object), metav1.UpdateOptions{})
+				return svcClient.Update(framework.Ctx, asService(t, object), metav1.UpdateOptions{})
 			},
 		},
 		{
 			name: "thanos-ruler stateful set",
 			get: func() (metav1.Object, error) {
-				return ssetClient.Get(context.TODO(), "thanos-ruler-test", metav1.GetOptions{})
+				return ssetClient.Get(framework.Ctx, "thanos-ruler-test", metav1.GetOptions{})
 			},
 			update: func(object metav1.Object) (metav1.Object, error) {
-				return ssetClient.Update(context.TODO(), asStatefulSet(t, object), metav1.UpdateOptions{})
+				return ssetClient.Update(framework.Ctx, asStatefulSet(t, object), metav1.UpdateOptions{})
 			},
 		},
 	}
