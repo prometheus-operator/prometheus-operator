@@ -744,7 +744,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	level.Info(c.logger).Log("msg", "sync alertmanager", "key", key)
+	level.Debug(c.logger).Log("msg", "sync alertmanager", "key", key)
 
 	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
 
