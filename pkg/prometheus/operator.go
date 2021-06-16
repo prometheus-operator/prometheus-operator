@@ -1223,7 +1223,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	level.Info(c.logger).Log("msg", "sync prometheus", "key", key)
+	logger := log.With(c.logger, "key", key)
+	level.Info(logger).Log("msg", "sync prometheus")
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p)
 	if err != nil {
 		return err
@@ -1254,7 +1255,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	// Ensure we have a StatefulSet running Prometheus deployed and that StatefulSet names are created correctly.
 	expected := expectedStatefulSetShardNames(p)
 	for shard, ssetName := range expected {
-		logger := log.With(c.logger, "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
+		logger := log.With(logger, "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 		level.Debug(logger).Log("msg", "reconciling statefulset")
 
 		obj, err := c.ssetInfs.Get(prometheusKeyToStatefulSetKey(key, shard))
