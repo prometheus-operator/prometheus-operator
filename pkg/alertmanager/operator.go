@@ -744,7 +744,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	level.Info(c.logger).Log("msg", "sync alertmanager", "key", key)
+	logger := log.With(c.logger, "key", key)
+	level.Info(logger).Log("msg", "sync alertmanager")
 
 	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
 
@@ -790,7 +791,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	oldSSetInputHash := obj.(*appsv1.StatefulSet).ObjectMeta.Annotations[sSetInputHashName]
 	if newSSetInputHash == oldSSetInputHash {
-		level.Debug(c.logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
 
@@ -806,7 +807,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			failMsg[i] = cause.Message
 		}
 
-		level.Info(c.logger).Log("msg", "recreating AlertManager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+		level.Info(logger).Log("msg", "recreating AlertManager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return errors.Wrap(err, "failed to delete StatefulSet to avoid forbidden action")
