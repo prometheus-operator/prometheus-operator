@@ -28,11 +28,12 @@ import (
 // marshalling. See the following issue for details:
 // https://github.com/prometheus/alertmanager/issues/1985
 type alertmanagerConfig struct {
-	Global       *globalConfig  `yaml:"global,omitempty" json:"global,omitempty"`
-	Route        *route         `yaml:"route,omitempty" json:"route,omitempty"`
-	InhibitRules []*inhibitRule `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
-	Receivers    []*receiver    `yaml:"receivers,omitempty" json:"receivers,omitempty"`
-	Templates    []string       `yaml:"templates" json:"templates"`
+	Global            *globalConfig       `yaml:"global,omitempty" json:"global,omitempty"`
+	Route             *route              `yaml:"route,omitempty" json:"route,omitempty"`
+	InhibitRules      []*inhibitRule      `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
+	Receivers         []*receiver         `yaml:"receivers,omitempty" json:"receivers,omitempty"`
+	Templates         []string            `yaml:"templates" json:"templates"`
+	MuteTimeIntervals []*MuteTimeInterval `yaml:"mute_time_intervals,omitempty" json:"mute_time_intervals,omitempty"`
 }
 
 type globalConfig struct {
@@ -76,11 +77,17 @@ type route struct {
 }
 
 type inhibitRule struct {
-	TargetMatch   map[string]string `yaml:"target_match,omitempty" json:"target_match,omitempty"`
-	TargetMatchRE map[string]string `yaml:"target_match_re,omitempty" json:"target_match_re,omitempty"`
-	SourceMatch   map[string]string `yaml:"source_match,omitempty" json:"source_match,omitempty"`
-	SourceMatchRE map[string]string `yaml:"source_match_re,omitempty" json:"source_match_re,omitempty"`
-	Equal         []string          `yaml:"equal,omitempty" json:"equal,omitempty"`
+	// Deprecated
+	TargetMatch map[string]string `yaml:"target_match,omitempty" json:"target_match,omitempty"`
+	// Deprecated
+	TargetMatchRE  map[string]string `yaml:"target_match_re,omitempty" json:"target_match_re,omitempty"`
+	TargetMatchers []string          `yaml:"target_matchers,omitempty" json:"target_matchers,omitempty"`
+	// Deprecated
+	SourceMatch map[string]string `yaml:"source_match,omitempty" json:"source_match,omitempty"`
+	// Deprecated
+	SourceMatchRE  map[string]string `yaml:"source_match_re,omitempty" json:"source_match_re,omitempty"`
+	SourceMatchers []string          `yaml:"source_matchers,omitempty" json:"source_matchers,omitempty"`
+	Equal          []string          `yaml:"equal,omitempty" json:"equal,omitempty"`
 }
 
 type receiver struct {
@@ -296,4 +303,22 @@ type victorOpsConfig struct {
 	EntityDisplayName string            `yaml:"entity_display_name,omitempty" json:"entity_display_name,omitempty"`
 	MonitoringTool    string            `yaml:"monitoring_tool,omitempty" json:"monitoring_tool,omitempty"`
 	CustomFields      map[string]string `yaml:"custom_fields,omitempty" json:"custom_fields,omitempty"`
+}
+
+type MuteTimeInterval struct {
+	Name          string         `yaml:"name,omitempty" json:"name,omitempty"`
+	TimeIntervals []TimeInterval `yaml:"time_intervals,omitempty" json:"time_intervals,omitempty"`
+}
+
+type TimeInterval struct {
+	Times       []TimeRange `yaml:"times,omitempty" json:"times,omitempty"`
+	Weekdays    []string    `yaml:"weekdays,flow,omitempty" json:"weekdays,omitempty"`
+	DaysOfMonth []string    `yaml:"days_of_month,flow,omitempty" json:"days_of_month,omitempty"`
+	Months      []string    `yaml:"months,flow,omitempty" json:"months,omitempty"`
+	Years       []string    `yaml:"years,flow,omitempty" json:"years,omitempty"`
+}
+
+type TimeRange struct {
+	StartTime string `yaml:"start_time" json:"start_time"`
+	EndTime   string `yaml:"end_time" json:"end_time"`
 }

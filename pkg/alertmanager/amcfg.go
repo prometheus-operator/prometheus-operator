@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 	"path"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -112,6 +113,11 @@ func (cg *configGenerator) generateConfig(
 			}
 			baseConfig.Receivers = append(baseConfig.Receivers, receivers)
 		}
+
+		for _, item := range amConfigs[amConfigIdentifier].Spec.MuteTimeIntervals {
+			baseConfig.MuteTimeIntervals = append(baseConfig.MuteTimeIntervals, convertTimeInterval(&item))
+		}
+
 	}
 
 	// For alerts to be processed by the AlertmanagerConfig routes, they need
@@ -121,6 +127,57 @@ func (cg *configGenerator) generateConfig(
 	baseConfig.Route.Routes = append(subRoutes, baseConfig.Route.Routes...)
 
 	return yaml.Marshal(baseConfig)
+
+}
+
+func convertTimeInterval(in *monitoringv1alpha1.MuteTimeInterval) *MuteTimeInterval {
+	mti := &MuteTimeInterval{}
+
+	mti.Name = in.Name
+
+	for _, interval := range in.TimeInterval {
+		mi := make([]TimeInterval, 1)
+		times := make([]TimeRange, len(interval.Times))
+		days := make([]string, len(interval.DaysOfMonth))
+		months := make([]string, len(interval.Months))
+		week := make([]string, len(interval.Weekdays))
+		years := make([]string, len(interval.Years))
+
+		for j, y := range interval.Times {
+			times[j].StartTime = y.StartTime
+			times[j].EndTime = y.EndTime
+		}
+
+		for j, y := range interval.DaysOfMonth {
+			days[j] = y
+		}
+
+		for j, y := range interval.Months {
+			months[j] = y
+		}
+
+		for j, y := range interval.Weekdays {
+			week[j] = y
+		}
+
+		for j, y := range interval.Years {
+			years[j] = y
+		}
+
+		x := &TimeInterval{
+			Times:       times,
+			DaysOfMonth: days,
+			Months:      months,
+			Weekdays:    week,
+			Years:       years,
+		}
+
+		// TODO, fix this hack to prevent a empty object being added to the yaml
+		if !reflect.DeepEqual(x, TimeInterval{}) {
+			mti.TimeIntervals = append(mi, *x)
+		}
+	}
+	return mti
 }
 
 func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {
@@ -734,6 +791,8 @@ func (cg *configGenerator) convertPushoverConfig(ctx context.Context, in monitor
 func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.NamespacedName) *inhibitRule {
 	sourceMatch := map[string]string{}
 	sourceMatchRE := map[string]string{}
+	sourceMatchers := []string{}
+
 	for _, sm := range in.SourceMatch {
 		if sm.Regex {
 			sourceMatchRE[sm.Name] = sm.Value
@@ -742,9 +801,12 @@ func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.Namespac
 		}
 	}
 
-	sourceMatch["namespace"] = crKey.Namespace
-	delete(sourceMatchRE, "namespace")
-
+	if len(in.SourceMatchers) != 0 {
+		sourceMatchers = append(sourceMatchers, "namespace="+crKey.Namespace)
+	} else {
+		sourceMatch["namespace"] = crKey.Namespace
+		delete(sourceMatchRE, "namespace")
+	}
 	// Set to nil if empty so that it doesn't show up in resulting yaml
 	if len(sourceMatchRE) == 0 {
 		sourceMatchRE = nil
@@ -752,6 +814,8 @@ func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.Namespac
 
 	targetMatch := map[string]string{}
 	targetMatchRE := map[string]string{}
+	targetMatchers := []string{}
+
 	for _, tm := range in.TargetMatch {
 		if tm.Regex {
 			targetMatchRE[tm.Name] = tm.Value
@@ -760,8 +824,12 @@ func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.Namespac
 		}
 	}
 
-	targetMatch["namespace"] = crKey.Namespace
-	delete(targetMatchRE, "namespace")
+	if len(in.TargetMatchers) != 0 {
+		targetMatchers = append(targetMatchers, "namespace="+crKey.Namespace)
+	} else {
+		targetMatch["namespace"] = crKey.Namespace
+		delete(targetMatchRE, "namespace")
+	}
 
 	// Set to nil if empty so that it doesn't show up in resulting yaml
 	if len(targetMatchRE) == 0 {
@@ -773,12 +841,17 @@ func convertInhibitRule(in *monitoringv1alpha1.InhibitRule, crKey types.Namespac
 		equal = nil
 	}
 
+	sourceMatchers = append(sourceMatchers, in.SourceMatchers...)
+	targetMatchers = append(targetMatchers, in.TargetMatchers...)
+
 	return &inhibitRule{
-		SourceMatch:   sourceMatch,
-		SourceMatchRE: sourceMatchRE,
-		TargetMatch:   targetMatch,
-		TargetMatchRE: targetMatchRE,
-		Equal:         equal,
+		SourceMatch:    sourceMatch,
+		SourceMatchRE:  sourceMatchRE,
+		SourceMatchers: sourceMatchers,
+		TargetMatch:    targetMatch,
+		TargetMatchRE:  targetMatchRE,
+		TargetMatchers: targetMatchers,
+		Equal:          equal,
 	}
 }
 

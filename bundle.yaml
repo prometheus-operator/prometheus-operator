@@ -63,6 +63,11 @@ spec:
                         - name
                         type: object
                       type: array
+                    sourceMatchers:
+                      description: A list of matchers for which one or more alerts have to exist for the inhibition to take effect.
+                      items:
+                        type: string
+                      type: array
                     targetMatch:
                       description: Matchers that have to be fulfilled in the alerts to be muted. The operator enforces that the alert matches the resource’s namespace.
                       items:
@@ -82,6 +87,68 @@ spec:
                         - name
                         type: object
                       type: array
+                    targetMatchers:
+                      description: A list of matchers that have to be fulfilled by the target alerts to be muted.
+                      items:
+                        type: string
+                      type: array
+                  type: object
+                type: array
+              muteTimeInterval:
+                description: List of mute time intervals
+                items:
+                  description: MuteTimeIntercal specifies a named interval of time that may be referenced in the routing tree to mute particular routes for particular times of the day
+                  properties:
+                    name:
+                      description: Name of a Mute Time Interval
+                      minLength: 1
+                      type: string
+                    timeInterval:
+                      description: Series of time intervals assoicated with the MuteTimeInterval
+                      items:
+                        description: TimeInterval  contains the actual definition for an interval of time.
+                        properties:
+                          daysOfMonth:
+                            description: A list of numerical days in the month. Days begin at 1. Negative values are also accepted which begin at the end of the month
+                            items:
+                              type: string
+                            type: array
+                          months:
+                            description: A list of calendar months identified by a case-insentive name (e.g. ‘January’) or by number, where January = 1
+                            items:
+                              type: string
+                            type: array
+                          times:
+                            description: Defines a series of start and tend times
+                            items:
+                              description: TimeRange defines a start and end time
+                              properties:
+                                endTime:
+                                  description: End time for a time interval, is exclusive
+                                  type: string
+                                startTime:
+                                  description: Start time for a time interval, is inclusive
+                                  type: string
+                              required:
+                              - endTime
+                              - startTime
+                              type: object
+                            type: array
+                          weekdays:
+                            description: A list of days of the week, where the week begins on Sunday and ends on Saturday. Days should be specified by name (e.g. ‘Sunday’).
+                            items:
+                              type: string
+                            type: array
+                          years:
+                            description: A numerical list of years. Ranges are accepted.
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      type: array
+                  required:
+                  - name
+                  - timeInterval
                   type: object
                 type: array
               receivers:

@@ -79,6 +79,9 @@ type AlertmanagerConfigSpec struct {
 	// the resource’s namespace.
 	// +optional
 	InhibitRules []InhibitRule `json:"inhibitRules,omitempty"`
+	// List of mute time intervals
+	// +optional
+	MuteTimeIntervals []MuteTimeInterval `json:"muteTimeInterval,omitempty"`
 }
 
 // Route defines a node in the routing tree.
@@ -689,6 +692,12 @@ type InhibitRule struct {
 	// Labels that must have an equal value in the source and target alert for
 	// the inhibition to take effect.
 	Equal []string `json:"equal,omitempty"`
+	// A list of matchers for which one or more alerts have
+	// to exist for the inhibition to take effect.
+	SourceMatchers []string `json:"sourceMatchers,omitempty"`
+	// A list of matchers that have to be fulfilled by the target
+	// alerts to be muted.
+	TargetMatchers []string `json:"targetMatchers,omitempty"`
 }
 
 // KeyValue defines a (key, value) tuple.
@@ -711,6 +720,43 @@ type Matcher struct {
 	// Whether to match on equality (false) or regular-expression (true).
 	// +optional
 	Regex bool `json:"regex,omitempty"`
+}
+
+// MuteTimeIntercal specifies a named interval of time that may be referenced
+// in the routing tree to mute particular routes for particular times of the day
+type MuteTimeInterval struct {
+	// Name of a Mute Time Interval
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+	// Series of time intervals assoicated with the MuteTimeInterval
+	TimeInterval []TimeInterval `json:"timeInterval"`
+}
+
+// TimeInterval  contains the actual definition for an interval of time.
+type TimeInterval struct {
+	// Defines a series of start and tend times
+	Times []TimeRange `json:"times,omitempty"`
+	// A list of days of the week, where the week begins on Sunday and ends on Saturday.
+	//Days should be specified by name (e.g. ‘Sunday’).
+	// +optional
+	Weekdays []string `json:"weekdays,omitempty"`
+	// A list of numerical days in the month. Days begin at 1. Negative values are also accepted which begin at the end of the month
+	// +optional
+	DaysOfMonth []string `json:"daysOfMonth,omitempty"`
+	// A list of calendar months identified by a case-insentive name (e.g. ‘January’) or by number, where January = 1
+	// +optional
+	Months []string `json:"months,omitempty"`
+	// A numerical list of years. Ranges are accepted.
+	// +optional
+	Years []string `json:"years,omitempty"`
+}
+
+// TimeRange defines a start and end time
+type TimeRange struct {
+	// Start time for a time interval, is inclusive
+	StartTime string `json:"startTime"`
+	// End time for a time interval, is exclusive
+	EndTime string `json:"endTime"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.

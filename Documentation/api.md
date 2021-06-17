@@ -82,6 +82,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [InhibitRule](#inhibitrule)
 * [KeyValue](#keyvalue)
 * [Matcher](#matcher)
+* [MuteTimeInterval](#mutetimeinterval)
 * [OpsGenieConfig](#opsgenieconfig)
 * [OpsGenieConfigResponder](#opsgenieconfigresponder)
 * [PagerDutyConfig](#pagerdutyconfig)
@@ -92,6 +93,8 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [SlackConfig](#slackconfig)
 * [SlackConfirmationField](#slackconfirmationfield)
 * [SlackField](#slackfield)
+* [TimeInterval](#timeinterval)
+* [TimeRange](#timerange)
 * [VictorOpsConfig](#victoropsconfig)
 * [WeChatConfig](#wechatconfig)
 * [WebhookConfig](#webhookconfig)
@@ -1034,6 +1037,7 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 | route | The Alertmanager route definition for alerts matching the resource’s namespace. If present, it will be added to the generated Alertmanager configuration as a first-level route. | *[Route](#route) | true |
 | receivers | List of receivers. | [][Receiver](#receiver) | true |
 | inhibitRules | List of inhibition rules. The rules will only apply to alerts matching the resource’s namespace. | [][InhibitRule](#inhibitrule) | false |
+| muteTimeInterval | List of mute time intervals | [][MuteTimeInterval](#mutetimeinterval) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1082,6 +1086,8 @@ InhibitRule defines an inhibition rule that allows to mute alerts when other ale
 | targetMatch | Matchers that have to be fulfilled in the alerts to be muted. The operator enforces that the alert matches the resource’s namespace. | [][Matcher](#matcher) | false |
 | sourceMatch | Matchers for which one or more alerts have to exist for the inhibition to take effect. The operator enforces that the alert matches the resource’s namespace. | [][Matcher](#matcher) | false |
 | equal | Labels that must have an equal value in the source and target alert for the inhibition to take effect. | []string | false |
+| sourceMatchers | A list of matchers for which one or more alerts have to exist for the inhibition to take effect. | []string | false |
+| targetMatchers | A list of matchers that have to be fulfilled by the target alerts to be muted. | []string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1105,6 +1111,17 @@ Matcher defines how to match on alert's labels.
 | name | Label to match. | string | true |
 | value | Label value to match. | string | true |
 | regex | Whether to match on equality (false) or regular-expression (true). | bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## MuteTimeInterval
+
+MuteTimeIntercal specifies a named interval of time that may be referenced in the routing tree to mute particular routes for particular times of the day
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name | Name of a Mute Time Interval | string | true |
+| timeInterval | Series of time intervals assoicated with the MuteTimeInterval | [][TimeInterval](#timeinterval) | true |
 
 [Back to TOC](#table-of-contents)
 
@@ -1290,6 +1307,31 @@ SlackField configures a single Slack field that is sent with each notification. 
 | title |  | string | true |
 | value |  | string | true |
 | short |  | *bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## TimeInterval
+
+TimeInterval  contains the actual definition for an interval of time.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| times | Defines a series of start and tend times | [][TimeRange](#timerange) | false |
+| weekdays | A list of days of the week, where the week begins on Sunday and ends on Saturday. Days should be specified by name (e.g. ‘Sunday’). | []string | false |
+| daysOfMonth | A list of numerical days in the month. Days begin at 1. Negative values are also accepted which begin at the end of the month | []string | false |
+| months | A list of calendar months identified by a case-insentive name (e.g. ‘January’) or by number, where January = 1 | []string | false |
+| years | A numerical list of years. Ranges are accepted. | []string | false |
+
+[Back to TOC](#table-of-contents)
+
+## TimeRange
+
+TimeRange defines a start and end time
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| startTime | Start time for a time interval, is inclusive | string | true |
+| endTime | End time for a time interval, is exclusive | string | true |
 
 [Back to TOC](#table-of-contents)
 

@@ -23,6 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus/alertmanager/config"
+
 	"github.com/prometheus/common/model"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -82,6 +83,157 @@ receivers:
 templates: []
 `,
 		},
+		{
+			name:    "skeleton base with mute time interval, no CRs",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(time.Minute)),
+				},
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+				MuteTimeIntervals: []*MuteTimeInterval{{
+					Name: "my_mute_time",
+					TimeIntervals: []TimeInterval{{
+						Times: []TimeRange{{
+							StartTime: "09:00",
+							EndTime:   "17:00",
+						}},
+					}},
+				}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `global:
+  resolve_timeout: 1m
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+templates: []
+mute_time_intervals:
+- name: my_mute_time
+  time_intervals:
+  - times:
+    - start_time: "09:00"
+      end_time: "17:00"
+`,
+		},
+		{
+			name:    "skeleton base with complete mute time interval, no CRs",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(time.Minute)),
+				},
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+				MuteTimeIntervals: []*MuteTimeInterval{{
+					Name: "my_mute_time",
+					TimeIntervals: []TimeInterval{{
+						Times: []TimeRange{{
+							StartTime: "09:00",
+							EndTime:   "17:00",
+						}},
+						Weekdays: []string{"sunday:tuesday", "saturday"},
+
+						DaysOfMonth: []string{"1:5", "-3:-1"},
+
+						Months: []string{"1:3", "5:8", "12"},
+						Years:  []string{"2020:2022", "2030"},
+					},
+					}},
+				}},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `global:
+  resolve_timeout: 1m
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+templates: []
+mute_time_intervals:
+- name: my_mute_time
+  time_intervals:
+  - times:
+    - start_time: "09:00"
+      end_time: "17:00"
+    weekdays: ['sunday:tuesday', saturday]
+    days_of_month: ["1:5", '-3:-1']
+    months: ["1:3", "5:8", "12"]
+    years: ['2020:2022', "2030"]
+`,
+		},
+		{
+			name:    "skeleton base with multiple mute time intervals, no CRs",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					ResolveTimeout: func(d model.Duration) *model.Duration { return &d }(model.Duration(time.Minute)),
+				},
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+				MuteTimeIntervals: []*MuteTimeInterval{{
+					Name: "my_mute_time",
+					TimeIntervals: []TimeInterval{{
+						Times: []TimeRange{{
+							StartTime: "09:00",
+							EndTime:   "17:00",
+						}},
+						Weekdays: []string{"sunday:tuesday", "saturday"},
+
+						DaysOfMonth: []string{"1:5", "-3:-1"},
+
+						Months: []string{"1:3", "5:8", "12"},
+						Years:  []string{"2020:2022", "2030"},
+					}},
+				},
+					{
+						Name: "my_mute_time_again",
+						TimeIntervals: []TimeInterval{{
+							Times: []TimeRange{{
+								StartTime: "12:00",
+								EndTime:   "13:00",
+							}},
+							Weekdays: []string{"sunday:tuesday"},
+
+							DaysOfMonth: []string{"-3:-1"},
+
+							Months: []string{"5:8", "12"},
+							Years:  []string{"2030"},
+						}},
+					},
+				},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
+			expected: `global:
+  resolve_timeout: 1m
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+templates: []
+mute_time_intervals:
+- name: my_mute_time
+  time_intervals:
+  - times:
+    - start_time: "09:00"
+      end_time: "17:00"
+    weekdays: ['sunday:tuesday', saturday]
+    days_of_month: ["1:5", '-3:-1']
+    months: ["1:3", "5:8", "12"]
+    years: ['2020:2022', "2030"]
+- name: my_mute_time_again
+  time_intervals:
+  - times:
+    - start_time: "12:00"
+      end_time: "13:00"
+    weekdays: ['sunday:tuesday']
+    days_of_month: ['-3:-1']
+    months: ["5:8", "12"]
+    years: ["2030"]
+`,
+		},
+
 		{
 			name:    "skeleton base with global smtp_require_tls set to false, no CRs",
 			kclient: fake.NewSimpleClientset(),
@@ -225,6 +377,46 @@ inhibit_rules:
   source_match:
     alertname: NodeNotReady
     namespace: mynamespace
+  equal:
+  - node
+receivers:
+- name: "null"
+templates: []
+`,
+		},
+		{
+			name:    "skeleton base, CR with source and target matchers only",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						InhibitRules: []monitoringv1alpha1.InhibitRule{
+							{
+								SourceMatchers: []string{"severity=\"critical\""},
+								TargetMatchers: []string{"severity=\"warning\""},
+								Equal:          []string{"node"},
+							},
+						},
+					},
+				},
+			},
+			expected: `route:
+  receiver: "null"
+inhibit_rules:
+- target_matchers:
+  - namespace=mynamespace
+  - severity="warning"
+  source_matchers:
+  - namespace=mynamespace
+  - severity="critical"
   equal:
   - node
 receivers:
