@@ -495,7 +495,7 @@ type HTTPConfig struct {
 	// +optional
 	Authorization *monitoringv1.Authorization `json:"authorization,omitempty"`
 	// BasicAuth for the client.
-	// This is mutually exclusive with Authorization
+	// This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.
 	// +optional
 	BasicAuth *monitoringv1.BasicAuth `json:"basicAuth,omitempty"`
 	// The secret's key that contains the bearer token to be used by the client
