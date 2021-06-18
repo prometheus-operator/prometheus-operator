@@ -30,9 +30,7 @@ type OAuth2Credentials struct {
 
 // AuthorizationCredentials represents a credential to be used with
 // authorization header http authentication, see https://tools.ietf.org/html/rfc7617.
-type AuthorizationCredentials struct {
-	Credentials string
-}
+type AuthorizationCredentials string
 
 // BearerToken represents a bearer token, see
 // https://tools.ietf.org/html/rfc6750.

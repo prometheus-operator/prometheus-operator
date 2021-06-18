@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
@@ -59,14 +60,16 @@ func (c alertmanagerConfig) String() string {
 }
 
 type configGenerator struct {
-	logger log.Logger
-	store  *assets.Store
+	logger    log.Logger
+	amVersion semver.Version
+	store     *assets.Store
 }
 
-func newConfigGenerator(logger log.Logger, store *assets.Store) *configGenerator {
+func newConfigGenerator(logger log.Logger, amVersion semver.Version, store *assets.Store) *configGenerator {
 	cg := &configGenerator{
-		logger: logger,
-		store:  store,
+		logger:    logger,
+		amVersion: amVersion,
+		store:     store,
 	}
 	return cg
 }
@@ -813,7 +816,7 @@ func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv
 		if username != "" && password != "" {
 			out.BasicAuth = &basicAuth{Username: username, Password: password}
 		}
-	} else if in.Authorization != nil {
+	} else if in.Authorization != nil && cg.amVersion.GTE(semver.MustParse("0.22.0")) {
 		credentials, err := cg.store.GetSecretKey(ctx, crKey.Namespace, in.Authorization.Credentials)
 		if err != nil {
 			return nil, errors.Errorf("failed to get Authorization credentials key %q from secret %q", in.Authorization.Credentials.Key, in.Authorization.Credentials.Name)

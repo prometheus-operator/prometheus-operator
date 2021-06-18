@@ -1097,7 +1097,7 @@ func (o *OAuth2) Validate() error {
 }
 
 // Authorization allow an endpoint to authenticate by configuring the authentication token
-// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+// More info: https://prometheus.io/docs/alerting/latest/configuration/#http_config
 // +k8s:openapi-gen=true
 type Authorization struct {
 	// The type of the token to use. Defaults to `Bearer`.

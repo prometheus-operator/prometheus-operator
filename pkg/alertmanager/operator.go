@@ -888,12 +888,18 @@ receivers:
 		return nil
 	}
 
-	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store)
+	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
+	version, err := semver.ParseTolerant(amVersion)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse alertmanager version")
+	}
+
+	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
 	if err != nil {
 		return errors.Wrap(err, "selecting AlertmanagerConfigs failed")
 	}
 
-	generator := newConfigGenerator(c.logger, store)
+	generator := newConfigGenerator(c.logger, version, store)
 	generatedConfig, err := generator.generateConfig(ctx, *baseConfig, amConfigs)
 	if err != nil {
 		return errors.Wrap(err, "generating Alertmanager config yaml failed")
@@ -942,7 +948,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
@@ -988,7 +994,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 	var rejected int
 	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
-	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
+
 	for namespaceAndName, amc := range amConfigs {
 		if err := checkAlertmanagerConfig(ctx, amVersion, amc, store); err != nil {
 			rejected++
@@ -1021,7 +1027,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 // checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
 // and has no missing references to other objects.
-func checkAlertmanagerConfig(ctx context.Context, amVersion string, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) error {
+func checkAlertmanagerConfig(ctx context.Context, amVersion semver.Version, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) error {
 	receiverNames, err := checkReceivers(ctx, amVersion, amc, store)
 	if err != nil {
 		return err
@@ -1030,7 +1036,7 @@ func checkAlertmanagerConfig(ctx context.Context, amVersion string, amc *monitor
 	return checkAlertmanagerRoutes(amc.Spec.Route, receiverNames, true)
 }
 
-func checkReceivers(ctx context.Context, amVersion string, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
+func checkReceivers(ctx context.Context, amVersion semver.Version, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store) (map[string]struct{}, error) {
 	var err error
 	receiverNames := make(map[string]struct{})
 
@@ -1085,7 +1091,7 @@ func checkReceivers(ctx context.Context, amVersion string, amc *monitoringv1alph
 	return receiverNames, nil
 }
 
-func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.PagerDutyConfig, amVersion string, namespace string, key string, store *assets.Store) error {
+func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.PagerDutyConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		pagerDutyConfigKey := fmt.Sprintf("%s/pagerduty/%d", key, i)
 
@@ -1109,7 +1115,7 @@ func checkPagerDutyConfigs(ctx context.Context, configs []monitoringv1alpha1.Pag
 	return nil
 }
 
-func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsGenieConfig, amVersion string, namespace string, key string, store *assets.Store) error {
+func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsGenieConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		opsgenieConfigKey := fmt.Sprintf("%s/opsgenie/%d", key, i)
 
@@ -1131,7 +1137,7 @@ func checkOpsGenieConfigs(ctx context.Context, configs []monitoringv1alpha1.OpsG
 	return nil
 }
 
-func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackConfig, amVersion string, namespace string, key string, store *assets.Store) error {
+func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		slackConfigKey := fmt.Sprintf("%s/slack/%d", key, i)
 
@@ -1153,7 +1159,7 @@ func checkSlackConfigs(ctx context.Context, configs []monitoringv1alpha1.SlackCo
 	return nil
 }
 
-func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.WebhookConfig, amVersion string, namespace string, key string, store *assets.Store) error {
+func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.WebhookConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		webhookConfigKey := fmt.Sprintf("%s/webhook/%d", key, i)
 
@@ -1175,7 +1181,7 @@ func checkWebhookConfigs(ctx context.Context, configs []monitoringv1alpha1.Webho
 	return nil
 }
 
-func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChatConfig, amVersion string, namespace string, key string, store *assets.Store) error {
+func checkWechatConfigs(ctx context.Context, configs []monitoringv1alpha1.WeChatConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 		wechatConfigKey := fmt.Sprintf("%s/wechat/%d", key, i)
 
@@ -1244,7 +1250,7 @@ func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailCo
 	return nil
 }
 
-func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.VictorOpsConfig, amVersion string, namespace string, key string, store *assets.Store) error {
+func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.VictorOpsConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
 	for i, config := range configs {
 
 		if config.APIKey != nil {
@@ -1285,7 +1291,7 @@ func checkVictorOpsConfigs(ctx context.Context, configs []monitoringv1alpha1.Vic
 	return nil
 }
 
-func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.PushoverConfig, amVersion string, namespace string, key string, store *assets.Store) error {
+func checkPushoverConfigs(ctx context.Context, configs []monitoringv1alpha1.PushoverConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
 	checkSecret := func(secret *v1.SecretKeySelector, name string) error {
 		if secret == nil {
 			return errors.Errorf("mandatory field %s is empty", name)
@@ -1356,19 +1362,14 @@ func checkAlertmanagerRoutes(r *monitoringv1alpha1.Route, receivers map[string]s
 }
 
 // configureHTTPConfigInStore configure the asset store for HTTPConfigs.
-func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alpha1.HTTPConfig, amVersion string, namespace string, key string, store *assets.Store) error {
+func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alpha1.HTTPConfig, amVersion semver.Version, namespace string, key string, store *assets.Store) error {
 	if httpConfig == nil {
 		return nil
 	}
 
 	// Version checks before we configure the http config
 	var err error
-	version, err := semver.ParseTolerant(amVersion)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse alertmanager version")
-	}
-
-	if version.GTE(semver.MustParse("0.22.0")) && httpConfig.Authorization != nil {
+	if httpConfig.Authorization != nil && amVersion.LT(semver.MustParse("0.22.0")) {
 		return errors.Wrap(err, "Authorization is only supported for alertmanager versions greater than v0.22+")
 	}
 
