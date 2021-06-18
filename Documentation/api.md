@@ -260,7 +260,7 @@ ArbitraryFSAccessThroughSMsConfig enables users to configure, whether a service 
 
 ## Authorization
 
-Authorization allow an endpoint to authenticate by configuring the authentication token More info: https://prometheus.io/docs/operating/configuration/#endpoints
+Authorization allows configuring authentication with endpoint via a token. More info: https://prometheus.io/docs/operating/configuration/#endpoints
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
