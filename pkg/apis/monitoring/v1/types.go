@@ -660,7 +660,9 @@ type RemoteWriteSpec struct {
 	Headers map[string]string `json:"headers,omitempty"`
 	// The list of remote write relabel configurations.
 	WriteRelabelConfigs []RelabelConfig `json:"writeRelabelConfigs,omitempty"`
-	//BasicAuth for the URL.
+	// OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
+	// BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
 	// Bearer token for remote write.
 	BearerToken string `json:"bearerToken,omitempty"`
@@ -717,6 +719,8 @@ type RemoteReadSpec struct {
 	ReadRecent bool `json:"readRecent,omitempty"`
 	// BasicAuth for the URL.
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
+	// OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
+	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 	// Bearer token for remote read.
 	BearerToken string `json:"bearerToken,omitempty"`
 	// File to read bearer token for remote read.
@@ -1040,6 +1044,49 @@ type ProberSpec struct {
 	Path string `json:"path,omitempty"`
 	// Optional ProxyURL.
 	ProxyURL string `json:"proxyUrl,omitempty"`
+}
+
+// OAuth2 allows an endpoint to authenticate with OAuth2.
+// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#oauth2
+// +k8s:openapi-gen=true
+type OAuth2 struct {
+	// The secret or configmap containing the OAuth2 client id
+	ClientID SecretOrConfigMap `json:"clientId"`
+	// The secret containing the OAuth2 client secret
+	ClientSecret v1.SecretKeySelector `json:"clientSecret"`
+	// The URL to fetch the token from
+	// +kubebuilder:validation:MinLength=1
+	TokenURL string `json:"tokenUrl"`
+	// OAuth2 scopes used for the token request
+	Scopes []string `json:"scopes,omitempty"`
+	// Parameters to append to the token URL
+	EndpointParams map[string]string `json:"endpointParams,omitempty"`
+}
+
+type OAuth2ValidationError struct {
+	err string
+}
+
+func (e *OAuth2ValidationError) Error() string {
+	return e.err
+}
+
+func (o *OAuth2) Validate() error {
+	if o.TokenURL == "" {
+		return &OAuth2ValidationError{err: "OAuth2 token url must be specified"}
+	}
+
+	if o.ClientID == (SecretOrConfigMap{}) {
+		return &OAuth2ValidationError{err: "OAuth2 client id must be specified"}
+	}
+
+	if err := o.ClientID.Validate(); err != nil {
+		return &OAuth2ValidationError{
+			err: fmt.Sprintf("invalid OAuth2 client id: %s", err.Error()),
+		}
+	}
+
+	return nil
 }
 
 // BasicAuth allow an endpoint to authenticate over basic authentication

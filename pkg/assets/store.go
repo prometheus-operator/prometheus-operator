@@ -45,6 +45,7 @@ type Store struct {
 	TLSAssets         map[TLSAssetKey]TLSAsset
 	BearerTokenAssets map[string]BearerToken
 	BasicAuthAssets   map[string]BasicAuthCredentials
+	OAuth2Assets      map[string]OAuth2Credentials
 }
 
 // NewStore returns an empty assetStore.
@@ -55,6 +56,7 @@ func NewStore(cmClient corev1client.ConfigMapsGetter, sClient corev1client.Secre
 		TLSAssets:         make(map[TLSAssetKey]TLSAsset),
 		BearerTokenAssets: make(map[string]BearerToken),
 		BasicAuthAssets:   make(map[string]BasicAuthCredentials),
+		OAuth2Assets:      make(map[string]OAuth2Credentials),
 		objStore:          cache.NewStore(assetKeyFunc),
 	}
 }
@@ -166,6 +168,34 @@ func (s *Store) AddBasicAuth(ctx context.Context, ns string, ba *monitoringv1.Ba
 	s.BasicAuthAssets[key] = BasicAuthCredentials{
 		Username: username,
 		Password: password,
+	}
+
+	return nil
+}
+
+// AddOAuth2 processes the given *OAuth2 and adds the referenced credentials to the store.
+func (s *Store) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2, key string) error {
+	if oauth2 == nil {
+		return nil
+	}
+
+	if err := oauth2.Validate(); err != nil {
+		return err
+	}
+
+	clientID, err := s.GetKey(ctx, ns, oauth2.ClientID)
+	if err != nil {
+		return errors.Wrap(err, "failed to get oauth2 client id")
+	}
+
+	clientSecret, err := s.GetSecretKey(ctx, ns, oauth2.ClientSecret)
+	if err != nil {
+		return errors.Wrap(err, "failed to get oauth2 client secret")
+	}
+
+	s.OAuth2Assets[key] = OAuth2Credentials{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
 	}
 
 	return nil

@@ -25,7 +25,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -162,6 +162,7 @@ func (cg *ConfigGenerator) GenerateConfig(
 	pMons map[string]*v1.PodMonitor,
 	probes map[string]*v1.Probe,
 	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	oauth2Secrets map[string]assets.OAuth2Credentials,
 	bearerTokens map[string]assets.BearerToken,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
@@ -383,11 +384,11 @@ func (cg *ConfigGenerator) GenerateConfig(
 	})
 
 	if len(p.Spec.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(version, p, basicAuthSecrets))
+		cfg = append(cfg, cg.generateRemoteWriteConfig(version, p, basicAuthSecrets, oauth2Secrets))
 	}
 
 	if len(p.Spec.RemoteRead) > 0 {
-		cfg = append(cfg, cg.generateRemoteReadConfig(version, p, basicAuthSecrets))
+		cfg = append(cfg, cg.generateRemoteReadConfig(version, p, basicAuthSecrets, oauth2Secrets))
 	}
 
 	return yaml.Marshal(cfg)
@@ -1367,8 +1368,12 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(version semver.Version, am
 	return cfg
 }
 
-func (cg *ConfigGenerator) generateRemoteReadConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
-
+func (cg *ConfigGenerator) generateRemoteReadConfig(
+	version semver.Version,
+	p *v1.Prometheus,
+	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	oauth2Secrets map[string]assets.OAuth2Credentials,
+) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
 
 	for i, spec := range p.Spec.RemoteRead {
@@ -1413,6 +1418,27 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(version semver.Version, p *v
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
+		if spec.OAuth2 != nil && version.GTE(semver.MustParse("2.27.0")) {
+			oauth2Cfg := yaml.MapSlice{}
+			if s, ok := oauth2Secrets[fmt.Sprintf("remoteRead/%d", i)]; ok {
+				oauth2Cfg = append(oauth2Cfg,
+					yaml.MapItem{Key: "client_id", Value: s.ClientID},
+					yaml.MapItem{Key: "client_secret", Value: s.ClientSecret},
+					yaml.MapItem{Key: "token_url", Value: spec.OAuth2.TokenURL},
+				)
+
+				if len(spec.OAuth2.Scopes) > 0 {
+					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "scopes", Value: spec.OAuth2.Scopes})
+				}
+
+				if len(spec.OAuth2.EndpointParams) > 0 {
+					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: spec.OAuth2.EndpointParams})
+				}
+
+				cfg = append(cfg, yaml.MapItem{Key: "oauth2", Value: oauth2Cfg})
+			}
+		}
+
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
 
 		if spec.ProxyURL != "" {
@@ -1429,7 +1455,12 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(version semver.Version, p *v
 	}
 }
 
-func (cg *ConfigGenerator) generateRemoteWriteConfig(version semver.Version, p *v1.Prometheus, basicAuthSecrets map[string]assets.BasicAuthCredentials) yaml.MapItem {
+func (cg *ConfigGenerator) generateRemoteWriteConfig(
+	version semver.Version,
+	p *v1.Prometheus,
+	basicAuthSecrets map[string]assets.BasicAuthCredentials,
+	oauth2Secrets map[string]assets.OAuth2Credentials,
+) yaml.MapItem {
 
 	cfgs := []yaml.MapSlice{}
 
@@ -1508,6 +1539,27 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(version semver.Version, p *
 
 		if spec.BearerTokenFile != "" {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
+		}
+
+		if spec.OAuth2 != nil && version.GTE(semver.MustParse("2.27.0")) {
+			oauth2Cfg := yaml.MapSlice{}
+			if s, ok := oauth2Secrets[fmt.Sprintf("remoteWrite/%d", i)]; ok {
+				oauth2Cfg = append(oauth2Cfg,
+					yaml.MapItem{Key: "client_id", Value: s.ClientID},
+					yaml.MapItem{Key: "client_secret", Value: s.ClientSecret},
+					yaml.MapItem{Key: "token_url", Value: spec.OAuth2.TokenURL},
+				)
+
+				if len(spec.OAuth2.Scopes) > 0 {
+					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "scopes", Value: spec.OAuth2.Scopes})
+				}
+
+				if len(spec.OAuth2.EndpointParams) > 0 {
+					oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: spec.OAuth2.EndpointParams})
+				}
+
+				cfg = append(cfg, yaml.MapItem{Key: "oauth2", Value: oauth2Cfg})
+			}
 		}
 
 		cfg = addTLStoYaml(cfg, p.ObjectMeta.Namespace, spec.TLSConfig)
