@@ -491,7 +491,7 @@ func (r *OpsGenieConfigResponder) Validate() error {
 // See https://prometheus.io/docs/alerting/latest/configuration/#http_config
 type HTTPConfig struct {
 	// Authorization header configuration for the client.
-	// This is mutually exclusive with BasicAuth and is only available starting from alertmanager v0.22+
+	// This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
 	// +optional
 	Authorization *monitoringv1.Authorization `json:"authorization,omitempty"`
 	// BasicAuth for the client.
