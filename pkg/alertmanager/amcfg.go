@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -792,6 +793,10 @@ func prefixReceiverName(receiverName string, crKey types.NamespacedName) string 
 func (cg *configGenerator) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
 	out := &httpClientConfig{
 		ProxyURL: in.ProxyURL,
+	}
+
+	if in.BasicAuth != nil && in.Authorization != nil {
+		level.Warn(cg.logger).Log("msg", "Basic auth and Authorization are mutually exclusive. Basic auth will take precedence.")
 	}
 
 	if in.BasicAuth != nil {

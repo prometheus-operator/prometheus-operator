@@ -393,6 +393,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
+                                  and is only available starting from alertmanager
+                                  v0.22+
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -715,6 +717,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
+                                  and is only available starting from alertmanager
+                                  v0.22+
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -1021,6 +1025,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
+                                  and is only available starting from alertmanager
+                                  v0.22+
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -1442,6 +1448,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
+                                  and is only available starting from alertmanager
+                                  v0.22+
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -1757,6 +1765,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
+                                  and is only available starting from alertmanager
+                                  v0.22+
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -2016,6 +2026,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
+                                  and is only available starting from alertmanager
+                                  v0.22+
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
@@ -2325,6 +2337,8 @@ spec:
                               authorization:
                                 description: Authorization header configuration for
                                   the client. This is mutually exclusive with BasicAuth
+                                  and is only available starting from alertmanager
+                                  v0.22+
                                 properties:
                                   credentials:
                                     description: The secret to pass to in the header.
