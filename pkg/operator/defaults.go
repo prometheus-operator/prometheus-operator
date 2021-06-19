@@ -17,7 +17,7 @@ package operator
 import "github.com/prometheus/common/version"
 
 const (
-	DefaultAlertmanagerVersion   = "v0.21.0"
+	DefaultAlertmanagerVersion   = "v0.22.0"
 	DefaultAlertmanagerBaseImage = "quay.io/prometheus/alertmanager"
 	DefaultAlertmanagerImage     = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
 	DefaultThanosVersion         = "v0.19.0"

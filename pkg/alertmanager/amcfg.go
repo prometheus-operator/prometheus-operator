@@ -131,12 +131,12 @@ func (cg *configGenerator) generateConfig(
 }
 
 func convertTimeInterval(in *monitoringv1alpha1.MuteTimeInterval) *MuteTimeInterval {
-	mti := &MuteTimeInterval{}
+	var mti MuteTimeInterval
 
 	mti.Name = in.Name
 
 	for _, interval := range in.TimeInterval {
-		mi := make([]TimeInterval, 1)
+
 		times := make([]TimeRange, len(interval.Times))
 		days := make([]string, len(interval.DaysOfMonth))
 		months := make([]string, len(interval.Months))
@@ -144,6 +144,7 @@ func convertTimeInterval(in *monitoringv1alpha1.MuteTimeInterval) *MuteTimeInter
 		years := make([]string, len(interval.Years))
 
 		for j, y := range interval.Times {
+
 			times[j].StartTime = y.StartTime
 			times[j].EndTime = y.EndTime
 		}
@@ -174,10 +175,11 @@ func convertTimeInterval(in *monitoringv1alpha1.MuteTimeInterval) *MuteTimeInter
 
 		// TODO, fix this hack to prevent a empty object being added to the yaml
 		if !reflect.DeepEqual(x, TimeInterval{}) {
-			mti.TimeIntervals = append(mi, *x)
+			mti.TimeIntervals = append(mti.TimeIntervals, *x)
 		}
 	}
-	return mti
+
+	return &mti
 }
 
 func convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName, firstLevelRoute bool) *route {

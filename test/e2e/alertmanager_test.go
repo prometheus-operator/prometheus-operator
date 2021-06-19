@@ -895,6 +895,30 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 			}},
+
+			InhibitRules: []monitoringv1alpha1.InhibitRule{
+				{
+					SourceMatchers: []string{"severity=\"critical\""},
+					TargetMatchers: []string{"severity=\"warning\""},
+					Equal:          []string{"alertname", "cluster", "service"},
+				},
+			},
+
+			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{{
+				Name: "testing",
+				TimeInterval: []monitoringv1alpha1.TimeInterval{{
+					Weekdays:    []string{"sunday:tuesday", "saturday"},
+					DaysOfMonth: []string{"1:5", "-3:-1"},
+					Months:      []string{"1:3", "5:8", "12"},
+					Years:       []string{"2020:2022", "2030"},
+					Times: []monitoringv1alpha1.TimeRange{
+						{
+							StartTime: "09:00",
+							EndTime:   "17:00",
+						},
+					},
+				}},
+			}},
 		},
 	}
 
@@ -1076,6 +1100,17 @@ route:
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
+inhibit_rules:
+- target_matchers:
+  - namespace=%s
+  - severity="warning"
+  source_matchers:
+  - namespace=%s
+  - severity="critical"
+  equal:
+  - alertname
+  - cluster
+  test/e2e/alertmanager_test.go- service
 receivers:
 - name: "null"
 - name: %v-e2e-test-amconfig-many-receivers-e2e
@@ -1117,7 +1152,17 @@ receivers:
   webhook_configs:
   - url: http://test.url
 templates: []
-`, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
+mute_time_intervals:
+- name: testing
+  time_intervals:
+  - times:
+    - start_time: "09:00"
+      end_time: "17:00"
+    weekdays: ['sunday:tuesday', saturday]
+    days_of_month: ["1:5", '-3:-1']
+    months: ["1:3", "5:8", "12"]
+    years: ['2020:2022', "2030"]
+`, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
 		if diff := cmp.Diff(string(cfgSecret.Data["alertmanager.yaml"]), expected); diff != "" {
 			lastErr = errors.Errorf("got(-), want(+):\n%s", diff)

@@ -319,6 +319,6 @@ type TimeInterval struct {
 }
 
 type TimeRange struct {
-	StartTime string `yaml:"start_time" json:"start_time"`
-	EndTime   string `yaml:"end_time" json:"end_time"`
+	StartTime string `yaml:"start_time,omitempty" json:"start_time,omitempty"`
+	EndTime   string `yaml:"end_time,omitempty" json:"end_time,omitempty"`
 }
