@@ -1109,7 +1109,7 @@ inhibit_rules:
   equal:
   - alertname
   - cluster
-  test/e2e/alertmanager_test.go- service
+  - service
 receivers:
 - name: "null"
 - name: %v-e2e-test-amconfig-many-receivers-e2e
