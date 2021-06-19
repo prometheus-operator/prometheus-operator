@@ -15,7 +15,6 @@
 package e2e
 
 import (
-	"context"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -40,7 +39,7 @@ func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(nonInstanceNs, "non-instance", "non-instance", 1)
-	_, err = framework.MonClientV1.Prometheuses(nonInstanceNs).Create(context.TODO(), p, metav1.CreateOptions{})
+	_, err = framework.MonClientV1.Prometheuses(nonInstanceNs).Create(framework.Ctx, p, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -52,7 +51,7 @@ func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 	// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
-	sts, err := framework.KubeClient.AppsV1().StatefulSets(nonInstanceNs).Get(context.TODO(), "prometheus-instance", metav1.GetOptions{})
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(nonInstanceNs).Get(framework.Ctx, "prometheus-instance", metav1.GetOptions{})
 	if !api_errors.IsNotFound(err) {
 		t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
@@ -102,7 +101,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		// create Prometheus custom resources in "denied" namespaces.
 		// This must NOT be reconciled as the prometheus-instance-namespaces option points to somewhere else.
 		p := framework.MakeBasicPrometheus(deniedNs, "denied", "denied", 1)
-		_, err = framework.MonClientV1.Prometheuses(deniedNs).Create(context.TODO(), p, metav1.CreateOptions{})
+		_, err = framework.MonClientV1.Prometheuses(deniedNs).Create(framework.Ctx, p, metav1.CreateOptions{})
 		if err != nil {
 			t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 		}
@@ -125,7 +124,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		}
 
 		s := framework.MakeBasicServiceMonitor("monitored")
-		if _, err := framework.MonClientV1.ServiceMonitors(deniedNs).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		if _, err := framework.MonClientV1.ServiceMonitors(deniedNs).Create(framework.Ctx, s, metav1.CreateOptions{}); err != nil {
 			t.Fatal("Creating ServiceMonitor failed: ", err)
 		}
 	}
@@ -152,7 +151,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		}
 
 		s := framework.MakeBasicServiceMonitor("monitored")
-		if _, err := framework.MonClientV1.ServiceMonitors(instanceNs).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		if _, err := framework.MonClientV1.ServiceMonitors(instanceNs).Create(framework.Ctx, s, metav1.CreateOptions{}); err != nil {
 			t.Fatal("Creating ServiceMonitor failed: ", err)
 		}
 
@@ -172,7 +171,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 	// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
-	sts, err := framework.KubeClient.AppsV1().StatefulSets(deniedNs).Get(context.TODO(), "prometheus-instance", metav1.GetOptions{})
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(deniedNs).Get(framework.Ctx, "prometheus-instance", metav1.GetOptions{})
 	if !api_errors.IsNotFound(err) {
 		t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
@@ -224,7 +223,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 	// create Prometheus custom resources in "allowed" namespaces.
 	// This must NOT be reconciled as the prometheus-instance-namespaces option points to somewhere else.
 	p := framework.MakeBasicPrometheus(allowedNs, "allowed", "allowed", 1)
-	_, err = framework.MonClientV1.Prometheuses(allowedNs).Create(context.TODO(), p, metav1.CreateOptions{})
+	_, err = framework.MonClientV1.Prometheuses(allowedNs).Create(framework.Ctx, p, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -264,7 +263,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		}
 
 		s := framework.MakeBasicServiceMonitor("monitored")
-		if _, err := framework.MonClientV1.ServiceMonitors(instanceNs).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		if _, err := framework.MonClientV1.ServiceMonitors(instanceNs).Create(framework.Ctx, s, metav1.CreateOptions{}); err != nil {
 			t.Fatal("Creating ServiceMonitor failed: ", err)
 		}
 	}
@@ -288,7 +287,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		}
 
 		s := framework.MakeBasicServiceMonitor("monitored")
-		if _, err := framework.MonClientV1.ServiceMonitors(allowedNs).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		if _, err := framework.MonClientV1.ServiceMonitors(allowedNs).Create(framework.Ctx, s, metav1.CreateOptions{}); err != nil {
 			t.Fatal("Creating ServiceMonitor failed: ", err)
 		}
 
@@ -314,7 +313,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 	// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
-	sts, err := framework.KubeClient.AppsV1().StatefulSets(allowedNs).Get(context.TODO(), "prometheus-instance", metav1.GetOptions{})
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(allowedNs).Get(framework.Ctx, "prometheus-instance", metav1.GetOptions{})
 	if !api_errors.IsNotFound(err) {
 		t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
@@ -427,7 +426,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 		}
 
 		s := framework.MakeBasicServiceMonitor("monitored")
-		if _, err := framework.MonClientV1.ServiceMonitors(allowedNs).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		if _, err := framework.MonClientV1.ServiceMonitors(allowedNs).Create(framework.Ctx, s, metav1.CreateOptions{}); err != nil {
 			t.Fatal("Creating ServiceMonitor failed: ", err)
 		}
 

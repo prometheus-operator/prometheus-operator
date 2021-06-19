@@ -15,7 +15,6 @@
 package framework
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -42,7 +41,7 @@ func (f *Framework) MakeBasicRule(ns, name string, groups []monitoringv1.RuleGro
 }
 
 func (f *Framework) CreateRule(ns string, ar *monitoringv1.PrometheusRule) (*monitoringv1.PrometheusRule, error) {
-	result, err := f.MonClientV1.PrometheusRules(ns).Create(context.TODO(), ar, metav1.CreateOptions{})
+	result, err := f.MonClientV1.PrometheusRules(ns).Create(f.Ctx, ar, metav1.CreateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("creating %v RuleFile failed: %v", ar.Name, err)
 	}
@@ -51,7 +50,7 @@ func (f *Framework) CreateRule(ns string, ar *monitoringv1.PrometheusRule) (*mon
 }
 
 func (f *Framework) GetRule(ns, name string) (*monitoringv1.PrometheusRule, error) {
-	result, err := f.MonClientV1.PrometheusRules(ns).Get(context.TODO(), name, metav1.GetOptions{})
+	result, err := f.MonClientV1.PrometheusRules(ns).Get(f.Ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("getting %v Rule failed: %v", name, err)
 	}
@@ -107,7 +106,7 @@ func (f *Framework) MakeAndCreateInvalidRule(ns, name, alertName string) (*monit
 // namespace.
 func (f *Framework) WaitForRule(ns, name string) error {
 	return wait.Poll(time.Second, f.DefaultTimeout, func() (bool, error) {
-		_, err := f.MonClientV1.PrometheusRules(ns).Get(context.TODO(), name, metav1.GetOptions{})
+		_, err := f.MonClientV1.PrometheusRules(ns).Get(f.Ctx, name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil
 		} else if err != nil {
@@ -118,7 +117,7 @@ func (f *Framework) WaitForRule(ns, name string) error {
 }
 
 func (f *Framework) UpdateRule(ns string, ar *monitoringv1.PrometheusRule) (*monitoringv1.PrometheusRule, error) {
-	result, err := f.MonClientV1.PrometheusRules(ns).Update(context.TODO(), ar, metav1.UpdateOptions{})
+	result, err := f.MonClientV1.PrometheusRules(ns).Update(f.Ctx, ar, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("updating %v RuleFile failed: %v", ar.Name, err)
 	}
@@ -127,7 +126,7 @@ func (f *Framework) UpdateRule(ns string, ar *monitoringv1.PrometheusRule) (*mon
 }
 
 func (f *Framework) DeleteRule(ns string, r string) error {
-	err := f.MonClientV1.PrometheusRules(ns).Delete(context.TODO(), r, metav1.DeleteOptions{})
+	err := f.MonClientV1.PrometheusRules(ns).Delete(f.Ctx, r, metav1.DeleteOptions{})
 	if err != nil {
 		return fmt.Errorf("deleting %v Prometheus rule in namespace %v failed: %v", r, ns, err.Error())
 	}
