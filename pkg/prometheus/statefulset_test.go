@@ -16,11 +16,12 @@ package prometheus
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -1826,4 +1827,32 @@ func TestConfigReloader(t *testing.T) {
 		}
 	}
 
+}
+
+func TestThanosReadyTimeout(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				ReadyTimeout: "20m",
+			},
+		},
+	}, defaultTestConfig, nil, "", 0)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "thanos-sidecar" {
+			for _, flag := range container.Args {
+				if flag == "--prometheus.ready_timeout=20m" {
+					found = true
+				}
+			}
+		}
+	}
+
+	if !found {
+		t.Fatal("Sidecar ready timeout not set when it should.")
+	}
 }
