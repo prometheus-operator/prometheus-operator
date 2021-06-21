@@ -15,7 +15,6 @@
 package framework
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"time"
@@ -27,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes"
 )
 
 func MakeBasicIngress(serviceName string, servicePort int) *v1beta1.Ingress {
@@ -57,19 +55,19 @@ func MakeBasicIngress(serviceName string, servicePort int) *v1beta1.Ingress {
 	}
 }
 
-func CreateIngress(kubeClient kubernetes.Interface, namespace string, i *v1beta1.Ingress) error {
-	_, err := kubeClient.ExtensionsV1beta1().Ingresses(namespace).Create(context.TODO(), i, metav1.CreateOptions{})
+func (f *Framework) CreateIngress(namespace string, i *v1beta1.Ingress) error {
+	_, err := f.KubeClient.ExtensionsV1beta1().Ingresses(namespace).Create(f.Ctx, i, metav1.CreateOptions{})
 	return errors.Wrap(err, fmt.Sprintf("creating ingress %v failed", i.Name))
 }
 
-func SetupNginxIngressControllerIncDefaultBackend(kubeClient kubernetes.Interface, namespace string) error {
+func (f *Framework) SetupNginxIngressControllerIncDefaultBackend(namespace string) error {
 	// Create Nginx Ingress Replication Controller
-	if err := createReplicationControllerViaYml(kubeClient, namespace, "./framework/resources/nxginx-ingress-controller.yml"); err != nil {
+	if err := f.createReplicationControllerViaYml(namespace, "./framework/resources/nxginx-ingress-controller.yml"); err != nil {
 		return errors.Wrap(err, "creating nginx ingress replication controller failed")
 	}
 
 	// Create Default HTTP Backend Replication Controller
-	if err := createReplicationControllerViaYml(kubeClient, namespace, "./framework/resources/default-http-backend.yml"); err != nil {
+	if err := f.createReplicationControllerViaYml(namespace, "./framework/resources/default-http-backend.yml"); err != nil {
 		return errors.Wrap(err, "creating default http backend replication controller failed")
 	}
 
@@ -85,25 +83,25 @@ func SetupNginxIngressControllerIncDefaultBackend(kubeClient kubernetes.Interfac
 		return errors.Wrap(err, "decoding http backend service yaml failed")
 	}
 
-	_, err = kubeClient.CoreV1().Services(namespace).Create(context.TODO(), &service, metav1.CreateOptions{})
+	_, err = f.KubeClient.CoreV1().Services(namespace).Create(f.Ctx, &service, metav1.CreateOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("creating http backend service %v failed", service.Name))
 	}
-	if err := WaitForServiceReady(kubeClient, namespace, service.Name); err != nil {
+	if err := f.WaitForServiceReady(namespace, service.Name); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("waiting for http backend service %v timed out", service.Name))
 	}
 
 	return nil
 }
 
-func DeleteNginxIngressControllerIncDefaultBackend(kubeClient kubernetes.Interface, namespace string) error {
+func (f *Framework) DeleteNginxIngressControllerIncDefaultBackend(namespace string) error {
 	// Delete Nginx Ingress Replication Controller
-	if err := deleteReplicationControllerViaYml(kubeClient, namespace, "./framework/resources/nxginx-ingress-controller.yml"); err != nil {
+	if err := f.deleteReplicationControllerViaYml(namespace, "./framework/resources/nxginx-ingress-controller.yml"); err != nil {
 		return errors.Wrap(err, "deleting nginx ingress replication controller failed")
 	}
 
 	// Delete Default HTTP Backend Replication Controller
-	if err := deleteReplicationControllerViaYml(kubeClient, namespace, "./framework/resources/default-http-backend.yml"); err != nil {
+	if err := f.deleteReplicationControllerViaYml(namespace, "./framework/resources/default-http-backend.yml"); err != nil {
 		return errors.Wrap(err, "deleting default http backend replication controller failed")
 	}
 
@@ -119,18 +117,18 @@ func DeleteNginxIngressControllerIncDefaultBackend(kubeClient kubernetes.Interfa
 		return errors.Wrap(err, "decoding http backend service yaml failed")
 	}
 
-	if err := kubeClient.CoreV1().Services(namespace).Delete(context.TODO(), service.Name, metav1.DeleteOptions{}); err != nil {
+	if err := f.KubeClient.CoreV1().Services(namespace).Delete(f.Ctx, service.Name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting http backend service %v failed", service.Name))
 	}
 
 	return nil
 }
 
-func GetIngressIP(kubeClient kubernetes.Interface, namespace string, ingressName string) (*string, error) {
+func (f *Framework) GetIngressIP(namespace string, ingressName string) (*string, error) {
 	var ingress *v1beta1.Ingress
 	err := wait.Poll(time.Millisecond*500, time.Minute*5, func() (bool, error) {
 		var err error
-		ingress, err = kubeClient.ExtensionsV1beta1().Ingresses(namespace).Get(context.TODO(), ingressName, metav1.GetOptions{})
+		ingress, err = f.KubeClient.ExtensionsV1beta1().Ingresses(namespace).Get(f.Ctx, ingressName, metav1.GetOptions{})
 		if err != nil {
 			return false, errors.Wrap(err, fmt.Sprintf("requesting the ingress %v failed", ingressName))
 		}
