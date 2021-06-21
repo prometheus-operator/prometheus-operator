@@ -39,6 +39,7 @@ func TestGenerateConfig(t *testing.T) {
 		baseConfig alertmanagerConfig
 		amConfigs  map[string]*monitoringv1alpha1.AlertmanagerConfig
 		expected   string
+		ctx        context.Context
 	}
 
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
@@ -61,6 +62,7 @@ receivers:
 - name: "null"
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name:    "skeleton base with global send_revolved, no CRs",
@@ -81,6 +83,7 @@ receivers:
 - name: "null"
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to false, no CRs",
@@ -101,6 +104,7 @@ receivers:
 - name: "null"
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to true, no CRs",
@@ -121,6 +125,7 @@ receivers:
 - name: "null"
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name:    "base with sub route, no CRs",
@@ -147,6 +152,7 @@ receivers:
 - name: custom
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name:    "skeleton base, simple CR",
@@ -181,6 +187,7 @@ receivers:
 - name: mynamespace-myamc-test
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only",
@@ -231,6 +238,7 @@ receivers:
 - name: "null"
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name:    "base with subroute, simple CR",
@@ -269,6 +277,7 @@ receivers:
 - name: mynamespace-myamc-test
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name: "CR with Pagerduty Receiver",
@@ -327,6 +336,7 @@ receivers:
   - routing_key: 1234abc
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name:    "CR with Webhook Receiver",
@@ -372,6 +382,7 @@ receivers:
   - url: http://test.url
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name: "CR with Opsgenie Receiver",
@@ -430,6 +441,7 @@ receivers:
   - api_key: 1234abc
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name: "CR with Opsgenie Team Responder",
@@ -495,6 +507,7 @@ receivers:
       type: team
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 			name: "CR with WeChat Receiver",
@@ -555,6 +568,7 @@ receivers:
     corp_id: wechatcorpid
 templates: []
 `,
+			ctx: context.Background(),
 		},
 		{
 
@@ -627,6 +641,7 @@ receivers:
         text: text
 templates: []
 `,
+			ctx: context.Background(),
 		},
 	}
 
@@ -634,7 +649,7 @@ templates: []
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
 			cg := newConfigGenerator(nil, store)
-			cfgBytes, err := cg.generateConfig(context.TODO(), tc.baseConfig, tc.amConfigs)
+			cfgBytes, err := cg.generateConfig(tc.ctx, tc.baseConfig, tc.amConfigs)
 			if err != nil {
 				t.Fatal(err)
 			}
