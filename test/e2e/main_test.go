@@ -79,10 +79,11 @@ func TestMain(m *testing.M) {
 // TestAllNS tests the Prometheus Operator watching all namespaces in a
 // Kubernetes cluster.
 func TestAllNS(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
+	testCtx := framework.NewTestCtx(t)
+	ctx := &testCtx
 	defer ctx.Cleanup(t)
 
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
 
 	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true, true)
 	if err != nil {
@@ -276,7 +277,7 @@ const (
 func testServerTLS(t *testing.T, namespace string) func(t *testing.T) {
 
 	return func(t *testing.T) {
-		if err := operatorFramework.WaitForServiceReady(framework.KubeClient, namespace, prometheusOperatorServiceName); err != nil {
+		if err := framework.WaitForServiceReady(namespace, prometheusOperatorServiceName); err != nil {
 			t.Fatal("waiting for prometheus operator service: ", err)
 		}
 

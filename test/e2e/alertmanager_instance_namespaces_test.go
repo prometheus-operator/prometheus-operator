@@ -27,7 +27,8 @@ import (
 )
 
 func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
+	testCtx := framework.NewTestCtx(t)
+	ctx := &testCtx
 	defer ctx.Cleanup(t)
 
 	// create 3 namespaces:
@@ -40,10 +41,10 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 	//
 	// 3. "nonInstance" ns:
 	//   - hosts an Alertmanager CR which must not be reconciled
-	operatorNs := ctx.CreateNamespace(t, framework.KubeClient)
-	instanceNs := ctx.CreateNamespace(t, framework.KubeClient)
-	nonInstanceNs := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBACGlobal(t, instanceNs, framework.KubeClient)
+	operatorNs := framework.CreateNamespace(t, ctx)
+	instanceNs := framework.CreateNamespace(t, ctx)
+	nonInstanceNs := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBACGlobal(t, ctx, instanceNs)
 
 	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, nil, nil, []string{instanceNs}, false, true)
 	if err != nil {
@@ -70,7 +71,8 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 }
 
 func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
+	testCtx := framework.NewTestCtx(t)
+	ctx := &testCtx
 	defer ctx.Cleanup(t)
 
 	// create two namespaces:
@@ -82,9 +84,9 @@ func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
 	//   - will be configured on prometheus operator as --alertmanager-instance-namespaces="instance"
 	//   - will additionally be configured on prometheus operator as --deny-namespaces="instance"
 	//   - hosts an alertmanager CR which must be reconciled.
-	operatorNs := ctx.CreateNamespace(t, framework.KubeClient)
-	instanceNs := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBACGlobal(t, instanceNs, framework.KubeClient)
+	operatorNs := framework.CreateNamespace(t, ctx)
+	instanceNs := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBACGlobal(t, ctx, instanceNs)
 
 	_, err := framework.CreatePrometheusOperator(operatorNs, *opImage, nil, []string{instanceNs}, nil, []string{instanceNs}, false, true)
 	if err != nil {
@@ -99,7 +101,8 @@ func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
 }
 
 func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
+	testCtx := framework.NewTestCtx(t)
+	ctx := &testCtx
 	defer ctx.Cleanup(t)
 
 	// create 3 namespaces:
@@ -116,13 +119,13 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 	//   - will be configured on prometheus operator as --namespaces="allowed"
 	//   - hosts an AlertmanagerConfig CR which must be reconciled
 	//   - hosts an Alertmanager CR which must not reconciled.
-	operatorNs := ctx.CreateNamespace(t, framework.KubeClient)
-	instanceNs := ctx.CreateNamespace(t, framework.KubeClient)
-	allowedNs := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBACGlobal(t, instanceNs, framework.KubeClient)
+	operatorNs := framework.CreateNamespace(t, ctx)
+	instanceNs := framework.CreateNamespace(t, ctx)
+	allowedNs := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBACGlobal(t, ctx, instanceNs)
 
 	for _, ns := range []string{allowedNs, instanceNs} {
-		err := testFramework.AddLabelsToNamespace(framework.KubeClient, ns, map[string]string{
+		err := testFramework.AddLabelsToNamespace(framework.KubeClient, framework.Ctx, ns, map[string]string{
 			"monitored": "true",
 		})
 		if err != nil {

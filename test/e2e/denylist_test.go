@@ -20,7 +20,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pkg/errors"
-	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
@@ -28,14 +27,15 @@ import (
 )
 
 func testDenyPrometheus(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
+	testCtx := framework.NewTestCtx(t)
+	ctx := &testCtx
 	defer ctx.Cleanup(t)
 
-	operatorNamespace := ctx.CreateNamespace(t, framework.KubeClient)
-	allowedNamespaces := []string{ctx.CreateNamespace(t, framework.KubeClient), ctx.CreateNamespace(t, framework.KubeClient)}
-	deniedNamespaces := []string{ctx.CreateNamespace(t, framework.KubeClient), ctx.CreateNamespace(t, framework.KubeClient)}
+	operatorNamespace := framework.CreateNamespace(t, ctx)
+	allowedNamespaces := []string{framework.CreateNamespace(t, ctx), framework.CreateNamespace(t, ctx)}
+	deniedNamespaces := []string{framework.CreateNamespace(t, ctx), framework.CreateNamespace(t, ctx)}
 
-	ctx.SetupPrometheusRBAC(t, operatorNamespace, framework.KubeClient)
+	framework.SetupPrometheusRBAC(t, ctx, operatorNamespace)
 
 	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, nil, nil, false, true)
 	if err != nil {
@@ -43,7 +43,7 @@ func testDenyPrometheus(t *testing.T) {
 	}
 
 	for _, denied := range deniedNamespaces {
-		ctx.SetupPrometheusRBAC(t, denied, framework.KubeClient)
+		framework.SetupPrometheusRBAC(t, ctx, denied)
 		p := framework.MakeBasicPrometheus(denied, "denied", "denied", 1)
 		_, err = framework.MonClientV1.Prometheuses(denied).Create(framework.Ctx, p, metav1.CreateOptions{})
 		if err != nil {
@@ -52,7 +52,7 @@ func testDenyPrometheus(t *testing.T) {
 	}
 
 	for _, allowed := range allowedNamespaces {
-		ctx.SetupPrometheusRBAC(t, allowed, framework.KubeClient)
+		framework.SetupPrometheusRBAC(t, ctx, allowed)
 		p := framework.MakeBasicPrometheus(allowed, "allowed", "allowed", 1)
 		_, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
 		if err != nil {
@@ -78,14 +78,15 @@ func testDenyPrometheus(t *testing.T) {
 }
 
 func testDenyServiceMonitor(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
+	testCtx := framework.NewTestCtx(t)
+	ctx := &testCtx
 	defer ctx.Cleanup(t)
 
-	operatorNamespace := ctx.CreateNamespace(t, framework.KubeClient)
-	allowedNamespaces := []string{ctx.CreateNamespace(t, framework.KubeClient), ctx.CreateNamespace(t, framework.KubeClient)}
-	deniedNamespaces := []string{ctx.CreateNamespace(t, framework.KubeClient), ctx.CreateNamespace(t, framework.KubeClient)}
+	operatorNamespace := framework.CreateNamespace(t, ctx)
+	allowedNamespaces := []string{framework.CreateNamespace(t, ctx), framework.CreateNamespace(t, ctx)}
+	deniedNamespaces := []string{framework.CreateNamespace(t, ctx), framework.CreateNamespace(t, ctx)}
 
-	ctx.SetupPrometheusRBAC(t, operatorNamespace, framework.KubeClient)
+	framework.SetupPrometheusRBAC(t, ctx, operatorNamespace)
 
 	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, nil, nil, false, true)
 	if err != nil {
@@ -128,12 +129,12 @@ func testDenyServiceMonitor(t *testing.T) {
 			},
 		}
 
-		if err := testFramework.CreateDeployment(framework.KubeClient, denied, echo); err != nil {
+		if err := framework.CreateDeployment(denied, echo); err != nil {
 			t.Fatal(err)
 		}
 
 		svc := framework.MakePrometheusService("denied", "denied", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, denied, svc); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady( denied, svc); err != nil {
 			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 		} else {
 			ctx.AddFinalizerFn(finalizerFn)
@@ -147,7 +148,7 @@ func testDenyServiceMonitor(t *testing.T) {
 	}
 
 	for _, allowed := range allowedNamespaces {
-		ctx.SetupPrometheusRBAC(t, allowed, framework.KubeClient)
+		framework.SetupPrometheusRBAC(t,ctx,  allowed)
 		p := framework.MakeBasicPrometheus(allowed, "allowed", "allowed", 1)
 		_, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
 		if err != nil {
@@ -155,7 +156,7 @@ func testDenyServiceMonitor(t *testing.T) {
 		}
 
 		svc := framework.MakePrometheusService("allowed", "allowed", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, allowed, svc); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(allowed, svc); err != nil {
 			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 		} else {
 			ctx.AddFinalizerFn(finalizerFn)
@@ -195,14 +196,15 @@ func testDenyServiceMonitor(t *testing.T) {
 }
 
 func testDenyThanosRuler(t *testing.T) {
-	ctx := framework.NewTestCtx(t)
+	testCtx := framework.NewTestCtx(t)
+	ctx := &testCtx
 	defer ctx.Cleanup(t)
 
-	operatorNamespace := ctx.CreateNamespace(t, framework.KubeClient)
-	allowedNamespaces := []string{ctx.CreateNamespace(t, framework.KubeClient), ctx.CreateNamespace(t, framework.KubeClient)}
-	deniedNamespaces := []string{ctx.CreateNamespace(t, framework.KubeClient), ctx.CreateNamespace(t, framework.KubeClient)}
+	operatorNamespace := framework.CreateNamespace(t, ctx)
+	allowedNamespaces := []string{framework.CreateNamespace(t, ctx), framework.CreateNamespace(t, ctx)}
+	deniedNamespaces := []string{framework.CreateNamespace(t, ctx), framework.CreateNamespace(t, ctx)}
 
-	ctx.SetupPrometheusRBAC(t, operatorNamespace, framework.KubeClient)
+	framework.SetupPrometheusRBAC(t, ctx, operatorNamespace)
 
 	_, err := framework.CreatePrometheusOperator(operatorNamespace, *opImage, nil, deniedNamespaces, nil, nil, false, true)
 	if err != nil {
@@ -218,7 +220,7 @@ func testDenyThanosRuler(t *testing.T) {
 	}
 
 	for _, allowed := range allowedNamespaces {
-		ctx.SetupPrometheusRBAC(t, allowed, framework.KubeClient)
+		framework.SetupPrometheusRBAC(t, ctx, allowed)
 
 		if _, err := framework.CreateThanosRulerAndWaitUntilReady(allowed, framework.MakeBasicThanosRuler("allowed", 1, "http://test.example.com")); err != nil {
 			t.Fatal(err)
