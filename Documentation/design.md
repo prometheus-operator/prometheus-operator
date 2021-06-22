@@ -1,22 +1,29 @@
-<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
-</div>
-
-# Design
+---
+title: "Design"
+description: "This document describes the design and interaction between the custom resource definitions that the Prometheus Operator introduces."
+lead: ""
+date: 2021-03-08T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 100
+toc: true
+---
 
 This document describes the design and interaction between the custom resource definitions that the Prometheus Operator introduces.
 
 The custom resources that the Prometheus Operator introduces are:
 
-* `Prometheus`
-* `Alertmanager`
-* `ThanosRuler`
-* `ServiceMonitor`
-* `PodMonitor`
-* `Probe`
-* `PrometheusRule`
-* `AlertmanagerConfig`
+* [Prometheus](#prometheus)
+* [Alertmanager](#alertmanager)
+* [ThanosRuler](#thanosruler)
+* [ServiceMonitor](#servicemonitor)
+* [PodMonitor](#podmonitor)
+* [Probe](#probe)
+* [PrometheusRule](#prometheusrule)
+* [AlertmanagerConfig](#alertmanagerconfig)
 
 ## Prometheus
 

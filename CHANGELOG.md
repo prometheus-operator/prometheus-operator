@@ -1,3 +1,46 @@
+## 0.48.1 / 2021-06-01
+
+* [BUGFIX] Added an `app` label on Prometheus pods. #4055
+
+## 0.48.0 / 2021-05-19
+
+Deprecation notice:  
+app labels will be removed in v0.50.
+
+* [CHANGE] Replace app label names with app.kubernetes.io/name. #3939
+* [CHANGE] Drop ksonnet as a dependency in jsonnetfile.json. #4002
+* [ENHANCEMENT] Add default container annotation to Alertmanager pod. #3978
+* [ENHANCEMENT] Add default container annotation to Thanos ruler pod. #3981
+* [ENHANCEMENT] Optimize asset secret update logic. #3986
+* [ENHANCEMENT] jsonnet: set default container in prometheus-operator pod. #3979
+* [BUGFIX] Watch configmaps from the Prometheus allowed namespaces only. #3992
+* [BUGFIX] Reconcile resources on namespace updates when using privileged lister/watcher. #3879
+* [BUGFIX] Don't generate broken Alertmanager configuration when `http_config` is defined in the global parameters. #4041
+
+## 0.47.1 / 2021-04-30
+
+* [BUGFIX] Avoid reconciliations for Alertmanager statefulset on resource version changes. #3948
+
+## 0.47.0 / 2021-04-13
+
+The `--config-reloader-cpu` and `--config-reloader-memory` flags are deprecated
+and will be removed in v0.49.0. They are replaced respectively by the
+`--config-reloader-cpu-request`/`--config-reloader-cpu-limit` and
+`config-reloader-memory-request`/`config-reloader-memory-limit` flags.
+
+* [FEATURE] Add `enableFeatures` field to the Prometheus CRD for enabling feature flags. #3878
+* [FEATURE] Add `metadataConfig` field to the Prometheus CRD for configuring how remote-write sends metadata information. #3915
+* [FEATURE] Add support for TLS and authentication configuration to the Probe CRD. #3876
+* [ENHANCEMENT] Allow CPU requests/limits and memory requests/limits of the config reloader to be set independently. #3826
+* [ENHANCEMENT] Add rules validation to `po-lint`. #3894
+* [ENHANCEMENT] Add common Kubernetes labels to statefulset objects managed by the Prometheus operator. #3841
+* [ENHANCEMENT] Avoid unneeded synchronizations on Alertmanager updates. #3943
+* [ENHANCEMENT] Retain the original job's name `__tmp_prometheus_job_name label` in the generated scrape configurations. #3828
+* [BUGFIX] Fix `app.kubernetes.io/managed-by` label on kubelet endpoint object. #3902
+* [BUGFIX] Avoid name collisions in the generated Prometheus configuration. #3913
+* [BUGFIX] Restore `prometheus_operator_spec_replicas` metrics for Alertmanager and Thanos Ruler controllers. #3924
+* [BUGFIX] Allow `smtp_require_tls` to be false in Alertmanager configuration. #3960
+
 ## 0.46.0 / 2021-02-24
 
 * [CHANGE] Drop support for Prometheus 1.x #2822

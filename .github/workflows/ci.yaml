@@ -1,7 +1,13 @@
 name: ci
 on:
-  - push
-  - pull_request
+  pull_request:
+  push:
+    branches:
+      - 'release-*'
+      - 'master'
+      - 'main'
+    tags:
+      - 'v*'
 env:
   golang-version: '1.16'
   kind-version: 'v0.10.0'
@@ -39,7 +45,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.33
+          version: v1.40.1
           args: --timeout 10m0s
   check-metrics:
     runs-on: ubuntu-latest
@@ -135,7 +141,7 @@ jobs:
       run: >
         EXCLUDE_ALERTMANAGER_TESTS=${{ matrix.alertmanager }}
         EXCLUDE_PROMETHEUS_TESTS=${{ matrix.prometheus }}
-        EXCLUDE_THANOS_TESTS=${{ matrix.thanosruler }}
+        EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
         make test-e2e
   publish:
     runs-on: ubuntu-latest
@@ -155,11 +161,17 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ${{ env.golang-version }}
-      - name: Login to Quay.io
+      - name: login to quay.io
         uses: docker/login-action@v1
         with:
           registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
+          username: ${{ secrets.quay_username }}
+          password: ${{ secrets.quay_password }}
+      - name: login to ghcr.io
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build images and push
         run: ./scripts/push-docker-image.sh

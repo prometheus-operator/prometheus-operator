@@ -1,9 +1,16 @@
-<br>
-<div class="alert alert-info" role="alert">
-    <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
-</div>
-
-# API Docs
+---
+title: "API"
+description: "Generated API docs for the Prometheus Operator"
+lead: ""
+date: 2021-03-08T08:49:31+00:00
+draft: false
+images: []
+menu:
+  docs:
+    parent: "operator"
+weight: 1000
+toc: true
+---
 
 This Document documents the types introduced by the Prometheus Operator to be consumed by users.
 
@@ -22,6 +29,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
 * [Endpoint](#endpoint)
+* [MetadataConfig](#metadataconfig)
 * [NamespaceSelector](#namespaceselector)
 * [PodMetricsEndpoint](#podmetricsendpoint)
 * [PodMetricsEndpointTLSConfig](#podmetricsendpointtlsconfig)
@@ -31,6 +39,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [Probe](#probe)
 * [ProbeList](#probelist)
 * [ProbeSpec](#probespec)
+* [ProbeTLSConfig](#probetlsconfig)
 * [ProbeTargetIngress](#probetargetingress)
 * [ProbeTargetStaticConfig](#probetargetstaticconfig)
 * [ProbeTargets](#probetargets)
@@ -61,6 +70,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [TLSConfig](#tlsconfig)
 * [ThanosSpec](#thanosspec)
 * [WebSpec](#webspec)
+* [WebTLSConfig](#webtlsconfig)
 * [ThanosRuler](#thanosruler)
 * [ThanosRulerList](#thanosrulerlist)
 * [ThanosRulerSpec](#thanosrulerspec)
@@ -281,8 +291,19 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | honorTimestamps | HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data. | *bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints | *[BasicAuth](#basicauth) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
-| relabelings | RelabelConfigs to apply to samples before scraping. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+| relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
+
+[Back to TOC](#table-of-contents)
+
+## MetadataConfig
+
+Configures the sending of series metadata to remote storage.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| send | Whether metric metadata is sent to remote storage or not. | bool | false |
+| sendInterval | How frequently metric metadata is sent to remote storage. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -316,7 +337,7 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | honorTimestamps | HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data. | *bool | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
 | metricRelabelings | MetricRelabelConfigs to apply to samples before ingestion. | []*[RelabelConfig](#relabelconfig) | false |
-| relabelings | RelabelConfigs to apply to samples before ingestion. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
+| relabelings | RelabelConfigs to apply to samples before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields and replaces original scrape job name with __tmp_prometheus_job_name. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config | []*[RelabelConfig](#relabelconfig) | false |
 | proxyUrl | ProxyURL eg http://proxyserver:2195 Directs scrapes to proxy through this endpoint. | *string | false |
 
 [Back to TOC](#table-of-contents)
@@ -407,6 +428,23 @@ ProbeSpec contains specification parameters for a Probe.
 | targets | Targets defines a set of static and/or dynamically discovered targets to be probed using the prober. | [ProbeTargets](#probetargets) | false |
 | interval | Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used. | string | false |
 | scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. | string | false |
+| tlsConfig | TLS configuration to use when scraping the endpoint. | *[ProbeTLSConfig](#probetlsconfig) | false |
+| bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the probe and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
+
+[Back to TOC](#table-of-contents)
+
+## ProbeTLSConfig
+
+ProbeTLSConfig specifies TLS configuration parameters.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| ca | Struct containing the CA cert to use for the targets. | SecretOrConfigMap | false |
+| cert | Struct containing the client cert file for the targets. | SecretOrConfigMap | false |
+| keySecret | Secret containing the client key file for the targets. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
+| serverName | Used to verify the hostname for the targets. | string | false |
+| insecureSkipVerify | Disable target certificate validation. | bool | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -454,6 +492,7 @@ ProberSpec contains specification parameters for the Prober used for probing.
 | url | Mandatory URL of the prober. | string | true |
 | scheme | HTTP scheme to use for scraping. Defaults to `http`. | string | false |
 | path | Path to collect metrics from. Defaults to `/probe`. | string | false |
+| proxyUrl | Optional ProxyURL. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -553,9 +592,9 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | walCompression | Enable compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0. | *bool | false |
 | logLevel | Log level for Prometheus to be configured with. | string | false |
 | logFormat | Log format for Prometheus to be configured with. | string | false |
-| scrapeInterval | Interval between consecutive scrapes. | string | false |
+| scrapeInterval | Interval between consecutive scrapes. Default: `1m` | string | false |
 | scrapeTimeout | Number of seconds to wait for target to respond before erroring. | string | false |
-| evaluationInterval | Interval between consecutive evaluations. | string | false |
+| evaluationInterval | Interval between consecutive evaluations. Default: `1m` | string | false |
 | rules | /--rules.*/ command-line arguments. | [Rules](#rules) | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
 | enableAdminAPI | Enable access to prometheus web admin API. Defaults to the value of `false`. WARNING: Enabling the admin APIs enables mutating endpoints, to delete data, shutdown Prometheus, and more. Enabling this should be done with care and the user is advised to add additional authentication authorization via a proxy to ensure only clients authorized to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis | bool | false |
@@ -583,7 +622,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | securityContext | SecurityContext holds pod-level security attributes and common container settings. This defaults to the default PodSecurityContext. | *v1.PodSecurityContext | false |
 | listenLocal | ListenLocal makes the Prometheus server listen on loopback, so that it does not bind against the Pod IP. | bool | false |
 | containers | Containers allows injecting additional containers or modifying operator generated containers. This can be used to allow adding an authentication proxy to a Prometheus pod or to change the behavior of an operator generated container. Containers described here modify an operator generated container if they share the same name and modifications are done via a strategic merge patch. The current container names are: `prometheus`, `config-reloader`, and `thanos-sidecar`. Overriding containers is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. | []v1.Container | false |
-| initContainers | InitContainers allows adding initContainers to the pod definition. Those can be used to e.g. fetch secrets for injection into the Prometheus configuration from external sources. Any errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/ Using initContainers for any use case other then secret fetching is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. | []v1.Container | false |
+| initContainers | InitContainers allows adding initContainers to the pod definition. Those can be used to e.g. fetch secrets for injection into the Prometheus configuration from external sources. Any errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/ InitContainers described here modify an operator generated init containers if they share the same name and modifications are done via a strategic merge patch. The current init container name is: `init-config-reloader`. Overriding init containers is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. | []v1.Container | false |
 | additionalScrapeConfigs | AdditionalScrapeConfigs allows specifying a key of a Secret containing additional Prometheus scrape configurations. Scrape configurations specified are appended to the configurations generated by the Prometheus Operator. Job configurations specified must have the form as specified in the official Prometheus documentation: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config. As scrape configs are appended, the user is responsible to make sure it is valid. Note that using this feature may expose the possibility to break upgrades of Prometheus. It is advised to review Prometheus release notes to ensure that no incompatible scrape configs are going to break Prometheus after the upgrade. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | additionalAlertRelabelConfigs | AdditionalAlertRelabelConfigs allows specifying a key of a Secret containing additional Prometheus alert relabel configurations. Alert relabel configurations specified are appended to the configurations generated by the Prometheus Operator. Alert relabel configurations specified must have the form as specified in the official Prometheus documentation: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs. As alert relabel configs are appended, the user is responsible to make sure it is valid. Note that using this feature may expose the possibility to break upgrades of Prometheus. It is advised to review Prometheus release notes to ensure that no incompatible alert relabel configs are going to break Prometheus after the upgrade. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | additionalAlertManagerConfigs | AdditionalAlertManagerConfigs allows specifying a key of a Secret containing additional Prometheus AlertManager configurations. AlertManager configurations specified are appended to the configurations generated by the Prometheus Operator. Job configurations specified must have the form as specified in the official Prometheus documentation: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config. As AlertManager configs are appended, the user is responsible to make sure it is valid. Note that using this feature may expose the possibility to break upgrades of Prometheus. It is advised to review Prometheus release notes to ensure that no incompatible AlertManager configs are going to break Prometheus after the upgrade. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
@@ -595,7 +634,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | overrideHonorLabels | OverrideHonorLabels if set to true overrides all user configured honor_labels. If HonorLabels is set in ServiceMonitor or PodMonitor to true, this overrides honor_labels to false. | bool | false |
 | overrideHonorTimestamps | OverrideHonorTimestamps allows to globally enforce honoring timestamps in all scrape configs. | bool | false |
 | ignoreNamespaceSelectors | IgnoreNamespaceSelectors if set to true will ignore NamespaceSelector settings from the podmonitor and servicemonitor configs, and they will only discover endpoints within their current namespace.  Defaults to false. | bool | false |
-| enforcedNamespaceLabel | EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert and metric that is user created. The label value will always be the namespace of the object that is being created. | string | false |
+| enforcedNamespaceLabel | EnforcedNamespaceLabel If set, a label will be added to\n\n1. all user-metrics (created by `ServiceMonitor`, `PodMonitor` and `ProbeConfig` object) and 2. in all `PrometheusRule` objects (except the ones excluded in `prometheusRulesExcludedFromEnforce`) to\n   * alerting & recording rules and\n   * the metrics used in their expressions (`expr`).\n\nLabel name is this field's value. Label value is the namespace of the created object (mentioned above). | string | false |
 | prometheusRulesExcludedFromEnforce | PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing of adding namespace labels. Works only if enforcedNamespaceLabel set to true. Make sure both ruleNamespace and ruleName are set for each pair | [][PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig) | false |
 | queryLogFile | QueryLogFile specifies the file to which PromQL queries are logged. Note that this location must be writable, and can be persisted using an attached volume. Alternatively, the location can be set to a stdout location such as `/dev/stdout` to log querie information to the default Prometheus log stream. This is only available in versions of Prometheus >= 2.16.0. For more details, see the Prometheus docs (https://prometheus.io/docs/guides/query-log/) | string | false |
 | enforcedSampleLimit | EnforcedSampleLimit defines global limit on number of scraped samples that will be accepted. This overrides any SampleLimit set per ServiceMonitor or/and PodMonitor. It is meant to be used by admins to enforce the SampleLimit to keep overall number of samples/series under the desired limit. Note that if SampleLimit is lower that value will be taken instead. | *uint64 | false |
@@ -676,7 +715,7 @@ RemoteReadSpec defines the remote_read configuration for prometheus.
 | remoteTimeout | Timeout for requests to the remote read endpoint. | string | false |
 | readRecent | Whether reads should be made for queries for time ranges that the local storage should have complete data for. | bool | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
-| bearerToken | bearer token for remote read. | string | false |
+| bearerToken | Bearer token for remote read. | string | false |
 | bearerTokenFile | File to read bearer token for remote read. | string | false |
 | tlsConfig | TLS Config to use for remote read. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
@@ -695,17 +734,18 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | headers | Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer. | map[string]string | false |
 | writeRelabelConfigs | The list of remote write relabel configurations. | [][RelabelConfig](#relabelconfig) | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
-| bearerToken | File to read bearer token for remote write. | string | false |
+| bearerToken | Bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
 | tlsConfig | TLS Config to use for remote write. | *[TLSConfig](#tlsconfig) | false |
 | proxyUrl | Optional ProxyURL | string | false |
 | queueConfig | QueueConfig allows tuning of the remote write queue parameters. | *[QueueConfig](#queueconfig) | false |
+| metadataConfig | MetadataConfig configures the sending of series metadata to remote storage. | *[MetadataConfig](#metadataconfig) | false |
 
 [Back to TOC](#table-of-contents)
 
 ## Rule
 
-Rule describes an alerting or recording rule.
+Rule describes an alerting or recording rule See Prometheus documentation: [alerting](https://www.prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) or [recording](https://www.prometheus.io/docs/prometheus/latest/configuration/recording_rules/#recording-rules) rule
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -806,12 +846,12 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jobLabel | The label to use to retrieve the job name from. | string | false |
-| targetLabels | TargetLabels transfers labels on the Kubernetes Service onto the target. | []string | false |
-| podTargetLabels | PodTargetLabels transfers labels on the Kubernetes Pod onto the target. | []string | false |
+| jobLabel | Chooses the label of the Kubernetes `Endpoints`. Its value will be used for the `job`-label's value of the created metrics.\n\nDefault & fallback value: the name of the respective Kubernetes `Endpoint`. | string | false |
+| targetLabels | TargetLabels transfers labels from the Kubernetes `Service` onto the created metrics. All labels set in `selector.matchLabels` are automatically transferred. | []string | false |
+| podTargetLabels | PodTargetLabels transfers labels on the Kubernetes `Pod` onto the created metrics. | []string | false |
 | endpoints | A list of endpoints allowed as part of this ServiceMonitor. | [][Endpoint](#endpoint) | true |
 | selector | Selector to select Endpoints objects. | [metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#labelselector-v1-meta) | true |
-| namespaceSelector | Selector to select which namespaces the Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
+| namespaceSelector | Selector to select which namespaces the Kubernetes Endpoints objects are discovered from. | [NamespaceSelector](#namespaceselector) | false |
 | sampleLimit | SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. | uint64 | false |
 | targetLimit | TargetLimit defines a limit on the number of scraped targets that will be accepted. | uint64 | false |
 
@@ -867,6 +907,7 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | logLevel | LogLevel for Thanos sidecar to be configured with. | string | false |
 | logFormat | LogFormat for Thanos sidecar to be configured with. | string | false |
 | minTime | MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y. | string | false |
+| readyTimeout | ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -877,6 +918,25 @@ WebSpec defines the query command line flags when starting Prometheus.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | pageTitle | The prometheus web page title | *string | false |
+| tlsConfig |  | *[WebTLSConfig](#webtlsconfig) | false |
+
+[Back to TOC](#table-of-contents)
+
+## WebTLSConfig
+
+WebTLSConfig defines the TLS parameters for HTTPS.
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| keySecret | Secret containing the TLS key for the server. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | true |
+| cert | Contains the TLS certificate for the server. | [SecretOrConfigMap](#secretorconfigmap) | true |
+| clientAuthType | Server policy for client authentication. Maps to ClientAuth Policies. For more detail on clientAuth options: https://golang.org/pkg/crypto/tls/#ClientAuthType | string | false |
+| client_ca | Contains the CA certificate for client certificate authentication to the server. | [SecretOrConfigMap](#secretorconfigmap) | false |
+| minVersion | Minimum TLS version that is acceptable. Defaults to TLS12. | string | false |
+| maxVersion | Maximum TLS version that is acceptable. Defaults to TLS13. | string | false |
+| cipherSuites | List of supported cipher suites for TLS versions up to TLS 1.2. If empty, Go default cipher suites are used. Available cipher suites are documented in the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants | []string | false |
+| preferServerCipherSuites | Controls whether the server selects the client's most preferred cipher suite, or the server's most preferred cipher suite. If true then the server's preference, as expressed in the order of elements in cipherSuites, is used. | *bool | false |
+| curvePreferences | Elliptic curves that will be used in an ECDHE handshake, in preference order. Available curves are documented in the go documentation: https://golang.org/pkg/crypto/tls/#CurveID | []string | false |
 
 [Back to TOC](#table-of-contents)
 

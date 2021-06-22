@@ -20,6 +20,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -40,6 +42,7 @@ const (
 	storageDir                      = "/prometheus"
 	confDir                         = "/etc/prometheus/config"
 	confOutDir                      = "/etc/prometheus/config_out"
+	webConfigDir                    = "/etc/prometheus/web_config"
 	tlsAssetsDir                    = "/etc/prometheus/certs"
 	rulesDir                        = "/etc/prometheus/rules"
 	secretsDir                      = "/etc/prometheus/secrets/"
@@ -223,9 +226,7 @@ func makeStatefulSet(
 		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
 	}
 
-	for _, volume := range p.Spec.Volumes {
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, volume)
-	}
+	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, p.Spec.Volumes...)
 
 	return statefulset, nil
 }
@@ -295,7 +296,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 				},
 			},
 			Selector: map[string]string{
-				"app": "prometheus",
+				"app.kubernetes.io/name": "prometheus",
 			},
 		},
 	}
@@ -351,7 +352,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		fmt.Sprintf("-storage.tsdb.path=%s", storageDir),
 		retentionTimeFlag+p.Spec.Retention,
 		"-web.enable-lifecycle",
-		"-storage.tsdb.no-lockfile",
 	)
 
 	if p.Spec.Query != nil && p.Spec.Query.LookbackDelta != nil {
@@ -529,6 +529,29 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		})
 	}
 
+	// Mount web config and web TLS credentials as volumes.
+	// We always mount the web config file for versions greater than 2.24.0.
+	// With this we avoid redeploying prometheus when reconfiguring between
+	// HTTP and HTTPS and vice-versa.
+	if version.GTE(semver.MustParse("2.24.0")) {
+		var webTLSConfig *monitoringv1.WebTLSConfig
+		if p.Spec.Web != nil {
+			webTLSConfig = p.Spec.Web.TLSConfig
+		}
+
+		webConfig, err := webconfig.New(webConfigDir, WebConfigSecretName(p.Name), webTLSConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		confArg, configVol, configMount := webConfig.GetMountParameters()
+		promArgs = append(promArgs, confArg)
+		volumes = append(volumes, configVol...)
+		promVolumeMounts = append(promVolumeMounts, configMount...)
+	}
+
+	// Mount related secrets
+
 	for _, s := range p.Spec.Secrets {
 		volumes = append(volumes, v1.Volume{
 			Name: k8sutil.SanitizeVolumeName("secret-" + s),
@@ -567,24 +590,6 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 	var readinessProbeHandler v1.Handler
 	{
-		healthyPath := path.Clean(webRoutePrefix + "/-/healthy")
-		if p.Spec.ListenLocal {
-			localHealthyPath := fmt.Sprintf("http://localhost:9090%s", healthyPath)
-			readinessProbeHandler.Exec = &v1.ExecAction{
-				Command: []string{
-					"sh",
-					"-c",
-					fmt.Sprintf(localProbe, localHealthyPath, localHealthyPath),
-				},
-			}
-		} else {
-			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
-				Path: healthyPath,
-				Port: intstr.FromString(p.Spec.PortName),
-			}
-		}
-	}
-	{
 		readyPath := path.Clean(webRoutePrefix + "/-/ready")
 		if p.Spec.ListenLocal {
 			localReadyPath := fmt.Sprintf("http://localhost:9090%s", readyPath)
@@ -595,11 +600,13 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 					fmt.Sprintf(localProbe, localReadyPath, localReadyPath),
 				},
 			}
-
 		} else {
 			readinessProbeHandler.HTTPGet = &v1.HTTPGetAction{
 				Path: readyPath,
 				Port: intstr.FromString(p.Spec.PortName),
+			}
+			if p.Spec.Web != nil && p.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("2.24.0")) {
+				readinessProbeHandler.HTTPGet.Scheme = v1.URISchemeHTTPS
 			}
 		}
 	}
@@ -614,12 +621,18 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 	}
 
 	podAnnotations := map[string]string{}
-	podLabels := map[string]string{}
+	podLabels := map[string]string{
+		"app.kubernetes.io/version": version.String(),
+	}
 	podSelectorLabels := map[string]string{
-		"app":                   "prometheus",
-		"prometheus":            p.Name,
-		shardLabelName:          fmt.Sprintf("%d", shard),
-		prometheusNameLabelName: p.Name,
+		// TODO(fpetkovski): remove `app` label after 0.50 release
+		"app":                          "prometheus",
+		"app.kubernetes.io/name":       "prometheus",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   p.Name,
+		"prometheus":                   p.Name,
+		shardLabelName:                 fmt.Sprintf("%d", shard),
+		prometheusNameLabelName:        p.Name,
 	}
 	if p.Spec.PodMetadata != nil {
 		if p.Spec.PodMetadata.Labels != nil {
@@ -638,10 +651,12 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		podLabels[k] = v
 	}
 
+	podAnnotations["kubectl.kubernetes.io/default-container"] = "prometheus"
+
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
 
-	var additionalContainers []v1.Container
+	var additionalContainers, operatorInitContainers []v1.Container
 
 	disableCompaction := p.Spec.DisableCompaction
 	if p.Spec.Thanos != nil {
@@ -763,6 +778,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		if p.Spec.Thanos.MinTime != "" {
 			container.Args = append(container.Args, "--min-time="+p.Spec.Thanos.MinTime)
 		}
+
+		if p.Spec.Thanos.ReadyTimeout != "" {
+			container.Args = append(container.Args, "--prometheus.ready_timeout="+p.Spec.Thanos.ReadyTimeout)
+		}
 		additionalContainers = append(additionalContainers, container)
 	}
 	if disableCompaction {
@@ -770,10 +789,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h")
 	}
 
-	configReloaderArgs := []string{
-		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
-		fmt.Sprintf("--config-envsubst-file=%s", path.Join(confOutDir, configEnvsubstFilename)),
-	}
+	var watchedDirectories []string
 	configReloaderVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config",
@@ -784,6 +800,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			MountPath: confOutDir,
 		},
 	}
+
 	if len(ruleConfigMapNames) != 0 {
 		for _, name := range ruleConfigMapNames {
 			mountPath := rulesDir + "/" + name
@@ -791,8 +808,28 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 				Name:      name,
 				MountPath: mountPath,
 			})
-			configReloaderArgs = append(configReloaderArgs, fmt.Sprintf("--watched-dir=%s", mountPath))
+			watchedDirectories = append(watchedDirectories, mountPath)
 		}
+	}
+
+	operatorInitContainers = append(operatorInitContainers,
+		operator.CreateConfigReloader(
+			"init-config-reloader",
+			operator.ReloaderResources(c.ReloaderConfig),
+			operator.ReloaderRunOnce(),
+			operator.LogFormat(p.Spec.LogFormat),
+			operator.LogLevel(p.Spec.LogLevel),
+			operator.VolumeMounts(configReloaderVolumeMounts),
+			operator.ConfigFile(path.Join(confDir, configFilename)),
+			operator.ConfigEnvsubstFile(path.Join(confOutDir, configEnvsubstFilename)),
+			operator.WatchedDirectories(watchedDirectories),
+			operator.Shard(shard),
+		),
+	)
+
+	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, p.Spec.InitContainers)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to merge init containers spec")
 	}
 
 	operatorContainers := append([]v1.Container{
@@ -807,19 +844,21 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 		},
 		operator.CreateConfigReloader(
-			c.ReloaderConfig,
-			url.URL{
+			"config-reloader",
+			operator.ReloaderResources(c.ReloaderConfig),
+			operator.ReloaderURL(url.URL{
 				Scheme: "http",
 				Host:   c.LocalHost + ":9090",
 				Path:   path.Clean(webRoutePrefix + "/-/reload"),
-			},
-			p.Spec.ListenLocal,
-			c.LocalHost,
-			p.Spec.LogFormat,
-			p.Spec.LogLevel,
-			configReloaderArgs,
-			configReloaderVolumeMounts,
-			shard,
+			}),
+			operator.ListenLocal(p.Spec.ListenLocal),
+			operator.LocalHost(c.LocalHost),
+			operator.LogFormat(p.Spec.LogFormat),
+			operator.LogLevel(p.Spec.LogLevel),
+			operator.ConfigFile(path.Join(confDir, configFilename)),
+			operator.ConfigEnvsubstFile(path.Join(confOutDir, configEnvsubstFilename)),
+			operator.WatchedDirectories(watchedDirectories), operator.VolumeMounts(configReloaderVolumeMounts),
+			operator.Shard(shard),
 		),
 	}, additionalContainers...)
 
@@ -846,7 +885,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 			},
 			Spec: v1.PodSpec{
 				Containers:                    containers,
-				InitContainers:                p.Spec.InitContainers,
+				InitContainers:                initContainers,
 				SecurityContext:               p.Spec.SecurityContext,
 				ServiceAccountName:            p.Spec.ServiceAccountName,
 				NodeSelector:                  p.Spec.NodeSelector,
@@ -869,6 +908,10 @@ func tlsAssetsSecretName(name string) string {
 	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
 }
 
+func WebConfigSecretName(name string) string {
+	return fmt.Sprintf("%s-web-config", prefixedName(name))
+}
+
 func volumeName(name string) string {
 	return fmt.Sprintf("%s-db", prefixedName(name))
 }
@@ -878,6 +921,7 @@ func prefixedName(name string) string {
 }
 
 func subPathForStorage(s *monitoringv1.StorageSpec) string {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if s == nil || s.DisableMountSubPath {
 		return ""
 	}

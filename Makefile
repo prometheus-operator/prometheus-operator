@@ -9,9 +9,8 @@ else
 endif
 
 GO_PKG=github.com/prometheus-operator/prometheus-operator
-REPO?=quay.io/prometheus-operator/prometheus-operator
-REPO_PROMETHEUS_CONFIG_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
-REPO_PROMETHEUS_OPERATOR_LINT?=quay.io/prometheus-operator/prometheus-operator-lint
+IMAGE_OPERATOR?=quay.io/prometheus-operator/prometheus-operator
+IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
@@ -141,16 +140,22 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(REPO):$(TAG) .
+	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
 	touch $@
 
 .hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile prometheus-config-reloader
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
-	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(REPO_PROMETHEUS_CONFIG_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	docker build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
+.PHONY: update-go-deps
+update-go-deps:
+	for m in $$(go list -mod=readonly -m -f '{{ if and (not .Indirect) (not .Main)}}{{.Path}}{{end}}' all); do \
+		go get $$m; \
+	done
+	@echo "Don't forget to run 'make tidy'"
 
 ##############
 # Generating #
@@ -234,7 +239,7 @@ shellcheck: $(SHELLCHECK_BINARY)
 
 .PHONY: check-metrics
 check-metrics: $(PROMLINTER_BINARY)
-	$(PROMLINTER_BINARY) .
+	$(PROMLINTER_BINARY) lint .
 
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY)
@@ -264,7 +269,7 @@ test/e2e/remote_write_certs/ca.key test/e2e/remote_write_certs/ca.crt test/e2e/r
 .PHONY: test-e2e
 test-e2e: KUBECONFIG?=$(HOME)/.kube/config
 test-e2e: test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem
-	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(REPO):$(TAG) -count=1
+	go test -timeout 55m -v ./test/e2e/ $(TEST_RUN_ARGS) --kubeconfig=$(KUBECONFIG) --operator-image=$(IMAGE_OPERATOR):$(TAG) -count=1
 
 ############
 # Binaries #

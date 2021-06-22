@@ -9,5 +9,5 @@ spec:
       protocol: TCP
   podSelector:
     matchLabels:
-      app: prometheus
+      app.kubernetes.io/name: prometheus
       prometheus: k8s

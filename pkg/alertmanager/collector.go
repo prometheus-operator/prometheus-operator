@@ -33,11 +33,11 @@ var (
 )
 
 type alertmanagerCollector struct {
-	store cache.Store
+	stores []cache.Store
 }
 
-func NewAlertmanagerCollector(s cache.Store) *alertmanagerCollector {
-	return &alertmanagerCollector{store: s}
+func newAlertmanagerCollectorForStores(s ...cache.Store) *alertmanagerCollector {
+	return &alertmanagerCollector{stores: s}
 }
 
 // Describe implements the prometheus.Collector interface.
@@ -47,8 +47,10 @@ func (c *alertmanagerCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements the prometheus.Collector interface.
 func (c *alertmanagerCollector) Collect(ch chan<- prometheus.Metric) {
-	for _, p := range c.store.List() {
-		c.collectAlertmanager(ch, p.(*v1.Alertmanager))
+	for _, s := range c.stores {
+		for _, p := range s.List() {
+			c.collectAlertmanager(ch, p.(*v1.Alertmanager))
+		}
 	}
 }
 

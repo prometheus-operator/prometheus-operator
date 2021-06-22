@@ -62,11 +62,7 @@ func deleteReplicationControllerViaYml(kubeClient kubernetes.Interface, namespac
 		return err
 	}
 
-	if err := kubeClient.CoreV1().ReplicationControllers(namespace).Delete(context.TODO(), rC.Name, metav1.DeleteOptions{}); err != nil {
-		return err
-	}
-
-	return nil
+	return kubeClient.CoreV1().ReplicationControllers(namespace).Delete(context.TODO(), rC.Name, metav1.DeleteOptions{})
 }
 
 func scaleDownReplicationController(kubeClient kubernetes.Interface, namespace string, rC v1.ReplicationController) error {

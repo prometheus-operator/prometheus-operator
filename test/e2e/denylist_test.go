@@ -15,7 +15,6 @@
 package e2e
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -46,7 +45,7 @@ func testDenyPrometheus(t *testing.T) {
 	for _, denied := range deniedNamespaces {
 		ctx.SetupPrometheusRBAC(t, denied, framework.KubeClient)
 		p := framework.MakeBasicPrometheus(denied, "denied", "denied", 1)
-		_, err = framework.MonClientV1.Prometheuses(denied).Create(context.TODO(), p, metav1.CreateOptions{})
+		_, err = framework.MonClientV1.Prometheuses(denied).Create(framework.Ctx, p, metav1.CreateOptions{})
 		if err != nil {
 			t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 		}
@@ -55,7 +54,7 @@ func testDenyPrometheus(t *testing.T) {
 	for _, allowed := range allowedNamespaces {
 		ctx.SetupPrometheusRBAC(t, allowed, framework.KubeClient)
 		p := framework.MakeBasicPrometheus(allowed, "allowed", "allowed", 1)
-		p, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
+		_, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -64,7 +63,7 @@ func testDenyPrometheus(t *testing.T) {
 	for _, denied := range deniedNamespaces {
 		// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 		// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
-		sts, err := framework.KubeClient.AppsV1().StatefulSets(denied).Get(context.TODO(), "prometheus-denied", metav1.GetOptions{})
+		sts, err := framework.KubeClient.AppsV1().StatefulSets(denied).Get(framework.Ctx, "prometheus-denied", metav1.GetOptions{})
 		if !api_errors.IsNotFound(err) {
 			t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 		}
@@ -142,7 +141,7 @@ func testDenyServiceMonitor(t *testing.T) {
 
 		// create the service monitor in a way, that it matches the label selector used in the allowed namespace.
 		s := framework.MakeBasicServiceMonitor("allowed")
-		if _, err := framework.MonClientV1.ServiceMonitors(denied).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		if _, err := framework.MonClientV1.ServiceMonitors(denied).Create(framework.Ctx, s, metav1.CreateOptions{}); err != nil {
 			t.Fatal("Creating ServiceMonitor failed: ", err)
 		}
 	}
@@ -150,7 +149,7 @@ func testDenyServiceMonitor(t *testing.T) {
 	for _, allowed := range allowedNamespaces {
 		ctx.SetupPrometheusRBAC(t, allowed, framework.KubeClient)
 		p := framework.MakeBasicPrometheus(allowed, "allowed", "allowed", 1)
-		p, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
+		_, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -163,7 +162,7 @@ func testDenyServiceMonitor(t *testing.T) {
 		}
 
 		s := framework.MakeBasicServiceMonitor("allowed")
-		if _, err := framework.MonClientV1.ServiceMonitors(allowed).Create(context.TODO(), s, metav1.CreateOptions{}); err != nil {
+		if _, err := framework.MonClientV1.ServiceMonitors(allowed).Create(framework.Ctx, s, metav1.CreateOptions{}); err != nil {
 			t.Fatal("Creating ServiceMonitor failed: ", err)
 		}
 
@@ -185,7 +184,7 @@ func testDenyServiceMonitor(t *testing.T) {
 	}
 
 	for _, allowed := range allowedNamespaces {
-		if err := framework.MonClientV1.ServiceMonitors(allowed).Delete(context.TODO(), "allowed", metav1.DeleteOptions{}); err != nil {
+		if err := framework.MonClientV1.ServiceMonitors(allowed).Delete(framework.Ctx, "allowed", metav1.DeleteOptions{}); err != nil {
 			t.Fatal("Deleting ServiceMonitor failed: ", err)
 		}
 
@@ -211,8 +210,8 @@ func testDenyThanosRuler(t *testing.T) {
 	}
 
 	for _, denied := range deniedNamespaces {
-		tr := framework.MakeBasicThanosRuler("denied", 1)
-		_, err = framework.MonClientV1.ThanosRulers(denied).Create(context.TODO(), tr, metav1.CreateOptions{})
+		tr := framework.MakeBasicThanosRuler("denied", 1, "http://test.example.com")
+		_, err = framework.MonClientV1.ThanosRulers(denied).Create(framework.Ctx, tr, metav1.CreateOptions{})
 		if err != nil {
 			t.Fatalf("creating %v Prometheus instances failed (%v): %v", tr.Spec.Replicas, tr.Name, err)
 		}
@@ -221,7 +220,7 @@ func testDenyThanosRuler(t *testing.T) {
 	for _, allowed := range allowedNamespaces {
 		ctx.SetupPrometheusRBAC(t, allowed, framework.KubeClient)
 
-		if _, err := framework.CreateThanosRulerAndWaitUntilReady(allowed, framework.MakeBasicThanosRuler("allowed", 1)); err != nil {
+		if _, err := framework.CreateThanosRulerAndWaitUntilReady(allowed, framework.MakeBasicThanosRuler("allowed", 1, "http://test.example.com")); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -229,7 +228,7 @@ func testDenyThanosRuler(t *testing.T) {
 	for _, denied := range deniedNamespaces {
 		// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied thanos ruler.
 		// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
-		sts, err := framework.KubeClient.AppsV1().StatefulSets(denied).Get(context.TODO(), "thanosruler-denied", metav1.GetOptions{})
+		sts, err := framework.KubeClient.AppsV1().StatefulSets(denied).Get(framework.Ctx, "thanosruler-denied", metav1.GetOptions{})
 		if !api_errors.IsNotFound(err) {
 			t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 		}
