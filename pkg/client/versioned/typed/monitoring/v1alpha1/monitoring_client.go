@@ -39,9 +39,8 @@ func (c *MonitoringV1alpha1Client) AlertmanagerConfigs(namespace string) Alertma
 // NewForConfig creates a new MonitoringV1alpha1Client for the given config.
 func NewForConfig(c *rest.Config) (*MonitoringV1alpha1Client, error) {
 	config := *c
-	if err := setConfigDefaults(&config); err != nil {
-		return nil, err
-	}
+	setConfigDefaults(&config)
+
 	client, err := rest.RESTClientFor(&config)
 	if err != nil {
 		return nil, err
@@ -64,7 +63,7 @@ func New(c rest.Interface) *MonitoringV1alpha1Client {
 	return &MonitoringV1alpha1Client{c}
 }
 
-func setConfigDefaults(config *rest.Config) error {
+func setConfigDefaults(config *rest.Config) {
 	gv := v1alpha1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
@@ -73,8 +72,6 @@ func setConfigDefaults(config *rest.Config) error {
 	if config.UserAgent == "" {
 		config.UserAgent = rest.DefaultKubernetesUserAgent()
 	}
-
-	return nil
 }
 
 // RESTClient returns a RESTClient that is used to communicate

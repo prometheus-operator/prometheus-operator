@@ -69,9 +69,8 @@ func (c *MonitoringV1Client) ThanosRulers(namespace string) ThanosRulerInterface
 // NewForConfig creates a new MonitoringV1Client for the given config.
 func NewForConfig(c *rest.Config) (*MonitoringV1Client, error) {
 	config := *c
-	if err := setConfigDefaults(&config); err != nil {
-		return nil, err
-	}
+	setConfigDefaults(&config)
+
 	client, err := rest.RESTClientFor(&config)
 	if err != nil {
 		return nil, err
@@ -94,7 +93,7 @@ func New(c rest.Interface) *MonitoringV1Client {
 	return &MonitoringV1Client{c}
 }
 
-func setConfigDefaults(config *rest.Config) error {
+func setConfigDefaults(config *rest.Config) {
 	gv := v1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
@@ -103,8 +102,6 @@ func setConfigDefaults(config *rest.Config) error {
 	if config.UserAgent == "" {
 		config.UserAgent = rest.DefaultKubernetesUserAgent()
 	}
-
-	return nil
 }
 
 // RESTClient returns a RESTClient that is used to communicate
