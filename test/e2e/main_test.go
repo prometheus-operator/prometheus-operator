@@ -16,10 +16,11 @@ package e2e
 
 import (
 	"flag"
-	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	"log"
 	"os"
 	"testing"
+
+	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -79,8 +80,8 @@ func TestMain(m *testing.M) {
 // TestAllNS tests the Prometheus Operator watching all namespaces in a
 // Kubernetes cluster.
 func TestAllNS(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	ns := framework.CreateNamespace(t, ctx)

@@ -25,8 +25,8 @@ import (
 )
 
 func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	operatorNs := framework.CreateNamespace(t, ctx)
@@ -59,8 +59,8 @@ func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 }
 
 func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	// create three namespaces:
@@ -119,7 +119,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		}
 
 		svc := framework.MakeEchoService("denied", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady( deniedNs, svc); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(deniedNs, svc); err != nil {
 			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 		} else {
 			ctx.AddFinalizerFn(finalizerFn)
@@ -164,7 +164,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		}
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady( instanceNs, svc); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(instanceNs, svc); err != nil {
 			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 		} else {
 			ctx.AddFinalizerFn(finalizerFn)
@@ -184,8 +184,8 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 }
 
 func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	// create three namespaces:
@@ -259,7 +259,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		}
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady( instanceNs, svc); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(instanceNs, svc); err != nil {
 			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 		} else {
 			ctx.AddFinalizerFn(finalizerFn)
@@ -283,7 +283,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		}
 
 		svc := framework.MakeEchoService("allowed", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady( allowedNs, svc); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(allowedNs, svc); err != nil {
 			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 		} else {
 			ctx.AddFinalizerFn(finalizerFn)
@@ -340,8 +340,8 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 // it's configured to watch namespaces that don't exist.
 // See https://github.com/prometheus-operator/prometheus-operator/issues/3347
 func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	// create three namespaces:
@@ -404,7 +404,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 		}
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady( instanceNs, svc); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(instanceNs, svc); err != nil {
 			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 		} else {
 			ctx.AddFinalizerFn(finalizerFn)

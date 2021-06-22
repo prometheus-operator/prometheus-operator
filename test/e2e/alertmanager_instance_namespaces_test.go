@@ -27,8 +27,8 @@ import (
 )
 
 func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	// create 3 namespaces:
@@ -71,8 +71,8 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 }
 
 func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	// create two namespaces:
@@ -101,8 +101,8 @@ func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
 }
 
 func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	// create 3 namespaces:

@@ -27,8 +27,8 @@ import (
 )
 
 func testDenyPrometheus(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	operatorNamespace := framework.CreateNamespace(t, ctx)
@@ -78,8 +78,8 @@ func testDenyPrometheus(t *testing.T) {
 }
 
 func testDenyServiceMonitor(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	operatorNamespace := framework.CreateNamespace(t, ctx)
@@ -134,7 +134,7 @@ func testDenyServiceMonitor(t *testing.T) {
 		}
 
 		svc := framework.MakePrometheusService("denied", "denied", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady( denied, svc); err != nil {
+		if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(denied, svc); err != nil {
 			t.Fatal(errors.Wrap(err, "creating prometheus service failed"))
 		} else {
 			ctx.AddFinalizerFn(finalizerFn)
@@ -148,7 +148,7 @@ func testDenyServiceMonitor(t *testing.T) {
 	}
 
 	for _, allowed := range allowedNamespaces {
-		framework.SetupPrometheusRBAC(t,ctx,  allowed)
+		framework.SetupPrometheusRBAC(t, ctx, allowed)
 		p := framework.MakeBasicPrometheus(allowed, "allowed", "allowed", 1)
 		_, err = framework.CreatePrometheusAndWaitUntilReady(allowed, p)
 		if err != nil {
@@ -196,8 +196,8 @@ func testDenyServiceMonitor(t *testing.T) {
 }
 
 func testDenyThanosRuler(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	operatorNamespace := framework.CreateNamespace(t, ctx)

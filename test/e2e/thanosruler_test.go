@@ -27,8 +27,8 @@ import (
 )
 
 func testThanosRulerCreateDeleteCluster(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 
 	ns := framework.CreateNamespace(t, ctx)
@@ -46,8 +46,7 @@ func testThanosRulerCreateDeleteCluster(t *testing.T) {
 }
 
 func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
 
 	thanosNamespace := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, thanosNamespace)
@@ -124,8 +123,8 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 func testTRPreserveUserAddedMetadata(t *testing.T) {
 	t.Parallel()
 
-	testCtx := framework.NewTestCtx(t)
-	ctx := &testCtx
+	ctx := framework.NewTestCtx(t)
+
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
