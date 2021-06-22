@@ -778,6 +778,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		if p.Spec.Thanos.MinTime != "" {
 			container.Args = append(container.Args, "--min-time="+p.Spec.Thanos.MinTime)
 		}
+
+		if p.Spec.Thanos.ReadyTimeout != "" {
+			container.Args = append(container.Args, "--prometheus.ready_timeout="+p.Spec.Thanos.ReadyTimeout)
+		}
 		additionalContainers = append(additionalContainers, container)
 	}
 	if disableCompaction {
