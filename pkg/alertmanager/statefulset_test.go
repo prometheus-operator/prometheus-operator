@@ -971,6 +971,13 @@ func TestClusterListenAddress(t *testing.T) {
 			ExpectedResult:         "--cluster.listen-address=",
 		},
 		{
+			Name:                   "ClusterListenAddressForSingleReplicaWithForceEnableClusterModeAndClusterListenLocal",
+			Replicas:               1,
+			ForceEnableClusterMode: true,
+			ClusterListenLocal:     true,
+			ExpectedResult:         "--cluster.listen-address=127.0.0.1:9094",
+		},
+		{
 			Name:                   "ClusterListenAddressForMultipleReplicas",
 			Replicas:               3,
 			ForceEnableClusterMode: false,
