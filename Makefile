@@ -222,7 +222,7 @@ format: go-fmt jsonnet-fmt check-license shellcheck
 
 .PHONY: go-fmt
 go-fmt:
-	go fmt $(pkgs)
+	gofmt -s -w .
 
 .PHONY: jsonnet-fmt
 jsonnet-fmt: $(JSONNETFMT_BINARY)

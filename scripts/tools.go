@@ -21,13 +21,13 @@ package tools
 import (
 	_ "github.com/brancz/gojsontoyaml"
 	_ "github.com/campoy/embedmd"
-	_ "github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb"
+	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	_ "github.com/google/go-jsonnet/cmd/jsonnet"
 	_ "github.com/google/go-jsonnet/cmd/jsonnetfmt"
+	_ "github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb"
+	_ "github.com/yeya24/promlinter/cmd/promlinter"
 	_ "k8s.io/code-generator/cmd/client-gen"
 	_ "k8s.io/code-generator/cmd/informer-gen"
 	_ "k8s.io/code-generator/cmd/lister-gen"
 	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
-	_ "github.com/yeya24/promlinter/cmd/promlinter"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 )
