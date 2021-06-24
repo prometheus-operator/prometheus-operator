@@ -58,6 +58,7 @@ type Framework struct {
 	MasterHost        string
 	DefaultTimeout    time.Duration
 	RestConfig        *rest.Config
+	Ctx               context.Context
 }
 
 // New setups a test framework and returns it.
@@ -101,6 +102,7 @@ func New(kubeconfig, opImage string) (*Framework, error) {
 		APIServerClient:   apiCli,
 		HTTPClient:        httpc,
 		DefaultTimeout:    time.Minute,
+		Ctx:               context.Background(),
 	}
 
 	return f, nil
@@ -224,56 +226,56 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 	}
 
 	err = f.CreateCRDAndWaitUntilReady(monitoringv1.AlertmanagerName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(context.TODO(), opts)
+		return f.MonClientV1.Alertmanagers(v1.NamespaceAll).List(f.Ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize Alertmanager CRD")
 	}
 
 	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PodMonitorName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.PodMonitors(v1.NamespaceAll).List(context.TODO(), opts)
+		return f.MonClientV1.PodMonitors(v1.NamespaceAll).List(f.Ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize PodMonitor CRD")
 	}
 
 	err = f.CreateCRDAndWaitUntilReady(monitoringv1.ProbeName, func(opts metav1.ListOptions) (object runtime.Object, err error) {
-		return f.MonClientV1.Probes(v1.NamespaceAll).List(context.TODO(), opts)
+		return f.MonClientV1.Probes(v1.NamespaceAll).List(f.Ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize Probe CRD")
 	}
 
 	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PrometheusName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(context.TODO(), opts)
+		return f.MonClientV1.Prometheuses(v1.NamespaceAll).List(f.Ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize Prometheus CRD")
 	}
 
 	err = f.CreateCRDAndWaitUntilReady(monitoringv1.PrometheusRuleName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(context.TODO(), opts)
+		return f.MonClientV1.PrometheusRules(v1.NamespaceAll).List(f.Ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize PrometheusRule CRD")
 	}
 
 	err = f.CreateCRDAndWaitUntilReady(monitoringv1.ServiceMonitorName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List(context.TODO(), opts)
+		return f.MonClientV1.ServiceMonitors(v1.NamespaceAll).List(f.Ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize ServiceMonitor CRD")
 	}
 
 	err = f.CreateCRDAndWaitUntilReady(monitoringv1.ThanosRulerName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1.ThanosRulers(v1.NamespaceAll).List(context.TODO(), opts)
+		return f.MonClientV1.ThanosRulers(v1.NamespaceAll).List(f.Ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize ThanosRuler CRD")
 	}
 
 	err = f.CreateCRDAndWaitUntilReady(monitoringv1alpha1.AlertmanagerConfigName, func(opts metav1.ListOptions) (runtime.Object, error) {
-		return f.MonClientV1alpha1.AlertmanagerConfigs(v1.NamespaceAll).List(context.TODO(), opts)
+		return f.MonClientV1alpha1.AlertmanagerConfigs(v1.NamespaceAll).List(f.Ctx, opts)
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "initialize AlertmanagerConfig CRD")

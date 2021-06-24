@@ -163,7 +163,7 @@ func makeStatefulSetService(p *monitoringv1.Alertmanager, config Config) *v1.Ser
 				"operated-alertmanager": "true",
 			}),
 			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
+				{
 					Name:       p.GetName(),
 					Kind:       p.Kind,
 					APIVersion: p.APIVersion,

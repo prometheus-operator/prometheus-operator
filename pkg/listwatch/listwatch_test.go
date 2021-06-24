@@ -25,19 +25,19 @@ func TestIdenticalNamespaces(t *testing.T) {
 	}{
 		{
 			a: map[string]struct{}{
-				"foo": struct{}{},
+				"foo": {},
 			},
 			b: map[string]struct{}{
-				"foo": struct{}{},
+				"foo": {},
 			},
 			ret: true,
 		},
 		{
 			a: map[string]struct{}{
-				"foo": struct{}{},
+				"foo": {},
 			},
 			b: map[string]struct{}{
-				"bar": struct{}{},
+				"bar": {},
 			},
 			ret: false,
 		},

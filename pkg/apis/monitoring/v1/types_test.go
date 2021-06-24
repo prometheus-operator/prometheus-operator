@@ -56,9 +56,9 @@ func TestMarshallServiceMonitor(t *testing.T) {
 
 func TestValidateSecretOrConfigMap(t *testing.T) {
 	for _, good := range []SecretOrConfigMap{
-		SecretOrConfigMap{},
-		SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-		SecretOrConfigMap{ConfigMap: &v1.ConfigMapKeySelector{}},
+		{},
+		{Secret: &v1.SecretKeySelector{}},
+		{ConfigMap: &v1.ConfigMapKeySelector{}},
 	} {
 		if err := good.Validate(); err != nil {
 			t.Errorf("expected validation of %+v not to fail, err: %s", good, err)

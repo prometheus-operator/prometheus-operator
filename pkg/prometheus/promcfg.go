@@ -1541,8 +1541,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(version semver.Version, p *
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: spec.QueueConfig.BatchSendDeadline})
 			}
 
-			if spec.QueueConfig.MaxRetries != int(0) {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_retries", Value: spec.QueueConfig.MaxRetries})
+			if version.LT(semver.MustParse("2.11.0")) {
+				if spec.QueueConfig.MaxRetries != int(0) {
+					queueConfig = append(queueConfig, yaml.MapItem{Key: "max_retries", Value: spec.QueueConfig.MaxRetries})
+				}
 			}
 
 			if spec.QueueConfig.MinBackoff != "" {

@@ -15,7 +15,6 @@
 package e2e
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -53,7 +52,7 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 
 	am := framework.MakeBasicAlertmanager("non-instance", 3)
 	am.Namespace = nonInstanceNs
-	_, err = framework.MonClientV1.Alertmanagers(nonInstanceNs).Create(context.TODO(), am, metav1.CreateOptions{})
+	_, err = framework.MonClientV1.Alertmanagers(nonInstanceNs).Create(framework.Ctx, am, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +63,7 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sts, err := framework.KubeClient.AppsV1().StatefulSets(nonInstanceNs).Get(context.TODO(), "alertmanager-instance", metav1.GetOptions{})
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(nonInstanceNs).Get(framework.Ctx, "alertmanager-instance", metav1.GetOptions{})
 	if !api_errors.IsNotFound(err) {
 		t.Fatalf("expected not to find an Alertmanager statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
@@ -153,7 +152,7 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 	}
 
 	// Create an Alertmanager resource in the "allowedNs" namespace which must *not* be reconciled.
-	_, err = framework.MonClientV1.Alertmanagers(allowedNs).Create(context.TODO(), am.DeepCopy(), metav1.CreateOptions{})
+	_, err = framework.MonClientV1.Alertmanagers(allowedNs).Create(framework.Ctx, am.DeepCopy(), metav1.CreateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +163,7 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 	}
 
 	// Check that the Alertmanager resource created in the "allowed" namespace hasn't been reconciled.
-	sts, err := framework.KubeClient.AppsV1().StatefulSets(allowedNs).Get(context.TODO(), "alertmanager-instance", metav1.GetOptions{})
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(allowedNs).Get(framework.Ctx, "alertmanager-instance", metav1.GetOptions{})
 	if !api_errors.IsNotFound(err) {
 		t.Fatalf("expected not to find an Alertmanager statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
@@ -187,11 +186,11 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 		},
 	}
 
-	if _, err = framework.MonClientV1alpha1.AlertmanagerConfigs(instanceNs).Create(context.TODO(), amConfig, metav1.CreateOptions{}); err != nil {
+	if _, err = framework.MonClientV1alpha1.AlertmanagerConfigs(instanceNs).Create(framework.Ctx, amConfig, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err = framework.MonClientV1alpha1.AlertmanagerConfigs(allowedNs).Create(context.TODO(), amConfig, metav1.CreateOptions{}); err != nil {
+	if _, err = framework.MonClientV1alpha1.AlertmanagerConfigs(allowedNs).Create(framework.Ctx, amConfig, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 

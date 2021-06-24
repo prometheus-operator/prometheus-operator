@@ -16,6 +16,7 @@ package v1
 
 import (
 	"fmt"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -641,6 +642,8 @@ type ThanosSpec struct {
 	// VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 	// VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
+	// ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m
+	ReadyTimeout string `json:"readyTimeout,omitempty"`
 }
 
 // RemoteWriteSpec defines the remote_write configuration for prometheus.
