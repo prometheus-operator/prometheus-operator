@@ -20626,8 +20626,18 @@ rules:
   - ""
   resources:
   - services
-  - services/finalizers
   - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services/finalizers
   verbs:
   - get
   - create
