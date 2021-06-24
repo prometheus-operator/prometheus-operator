@@ -81,7 +81,6 @@ func TestMain(m *testing.M) {
 // Kubernetes cluster.
 func TestAllNS(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 
 	ns := framework.CreateNamespace(t, ctx)

@@ -45,7 +45,6 @@ func testAMCreateDeleteCluster(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -66,7 +65,6 @@ func testAMScaling(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -95,7 +93,6 @@ func testAMVersionMigration(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -127,7 +124,6 @@ func testAMStorageUpdate(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 
@@ -187,7 +183,6 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -216,7 +211,6 @@ func testAMClusterInitialization(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -265,7 +259,6 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	amClusterSize := 3
@@ -303,7 +296,6 @@ func testAMClusterGossipSilences(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -354,7 +346,6 @@ func testAMReloadConfig(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -509,7 +500,6 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -733,7 +723,6 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	configNs := framework.CreateNamespace(t, ctx)
@@ -1194,7 +1183,6 @@ func testUserDefinedAlertmanagerConfig(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1261,7 +1249,6 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)

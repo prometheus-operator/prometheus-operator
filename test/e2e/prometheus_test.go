@@ -720,7 +720,6 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			t.Parallel()
 
 			ctx := framework.NewTestCtx(t)
-
 			defer ctx.Cleanup(t)
 
 			ns := framework.CreateNamespace(t, ctx)
@@ -791,7 +790,6 @@ func testPromCreateDeleteCluster(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -842,7 +840,6 @@ func testPromNoServiceMonitorSelector(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -859,7 +856,6 @@ func testPromVersionMigration(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -891,7 +887,6 @@ func testPromResourceUpdate(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -957,7 +952,6 @@ func testPromStorageLabelsAnnotations(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1033,7 +1027,6 @@ func testPromStorageUpdate(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1092,7 +1085,6 @@ func testPromReloadConfig(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1186,7 +1178,6 @@ func testPromAdditionalScrapeConfig(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1245,7 +1236,6 @@ func testPromAdditionalAlertManagerConfig(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1327,7 +1317,6 @@ func testPromReloadRules(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1386,7 +1375,6 @@ func testPromMultiplePrometheusRulesSameNS(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1427,7 +1415,6 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	rootNS := framework.CreateNamespace(t, ctx)
 	alertNSOne := framework.CreateNamespace(t, ctx)
@@ -1507,7 +1494,6 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1585,7 +1571,6 @@ func testPromRulesMustBeAnnotated(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1616,7 +1601,6 @@ func testInvalidRulesAreRejected(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -1866,7 +1850,6 @@ func testPromPreserveUserAddedMetadata(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -2049,7 +2032,6 @@ func testPromWhenDeleteCRDCleanUpViaOwnerRef(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -2085,7 +2067,6 @@ func testPromDiscovery(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -2126,7 +2107,6 @@ func testPromSharedResourcesReconciliation(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -2180,7 +2160,6 @@ func testShardingProvisioning(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -2254,7 +2233,6 @@ func testResharding(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -2327,7 +2305,6 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -2379,7 +2356,6 @@ func testPromExposingWithKubernetesAPI(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -2407,7 +2383,6 @@ func testPromDiscoverTargetPort(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -2468,7 +2443,6 @@ func testPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	prometheusNSName := framework.CreateNamespace(t, ctx)
 	serviceMonitorNSName := framework.CreateNamespace(t, ctx)
@@ -2526,7 +2500,6 @@ func testThanos(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -2687,7 +2660,6 @@ func testPromGetAuthSecret(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := framework.NewTestCtx(t)
-
 			defer ctx.Cleanup(t)
 			ns := framework.CreateNamespace(t, ctx)
 			framework.SetupPrometheusRBACGlobal(t, ctx, ns)
@@ -2775,7 +2747,6 @@ func testOperatorNSScope(t *testing.T) {
 
 	t.Run("SingleNS", func(t *testing.T) {
 		ctx := framework.NewTestCtx(t)
-
 		defer ctx.Cleanup(t)
 
 		operatorNS := framework.CreateNamespace(t, ctx)
@@ -2846,7 +2817,6 @@ func testOperatorNSScope(t *testing.T) {
 
 	t.Run("MultiNS", func(t *testing.T) {
 		ctx := framework.NewTestCtx(t)
-
 		defer ctx.Cleanup(t)
 
 		operatorNS := framework.CreateNamespace(t, ctx)
@@ -3087,8 +3057,8 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			t.Parallel()
 
 			ctx := framework.NewTestCtx(t)
-
 			defer ctx.Cleanup(t)
+
 			ns := framework.CreateNamespace(t, ctx)
 			framework.SetupPrometheusRBAC(t, ctx, ns)
 
@@ -3205,7 +3175,6 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 
 	ns := framework.CreateNamespace(t, ctx)
@@ -3385,7 +3354,6 @@ func testPromStaticProbe(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -3591,7 +3559,6 @@ func testPromSecurePodMonitor(t *testing.T) {
 			t.Parallel()
 
 			ctx := framework.NewTestCtx(t)
-
 			defer ctx.Cleanup(t)
 			ns := framework.CreateNamespace(t, ctx)
 			framework.SetupPrometheusRBAC(t, ctx, ns)
@@ -3694,7 +3661,6 @@ func testPromWebTLS(t *testing.T) {
 	t.Parallel()
 
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 	ns := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, ns)

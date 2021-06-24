@@ -28,7 +28,6 @@ import (
 
 func testDenyPrometheus(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 
 	operatorNamespace := framework.CreateNamespace(t, ctx)
@@ -79,7 +78,6 @@ func testDenyPrometheus(t *testing.T) {
 
 func testDenyServiceMonitor(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 
 	operatorNamespace := framework.CreateNamespace(t, ctx)
@@ -197,7 +195,6 @@ func testDenyServiceMonitor(t *testing.T) {
 
 func testDenyThanosRuler(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 
 	operatorNamespace := framework.CreateNamespace(t, ctx)

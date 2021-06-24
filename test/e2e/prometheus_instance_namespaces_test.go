@@ -26,7 +26,6 @@ import (
 
 func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 
 	operatorNs := framework.CreateNamespace(t, ctx)
@@ -60,7 +59,6 @@ func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 
 func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 
 	// create three namespaces:
@@ -185,7 +183,6 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 
 func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 
 	// create three namespaces:
@@ -341,7 +338,6 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 // See https://github.com/prometheus-operator/prometheus-operator/issues/3347
 func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
-
 	defer ctx.Cleanup(t)
 
 	// create three namespaces:
