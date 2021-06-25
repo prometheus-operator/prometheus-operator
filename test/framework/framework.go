@@ -188,7 +188,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		return nil, errors.Wrap(err, "failed to create prometheus operator service account")
 	}
 
-	clusterRole, err := f.CreateClusterRole( "../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml")
+	clusterRole, err := f.CreateClusterRole("../../example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml")
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, errors.Wrap(err, "failed to create prometheus cluster role")
 	}

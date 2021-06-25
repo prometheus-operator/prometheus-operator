@@ -20,7 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func (f *Framework) CreateRoleBinding( ns string, relativePath string) (FinalizerFn, error) {
+func (f *Framework) CreateRoleBinding(ns string, relativePath string) (FinalizerFn, error) {
 	finalizerFn := func() error { return f.DeleteRoleBinding(ns, relativePath) }
 	roleBinding, err := f.parseRoleBindingYaml(relativePath)
 	if err != nil {

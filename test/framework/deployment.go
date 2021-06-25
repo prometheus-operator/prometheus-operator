@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func (f *Framework) GetDeployment( ns, name string) (*appsv1.Deployment, error) {
+func (f *Framework) GetDeployment(ns, name string) (*appsv1.Deployment, error) {
 	return f.KubeClient.AppsV1().Deployments(ns).Get(f.Ctx, name, metav1.GetOptions{})
 }
 
