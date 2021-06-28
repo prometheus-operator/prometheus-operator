@@ -357,7 +357,7 @@ func (f *Framework) CreatePrometheusOperator(ns, opImage string, namespaceAllowl
 		)
 	}
 
-	err = CreateOrUpdateDeployment(f.KubeClient, ns, deploy)
+	err = CreateDeployment(f.KubeClient, ns, deploy)
 	if err != nil {
 		return nil, err
 	}
