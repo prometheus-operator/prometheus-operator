@@ -85,8 +85,9 @@ func TestAllNS(t *testing.T) {
 	defer ctx.Cleanup(t)
 
 	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	stableVersion := "quay.io/prometheus-operator/prometheus-operator:v0.47.1"
+	finalizers, err := framework.CreatePrometheusOperator(ns, stableVersion, nil, nil, nil, nil, true, true)
 
-	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +97,11 @@ func TestAllNS(t *testing.T) {
 	}
 
 	t.Run("TestServerTLS", testServerTLS(t, ns))
-
+	// upgrade operator to current version
+	_, err = framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
 	// (or at least did not fail before calling t.Parallel). As all tests in

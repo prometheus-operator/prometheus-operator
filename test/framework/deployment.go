@@ -49,12 +49,25 @@ func MakeDeployment(pathToYaml string) (*appsv1.Deployment, error) {
 	return &deployment, nil
 }
 
-func CreateDeployment(kubeClient kubernetes.Interface, namespace string, d *appsv1.Deployment) error {
+func CreateOrUpdateDeployment(kubeClient kubernetes.Interface, namespace string, d *appsv1.Deployment) error {
 	d.Namespace = namespace
-	_, err := kubeClient.AppsV1().Deployments(namespace).Create(context.TODO(), d, metav1.CreateOptions{})
+
+	_, err := kubeClient.AppsV1().Deployments(namespace).Get(context.TODO(), d.Name, metav1.GetOptions{})
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
+		} else {
+			_, err := kubeClient.AppsV1().Deployments(namespace).Create(context.TODO(), d, metav1.CreateOptions{})
+			if err != nil {
+				return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
+			}
+		}
+	}
+	_, err = kubeClient.AppsV1().Deployments(namespace).Update(context.TODO(), d, metav1.UpdateOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to create deployment %s", d.Name))
 	}
+
 	return nil
 }
 
