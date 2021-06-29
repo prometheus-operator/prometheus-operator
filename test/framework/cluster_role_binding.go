@@ -15,15 +15,13 @@
 package framework
 
 import (
-	"context"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes"
 )
 
-func createClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) (FinalizerFn, error) {
-	finalizerFn := func() error { return DeleteClusterRoleBinding(kubeClient, ns, relativePath) }
+func (f *Framework) createClusterRoleBinding(ns string, relativePath string) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteClusterRoleBinding(ns, relativePath) }
 	clusterRoleBinding, err := parseClusterRoleBindingYaml(relativePath)
 	if err != nil {
 		return finalizerFn, err
@@ -35,17 +33,17 @@ func createClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relati
 
 	clusterRoleBinding.Subjects[0].Namespace = ns
 
-	_, err = kubeClient.RbacV1().ClusterRoleBindings().Get(context.TODO(), clusterRoleBinding.Name, metav1.GetOptions{})
+	_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Get(f.Ctx, clusterRoleBinding.Name, metav1.GetOptions{})
 
 	if err == nil {
 		// ClusterRoleBinding already exists -> Update
-		_, err = kubeClient.RbacV1().ClusterRoleBindings().Update(context.TODO(), clusterRoleBinding, metav1.UpdateOptions{})
+		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Update(f.Ctx, clusterRoleBinding, metav1.UpdateOptions{})
 		if err != nil {
 			return finalizerFn, err
 		}
 	} else {
 		// ClusterRoleBinding doesn't exists -> Create
-		_, err = kubeClient.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{})
+		_, err = f.KubeClient.RbacV1().ClusterRoleBindings().Create(f.Ctx, clusterRoleBinding, metav1.CreateOptions{})
 		if err != nil {
 			return finalizerFn, err
 		}
@@ -54,7 +52,7 @@ func createClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relati
 	return finalizerFn, err
 }
 
-func DeleteClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) error {
+func (f *Framework) DeleteClusterRoleBinding(ns string, relativePath string) error {
 	clusterRoleBinding, err := parseClusterRoleYaml(relativePath)
 	if err != nil {
 		return err
@@ -64,7 +62,7 @@ func DeleteClusterRoleBinding(kubeClient kubernetes.Interface, ns string, relati
 	// it was created preventing concurrent tests to delete each others bindings.
 	clusterRoleBinding.Name = ns + "-" + clusterRoleBinding.Name
 
-	return kubeClient.RbacV1().ClusterRoleBindings().Delete(context.TODO(), clusterRoleBinding.Name, metav1.DeleteOptions{})
+	return f.KubeClient.RbacV1().ClusterRoleBindings().Delete(f.Ctx, clusterRoleBinding.Name, metav1.DeleteOptions{})
 }
 
 func parseClusterRoleBindingYaml(relativePath string) (*rbacv1.ClusterRoleBinding, error) {

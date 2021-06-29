@@ -37,7 +37,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {
@@ -46,8 +45,8 @@ func testAMCreateDeleteCluster(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	name := "test"
 
@@ -66,8 +65,8 @@ func testAMScaling(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	name := "test"
 
@@ -94,8 +93,8 @@ func testAMVersionMigration(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	name := "test"
 
@@ -125,7 +124,7 @@ func testAMStorageUpdate(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
 
 	name := "test"
 
@@ -184,8 +183,8 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	alertmanager := framework.MakeBasicAlertmanager("test-alertmanager", 1)
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
@@ -194,7 +193,7 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(ns, alertmanagerService); err != nil {
 		t.Fatal(err)
 	}
 
@@ -212,8 +211,8 @@ func testAMClusterInitialization(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	amClusterSize := 3
 	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
@@ -237,7 +236,7 @@ func testAMClusterInitialization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, alertmanagerService); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(ns, alertmanagerService); err != nil {
 		t.Fatal(err)
 	}
 
@@ -260,7 +259,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
 	amClusterSize := 3
 
 	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
@@ -297,8 +296,8 @@ func testAMClusterGossipSilences(t *testing.T) {
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	amClusterSize := 3
 	alertmanager := framework.MakeBasicAlertmanager("test", int32(amClusterSize))
@@ -347,8 +346,8 @@ func testAMReloadConfig(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	alertmanager := framework.MakeBasicAlertmanager("reload-config", 1)
 	templateResourceName := fmt.Sprintf("alertmanager-templates-%s", alertmanager.Name)
@@ -501,8 +500,8 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	whReplicas := int32(1)
 	whdpl := &appsv1.Deployment{
@@ -557,13 +556,13 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 			},
 		},
 	}
-	if err := testFramework.CreateDeployment(framework.KubeClient, ns, whdpl); err != nil {
+	if err := framework.CreateDeployment(ns, whdpl); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, whsvc); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(ns, whsvc); err != nil {
 		t.Fatal(err)
 	}
-	err := testFramework.WaitForPodsReady(framework.KubeClient, ns, time.Minute*5, 1,
+	err := framework.WaitForPodsReady(ns, time.Minute*5, 1,
 		metav1.ListOptions{
 			LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
 				"app.kubernetes.io/name": "alertmanager-webhook",
@@ -618,7 +617,7 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, ns, amsvc); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(ns, amsvc); err != nil {
 		t.Fatal(err)
 	}
 
@@ -682,7 +681,7 @@ inhibit_rules:
 	}
 
 	podName := pl.Items[0].Name
-	logs, err := testFramework.GetLogs(framework.KubeClient, ns, podName, "webhook-server")
+	logs, err := framework.GetLogs(ns, podName, "webhook-server")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -707,7 +706,7 @@ inhibit_rules:
 
 	time.Sleep(time.Minute)
 
-	logs, err = testFramework.GetLogs(framework.KubeClient, ns, podName, "webhook-server")
+	logs, err = framework.GetLogs(ns, podName, "webhook-server")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -724,9 +723,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	configNs := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	configNs := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	alertmanager := framework.MakeBasicAlertmanager("amconfig-crd", 1)
 	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
@@ -738,7 +737,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := testFramework.AddLabelsToNamespace(framework.KubeClient, configNs, map[string]string{"monitored": "true"}); err != nil {
+	if err := framework.AddLabelsToNamespace(configNs, map[string]string{"monitored": "true"}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1133,7 +1132,7 @@ templates: []
 	// AlertmanagerConfig resources and wait until the Alertmanager
 	// configuration gets regenerated.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
-	if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, configNs, "monitored"); err != nil {
+	if err := framework.RemoveLabelsFromNamespace(configNs, "monitored"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1184,8 +1183,8 @@ func testUserDefinedAlertmanagerConfig(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	yamlConfig := `route:
   receiver: "void"
@@ -1250,8 +1249,8 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	name := "test"
 

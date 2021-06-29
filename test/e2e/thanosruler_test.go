@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	"google.golang.org/protobuf/proto"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,8 +29,8 @@ func testThanosRulerCreateDeleteCluster(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	name := "test"
 
@@ -48,8 +47,8 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 
-	thanosNamespace := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, thanosNamespace, framework.KubeClient)
+	thanosNamespace := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, thanosNamespace)
 
 	name := "test"
 
@@ -60,7 +59,7 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 
 	svc := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
-	if _, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, thanosNamespace, svc); err != nil {
+	if _, err := framework.CreateServiceAndWaitUntilReady(thanosNamespace, svc); err != nil {
 		t.Fatal(err)
 	}
 
@@ -77,8 +76,8 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ruleNamespace := ctx.CreateNamespace(t, framework.KubeClient)
-	if err := testFramework.AddLabelsToNamespace(framework.KubeClient, ruleNamespace, map[string]string{
+	ruleNamespace := framework.CreateNamespace(t, ctx)
+	if err := framework.AddLabelsToNamespace(ruleNamespace, map[string]string{
 		"monitored": "true",
 	}); err != nil {
 		t.Fatal(err)
@@ -91,7 +90,7 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 
 	thanosService := framework.MakeThanosRulerService(thanos.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := testFramework.CreateServiceAndWaitUntilReady(framework.KubeClient, thanosNamespace, thanosService); err != nil {
+	if finalizerFn, err := framework.CreateServiceAndWaitUntilReady(thanosNamespace, thanosService); err != nil {
 		t.Fatalf("creating Thanos ruler service failed: %v", err)
 	} else {
 		ctx.AddFinalizerFn(finalizerFn)
@@ -104,7 +103,7 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	// Remove the selecting label from ruleNamespace and wait until the rule is
 	// removed from the Thanos ruler.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
-	if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, ruleNamespace, "monitored"); err != nil {
+	if err := framework.RemoveLabelsFromNamespace(ruleNamespace, "monitored"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -125,8 +124,8 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
-	ctx.SetupPrometheusRBAC(t, ns, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
+	framework.SetupPrometheusRBAC(t, ctx, ns)
 
 	name := "test"
 

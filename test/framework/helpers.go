@@ -15,7 +15,6 @@
 package framework
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -25,17 +24,16 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
-func PathToOSFile(relativPath string) (*os.File, error) {
-	path, err := filepath.Abs(relativPath)
+func PathToOSFile(relativePath string) (*os.File, error) {
+	path, err := filepath.Abs(relativePath)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed generate absolute file path of %s", relativPath))
+		return nil, errors.Wrap(err, fmt.Sprintf("failed generate absolute file path of %s", relativePath))
 	}
 
 	manifest, err := os.Open(path)
@@ -48,9 +46,9 @@ func PathToOSFile(relativPath string) (*os.File, error) {
 
 // WaitForPodsReady waits for a selection of Pods to be running and each
 // container to pass its readiness check.
-func WaitForPodsReady(kubeClient kubernetes.Interface, namespace string, timeout time.Duration, expectedReplicas int, opts metav1.ListOptions) error {
+func (f *Framework) WaitForPodsReady(namespace string, timeout time.Duration, expectedReplicas int, opts metav1.ListOptions) error {
 	return wait.Poll(time.Second, timeout, func() (bool, error) {
-		pl, err := kubeClient.CoreV1().Pods(namespace).List(context.TODO(), opts)
+		pl, err := f.KubeClient.CoreV1().Pods(namespace).List(f.Ctx, opts)
 		if err != nil {
 			return false, err
 		}
@@ -74,9 +72,9 @@ func WaitForPodsReady(kubeClient kubernetes.Interface, namespace string, timeout
 	})
 }
 
-func WaitForPodsRunImage(kubeClient kubernetes.Interface, namespace string, expectedReplicas int, image string, opts metav1.ListOptions) error {
+func (f *Framework) WaitForPodsRunImage(namespace string, expectedReplicas int, image string, opts metav1.ListOptions) error {
 	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		pl, err := kubeClient.CoreV1().Pods(namespace).List(context.TODO(), opts)
+		pl, err := f.KubeClient.CoreV1().Pods(namespace).List(f.Ctx, opts)
 		if err != nil {
 			return false, err
 		}
@@ -123,13 +121,13 @@ func podRunsImage(p v1.Pod, image string) bool {
 	return false
 }
 
-func GetLogs(kubeClient kubernetes.Interface, namespace string, podName, containerName string) (string, error) {
-	logs, err := kubeClient.CoreV1().RESTClient().Get().
+func (f *Framework) GetLogs(namespace string, podName, containerName string) (string, error) {
+	logs, err := f.KubeClient.CoreV1().RESTClient().Get().
 		Resource("pods").
 		Namespace(namespace).
 		Name(podName).SubResource("log").
 		Param("container", containerName).
-		Do(context.TODO()).
+		Do(f.Ctx).
 		Raw()
 	if err != nil {
 		return "", err
@@ -137,8 +135,8 @@ func GetLogs(kubeClient kubernetes.Interface, namespace string, podName, contain
 	return string(logs), err
 }
 
-func ProxyGetPod(kubeClient kubernetes.Interface, namespace, podName, path string) *rest.Request {
-	return kubeClient.
+func (f *Framework) ProxyGetPod(namespace, podName, path string) *rest.Request {
+	return f.KubeClient.
 		CoreV1().
 		RESTClient().
 		Get().
@@ -149,8 +147,8 @@ func ProxyGetPod(kubeClient kubernetes.Interface, namespace, podName, path strin
 		Suffix(path)
 }
 
-func ProxyPostPod(kubeClient kubernetes.Interface, namespace, podName, path, body string) *rest.Request {
-	return kubeClient.
+func (f *Framework) ProxyPostPod(namespace, podName, path, body string) *rest.Request {
+	return f.KubeClient.
 		CoreV1().
 		RESTClient().
 		Post().
