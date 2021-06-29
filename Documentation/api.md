@@ -200,7 +200,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | initContainers | InitContainers allows adding initContainers to the pod definition. Those can be used to e.g. fetch secrets for injection into the Alertmanager configuration from external sources. Any errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/ Using initContainers for any use case other then secret fetching is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. | []v1.Container | false |
 | priorityClassName | Priority class assigned to the Pods | string | false |
 | additionalPeers | AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster. | []string | false |
-| clusterListenLocal | ClusterListenLocal makes the Alertmanager server listen on loopback for cluster communication | bool | false |
+| clusterListenLocal | ClusterListenLocal makes the Alertmanager server listen on loopback for cluster communication. | bool | false |
 | clusterAdvertiseAddress | ClusterAdvertiseAddress is the explicit address to advertise in cluster. Needs to be provided for non RFC1918 [1] (public) addresses. [1] RFC1918: https://tools.ietf.org/html/rfc1918 | string | false |
 | clusterGossipInterval | Interval between gossip attempts. | string | false |
 | clusterPushpullInterval | Interval between pushpull attempts. | string | false |
