@@ -1,0 +1,43 @@
+name: publish
+on:
+  workflow_run:
+    workflows:
+    - "checks"
+    - "unit"
+    - "e2e"
+    types: [completed]
+    branches:
+      - 'release-*'
+      - 'master'
+      - 'main'
+    tags:
+      - 'v*'
+
+env:
+  golang-version: '1.16'
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish container images
+    if: ${{ github.event_name == 'push' && github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.golang-version }}
+      - name: login to quay.io
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.quay_username }}
+          password: ${{ secrets.quay_password }}
+      - name: login to ghcr.io
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build images and push
+        run: ./scripts/push-docker-image.sh
