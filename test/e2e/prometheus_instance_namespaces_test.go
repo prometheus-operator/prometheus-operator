@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
-	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	v1 "k8s.io/api/core/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -84,7 +83,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 	framework.SetupPrometheusRBACGlobal(t, ctx, instanceNs)
 
 	for _, ns := range []string{deniedNs, instanceNs} {
-		err := testFramework.AddLabelsToNamespace(framework.KubeClient, framework.Ctx, ns, map[string]string{
+		err := framework.AddLabelsToNamespace(ns, map[string]string{
 			"monitored": "true",
 		})
 		if err != nil {
@@ -207,7 +206,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 	framework.SetupPrometheusRBACGlobal(t, ctx, instanceNs)
 
 	for _, ns := range []string{allowedNs, instanceNs} {
-		err := testFramework.AddLabelsToNamespace(framework.KubeClient, framework.Ctx, ns, map[string]string{
+		err := framework.AddLabelsToNamespace(ns, map[string]string{
 			"monitored": "true",
 		})
 		if err != nil {
@@ -360,7 +359,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 	framework.SetupPrometheusRBACGlobal(t, ctx, instanceNs)
 
 	for _, ns := range []string{allowedNs, instanceNs} {
-		err := testFramework.AddLabelsToNamespace(framework.KubeClient, framework.Ctx, ns, map[string]string{
+		err := framework.AddLabelsToNamespace(ns, map[string]string{
 			"monitored": "true",
 		})
 		if err != nil {

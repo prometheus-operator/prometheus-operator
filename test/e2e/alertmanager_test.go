@@ -37,7 +37,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 func testAMCreateDeleteCluster(t *testing.T) {
@@ -738,7 +737,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := testFramework.AddLabelsToNamespace(framework.KubeClient, framework.Ctx, configNs, map[string]string{"monitored": "true"}); err != nil {
+	if err := framework.AddLabelsToNamespace(configNs, map[string]string{"monitored": "true"}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1133,7 +1132,7 @@ templates: []
 	// AlertmanagerConfig resources and wait until the Alertmanager
 	// configuration gets regenerated.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
-	if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, framework.Ctx, configNs, "monitored"); err != nil {
+	if err := framework.RemoveLabelsFromNamespace(configNs, "monitored"); err != nil {
 		t.Fatal(err)
 	}
 

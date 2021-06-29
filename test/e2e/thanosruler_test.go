@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	"google.golang.org/protobuf/proto"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -78,7 +77,7 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 
 	ruleNamespace := framework.CreateNamespace(t, ctx)
-	if err := testFramework.AddLabelsToNamespace(framework.KubeClient, framework.Ctx, ruleNamespace, map[string]string{
+	if err := framework.AddLabelsToNamespace(ruleNamespace, map[string]string{
 		"monitored": "true",
 	}); err != nil {
 		t.Fatal(err)
@@ -104,7 +103,7 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	// Remove the selecting label from ruleNamespace and wait until the rule is
 	// removed from the Thanos ruler.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
-	if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, framework.Ctx, ruleNamespace, "monitored"); err != nil {
+	if err := framework.RemoveLabelsFromNamespace(ruleNamespace, "monitored"); err != nil {
 		t.Fatal(err)
 	}
 

@@ -1430,7 +1430,7 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 	ruleFilesNamespaceSelector := map[string]string{"monitored": "true"}
 
 	for _, file := range ruleFiles {
-		err := testFramework.AddLabelsToNamespace(framework.KubeClient, framework.Ctx, file.ns, ruleFilesNamespaceSelector)
+		err := framework.AddLabelsToNamespace(file.ns, ruleFilesNamespaceSelector)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1471,7 +1471,7 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 	// and wait until the rules are removed from Prometheus.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
 	for _, file := range ruleFiles {
-		if err := testFramework.RemoveLabelsFromNamespace(framework.KubeClient, framework.Ctx, file.ns, "monitored"); err != nil {
+		if err := framework.RemoveLabelsFromNamespace(file.ns, "monitored"); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -2448,9 +2448,7 @@ func testPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 	serviceMonitorNSName := framework.CreateNamespace(t, ctx)
 	framework.SetupPrometheusRBAC(t, ctx, prometheusNSName)
 
-	if err := testFramework.AddLabelsToNamespace(
-		framework.KubeClient,
-		framework.Ctx,
+	if err := framework.AddLabelsToNamespace(
 		serviceMonitorNSName,
 		map[string]string{"team": "frontend"},
 	); err != nil {
@@ -2677,7 +2675,7 @@ func testPromGetAuthSecret(t *testing.T) {
 			}
 			testNamespace := framework.CreateNamespace(t, ctx)
 
-			err := testFramework.AddLabelsToNamespace(framework.KubeClient, framework.Ctx, testNamespace, maptest)
+			err := framework.AddLabelsToNamespace(testNamespace, maptest)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2759,7 +2757,7 @@ func testOperatorNSScope(t *testing.T) {
 
 		// Add labels to namespaces for Prometheus RuleNamespaceSelector.
 		for _, ns := range []string{mainNS, arbitraryNS} {
-			err := testFramework.AddLabelsToNamespace(framework.KubeClient, framework.Ctx, ns, prometheusNamespaceSelector)
+			err := framework.AddLabelsToNamespace(ns, prometheusNamespaceSelector)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2829,7 +2827,7 @@ func testOperatorNSScope(t *testing.T) {
 		prometheusNamespaceSelector := map[string]string{"prometheus": prometheusNS}
 
 		for _, ns := range []string{ruleNS, arbitraryNS} {
-			err := testFramework.AddLabelsToNamespace(framework.KubeClient, framework.Ctx, ns, prometheusNamespaceSelector)
+			err := framework.AddLabelsToNamespace(ns, prometheusNamespaceSelector)
 			if err != nil {
 				t.Fatal(err)
 			}
