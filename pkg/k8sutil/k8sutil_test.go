@@ -308,3 +308,86 @@ func TestMergeMetadata(t *testing.T) {
 		}
 	})
 }
+
+func TestCreateOrUpdateImmutableFields(t *testing.T) {
+	namespace := "default"
+	policy := corev1.IPFamilyPolicyRequireDualStack
+
+	t.Run("CreateOrUpdateService with immutable fields", func(t *testing.T) {
+		service := &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "prometheus-operated-test",
+				Namespace: namespace,
+			},
+			Spec: corev1.ServiceSpec{
+				ClusterIP: "127.0.0.1",
+				ClusterIPs: []string{
+					"127.0.0.1",
+					"192.168.0.159",
+				},
+				IPFamilyPolicy: &policy,
+				IPFamilies: []corev1.IPFamily{
+					corev1.IPv6Protocol,
+				},
+				Ports: []corev1.ServicePort{
+					{
+						Name: "https-metrics",
+						Port: 10250,
+					},
+					{
+						Name: "http-metrics",
+						Port: 10255,
+					},
+				},
+			},
+			Status: corev1.ServiceStatus{},
+		}
+
+		svcClient := fake.NewSimpleClientset(service).CoreV1().Services(namespace)
+
+		modifiedSvc := &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "prometheus-operated-test",
+				Namespace: namespace,
+			},
+			Spec: corev1.ServiceSpec{
+				Ports: []corev1.ServicePort{
+					{
+						Name: "https-metrics",
+						Port: 10250,
+					},
+				},
+			},
+			Status: corev1.ServiceStatus{},
+		}
+
+		if err := CreateOrUpdateService(context.TODO(), svcClient, modifiedSvc); err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(service.Spec.IPFamilies, modifiedSvc.Spec.IPFamilies) {
+			t.Fatalf("services Spec.IPFamilies are not equal, expected %q, got %q",
+				service.Spec.IPFamilies, modifiedSvc.Spec.IPFamilies)
+		}
+
+		if !reflect.DeepEqual(service.Spec.ClusterIP, modifiedSvc.Spec.ClusterIP) {
+			t.Fatalf("services Spec.ClusterIP are not equal, expected %q, got %q",
+				service.Spec.ClusterIP, modifiedSvc.Spec.ClusterIP)
+		}
+
+		if !reflect.DeepEqual(service.Spec.ClusterIPs, modifiedSvc.Spec.ClusterIPs) {
+			t.Fatalf("services Spec.ClusterIPs are not equal, expected %q, got %q",
+				service.Spec.ClusterIPs, modifiedSvc.Spec.ClusterIPs)
+		}
+
+		if !reflect.DeepEqual(service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy) {
+			t.Fatalf("services Spec.IPFamilyPolicy are not equal, expected %v, got %v",
+				service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy)
+		}
+
+		if !reflect.DeepEqual(service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy) {
+			t.Fatalf("services Spec.IPFamilyPolicy are not equal, expected %v, got %v",
+				service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy)
+		}
+	})
+}
