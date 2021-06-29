@@ -193,7 +193,7 @@ func createK8sSampleApp(t *testing.T, name, ns string) (string, int32) {
 	simple.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/certs"}
 
 	simple.Spec.Template.Spec.Volumes = []v1.Volume{
-		v1.Volume{
+		{
 			Name: "tls-certs",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
@@ -224,11 +224,11 @@ func createK8sSampleApp(t *testing.T, name, ns string) (string, int32) {
 		Spec: v1.ServiceSpec{
 			Type: v1.ServiceTypeLoadBalancer,
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name: "web",
 					Port: 8080,
 				},
-				v1.ServicePort{
+				{
 					Name: "mtls",
 					Port: 8081,
 				},
@@ -2704,7 +2704,7 @@ func testPromGetAuthSecret(t *testing.T) {
 				Spec: v1.ServiceSpec{
 					Type: v1.ServiceTypeLoadBalancer,
 					Ports: []v1.ServicePort{
-						v1.ServicePort{
+						{
 							Name: "web",
 							Port: 8080,
 						},
@@ -3154,10 +3154,10 @@ func mountTLSFiles(p *monitoringv1.Prometheus, secretName string) {
 			},
 		})
 	p.Spec.Containers = []v1.Container{
-		v1.Container{
+		{
 			Name: "prometheus",
 			VolumeMounts: []v1.VolumeMount{
-				v1.VolumeMount{
+				{
 					Name:      volumeName,
 					MountPath: "/etc/ca-certificates",
 				},
@@ -3214,7 +3214,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	simple.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/certs"}
 
 	simple.Spec.Template.Spec.Volumes = []v1.Volume{
-		v1.Volume{
+		{
 			Name: "tls-certs",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
@@ -3245,11 +3245,11 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 		Spec: v1.ServiceSpec{
 			Type: v1.ServiceTypeLoadBalancer,
 			Ports: []v1.ServicePort{
-				v1.ServicePort{
+				{
 					Name: "web",
 					Port: 8080,
 				},
-				v1.ServicePort{
+				{
 					Name: "mtls",
 					Port: 8081,
 				},

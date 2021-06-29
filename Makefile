@@ -200,8 +200,11 @@ $(RBAC_MANIFESTS): scripts/generate/vendor VERSION $(shell find jsonnet -type f)
 example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-thanos-example.sh
 
-FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
+FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md Documentation/operator.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
+
+Documentation/operator.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
+	$(PO_DOCGEN_BINARY) operator cmd/operator/main.go > $@
 
 Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
 	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) > $@
@@ -222,7 +225,7 @@ format: go-fmt jsonnet-fmt check-license shellcheck
 
 .PHONY: go-fmt
 go-fmt:
-	go fmt $(pkgs)
+	gofmt -s -w .
 
 .PHONY: jsonnet-fmt
 jsonnet-fmt: $(JSONNETFMT_BINARY)

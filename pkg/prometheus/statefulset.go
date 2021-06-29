@@ -275,7 +275,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 		ObjectMeta: metav1.ObjectMeta{
 			Name: governingServiceName,
 			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
+				{
 					Name:       p.GetName(),
 					Kind:       p.Kind,
 					APIVersion: p.APIVersion,
