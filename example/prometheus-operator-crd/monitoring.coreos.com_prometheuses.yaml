@@ -4157,22 +4157,26 @@ spec:
                       description: Timeout for requests to the remote write endpoint.
                       type: string
                     sigv4:
-                      description: Sigv4 allows to configures AWS's Signature Verification 4
+                      description: Sigv4 allows to configures AWS's Signature Verification
+                        4
                       properties:
                         accessKey:
-                          description: AccessKey is the AWS API key. If blank, the environment variable `AWS_ACCESS_KEY_ID` is used
+                          description: AccessKey is the AWS API key. If blank, the
+                            environment variable `AWS_ACCESS_KEY_ID` is used
                           type: string
                         profile:
                           description: Profile is the named AWS profile used to authenticate.
                           type: string
                         region:
-                          description: Region is the AWS region. If blank, the region from the default credentials chain used.
+                          description: Region is the AWS region. If blank, the region
+                            from the default credentials chain used.
                           type: string
                         roleArn:
                           description: RoleArn is the named AWS profile used to authenticate.
                           type: string
                         secretKey:
-                          description: SecretKey is the AWS API secret. If blank, the environment variable `AWS_SECRET_ACCESS_KEY` is used
+                          description: SecretKey is the AWS API secret. If blank,
+                            the environment variable `AWS_SECRET_ACCESS_KEY` is used
                           type: string
                       type: object
                     tlsConfig:
