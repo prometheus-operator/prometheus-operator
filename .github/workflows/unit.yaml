@@ -1,0 +1,31 @@
+name: unit
+on:
+  pull_request:
+  push:
+    branches:
+      - 'release-*'
+      - 'master'
+      - 'main'
+    tags:
+      - 'v*'
+env:
+  golang-version: '1.16'
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Unit tests
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - run: make test-unit
+  extended-tests:
+    runs-on: ubuntu-latest
+    name: Extended tests
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.golang-version }}
+    - run: make test-long

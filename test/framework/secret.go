@@ -15,14 +15,11 @@
 package framework
 
 import (
-	"context"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
-func MakeSecretWithCert(kubeClient kubernetes.Interface, ns, name string, keyList []string,
+func MakeSecretWithCert(ns, name string, keyList []string,
 	dataList [][]byte) *corev1.Secret {
 
 	secret := &corev1.Secret{
@@ -38,10 +35,10 @@ func MakeSecretWithCert(kubeClient kubernetes.Interface, ns, name string, keyLis
 	return secret
 }
 
-func CreateSecretWithCert(kubeClient kubernetes.Interface, certBytes, keyBytes []byte, ns, name string) error {
+func (f *Framework) CreateSecretWithCert(certBytes, keyBytes []byte, ns, name string) error {
 
-	secret := MakeSecretWithCert(kubeClient, ns, name, []string{"tls.key", "tls.crt"}, [][]byte{keyBytes, certBytes})
-	_, err := kubeClient.CoreV1().Secrets(ns).Create(context.TODO(), secret, metav1.CreateOptions{})
+	secret := MakeSecretWithCert(ns, name, []string{"tls.key", "tls.crt"}, [][]byte{keyBytes, certBytes})
+	_, err := f.KubeClient.CoreV1().Secrets(ns).Create(f.Ctx, secret, metav1.CreateOptions{})
 
 	return err
 }

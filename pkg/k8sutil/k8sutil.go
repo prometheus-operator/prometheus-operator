@@ -121,8 +121,13 @@ func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterfac
 			return errors.Wrap(err, "creating service object failed")
 		}
 	} else {
+		// apply immutable fields from the existing service
 		svc.ResourceVersion = service.ResourceVersion
 		svc.Spec.IPFamilies = service.Spec.IPFamilies
+		svc.Spec.IPFamilyPolicy = service.Spec.IPFamilyPolicy
+		svc.Spec.ClusterIP = service.Spec.ClusterIP
+		svc.Spec.ClusterIPs = service.Spec.ClusterIPs
+
 		svc.SetOwnerReferences(mergeOwnerReferences(service.GetOwnerReferences(), svc.GetOwnerReferences()))
 		mergeMetadata(&svc.ObjectMeta, service.ObjectMeta)
 

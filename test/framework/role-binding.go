@@ -15,28 +15,25 @@
 package framework
 
 import (
-	"context"
-
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes"
 )
 
-func CreateRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) (FinalizerFn, error) {
-	finalizerFn := func() error { return DeleteRoleBinding(kubeClient, ns, relativePath) }
-	roleBinding, err := parseRoleBindingYaml(relativePath)
+func (f *Framework) CreateRoleBinding(ns string, relativePath string) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteRoleBinding(ns, relativePath) }
+	roleBinding, err := f.parseRoleBindingYaml(relativePath)
 	if err != nil {
 		return finalizerFn, err
 	}
 
-	_, err = kubeClient.RbacV1().RoleBindings(ns).Create(context.TODO(), roleBinding, metav1.CreateOptions{})
+	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(f.Ctx, roleBinding, metav1.CreateOptions{})
 	return finalizerFn, err
 }
 
-func CreateRoleBindingForSubjectNamespace(kubeClient kubernetes.Interface, ns, subjectNs string, relativePath string) (FinalizerFn, error) {
-	finalizerFn := func() error { return DeleteRoleBinding(kubeClient, ns, relativePath) }
-	roleBinding, err := parseRoleBindingYaml(relativePath)
+func (f *Framework) CreateRoleBindingForSubjectNamespace(ns, subjectNs string, relativePath string) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteRoleBinding(ns, relativePath) }
+	roleBinding, err := f.parseRoleBindingYaml(relativePath)
 
 	for i := range roleBinding.Subjects {
 		roleBinding.Subjects[i].Namespace = subjectNs
@@ -46,20 +43,20 @@ func CreateRoleBindingForSubjectNamespace(kubeClient kubernetes.Interface, ns, s
 		return finalizerFn, err
 	}
 
-	_, err = kubeClient.RbacV1().RoleBindings(ns).Create(context.TODO(), roleBinding, metav1.CreateOptions{})
+	_, err = f.KubeClient.RbacV1().RoleBindings(ns).Create(f.Ctx, roleBinding, metav1.CreateOptions{})
 	return finalizerFn, err
 }
 
-func DeleteRoleBinding(kubeClient kubernetes.Interface, ns string, relativePath string) error {
-	roleBinding, err := parseRoleBindingYaml(relativePath)
+func (f *Framework) DeleteRoleBinding(ns string, relativePath string) error {
+	roleBinding, err := f.parseRoleBindingYaml(relativePath)
 	if err != nil {
 		return err
 	}
 
-	return kubeClient.RbacV1().RoleBindings(ns).Delete(context.TODO(), roleBinding.Name, metav1.DeleteOptions{})
+	return f.KubeClient.RbacV1().RoleBindings(ns).Delete(f.Ctx, roleBinding.Name, metav1.DeleteOptions{})
 }
 
-func parseRoleBindingYaml(relativePath string) (*rbacv1.RoleBinding, error) {
+func (f *Framework) parseRoleBindingYaml(relativePath string) (*rbacv1.RoleBinding, error) {
 	manifest, err := PathToOSFile(relativePath)
 	if err != nil {
 		return nil, err
