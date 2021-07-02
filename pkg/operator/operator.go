@@ -339,11 +339,13 @@ func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger lo
 		t := time.NewTicker(time.Minute)
 		defer t.Stop()
 
-		select {
-		case <-t.C:
-			level.Warn(logger).Log("msg", "cache sync not yet completed")
-		case <-ctx.Done():
-			close(done)
+		for {
+			select {
+			case <-t.C:
+				level.Warn(logger).Log("msg", "cache sync not yet completed")
+			case <-ctx.Done():
+				close(done)
+			}
 		}
 	}()
 
