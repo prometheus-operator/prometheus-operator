@@ -1,0 +1,16 @@
+name: validate-pr
+on:
+  pull_request:
+jobs:
+  validate-pr-description:
+    runs-on: ubuntu-latest
+    name: notes
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        # Make sure `release-note` is present
+        cat "$GITHUB_EVENT_PATH" | jq -r '.pull_request.body' | grep -c 'release-note'
+        # Make sure `release-note` is changed
+        cat "$GITHUB_EVENT_PATH" | jq -r '.pull_request.body' | grep -vz 'release-note:REPLACEME'
+
+
