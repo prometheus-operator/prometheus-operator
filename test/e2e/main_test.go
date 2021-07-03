@@ -85,7 +85,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := framework.CreateNamespace(t, ctx)
 	stableVersion := "quay.io/prometheus-operator/prometheus-operator:v" + os.Getenv("VERSION")
-	t.Fatalf(
+	t.Logf(
 		"debug: current version %s",
 		os.Getenv("VERSION"),
 	)
