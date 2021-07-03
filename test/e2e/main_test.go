@@ -84,7 +84,11 @@ func TestAllNS(t *testing.T) {
 	defer ctx.Cleanup(t)
 
 	ns := framework.CreateNamespace(t, ctx)
-	stableVersion := "quay.io/prometheus-operator/prometheus-operator:v0.47.1"
+	stableVersion := "quay.io/prometheus-operator/prometheus-operator:v" + os.Getenv("VERSION")
+	t.Fatalf(
+		"debug: current version %s",
+		os.Getenv("VERSION"),
+	)
 	finalizers, err := framework.CreatePrometheusOperator(ns, stableVersion, nil, nil, nil, nil, true, true)
 
 	if err != nil {
