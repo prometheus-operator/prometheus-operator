@@ -16,7 +16,6 @@ package framework
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -270,7 +269,7 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 }
 
 func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
-	result, err := f.MonClientV1.Prometheuses(ns).Create(context.TODO(), p, metav1.CreateOptions{})
+	result, err := f.MonClientV1.Prometheuses(ns).Create(f.Ctx, p, metav1.CreateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 	}
@@ -283,7 +282,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ns string, p *monitoringv1
 }
 
 func (f *Framework) UpdatePrometheusAndWaitUntilReady(ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
-	result, err := f.MonClientV1.Prometheuses(ns).Update(context.TODO(), p, metav1.UpdateOptions{})
+	result, err := f.MonClientV1.Prometheuses(ns).Update(f.Ctx, p, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +297,7 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 	var pollErr error
 
 	err := wait.Poll(2*time.Second, timeout, func() (bool, error) {
-		st, _, pollErr := prometheus.Status(context.Background(), f.KubeClient, p)
+		st, _, pollErr := prometheus.Status(f.Ctx, f.KubeClient, p)
 
 		if pollErr != nil {
 			return false, nil
@@ -319,17 +318,16 @@ func (f *Framework) WaitForPrometheusReady(p *monitoringv1.Prometheus, timeout t
 }
 
 func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClientV1.Prometheuses(ns).Get(context.TODO(), name, metav1.GetOptions{})
+	_, err := f.MonClientV1.Prometheuses(ns).Get(f.Ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting Prometheus custom resource %v failed", name))
 	}
 
-	if err := f.MonClientV1.Prometheuses(ns).Delete(context.TODO(), name, metav1.DeleteOptions{}); err != nil {
+	if err := f.MonClientV1.Prometheuses(ns).Delete(f.Ctx, name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting Prometheus custom resource %v failed", name))
 	}
 
-	if err := WaitForPodsReady(
-		f.KubeClient,
+	if err := f.WaitForPodsReady(
 		ns,
 		f.DefaultTimeout,
 		0,
@@ -345,11 +343,10 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
 }
 
 func (f *Framework) WaitForPrometheusRunImageAndReady(ns string, p *monitoringv1.Prometheus) error {
-	if err := WaitForPodsRunImage(f.KubeClient, ns, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
+	if err := f.WaitForPodsRunImage(ns, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
 		return err
 	}
-	return WaitForPodsReady(
-		f.KubeClient,
+	return f.WaitForPodsReady(
 		ns,
 		f.DefaultTimeout,
 		int(*p.Spec.Replicas),
@@ -412,7 +409,7 @@ func (f *Framework) WaitForDiscoveryWorking(ns, svcName, prometheusName string) 
 	var loopErr error
 
 	err := wait.Poll(time.Second, 5*f.DefaultTimeout, func() (bool, error) {
-		pods, loopErr := f.KubeClient.CoreV1().Pods(ns).List(context.TODO(), prometheus.ListOptions(prometheusName))
+		pods, loopErr := f.KubeClient.CoreV1().Pods(ns).List(f.Ctx, prometheus.ListOptions(prometheusName))
 		if loopErr != nil {
 			return false, loopErr
 		}
@@ -491,7 +488,7 @@ func assertExpectedTargets(targets []*Target, expectedTargets []string) error {
 func (f *Framework) PrometheusSVCGetRequest(ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := ProxyGet("", svcName, "web", endpoint, query)
-	return request.DoRaw(context.TODO())
+	return request.DoRaw(f.Ctx)
 }
 
 func (f *Framework) GetActiveTargets(ns, svcName string) ([]*Target, error) {
@@ -558,7 +555,7 @@ func (f *Framework) PrintPrometheusLogs(t *testing.T, p *monitoringv1.Prometheus
 
 	replicas := int(*p.Spec.Replicas)
 	for i := 0; i < replicas; i++ {
-		l, err := GetLogs(f.KubeClient, p.Namespace, fmt.Sprintf("prometheus-%s-%d", p.Name, i), "prometheus")
+		l, err := f.GetLogs(p.Namespace, fmt.Sprintf("prometheus-%s-%d", p.Name, i), "prometheus")
 		if err != nil {
 			t.Logf("failed to retrieve logs for replica[%d]: %v", i, err)
 			continue

@@ -45,7 +45,7 @@ func (f *Framework) MakeBasicThanosRuler(name string, replicas int32, queryEndpo
 }
 
 func (f *Framework) CreateThanosRulerAndWaitUntilReady(ns string, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRuler, error) {
-	result, err := f.MonClientV1.ThanosRulers(ns).Create(context.TODO(), tr, metav1.CreateOptions{})
+	result, err := f.MonClientV1.ThanosRulers(ns).Create(f.Ctx, tr, metav1.CreateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("creating %v ThanosRuler instances failed (%v): %v", tr.Spec.Replicas, tr.Name, err)
 	}
@@ -58,7 +58,7 @@ func (f *Framework) CreateThanosRulerAndWaitUntilReady(ns string, tr *monitoring
 }
 
 func (f *Framework) UpdateThanosRulerAndWaitUntilReady(ns string, tr *monitoringv1.ThanosRuler) (*monitoringv1.ThanosRuler, error) {
-	result, err := f.MonClientV1.ThanosRulers(ns).Update(context.TODO(), tr, metav1.UpdateOptions{})
+	result, err := f.MonClientV1.ThanosRulers(ns).Update(f.Ctx, tr, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -164,21 +164,20 @@ func (f *Framework) CheckThanosFiringAlert(ns, svcName, alertName string) (bool,
 func (f *Framework) ThanosSVCGetRequest(ns, svcName, endpoint string, query map[string]string) ([]byte, error) {
 	ProxyGet := f.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := ProxyGet("", svcName, "web", endpoint, query)
-	return request.DoRaw(context.TODO())
+	return request.DoRaw(f.Ctx)
 }
 
 func (f *Framework) DeleteThanosRulerAndWaitUntilGone(ns, name string) error {
-	_, err := f.MonClientV1.ThanosRulers(ns).Get(context.TODO(), name, metav1.GetOptions{})
+	_, err := f.MonClientV1.ThanosRulers(ns).Get(f.Ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("requesting ThanosRuler custom resource %v failed", name))
 	}
 
-	if err := f.MonClientV1.ThanosRulers(ns).Delete(context.TODO(), name, metav1.DeleteOptions{}); err != nil {
+	if err := f.MonClientV1.ThanosRulers(ns).Delete(f.Ctx, name, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("deleting ThanosRuler custom resource %v failed", name))
 	}
 
-	if err := WaitForPodsReady(
-		f.KubeClient,
+	if err := f.WaitForPodsReady(
 		ns,
 		f.DefaultTimeout,
 		0,

@@ -15,22 +15,20 @@
 package framework
 
 import (
-	"context"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes"
 )
 
-func createServiceAccount(kubeClient kubernetes.Interface, namespace string, relativPath string) (FinalizerFn, error) {
-	finalizerFn := func() error { return DeleteServiceAccount(kubeClient, namespace, relativPath) }
+func (f *Framework) createServiceAccount(namespace string, relativePath string) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteServiceAccount(namespace, relativePath) }
 
-	serviceAccount, err := parseServiceAccountYaml(relativPath)
+	serviceAccount, err := parseServiceAccountYaml(relativePath)
 	if err != nil {
 		return finalizerFn, err
 	}
 	serviceAccount.Namespace = namespace
-	_, err = kubeClient.CoreV1().ServiceAccounts(namespace).Create(context.TODO(), serviceAccount, metav1.CreateOptions{})
+	_, err = f.KubeClient.CoreV1().ServiceAccounts(namespace).Create(f.Ctx, serviceAccount, metav1.CreateOptions{})
 	if err != nil {
 		return finalizerFn, err
 	}
@@ -38,8 +36,8 @@ func createServiceAccount(kubeClient kubernetes.Interface, namespace string, rel
 	return finalizerFn, nil
 }
 
-func parseServiceAccountYaml(relativPath string) (*v1.ServiceAccount, error) {
-	manifest, err := PathToOSFile(relativPath)
+func parseServiceAccountYaml(relativePath string) (*v1.ServiceAccount, error) {
+	manifest, err := PathToOSFile(relativePath)
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +50,11 @@ func parseServiceAccountYaml(relativPath string) (*v1.ServiceAccount, error) {
 	return &serviceAccount, nil
 }
 
-func DeleteServiceAccount(kubeClient kubernetes.Interface, namespace string, relativPath string) error {
-	serviceAccount, err := parseServiceAccountYaml(relativPath)
+func (f *Framework) DeleteServiceAccount(namespace string, relativePath string) error {
+	serviceAccount, err := parseServiceAccountYaml(relativePath)
 	if err != nil {
 		return err
 	}
 
-	return kubeClient.CoreV1().ServiceAccounts(namespace).Delete(context.TODO(), serviceAccount.Name, metav1.DeleteOptions{})
+	return f.KubeClient.CoreV1().ServiceAccounts(namespace).Delete(f.Ctx, serviceAccount.Name, metav1.DeleteOptions{})
 }

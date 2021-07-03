@@ -15,7 +15,6 @@
 package framework
 
 import (
-	"context"
 	"os"
 	"time"
 
@@ -23,10 +22,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes"
 )
 
-func createReplicationControllerViaYml(kubeClient kubernetes.Interface, namespace string, filepath string) error {
+func (f *Framework) createReplicationControllerViaYml(namespace string, filepath string) error {
 	manifest, err := os.Open(filepath)
 	if err != nil {
 		return err
@@ -38,7 +36,7 @@ func createReplicationControllerViaYml(kubeClient kubernetes.Interface, namespac
 		return err
 	}
 
-	_, err = kubeClient.CoreV1().ReplicationControllers(namespace).Create(context.TODO(), &rC, metav1.CreateOptions{})
+	_, err = f.KubeClient.CoreV1().ReplicationControllers(namespace).Create(f.Ctx, &rC, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -46,7 +44,7 @@ func createReplicationControllerViaYml(kubeClient kubernetes.Interface, namespac
 	return nil
 }
 
-func deleteReplicationControllerViaYml(kubeClient kubernetes.Interface, namespace string, filepath string) error {
+func (f *Framework) deleteReplicationControllerViaYml(namespace string, filepath string) error {
 	manifest, err := os.Open(filepath)
 	if err != nil {
 		return err
@@ -58,28 +56,24 @@ func deleteReplicationControllerViaYml(kubeClient kubernetes.Interface, namespac
 		return err
 	}
 
-	if err := scaleDownReplicationController(kubeClient, namespace, rC); err != nil {
+	if err := f.scaleDownReplicationController(namespace, rC); err != nil {
 		return err
 	}
 
-	if err := kubeClient.CoreV1().ReplicationControllers(namespace).Delete(context.TODO(), rC.Name, metav1.DeleteOptions{}); err != nil {
-		return err
-	}
-
-	return nil
+	return f.KubeClient.CoreV1().ReplicationControllers(namespace).Delete(f.Ctx, rC.Name, metav1.DeleteOptions{})
 }
 
-func scaleDownReplicationController(kubeClient kubernetes.Interface, namespace string, rC v1.ReplicationController) error {
+func (f *Framework) scaleDownReplicationController(namespace string, rC v1.ReplicationController) error {
 	*rC.Spec.Replicas = 0
-	rCAPI := kubeClient.CoreV1().ReplicationControllers(namespace)
+	rCAPI := f.KubeClient.CoreV1().ReplicationControllers(namespace)
 
-	_, err := kubeClient.CoreV1().ReplicationControllers(namespace).Update(context.TODO(), &rC, metav1.UpdateOptions{})
+	_, err := f.KubeClient.CoreV1().ReplicationControllers(namespace).Update(f.Ctx, &rC, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}
 
 	return wait.Poll(time.Second, time.Minute*5, func() (bool, error) {
-		currentRC, err := rCAPI.Get(context.TODO(), rC.Name, metav1.GetOptions{})
+		currentRC, err := rCAPI.Get(f.Ctx, rC.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

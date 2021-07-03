@@ -397,7 +397,7 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
-			"probe1": &monitoringv1.Probe{
+			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
 					Namespace: "default",
@@ -407,9 +407,10 @@ func TestProbeStaticTargetsConfigGeneration(t *testing.T) {
 				},
 				Spec: monitoringv1.ProbeSpec{
 					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: "http",
-						URL:    "blackbox.exporter.io",
-						Path:   "/probe",
+						Scheme:   "http",
+						URL:      "blackbox.exporter.io",
+						Path:     "/probe",
+						ProxyURL: "socks://myproxy:9095",
 					},
 					Module: "http_2xx",
 					Targets: monitoringv1.ProbeTargets{
@@ -457,6 +458,7 @@ scrape_configs:
   honor_timestamps: true
   metrics_path: /probe
   scheme: http
+  proxy_url: socks://myproxy:9095
   params:
     module:
     - http_2xx
@@ -515,7 +517,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
-			"probe1": &monitoringv1.Probe{
+			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
 					Namespace: "default",
@@ -625,7 +627,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
-			"probe1": &monitoringv1.Probe{
+			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
 					Namespace: "default",
@@ -712,6 +714,108 @@ alerting:
 	}
 }
 
+func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
+	cg := &ConfigGenerator{}
+	cfg, err := cg.GenerateConfig(
+		&monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+			Spec: monitoringv1.PrometheusSpec{
+				ProbeSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
+			},
+		},
+		nil,
+		nil,
+		map[string]*monitoringv1.Probe{
+			"probe1": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testprobe1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ProbeSpec{
+					JobName: "blackbox",
+					ProberSpec: monitoringv1.ProberSpec{
+						Scheme: "http",
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+					},
+					Targets: monitoringv1.ProbeTargets{
+						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+							Targets: []string{
+								"prometheus.io",
+								"promcon.io",
+							},
+						},
+					},
+				},
+			},
+		},
+		map[string]assets.BasicAuthCredentials{},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs:
+- job_name: probe/default/testprobe1
+  honor_timestamps: true
+  metrics_path: /probe
+  scheme: http
+  static_configs:
+  - targets:
+    - prometheus.io
+    - promcon.io
+    labels:
+      namespace: default
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - target_label: job
+    replacement: blackbox
+  - source_labels:
+    - __address__
+    target_label: __param_target
+  - source_labels:
+    - __param_target
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.exporter.io
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+`
+
+	result := string(cfg)
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Fatalf("Unexpected result got(-) want(+)\n%s\n", diff)
+	}
+}
+
 func TestProbeIngressSDConfigGeneration(t *testing.T) {
 	cg := &ConfigGenerator{}
 	cfg, err := cg.GenerateConfig(
@@ -731,7 +835,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
-			"probe1": &monitoringv1.Probe{
+			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
 					Namespace: "default",
@@ -861,7 +965,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
-			"probe1": &monitoringv1.Probe{
+			"probe1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testprobe1",
 					Namespace: "default",
@@ -1384,7 +1488,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 			Spec: monitoringv1.PrometheusSpec{},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"test": &monitoringv1.ServiceMonitor{
+			"test": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "default",
@@ -1692,7 +1796,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"test": &monitoringv1.ServiceMonitor{
+			"test": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "default",
@@ -1929,7 +2033,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -2195,7 +2299,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -2336,7 +2440,7 @@ func TestSettingHonorLabels(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -2477,7 +2581,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -2618,7 +2722,7 @@ func TestTargetLabels(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -2757,7 +2861,7 @@ func TestPodTargetLabels(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": &monitoringv1.ServiceMonitor{
+			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "testservicemonitor1",
 					Namespace: "default",
@@ -3009,7 +3113,7 @@ func TestEmptyEndointPorts(t *testing.T) {
 			},
 		},
 		map[string]*monitoringv1.ServiceMonitor{
-			"test": &monitoringv1.ServiceMonitor{
+			"test": {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "default",
@@ -4142,7 +4246,6 @@ remote_write:
     max_shards: 10
     max_samples_per_send: 100
     batch_send_deadline: 20s
-    max_retries: 3
     min_backoff: 1s
     max_backoff: 10s
 `,
@@ -4188,12 +4291,104 @@ remote_write:
     max_shards: 10
     max_samples_per_send: 100
     batch_send_deadline: 20s
-    max_retries: 3
     min_backoff: 1s
     max_backoff: 10s
   metadata_config:
     send: false
     send_interval: 1m
+`,
+		},
+		{
+			version: "v2.23.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
+				},
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         false,
+					SendInterval: "1m",
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 30s
+  queue_config:
+    capacity: 1000
+    min_shards: 1
+    max_shards: 10
+    max_samples_per_send: 100
+    batch_send_deadline: 20s
+    min_backoff: 1s
+    max_backoff: 10s
+  metadata_config:
+    send: false
+    send_interval: 1m
+`,
+		},
+		{
+			version: "v2.10.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: "20s",
+					MaxRetries:        3,
+					MinBackoff:        "1s",
+					MaxBackoff:        "10s",
+				},
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         false,
+					SendInterval: "1m",
+				},
+			},
+			expected: `global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+rule_files: []
+scrape_configs: []
+alerting:
+  alert_relabel_configs:
+  - action: labeldrop
+    regex: prometheus_replica
+  alertmanagers: []
+remote_write:
+- url: http://example.com
+  remote_timeout: 30s
+  queue_config:
+    capacity: 1000
+    min_shards: 1
+    max_shards: 10
+    max_samples_per_send: 100
+    batch_send_deadline: 20s
+    max_retries: 3
+    min_backoff: 1s
+    max_backoff: 10s
 `,
 		},
 	} {

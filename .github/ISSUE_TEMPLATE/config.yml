@@ -1,0 +1,8 @@
+blank_issues_enabled: false # Show or hide the Create a blank issue choice when users select New issue.
+contact_links:
+  - name: "Questions via prometheus-operator community support on kubernetes slack - #prometheus-operator"
+    url: https://kubernetes.slack.com/archives/CFFDS2Z7F
+    about: "Join us for questions, answers or prometheus-operator related chat. Please do create issues on Github for better collaboration. If you don't have an account, sign up at http://slack.k8s.io/"
+  - name: "Question via prometheus-operator discussions (similar to Stack Overflow)"
+    url: https://github.com/prometheus-operator/prometheus-operator/discussions
+    about: "Please ask and answer questions here for async response."

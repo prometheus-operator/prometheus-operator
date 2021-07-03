@@ -17,8 +17,11 @@ package prometheus
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -69,6 +72,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	expectedPodLabels := map[string]string{
 		"prometheus":                   "",
+		"app":                          "prometheus",
 		"app.kubernetes.io/name":       "prometheus",
 		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultPrometheusVersion, "v"),
 		"app.kubernetes.io/managed-by": "prometheus-operator",
@@ -252,6 +256,12 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									SubPath:   "",
 								},
 								{
+									Name:      "web-config",
+									ReadOnly:  true,
+									MountPath: "/etc/prometheus/web_config/web-config.yaml",
+									SubPath:   "web-config.yaml",
+								},
+								{
 									Name:      "secret-test-secret1",
 									ReadOnly:  true,
 									MountPath: "/etc/prometheus/secrets/test-secret1",
@@ -290,6 +300,14 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									LocalObjectReference: v1.LocalObjectReference{
 										Name: "rules-configmap-one",
 									},
+								},
+							},
+						},
+						{
+							Name: "web-config",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: "prometheus-volume-init-test-web-config",
 								},
 							},
 						},
@@ -335,7 +353,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		fmt.Println(pretty.Compare(expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts))
 		t.Fatal("expected volume mounts to match")
 	}
-
 }
 
 func TestAdditionalConfigMap(t *testing.T) {
@@ -411,6 +428,49 @@ func TestListenLocal(t *testing.T) {
 
 	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 0 {
 		t.Fatal("Prometheus container should have 0 ports defined")
+	}
+}
+
+func TestListenTLS(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Web: &monitoringv1.WebSpec{
+				TLSConfig: &monitoringv1.WebTLSConfig{
+					KeySecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "some-secret",
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "some-configmap",
+							},
+						},
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", 0)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	expectedReadinessProbe := &v1.Probe{
+		Handler: v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path:   "/-/ready",
+				Port:   intstr.FromString("web"),
+				Scheme: "HTTPS",
+			},
+		},
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 120,
+	}
+	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
+		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
 	}
 }
 
@@ -1671,7 +1731,7 @@ func TestEnableFeaturesWithMultipleFeature(t *testing.T) {
 }
 
 func TestWebPageTitle(t *testing.T) {
-	var pageTitle string = "my-page-title"
+	pageTitle := "my-page-title"
 	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Web: &monitoringv1.WebSpec{
@@ -1719,5 +1779,80 @@ func TestExpectedStatefulSetShardNames(t *testing.T) {
 		if res[i] != name {
 			t.Fatal("Unexpected StatefulSet shard name")
 		}
+	}
+}
+
+func TestConfigReloader(t *testing.T) {
+	expectedShardNum := 0
+	baseSet, err := makeStatefulSet("test", monitoringv1.Prometheus{}, defaultTestConfig, nil, "", int32(expectedShardNum))
+	require.NoError(t, err)
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-url=http://:9090/-/reload",
+		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
+		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+	}
+
+	for _, c := range baseSet.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expectd container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+			}
+			for _, env := range c.Env {
+				if env.Name == "SHARD" && !reflect.DeepEqual(env.Value, strconv.Itoa(expectedShardNum)) {
+					t.Fatalf("expectd shard value is %s, but found %s", strconv.Itoa(expectedShardNum), env.Value)
+				}
+			}
+		}
+	}
+
+	expectedArgsInitConfigReloader := []string{
+		"--watch-interval=0",
+		"--listen-address=:8080",
+		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
+		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+	}
+
+	for _, c := range baseSet.Spec.Template.Spec.Containers {
+		if c.Name == "init-config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
+			}
+			for _, env := range c.Env {
+				if env.Name == "SHARD" && !reflect.DeepEqual(env.Value, strconv.Itoa(expectedShardNum)) {
+					t.Fatalf("expectd shard value is %s, but found %s", strconv.Itoa(expectedShardNum), env.Value)
+				}
+			}
+		}
+	}
+
+}
+
+func TestThanosReadyTimeout(t *testing.T) {
+	sset, err := makeStatefulSet("test", monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				ReadyTimeout: "20m",
+			},
+		},
+	}, defaultTestConfig, nil, "", 0)
+	if err != nil {
+		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
+	}
+
+	found := false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "thanos-sidecar" {
+			for _, flag := range container.Args {
+				if flag == "--prometheus.ready_timeout=20m" {
+					found = true
+				}
+			}
+		}
+	}
+
+	if !found {
+		t.Fatal("Sidecar ready timeout not set when it should.")
 	}
 }

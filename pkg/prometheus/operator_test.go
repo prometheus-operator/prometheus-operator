@@ -67,13 +67,13 @@ func TestGetNodeAddresses(t *testing.T) {
 			name: "simple",
 			nodes: &v1.NodeList{
 				Items: []v1.Node{
-					v1.Node{
+					{
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "node-0",
 						},
 						Status: v1.NodeStatus{
 							Addresses: []v1.NodeAddress{
-								v1.NodeAddress{
+								{
 									Address: "10.0.0.1",
 									Type:    v1.NodeInternalIP,
 								},
@@ -90,26 +90,26 @@ func TestGetNodeAddresses(t *testing.T) {
 			name: "missing ip on one node",
 			nodes: &v1.NodeList{
 				Items: []v1.Node{
-					v1.Node{
+					{
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "node-0",
 						},
 						Status: v1.NodeStatus{
 							Addresses: []v1.NodeAddress{
-								v1.NodeAddress{
+								{
 									Address: "node-0",
 									Type:    v1.NodeHostName,
 								},
 							},
 						},
 					},
-					v1.Node{
+					{
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "node-1",
 						},
 						Status: v1.NodeStatus{
 							Addresses: []v1.NodeAddress{
-								v1.NodeAddress{
+								{
 									Address: "10.0.0.1",
 									Type:    v1.NodeInternalIP,
 								},

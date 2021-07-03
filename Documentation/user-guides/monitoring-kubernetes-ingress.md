@@ -21,13 +21,13 @@ First, we need an application running on Kubernetes for our users to access. You
 
 We can quickly deploy this application using `kubectl`:
 
-```
+```sh
 kubectl apply -f https://getambassador.io/yaml/tour/tour.yaml
 ```
 
 Check the application's status and wait for it to start running:
 
-```
+```console
 $ kubectl get po --selector=app=tour
 
 NAME                    READY   STATUS    RESTARTS   AGE
@@ -37,22 +37,22 @@ tour-6df995489d-lc9hs   2/2     Running   0          1m
 Now that we have an application running in Kubernetes, we need to expose it to the outside world. We will do this with Ambassador to take advantage of Envoy's robust metrics generation.
 
 1. Deploy Ambassador to your cluster with `kubectl`:
-    
-    ```
+
+    ```sh
     kubectl apply -f https://getambassador.io/yaml/ambassador/ambassador-rbac.yaml
     ```
     Ambassador is now running in your cluster and is ready to start routing traffic to your application.
 
 2. Expose Ambassador to the internet.
 
-    ```
+    ```sh
     kubectl apply -f https://getambassador.io/yaml/ambassador/ambassador-service.yaml
     ```
-    This will create a `LoadBalancer` service in Kubernetes which will automatically create a cloud load balancer if you are running in cloud-managed Kubernetes. 
+    This will create a `LoadBalancer` service in Kubernetes which will automatically create a cloud load balancer if you are running in cloud-managed Kubernetes.
 
     Kubernetes will automatically assign the load balancer's IP address as the `EXTERNAL_IP` of the service. You can view this with `kubectl`:
 
-    ```
+    ```console
     $ kubectl get svc ambassador
 
     NAME         TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)       AGE
@@ -91,12 +91,12 @@ Now that we have an application running in Kubernetes, we need to expose it to t
 
 You now have an application running in Kubernetes and exposed to the internet.
 
-## Deploy Prometheus 
+## Deploy Prometheus
 Now that we have an application running and exposed by Ambassador, we need to configure Prometheus to scrape the metrics from Ambassador. The Prometheus Operator gives us a way to deploy and manage Prometheus deployments using Kubernetes-style resources
 
 The Prometheus Operator creates Kubernetes Custom Resource Definitions (CRDs) so we can manage our Prometheus deployment using Kubernetes-style declarative YAML manifests. To deploy the Prometheus Operator, you can clone the [repository](https://github.com/prometheus-operator/prometheus-operator) and follow the instructions in the README. You can also just create it with `kubectl`:
 
-```
+```sh
 kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml
 ```
 
@@ -147,7 +147,7 @@ spec:
 
 **Note:** The `externalUrl` and `routePrefix` fields allows for you to route requests to Prometheus through Ambassador on the `/prometheus` path. Replace `{AMBASSADOR_EXTERNAL_IP}` with the value from above.
 
-```
+```sh
 kubectl apply -f prometheus.yaml
 ```
 We now have Prometheus running in the cluster and exposed through Ambassador. View the Prometheus UI by going to http://{AMBASSADOR_EXTERNAL_IP}/prometheus/graph from a web browser.
@@ -174,7 +174,7 @@ spec:
   - port: ambassador-admin
 ```
 
-```
+```sh
 kubectl apply -f ambassador-monitor.yaml
 ```
 
@@ -182,9 +182,9 @@ Prometheus will now be configured to collect metrics from the `ambassadr-admin` 
 
 ## Examining Ingress Metrics
 
-If you go to `http://{AMBASSADOR_EXTERNAL_IP}/prometheus/targets` from a web browser you will now see `ambassador-monitor` as a target for Prometheus to scrape metrics from Ambassador. Clicking on the drop down menu at `http://{AMBASSADOR_EXTERNAL_IP}/prometheus/graph`, you can see the various ingress-related metrics output by Envoy. 
+If you go to `http://{AMBASSADOR_EXTERNAL_IP}/prometheus/targets` from a web browser you will now see `ambassador-monitor` as a target for Prometheus to scrape metrics from Ambassador. Clicking on the drop down menu at `http://{AMBASSADOR_EXTERNAL_IP}/prometheus/graph`, you can see the various ingress-related metrics output by Envoy.
 
-Envoy's metrics data model is remarkably similar to that of Prometheus and uses the same three kinds of statistics (`Counters`, `Gauges`, and `Histograms`). This allows for Envoy to export dynamic and data-rich statistics that are immediately useable by Prometheus's analytical functions. 
+Envoy's metrics data model is remarkably similar to that of Prometheus and uses the same three kinds of statistics (`Counters`, `Gauges`, and `Histograms`). This allows for Envoy to export dynamic and data-rich statistics that are immediately useable by Prometheus's analytical functions.
 
 **Notable Metrics:**
 

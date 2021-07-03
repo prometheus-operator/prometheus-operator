@@ -15,7 +15,6 @@
 package e2e
 
 import (
-	"context"
 	"flag"
 	"log"
 	"os"
@@ -84,7 +83,7 @@ func TestAllNS(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
 	stableVersion := "quay.io/prometheus-operator/prometheus-operator:v0.47.1"
 	finalizers, err := framework.CreatePrometheusOperator(ns, stableVersion, nil, nil, nil, nil, true, true)
 
@@ -117,7 +116,7 @@ func TestAllNS(t *testing.T) {
 		"app.kubernetes.io/name": "prometheus-operator",
 	})).String()}
 
-	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.TODO(), opts)
+	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(framework.Ctx, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,6 +200,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromSecurePodMonitor":                   testPromSecurePodMonitor,
 		"PromSharedResourcesReconciliation":      testPromSharedResourcesReconciliation,
 		"PromPreserveUserAddedMetadata":          testPromPreserveUserAddedMetadata,
+		"PromWebTLS":                             testPromWebTLS,
 	}
 
 	for name, f := range testFuncs {
@@ -282,13 +282,13 @@ const (
 func testServerTLS(t *testing.T, namespace string) func(t *testing.T) {
 
 	return func(t *testing.T) {
-		if err := operatorFramework.WaitForServiceReady(framework.KubeClient, namespace, prometheusOperatorServiceName); err != nil {
+		if err := framework.WaitForServiceReady(namespace, prometheusOperatorServiceName); err != nil {
 			t.Fatal("waiting for prometheus operator service: ", err)
 		}
 
 		operatorService := framework.KubeClient.CoreV1().Services(namespace)
 		request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/healthz", make(map[string]string))
-		_, err := request.DoRaw(context.TODO())
+		_, err := request.DoRaw(framework.Ctx)
 		if err != nil {
 			t.Fatal(err)
 		}

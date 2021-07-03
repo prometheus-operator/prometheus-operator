@@ -28,13 +28,13 @@ Next, use the following configuration to deny all the ingress (inbound) traffic.
 ```
 Save the config file as default-deny-all.yaml and apply the configuration to the cluster using
 
-```
+```sh
 kubectl apply -f <path to config file>/default-deny-all.yaml
 ```
 
 Apply the following network policies to allow the necessary traffic to access ports in the pod:
 
-```
+```console
 $ kubectl apply -n monitoring -f example/networkpolicies/
 
 networkpolicy "alertmanager-web" configured
