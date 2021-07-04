@@ -101,9 +101,13 @@ func TestAllNS(t *testing.T) {
 
 	t.Run("TestServerTLS", testServerTLS(t, ns))
 	// upgrade operator to current version
-	_, err = framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true, true)
+	finalizers, err = framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true, true)
+
 	if err != nil {
 		t.Fatal(err)
+	}
+	for _, f := range finalizers {
+		ctx.AddFinalizerFn(f)
 	}
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
