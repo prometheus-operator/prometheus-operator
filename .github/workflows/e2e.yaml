@@ -9,8 +9,8 @@ on:
     tags:
       - 'v*'
 env:
-  kind-version: 'v0.10.0'
-  kind-image: 'kindest/node:v1.20.0'  # Image defines which k8s version is used
+  kind-version: 'v0.11.0'
+  kind-image: 'kindest/node:v1.21.2'  # Image defines which k8s version is used
 jobs:
   e2e-tests:
     name: E2E tests
@@ -38,11 +38,10 @@ jobs:
       with:
         version: ${{ env.kind-version }}
         image: ${{ env.kind-image }}
+        wait: 300s
     - name: Wait for cluster to finish bootstraping
       run: |
-        until [ "$(kubectl get pods --all-namespaces --no-headers | grep -cEv '([0-9]+)/\1')" -eq 0 ]; do
-            sleep 5s
-        done
+        kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
         kubectl cluster-info
         kubectl get pods -A
     - name: Build and load images
