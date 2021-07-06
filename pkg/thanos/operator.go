@@ -230,8 +230,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 // waitForCacheSync waits for the informers' caches to be synced.
 func (o *Operator) waitForCacheSync(ctx context.Context) error {
-	ok := true
-
 	for _, infs := range []struct {
 		name                 string
 		informersForResource *informers.ForResource
@@ -243,7 +241,7 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
 			if !operator.WaitForNamedCacheSync(ctx, "thanos", log.With(o.logger, "informer", infs.name), inf.Informer()) {
-				ok = false
+				return errors.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
 	}
@@ -256,12 +254,8 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 		{"RuleNamespace", o.nsRuleInf},
 	} {
 		if !operator.WaitForNamedCacheSync(ctx, "thanos", log.With(o.logger, "informer", inf.name), inf.informer) {
-			ok = false
+			return errors.Errorf("failed to sync cache for %s informer", inf.name)
 		}
-	}
-
-	if !ok {
-		return errors.New("failed to sync caches")
 	}
 
 	level.Info(o.logger).Log("msg", "successfully synced all caches")
