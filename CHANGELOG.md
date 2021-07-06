@@ -1,3 +1,19 @@
+## 0.49.0 / 2021-07-06
+
+* [CHANGE] Flag "storage.tsdb.no-lockfile" will now default to false. #4066
+* [CHANGE] Remove `app.kubernetes.io/version` label selector from Prometheus and Alertmanager statefulsets. #4093
+* [CHANGE] Exit if the informers cache synchronization doesn't complete after 10 minutes. #4143, #4149
+* [FEATURE] Added web TLS configuration support for Prometheus. #4025
+* [FEATURE] Add proxy_url support for Probes. #4043
+* [ENHANCEMENT] Set proper build context in version package. #4019
+* [ENHANCEMENT] Publish images on GitHub Container Registry. #4060
+* [ENHANCEMENT] Automatically generate document for operator executable. #4112
+* [ENHANCEMENT] Adds configuration to set the Prometheus ready timeout to Thanos sidecar #4118
+* [BUGFIX] Fixed bug in Alertmanager config where URLS that are taken from Kubernetes secrets might contain whitespace or newline characters. #4068
+* [BUGFIX] Generate correct scraping configuration for Probes with empty or unset `module` parameter. #4074
+* [BUGFIX] Operator does not generate `max_retries` option in `remote_write` for Prometheus version 2.11.0 and higher. #4103
+* [BUGFIX] Preserve the dual-stack immutable fields on service sync. #4119
+
 ## 0.48.1 / 2021-06-01
 
 * [BUGFIX] Added an `app` label on Prometheus pods. #4055
