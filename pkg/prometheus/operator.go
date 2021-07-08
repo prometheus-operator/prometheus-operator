@@ -1537,6 +1537,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote read %d", i)
 		}
+		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, fmt.Sprintf("remoteRead/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote read %d", i)
+		}
 		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
 			return errors.Wrapf(err, "remote read %d", i)
 		}
@@ -1544,6 +1547,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	for i, remote := range p.Spec.RemoteWrite {
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
 		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
@@ -1577,6 +1583,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		pmons,
 		bmons,
 		store.BasicAuthAssets,
+		store.OAuth2Assets,
 		store.BearerTokenAssets,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,
