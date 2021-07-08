@@ -66,11 +66,12 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 	var cfg *rest.Config
 	var err error
 
-	kubeconfigFile := os.Getenv(KubeConfigEnv)
-	if kubeconfigFile != "" {
-		cfg, err = clientcmd.BuildConfigFromFlags("", kubeconfigFile)
+	kubeconfigPath := os.Getenv(KubeConfigEnv)
+	if kubeconfigPath != "" {
+		loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+		cfg, err = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{}).ClientConfig()
 		if err != nil {
-			return nil, fmt.Errorf("error creating config from %s: %w", kubeconfigFile, err)
+			return nil, fmt.Errorf("error creating config from %s: %w", kubeconfigPath, err)
 		}
 	} else {
 		if len(host) == 0 {
