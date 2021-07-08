@@ -176,11 +176,12 @@ type slackConfig struct {
 }
 
 type httpClientConfig struct {
-	BasicAuth       *basicAuth `yaml:"basic_auth,omitempty"`
-	BearerToken     string     `yaml:"bearer_token,omitempty"`
-	BearerTokenFile string     `yaml:"bearer_token_file,omitempty"`
-	ProxyURL        string     `yaml:"proxy_url,omitempty"`
-	TLSConfig       tlsConfig  `yaml:"tls_config,omitempty"`
+	Authorization   *authorization `yaml:"authorization,omitempty"`
+	BasicAuth       *basicAuth     `yaml:"basic_auth,omitempty"`
+	BearerToken     string         `yaml:"bearer_token,omitempty"`
+	BearerTokenFile string         `yaml:"bearer_token_file,omitempty"`
+	ProxyURL        string         `yaml:"proxy_url,omitempty"`
+	TLSConfig       tlsConfig      `yaml:"tls_config,omitempty"`
 }
 
 type tlsConfig struct {
@@ -189,6 +190,12 @@ type tlsConfig struct {
 	KeyFile            string `yaml:"key_file,omitempty"`
 	ServerName         string `yaml:"server_name,omitempty"`
 	InsecureSkipVerify bool   `yaml:"insecure_skip_verify"`
+}
+
+type authorization struct {
+	Type            string `yaml:"type,omitempty"`
+	Credentials     string `yaml:"credentials,omitempty"`
+	CredentialsFile string `yaml:"credentials_file,omitempty"`
 }
 
 type basicAuth struct {

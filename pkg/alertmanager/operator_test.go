@@ -801,7 +801,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			err := checkAlertmanagerConfig(context.Background(), tc.amConfig, store)
+			err := checkAlertmanagerConfig(context.Background(), "0.22.1", tc.amConfig, store)
 			if tc.ok {
 				if err != nil {
 					t.Fatalf("expecting no error but got %q", err)

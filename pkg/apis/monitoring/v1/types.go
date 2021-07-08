@@ -1042,6 +1042,16 @@ type ProberSpec struct {
 	ProxyURL string `json:"proxyUrl,omitempty"`
 }
 
+// Authorization allows an endpoint to authenticate by configuring the authentication token
+// More info: https://prometheus.io/docs/alerting/latest/configuration/#http_config
+// +k8s:openapi-gen=true
+type Authorization struct {
+	// The type of the token to use. Defaults to `Bearer`.
+	Type string `json:"type,omitempty"`
+	// The secret to pass to in the header.
+	Credentials v1.SecretKeySelector `json:"credentials,omitempty"`
+}
+
 // BasicAuth allow an endpoint to authenticate over basic authentication
 // More info: https://prometheus.io/docs/operating/configuration/#endpoints
 // +k8s:openapi-gen=true

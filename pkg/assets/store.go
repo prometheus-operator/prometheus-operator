@@ -42,20 +42,22 @@ type Store struct {
 	sClient  corev1client.SecretsGetter
 	objStore cache.Store
 
-	TLSAssets         map[TLSAssetKey]TLSAsset
-	BearerTokenAssets map[string]BearerToken
-	BasicAuthAssets   map[string]BasicAuthCredentials
+	TLSAssets           map[TLSAssetKey]TLSAsset
+	AuthorizationAssets map[string]AuthorizationCredentials
+	BearerTokenAssets   map[string]BearerToken
+	BasicAuthAssets     map[string]BasicAuthCredentials
 }
 
 // NewStore returns an empty assetStore.
 func NewStore(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *Store {
 	return &Store{
-		cmClient:          cmClient,
-		sClient:           sClient,
-		TLSAssets:         make(map[TLSAssetKey]TLSAsset),
-		BearerTokenAssets: make(map[string]BearerToken),
-		BasicAuthAssets:   make(map[string]BasicAuthCredentials),
-		objStore:          cache.NewStore(assetKeyFunc),
+		cmClient:            cmClient,
+		sClient:             sClient,
+		TLSAssets:           make(map[TLSAssetKey]TLSAsset),
+		BearerTokenAssets:   make(map[string]BearerToken),
+		BasicAuthAssets:     make(map[string]BasicAuthCredentials),
+		AuthorizationAssets: make(map[string]AuthorizationCredentials),
+		objStore:            cache.NewStore(assetKeyFunc),
 	}
 }
 
@@ -166,6 +168,24 @@ func (s *Store) AddBasicAuth(ctx context.Context, ns string, ba *monitoringv1.Ba
 	s.BasicAuthAssets[key] = BasicAuthCredentials{
 		Username: username,
 		Password: password,
+	}
+
+	return nil
+}
+
+// AddAuthorization processes the given *Authorization and adds the referenced credentials to the store.
+func (s *Store) AddAuthorization(ctx context.Context, ns string, auth *monitoringv1.Authorization, key string) error {
+	if auth == nil {
+		return nil
+	}
+
+	credentials, err := s.GetSecretKey(ctx, ns, auth.Credentials)
+	if err != nil {
+		return errors.Wrap(err, "failed to get authorization credential")
+	}
+
+	s.AuthorizationAssets[key] = AuthorizationCredentials{
+		Credentials: credentials,
 	}
 
 	return nil

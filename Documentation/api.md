@@ -25,6 +25,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [AlertmanagerSpec](#alertmanagerspec)
 * [AlertmanagerStatus](#alertmanagerstatus)
 * [ArbitraryFSAccessThroughSMsConfig](#arbitraryfsaccessthroughsmsconfig)
+* [Authorization](#authorization)
 * [BasicAuth](#basicauth)
 * [EmbeddedObjectMetadata](#embeddedobjectmetadata)
 * [EmbeddedPersistentVolumeClaim](#embeddedpersistentvolumeclaim)
@@ -232,6 +233,17 @@ ArbitraryFSAccessThroughSMsConfig enables users to configure, whether a service 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | deny |  | bool | false |
+
+[Back to TOC](#table-of-contents)
+
+## Authorization
+
+Authorization allows configuring authentication with endpoint via a token. More info: https://prometheus.io/docs/operating/configuration/#endpoints
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| type | The type of the token to use. Defaults to `Bearer`. | string | false |
+| credentials | The secret to pass to in the header. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1088,7 +1100,8 @@ HTTPConfig defines a client HTTP configuration. See https://prometheus.io/docs/a
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| basicAuth | BasicAuth for the client. | *monitoringv1.BasicAuth | false |
+| authorization | Authorization header configuration for the client. This is mutually exclusive with BasicAuth and is only available starting from alertmanager v0.22+ | *monitoringv1.Authorization | false |
+| basicAuth | BasicAuth for the client. This is mutually exclusive with Authorization | *monitoringv1.BasicAuth | false |
 | bearerTokenSecret | The secret's key that contains the bearer token to be used by the client for authentication. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. | *[v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | false |
 | tlsConfig | TLS configuration for the client. | *monitoringv1.SafeTLSConfig | false |
 | proxyURL | Optional proxy URL. | string | false |
