@@ -1483,6 +1483,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "name", Value: spec.Name})
 		}
 
+		if spec.SendExemplars && version.GTE(semver.MustParse("2.27.0")) {
+			cfg = append(cfg, yaml.MapItem{Key: "send_exemplars", Value: spec.SendExemplars})
+		}
+
 		if spec.WriteRelabelConfigs != nil {
 			relabelings := []yaml.MapSlice{}
 			for _, c := range spec.WriteRelabelConfigs {
