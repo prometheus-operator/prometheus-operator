@@ -652,6 +652,8 @@ type RemoteWriteSpec struct {
 	// name is used in metrics and logging in order to differentiate queues.
 	// Only valid in Prometheus versions 2.15.0 and newer.
 	Name string `json:"name,omitempty"`
+	// Only valid in Prometheus versions 2.15.0 and newer.
+	SendExemplars bool `json:"sendExemplars,omitempty"`
 	// Timeout for requests to the remote write endpoint.
 	RemoteTimeout string `json:"remoteTimeout,omitempty"`
 	// Custom HTTP headers to be sent along with each remote write request.
