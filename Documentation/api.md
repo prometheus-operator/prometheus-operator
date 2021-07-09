@@ -17,7 +17,6 @@ This Document documents the types introduced by the Prometheus Operator to be co
 > Note this document is generated from code comments. When contributing a change to this document please do so by changing the code comments.
 
 ## Table of Contents
-- [Table of Contents](#table-of-contents)
 - [APIServerConfig](#apiserverconfig)
 - [AlertingSpec](#alertingspec)
 - [Alertmanager](#alertmanager)
