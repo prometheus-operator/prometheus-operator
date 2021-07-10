@@ -163,8 +163,6 @@ func convertTimeInterval(in *monitoringv1alpha1.MuteTimeInterval) *MuteTimeInter
 		if !reflect.DeepEqual(x, TimeInterval{}) {
 			mti.TimeIntervals = append(mti.TimeIntervals, *x)
 		}
-		mti.TimeIntervals = append(mti.TimeIntervals, *x)
-
 	}
 
 	return &mti

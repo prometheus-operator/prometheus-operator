@@ -1076,7 +1076,7 @@ AlertmanagerConfigSpec is a specification of the desired behavior of the Alertma
 | route | The Alertmanager route definition for alerts matching the resource’s namespace. If present, it will be added to the generated Alertmanager configuration as a first-level route. | *[Route](#route) | true |
 | receivers | List of receivers. | [][Receiver](#receiver) | true |
 | inhibitRules | List of inhibition rules. The rules will only apply to alerts matching the resource’s namespace. | [][InhibitRule](#inhibitrule) | false |
-| muteTimeInterval | List of mute time intervals | [][MuteTimeInterval](#mutetimeinterval) | false |
+| muteTimeIntervals | List of mute time intervals | [][MuteTimeInterval](#mutetimeinterval) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -1160,7 +1160,7 @@ MuteTimeIntercal specifies a named interval of time that may be referenced in th
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | name | Name of a Mute Time Interval | string | true |
-| timeInterval | Series of time intervals assoicated with the MuteTimeInterval | [][TimeInterval](#timeinterval) | true |
+| timeIntervals | Series of time intervals assoicated with the MuteTimeInterval | [][TimeInterval](#timeinterval) | true |
 
 [Back to TOC](#table-of-contents)
 

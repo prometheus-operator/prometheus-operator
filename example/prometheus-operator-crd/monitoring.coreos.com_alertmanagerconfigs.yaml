@@ -113,7 +113,7 @@ spec:
                       type: array
                   type: object
                 type: array
-              muteTimeInterval:
+              muteTimeIntervals:
                 description: List of mute time intervals
                 items:
                   description: MuteTimeIntercal specifies a named interval of time
