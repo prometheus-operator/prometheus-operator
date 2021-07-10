@@ -905,7 +905,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{{
 				Name: "testing",
-				TimeInterval: []monitoringv1alpha1.TimeInterval{{
+				TimeIntervals: []monitoringv1alpha1.TimeInterval{{
 					Weekdays:    []string{"sunday:tuesday", "saturday"},
 					DaysOfMonth: []string{"1:5", "-3:-1"},
 					Months:      []string{"1:3", "5:8", "12"},

@@ -124,7 +124,7 @@ spec:
                       description: Name of a Mute Time Interval
                       minLength: 1
                       type: string
-                    timeInterval:
+                    timeIntervals:
                       description: Series of time intervals assoicated with the MuteTimeInterval
                       items:
                         description: TimeInterval  contains the actual definition
@@ -177,7 +177,7 @@ spec:
                       type: array
                   required:
                   - name
-                  - timeInterval
+                  - timeIntervals
                   type: object
                 type: array
               receivers:

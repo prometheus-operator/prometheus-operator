@@ -729,7 +729,7 @@ type MuteTimeInterval struct {
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 	// Series of time intervals assoicated with the MuteTimeInterval
-	TimeInterval []TimeInterval `json:"timeInterval"`
+	TimeIntervals []TimeInterval `json:"timeIntervals"`
 }
 
 // TimeInterval  contains the actual definition for an interval of time.

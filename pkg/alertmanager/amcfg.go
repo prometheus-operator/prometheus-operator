@@ -132,11 +132,9 @@ func (cg *configGenerator) generateConfig(
 
 func convertTimeInterval(in *monitoringv1alpha1.MuteTimeInterval) *MuteTimeInterval {
 	var mti MuteTimeInterval
-
 	mti.Name = in.Name
 
-	for _, interval := range in.TimeInterval {
-
+	for _, interval := range in.TimeIntervals {
 		times := make([]TimeRange, len(interval.Times))
 		days := make([]string, len(interval.DaysOfMonth))
 		months := make([]string, len(interval.Months))
@@ -144,26 +142,14 @@ func convertTimeInterval(in *monitoringv1alpha1.MuteTimeInterval) *MuteTimeInter
 		years := make([]string, len(interval.Years))
 
 		for j, y := range interval.Times {
-
 			times[j].StartTime = y.StartTime
 			times[j].EndTime = y.EndTime
 		}
 
-		for j, y := range interval.DaysOfMonth {
-			days[j] = y
-		}
-
-		for j, y := range interval.Months {
-			months[j] = y
-		}
-
-		for j, y := range interval.Weekdays {
-			week[j] = y
-		}
-
-		for j, y := range interval.Years {
-			years[j] = y
-		}
+		copy(days, interval.DaysOfMonth)
+		copy(months, interval.Months)
+		copy(week, interval.Weekdays)
+		copy(years, interval.Years)
 
 		x := &TimeInterval{
 			Times:       times,
@@ -173,10 +159,12 @@ func convertTimeInterval(in *monitoringv1alpha1.MuteTimeInterval) *MuteTimeInter
 			Years:       years,
 		}
 
-		// TODO, fix this hack to prevent a empty object being added to the yaml
+		// Prevent empty structs from being added to the yaml
 		if !reflect.DeepEqual(x, TimeInterval{}) {
 			mti.TimeIntervals = append(mti.TimeIntervals, *x)
 		}
+		mti.TimeIntervals = append(mti.TimeIntervals, *x)
+
 	}
 
 	return &mti
