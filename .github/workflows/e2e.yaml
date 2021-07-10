@@ -1,0 +1,59 @@
+name: e2e
+on:
+  pull_request:
+  push:
+    branches:
+      - 'release-*'
+      - 'master'
+      - 'main'
+    tags:
+      - 'v*'
+env:
+  kind-version: 'v0.11.0'
+  kind-image: 'kindest/node:v1.21.2'  # Image defines which k8s version is used
+jobs:
+  e2e-tests:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        suite: [alertmanager, prometheus, thanosruler]
+        include:
+          - suite: alertmanager
+            prometheus: "exclude"
+            alertmanager: ""
+            thanosruler: "exclude"
+          - suite: prometheus
+            prometheus: ""
+            alertmanager: "exclude"
+            thanosruler: "exclude"
+          - suite: thanosruler
+            prometheus: "exclude"
+            alertmanager: "exclude"
+            thanosruler: ""
+    steps:
+    - uses: actions/checkout@v2
+    - name: Start KinD
+      uses: engineerd/setup-kind@v0.5.0
+      with:
+        version: ${{ env.kind-version }}
+        image: ${{ env.kind-image }}
+        wait: 300s
+    - name: Wait for cluster to finish bootstraping
+      run: |
+        kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
+        kubectl cluster-info
+        kubectl get pods -A
+    - name: Build and load images
+      run: |
+        export SHELL=/bin/bash
+        make build image
+        kind load docker-image quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
+        kind load docker-image quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
+        kubectl apply -f scripts/kind-rbac.yaml
+    - name: Run tests
+      run: >
+        EXCLUDE_ALERTMANAGER_TESTS=${{ matrix.alertmanager }}
+        EXCLUDE_PROMETHEUS_TESTS=${{ matrix.prometheus }}
+        EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
+        make test-e2e

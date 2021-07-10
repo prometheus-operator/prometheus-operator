@@ -327,8 +327,7 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
 		return errors.Wrap(err, fmt.Sprintf("deleting Prometheus custom resource %v failed", name))
 	}
 
-	if err := WaitForPodsReady(
-		f.KubeClient,
+	if err := f.WaitForPodsReady(
 		ns,
 		f.DefaultTimeout,
 		0,
@@ -344,11 +343,10 @@ func (f *Framework) DeletePrometheusAndWaitUntilGone(ns, name string) error {
 }
 
 func (f *Framework) WaitForPrometheusRunImageAndReady(ns string, p *monitoringv1.Prometheus) error {
-	if err := WaitForPodsRunImage(f.KubeClient, ns, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
+	if err := f.WaitForPodsRunImage(ns, int(*p.Spec.Replicas), promImage(p.Spec.Version), prometheus.ListOptions(p.Name)); err != nil {
 		return err
 	}
-	return WaitForPodsReady(
-		f.KubeClient,
+	return f.WaitForPodsReady(
 		ns,
 		f.DefaultTimeout,
 		int(*p.Spec.Replicas),
@@ -557,7 +555,7 @@ func (f *Framework) PrintPrometheusLogs(t *testing.T, p *monitoringv1.Prometheus
 
 	replicas := int(*p.Spec.Replicas)
 	for i := 0; i < replicas; i++ {
-		l, err := GetLogs(f.KubeClient, p.Namespace, fmt.Sprintf("prometheus-%s-%d", p.Name, i), "prometheus")
+		l, err := f.GetLogs(p.Namespace, fmt.Sprintf("prometheus-%s-%d", p.Name, i), "prometheus")
 		if err != nil {
 			t.Logf("failed to retrieve logs for replica[%d]: %v", i, err)
 			continue

@@ -275,7 +275,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config operator.Config) 
 		ObjectMeta: metav1.ObjectMeta{
 			Name: governingServiceName,
 			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
+				{
 					Name:       p.GetName(),
 					Kind:       p.Kind,
 					APIVersion: p.APIVersion,
@@ -777,6 +777,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 		if p.Spec.Thanos.MinTime != "" {
 			container.Args = append(container.Args, "--min-time="+p.Spec.Thanos.MinTime)
+		}
+
+		if p.Spec.Thanos.ReadyTimeout != "" {
+			container.Args = append(container.Args, "--prometheus.ready_timeout="+p.Spec.Thanos.ReadyTimeout)
 		}
 		additionalContainers = append(additionalContainers, container)
 	}

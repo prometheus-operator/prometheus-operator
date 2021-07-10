@@ -177,8 +177,7 @@ func (f *Framework) DeleteThanosRulerAndWaitUntilGone(ns, name string) error {
 		return errors.Wrap(err, fmt.Sprintf("deleting ThanosRuler custom resource %v failed", name))
 	}
 
-	if err := WaitForPodsReady(
-		f.KubeClient,
+	if err := f.WaitForPodsReady(
 		ns,
 		f.DefaultTimeout,
 		0,

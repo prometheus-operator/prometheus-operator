@@ -459,7 +459,7 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 				"operated-thanos-ruler": "true",
 			}),
 			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
+				{
 					Name:       tr.GetName(),
 					Kind:       tr.Kind,
 					APIVersion: tr.APIVersion,

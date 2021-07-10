@@ -43,23 +43,35 @@ K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(TYPES_V1ALPHA1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(TOOLS_BIN_DIR)/$(bin))
 
+BUILD_DATE=$(shell date +"%Y%m%d-%T")
+# source: https://docs.github.com/en/free-pro-team@latest/actions/reference/environment-variables#default-environment-variables
+ifndef GITHUB_ACTIONS
+	BUILD_USER?=$(USER)
+	BUILD_BRANCH?=$(shell git branch --show-current)
+	BUILD_REVISION?=$(shell git rev-parse --short HEAD)
+else
+	BUILD_USER=Action-Run-ID-$(GITHUB_RUN_ID)
+	BUILD_BRANCH=$(GITHUB_REF:refs/heads/%=%)
+	BUILD_REVISION=$(GITHUB_SHA)
+endif
+
 # The Prometheus common library import path
-# https://github.com/prometheus/common
 PROMETHEUS_COMMON_PKG=github.com/prometheus/common
 
 # The ldflags for the go build process to set the version related data.
-# The environments variables are in sync with GitHub Action specification.
-# When changing the CI system remember to update env variables respectively.
-#
-# source: https://docs.github.com/en/free-pro-team@latest/actions/reference/environment-variables#default-environment-variables
-GO_BUILD_VERSION_LDFLAGS=\
-	-X $(PROMETHEUS_COMMON_PKG)/version.Revision=$(GITHUB_SHA)  \
-	-X $(PROMETHEUS_COMMON_PKG)/version.BuildUser=$(GITHUB_ACTOR)  \
-	-X $(PROMETHEUS_COMMON_PKG)/version.BuildDate=$(shell date +"%Y%m%d-%T") \
-	-X $(PROMETHEUS_COMMON_PKG)/version.Branch=$(GITHUB_REF:refs/heads/%=%) \
+GO_BUILD_LDFLAGS=\
+	-s \
+	-X $(PROMETHEUS_COMMON_PKG)/version.Revision=$(BUILD_REVISION)  \
+	-X $(PROMETHEUS_COMMON_PKG)/version.BuildUser=$(BUILD_USER) \
+	-X $(PROMETHEUS_COMMON_PKG)/version.BuildDate=$(BUILD_DATE) \
+	-X $(PROMETHEUS_COMMON_PKG)/version.Branch=$(BUILD_BRANCH) \
 	-X $(PROMETHEUS_COMMON_PKG)/version.Version=$(VERSION)
 
-GO_BUILD_RECIPE=GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 go build -ldflags="-s $(GO_BUILD_VERSION_LDFLAGS)"
+GO_BUILD_RECIPE=\
+	GOOS=$(GOOS) \
+	GOARCH=$(GOARCH) \
+	CGO_ENABLED=0 \
+	go build -ldflags="$(GO_BUILD_LDFLAGS)"
 
 pkgs = $(shell go list ./... | grep -v /test/ | grep -v /contrib/)
 pkgs += $(shell go list $(GO_PKG)/pkg/apis/monitoring...)
@@ -200,8 +212,11 @@ $(RBAC_MANIFESTS): scripts/generate/vendor VERSION $(shell find jsonnet -type f)
 example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-thanos-example.sh
 
-FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md
+FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md Documentation/operator.md
 TO_BE_EXTENDED_DOCS = $(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentation -type f))
+
+Documentation/operator.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
+	$(PO_DOCGEN_BINARY) operator cmd/operator/main.go > $@
 
 Documentation/api.md: $(PO_DOCGEN_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET)
 	$(PO_DOCGEN_BINARY) api $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) > $@
@@ -222,7 +237,7 @@ format: go-fmt jsonnet-fmt check-license shellcheck
 
 .PHONY: go-fmt
 go-fmt:
-	go fmt $(pkgs)
+	gofmt -s -w .
 
 .PHONY: jsonnet-fmt
 jsonnet-fmt: $(JSONNETFMT_BINARY)
@@ -264,7 +279,7 @@ test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/k
 	cd test/instrumented-sample-app && make generate-certs
 
 test/e2e/remote_write_certs/ca.key test/e2e/remote_write_certs/ca.crt test/e2e/remote_write_certs/client.key test/e2e/remote_write_certs/client.crt test/e2e/remote_write_certs/bad_ca.key test/e2e/remote_write_certs/bad_ca.crt test/e2e/remote_write_certs/bad_client.key test/e2e/remote_write_certs/bad_client.crt:
-	make generate-remote-write-certs
+	$(MAKE) generate-remote-write-certs
 
 .PHONY: test-e2e
 test-e2e: KUBECONFIG?=$(HOME)/.kube/config

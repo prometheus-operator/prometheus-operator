@@ -512,7 +512,7 @@ func TestPodTemplateConfig(t *testing.T) {
 		NodeAffinity: &v1.NodeAffinity{},
 		PodAffinity: &v1.PodAffinity{
 			PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
-				v1.WeightedPodAffinityTerm{
+				{
 					PodAffinityTerm: v1.PodAffinityTerm{
 						Namespaces: []string{"foo"},
 					},
@@ -524,7 +524,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 
 	tolerations := []v1.Toleration{
-		v1.Toleration{
+		{
 			Key: "key",
 		},
 	}

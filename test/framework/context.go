@@ -30,7 +30,7 @@ type TestCtx struct {
 
 type FinalizerFn func() error
 
-func (f *Framework) NewTestCtx(t *testing.T) TestCtx {
+func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 	// TestCtx is used among others for namespace names where '/' is forbidden
 	prefix := strings.TrimPrefix(
 		strings.Replace(
@@ -43,8 +43,8 @@ func (f *Framework) NewTestCtx(t *testing.T) TestCtx {
 	)
 
 	id := prefix + "-" + strconv.FormatInt(time.Now().Unix(), 36)
-	return TestCtx{
-		ID:  id,
+	return &TestCtx{
+		ID: id,
 	}
 }
 

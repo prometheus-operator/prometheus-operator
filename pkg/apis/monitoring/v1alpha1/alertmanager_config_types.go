@@ -81,7 +81,7 @@ type AlertmanagerConfigSpec struct {
 	InhibitRules []InhibitRule `json:"inhibitRules,omitempty"`
 	// List of mute time intervals
 	// +optional
-	MuteTimeIntervals []MuteTimeInterval `json:"muteTimeInterval,omitempty"`
+	MuteTimeIntervals []MuteTimeInterval `json:"muteTimeIntervals,omitempty"`
 }
 
 // Route defines a node in the routing tree.

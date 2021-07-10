@@ -29,6 +29,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/thanos-io/thanos/pkg/reloader"
@@ -149,8 +150,8 @@ func main() {
 
 	r := prometheus.NewRegistry()
 	r.MustRegister(
-		prometheus.NewGoCollector(),
-		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 	)
 
 	var g run.Group

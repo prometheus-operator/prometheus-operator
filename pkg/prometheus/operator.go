@@ -316,8 +316,6 @@ func New(ctx context.Context, conf operator.Config, logger log.Logger, r prometh
 
 // waitForCacheSync waits for the informers' caches to be synced.
 func (c *Operator) waitForCacheSync(ctx context.Context) error {
-	ok := true
-
 	for _, infs := range []struct {
 		name                 string
 		informersForResource *informers.ForResource
@@ -333,7 +331,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
 			if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", infs.name), inf.Informer()) {
-				ok = false
+				return errors.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
 	}
@@ -346,12 +344,8 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"MonNamespace", c.nsMonInf},
 	} {
 		if !operator.WaitForNamedCacheSync(ctx, "prometheus", log.With(c.logger, "informer", inf.name), inf.informer) {
-			ok = false
+			return errors.Errorf("failed to sync cache for %s informer", inf.name)
 		}
-	}
-
-	if !ok {
-		return errors.New("failed to sync caches")
 	}
 
 	level.Info(c.logger).Log("msg", "successfully synced all caches")
@@ -1543,6 +1537,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote read %d", i)
 		}
+		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, fmt.Sprintf("remoteRead/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote read %d", i)
+		}
 		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
 			return errors.Wrapf(err, "remote read %d", i)
 		}
@@ -1550,6 +1547,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	for i, remote := range p.Spec.RemoteWrite {
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
+			return errors.Wrapf(err, "remote write %d", i)
+		}
+		if err := store.AddOAuth2(ctx, p.GetNamespace(), remote.OAuth2, fmt.Sprintf("remoteWrite/%d", i)); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
 		}
 		if err := store.AddTLSConfig(ctx, p.GetNamespace(), remote.TLSConfig); err != nil {
@@ -1583,6 +1583,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		pmons,
 		bmons,
 		store.BasicAuthAssets,
+		store.OAuth2Assets,
 		store.BearerTokenAssets,
 		additionalScrapeConfigs,
 		additionalAlertRelabelConfigs,

@@ -16,10 +16,11 @@ package e2e
 
 import (
 	"flag"
-	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 	"log"
 	"os"
 	"testing"
+
+	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -82,7 +83,7 @@ func TestAllNS(t *testing.T) {
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup(t)
 
-	ns := ctx.CreateNamespace(t, framework.KubeClient)
+	ns := framework.CreateNamespace(t, ctx)
 
 	finalizers, err := framework.CreatePrometheusOperator(ns, *opImage, nil, nil, nil, nil, true, true)
 	if err != nil {
@@ -276,7 +277,7 @@ const (
 func testServerTLS(t *testing.T, namespace string) func(t *testing.T) {
 
 	return func(t *testing.T) {
-		if err := operatorFramework.WaitForServiceReady(framework.KubeClient, namespace, prometheusOperatorServiceName); err != nil {
+		if err := framework.WaitForServiceReady(namespace, prometheusOperatorServiceName); err != nil {
 			t.Fatal("waiting for prometheus operator service: ", err)
 		}
 

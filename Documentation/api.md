@@ -31,6 +31,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [Endpoint](#endpoint)
 * [MetadataConfig](#metadataconfig)
 * [NamespaceSelector](#namespaceselector)
+* [OAuth2](#oauth2)
 * [PodMetricsEndpoint](#podmetricsendpoint)
 * [PodMetricsEndpointTLSConfig](#podmetricsendpointtlsconfig)
 * [PodMonitor](#podmonitor)
@@ -317,6 +318,20 @@ NamespaceSelector is a selector for selecting either all namespaces or a list of
 | ----- | ----------- | ------ | -------- |
 | any | Boolean describing whether all namespaces are selected in contrast to a list restricting them. | bool | false |
 | matchNames | List of namespace names. | []string | false |
+
+[Back to TOC](#table-of-contents)
+
+## OAuth2
+
+OAuth2 allows an endpoint to authenticate with OAuth2. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#oauth2
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| clientId | The secret or configmap containing the OAuth2 client id | [SecretOrConfigMap](#secretorconfigmap) | true |
+| clientSecret | The secret containing the OAuth2 client secret | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secretkeyselector-v1-core) | true |
+| tokenUrl | The URL to fetch the token from | string | true |
+| scopes | OAuth2 scopes used for the token request | []string | false |
+| endpointParams | Parameters to append to the token URL | map[string]string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -717,6 +732,7 @@ RemoteReadSpec defines the remote_read configuration for prometheus.
 | remoteTimeout | Timeout for requests to the remote read endpoint. | string | false |
 | readRecent | Whether reads should be made for queries for time ranges that the local storage should have complete data for. | bool | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
+| oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
 | bearerToken | Bearer token for remote read. | string | false |
 | bearerTokenFile | File to read bearer token for remote read. | string | false |
 | tlsConfig | TLS Config to use for remote read. | *[TLSConfig](#tlsconfig) | false |
@@ -735,6 +751,7 @@ RemoteWriteSpec defines the remote_write configuration for prometheus.
 | remoteTimeout | Timeout for requests to the remote write endpoint. | string | false |
 | headers | Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer. | map[string]string | false |
 | writeRelabelConfigs | The list of remote write relabel configurations. | [][RelabelConfig](#relabelconfig) | false |
+| oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
 | bearerToken | Bearer token for remote write. | string | false |
 | bearerTokenFile | File to read bearer token for remote write. | string | false |
@@ -909,6 +926,7 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | logLevel | LogLevel for Thanos sidecar to be configured with. | string | false |
 | logFormat | LogFormat for Thanos sidecar to be configured with. | string | false |
 | minTime | MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y. | string | false |
+| readyTimeout | ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m | string | false |
 
 [Back to TOC](#table-of-contents)
 
