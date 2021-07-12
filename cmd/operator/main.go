@@ -143,7 +143,7 @@ var (
 		logFormatLogfmt,
 		logFormatJSON,
 	}
-	cfg             = operator.Config{}
+	cfg = operator.Config{}
 
 	rawTLSCipherSuites string
 	serverTLS          bool
