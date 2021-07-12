@@ -4155,7 +4155,7 @@ spec:
                       description: Timeout for requests to the remote write endpoint.
                       type: string
                     sendExemplars:
-                      description: Only valid in Prometheus versions 2.15.0 and newer.
+                      description: Only valid in Prometheus versions 2.27.0 and newer.
                       type: boolean
                     tlsConfig:
                       description: TLS Config to use for remote write.
